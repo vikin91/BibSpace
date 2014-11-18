@@ -1,0 +1,117 @@
+% use Mojo::ByteStream 'b';
+% layout 'admin';
+
+
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+            <a class="btn btn-default" href="<%= url_for('edit_publication', id=>$id) %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the publication</a>
+            <a class="btn btn-default" href="<%= url_for('regenerate_publication', id=>$id)%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
+
+            <button class="btn btn-info" data-toggle="tooltip" data-placement="right" title="Some publications do not have authors so the entries cannot be automatically assigned to a team. In reality, there was usually a team involved in the work on that publication. Exceptions allow you to assign such entry to a team and list it among other papers of that team."><i class="fa fa-question "></i> Help</button>
+        </div>
+    </div>
+
+    %= include 'preview_row', preview => $entry->{html}, btype=> $entry->{bibtex_type}, bkey => $entry->{bibtex_key};
+
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <button type="button" class="btn btn-success">
+                <span class="glyphicon glyphicon-user"></span> Detected authors <span class="badge"><%= scalar @$authors %></span>
+            </button>
+        </div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+            % foreach my $author (@$authors){
+                <a class="btn btn-default" type="button" href="<%= url_for('edit_author', id=>$author->{id})%>">
+                    <span class="glyphicon glyphicon-user"></span>
+                    <%= $author->master->name %>
+                    <i class="fa fa-external-link"></i>
+                </a>
+            % }
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <button type="button" class="btn btn-success pull-right">
+                <i class="fa fa-users"></i> Detected teams <span class="badge"><%= scalar @$teams %></span>
+            </button>
+        </div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+            % foreach my $team (@$teams){
+                <a class="btn btn-default" type="button" href="<%= url_for('edit_team', id=>$team->{id} )%>">
+                    <i class="fa fa-users"></i>
+                    <%= $team->{name} %>
+                    <i class="fa fa-external-link"></i>
+                </a>
+            % }
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <button type="button" class="btn btn-warning">
+                <i class="fa fa-exclamation"></i> Detected exceptions <span class="badge"><%= scalar @$exceptions %></span>
+            </button>
+        </div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+            % foreach my $exception (@$exceptions){
+                <div class="btn-group">
+                    <a class="btn btn-default" type="button" href="<%= url_for('edit_team', id=>$exception->{id} )%>">
+                        <i class="fa fa-exclamation " style="color: red;"></i>
+                        <i class="fa fa-users " style="color: #5CB85C;"></i>
+                        <%= $exception->team->name %>
+                        <i class="fa fa-external-link"></i>
+                    </a>
+                    <a class="btn btn-default" href="<%= url_for('remove_exception_from_publication', eid=>$entry->id, tid=>$exception->team->id)%>"><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
+                </div>
+            % }
+            % if (scalar @$exceptions == 0){
+                <div class="alert alert-warning">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa fa-exclamation " style="color: red;"></i>
+                    Detected teams will be ignored after adding any exception (at least should be...). But temporarily they are not. Teams = teams + exceptions.
+                    <i class="fa fa-exclamation " style="color: red;"></i>
+                </div>
+            % }
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <span class="btn btn-default pull-right"><i class="fa fa-users"></i> Unassigned teams </span>
+        </div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+            % foreach my $team (@$unassigned_teams){
+                <div class="btn-group">
+                    <a class="btn btn-default" type="button" href="<%= url_for('edit_team', id=>$team->{id})%>">
+                        <i class="fa fa-users " style="color: #5CB85C;"></i> <%= $team->name %>
+                    </a>
+                    <a class="btn btn-default" href="<%= url_for('add_exception_to_publication', eid=>$entry->{id}, tid=>$team->{id} )%>">
+                        <span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><i class="fa fa-exclamation " style="color: #5CB85C;"></i>
+                    </a>
+                </div>
+            % }
+        </div>
+    </div>
+
+
+
+</div> <!-- container -->
+
+
+
+
+
+

@@ -1,0 +1,4 @@
+*.pm linguist-language=Perl
+*.pl linguist-language=Perl
+*.html.ep linguist-language=HTML
+

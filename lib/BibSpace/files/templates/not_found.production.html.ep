@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Error 404</title></head>
+   <style type="text/css">/*<![CDATA[*/
+
+      a img { border: 0 }
+      body { background-color: #ffffff }
+      h1 {color: #000;}
+/*]]>*/</style> 
+
+  <body>
+  <h1>Error 404</h1>
+  <p>The address of the resource is incorrect or the resource does not exist. Please return <a href="<%= url_for('/')%>">home</a> and use the correct link.</p>
+  <p>If you belive that this page is a result of a bug, please inform yout system administrator or <a href="https://github.com/vikin91/BibSpace/issues">fill a bug report</a>.</p>
+      %= include 'global_footer'
+  
+  </body>
+</html>
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->

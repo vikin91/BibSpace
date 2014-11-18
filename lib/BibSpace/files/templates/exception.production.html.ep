@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Error 500</title></head>
+   <style type="text/css">/*<![CDATA[*/
+
+      a img { border: 0 }
+      body { background-color: #ffffff }
+      h1 {color: #000;}
+/*]]>*/</style> 
+
+  <body>
+  <h1>Error 500</h1>
+  <p>Something went wrong... Please inform yout system administrator or <a href="https://github.com/vikin91/BibSpace/issues">fill a bug report</a>.</p>
+
+      %= include 'global_footer'
+      
+  </body>
+</html>
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->

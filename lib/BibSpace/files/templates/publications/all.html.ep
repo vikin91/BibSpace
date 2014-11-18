@@ -1,0 +1,45 @@
+% layout 'admin';
+% use Mojo::ByteStream 'b';
+
+% my $all_entries = stash('all_entries');
+% $all_entries = $entries if !defined $all_entries;
+
+<div class="text-center">
+  <ul class="nav nav-pills nav-justified" role="tablist">
+    % if( !defined param('year') ){
+      <li role="presentation" class="active">
+    % }
+    % else{
+      <li role="presentation">
+    % }
+      <a href="<%= url_with->query( [year=>undef, entry_type=>param('entry_type')] ) %>"> 
+        All 
+        <span class="badge"><%= num_pubs(undef, undef, $all_entries) %></span>
+      </a>
+    </li>
+
+  % for my $page_year (reverse (get_year_of_oldest_entry .. current_year+1)){
+    % my $num = num_pubs( param('entry_type'), $page_year, $all_entries );
+    % next if $num == 0 and current_year != $page_year;
+
+    % if( param('year') and $page_year == param('year') ){
+      <li role="presentation" class="active">
+    % }
+    % elsif($num==0){
+      <li role="presentation" class="disabled">
+    % }
+    % else{
+      <li role="presentation">
+    % }
+    <a href="<%= url_with->query( [year => $page_year] ) %>">
+      <%= $page_year %> 
+      <span class="badge"><%= $num %></span>
+    </a>
+    </li>
+  %}
+  </ul>
+</div>
+
+
+%= include 'publications/all_table', entries => $entries;
+

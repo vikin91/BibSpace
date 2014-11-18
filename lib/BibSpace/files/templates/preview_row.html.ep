@@ -1,0 +1,14 @@
+% my $html_preview = $preview // 'NO HTML - Bibtex may contain errors';
+
+% if($html_preview ne ''){
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-xs-12">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <h3>Preview</h3>
+          %= b($html_preview)
+        </div>
+      </div>
+    </div>
+  </div>
+%}

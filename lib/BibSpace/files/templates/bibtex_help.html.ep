@@ -1,0 +1,23 @@
+<strong>Remember!</strong><br/><br>
+<i class="fa fa-asterisk"></i> DE <i class="fa fa-asterisk"></i>
+<ul class="list-unstyled">
+  <li>&auml; <i class="fa fa-hand-o-right"></i> {\"a} </li>
+  <li>&uuml; <i class="fa fa-hand-o-right"></i> {\"u}</li>
+  <li>&ouml; <i class="fa fa-hand-o-right"></i> {\"o}</li>
+  <li>&szlig; <i class="fa fa-hand-o-right"></i> {\ss} </li>
+</ul>
+<hr/>
+<i class="fa fa-asterisk"></i> PL <i class="fa fa-asterisk"></i><br/>
+<ul class="list-unstyled">
+  <li>&oacute; <i class="fa fa-hand-o-right"></i> {\'o}  </li>
+  <li>&#347; <i class="fa fa-hand-o-right"></i> {\'s}   </li>
+  <li>&#322; <i class="fa fa-hand-o-right"></i> {\l}      </li>
+  <li>&#261; <i class="fa fa-hand-o-right"></i> {\k{a}}     </li>
+</ul>
+<hr/>
+<i class="fa fa-asterisk"></i> Symbols <i class="fa fa-asterisk"></i>
+<ul class="list-unstyled">
+  <li><a href="http://www.bibtex.org/SpecialSymbols/">Help 1 <i class="fa fa-external-link"></i></a></li>
+  <li><a href="http://leptokurtosis.com/main/node/42">Help 2 <i class="fa fa-external-link"></i></a></li>
+</ul>
+

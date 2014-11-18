@@ -1,0 +1,89 @@
+%   if ($entry_obj->is_hidden() == 1) {
+<tr valign="top" class="hiddenrow" 
+%   }
+%   else{
+<tr valign="top" 
+%   } 
+class="publication_table_row" publication-table-row-data-id="<%=$entry_obj->id%>">
+    <td>
+        <button class="btn btn-default btn-sm" 
+                data-toggle="tooltip" data-placement="top" title="Paper ID: <%= $entry_obj->id %>" data-container="body">
+            <span class="glyphicon glyphicon-barcode"></span> <%= $entry_obj->id %>
+        </button>
+    </td>
+    <td style="width: 30%;">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Paper manipulation controls">
+            
+            <a class="btn btn-warning btn-sm" href="<%= url_for('manage_tags', id=>$entry_obj->id)%>"
+                data-toggle="tooltip" data-placement="top" title="Tags" data-container="body">
+                <span class="glyphicon glyphicon-tags"></span>
+            </a>
+            
+            
+            <a class="btn btn-default btn-sm" href="<%= url_for('toggle_hide_publication', id=>$entry_obj->id)%>"
+                data-toggle="tooltip" data-placement="top" title="Hide/unhide" data-container="body">
+                <span class="glyphicon glyphicon-eye-close"></span>
+            </a>
+            
+            <a class="btn btn-success btn-sm" href="<%= url_for('edit_publication', id=>$entry_obj->id)%>"
+                data-toggle="tooltip" data-placement="top" title="Edit" data-container="body">
+                <span class="glyphicon glyphicon-pencil"></span>
+            </a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('show_authors_of_entry', id=>$entry_obj->id)%>"
+                data-toggle="tooltip" data-placement="top" title="Show authors" data-container="body">
+                <span class="glyphicon glyphicon-user"></span>
+            </a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('regenerate_publication', id=>$entry_obj->id)%>"
+                data-toggle="tooltip" data-placement="top" title="Regenerate HTML" data-container="body">
+                <span class="glyphicon glyphicon-refresh"></span>
+            </a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('manage_attachments', id=>$entry_obj->id)%>"
+                data-toggle="tooltip" data-placement="top" title="Upload files" data-container="body">
+                <i class="fa fa-upload"></i>
+            </a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('manage_exceptions', id=>$entry_obj->id)%>"
+                data-toggle="tooltip" data-placement="top" title="Exceptions" data-container="body">
+                <i class="fa fa-exclamation "></i>
+            </a>
+            <a class="btn btn-danger btn-sm" href="<%= url_for('delete_publication_sure', id=>$entry_obj->id)%>"
+                data-toggle="tooltip" data-placement="top" title="Delete immediately" data-container="body">
+                <i class="fa fa-trash "></i>
+            </a>
+        </div>
+
+        <br/>
+        <br/>
+
+        <!-- TALK/PAPER switch -->
+        <div class="btn-group">
+            % my $t1 = "btn-success";
+            % my $t2 = "btn-default";  
+            % my $extra_msg = "";
+            % if ($entry_obj->is_talk) {
+                % $t1 = "btn-default";
+                % $t2 = "btn-success";
+                % if($entry_obj->bibtex_type ne 'misc') {
+                    % $t2="btn-danger";
+                    % $extra_msg = ". Talks should have bibtex_type set to 'misc'"; 
+                %}
+            %}
+             <a href="<%= url_for('make_paper', id=>$entry_obj->id ) %>" class="btn <%=$t1%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
+                    <span class="glyphicon glyphicon-file"></span>
+            </a>
+            <a href="<%= url_for('make_talk', id=>$entry_obj->{id} ) %>" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
+                    <i class="fa fa-microphone"></i>
+            </a>
+        </div>
+
+        <button class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Created: <%=$entry_obj->get_creation_time%>">
+            <span class="glyphicon glyphicon-star"></span><span class="glyphicon glyphicon-calendar"></span>
+        </button>
+        <button class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Modified: <%=$entry_obj->get_modified_time%>">
+            <span class="glyphicon glyphicon-pencil"></span><span class="glyphicon glyphicon-calendar"></span>
+        </button>
+    </td>
+
+    <td class="bibtexitem">
+      %== $entry_obj->html // "no data"
+    </td>
+</tr>

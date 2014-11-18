@@ -1,0 +1,130 @@
+% use Mojo::ByteStream 'b';
+% layout 'admin';
+
+% my @otypes = @{$otypes};
+
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+            <a class="btn btn-success" href="<%= url_for('add_type_get')%>"><span class="glyphicon glyphicon-plus"></span> Define new type</a>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+            <table class="table table-hover table-condensed">
+            <tbody>
+            % foreach my $otype (@otypes){
+                <tr>
+                    <td>
+                        <div class="btn-group">
+                            <a class="btn btn-success btn-sm" href="<%= url_for('edit_type', name=>$otype->our_type)%>" data-toggle="tooltip" data-placement="top" title="Edit types aggregation">
+                                <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
+
+                            % if( $otype->onLanding ){
+                                <a href="<%= url_for('toggle_landing_type', name=>$otype->our_type)%>" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="bottom" title="Toggle appearing on landing page">
+                                    <span class="glyphicon glyphicon-heart"></span>
+                                </a>
+                            %}
+                            %else{
+                                <a href="<%= url_for('toggle_landing_type', name=>$otype->our_type)%>" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="bottom" title="Toggle appearing on landing page">
+                                    <span class="glyphicon glyphicon-eye-close"></span>
+                                </a>
+                            %}
+
+                            % if( $otype->is_original_bibtex_type ){
+                                <a class="btn btn-default btn-sm" href="#" data-toggle="tooltip" data-placement="right" title="Original BibTeX type cannot be deleted">
+                                    <span class="glyphicon glyphicon-trash"></span>
+                                </a>
+                            % }
+                            % elsif( !$otype->can_be_deleted ){
+                                <a class="btn btn-default btn-sm" href="#" data-toggle="tooltip" data-placement="right" title="You need to unmap BibTeX types first.">
+                                    <span class="glyphicon glyphicon-trash"></span>
+                                </a>
+                            % }
+                            % else{
+                                <span data-target="#modal-dialog-delete-type-<%=$otype->id%>" data-toggle="modal">
+                                    <a class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="right" title="Delete type...">
+                                        <span class="glyphicon glyphicon-trash"></span>
+                                    </a>
+                                </span>
+                            % }
+
+
+                        </div>
+
+
+                    </td>
+                    <td>
+                        <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="right" title="Type <%= $otype->our_type %> aggregates <%= $otype->num_bibtex_types %> BibTeX types.">
+                            <span class="badge"><%= $otype->num_bibtex_types %></span>
+                        </span>
+                    </td>
+
+                    <td>
+                        <p class="btn btn-default btn-sm type-name type-name-<%=$otype->our_type%>" >
+                          <span class="glyphicon glyphicon-book"></span>
+                          <%= $otype->our_type %>
+                        </p>
+                    </td>
+                    <td>
+                        <a class="btn btn-default btn-sm" href="<%= url_for('publications')->query(bibtex_type=>$otype->our_type) %>">
+                        <span class="glyphicon glyphicon-list-alt"></span> Show papers
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-default btn-sm" href="<%= url_for('landing_publications')->query(bibtex_type=>$otype->our_type) %>">
+                            <span class="glyphicon glyphicon-plane"></span> Landing page
+                        </a>
+                    </td>
+                    <td>
+                      <a class="btn btn-default btn-sm" href="<%= url_for('landing_years_publications')->query(bibtex_type=>$otype->our_type) %>">
+                            <span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing page
+                      </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-default btn-sm" href="<%= url_for('readbibtex')->query(bibtex_type=>$otype->our_type) %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of type <%= $otype->our_type %>">
+                            <i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> BibTeX
+                        </a>
+                    </td>
+                </tr>
+            %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+
+</div> <!-- CONTAINER -->
+
+
+
+% foreach my $otype (@otypes){
+    <!-- MODAL DIALOG FOR DELETE Type -->
+    <div id="modal-dialog-delete-type-<%=$otype->id%>" class="modal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+              <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+              <h3>Are you sure you want to delete?</h3>
+          </div>
+          <div class="modal-body">
+              <pre>'<%= $otype->our_type  %>' => maps to bibtex types => [<%= join(', ', $otype->bibtexTypes_all) %>] </pre>
+              <div class="modal-footer">
+                <a class="btn btn-danger" href="<%= url_for('delete_type', name=>$otype->our_type )%>"><i class="fa fa-trash"></i> Yes, delete this type</a>
+                <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, leave it alone</a>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- MODAL DIALOG FOR DELETE Type -->
+% }
+
+
+
+

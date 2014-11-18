@@ -1,0 +1,26 @@
+% layout 'admin';
+
+<div class="container">
+
+    <!-- INFORMATION -->
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="alert alert-warning">
+          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          <p>Registration is disabled. If you require an account, contact the system administrator.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <hr>
+</div>
+
+
+
+
+
+
+
+
+

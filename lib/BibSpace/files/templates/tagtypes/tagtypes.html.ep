@@ -1,0 +1,100 @@
+% layout 'admin';
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            <h2>Manage Types of Tags</h2>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            <a class="btn btn-success" href="<%= url_for('add_tag_type')%>"><span class="glyphicon glyphicon-plus"></span> Add new Tag Type</a>
+        </div>
+    </div>
+
+    <br>
+
+
+    <div class="row">
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            <table class="table table-hover table-condensed">
+            <tbody>
+            % foreach my $tt (@{$tagtypes}){
+              <tr>
+                <td>
+                    <div class="btn-group">
+                        <a class="btn btn-success btn-sm" href="<%= url_for('edit_tag_type', id=>$tt->id) %>" data-toggle="tooltip" data-placement="top" title="Edit tag type"><span class="glyphicon glyphicon-pencil"></span></a>
+
+                        <a class="btn btn-info btn-sm" href="<%= url_for('all_tags', id=>$tt->id) %>" data-toggle="tooltip" data-placement="top" title="Show tags"><span class="glyphicon glyphicon-search"></span></a>
+
+                        % if($tt->id == 1 or $tt->id == 2){
+                            <span data-toggle="tooltip" data-placement="top" title="Can not delete this tag type...">
+                                <a class="btn btn-default btn-sm" href="#" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span></a>
+                            </span>
+                        % }
+                        % else{
+                            <span data-toggle="tooltip" data-placement="top" title="Delete tag type...">
+                                <a class="btn btn-danger btn-sm" href="#modal-dialog-delete-tag-<%=$tt->id%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span></a>
+                            </span>
+                        % }
+
+                    </div>
+
+                    <!-- MODAL DIALOG FOR DELETE TAG -->
+                    <div id="modal-dialog-delete-tag-<%=$tt->{id}%>" class="modal">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                              <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+                              <h3>Are you sure?</h3>
+                          </div>
+                          <div class="modal-body">
+
+                              <p>Are you sure you want to delete tag type: <i><%= $tt->{name} %></i>?</p>
+
+                              <div class="modal-footer">
+                                <a class="btn btn-danger" href="<%= url_for('delete_tag_type', id=>$tt->{id}) %>"><i class="fa fa-trash"></i> Yes, delete this tag type </a>
+                                <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, leave <i><%= $tt->{name} %></i> alone</a>
+                              </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- MODAL DIALOG FOR DELETE TAG -->
+                </td>
+                <td>
+                    <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Tag ID">
+                      <span class="glyphicon glyphicon-barcode"></span>
+                      <span class="tag-type-id tag-type-id-<%= $tt->id %>"><%= $tt->id %></span>
+                    </span>
+                </td>
+                <td>
+                    <span class="btn btn-default btn-sm">
+                      <span class="glyphicon glyphicon-tags"></span>
+                      % my $tt_name = $tt->name;
+                      % $tt_name =~ s/\s/_/g;
+                      <span class="tag-type-name tag-type-name-<%= $tt_name %>"><%= $tt->name %></span>
+                    </span>
+                </td>
+                <td>
+                    <p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-comment"></span> <%= $tt->{comment} %></p>
+                </td>
+              </tr>
+            %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+
+</div> <!-- CONTAINER -->
+
+
+
+
+<br>
+
+
+

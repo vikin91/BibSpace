@@ -1,0 +1,99 @@
+% layout 'admin';
+
+% my $login = session 'user';
+% my @user_objs = @{$user_objs};
+
+
+<div class="container">
+
+ <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+      <h1>Registered users</h1>
+        <table class="table table-condensed table-hover">
+          <thead>
+            <td ><button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-search"></span></button></td>
+            <td ><button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-trash"></span></button></td>
+            <td ><button class="btn btn-default btn-sm">U</button></td>
+            <td ><button class="btn btn-default btn-sm">M</button></td>
+            <td ><button class="btn btn-default btn-sm">A</button></td>
+            <td ><button class="btn btn-default btn-sm">Login</button></td>
+            <td ><button class="btn btn-default btn-sm">ID</button></td>
+            <td ><button class="btn btn-default btn-sm">Real Name</button></td>
+            <td ><button class="btn btn-default btn-sm"><i class="fa fa-envelope-o" aria-hidden="true"></i>  Email</button></td>
+            <td ><button class="btn btn-default btn-sm">
+                <span class="glyphicon glyphicon-calendar"></span> 
+                <span class="glyphicon glyphicon-time"></span> Registration</button>
+            </td>
+            <td ><button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-calendar"></span> <span class="glyphicon glyphicon-time"></span> Last login</button></td>
+            <td ><button class="btn btn-default btn-sm">Rank</button></td>
+          </thead>
+          <tbody>
+         % foreach my $obj (@user_objs){
+         %    if (defined $obj) {
+                <tr valign="top">  
+                <td><a class="btn btn-success" href="<%= url_for('show_user_profile', id=>$obj->{id}) %>"><span class="glyphicon glyphicon-search"></span></a></td>
+                <td>
+                    <a class="btn btn-danger" href="#modal-dialog-<%=$obj->{id}%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span></a>
+                    <!-- MODAL DIALOG FOR DELETE -->
+                    <div id="modal-dialog-<%=$obj->{id}%>" class="modal">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+                                    <h3>Are you sure?</h3>
+                                    <p>Are you sure you want to delete user <span class="btn btn-default btn-sm"><%= $obj->login %></span> (<span class="badge"><%=$obj->real_name %></span>) ?</p>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="modal-footer">
+                                        <a href="<%= url_for('delete_user', id=>$obj->id) %>" class="btn btn-danger"> Yes, delete that user <span class="glyphicon glyphicon-trash"></span></a>
+                                        <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, keep him <span class="glyphicon glyphicon-heart"></span> </button></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                  <!-- END OF MODAL DIALOG FOR DELETE -->
+                </td>
+                <td><a href="<%= url_for('make_user', id=>$obj->id) %>" class="btn btn-info">U</a></td>
+                % if ($obj->is_manager()) {
+                    <td><a href="<%= url_for('make_manager', id=>$obj->id) %>" class="btn btn-warning">M</a></td>
+                % }
+                % else{
+                    <td><a href="<%= url_for('make_manager', id=>$obj->id) %>" class="btn btn-default">M</a></td>
+                %}
+                % if ($obj->is_admin()) {
+                    <td><a href="<%= url_for('make_admin', id=>$obj->id) %>" class="btn btn-danger">A</a></td>
+                % }
+                % else{
+                    <td><a href="<%= url_for('make_admin', id=>$obj->id) %>" class="btn btn-default">A</a></td>
+                %}
+                
+
+
+                <td><button class="btn btn-default btn-sm"> <%= $obj->login %></button></td>
+                <td>
+                  <button class="btn btn-default btn-sm" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> <%= $obj->id %></button>
+                </td>
+                <td><button class="btn btn-default btn-sm">
+                        <span class="glyphicon glyphicon-user"></span> 
+                        <%= $obj->real_name %>
+                    </button>
+                </td>
+                <td><button class="btn btn-default btn-sm"> <%= $obj->email %></button></td>
+                <td><button class="btn btn-default btn-sm"> <%= $obj->get_registration_time %></button></td>
+                <td><button class="btn btn-default btn-sm"> <%= $obj->get_last_login %></button></td>
+                <td><button class="btn btn-default btn-sm"> <%= $obj->rank %></button></td>
+                <!-- <td><button class="btn btn-default btn-sm"> <%= $obj->{master_id} %></button></td> -->
+                <!-- <td><button class="btn btn-default btn-sm"> <%= $obj->{tennant_id} %></button></td> -->
+                </tr>
+              %}
+          %}
+        </tbody>
+        </table> 
+      </div>
+      </div>
+
+
+    <hr>
+ 
+</div>

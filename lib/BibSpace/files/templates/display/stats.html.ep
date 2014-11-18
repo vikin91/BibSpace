@@ -1,0 +1,47 @@
+% layout 'admin';
+<div class="container">
+<div class="row">
+  <div class="col-lg-2 col-md-2 col-sm-2 col-xs-4">
+    <H1>Statistics</H1>
+  </div>
+  <div class="col-lg-6 col-lg-offset-2 col-md-6 col-md-offset-2 col-sm-6 col-xs-8">
+    <i class="fa fa-sort-numeric-asc fa-2x" aria-hidden="true"></i>  
+    Newer entries are at the bottom 
+    <i class="fa fa-sort-numeric-asc fa-2x" aria-hidden="true"></i> 
+  </div>
+</div>
+
+
+<div class="row">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <form>
+      <div class="form-group">
+        <label for="filterexpr">Filter expression</label>
+        <input type="text" class="form-control" id="filterexpr" disabled="disable" autocomplete="off" placeholder="Your perl regular expression here">
+        
+        
+      </div>
+    </form>
+
+    <ul class="nav nav-tabs">
+      <li role="presentation" class="active" id="statistics_tab">
+        <a href="<%= url_for('show_stats', num => $num )->to_abs %>" class="btn btn-default">Statistics</a>
+      </li>
+      <li role="presentation"  id="log_tab">
+        <a href="<%= url_for('show_log', num => $num )->to_abs %>" class="btn btn-default">Log</a>
+      </li>
+    </ul>
+  </div>
+</div>
+<div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+<pre id="log_lines_pre" style="font-family:monospace;">
+% foreach my $line (@{$lines}){
+<%= $line %>
+% }
+</pre>
+        </div>
+    </div>
+</div>
+
+

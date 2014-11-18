@@ -1,0 +1,51 @@
+% layout 'admin';
+
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-2 col-md-2 col-xs-2"></div>
+        <div class="col-lg-6 col-md-6 col-xs-6"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            <table class="table  table-hover table-condensed">
+              <thead>
+                <td ><button class="btn btn-default btn-sm">ID</button></td>
+                <td ><button class="btn btn-default btn-sm">Name</button></td>
+                <td ><button class="btn btn-default btn-sm">Shortcuts</button></td>
+              </thead>
+            <tbody>
+            % foreach my $team (@{$teams}){
+              <tr>
+
+                <td>
+                  <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Team's ID">
+                    <span class="glyphicon glyphicon-barcode"></span> <span class="team-id-<%= $team->id %>"><%= $team->{id} %></span>
+                  </span>
+                </td>
+                <td>
+                    <div class="btn-group" role="group" aria-label="Edit team">
+                        <a role="button" class="btn btn-success" href="<%= url_for('edit_team', id=>$team->id) %>" data-toggle="tooltip" data-placement="left" title="Edit team members">
+                          <span class="glyphicon glyphicon-pencil"></span>
+                        </a>
+                        <button class="btn btn-default team-name-<%= $team->name %>" ><i class="fa fa-users"></i>
+                          <span class="team-name-<%= $team->name %>"><%= $team->name %></span>
+                        </button>
+                    </div>
+                </td>
+                <td><a class="btn btn-default btn-sm" href="<%= url_for('/publications')->query(team=>$team->{name})%>"><i class="fa fa-files-o"></i> Show papers</a></td>
+                <td><a class="btn btn-default btn-sm" href="<%= url_for('/publications')->query(team=>$team->{name}) %>"><span class="glyphicon glyphicon-plane"></span> Landing types</a></td>
+                <td>
+                <a class="btn btn-default btn-sm" href="<%= url_for('/publications')->query(team=>$team->{name}) %>"><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing years</a>
+                </td>
+              </tr>
+            %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,48 @@
+% layout 'default';
+
+
+<br><br><br>
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+
+            <div class="alert alert-info">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <i class="fa  fa-exclamation-circle "></i> Usualy backup, regenerate HTML and reassign papers to authors are run via cron. Ask your admin what precisely these cron tasks do. 
+            </div>
+
+            <br>
+
+            <a class="btn btn-default" href="<%= url_for('/cron/day')%>" data-toggle="tooltip" data-placement="right" title="Run manually routines run during the day">
+                <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Cron day 
+                (last run <%=$lr_0->days%> days <%=$lr_0->hours%>h:<%=$lr_0->minutes%>m:<%=$lr_0->seconds%>s ago)
+            </a>
+
+            <br>
+
+            <a class="btn btn-default" href="<%= url_for('/cron/night')%>" data-toggle="tooltip" data-placement="right" title="Run manually routines run during the night (once per 24h)">
+                <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Cron night 
+                (last run <%=$lr_1->days%> days <%=$lr_1->hours%>h:<%=$lr_1->minutes%>m:<%=$lr_1->seconds%>s ago)
+            </a>
+
+            <br>
+
+            <a class="btn btn-default" href="<%= url_for('/cron/week')%>" data-toggle="tooltip" data-placement="right" title="Run manually routines run once per week">
+                <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Cron week 
+                (last run <%=$lr_2->days%> days <%=$lr_2->hours%>h:<%=$lr_2->minutes%>m:<%=$lr_2->seconds%>s ago)
+            </a>
+
+            <br>
+
+            <a class="btn btn-default" href="<%= url_for('/cron/month')%>" data-toggle="tooltip" data-placement="right" title="Run manually routines run once per month">
+                <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Cron month 
+                (last run <%=$lr_3->days%> days <%=$lr_3->hours%>h:<%=$lr_3->minutes%>m:<%=$lr_3->seconds%>s ago)
+            </a>
+
+        </div>
+    </div>
+
+</div>

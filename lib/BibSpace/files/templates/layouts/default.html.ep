@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <!--default-->
+  %= include 'head'
+  <%= content_for 'header' %>
+  <body>
+  
+
+
+
+
+
+  <%= content %>
+
+
+
+  
+  %= include 'global_footer'
+  </body>
+</html>

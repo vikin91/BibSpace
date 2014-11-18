@@ -1,0 +1,59 @@
+% layout 'admin';
+
+
+<div class="container" style="margin-top:30px">
+  <div class="row">
+      <div class="col-md-1"></div>
+      <div class="col-md-6">
+        <a class="btn btn-success" href="<%= url_for('all_tags', type=>$tagobj->{type}) %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all tags</a>
+      </div>
+  </div>
+  <br>
+  <div class="row">
+      <div class="col-md-1"></div>
+      <div class="col-md-6">
+        <div class="alert alert-warning">
+            <button class="close" aria-hidden="true" data-dismiss="alert" type="button">×</button>
+            <i class="fa fa-exclamation-circle "></i>
+            <strong>Editing</strong> You are editing only the name of the tag with id <%= $tagobj->{id} %> (<%= $tagobj->{name} %>)! All papers tagged with this tag will be tagged with the new name after the editing is done. Landing pages for this tag will change their URL!
+        </div>
+      </div>
+  </div>
+
+
+  <br>
+  <div class="row">
+    
+  	<div class="col-md-1"></div>
+  	<div class="col-md-6">
+   		<div class="panel panel-default">
+    			<div class="panel-heading">
+    				<h3 class="panel-title"><strong>Edit Tag id <%= $tagobj->id %> (<%= $tagobj->name %>)</strong></h3>
+    			</div>
+    			<div class="panel-body">
+    			<!-- FORM -->
+     			<form role="form" action="<%= url_for('edit_tag', id=>$tagobj->id) %>">
+    				<div class="form-group">
+      				<label for="user">New Tag Name</label>
+      				<input type="text" class="form-control" style="border-radius:0px" name="new_tag" id="new_tag" placeholder="Separate tags using semicolon. Spaces will be changed to underscores." value="<%= $tagobj->{name} %>">
+
+                    <label for="permalink">Permalink</label>
+                    <input type="text" class="form-control" style="border-radius:0px" name="new_permalink" id="new_permalink" placeholder="Compact name for referencing the tag." value="<%= $tagobj->{permalink} %>">
+
+                    <label for="type">Type (experimental)</label>
+                    <input type="text" class="form-control" style="border-radius:0px" name="new_type" id="new_type" placeholder="Tag type." value="<%= $tagobj->{type} %>">
+    				</div>
+    				<button type="submit" class="btn btn-sm btn-default">Save</button>
+  			</form>
+  			<!-- FORM END -->
+    			</div>
+  		</div>
+  	</div>
+  </div>
+</div>
+
+
+
+%################################################################################################################
+%################################################################################################################
+%################################################################################################################

@@ -1,0 +1,8 @@
+[PerlTidy]
+select = **/*.{pl,pm,t}
+argv = --profile=$ROOT/.perltidyrc
+
+;[PerlCritic]
+;select = lib/**/*.pm
+;ignore = lib/BibStyle/**/*.pm
+;argv = -severity 4

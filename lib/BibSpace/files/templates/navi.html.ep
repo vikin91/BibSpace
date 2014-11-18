@@ -1,0 +1,377 @@
+% use Mojo::ByteStream 'b';
+
+
+<!-- LOGIN BUTTON -->
+% if(session 'user'){
+
+    <div class="btn-group">
+        <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
+            <span class="glyphicon glyphicon-user"></span>
+            <span>Servus <%= session 'user_name' %>!</span>
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            <li><a href="<%= url_for('/profile')%>"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+            % if(is_admin()){
+                <li><a href="<%= url_for 'register' %>"><span class="glyphicon glyphicon-log-in"></span> Register</a></li>
+                <li><a href="<%= url_for('/manage_users') %>"><i class="fa fa-users"></i> Manage Users</a></li>
+            % }
+            <li class="divider"></li>
+            <li><a href="<%= url_for('/logout') %>"><span class="glyphicon glyphicon-off"></span> Logout</a></li>
+        </ul>
+    </div>
+
+%} else{
+    <a class="btn btn-success" href="<%= url_for('/login_form') %>"><span class="glyphicon glyphicon-log-in"></span> Login</a>
+    <a class="btn btn-success" href="<%= url_for 'register' %>"><span class="glyphicon glyphicon-log-in"></span> Register</a>
+% }
+
+<a class="btn btn-default" href="<%= url_for('/') %>"><span class="glyphicon glyphicon-home"></span> Home</a>
+
+
+<!-- BIG IF -->
+% if(session 'user'){
+
+<!-- PUBLICATIONS BUTTON -->
+    <div class="btn-group">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+        <span class="glyphicon glyphicon-list-alt"></span>
+        Publications
+        <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" role="menu">
+        <li>
+            <a href="<%= url_for('/publications/add')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add</span></a>
+            <a href="<%= url_for('/publications/add_many')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add multiple</span></a>
+        </li>
+        <li class="divider"></li>
+        <li>
+            <a href="<%= url_for('/publications')->query(year=>current_year)%>">
+                <span class="glyphicon glyphicon-search"></span>
+                <span> Show entries </span>
+                <span class="badge"><%= num_pubs()%></span>
+            </a>
+        </li>
+        <li>
+            <a href="<%= url_for('/publications')->query(entry_type=>'paper', year=>current_year)%>">
+              <i class="fa fa-file"></i>
+              <span>Show papers</span>
+              <span class="badge"><%= num_pubs('paper')%></span>
+            </a>
+        </li>
+        <li>
+            <a href="<%= url_for('/publications')->query(entry_type=>'talk', year=>current_year)%>">
+              <i class="fa fa-microphone"></i>
+              <span>Show talks</span>
+              <span class="badge"><%= num_pubs('talk')%></span>
+            </a>
+        </li>
+        <li class="divider"></li>
+        <li>
+            <a href="<%= url_for('/publications/recently_added/10')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> <span>Recently added <span class="badge">10</span></span></a>
+        </li>
+        <li>
+            <a href="<%= url_for('/publications/recently_modified/10')%>"><span class="glyphicon glyphicon-pencil" style="color: #5BC0DE;"></span><span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> <span>Recently edited <span class="badge">10</span></span></a>
+        </li>
+        <li class="divider"></li>
+        <li>
+            <a href="<%= url_for('all_orphaned') %>" data-toggle="tooltip" data-placement="right" title="Show papers without relation to any author"><i class="fa fa-chain-broken" style="color: red;"></i> Show orphaned papers</a>
+        </li>
+
+        <li>
+            <a href="<%= url_for('/publications/candidates_to_delete') %>" data-toggle="tooltip" data-placement="right" title="Show papers that may be potentially deleted from the system"><i class="fa fa-trash-o"></i> Show candidates for deletion</a>
+        </li>
+        <li>
+            <a href="<%= url_for('/publications/missing_month') %>" data-toggle="tooltip" data-placement="right" title="Show papers without field 'month'"><span class="glyphicon glyphicon-search"></span> Show papers without <i>month</i> field</a>
+        </li>
+
+        <li class="divider"></li>
+        % my @ttobjs = get_important_tag_types($self);
+        % foreach my $ttobj (@ttobjs){
+            <li>
+                <a href="<%= url_for('get_untagged_publications', tagtype=>$ttobj->id)%>" data-toggle="tooltip" data-placement="right" title="Show papers having no tags of type <%=$ttobj->{name}%>"><i class="fa fa-question"></i> Papers with missing <%=$ttobj->{name}%></a>
+            </li>
+        % }
+  </ul>
+</div>
+
+<!-- AUTHORS BUTTON -->
+<div class="btn-group">
+  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+    <span class="glyphicon glyphicon-user"></span>
+    Authors
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu">
+        <li><a href="<%= url_for('/authors/add')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add</span></a></li>
+        <li>
+          <a href="<%= url_for('/authors')%>">
+            <span class="glyphicon glyphicon-search"></span>
+            <span>Show all</span>
+            <span class="badge"><%= num_authors()%></span>
+          </a>
+        </li>
+        <li>
+          <a href="<%= url_for('/authors')->query(visible=> 1) %>">
+            <span class="glyphicon glyphicon-eye-open"></span>
+            <span>Show visible</span>
+            <span class="badge"><%= num_visible_authors()%></span>
+          </a>
+        </li>
+
+
+
+        <li class="divider"></li>
+        <li role="presentation" class="dropdown-header">Visible authors</li>
+        % my @authors = sort {$a->uid cmp $b->uid} get_visible_authors();
+        % foreach my $author (@authors){
+            <li>
+                <a href="<%= url_for('edit_author', id=>$author->{id})%>" >
+                    <span class="glyphicon glyphicon-user"></span> <%= $author->{uid} %>
+                    <span class="badge">
+                        <%= num_pubs( undef, undef, [$author->get_entries] ) %>
+                        <span class="glyphicon glyphicon-file"></span>
+                    </span>
+                </a>
+            </li>
+        %}
+  </ul>
+</div>
+
+
+<!-- TEAMS BUTTON -->
+<div class="btn-group">
+  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-users"></i>
+    Teams
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu">
+         <li><a href="<%= url_for('/teams/add')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add</span></a></li>
+         <li><a href="<%= url_for('/teams')%>"><span class="glyphicon glyphicon-search"></span> <span>Show all</span> <span class="badge"><%= get_num_teams()%></span></a></li>
+
+        <li class="divider"></li>
+        <li role="presentation" class="dropdown-header">Teams</li>
+        % my @all_teams = $self->app->repo->teams_all;
+        % foreach my $team ( @all_teams ){
+            <li>
+                <a href="<%= url_for('edit_team', id=>$team->id )%>">
+                    <i class="fa fa-users"></i> <%= $team->name %>
+                    <span class="badge">
+                        <%= scalar $team->get_members %>
+                        <span class="glyphicon glyphicon-user"></span>
+                    </span>
+
+                </a>
+            </li>
+        %}
+
+  </ul>
+
+
+</div>
+
+
+<!-- TAGS BUTTON -->
+<div class="btn-group">
+  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+    <span class="glyphicon glyphicon-tags"></span>
+    Tags
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu">
+        <li>
+            <a href="<%= url_for('/tagtypes')%>"><span class="glyphicon glyphicon-search"></span>
+                <span>Manage tag types </span>
+            </a>
+        </li>
+        <li class="divider"></li>
+        % foreach my $ttobj (@ttobjs){
+            <li>
+                <a href="<%= url_for('/tags/')%><%= $ttobj->{id}%>"><span class="glyphicon glyphicon-search"></span>
+                    <span>Show <%= $ttobj->{name}%></span>
+                    <span class="badge"><%= num_tags($ttobj->{id})%></span>
+                </a>
+            </li>
+        % }
+  </ul>
+</div>
+
+
+<!-- Types BUTTON -->
+<div class="btn-group">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+        <span class="glyphicon glyphicon-book"></span>
+        Types
+        <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" role="menu">
+        <li><a href="<%= url_for('/types')%>"><span class="glyphicon glyphicon-search"></span> <span>Show all</span></a></li>
+  </ul>
+</div>
+
+<!-- Settings BUTTON -->
+<div class="btn-group">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+        <i class="fa fa-cog"></i>
+        Settings
+        <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" role="menu">
+        <li>
+            <a href="<%= url_for('regenerate_html_for_all')%>">
+                <span class="glyphicon glyphicon-refresh"></span>
+                Regenerate HTML
+                <span class="glyphicon glyphicon-time"  style="color: red;"></span>
+            </a>
+            <a href="<%= url_for('regenerate_html_in_chunk', chunk_size => 50)%>">
+                <span class="glyphicon glyphicon-refresh"></span>
+                Regenerate HTML in chunk of 50
+            </a>
+            <a href="<%= url_for('mark_all_to_regenerate')%>" data-toggle="tooltip" data-placement="left" title="Sets all entries for regeneration">
+                <i class="fa fa-magic"></i>
+                <span class="glyphicon glyphicon-refresh"></span>
+                Mark all entries for HTML regeneration
+            </a>
+        </li>
+        % if(is_admin()){
+            <li class="divider"></li>
+            <li>
+                <a href="<%= url_for('/settings/clean_all')%>" data-toggle="tooltip" data-placement="left" title="Removes ugly BibTeX fields form entries. After cleaning HTML regeneration is required.">
+                    <i class="fa fa-magic"></i> Clean BibTeX fields
+                    <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
+                    <span class="badge">for all</span>
+                </a>
+            </li>
+            <li>
+                <a href="<%= url_for('fix_attachment_urls')%>" data-toggle="tooltip" data-placement="left" title="Links discovered files to entries. Converts download links from direct file path to the file serving function.">
+                    <i class="fa fa-magic"></i> Fix attachment urls
+                    <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
+                    <span class="badge">for all</span>
+                    <span class="glyphicon glyphicon-time"  style="color: red;"></span>
+                </a>
+            </li>
+            <li>
+                <a href="<%= url_for('fix_all_months')%>" data-toggle="tooltip" data-placement="left" title="Calculates integer month field in DB based on bibtex field 'month'.">
+                    <i class="fa fa-magic"></i> Fix months
+                    <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
+                    <span class="badge">for all entries</span>
+                </a>
+            </li>
+        % }
+        % if(is_admin()){
+            <li class="divider"></li>
+            <li>
+                <a href="#modal-dialog-reassign-navi" data-toggle="modal">
+                  <i class="fa fa-refresh fa-spin" style="color: yellow;"></i>
+                  Reassign all papers to authors ...
+                  <span class="glyphicon glyphicon-time"  style="color: red;"></span>
+                </a>
+            </li>
+            <li>
+                <a href="#modal-dialog-reassign-and-create-navi" data-toggle="modal">
+                  <i class="fa fa-refresh fa-spin" style="color: red;"></i>
+                  Reassign all papers to authors (w. creation) ...
+                  <span class="glyphicon glyphicon-time"  style="color: red;"></span>
+                </a>
+            </li>
+        % }
+        <li class="divider"></li>
+        <li>
+            <a href="<%= url_for('backup_index')%>"><i class="fa fa-hdd-o"></i><span> Manage backups</span></a>
+        </li>
+        <li>
+            <a href="<%= url_for('/cron')%>">
+                <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Show cron tasks
+            </a>
+        </li>
+        <li>
+            <a href="<%= url_for('/log')->query(num=>100)%>">
+                <i class="fa fa-list-ol"></i> Show log
+            </a>
+        </li>
+  </ul>
+</div>
+
+  <!-- MODAL DIALOG FOR REASSIGN-AND-CREATE -->
+    <div id="modal-dialog-reassign-and-create-navi" class="modal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+              <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+              <h3>Are you sure?</h3>
+          </div>
+          <div class="modal-body">
+
+              <p><strong>Use this function if you manipulated the DB directly and you want to repair that what you have broken...</strong></p>
+              <p>Are you sure you want to:</p>
+              <ul>
+                <li>For every paper in the DB</li>
+                <ul>
+                  <li>Remove the assignment of authors to this paper</li>
+                  <li>Parse the authors from the Bibtex code that is stored in DB</li>
+                  <li>Assign authors from DB to this entry. Authors non existing in DB <strong>will</strong> be added!</li>
+                  <li>Tags will NOT be changed.</li>
+                  <li>Bibtex code will NOT be changed.</li>
+                  <li>HTML code will NOT be changed.</li>
+                </ul>
+              </ul>
+
+              <div class="modal-footer">
+                <a class="btn btn-warning" href="<%= url_for('/authors/reassign_and_create')%>"><i class="fa fa-refresh"></i> Yes, Reassign papers to authors (this can take some time)</a>
+                <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-info">No, I don't want to do this</a>
+              </div>
+          </div>
+        </div>
+      </div>
+  </div>
+  <!-- END OF MODAL DIALOG FOR REASSIGN-AND-CREATE -->
+
+  <!-- MODAL DIALOG FOR REASSIGN -->
+    <div id="modal-dialog-reassign-navi" class="modal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+              <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+              <h3>Are you sure?</h3>
+          </div>
+          <div class="modal-body">
+
+              <p>Are you sure you want to:</p>
+              <ul>
+                <li>For every paper in the DB</li>
+                <ul>
+                  <li>Remove the assignment of authors to this paper</li>
+                  <li>Parse the authors from the Bibtex code that is stored in DB</li>
+                  <li>Assign authors from DB to this entry. Authors non existing in DB <strong>will NOT</strong> be added!</li>
+                  <li>Tags will NOT be changed.</li>
+                  <li>Bibtex code will NOT be changed.</li>
+                  <li>HTML code will NOT be changed.</li>
+                </ul>
+              </ul>
+
+              <div class="modal-footer">
+                <a class="btn btn-warning" href="<%= url_for('/authors/reassign')%>"><i class="fa fa-refresh"></i> Yes, Reassign papers to authors (this can take some time)</a>
+                <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-info">No, I don't want to do this</a>
+              </div>
+          </div>
+        </div>
+      </div>
+  </div>
+  <!-- END OF MODAL DIALOG FOR REASSIGN -->
+<!-- END OF BIG IF -->
+%} #END OF BIG IF
+
+<a type="button" class="btn btn-default" href="<%= url_for('metalist_all_entries') %>">
+    <i class="fa fa-map-o"></i> Sitemap
+</a>
+
+% if(session 'user'){
+  <a type="button" class="btn btn-default" href="<%= url_for('preferences') %>">
+    <i class="fa fa-cog"></i> Preferences
+  </a>
+  <a type="button" class="btn btn-default"><small><%= $self->app->version %> </small></a>
+% }
+
+
+

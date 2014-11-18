@@ -1,0 +1,40 @@
+% layout 'default';
+% use Mojo::ByteStream 'b';
+
+
+% my @objs = @{$entries};
+% my $size = scalar @objs;
+% my $i = 0;
+% my $j = 0;
+
+
+%########################################
+
+
+
+<table>
+% $i = 0;
+% $j = $size;
+% foreach my $obj (@objs){
+    % if (defined $obj) {
+        <tr class="v-align-top">
+            <td class="bibtexnumber">
+                [<%= $j %>]
+            </td>
+            <td class="bibtexitem">
+                %== $obj->{html} || "no html"
+            </td>
+        </tr>
+        % $i++;
+        % $j--;
+    % }
+ % }
+ </table> 
+
+
+
+
+
+
+
+

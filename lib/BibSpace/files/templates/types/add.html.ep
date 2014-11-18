@@ -1,0 +1,33 @@
+% layout 'admin';
+
+
+<div class="container" style="margin-top:30px">
+  <div class="row">
+      <div class="col-lg-1 col-md-1 col-xs-1"></div>
+      <div class="col-lg-6 col-md-6 col-xs-6">
+        <a class="btn btn-success" href="<%= url_for('all_types')%>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all types</a>
+      </div>
+  </div>
+  <br>
+	<div class="row">
+		<div class="col-lg-1 col-md-1 col-xs-1"></div>
+		<div class="col-lg-6 col-md-6 col-xs-6">
+	 		<div class="panel panel-default">
+	  			<div class="panel-heading">
+	  				<h3 class="panel-title"><strong>Add new type </strong></h3>
+	  			</div>
+	  			<div class="panel-body">
+	  			<!-- FORM -->
+	   			<form role="form" method="POST" action="<%= url_for('add_type_post')%>">
+	  				<div class="form-group">
+	    				<label for="new_type">New Type</label>
+	    				<input type="text" class="form-control" style="border-radius:0px" name="new_type" id="new_type" placeholder="Name the new type. You will define the mapping to BibTeX types later.">
+	  				</div>
+	  				<button type="submit" class="btn btn-sm btn-default">Add</button>
+				</form>
+				<!-- FORM END -->
+	  			</div>
+			</div>
+		</div>
+	</div>
+</div>

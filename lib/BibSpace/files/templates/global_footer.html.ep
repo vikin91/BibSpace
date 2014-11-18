@@ -1,0 +1,5 @@
+<!-- global footer start -->
+% if(app->config->{footer_inject_code}){
+  %= b(app->config->{footer_inject_code})
+% }
+<!-- global footer end -->
