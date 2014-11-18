@@ -1,0 +1,72 @@
+% layout 'admin';
+
+<div class="jumbotron">
+    <h1>Hello!</h1>
+    % if(session 'user'){
+        <p>Nice to see you here <em><%= session 'user_name' %></em>!</p>
+    % }
+    % else{
+        <p>Please login or register.</p>
+    % }
+</div>
+
+
+<div class="container">
+
+  <div class="row">
+    <div class="col-lg-1"></div>
+    <div class="col-lg-8 col-md-8 col-xs-8">
+		<div class="alert alert-info">
+			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+			Resources available without login
+			<ul>
+                <li><a href="/read/publications/get/ID">/read/publications/get/ID</a> (ID = integer_ (alias <a href="/r/p/get/ID">/p/get/ID</a>)</li>
+				<li><a href="/read/publications">/read/publications?[filter_expr]</a> (alias <a href="/r/p">/r/p</a>)</li>
+				<li><a href="/read/bibtex">/read/bibtex?[filter_expr]</a> (alias <a href="/r/b">/r/b</a>)</li>
+    			<li><a href="/landing/publications">/landing/publications?[filter_expr][modifiers]</a> (alias <a href="/l/p">/l/p</a>)</li>
+    			<li><a href="/landing-years/publications?navbar=1">/landing-years/publications?[filter_expr][&modifier]</a>  (alias <a href="/ly/p">/ly/p</a>)</li>
+                <li>
+                    <a href="/read/authors-for-tag/tag/team">/read/authors-for-tag/tag/team</a>  (alias <a href="/r/a4t/tag/team">/r/a4t/tag/team</a>)
+                </li>
+                <li>
+                    <a href="/read/tags-for-author/author">/read/tags-for-author/author</a>  (alias <a href="/r/t4a/author_id">/r/t4a/author</a>)
+                </li>
+			</ul>
+
+			<br>
+
+			<ul>
+				<li>[filter_expr] = [expr](&amp;[expr])*</li>
+				<li>[expr] = </li>
+				<ul>
+					<li>author=[String]</li>
+					<li>tag=[String]</li>
+                    <li>permalink=[String]</li>
+					<li>team=[String]</li>
+					<li>type=[String]</li>
+					<li>year=[Integer]</li>
+				</ul>
+			</ul>
+            <ul>
+                <li>[modifiers] = </li>
+                <ul>
+                    <li>navbar=[0 or 1] - shows navigation bar. Default=0</li>
+                    <li>title=[0 or 1] - shows automatically calculated title for the given list. Default=0</li>
+                    <li>switchlink=[0 or 1] - shows link for switching grouping by years or types. Default=1</li>
+                </ul>
+            </ul>
+
+            <br>
+
+            Example
+            <ul>
+                <li><a href="/l/p?tag=Cloud&author=KounevSamuel&year=2013&title=1&switchlink=0">/l/p?tag=Cloud&author=KounevSamuel&year=2013&title=1&switchlink=0</a>
+            </ul>
+		</div>
+    </div>
+  </div>
+
+
+
+  
+</div>

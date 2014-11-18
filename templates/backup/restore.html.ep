@@ -1,0 +1,86 @@
+% layout 'admin';
+
+<a class="btn btn-default" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+
+% my @id_arr = @{$ids};
+% my @fname_arr = @{$fnames};
+% my @ctimes_arr = @{$ctimes};
+% my $size = scalar @ctimes_arr;
+% my $j = $size;
+
+<h1>Create backup</h1>
+
+<a class="btn btn-info" href="/backup?back_url=<%= $self->req->url->to_abs %>"><i class="fa fa-hdd-o"></i> Do whole DB backup <i class="fa fa-hdd-o"></i></a>
+
+<h1>Restore DB backup</h1>
+
+
+
+<table class="table table-striped table-condensed">
+<thead>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</thead>
+<tbody>
+% my $i = 0;
+% foreach my $id (@id_arr){
+  % my $fname = $fname_arr[$i];
+  % my $ctime = $ctimes_arr[$i];
+  
+  <tr>
+    <td><p class="btn btn-default btn-sm">[<%= $j %>]</p></td>
+    <td>
+        <a class="btn btn-warning" href="#modal-dialog-restore-<%=$id%>" data-toggle="modal"><span class="glyphicon glyphicon-import"></span> Restore</a>
+        <a class="btn btn-danger" href="#modal-dialog-del-<%=$id%>" data-toggle="modal"><span class="glyphicon glyphicon-fire"></span> Destroy</a>
+
+            <!-- MODAL DIALOG FOR DELETE -->
+            <div id="modal-dialog-del-<%=$id%>" class="modal">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                      <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+                      <h3>Are you sure?</h3>
+                       <p>Are you sure you want to delete the DB backup <span class="btn btn-default btn-sm"><%= $j %></span> created at <span class="badge"><%=$ctime %></span> file <span class="badge"><%=$fname%></span> ?</p>
+                  </div>
+                  <div class="modal-body">
+                      <div class="modal-footer">
+                        <a href="/restore/delete/<%=$id%>?back_url=<%= $self->req->url->to_abs %>" class="btn btn-danger"> Yes, delete it <span class="glyphicon glyphicon-fire"></span>
+                        </a>
+                        <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, I want to keep it <span class="glyphicon glyphicon-heart"></span> </button></a>
+                      </div>
+                  </div>
+                </div>
+              </div>
+          </div>
+          <!-- END OF MODAL DIALOG FOR DELETE -->
+          <!-- MODAL DIALOG FOR RESTORE -->
+            <div id="modal-dialog-restore-<%=$id%>" class="modal">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                      <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+                      <h3>Are you sure?</h3>
+                  </div>
+                  <div class="modal-body">
+                  		<p>Are you sure you want to restore the state of DB from backup <span class="btn btn-default btn-sm"><%= $j %></span> created at <span class="badge"><%=$ctime %></span> file <span class="badge"><%=$fname%></span> ?</p>
+                       	<p><span class="glyphicon glyphicon-warning-sign"  style="color: orange;"></span> <span class="label label-warning">Warning</span> Current state of the DB will be lost forever <span class="glyphicon glyphicon-warning-sign"  style="color: orange;"></span></p>
+
+                      <div class="modal-footer">
+                        <a href="/restore/do/<%=$id%>?back_url=<%= $self->req->url->to_abs %>" class="btn btn-warning"> Yes, restore <span class="glyphicon glyphicon-import"></span>
+                        </a>
+                        <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, maybe later <span class="glyphicon glyphicon-leaf"></span> </button></a>
+                      </div>
+                  </div>
+                </div>
+              </div>
+          </div>
+          <!-- END OF MODAL DIALOG FOR DELETE -->
+    </td>
+
+    <td><p class="btn btn-default btn-sm" ><i class="fa fa-hdd-o fa-2x"></i> <%= $fname %></p></td>
+    <td><a class="btn btn-default btn-sm" ><i class="fa fa-calendar"></i> <span class="glyphicon glyphicon-time"></span> <%= $ctime %></a></td>
+  </tr>
+  % $i++;
+  % $j--;
+%}
+</tbody>
+</table>

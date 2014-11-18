@@ -1,0 +1,142 @@
+% use Mojo::ByteStream 'b';
+% layout 'admin';
+
+
+
+% my $i = 0;
+% my $size = @{$otypes};
+% my @otypes = @{$otypes};
+
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+            <a class="btn btn-success" href="/types/add"><span class="glyphicon glyphicon-plus"></span> Define new type</a>
+        </div>
+    </div>
+
+    <br>
+    % if (my $msg = flash 'message') {
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-xs-12">
+                <div class="alert alert-danger">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    %= b($msg)
+                </div>
+            </div>
+        </div>
+        
+        <hr> 
+    % }   
+
+
+    <div class="row">
+        <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+            <table class="table table-hover table-condensed">
+            <tbody>
+            % foreach my $otype (@otypes){
+                <tr>
+                    <td>
+                        <div class="btn-group">
+                            <a class="btn btn-success btn-sm" href="/types/manage/<%=$otype%><%=backurl()%>" data-toggle="tooltip" data-placement="top" title="Edit types aggregation"><span class="glyphicon glyphicon-pencil"></span>
+                            </a>
+                            
+                            <div class="btn-group" data-toggle="tooltip" data-placement="bottom" title="Toggle appearing on landing page">
+                                % if(helper_get_landing_for_our_type($otype) == 1){
+                                    <a href="/types/toggle/<%= $otype %><%=backurl%>" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-heart"></span></a>
+                                %}
+                                %else{
+                                    <a href="/types/toggle/<%= $otype %><%=backurl%>" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-eye-close"></span></a>
+                                %}
+                            </div>
+                            
+                            % my $type_str = join '', get_bibtex_types_aggregated_for_type($otype);
+                            % if(num_bibtex_types_aggregated_for_type($otype) == 1 and $type_str eq $otype){
+                                <span data-toggle="tooltip" data-placement="right" title="Original BibTeX type cannot be deleted">
+                                    <a class="btn btn-default btn-sm" href="#"><span class="glyphicon glyphicon-trash"></span></a>
+                                </span>
+                            % }
+                            % elsif(num_bibtex_types_aggregated_for_type($otype) > 1){
+                                <span data-toggle="tooltip" data-placement="right" title="Unmap BibTeX types first please">
+                                    <a class="btn btn-warning btn-sm" href="#"><span class="glyphicon glyphicon-trash"></span></a>
+                                </span>
+                            % }
+                            % else{
+                                <span data-toggle="tooltip" data-placement="right" title="Delete type...">
+                                    <a class="btn btn-danger btn-sm" href="#modal-dialog-delete-type-<%=$otype%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span></a>
+                                </span>
+
+                                <!-- MODAL DIALOG FOR DELETE TAG -->
+                                <div id="modal-dialog-delete-type-<%=$otype%>" class="modal">
+                                  <div class="modal-dialog">
+                                    <div class="modal-content">
+                                      <div class="modal-header">
+                                          <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+                                          <h3>Are you sure?</h3>
+                                      </div>
+                                      <div class="modal-body">
+
+                                          <p>Are you sure you want to delete our_type: <i><%= $otype %></i>?</p>
+                                          
+                                        
+                                          <div class="modal-footer">
+                                            <a class="btn btn-danger" href="/types/delete/<%=$otype%><%=backurl()%>"><i class="fa fa-trash"></i> Yes, delete this type</a>
+                                            <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, leave it alone</a>
+                                          </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <!-- MODAL DIALOG FOR DELETE TAG -->
+                            % }
+                            
+                        </div>
+
+
+                    </td>
+                    <td>
+                        <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="right" title="Type <%= $otype %> aggregates <%= num_bibtex_types_aggregated_for_type($otype) %> BibTeX types: <%= join ', ', get_bibtex_types_aggregated_for_type($otype) %>.">
+                            <span class="badge"><%= num_bibtex_types_aggregated_for_type($otype) %></span>
+                        </span>
+                    </td>
+                    
+                    <td>
+                        <p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-book"></span> <%= $otype %></p>
+                    </td>
+                    <td>
+                        <a class="btn btn-default btn-sm" href="/publications?type=<%= $otype %>">
+                        <span class="glyphicon glyphicon-list-alt"></span> Show papers 
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-default btn-sm" href="/landing/publications?type=<%= $otype %>">
+                            <span class="glyphicon glyphicon-plane"></span> Landing page
+                        </a>
+                    </td>
+                    <td>
+                      <a class="btn btn-default btn-sm" href="/landing-years/publications?type=<%= $otype %>">
+                            <span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing page
+                      </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-default btn-sm" href="/read/bibtex?type=<%= $otype %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of type <%= $otype %>">
+                            <i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> BibTeX
+                        </a>
+                    </td>
+                </tr>
+            %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+
+</div> <!-- CONTAINER -->
+
+
+
+
+<br>
+
+
+

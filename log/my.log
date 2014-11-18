@@ -1,0 +1,21 @@
+[Tue Jun  3 10:38:43 2014] [info] (not_logged_in): login login_form
+[Tue Jun  3 10:38:44 2014] [info] (not_logged_in): login login
+[Tue Jun  3 10:38:44 2014] [info] (not_logged_in): trying to log in as user pub_admin
+[Tue Jun  3 10:38:44 2014] [info] (pub_admin): logging in succeeded as user pub_admin!
+[Tue Jun  3 10:38:52 2014] [info] (pub_admin): login login_form
+[Tue Jun  3 10:39:04 2014] [debug] Dumping bib form DB for team: full
+[Tue Jun  3 10:39:04 2014] [info] (pub_admin): creating backup with prefix normal
+[Tue Jun  3 10:39:24 2014] [debug] Dumping bib form DB for team: full
+[Tue Jun  3 10:39:24 2014] [info] (pub_admin): creating backup with prefix normal
+[Tue Jun  3 10:41:13 2014] [debug] Dumping bib form DB for team: full
+[Tue Jun  3 10:41:13 2014] [info] (pub_admin): creating backup with prefix normal
+[Tue Jun  3 10:49:38 2014] [debug] Dumping bib form DB for team: full
+[Tue Jun  3 10:49:38 2014] [info] (pub_admin): creating backup with prefix normal
+[Tue Jun  3 10:49:40 2014] [debug] Dumping bib form DB for team: full
+[Tue Jun  3 10:49:40 2014] [info] (pub_admin): creating backup with prefix normal
+[Tue Jun  3 10:53:45 2014] [info] (pub_admin): edit_author: master: SpinnerSimon. id: 83.
+[Mon Jun 16 20:57:54 2014] [info] (not_logged_in): login login_form
+[Mon Jun 16 20:57:56 2014] [info] (not_logged_in): login login
+[Mon Jun 16 20:57:56 2014] [info] (not_logged_in): trying to log in as user pub_admin
+[Mon Jun 16 20:57:56 2014] [info] (pub_admin): logging in succeeded as user pub_admin!
+[Mon Jun 16 20:58:04 2014] [info] (pub_admin): Show authors: visible 1, letter %, search %

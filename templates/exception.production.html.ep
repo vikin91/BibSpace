@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Error 500</title></head>
+   <style type="text/css">/*<![CDATA[*/
+
+      a img { border: 0 }
+      body { background-color: #ffffff }
+      h1 {color: #000;}
+/*]]>*/</style> 
+
+  <body>
+  <h1>Error 500...</h1>
+  <p>For this system, error 500 usually occurs when the app server has problems with talking to the database. If the server displays error 500 for 30 minutes or more, the app server will be automatically restarted. Twice per hour Piotr receives updates about the server status. He will fix it asap if the automatic restart does not help.</p>
+
+      %= include 'global_footer'
+      
+  </body>
+</html>
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->

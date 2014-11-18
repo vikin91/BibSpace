@@ -1,0 +1,60 @@
+% layout 'default';
+
+% my $size = 0;
+% my $i = 0;
+% my $j = 0;
+
+% my %hash_h = %{$hash_html};
+% my %hash_k = %{$hash_key};
+% my %hash_d = %{$hash_dict};
+% my @keys = @{$keys};
+
+
+<a id="top"></a>
+% if(defined $navbar and $navbar==1){
+    % foreach my $type (@keys) {
+      % if(defined $type and defined $hash_h{$type}){
+        % $size = @{$hash_h{$type}};
+        % if($size > 0){
+          <a class="bibtexitem" href="#navid_<%= $hash_d{$type} %>">[<%= $hash_d{$type} %>]</a> 
+         %}
+      %}
+    %}
+    <br>
+%}
+
+
+% foreach my $type (@keys) {
+    % if(defined $type and defined $hash_h{$type}){
+        % $size = @{$hash_h{$type}};
+        % if($size > 0){
+            <a id="navid_<%= $hash_d{$type} %>"></a>
+            % if(defined $navbar and $navbar==1){
+                <a class="bibtexitem" href="#top">[top]</a> 
+            % }
+            <h1> <%= $hash_d{$type} %> </h1>
+            
+      
+            % my @keys_arr = @{$hash_k{$type}};
+            % my @pubs_arr = @{$hash_h{$type}};
+
+            <table>
+            % $i = 0;
+            % $j = $size;
+            % foreach my $key (@keys_arr){
+                %  my $v = $pubs_arr[$i];
+                % if (defined $v) {
+                    <tr valign="top">
+                        <td align="right" class="bibtexnumber">[<%= $j %>]</td>
+                        <td class="bibtexitem">
+                            %== $v
+                        </td>
+                    </tr>
+                    % $i++;
+                    % $j--;
+                %}
+            %}
+            </table> 
+        % }
+    % }
+%}
