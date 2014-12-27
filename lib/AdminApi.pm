@@ -86,7 +86,11 @@ sub startup {
         
         # my $burl = "?back_url=".$s->req->url->base."".$self->proxy_prefix."".$s->req->url->path;
         # my $burl = "?back_url=".$s->req->url->to_abs;
-        my $burl = "?back_url=".$s->req->url;
+        my $short_url = $s->req->url;
+        if ($short_url eq '/'){
+            $short_url = '/pa';
+        }
+        my $burl = "?back_url=".$short_url;
         $burl =~ s/&/%26/g;
         $burl;
     });
@@ -96,7 +100,11 @@ sub startup {
         my $s = shift; 
         # return $s->req->url->base."".$self->proxy_prefix."".$s->req->url->path;
         # return $s->req->url->to_abs;
-        return $s->req->url;
+        my $short_url = $s->req->url;
+        if ($short_url eq '/'){
+            $short_url = '/pa';
+        }
+        return $short_url;
     });
 
     $self->helper(is_manager => sub {
