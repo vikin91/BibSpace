@@ -47,7 +47,7 @@ sub register {
 
 	$app->helper(get_year_of_oldest_entry => sub {
         my $self = shift;
-        my $sth = $self->db->prepare( "SELECT MIN(year) as min FROM Entry" );  
+        my $sth = $self->db->prepare( "SELECT MIN(year) as min FROM Entry" ) or die $self->db->errstr;  
         $sth->execute(); 
         my $row = $sth->fetchrow_hashref();
         my $min = $row->{min};

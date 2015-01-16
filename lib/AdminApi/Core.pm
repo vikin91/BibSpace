@@ -518,10 +518,8 @@ sub get_all_tags{
 sub get_types_for_landing_page{
     my $dbh = shift;
 
-    ## TODO!!!! Make this as a binary field in the DB - table Our_types_to_bibtex_types
-
     my $qry = "SELECT DISTINCT our_type FROM OurType_to_Type WHERE landing=1 ORDER BY our_type ASC";
-    my $sth = $dbh->prepare( $qry );  
+    my $sth = $dbh->prepare( $qry ) or die $dbh->errstr;  
     $sth->execute();
 
     my @otypes;
