@@ -48,12 +48,15 @@ sub startup {
     $self->plugin('AdminApi::CronHelpers');
 
     # different secrets for different servers... and different call. I dunno why one is supported and second not
-    if($address =~ m/146\.185\.144\.116/){  # TEST SERVER
-        $self->secrets( [$config->{key_cookie}] );
-    }
-    else{
-        $self->secret( $config->{key_cookie} );    
-    }
+
+    $self->secrets( [$config->{key_cookie}] );
+    
+    # if($address =~ m/146\.185\.144\.116/){  # TEST SERVER
+    #     $self->secrets( [$config->{key_cookie}] );
+    # }
+    # else{
+    #     $self->secret( $config->{key_cookie} );    
+    # }
     
 
 
@@ -131,11 +134,11 @@ sub startup {
     $self->helper(write_log => sub {        
         my $c = shift;
         my $msg = shift;
-
-        my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug');
         my $usr = $c->session('user') || "not_logged_in";
         my $usr_str = "(".$usr."): ";
-        $log->info($usr_str.$msg);
+
+        my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug') or print "opening log failed. Msg was: ".$usr_str.$msg;
+        $log->info($usr_str.$msg) or print print "writing to log failed. Msg was: ".$usr_str.$msg;
     });
 
     $self->db->do("PRAGMA foreign_keys = ON");
