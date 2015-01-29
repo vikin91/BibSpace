@@ -50,7 +50,8 @@ sub startup {
     # different secrets for different servers... and different call. I dunno why one is supported and second not
 
     $self->secrets( [$config->{key_cookie}] );
-    
+
+    # this was fixed in new mojo
     # if($address =~ m/146\.185\.144\.116/){  # TEST SERVER
     #     $self->secrets( [$config->{key_cookie}] );
     # }
@@ -59,7 +60,7 @@ sub startup {
     # }
     
 
-
+    # this was fixed in new mojo
     # $self->hook(before_dispatch => sub {
     #     my $c = shift;
 
