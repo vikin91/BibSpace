@@ -60,15 +60,15 @@ sub startup {
     
 
 
-    $self->hook(before_dispatch => sub {
-        my $c = shift;
+    # $self->hook(before_dispatch => sub {
+    #     my $c = shift;
 
-        $c->req->url->base(Mojo::URL->new($config->{base_url})) if $self->mode eq 'production';
-        # print Dumper $c->req->url;
-        # push @{$c->req->url->base->path->trailing_slash(1)},
-        #       shift @{$c->req->url->path->leading_slash(0)};
+    #     $c->req->url->base(Mojo::URL->new($config->{base_url})) if $self->mode eq 'production';
+    #     # print Dumper $c->req->url;
+    #     # push @{$c->req->url->base->path->trailing_slash(1)},
+    #     #       shift @{$c->req->url->path->leading_slash(0)};
         
-    });
+    # });
 
     $self->helper(users => sub { state $users = MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
