@@ -980,7 +980,8 @@ sub add_pdf_post{
       
         $uploaded_file->move_to("public/".$file_path); ### WORKS!!!
 
-        my $file_url = $self->req->url->base."/".$file_path;
+        ### TODO Feb 2015: move $self->req->url->base to a parameter!!
+        my $file_url = $self->req->url->base."/pa/".$file_path;
 
         $self->write_log("Saving attachment for paper id $id under: $file_url");
 
