@@ -18,17 +18,44 @@ use Data::Dumper;
 # 5 2 * * 0 curl http://localhost:8081/cron/week
 # 10 2 1 * * curl http://localhost:8081/cron/month
 
+# has config => sub {
+#     my $self = shift;
+#     my $address = Net::Address::IP::Local->public;
+#     # print $address;
+
+#     # my $config = $self->plugin('Config');
+#     my $config = undef;
+    
+#     # load default
+#     $config = $self->plugin('Config');
+
+#     if($self->app->home =~ /demo/){
+#         say "Loading demo config version";
+#         $config = $self->plugin('Config' => {file => 'admin_api_demo.conf'});
+#     }
+#     elsif($address =~ m/146\.185\.144\.116/){  # TEST SERVER
+#         $config = $self->plugin('Config' => {file => 'admin_api_test.conf'});
+#     }
+#     else{   # PRODUCTION
+#         $config = $self->plugin('Config' => {file => 'admin_api_production.conf'});
+#     }
+#     return $config;
+# };
+
 has db => sub {
-    DBI->connect('dbi:SQLite:dbname='.$config->{normal_db}, '', '') or die $DBI::errstr .". File is: ".$config->{normal_db};
+    my $self = shift;
+    DBI->connect('dbi:SQLite:dbname='.$self->config->{normal_db}, '', '') or die $DBI::errstr .". File is: ".$self->config->{normal_db};
 };
 
 has backup_db => sub {
-    DBI->connect('dbi:SQLite:dbname='.$config->{backup_db}, '', '') or die $DBI::errstr;
-}
-
-has log => sub {
-    Mojo::Log->new( path => $config->{log_file}, level => 'debug' ) or print "opening log (in has Function) failed.";
+    my $self = shift;
+    DBI->connect('dbi:SQLite:dbname='.$self->config->{backup_db}, '', '') or die $DBI::errstr;
 };
+
+# has log => sub {
+#     my $self = shift;
+#     Mojo::Log->new( path => $self->config->{log_file}, level => 'debug' ) or print "opening log (in has Function) failed.";
+# };
 
 
 sub startup {
@@ -38,7 +65,7 @@ sub startup {
     # print $address;
 
     # my $config = $self->plugin('Config');
-    my $config = undef;
+    my $config = $self->app->config;
     
     # load default
     $config = $self->plugin('Config');
@@ -86,13 +113,13 @@ sub startup {
     $self->helper(users => sub { state $users = MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
 
-    # $self->helper(db => sub {
-    #     DBI->connect('dbi:SQLite:dbname='.$config->{normal_db}, '', '') or die $DBI::errstr .". File is: ".$config->{normal_db};
-    # });
+    $self->helper(db => sub {
+        $self->app->db;
+    });
 
-    # $self->helper(backup_db => sub {
-    #     DBI->connect('dbi:SQLite:dbname='.$config->{backup_db}, '', '') or die $DBI::errstr;
-    # });
+    $self->helper(backup_db => sub {
+        $self->app->backup_db;
+    });
 
     $self->helper(backurl => sub {
         my $s = shift; 
@@ -140,9 +167,9 @@ sub startup {
     });
 
 
-    # $self->helper(log => sub {
-    #     Mojo::Log->new( path => $config->{log_file}, level => 'debug' );
-    # });
+    $self->helper(log => sub {
+        Mojo::Log->new( path => $config->{log_file}, level => 'debug' );
+    });
 
     $self->helper(write_log => sub {        
         my $c = shift;
