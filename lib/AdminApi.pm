@@ -18,6 +18,18 @@ use Data::Dumper;
 # 5 2 * * 0 curl http://localhost:8081/cron/week
 # 10 2 1 * * curl http://localhost:8081/cron/month
 
+has db => sub {
+    DBI->connect('dbi:SQLite:dbname='.$config->{normal_db}, '', '') or die $DBI::errstr .". File is: ".$config->{normal_db};
+};
+
+has backup_db => sub {
+    DBI->connect('dbi:SQLite:dbname='.$config->{backup_db}, '', '') or die $DBI::errstr;
+}
+
+has log => sub {
+    Mojo::Log->new( path => $config->{log_file}, level => 'debug' ) or print "opening log (in has Function) failed.";
+};
+
 
 sub startup {
     my $self = shift;
@@ -74,13 +86,13 @@ sub startup {
     $self->helper(users => sub { state $users = MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
 
-    $self->helper(db => sub {
-        DBI->connect('dbi:SQLite:dbname='.$config->{normal_db}, '', '') or die $DBI::errstr .". File is: ".$config->{normal_db};
-    });
+    # $self->helper(db => sub {
+    #     DBI->connect('dbi:SQLite:dbname='.$config->{normal_db}, '', '') or die $DBI::errstr .". File is: ".$config->{normal_db};
+    # });
 
-    $self->helper(backup_db => sub {
-        DBI->connect('dbi:SQLite:dbname='.$config->{backup_db}, '', '') or die $DBI::errstr;
-    });
+    # $self->helper(backup_db => sub {
+    #     DBI->connect('dbi:SQLite:dbname='.$config->{backup_db}, '', '') or die $DBI::errstr;
+    # });
 
     $self->helper(backurl => sub {
         my $s = shift; 
@@ -128,9 +140,9 @@ sub startup {
     });
 
 
-    $self->helper(log => sub {
-        Mojo::Log->new( path => $config->{log_file}, level => 'debug' );
-    });
+    # $self->helper(log => sub {
+    #     Mojo::Log->new( path => $config->{log_file}, level => 'debug' );
+    # });
 
     $self->helper(write_log => sub {        
         my $c = shift;
@@ -138,8 +150,8 @@ sub startup {
         my $usr = $c->session('user') || "not_logged_in";
         my $usr_str = "(".$usr."): ";
 
-        my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug') or print "opening log failed. Msg was: ".$usr_str.$msg;
-        $log->info($usr_str.$msg) or print print "writing to log failed. Msg was: ".$usr_str.$msg;
+        my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug') or print "opening log failed. (this line may cause shit happening!) Msg was: ".$usr_str.$msg;
+        $log->info($usr_str.$msg) or print "writing to log failed. Msg was: ".$usr_str.$msg;
     });
 
     $self->db->do("PRAGMA foreign_keys = ON");
