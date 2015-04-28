@@ -11,7 +11,7 @@ use Time::Piece;
 use MyUsers;
 use AdminApi::Helpers;
 use Data::Dumper;
-
+use POSIX qw/strftime/;
 
 # 0 4,12,20 * * * curl http://localhost:8081/cron/day
 # 0 2 * * * curl http://localhost:8081/cron/night
@@ -177,8 +177,19 @@ sub startup {
         my $usr = $c->session('user') || "not_logged_in";
         my $usr_str = "(".$usr."): ";
 
-        my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug') or print "opening log failed. (this line may cause shit happening!) Msg was: ".$usr_str.$msg;
-        $log->info($usr_str.$msg) or print "writing to log failed. Msg was: ".$usr_str.$msg;
+        my $datetime_string = strftime('%Y-%m-%d',localtime);
+
+        my $filename = $config->{log_file};
+        if(open(my $fh, '>', $filename)){
+            print $fh $usr_str.$msg."\n";
+            close $fh;
+        }
+        else{
+            print "opening log failed. (this line may cause shit happening!) Msg was: ".$usr_str.$msg ." error: $!";
+        }
+
+        #my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug') or print "opening log failed. (this line may cause shit happening!) Msg was: ".$usr_str.$msg;
+        #$log->info($usr_str.$msg) or print "writing to log failed. Msg was: ".$usr_str.$msg;
     });
 
     $self->db->do("PRAGMA foreign_keys = ON");
