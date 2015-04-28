@@ -177,7 +177,7 @@ sub startup {
         my $usr = $c->session('user') || "not_logged_in";
         my $usr_str = "(".$usr."): ";
 
-        my $datetime_string = strftime('%Y-%m-%d',localtime);
+        my $datetime_string = strftime('%Y-%m-%d %H:%M:%S',localtime);
 
         my $filename = $config->{log_file};
         my $msg_to_log = "[".$datetime_string."] ".$usr_str.$msg."\n";
