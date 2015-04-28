@@ -181,7 +181,7 @@ sub startup {
 
         my $filename = $config->{log_file};
         if(open(my $fh, '>', $filename)){
-            print $fh $usr_str.$msg."\n";
+            print $fh "[".$datetime_string."] ".$usr_str.$msg."\n";
             close $fh;
         }
         else{
