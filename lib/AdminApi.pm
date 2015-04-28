@@ -189,9 +189,11 @@ sub startup {
         else{
             print "opening log failed. (this line may cause shit happening!) Msg was: ".$msg_to_log." error: $!";
         }
+        
+        # this code is instable - crashes once a month
 
-        #my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug') or print "opening log failed. (this line may cause shit happening!) Msg was: ".$usr_str.$msg;
-        #$log->info($usr_str.$msg) or print "writing to log failed. Msg was: ".$usr_str.$msg;
+        # my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug') or print "opening log failed. (this line may cause shit happening!) Msg was: ".$usr_str.$msg;
+        # $log->info($usr_str.$msg) or print "writing to log failed. Msg was: ".$usr_str.$msg;
     });
 
     $self->db->do("PRAGMA foreign_keys = ON");
