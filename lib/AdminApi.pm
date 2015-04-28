@@ -180,12 +180,14 @@ sub startup {
         my $datetime_string = strftime('%Y-%m-%d',localtime);
 
         my $filename = $config->{log_file};
+        my $msg_to_log = "[".$datetime_string."] ".$usr_str.$msg."\n";
+
         if(open(my $fh, '>>', $filename)){
-            print $fh "[".$datetime_string."] ".$usr_str.$msg."\n";
+            print $fh $msg_to_log;
             close $fh;
         }
         else{
-            print "opening log failed. (this line may cause shit happening!) Msg was: ".$usr_str.$msg ." error: $!";
+            print "opening log failed. (this line may cause shit happening!) Msg was: ".$msg_to_log." error: $!";
         }
 
         #my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug') or print "opening log failed. (this line may cause shit happening!) Msg was: ".$usr_str.$msg;
