@@ -180,7 +180,7 @@ sub startup {
         my $datetime_string = strftime('%Y-%m-%d',localtime);
 
         my $filename = $config->{log_file};
-        if(open(my $fh, '>', $filename)){
+        if(open(my $fh, '>>', $filename)){
             print $fh "[".$datetime_string."] ".$usr_str.$msg."\n";
             close $fh;
         }
