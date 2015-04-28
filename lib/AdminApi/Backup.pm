@@ -148,7 +148,8 @@ sub backup_download {
 
     if($exists == 1){
         $self->write_log("downloading backup $file_path");
-        $self->render_static($file_path);  
+        #$self->render_static($file_path);  #deprecated !!
+        $self->redirect_to($file_path);
     }
     else{
         $self->redirect_to("/backup");
