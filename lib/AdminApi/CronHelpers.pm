@@ -61,7 +61,7 @@ sub register {
 
     $app->helper(helper_do_delete_broken_or_old_backup => sub {
         my $self = shift;
-        do_delete_broken_or_old_backup();
+        do_delete_broken_or_old_backup($self);
     });
     
 

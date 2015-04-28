@@ -112,7 +112,7 @@ sub cron_week {
 sub cron_month {
     my $self = shift;
     my $level = 3;
-    my $call_freq = 648;
+    my $call_freq = 1;
 
     my $last_call = get_last_cron_run_in_hours($self->backup_db, $level);
     my $left = $call_freq - $last_call;
