@@ -100,8 +100,8 @@ sub cron_week {
     $self->write_log("Cron week started");
 
     ############ CRON ACTIONS 
-    $self->helper_reassign_papers_to_authors();
-    $self->helper_clean_ugly_bibtex_fileds_for_all_entries();
+    # $self->helper_reassign_papers_to_authors();  #can be anbled later
+    # $self->helper_clean_ugly_bibtex_fileds_for_all_entries(); #can be enabled later
     $self->helper_do_delete_broken_or_old_backup();
     ############ CRON ACTIONS STOP
     
@@ -116,8 +116,8 @@ sub cron_month {
 
     my $last_call = get_last_cron_run_in_hours($self->backup_db, $level);
     my $left = $call_freq - $last_call;
-    #$self->render(text => "Cron month called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
-    #return if $last_call < $call_freq and $last_call > -1;
+    $self->render(text => "Cron month called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
+    return if $last_call < $call_freq and $last_call > -1;
 
     log_cron_usage($self->backup_db, $level);
     $self->write_log("Cron month started");
