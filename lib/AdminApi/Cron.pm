@@ -112,12 +112,12 @@ sub cron_week {
 sub cron_month {
     my $self = shift;
     my $level = 3;
-    my $call_freq = 0;
+    my $call_freq = 648;
 
     my $last_call = get_last_cron_run_in_hours($self->backup_db, $level);
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron month called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
-    return if $last_call < $call_freq and $last_call > -1;
+    #return if $last_call < $call_freq and $last_call > -1;
 
     log_cron_usage($self->backup_db, $level);
     $self->write_log("Cron month started");
