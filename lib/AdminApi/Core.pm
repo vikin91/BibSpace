@@ -92,7 +92,7 @@ our $bibtex2html_tmp_dir = "./tmp";
 #     my $self = shift;
 #     my $type = shift || 1;
 
-#     my $dbh = $self->db;
+#     my $dbh = $self->app->db;
 
 #     my $sth = $dbh->prepare("SELECT name FROM TagType WHERE id = ?");
 #     $sth->execute($type);
@@ -125,7 +125,7 @@ sub nohtml{
 sub do_delete_backup{   # added 22.08.14
     my $self = shift;
     my $id = shift;
-    my $backup_dbh = $self->backup_db;
+    my $backup_dbh = $self->app->backup_db;
 
     prepare_backup_table($backup_dbh);
 
@@ -146,14 +146,14 @@ sub do_delete_backup{   # added 22.08.14
 ####################################################################################
 sub do_delete_broken_or_old_backup {   # added 22.08.14
     my $self = shift;
-    my $backup_dbh = $self->backup_db;
+    my $backup_dbh = $self->app->backup_db;
 
     prepare_backup_table($backup_dbh);
 
     my $sth = $backup_dbh->prepare("SELECT id, creation_time, filename FROM Backup ORDER BY creation_time DESC");
     $sth->execute();
 
-    my $backup_age_in_days_to_delete = 30;
+    my $backup_age_in_days_to_delete_automatically = $self->config->{backup_age_in_days_to_delete_automatically};
     my $file_age_counter = 1; # 1 (one) backup will not be deleted for files older than $backup_age_in_days_to_delete
 
 
@@ -181,7 +181,7 @@ sub do_delete_broken_or_old_backup {   # added 22.08.14
             $self->do_delete_backup($id);
         }
         else{   # file exists
-            if($b_age > $backup_age_in_days_to_delete){
+            if($b_age > $backup_age_in_days_to_delete_automatically){
                 # we delete only automatically-created backups
                 if($fname =~ /cron/){
                     if($file_age_counter >0){   # we leave some untouched
@@ -226,14 +226,14 @@ sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their
 
     $self->write_log("reassing papers to authors started");
 
-    my $qry = "SELECT DISTINCT key, id, bib FROM Entry";
-    my $sth = $self->db->prepare( $qry );  
+    my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
+    my $sth = $self->app->db->prepare( $qry );  
     $sth->execute(); 
 
     my @bibs;
     while(my $row = $sth->fetchrow_hashref()) {
         my $bib = $row->{bib};
-        my $key = $row->{key};
+        my $key = $row->{bibtex_key};
         my $id = $row->{id};
 
         push @bibs, $bib;
@@ -256,14 +256,14 @@ sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assi
 
     $self->write_log("reassigning papers to authors (with authors creation) started");
 
-    my $qry = "SELECT DISTINCT key, id, bib FROM Entry";
-    my $sth = $self->db->prepare( $qry );  
+    my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
+    my $sth = $self->app->db->prepare( $qry );  
     $sth->execute(); 
 
     my @bibs;
     while(my $row = $sth->fetchrow_hashref()) {
         my $bib = $row->{bib};
-        my $key = $row->{key};
+        my $key = $row->{bibtex_key};
         my $id = $row->{id};
 
         push @bibs, $bib;
@@ -274,7 +274,7 @@ sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assi
         my $entry_obj = new Text::BibTeX::Entry();
         $entry_obj->parse_s($entry_str);
     
-        after_edit_process_authors($self->db, $entry_obj);
+        after_edit_process_authors($self->app->db, $entry_obj);
         assign_entry_to_existing_authors_no_add($self, $entry_obj);
     }
 
@@ -284,7 +284,7 @@ sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assi
 ####################################################################################
 sub clean_ugly_bibtex_fileds_for_all_entries {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     $self->write_log("clean_ugly_bibtex_fileds_for_all_entries started");
     
     
@@ -319,6 +319,16 @@ sub clean_ugly_bibtex_fileds {
     if( $num_deleted > 0){
         my $new_bib = $entry->print_s;
 
+
+        # celaning errors caused by sqlite - mysql import
+        
+        $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
+        $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
+
+        $new_bib =~ s/\\\\/\\/g;
+        $new_bib =~ s/\\\\/\\/g;
+
+
         my $sth2 = $dbh->prepare( "UPDATE Entry SET bib=?, need_html_regen = 1 WHERE id =?" );  
         $sth2->execute($new_bib, $eid);
         $sth2->finish();
@@ -332,7 +342,7 @@ sub clean_ugly_bibtex_fileds {
 sub assign_entry_to_existing_authors_no_add{
     my $self = shift;
     my $entry = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $entry_key = $entry->key;
     my $key = $entry->key;
@@ -344,7 +354,12 @@ sub assign_entry_to_existing_authors_no_add{
 
     
     my $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
-    $sth->execute($eid);
+    if(defined $sth){
+      $sth->execute($eid);
+    }
+    else{
+      print 'cannot execute DELETE FROM Entry_to_Author WHERE entry_id = ?. FIXME Core.pm.';
+    }
     
 
     my @names;
@@ -365,11 +380,15 @@ sub assign_entry_to_existing_authors_no_add{
         my $mid = get_master_id_for_author_id($dbh, $aid);    
 
         if(defined $mid and $mid != -1){
-            # $self->write_log("reassing papers to authors: entry eid $eid -> uid $uid, aid $aid, mid $mid");
-
-            my $sth3 = $dbh->prepare('INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
-            $sth3->execute($mid, $eid); 
-            $sth3->finish();
+            # my $sth3 = $dbh->prepare('INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
+            my $sth3 = $dbh->prepare('INSERT IGNORE Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
+            if(defined $sth3){
+              $sth3->execute($mid, $eid); 
+              $sth3->finish();
+            }
+            else{
+              print 'INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?). FIXME Core.pm';
+            }
         }
     }
     # $dbh->commit; #end transaction
@@ -408,8 +427,10 @@ sub after_edit_process_authors{
 
       my $aid = get_author_id_for_uid($dbh, $uid);
 
+      # say "\t pre! entry $eid -> uid $uid, aid $aid";
 
-      my $sth0 = $dbh->prepare('INSERT OR IGNORE INTO Author(uid, master) VALUES(?, ?)');
+
+      my $sth0 = $dbh->prepare('INSERT INTO Author(uid, master) VALUES(?, ?)');
       $sth0->execute($uid, $uid) if $aid eq '-1';
 
       $aid = get_author_id_for_uid($dbh, $uid);
@@ -420,6 +441,8 @@ sub after_edit_process_authors{
          $mid = $aid;
       }
       
+      # say "\t pre2! entry $eid -> uid $uid, aid $aid, mid $mid";
+
       my $sth2 = $dbh->prepare('UPDATE Author SET master_id=? WHERE id=?');
       $sth2->execute($mid, $aid);
 
@@ -431,11 +454,13 @@ sub after_edit_process_authors{
       my $aid = get_author_id_for_uid($dbh, $uid);
       my $mid = get_master_id_for_author_id($dbh, $aid);       #there tables are not filled yet!!
 
-      say "\t !!! entry $eid -> uid $uid, aid $aid, mid $mid";
+      # say "\t !!! entry $eid -> uid $uid, aid $aid, mid $mid";
 
-      my $sth3 = $dbh->prepare('INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
-      # my $sth3 = $dbh->prepare('UPDATE Entry_to_Author SET author_id = ? WHERE entry_id = ?');
-      $sth3->execute($mid, $eid);
+      if(defined $mid and $mid != -1){ #added 5.05.2015 - may skip some authors!
+        my $sth3 = $dbh->prepare('INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
+        # my $sth3 = $dbh->prepare('UPDATE Entry_to_Author SET author_id = ? WHERE entry_id = ?');
+        $sth3->execute($mid, $eid);
+      }
 
       
       # my $tid = get_team_id($dbh, "NOTEAM");
@@ -448,7 +473,7 @@ sub get_visibility_for_id {
    my $self = shift;
    my $id = shift;
    
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
    my $sth;
    $sth = $dbh->prepare( "SELECT display FROM Author WHERE id=?" );
@@ -779,12 +804,12 @@ sub get_html_for_entry_id{
    my $dbh = shift;
    my $eid = shift;
 
-   my $sth = $dbh->prepare( "SELECT html FROM Entry WHERE id=?" );     
+   my $sth = $dbh->prepare( "SELECT html, bibtex_key FROM Entry WHERE id=?" );     
    $sth->execute($eid);
 
    my $row = $sth->fetchrow_hashref();
    my $html = $row->{html};
-   my $key = $row->{key};
+   my $key = $row->{bibtex_key};
    my $type = $row->{type};
 
 
@@ -814,11 +839,11 @@ sub get_entry_key{
    my $dbh = shift;
    my $eid = shift;
 
-   my $sth = $dbh->prepare( "SELECT key FROM Entry WHERE id=?" ); 
+   my $sth = $dbh->prepare( "SELECT bibtex_key FROM Entry WHERE id=?" ); 
    $sth->execute($eid);
 
    my $row = $sth->fetchrow_hashref();
-   my $key = $row->{key};
+   my $key = $row->{bibtex_key};
    return $key;
 }
 ##########################################################################
@@ -841,7 +866,7 @@ sub get_entry_id{
    my $dbh = shift;
    my $key = shift;
 
-   my $sth = $dbh->prepare( "SELECT id FROM Entry WHERE key=?" );     
+   my $sth = $dbh->prepare( "SELECT id FROM Entry WHERE bibtex_key=?" );     
    $sth->execute($key);
 
    my $row = $sth->fetchrow_hashref();
@@ -1000,9 +1025,9 @@ sub add_team_for_author {
    my $master_id = shift;
    my $teamid = shift;
 
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
-   my $qry = "INSERT OR IGNORE INTO Author_to_Team(author_id, team_id) VALUES (?,?)";
+   my $qry = "INSERT IGNORE INTO Author_to_Team(author_id, team_id) VALUES (?,?)";
    my $sth = $dbh->prepare( $qry );  
    $sth->execute($master_id, $teamid); 
 
@@ -1014,7 +1039,7 @@ sub remove_team_for_author {
    my $master_id = shift;
    my $teamid = shift;
 
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
    my $qry = "DELETE FROM Author_to_Team WHERE author_id=? AND team_id=?";
    my $sth = $dbh->prepare( $qry );  
@@ -1027,7 +1052,7 @@ sub remove_team_for_author {
 sub get_team_members {
    my $self = shift;
    my $teamid = shift;
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
     
    my @author_ids;
@@ -1062,7 +1087,7 @@ sub get_team_members {
 sub get_teams_of_author {
    my $self = shift;
    my $mid = shift;
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
     
    my @teams;
@@ -1099,7 +1124,7 @@ sub get_teams_of_author {
 sub get_author_ids_for_tag_id {
    my $self = shift;
    my $tag_id = shift;
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
    my $qry = "SELECT DISTINCT Entry_to_Author.author_id
             FROM Entry_to_Author 
@@ -1126,7 +1151,7 @@ sub get_author_ids_for_tag_id_and_team {
    my $self = shift;
    my $tag_id = shift;
    my $team_id = shift;
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
    my $current_year = 2015; ##TODO: GET THIS AUTOMATICALLY!!
 
    my $qry = "SELECT DISTINCT Entry_to_Author.author_id
@@ -1167,14 +1192,14 @@ sub get_tags_for_author {
    my $self = shift;
    my $master_id = shift;
    my $type = shift || 1;
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
    my $qry = "SELECT DISTINCT Entry_to_Tag.tag_id, Tag.name 
             FROM Entry_to_Author 
             LEFT JOIN Entry_to_Tag ON Entry_to_Author.entry_id = Entry_to_Tag.entry_id 
             LEFT JOIN Tag ON Entry_to_Tag.tag_id = Tag.id 
             WHERE Entry_to_Author.author_id=? 
-            AND Entry_to_Tag.tag_id NOT NULL
+            AND Entry_to_Tag.tag_id IS NOT NULL
             AND Tag.type = ?
             ORDER BY Tag.name ASC";
 
@@ -1200,7 +1225,7 @@ sub get_tags_for_team {
     my $self = shift;
     my $teamid = shift;
     my $type = shift || 1;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my @params;
 
@@ -1212,8 +1237,8 @@ sub get_tags_for_team {
                 LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
                 LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
                 LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id 
-                WHERE Entry.key NOT NULL 
-                AND Tag.type == ?";
+                WHERE Entry.bibtex_key IS NOT NULL 
+                AND Tag.type = ?";
 
     push @params, $type;
     
@@ -1224,7 +1249,7 @@ sub get_tags_for_team {
         # $qry .= "AND Exceptions_Entry_to_Team.team_id=?  ";
         $qry .= "AND ((Exceptions_Entry_to_Team.team_id=? ) OR (Author_to_Team.team_id=? AND start <= Entry.year  AND (stop >= Entry.year OR stop = 0))) ";
     }
-    $qry .= "ORDER BY Entry.year DESC, Entry.key ASC";
+    $qry .= "ORDER BY Entry.year DESC";
 
 
     my $sth = $dbh->prepare_cached( $qry );  
@@ -1262,7 +1287,9 @@ sub add_field_to_bibtex_code {
     $entry->set ($field, $value);
     my $new_bib = $entry->print_s;
 
-    my $sth2 = $dbh->prepare( "UPDATE Entry SET bib=?, modified_time=datetime('now', 'localtime'), need_html_regen = 1 WHERE id =?" );  
+    # my $sth2 = $dbh->prepare( "UPDATE Entry SET bib=?, modified_time=datetime('now', 'localtime'), need_html_regen = 1 WHERE id =?" );  
+    my $sth2 = $dbh->prepare( "UPDATE Entry SET bib=?, modified_time=CURRENT_TIMESTAMP, need_html_regen = 1 WHERE id =?" );  
+    
     $sth2->execute($new_bib, $eid);
     $sth2->finish();
 };
@@ -1304,6 +1331,8 @@ sub create_user_id {
    $userID =~ s/\\\"(.)/$1e/g;   # makes \"{x} -> xe
    $userID =~ s/\{\\\'(.)\}/$1/g;   # makes {\'x} -> x
    $userID =~ s/\\\'(.)/$1/g;   # makes \'x -> x
+   $userID =~ s/\'\'(.)/$1/g;   # makes ''x -> x
+   $userID =~ s/\"(.)/$1e/g;   # makes "x -> xe
    $userID =~ s/\{\\ss\}/ss/g;   # makes {\ss}-> ss
    $userID =~ s/\{(.*)\}/$1/g;   # makes {abc..def}-> abc..def
    $userID =~ s/\\\^(.)(.)/$1$2/g;   # makes \^xx-> xx
@@ -1311,6 +1340,9 @@ sub create_user_id {
    $userID =~ s/\\\^(.)/$1/g;   # makes \^x-> x 
    $userID =~ s/\\\~(.)/$1/g;   # makes \~x-> x
    $userID =~ s/\\//g;   # removes \ 
+
+   $userID =~ s/\{//g;   # removes {
+   $userID =~ s/\}//g;   # removes }
 
    $userID =~ s/\(.*\)//g;   # removes everything between the brackets and the brackets also
    
@@ -1323,7 +1355,7 @@ sub generate_html_for_id{
    my $dbh = shift;
    my $eid = shift;
 
-   my $sth = $dbh->prepare( "SELECT need_html_regen, key, bib, html 
+   my $sth = $dbh->prepare( "SELECT need_html_regen, bibtex_key, bib, html 
          FROM Entry 
          WHERE id = ?" );  
    $sth->execute($eid); 
@@ -1337,11 +1369,13 @@ sub generate_html_for_id{
    while(my $row = $sth->fetchrow_hashref()) {
       $bib = $row->{bib};
       $old_html = $row->{html};
-      $key = $row->{key};
+      $key = $row->{bibtex_key};
       $entry_needs_html_regeration = $row->{need_html_regen};
    }
     
    my ($html, $htmlbib) = get_html_for_bib($bib, $key);
+
+   # this triggers: modified_time=CURRENT_TIMESTAMP  # minor severity
 
    my $sth2 = $dbh->prepare( "UPDATE Entry
       SET html = ? , html_bib = ?, need_html_regen = 0
@@ -1362,6 +1396,12 @@ sub generate_html_for_key{
 sub get_html_for_bib{
    my $bib_str = shift;
    my $key = shift || 'no-bibtex-key';
+
+    # fix for the coding problems with mysql
+    $bib_str =~ s/J''urgen/J\\''urgen/g;
+    $bib_str =~ s/''a/\\''a/g;
+    $bib_str =~ s/''o/\\''o/g;
+    $bib_str =~ s/''e/\\''e/g;
 
    my $out_file = $bibtex2html_tmp_dir."/out";
    my $outhtml = $out_file.".html";
@@ -1443,6 +1483,7 @@ sub tune_html{
 
 
    $s =~ s/>.pdf<\/a>/ target="blank">.pdf<\/a>/g;
+   $s =~ s/>slides<\/a>/ target="blank">slides<\/a>/g;
    $s =~ s/>http<\/a>/ target="blank">http<\/a>/g;
    $s =~ s/>.http<\/a>/ target="blank">http<\/a>/g;
    $s =~ s/>DOI<\/a>/ target="blank">DOI<\/a>/g;
@@ -1473,7 +1514,7 @@ sub tune_html{
 
    
    #$s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \]<div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
-   $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
+   $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\" style=\"text-align: justify;\">/g;
    $s =~ s/<\/font><\/blockquote><NeueZeile><p>/<\/blockquote><\/div>/g;
 
    #inserting bib DIV marker
@@ -1514,7 +1555,7 @@ sub get_dir_size {
 sub get_backup_filename{
     my $self = shift;
     my $bip = shift;
-    my $backup_dbh = $self->backup_db;
+    my $backup_dbh = $self->app->backup_db;
 
     my $sth = $backup_dbh->prepare("SELECT filename FROM Backup WHERE id=? LIMIT 1");
     $sth->execute($bip);
@@ -1526,7 +1567,7 @@ sub get_backup_filename{
 sub get_backup_creation_time{
     my $self = shift;
     my $bip = shift;
-    my $backup_dbh = $self->backup_db;
+    my $backup_dbh = $self->app->backup_db;
 
     my $sth = $backup_dbh->prepare("SELECT creation_time FROM Backup WHERE id=? LIMIT 1");
     $sth->execute($bip);
@@ -1537,7 +1578,7 @@ sub get_backup_creation_time{
 sub get_backup_age_in_days{
     my $self = shift;
     my $bid = shift;
-    my $backup_dbh = $self->backup_db;
+    my $backup_dbh = $self->app->backup_db;
 
     my $sth = $backup_dbh->prepare("SELECT (julianday('now', 'localtime') - julianday(creation_time)) as age FROM Backup WHERE id=? LIMIT 1");
     $sth->execute($bid);

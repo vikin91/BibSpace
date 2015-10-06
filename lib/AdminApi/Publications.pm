@@ -29,7 +29,7 @@ sub metalist {
 	say "CALL: metalist ";
     my $self = shift;
 
-    my @ids_arr = get_all_entry_ids($self->db);
+    my @ids_arr = get_all_entry_ids($self->app->db);
     $self->stash(ids => \@ids_arr);
 
     $self->render(template => 'publications/metalist'); 
@@ -45,8 +45,8 @@ sub meta {
 
 
     # FETCHING DATA FROM DB
-    my $dbh = $self->db;
-    my $sth = $dbh->prepare( "SELECT DISTINCT id, key, bib, html, type, modified_time, creation_time
+    my $dbh = $self->app->db;
+    my $sth = $dbh->prepare( "SELECT DISTINCT id, bibtex_key, bib, html, type, modified_time, creation_time
         FROM Entry 
         WHERE id = ?" );  
     $sth->execute($id);
@@ -229,11 +229,11 @@ sub all_recently_added {
     say "CALL: all_recently_added "; 
     my $self = shift;
     my $num = $self->param('num') || 10;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Displaying recently added entries num $num");
 
-    my $qry = "SELECT DISTINCT id, key, creation_time FROM Entry ORDER BY datetime(creation_time) DESC LIMIT ?";
+    my $qry = "SELECT DISTINCT id, bibtex_key, creation_time FROM Entry ORDER BY creation_time DESC LIMIT ?";
     my $sth = $dbh->prepare( $qry );  
     $sth->execute($num); 
 
@@ -254,12 +254,11 @@ sub all_recently_modified {
 	say "CALL: all_recently_modified ";
     my $self = shift;
     my $num = $self->param('num') || 10;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Displaying recently modified entries num $num");
 
-    my $qry = "SELECT DISTINCT id,
-     key, modified_time FROM Entry ORDER BY datetime(modified_time) DESC LIMIT ?";
+    my $qry = "SELECT DISTINCT id, bibtex_key, modified_time FROM Entry ORDER BY modified_time DESC LIMIT ?";
 
     my $sth = $dbh->prepare( $qry );  
     $sth->execute($num); 
@@ -280,7 +279,7 @@ sub all_with_pdf_on_sdq{
     say "CALL: all_with_pdf_on_sdq ";
     my $self = shift;
     my $num = $self->param('num') || 10;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Displaying papers with pdfs on sdq server");
 
@@ -307,11 +306,11 @@ sub all_without_tag {
 	say "CALL: all_without_tag ";
     my $self = shift;
     my $tagtype = $self->param('tagtype') || 1;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Displaying papers without any tag of type $tagtype");
 
-    my $qry = "SELECT DISTINCT id, key 
+    my $qry = "SELECT DISTINCT id, bibtex_key 
                 FROM Entry 
                 WHERE id NOT IN (
                     SELECT DISTINCT entry_id 
@@ -339,7 +338,7 @@ sub all_without_tag {
 sub all_without_tag_for_author {
 	say "CALL: all_without_tag_for_author ";
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $author = $self->param('author');
     my $tagtype = $self->param('tagtype');
     my $aid = -1;
@@ -356,7 +355,7 @@ sub all_without_tag_for_author {
 
     $self->write_log("Displaying papers without any tag of type $tagtype for author id $aid");
 
-    my $qry = "SELECT DISTINCT id, key 
+    my $qry = "SELECT DISTINCT id, bibtex_key 
                 FROM Entry 
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
                 WHERE Entry_to_Author.author_id = ?
@@ -388,11 +387,11 @@ sub all_without_author {
 	say "CALL: all_without_author "; 
  say "all_without_author ";
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Displaying papers without any author");
 
-    my $qry = "SELECT DISTINCT id, key FROM Entry WHERE id NOT IN (SELECT DISTINCT entry_id FROM Entry_to_Author)";
+    my $qry = "SELECT DISTINCT id, bibtex_key FROM Entry WHERE id NOT IN (SELECT DISTINCT entry_id FROM Entry_to_Author)";
     my $sth = $dbh->prepare( $qry );  
     $sth->execute(); 
 
@@ -421,7 +420,7 @@ sub show_unrelated_to_team{
 
     $self->write_log("Displaying entries unrealted to team with it $team_id");
     
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $back_url = $self->param('back_url') || '/types';
 
 
@@ -613,6 +612,16 @@ sub landing_years_obj{
     foreach my $yr (@allkeys) {
         
         my @objs = get_publications_main($self, undef, $yr, undef, undef, undef, 0, undef);
+        
+        ### QUICKFIX START: Hide Entries with tag = Talks from the landing page
+        my @objs_with_excluded_tag;
+        for my $entry_obj (@objs){
+             if($entry_obj->hasTag($self->app->db, "Talks") == 0){ 
+                push @objs_with_excluded_tag, $entry_obj;
+             }
+        }
+        @objs = @objs_with_excluded_tag;
+        ### QUICKFIX END: Hide Entries with tag = Talks from the landing page
 
         # delete the year from the @keys array if the year has 0 papers
         if(scalar @objs > 0){
@@ -621,6 +630,8 @@ sub landing_years_obj{
             push @keys, $yr;
         }
     }
+
+    
 
     # WARNING, it depends on routing! anti-pattern! Correct it some day
     my $url = "/l/p?".$self->req->url->query;
@@ -663,7 +674,7 @@ sub landing_types_obj{
     my %hash_values;
 
     my @keys;
-    my @all_keys = get_types_for_landing_page($self->db);
+    my @all_keys = get_types_for_landing_page($self->app->db);
 
     
     if(defined $type){
@@ -682,8 +693,9 @@ sub landing_types_obj{
     # separate foreach loop to optimize preformance
     foreach my $key (@keys){
         my @objs = get_publications_main($self, undef, undef, $key, undef, undef, 0, undef);
+        
         if(scalar @objs > 0){
-            $hash_dict{$key} = get_type_description($self->db, $key);
+            $hash_dict{$key} = get_type_description($self->app->db, $key);
             $hash_values{$key} = \@objs;
             push @keys_with_papers, $key;
         }
@@ -746,7 +758,7 @@ sub display_landing{
 
     my $permalink = $self->param('permalink');
     my $tag_name = $self->param('tag') || "";
-    my $tag_name_for_permalink = TagObj->get_tag_name_for_permalink($self->db, $permalink);
+    my $tag_name_for_permalink = TagObj->get_tag_name_for_permalink($self->app->db, $permalink);
     $tag_name = $tag_name_for_permalink unless $tag_name_for_permalink eq -1;
     $tag_name = $permalink if !defined $self->param('tag') and $tag_name_for_permalink eq -1;
     $tag_name =~ s/_+/_/g if defined $show_title and $show_title == 1;
@@ -771,7 +783,9 @@ sub display_landing{
     # say "fragment ".$url->fragment;
 
 
-
+    # keys = years
+    # my @objs = @{ $hash_values{$year} };
+    # foreach my $obj (@objs){
     $self->stash(hash_values =>$hash_values_ref, hash_dict => $hash_dict_ref, keys => $keys_ref, 
                  navbar => $navbar_html, show_title => $show_title, title => $title, switch_link => $switchlink);
     $self->render(template => 'publications/landing_obj');
@@ -809,7 +823,7 @@ sub get_publications_core_from_array{
 
     $sort = 1 unless defined $sort;
 
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my @objs = EntryObj->getFromArray($dbh, $array, $sort);
     return @objs;
@@ -821,7 +835,7 @@ sub get_publications_core_from_set{
     my $self = shift;
     my $set = shift;
     
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my @array;
 
     while (defined(my $e = $set->each)) {
@@ -843,7 +857,7 @@ sub get_publications_core{
     my $visible = shift || 0;
     my $permalink = shift;
 
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $teamid = get_team_id($dbh, $team) || undef;
     my $mid = get_master_id_for_master($dbh, $author) || undef;
@@ -862,7 +876,7 @@ sub get_single_publication {
 	say "CALL: get_single_publication ";
     my $self = shift;
     my $eid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
 
     my @objs;
@@ -880,17 +894,17 @@ sub add_pdf {
     my $id = $self->param('id');
     my $back_url = $self->param('back_url') || '/publications';
     # my $msg = $self->param('message') || '';
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     $back_url = '/publications' if $back_url eq $self->req->url->to_abs;
 
     $self->write_log("Page: add pdf for paper id $id");
 
     # getting html preview
-    my $sth = $dbh->prepare( "SELECT DISTINCT key, html, type FROM Entry WHERE id = ?" );  
+    my $sth = $dbh->prepare( "SELECT DISTINCT bibtex_key, html, type FROM Entry WHERE id = ?" );  
     $sth->execute($id);
     my $row = $sth->fetchrow_hashref();
-    my $html_preview = $row->{html} || nohtml($row->{key}, $row->{type});
-    my $key = $row->{key};
+    my $html_preview = $row->{html} || nohtml($row->{bibtex_key}, $row->{type});
+    my $key = $row->{bibtex_key};
 
 
     $self->stash(id => $id, preview => $html_preview, back_url => $back_url);
@@ -985,15 +999,17 @@ sub add_pdf_post{
 
         $self->write_log("Saving attachment for paper id $id under: $file_url");
 
-        add_field_to_bibtex_code($self->db, $id, $bibtex_field, $file_url);
+        add_field_to_bibtex_code($self->app->db, $id, $bibtex_field, $file_url);
 
         my $msg = "Thanks for uploading $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>. The file was renamed to: <em>$fname</em>. URL <a href=\"".$file_url."\">$name</a>";
 
-        my $sth2 = $self->db->prepare( "UPDATE Entry SET modified_time=datetime('now', 'localtime') WHERE id =?" );  
+        # my $sth2 = $self->app->db->prepare( "UPDATE Entry SET modified_time=datetime('now', 'localtime') WHERE id =?" );  
+        my $sth2 = $self->app->db->prepare( "UPDATE Entry SET modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
+        
         $sth2->execute($id);
         $sth2->finish();
 
-        generate_html_for_id($self->db, $id);
+        generate_html_for_id($self->app->db, $id);
 
         $self->flash(back_url => $back_url, message => $msg);
         $self->redirect_to($back_url);
@@ -1007,7 +1023,7 @@ sub regenerate_html_for_all {
   my $self = shift;
   my $back_url = $self->param('back_url');
 
-  my $dbh = $self->db;
+  my $dbh = $self->app->db;
 
   my $current = $self->req->url->to_abs;
   $back_url = '/publications' if !defined $back_url or $back_url eq $current or $back_url eq '';
@@ -1026,7 +1042,7 @@ sub regenerate_html_for_all_force {
     my $self = shift;
     my $back_url = $self->param('back_url');
 
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     
     my $current = $self->req->url->to_abs;
     $back_url = '/publications' if $back_url eq $current or $back_url eq '';
@@ -1048,7 +1064,7 @@ sub regenerate_html {
     my $id = $self->param('id');
     my $back_url = $self->param('back_url');
 
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     
     my $current = $self->req->url->to_abs;
@@ -1068,19 +1084,19 @@ sub delete {
 
     $self->write_log("Delete entry eid $id. (delete_sure should follow) ");
 
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $sth = $dbh->prepare( "SELECT DISTINCT key, html, type
       FROM Entry 
       WHERE id = ?" );  
    $sth->execute($id);
 
    my $row = $sth->fetchrow_hashref();
-   my $html_preview = $row->{html} || nohtml($row->{key}, $row->{type});
-   my $key = $row->{key};
+   my $html_preview = $row->{html} || nohtml($row->{bibtex_key}, $row->{type});
+   my $bibtex_key = $row->{bibtex_key};
   
 
 
-  $self->stash(key => $key, id => $id, preview => $html_preview, back_url => $back_url);
+  $self->stash(key => $bibtex_key, id => $id, preview => $html_preview, back_url => $back_url);
   $self->render(template => 'publications/sure_delete');
 };
 
@@ -1096,7 +1112,7 @@ sub delete_sure {
       $back_url = "/publications";
    }
 
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
    delete_entry_by_id($dbh, $eid);
    $self->write_log("delete_sure entry eid $eid. Entry deleted.");
@@ -1109,7 +1125,7 @@ sub show_authors_of_entry{
     my $self = shift;
     my $eid = $self->param('id');
     my $back_url = $self->param('back_url') || "/publications";
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Showing authors of entry eid $eid");
 
@@ -1133,7 +1149,7 @@ sub manage_exceptions{
     my $self = shift;
     my $eid = $self->param('id');
     my $back_url = $self->param('back_url') || "/publications";
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Manage exceptions of entry eid $eid");
 
@@ -1159,7 +1175,7 @@ sub manage_tags{
     my $self = shift;
     my $eid = $self->param('id');
     my $back_url = $self->param('back_url') || "/publications";
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Manage tags of entry eid $eid");
 
@@ -1194,7 +1210,7 @@ sub remove_tag{
   my $eid = $self->param('eid');
   my $tid = $self->param('tid');
   my $back_url = $self->param('back_url') || "/publications";
-  my $dbh = $self->db;
+  my $dbh = $self->app->db;
 
   $self->write_log("Removing tag id $tid from entry eid $eid");
 
@@ -1213,7 +1229,7 @@ sub add_tag{
     my $eid = $self->param('eid');
     my $tid = $self->param('tid');
     my $back_url = $self->param('back_url') || "/publications";
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Adding tag id $tid to entry eid $eid");
 
@@ -1230,7 +1246,7 @@ sub add_exception{
     my $eid = $self->param('eid');
     my $tid = $self->param('tid');
     my $back_url = $self->param('back_url') || "/publications";
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Adding exception id $tid to entry eid $eid");
 
@@ -1248,7 +1264,7 @@ sub remove_exception{
     my $eid = $self->param('eid');
     my $tid = $self->param('tid');
     my $back_url = $self->param('back_url') || "/publications";
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->write_log("Removing exception id $tid to entry eid $eid");
 
@@ -1302,7 +1318,7 @@ sub post_add_store {
       return;
   }
 
-  my $dbh = $self->db;
+  my $dbh = $self->app->db;
   my $html_preview = "";
   my $code = -2;
   my $key = -1;
@@ -1384,18 +1400,18 @@ sub get_edit {
    
    $self->write_log("Editing publication entry id $id");
    
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
-   my $sth = $dbh->prepare( "SELECT DISTINCT key, bib 
+   my $sth = $dbh->prepare( "SELECT DISTINCT bibtex_key, bib 
       FROM Entry 
       WHERE id = ?" );  
    $sth->execute($id);
 
    my $row = $sth->fetchrow_hashref();
    my $bib = $row->{bib};
-   my $key = $row->{key};
+   my $key = $row->{bibtex_key};
 
-   say "entry id $id has key $key";
+   # say "entry id $id has key $key";
 
    $sth->finish;
 
@@ -1420,7 +1436,7 @@ sub post_edit_store {
   $self->write_log("Post_edit_store: editing publication entry id $id");
 
 
-  my $dbh = $self->db;
+  my $dbh = $self->app->db;
   my $html_preview = "";
   my $code = -2;
   my $key = -1;
@@ -1522,7 +1538,7 @@ sub after_edit_check_entry{
    my $content = $entry->print_s;
    my $type = $entry->type;
 
-   my @ary = $dbh->selectrow_array("SELECT COUNT(*) FROM Entries WHERE key = ?", undef, $entry->key);  
+   my @ary = $dbh->selectrow_array("SELECT COUNT(*) FROM Entries WHERE bibtex_key = ?", undef, $entry->key);  
    my $key_exists = $ary[0];
 
     if($key_exists==0){
@@ -1567,7 +1583,7 @@ sub postprocess_updated_entry{
     my $content = $entry->print_s;
     my $type = $entry->type;
 
-    my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, key=?, bib=?, year=?, type=?, abstract=?, need_html_regen = 1, modified_time=datetime('now', 'localtime') WHERE id =?" );  
+    my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, type=?, abstract=?, need_html_regen = 1, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
     $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
     $sth2->finish();
     $exit_code = 1;
@@ -1615,18 +1631,18 @@ sub postprocess_edited_entry{
     my $content = $entry->print_s;
     my $type = $entry->type;
 
-    my @ary = $dbh->selectrow_array("SELECT COUNT(*) FROM Entry WHERE key = ?", undef, $entry->key);  
+    my @ary = $dbh->selectrow_array("SELECT COUNT(*) FROM Entry WHERE bibtex_key = ?", undef, $entry->key);  
     my $key_exists = $ary[0];
 
     if(!$preview and $key_exists==0){
-        my $sth2 = $dbh->prepare( "INSERT INTO Entry(title, key, bib, year, type, abstract, creation_time, modified_time) VALUES(?, ?, ?, ?, ?, ?, datetime('now', 'localtime'), datetime('now', 'localtime'))" );  
+        my $sth2 = $dbh->prepare( "INSERT INTO Entry(title, bibtex_key, bib, year, type, abstract, creation_time, modified_time) VALUES(?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)" );  
         $sth2->execute($title, $key, $content, $year, $type, $abstract);
         $sth2->finish();
         $exit_code = 0;
 
     }
     elsif(!$preview){ 
-         my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, key=?, bib=?, year=?, type=?, abstract=?, modified_time=datetime('now', 'localtime') WHERE id =?" );  
+         my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, type=?, abstract=?, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
          $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
          $sth2->finish();
          $exit_code = 1;
@@ -1691,12 +1707,12 @@ sub after_edit_process_tags{
          
 
          # $dbh->do("REPLACE INTO Tags VALUES($tag)");
-         my $sth3 = $dbh->prepare( "INSERT OR IGNORE INTO Tag(name) VALUES(?)" );  
+         my $sth3 = $dbh->prepare( "INSERT IGNORE INTO Tag(name) VALUES(?)" );  
          $sth3->execute($tag);
          my $tagid2 = get_tag_id($dbh, $tag);
 
          # $dbh->do("INSERT INTO Entry_to_Tag(entry, tag) VALUES($entry_key, $tag)");
-         $sth3 = $dbh->prepare( "INSERT OR IGNORE INTO Entry_to_Tag(entry_id, tag_id) VALUES(?, ?)" );  
+         $sth3 = $dbh->prepare( "INSERT IGNORE INTO Entry_to_Tag(entry_id, tag_id) VALUES(?, ?)" );  
          $sth3->execute($eid, $tagid2);
       }
 
@@ -1709,7 +1725,7 @@ sub clean_ugly_bibtex {
 	say "CALL: clean_ugly_bibtex ";
     my $self = shift;
     my $back_url = $self->param('back_url');
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     $back_url = '/publications' if $back_url eq $self->req->url->to_abs or $back_url eq '';
 
     $self->write_log("Cleaning ugly bibtex fields for all entries");
@@ -1760,8 +1776,8 @@ sub special_map_pdf_to_local_file{
     say $file_url;
 
     if($exists == 1){
-        add_field_to_bibtex_code($self->db, $id, $bibtex_field, $file_url);    
-        generate_html_for_id($self->db, $id);
+        add_field_to_bibtex_code($self->app->db, $id, $bibtex_field, $file_url);    
+        generate_html_for_id($self->app->db, $id);
     }
     
 

@@ -47,7 +47,7 @@ our @EXPORT = qw(
 sub get_ids_arr_of_unassigned_tags {
     my $self = shift;
     my $eid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     
 
@@ -75,7 +75,7 @@ sub get_ids_arr_of_unassigned_tags {
 
 sub get_set_of_all_teams {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -84,7 +84,7 @@ sub get_set_of_all_teams {
 
     my $qry = "SELECT DISTINCT id
                 FROM Team
-                WHERE name NOT NULL ";
+                WHERE name IS NOT NULL ";
 
     my $sth = $dbh->prepare_cached( $qry );  
     $sth->execute(@params); 
@@ -101,7 +101,7 @@ sub get_set_of_all_teams {
 
 sub get_set_of_all_papers {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -110,8 +110,8 @@ sub get_set_of_all_papers {
 
     my $qry = "SELECT DISTINCT id
                 FROM Entry
-                WHERE key NOT NULL ";
-    $qry .= "ORDER BY year DESC, key ASC";
+                WHERE bibtex_key IS NOT NULL ";
+    $qry .= "ORDER BY year DESC, bibtex_key ASC";
 
     my $sth = $dbh->prepare_cached( $qry );  
     $sth->execute(@params); 
@@ -130,14 +130,14 @@ sub get_set_of_all_papers {
 sub get_set_of_papers_for_team {
     my $self = shift;
     my $tid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
 
     my @params;
 
-    my $qry = "SELECT DISTINCT Entry.key, Entry.id, bib, html, Entry.type
+    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, bib, html, Entry.type
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
@@ -145,7 +145,7 @@ sub get_set_of_papers_for_team {
                 LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
                 LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.type 
                 LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
-                WHERE Entry.key NOT NULL ";
+                WHERE Entry.bibtex_key IS NOT NULL ";
 
     push @params, $tid;
     push @params, $tid;
@@ -153,7 +153,7 @@ sub get_set_of_papers_for_team {
     # $qry .= "AND ((Exceptions_Entry_to_Team.team_id=? ) OR Author.display = 1) ";
     $qry .= "AND ((Exceptions_Entry_to_Team.team_id=? ) OR (Author_to_Team.team_id=? AND start <= Entry.year  AND (stop >= Entry.year OR stop = 0))) ";
     
-    $qry .= "ORDER BY Entry.year DESC, Entry.key ASC";
+    $qry .= "ORDER BY Entry.year DESC, Entry.bibtex_key ASC";
 
     my $sth = $dbh->prepare_cached( $qry );  
     $sth->execute(@params); 
@@ -172,7 +172,7 @@ sub get_set_of_papers_for_team {
 
 sub get_set_of_papers_with_exceptions {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -195,7 +195,7 @@ sub get_set_of_papers_with_exceptions {
 
 sub get_set_of_tagged_papers {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -216,7 +216,7 @@ sub get_set_of_tagged_papers {
 
 sub get_set_of_papers_with_no_tags {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -239,7 +239,7 @@ sub get_set_of_papers_with_no_tags {
 sub get_set_of_papers_for_all_authors_of_team_id {
     my $self = shift;
     my $tid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -257,7 +257,7 @@ sub get_set_of_papers_for_all_authors_of_team_id {
 sub get_set_of_authors_for_team {
     my $self = shift;
     my $tid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -281,7 +281,7 @@ sub get_set_of_authors_for_team {
 sub get_set_of_papers_for_author_id {
     my $self = shift;
     my $aid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -307,7 +307,7 @@ sub get_set_of_papers_for_author_id {
 sub get_set_of_papers_for_tag {
     my $self = shift;
     my $tid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -332,7 +332,7 @@ sub get_set_of_papers_for_author_and_tag {
     my $self = shift;
     my $aid = shift;
     my $tid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set_author_papers = get_set_of_papers_for_author_id($self, $aid);
     my $set_tag_papers = get_set_of_papers_for_tag($self, $tid);
@@ -346,7 +346,7 @@ sub get_set_of_papers_for_team_and_tag {
     my $self = shift;
     my $teamid = shift;
     my $tagid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set_tag_papers = get_set_of_papers_for_tag($self, $tagid);
     my $set_team_papers = get_set_of_papers_for_team($self, $teamid);
@@ -358,7 +358,7 @@ sub get_set_of_papers_for_author_and_team{
     my $self = shift;
     my $aid = shift;
     my $tid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set_author_papers = get_set_of_papers_for_author_id($self, $aid);
     my $set_team_papers = get_set_of_papers_for_team($self, $tid);
@@ -372,7 +372,7 @@ sub get_set_of_teams_for_author_id_w_year {
     my $self = shift;
     my $aid = shift;
     my $year = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -397,7 +397,7 @@ sub get_set_of_teams_for_author_id_w_year {
 sub get_set_of_teams_for_author_id {
     my $self = shift;
     my $aid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -421,7 +421,7 @@ sub get_set_of_teams_for_author_id {
 sub get_set_of_authors_for_entry_id {
     my $self = shift;
     my $eid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
@@ -442,7 +442,7 @@ sub get_set_of_authors_for_entry_id {
 sub get_set_of_teams_for_entry_id {
     my $self = shift;
     my $eid = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $entry_year = get_year_for_entry_id($dbh, $eid);
 

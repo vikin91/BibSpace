@@ -14,9 +14,12 @@
     %= javascript 'http://code.jquery.com/jquery-latest.min.js'
     %= javascript 'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'
     %= stylesheet 'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css'
+
     % my $burl = config 'base_url';
-    %= stylesheet $burl.'styles.css'
-    %= stylesheet $burl.'test1.css'
+    %= stylesheet 'http://se2.informatik.uni-wuerzburg.de/pa/styles.css'
+    %= stylesheet 'http://se2.informatik.uni-wuerzburg.de/pa/test1.css'
+    %= stylesheet 'https://se2.informatik.uni-wuerzburg.de/pa/styles.css'
+    %= stylesheet 'https://se2.informatik.uni-wuerzburg.de/pa/test1.css'
 
     <script type="text/javascript">
          function showAbstract(divid) {

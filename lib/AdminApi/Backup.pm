@@ -35,14 +35,16 @@ sub do_backup_current_state{
     my $self = shift;
     my $fname_prefix = shift || "normal";
 
-    prepare_backup_table($self->backup_db);
+    prepare_backup_table($self->app->backup_db);
     dump_db_to_bib_team($self, "full");
 
     $self->write_log("creating backup with prefix $fname_prefix");
-    return  $self->helper_do_backup_current_state($fname_prefix);
+    # return  $self->helper_do_backup_current_state($fname_prefix); # sqlite
+    return  $self->helper_do_mysql_backup_current_state($fname_prefix); # mysql
+    
 
-    # my $backup_dbh = $self->backup_db;  
-    # my $normal_dbh = $self->db;
+    # my $backup_dbh = $self->app->backup_db;  
+    # my $normal_dbh = $self->app->db;
 
     # my $backup_dir = "./backups";
     # my $str = Time::Piece::localtime->strftime('%Y%m%d-%H%M%S');
@@ -62,8 +64,8 @@ sub do_backup_current_state{
 ####################################################################################
 sub save {
     my $self = shift;
-    my $backup_dbh = $self->backup_db;  
-    my $normal_dbh = $self->db;
+    my $backup_dbh = $self->app->backup_db;  
+    my $normal_dbh = $self->app->db;
     my $back_url = $self->param('back_url') || "/";
     $back_url = "/" if $back_url eq $self->req->url->to_abs;
 
@@ -87,7 +89,7 @@ sub delete_broken_or_old_backup {
 
 sub backup {
     my $self = shift;
-    my $backup_dbh = $self->backup_db;
+    my $backup_dbh = $self->app->backup_db;
     my $back_url = $self->param('back_url') || '/backup';  
 
     prepare_backup_table($backup_dbh);
@@ -129,14 +131,16 @@ sub backup {
 
 sub backup_download {
     my $self = shift;
-    my $backup_dbh = $self->backup_db;
+    my $backup_dbh = $self->app->backup_db;
     my $back_url = $self->param('back_url') || '/backup'; 
     my $backup_file = $self->param('file'); 
 
     $backup_file =~ s/\///g;
+    my $ext = ".sql";
 
-    my $file_path = "backups/".$backup_file.".db";
-    my $public_file_system = "public/backups/".$backup_file.".db";
+
+    my $file_path = "backups/".$backup_file.$ext;
+    my $public_file_system = "public/backups/".$backup_file.$ext;
 
     copy($file_path, $public_file_system);
     
@@ -158,7 +162,7 @@ sub backup_download {
 ####################################################################################
 sub delete_backup{  # modified 22.08.14
     my $self = shift;
-    my $backup_dbh = $self->backup_db;
+    my $backup_dbh = $self->app->backup_db;
     my $back_url = $self->param('back_url') || '/backup';  
     my $id = $self->param('id');
 
@@ -173,9 +177,9 @@ sub delete_backup{  # modified 22.08.14
 
 
 ####################################################################################
-sub restore_backup{
+sub restore_backup_sqlite{
     my $self = shift;
-    my $backup_dbh = $self->backup_db;
+    my $backup_dbh = $self->app->backup_db;
     my $back_url = $self->param('back_url') || '/backup';  
     my $id = $self->param('id');
 
@@ -186,7 +190,7 @@ sub restore_backup{
     my $row = $sth->fetchrow_hashref();
     my $fname = $row->{filename};
 
-    $self->db->disconnect();
+    # $self->app->db->disconnect();
     
     # saving current state with special prefix to provide the possibility to restore the pre-restore state 
     do_backup_current_state($self, "pre-restore");
@@ -200,6 +204,72 @@ sub restore_backup{
     $self->redirect_to('/backup');
     # $self->redirect_to($back_url);
 }
+####################################################################################
+sub restore_backup{
+    my $self = shift;
+    my $backup_dbh = $self->app->backup_db;
+    my $back_url = $self->param('back_url') || '/backup';  
+    my $id = $self->param('id');
+
+    prepare_backup_table($backup_dbh);
+
+    my $sth = $backup_dbh->prepare("SELECT filename FROM Backup WHERE id = ?");
+    $sth->execute($id);
+    my $row = $sth->fetchrow_hashref();
+    my $fname = $row->{filename};
+
+    $self->app->db->disconnect();
+    
+    # saving current state with special prefix to provide the possibility to restore the pre-restore state 
+    do_backup_current_state($self, "pre-restore");
+
+    $self->write_log("Cleaning the whole DB before restoring.");
+
+    # $self->app->db->do("SET autocommit=0");
+    # $self->app->db->do("SET foreign_key_checks=0");
+    # $self->app->db->do("START TRANSACTION");
+
+    # $self->app->db->do("TRUNCATE TABLE Author_to_Team");
+    # $self->app->db->do("TRUNCATE TABLE Entry_to_Author");
+    # $self->app->db->do("TRUNCATE TABLE Entry_to_Tag");
+    # $self->app->db->do("TRUNCATE TABLE Exceptions_Entry_to_Team");
+    # $self->app->db->do("TRUNCATE TABLE OurType_to_Type");
+    # $self->app->db->do("TRUNCATE TABLE Tag");
+    # $self->app->db->do("TRUNCATE TABLE TagType");
+    # $self->app->db->do("TRUNCATE TABLE Entry");
+    # $self->app->db->do("TRUNCATE TABLE Team");
+    # $self->app->db->do("TRUNCATE TABLE Author");
+
+    # $self->app->db->do("SET foreign_key_checks=1");
+    # $self->app->db->do("SET autocommit=1");
+    # $self->app->db->do("COMMIT");
+
+    $self->write_log("restoring backup from file $fname");
+
+    my $db_host = $self->config->{db_host};
+    my $db_user = $self->config->{db_user};
+    my $db_database = $self->config->{db_database};
+    my $db_pass = $self->config->{db_pass};
+
+
+    my $cmd = "mysql -u $db_user -p$db_pass $db_database  < $fname";
+    say "cmd: $cmd";
+    `$cmd`;
+
+    if ($? == 0){
+        say "Restoring backup succeded from file $fname";
+        `head -n 100 $fname`;
+        say "---";
+        say "---";
+    }
+    else{
+        say "Restoring backup FAILED from file $fname";
+    }
+
+
+    $self->redirect_to('/backup');
+    # $self->redirect_to($back_url);
+}
 
 
 ####################################################################################
@@ -207,8 +277,8 @@ sub restore_backup{
 sub dump_db_to_bib_team{
   my $self = shift;
   my $team = shift;
-  my $backup_dbh = $self->backup_db;  
-  my $normal_dbh = $self->db;
+  my $backup_dbh = $self->app->backup_db;  
+  my $normal_dbh = $self->app->db;
   my $teamid = get_team_id($normal_dbh, $team);
 
   prepare_backup_table($backup_dbh);
@@ -225,10 +295,10 @@ sub dump_db_to_bib_team{
 
   # log_to_backup_table($backup_dbh, $dbfname);
 
-  # $self->db->disconnect();
+  # $self->app->db->disconnect();
   # copy("bib.db", $dbfname);
 
-  # $normal_dbh = $self->db;
+  # $normal_dbh = $self->app->db;
   
   
 
@@ -236,7 +306,7 @@ sub dump_db_to_bib_team{
 
   if(! defined $team or $team eq 'full'){
       $team = "full";
-      $sth = $normal_dbh->prepare( "SELECT DISTINCT bib FROM Entry ORDER BY year DESC, key ASC" );  
+      $sth = $normal_dbh->prepare( "SELECT DISTINCT bib FROM Entry ORDER BY year DESC, bibtex_key ASC" );  
       $sth->execute();
   }
   else{
@@ -245,16 +315,16 @@ sub dump_db_to_bib_team{
       LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id 
       LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id
       LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id       
-         WHERE Entry.key NOT NULL
+         WHERE Entry.bibtex_key IS NOT NULL
          AND ((Exceptions_Entry_to_Team.team_id = ? ) OR (Author_to_Team.team_id = ?))
-         ORDER BY Entry.year DESC, Entry.key ASC" );  
+         ORDER BY Entry.year DESC, Entry.bibtex_key ASC" );  
       $sth->execute($teamid, $teamid);
   }
 
-  $self->log->debug("Dumping bib form DB for team: $team");
+  $self->write_log("Dumping bib form DB for team: $team");
  
   
-  
+  say "saving bib dump to file $fname";
   
   write_file( $fname, {append => 0 }, undef );
 

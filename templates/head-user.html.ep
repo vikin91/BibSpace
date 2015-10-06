@@ -5,11 +5,14 @@
     <meta content="text/html>
     <meta charset="UTF-8">
     <meta http-equiv="Pragma" content="no-cache">
+    
     %= javascript 'http://code.jquery.com/jquery-latest.min.js'
-    % my $burl = config 'base_url';
-    %= stylesheet $burl.'styles.css'
 
-    %= stylesheet $burl.'test1.css'
+    % my $burl = config 'base_url';
+
+    %= stylesheet 'http://se2.informatik.uni-wuerzburg.de/pa/styles.css'
+    %= stylesheet 'http://se2.informatik.uni-wuerzburg.de/pa/test1.css'
+
 
     
 

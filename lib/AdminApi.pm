@@ -42,9 +42,29 @@ use POSIX qw/strftime/;
 #     return $config;
 # };
 
+
+has db_connect_string => sub {
+    my $self = shift;
+    
+    return 'dbi:SQLite:dbname='.$self->config->{normal_db};
+    
+};
+
 has db => sub {
     my $self = shift;
-    DBI->connect('dbi:SQLite:dbname='.$self->config->{normal_db}, '', '') or die $DBI::errstr .". File is: ".$self->config->{normal_db};
+    # DBI->connect($self->app->db_connect_string, '', '') or die $DBI::errstr .". File is: ".$self->config->{normal_db};
+
+    my $db_host = $self->config->{db_host};
+    my $db_user = $self->config->{db_user};
+    my $db_database = $self->config->{db_database};
+    my $db_pass = $self->config->{db_pass};
+
+
+    my $dbh = DBI->connect("DBI:mysql:database=$db_database;host=$db_host",
+                         "$db_user", "$db_pass",
+                         {'RaiseError' => 1});
+    $dbh->{mysql_auto_reconnect} = 1;
+    return $dbh;
 };
 
 has backup_db => sub {
@@ -113,13 +133,13 @@ sub startup {
     $self->helper(users => sub { state $users = MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
 
-    $self->helper(db => sub {
-        $self->app->db;
-    });
+    # $self->helper(db => sub {
+    #     $self->app->db;
+    # });
 
-    $self->helper(backup_db => sub {
-        $self->app->backup_db;
-    });
+    # $self->helper(backup_db => sub {
+    #     $self->app->backup_db;
+    # });
 
     $self->helper(backurl => sub {
         my $s = shift; 
@@ -167,9 +187,9 @@ sub startup {
     });
 
 
-    $self->helper(log => sub {
-        Mojo::Log->new( path => $config->{log_file}, level => 'debug' );
-    });
+    # $self->helper(log => sub {
+    #     Mojo::Log->new( path => $config->{log_file}, level => 'debug' );
+    # });
 
     $self->helper(write_log => sub {        
         my $c = shift;
@@ -187,7 +207,7 @@ sub startup {
             close $fh;
         }
         else{
-            print "opening log failed. (this line may cause shit happening!) Msg was: ".$msg_to_log." error: $!";
+            print " opening log failed. (this line may cause shit happening!) Msg was: ".$msg_to_log." error: $!";
         }
         
         # this code is instable - crashes once a month
@@ -196,8 +216,8 @@ sub startup {
         # $log->info($usr_str.$msg) or print "writing to log failed. Msg was: ".$usr_str.$msg;
     });
 
-    $self->db->do("PRAGMA foreign_keys = ON");
-    $self->db->do("PRAGMA cache_size = 100000"); # sets cache to 100MB
+    # $self->app->db->do("PRAGMA foreign_keys = ON");
+    # $self->app->db->do("PRAGMA cache_size = 100000"); # sets cache to 100MB
 
 
     # my $r0 = $self->routes;

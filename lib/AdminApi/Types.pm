@@ -24,7 +24,7 @@ use Mojo::Log;
 ####################################################################################
 sub all_our {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my @otypes = get_all_our_types($dbh);
   
@@ -34,7 +34,7 @@ sub all_our {
 ####################################################################################
 sub add_type{
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $self->stash();
     $self->render(template => 'types/add');   
@@ -44,11 +44,11 @@ sub post_add_type{
     my $self = shift;
     my $new_type = $self->param('new_type');
     
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $back_url = $self->param('back_url') || '/types';
 
     if(defined $new_type and length($new_type)>0 ){
-        my $sth = $dbh->prepare("INSERT OR IGNORE INTO OurType_to_Type (our_type, bibtex_type, description, landing) VALUES(?,?,?,?)");  
+        my $sth = $dbh->prepare("INSERT IGNORE INTO OurType_to_Type (our_type, bibtex_type, description, landing) VALUES(?,?,?,?)");  
         $sth->execute($new_type, "misc", "Publications of type ".$new_type, 0);    
     }
 
@@ -58,7 +58,7 @@ sub post_add_type{
 sub manage {
     my $self = shift;
     my $type = $self->param('type');
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $back_url = $self->param('back_url') || '/types';
 
     my @all_otypes = get_all_our_types($dbh);
@@ -75,7 +75,7 @@ sub toggle_landing{
     my $self = shift;
     my $type = $self->param('type');
     
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $back_url = $self->param('back_url') || '/types';
 
     toggle_landing_for_our_type($dbh, $type);
@@ -88,7 +88,7 @@ sub post_store_description{
     my $type = $self->param('our_type');
     my $description = $self->param('new_description');
     
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $back_url = $self->param('back_url') || '/types';
 
     if(defined $type and defined $description ){
@@ -103,7 +103,7 @@ sub delete_type {
     my $self = shift;
     my $type2del = $self->param('type_to_delete');
     my $msg = "";
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $back_url = $self->param('back_url') || '/types';
 
     my $type_str = join '', $self->get_bibtex_types_aggregated_for_type($type2del);
@@ -138,7 +138,7 @@ sub map_types {
     my $b_type = $self->param('bibtex_type');
     my $msg = "";
 
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $back_url = $self->param('back_url') || '/types';
 
     if(defined $o_type and length $o_type > 0 and defined $b_type and length $b_type > 0){
@@ -182,7 +182,7 @@ sub unmap_types {
     my $self = shift;
     my $o_type = $self->param('our_type');
     my $b_type = $self->param('bibtex_type');
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $back_url = $self->param('back_url') || '/types';
     my $msg = "";
 

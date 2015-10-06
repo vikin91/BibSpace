@@ -18,7 +18,7 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 
 sub show {
    my $self = shift;
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
    
    my $sth = $dbh->prepare( "SELECT id, name, parent FROM Team
          ORDER BY name ASC" );  
@@ -49,7 +49,7 @@ sub add_team {
    my $self = shift;
    my $back_url = $self->param('back_url') || "/teams";
 
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
 
    $self->stash(back_url => $back_url);
@@ -60,7 +60,7 @@ sub add_team {
 ### POST like for HTML forms, not a blog post
 sub add_team_post {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $new_team = $self->param('new_team');
 
     if(defined $new_team){
@@ -97,7 +97,7 @@ sub add_team_post {
 ##############################################################################################################
 sub delete_team {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $id_to_delete = $self->param('id_to_delete');
 
     if(defined $id_to_delete and $id_to_delete != -1 and  $self->team_can_be_deleted($id_to_delete)){
@@ -111,7 +111,7 @@ sub delete_team {
 ##############################################################################################################
 sub delete_team_force {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $id_to_delete = $self->param('id_to_delete');
 
 
@@ -139,7 +139,7 @@ sub delete_team_force {
 ##############################################################################################################
 sub do_delete_team_force {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $id_to_delete = shift;
 
 
@@ -162,7 +162,7 @@ sub edit {
     my $self = shift;
     my $teamid = $self->param('teamid');
     my $back_url = $self->param('back_url') || "/teams";
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     # TODO: Implement me!!
 
@@ -178,7 +178,7 @@ sub edit {
    my $teamid = $self->param('teamid');
    my $back_url = $self->param('back_url') || "/teams";
 
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
 
    my ($author_ids_ref, $start_arr_ref, $stop_arr_ref) = get_team_members($self, $teamid);
