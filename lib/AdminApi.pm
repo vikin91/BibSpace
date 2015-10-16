@@ -173,7 +173,7 @@ sub startup {
     $self->helper(is_manager => sub {
         my $self = shift; 
         my $usr = $self->session('user');
-        my $rank = $self->users->get_rank($usr) || 0;
+        my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
         return 1 if $rank > 0;
         return undef;
     });
@@ -181,7 +181,7 @@ sub startup {
     $self->helper(is_admin => sub {
         my $self = shift; 
         my $usr = $self->session('user');
-        my $rank = $self->users->get_rank($usr) || 0;
+        my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
         return 1 if $rank > 1;
         return undef;
     });
@@ -259,6 +259,13 @@ sub startup {
 
     ################ SETTINGS ################
     $logged_user->get('/profile')->to('login#profile');
+    $superadmin->get('/manage_users')->to('login#manage_users')->name('manage_users');
+    $superadmin->get('/profile/:id')->to('login#foreign_profile');
+    $superadmin->get('/profile/delete/:id')->to('login#delete_user');
+
+    $superadmin->get('/profile/make_user/:id')->to('login#make_user');
+    $superadmin->get('/profile/make_manager/:id')->to('login#make_manager');
+    $superadmin->get('/profile/make_admin/:id')->to('login#make_admin');
     
     $manager->get('/log')->to('display#show_log');
     $manager->get('/settings/clean_all')->to('publications#clean_ugly_bibtex');

@@ -15,6 +15,7 @@
             <li><a href="/profile"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
             % if(is_admin()){
                 <li><a href="/register"><span class="glyphicon glyphicon-log-in"></span> Register</a></li>
+                <li><a href="/manage_users"><i class="fa fa-users"></i> Manage Users</a></li>
             % }
             <li class="divider"></li>
             <li><a href="/logout"><span class="glyphicon glyphicon-off"></span> Logout</a></li>

@@ -47,11 +47,19 @@
             % if($rank >= 0){
                 <button type="button" class="btn btn-default">User </button>
             % }
-            % if($rank >= 1){
+            % if($rank > 0){
                 <button type="button" class="btn btn-default">Manager </button>
             % }
-            % if($rank >= 2){
+            % if($rank > 1){
                 <button type="button" class="btn btn-default">Admin </button>
+            % }
+            <!-- ADDED for fun only, but may be used later -->
+            % if($rank > 2){
+                <button type="button" class="btn btn-default">Super Admin </button>
+            % }
+            <!-- ADDED for fun only, but may be used later -->
+            % if($rank > 3){
+                <button type="button" class="btn btn-default">God Admin </button>
             % }
         </div>
     </div>

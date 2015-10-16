@@ -1,7 +1,7 @@
 package AdminApi::Login;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
-
+use UserObj;
 
 
 ####################################################################################
@@ -16,7 +16,8 @@ sub check_is_logged_in {
 # for _under_ -checking
 sub check_is_manager {
     my $self = shift;
-    my $rank = $self->users->get_rank($self->session('user'));
+    my $dbh = $self->app->db;
+    my $rank = $self->users->get_rank($self->session('user'), $dbh);
     return 1 if $rank > 0;
 
 
@@ -27,8 +28,9 @@ sub check_is_manager {
 # for _under_ -checking
 sub check_is_admin {
     my $self = shift;
+    my $dbh = $self->app->db;
 
-    my $rank = $self->users->get_rank($self->session('user'));
+    my $rank = $self->users->get_rank($self->session('user'), $dbh);
     return 1 if $rank > 1;
 
     $self->render(text => 'Your need _admin_ rights to access this page.');
@@ -38,10 +40,104 @@ sub check_is_admin {
 ####################################################################################
 ####################################################################################
 ####################################################################################
+sub manage_users {
+    my $self = shift;
+    my $dbh = $self->app->db;
+
+    my @user_objs = UserObj->getAll($dbh);
+
+    $self->stash(user_objs => \@user_objs);
+    $self->render(template => 'login/manage_users');
+}
+####################################################################################
+sub make_user {
+    my $self = shift;
+    my $profile_id = $self->param('id');
+    my $dbh = $self->app->db;
+
+    my $usr_obj = UserObj->new({id => $profile_id});
+    $usr_obj->initFromDB($dbh);
+    $usr_obj->make_user($dbh);
+    $self->redirect_to('manage_users');
+}
+####################################################################################
+sub make_manager {
+    my $self = shift;
+    my $profile_id = $self->param('id');
+    my $dbh = $self->app->db;
+
+    my $usr_obj = UserObj->new({id => $profile_id});
+    $usr_obj->initFromDB($dbh);
+    $usr_obj->make_manager($dbh);
+    $self->redirect_to('manage_users');
+}
+####################################################################################
+sub make_admin {
+    my $self = shift;
+    my $profile_id = $self->param('id');
+    my $dbh = $self->app->db;
+
+    my $usr_obj = UserObj->new({id => $profile_id});
+    $usr_obj->initFromDB($dbh);
+    $usr_obj->make_admin($dbh);
+    $self->redirect_to('manage_users');
+}
+####################################################################################
+sub delete_user {
+    my $self = shift;
+    my $profile_id = $self->param('id');
+    my $dbh = $self->app->db;
+
+    my $usr_obj = UserObj->new({id => $profile_id});
+    $usr_obj->initFromDB($dbh);
+
+    if($self->users->login_exists($usr_obj->{login}, $dbh) and $usr_obj->is_admin()){
+        $self->write_log("User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.");
+        $self->stash(msg => "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.");
+    }
+    else{
+        $self->write_log("User \`$usr_obj->{login}\` ($usr_obj->{real_name}) has been deleted.");
+        $self->stash(msg => "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) has been deleted.");
+        $self->users->do_delete_user($profile_id, $dbh);    
+    }
+    
+    # $self->redirect_to('manage_users');
+
+    my @user_objs = UserObj->getAll($dbh);
+
+    $self->stash(user_objs => \@user_objs);
+    $self->render(template => 'login/manage_users');
+}
+####################################################################################
+sub foreign_profile {
+    my $self = shift;
+    my $profile_id = $self->param('id');
+    my $dbh = $self->app->db;
+
+    my $login = $self->users->get_login_for_id($profile_id, $dbh);
+
+    my $reg_time = $self->users->get_registration_time($login, $dbh);
+    my $last_login_time = $self->users->get_last_login($login, $dbh);
+
+    my $rank = $self->users->get_rank($login, $dbh);
+    my $email = $self->users->get_email($login, $dbh);
+
+    $self->stash(user => $self->users, reg_time => $reg_time, last_login_time => $last_login_time, rank => $rank, email => $email, login => $login);
+    $self->render(template => 'login/foreign_profile');
+}
+####################################################################################
 sub profile {
     my $self = shift;
+    my $dbh = $self->app->db;
 
-    $self->stash(user => $self->users);
+    my $login = $self->session('user');
+    my $reg_time = $self->users->get_registration_time($login, $dbh);
+    my $last_login_time = $self->users->get_last_login($login, $dbh);
+
+    my $rank = $self->users->get_rank($login, $dbh);
+    my $email = $self->users->get_email($login, $dbh);
+
+    $self->stash(user => $self->users, reg_time => $reg_time, last_login_time => $last_login_time, rank => $rank, email => $email, login => $login);
     $self->render(template => 'login/profile');
 }
 ####################################################################################
@@ -61,16 +157,17 @@ sub post_gen_forgot_token {
     # this is called when a user fills the form called "Recovery of forgotten password"
     my $user = $self->param('user');
     my $email = $self->param('email');
+    my $dbh = $self->app->db;
 
     my $do_gen = 0;
     my $final_email = "";
 
-    if($self->users->login_exists($user)==1){
+    if($self->users->login_exists($user, $dbh)==1){
         $do_gen = 1;
         # get email of this user
-        $final_email = $self->users->get_email_for_uname($user);
+        $final_email = $self->users->get_email_for_uname($user, $dbh);
     }
-    if($self->users->email_exists($email)==1){
+    if($self->users->email_exists($email, $dbh)==1){
         $do_gen = 1;
         $final_email = $email;
     }
@@ -81,7 +178,7 @@ sub post_gen_forgot_token {
 
 
         my $token = $self->users->generate_token(); 
-        $self->users->save_token_email($token, $final_email);
+        $self->users->save_token_email($token, $final_email, $dbh);
         $self->users->send_email($token, $final_email);
 
         $self->write_log("Forgot: reset token sent to $final_email");
@@ -101,6 +198,7 @@ sub post_gen_forgot_token {
 sub token_clicked {
     my $self = shift;
     my $token = $self->param('token');
+    my $dbh = $self->app->db;
 
     # verify if token exists
     # display form for setting new password. 
@@ -116,6 +214,7 @@ sub store_password {
     my $token = $self->param('token');
     my $pass1 = $self->param('pass1');
     my $pass2 = $self->param('pass2');
+    my $dbh = $self->app->db;
 
     my $email = $self->users->get_email_for_token($token); #get it out of the DB for the token
 
@@ -130,9 +229,9 @@ sub store_password {
 
     if($pass1 eq $pass2){
 
-        if($self->users->set_new_password($email, $pass1) == 1){
+        if($self->users->set_new_password($email, $pass1, $dbh) == 1){
 
-            $self->users->remove_token($token);
+            $self->users->remove_token($token, $dbh);
             $self->stash(msg => 'Change successuful. You may login now.');
             $self->write_log("Forgot: Change successful");
             $self->render(template => 'login/index');
@@ -146,7 +245,7 @@ sub store_password {
         return;
     }
 
-    $self->users->remove_token($token);
+    $self->users->remove_token($token, $dbh);
     $self->write_log("Forgot: Chnage failed. Token deleted.");
     $self->stash(msg => 'Something went wrong. The password has not been changed. The reset token is no longer valid. You need to request a new one by clicking in \'I forgot my password\'.');
     $self->render(template => 'login/index');
@@ -159,6 +258,7 @@ sub login {
     my $self = shift;
     my $user = $self->param('user');
     my $pass = $self->param('pass');
+    my $dbh = $self->app->db;
 
     
 
@@ -166,10 +266,10 @@ sub login {
 
         $self->write_log("Login: trying to log in as user $user");
 
-        if($self->users->check($user, $pass)){
+        if($self->users->check($user, $pass, $dbh)){
             $self->session(user => $user);
-            $self->session(user_name => $self->users->get_user_real_name($user));
-            $self->users->record_logging_in($user);
+            $self->session(user_name => $self->users->get_user_real_name($user, $dbh));
+            $self->users->record_logging_in($user, $dbh);
 
             $self->write_log("Login success");
             $self->redirect_to('startpa');
@@ -229,7 +329,8 @@ sub logout {
 sub register{
     my $self = shift;
     my $config = $self->app->config;
-    my $can_register = $config->{registration_enabled} ;
+    my $can_register = $config->{registration_enabled};
+    my $dbh = $self->app->db;
 
     
     if( (defined $self->check_is_admin() and $self->check_is_admin() == 1) or (defined $can_register and $can_register == 1) ){
@@ -254,6 +355,7 @@ sub register_disabled{
 ####################################################################################
 sub post_do_register{
     my $self = shift;
+    my $dbh = $self->app->db;
 
     my $config = $self->app->config;
     my $can_register = $config->{registration_enabled};
@@ -278,8 +380,8 @@ sub post_do_register{
             if(length($password1) == length($password2) and  $password2 eq $password1){
 
                 if(length($password1) >= 4){
-                    if($self->users->login_exists($login) == 0){
-                        $self->users->add_new_user($login,$email,$name,$password1);
+                    if($self->users->login_exists($login, $dbh) == 0){
+                        $self->users->add_new_user($login,$email,$name,$password1,0,$dbh);
 
                         # $self->stash(msg => "User created successfully! You may now login using login: $login.");
 
