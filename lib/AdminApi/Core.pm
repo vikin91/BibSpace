@@ -178,7 +178,7 @@ sub do_delete_broken_or_old_backup {   # added 22.08.14
 
         if($exists == 0){
             # CAN DELETE
-            $self->do_delete_backup($id);
+            do_delete_backup($self, $id);
         }
         else{   # file exists
             if($b_age > $backup_age_in_days_to_delete_automatically){
@@ -188,7 +188,7 @@ sub do_delete_broken_or_old_backup {   # added 22.08.14
                         $file_age_counter = $file_age_counter - 1;
                     }
                     else{   # rest should be deleted
-                        $self->do_delete_backup($id);
+                        do_delete_backup($self, $id);
                     }
                 }
             }

@@ -1402,23 +1402,26 @@ sub get_edit {
    
    my $dbh = $self->app->db;
 
-   my $sth = $dbh->prepare( "SELECT DISTINCT bibtex_key, bib 
-      FROM Entry 
-      WHERE id = ?" );  
-   $sth->execute($id);
 
-   my $row = $sth->fetchrow_hashref();
-   my $bib = $row->{bib};
-   my $key = $row->{bibtex_key};
 
-   # say "entry id $id has key $key";
+   # my $sth = $dbh->prepare( "SELECT DISTINCT bibtex_key, bib 
+   #    FROM Entry 
+   #    WHERE id = ?" );  
+   # $sth->execute($id);
 
-   $sth->finish;
+   # my $row = $sth->fetchrow_hashref();
 
-  # $self->stash(bib  => $bib, key => $key, exit_code => '', msg => '', preview => '');
-  #  $self->render(template => 'publications/add_entry');
+   # # say "entry id $id has key $key";
 
-   $self->stash(bib  => $bib, id => $id, key => $key, existing_id => '', exit_code => '', msg => '', preview => '', back_url => $back_url);
+   # $sth->finish;
+
+   my $obj = EntryObj->new({id => $id});
+   $obj->initFromDB($dbh);
+   my $bib = $obj->{bib};
+   my $key = $obj->{bibtex_key};
+
+
+   $self->stash(bib  => $bib, entry_obj => $obj, id => $id, key => $key, existing_id => '', exit_code => '', msg => '', preview => '', back_url => $back_url);
    $self->render(template => 'publications/edit_entry');
 };
 ############################################################################################################
@@ -1448,6 +1451,11 @@ sub post_edit_store {
   my $param_prev = $self->param('preview') || "";
   my $param_save = $self->param('save') || "";
 
+  my $obj = EntryObj->new({id => $id});
+  $obj->initFromDB($dbh) if defined $id;
+  $obj->{bib} = $new_bib;
+  $obj->{key} = $key;
+
   # say "preview $param_prev";
   # say "save $param_save";
 
@@ -1455,7 +1463,7 @@ sub post_edit_store {
     
       $code = -1;
 
-      $self->stash(bib  => $new_bib, key => $key, existing_id => '', msg => '', exit_code => $code, preview => $html_preview);
+      $self->stash(bib  => $new_bib, entry_obj => $obj, key => $key, existing_id => '', msg => '', exit_code => $code, preview => $html_preview);
       $self->render(template => 'publications/edit_entry');
       return;
   }
@@ -1466,7 +1474,7 @@ sub post_edit_store {
 
       $code = 3; # generate key-exists msg
       
-      $self->stash(bib  => $new_bib, key => $key, existing_id => $exisitng_id, msg => '', exit_code => $code, preview => $html_preview);
+      $self->stash(bib  => $new_bib, entry_obj => $obj, key => $key, existing_id => $exisitng_id, msg => '', exit_code => $code, preview => $html_preview);
       $self->render(template => 'publications/edit_entry');
       return;
   }
@@ -1474,8 +1482,9 @@ sub post_edit_store {
   if(defined $self->param('preview')){
 
       my ($html, $htmlbib) = get_html_for_bib($new_bib, $key);
+      $obj->{html} = $html;
       $html_preview = $html;
-      $self->stash(bib  => $new_bib, key => $key, existing_id => '', msg => '', exit_code => $code, preview => $html_preview);
+      $self->stash(bib  => $new_bib, entry_obj => $obj, key => $key, existing_id => '', msg => '', exit_code => $code, preview => $html_preview);
       $self->render(template => 'publications/edit_entry');
       return;
   }
@@ -1484,7 +1493,9 @@ sub post_edit_store {
 
       ($code, $html_preview) = postprocess_updated_entry($dbh, $new_bib, $id);
       $id = get_entry_id($dbh, $key);  
-      $self->stash(bib  => $new_bib, key => $key, existing_id => '', msg => '', exit_code => $code, preview => $html_preview);
+      $obj->{html} = $html_preview;
+      $obj->{id} = $id;
+      $self->stash(bib  => $new_bib, entry_obj => $obj, key => $key, existing_id => '', msg => '', exit_code => $code, preview => $html_preview);
       $self->render(template => 'publications/edit_entry');
       return;
   }
