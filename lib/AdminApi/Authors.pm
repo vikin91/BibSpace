@@ -20,7 +20,7 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 ##############################################################################################################
 sub show {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $visible = $self->param('visible') || 0;
     my $search = $self->param('search') || '%';
     my $letter = $self->param('letter') || '%';
@@ -34,7 +34,8 @@ sub show {
    }
 
     my @params;
-    my $qry = "SELECT master_id, id, master, display, substr(master, 0, 2) as let FROM Author WHERE master NOT NULL ";
+    #my $qry = "SELECT master_id, id, master, display, substr(master, 0, 2) AS let FROM Author WHERE master IS NOT NULL ";
+    my $qry = "SELECT master_id, id, master, display FROM Author WHERE master IS NOT NULL ";
 
     if(defined $visible and $visible eq '1'){
         $qry .= "AND display=1 ";
@@ -45,9 +46,13 @@ sub show {
     }
     elsif(defined $letter and $letter ne '%'){
       push @params, $letter;
-      $qry .= "AND let LIKE ? ";
+      # $qry .= "AND let LIKE ? ";
+      $qry .= "AND substr(master, 1, 1) LIKE ? "; # mysql
+      
     }
     $qry .= "GROUP BY master_id ORDER BY display DESC, master ASC";
+
+    print $qry."\n";
 
     $self->write_log("Show authors: visible $visible, letter $letter, search $search");
 
@@ -93,7 +98,7 @@ sub add_author {
    my $self = shift;
    my $back_url = $self->param('back_url') || "/publications";
 
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
 
    $self->stash(master  => '', id => '', back_url => $back_url);
@@ -104,7 +109,7 @@ sub add_author {
 ### POST like for HTML forms, not a blog post
 sub add_post {
      my $self = shift;
-     my $dbh = $self->db;
+     my $dbh = $self->app->db;
      my $new_master = $self->param('new_master');
 
      
@@ -148,7 +153,7 @@ sub edit_author {
    my $id = $self->param('id');
    my $back_url = $self->param('back_url') || "/publications";
 
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
    my $master = get_master_for_id($dbh, $id);
 
    $self->write_log("edit_author: master: $master. id: $id.");
@@ -202,7 +207,7 @@ sub can_be_deleted{
 ##############################################################################################################
 sub add_to_team {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $master_id = $self->param('id');
     my $team_id = $self->param('tid');
 
@@ -214,7 +219,7 @@ sub add_to_team {
 ##############################################################################################################
 sub remove_from_team {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $master_id = $self->param('id');
     my $team_id = $self->param('tid');
 
@@ -226,7 +231,7 @@ sub remove_from_team {
 ##############################################################################################################
 sub remove_uid{
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $muid = $self->param('id');
     my $uid = $self->param('uid');
 
@@ -241,7 +246,7 @@ sub remove_uid{
 ### POST like for HTML forms, not a blog post
 sub edit_post {
      my $self = shift;
-     my $dbh = $self->db;
+     my $dbh = $self->app->db;
 
      my $id = $self->param('id');
      my $master = get_master_for_id($dbh, $id);
@@ -274,9 +279,11 @@ sub edit_post {
               my $success = add_new_user_id_to_master($self, $id, $new_user_id);
               if($success==0){
                   $self->write_log("add_new_user_id_to_master for master id $id and new_user_id $new_user_id was succesfull.");  
+                  say "add_new_user_id_to_master for master id $id and new_user_id $new_user_id was succesfull.";
               }
               else{
                   $self->write_log("add_new_user_id_to_master for master id $id and new_user_id $new_user_id was UNSUCCESSFUL: such user already exists.");   
+                  say "add_new_user_id_to_master for master id $id and new_user_id $new_user_id was UNSUCCESSFUL: such user already exists.";
               }
          }
      }
@@ -285,7 +292,7 @@ sub edit_post {
 ##############################################################################################################
 sub post_edit_membership_dates{
      my $self = shift;
-     my $dbh = $self->db;
+     my $dbh = $self->app->db;
 
      my $aid = $self->param('aid');
      my $tid = $self->param('tid');
@@ -321,7 +328,7 @@ sub do_edit_membership_dates{
     my $tid = shift;
     my $new_start = shift;
     my $new_stop = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     # double check!
     if(defined $aid and $aid > 0 and defined $tid and $tid > 0 and defined $new_start and $new_start >= 0 and defined $new_stop and $new_stop >= 0 and ($new_stop == 0 or $new_start <= $new_stop)){
@@ -332,13 +339,13 @@ sub do_edit_membership_dates{
 ##############################################################################################################
 sub delete_author {
      my $self = shift;
-     my $dbh = $self->db;
+     my $dbh = $self->app->db;
      my $id = $self->param('id');
 
      my $visibility = get_visibility_for_id($self, $id);
 
      if(defined $id and $id != -1 and can_be_deleted($self, $id)==1){
-        delete_author_force($self);
+        delete_author_force($self, $id);
         return;
      }
 
@@ -349,8 +356,25 @@ sub delete_author {
 ##############################################################################################################
 sub delete_author_force {
      my $self = shift;
-     my $dbh = $self->db;
+     my $dbh = $self->app->db;
      my $id = $self->param('id');
+
+     do_delete_author_force($self, $id);
+    
+    my $back_url = "/authors?visible=1";
+    $self->flash(msg => "Author with id $id removed successfully.");
+    $self->write_log("Author with id $id removed successfully.");
+
+    # say "delete_author_force: going back to: $back_url";
+
+    $self->redirect_to($back_url);
+     
+};
+##############################################################################################################
+sub do_delete_author_force {
+     my $self = shift;
+     my $dbh = $self->app->db;
+     my $id = shift;
 
      my $visibility = get_visibility_for_id($self, $id);
 
@@ -366,48 +390,79 @@ sub delete_author_force {
 
         my $sth4 = $dbh->prepare('DELETE FROM Author_to_Team WHERE author_id=?');
         $sth4->execute($id);
-     }
-
-    
-    my $back_url = $self->param('back_url') || "/authors?visible=1";
-    $self->redirect_to($back_url);
-     
+     }  
 };
-
 ##############################################################################################################
 sub add_new_user_id_to_master{
   my $self = shift; 
   my $id = shift;
   my $new_user_id = shift;
-  my $dbh = $self->db;
+  my $dbh = $self->app->db;
 
   # checking if such an uid already exists
   my $aid = get_author_id_for_uid($dbh, $new_user_id);
   my $master_str = get_master_for_id($dbh, $id);
   
-  my $sth = $dbh->prepare('INSERT OR IGNORE INTO Author(uid, master, master_id) VALUES(?, ?, ?)');
+  my $sth = $dbh->prepare('INSERT IGNORE INTO Author(uid, master, master_id) VALUES(?, ?, ?)');
   # adding only if doenst exist yet
   if($aid eq '-1'){
       $sth->execute($new_user_id, $master_str, $id);  
       return 0;
   }
   else{
-      say "aid: $aid";
-      say "master_str: $master_str";
-      return -1;
+      say "add_new_user_id_to_master: author ID already exists. aid: $aid. Master for this ais is:  $master_str";
+      say "calling: add_new_user_id_to_master_force($id, $new_user_id)";
+      return add_new_user_id_to_master_force($self, $id, $new_user_id);
   }
 }
+
+##############################################################################################################
+sub add_new_user_id_to_master_force{
+  my $self = shift; 
+  my $id = shift;
+  my $new_user_id = shift;
+  my $dbh = $self->app->db;
+
+  # checking if such an uid already exists
+  my $aid = get_author_id_for_uid($dbh, $new_user_id);  # SELECT id FROM Author WHERE uid=?
+  my $master_str = get_master_for_id($dbh, $id); # SELECT master FROM Author WHERE id=?
+  
+  # my $sth = $dbh->prepare('INSERT IGNORE INTO Author(uid, master, master_id) VALUES(?, ?, ?)');
+  # aid is <> than -1 if such author already exists
+  if($aid ne '-1'){
+      
+      # duplicate uid (user to be merged): $aid
+      # master id (user to be merged with): $id
+
+      my $sth3 = $dbh->prepare('UPDATE Entry_to_Author SET author_id=? WHERE author_id=?');
+      $sth3->execute($id, $aid);
+
+      my $sth4 = $dbh->prepare('UPDATE Author_to_Team SET author_id=? WHERE author_id=?');
+      $sth4->execute($id, $aid);
+
+      do_delete_author_force($self, $aid);
+
+      return add_new_user_id_to_master($self, $id, $new_user_id);
+  }
+  else{
+      add_new_user_id_to_master($self, $id, $new_user_id);
+  }
+}
+
 ##############################################################################################################
 sub remove_user_id_from_master{
   my $self = shift; 
   my $mid = shift;
   my $uid = shift;
-  my $dbh = $self->db;
+  my $dbh = $self->app->db;
   
   # cannot remove aid that is muid, because you would remove the user completly
   if($mid != $uid){
       my $sth = $dbh->prepare('DELETE FROM Author WHERE id=? AND master_id=?');
       $sth->execute($uid, $mid);  
+  }
+  else{
+    say "remove_user_id_from_master: cannot remove aid that is muid, because you would remove the user completly";
   }
 }
 ##############################################################################################################
@@ -415,7 +470,7 @@ sub update_master_id{
     my $self = shift;
     my $id = shift;
     my $new_master = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $ret = 0;
     # 0 - change - OK
@@ -463,7 +518,7 @@ sub update_master_id{
 #    my $self = shift;
 #    my $master = shift;
    
-#    my $dbh = $self->db;
+#    my $dbh = $self->app->db;
 
 #    $self->write_log("Deleting author: $master.");
 
@@ -481,7 +536,7 @@ sub update_master_id{
 #    my $self = shift;
 #    my $id = $self->param('id') ;
 
-#    my $master = get_master_for_id($self->db, $id);
+#    my $master = get_master_for_id($self->app->db, $id);
 #    delete_author_master($self, $master);
    
 #    my $back_url = $self->param('back_url') || "/authors?visible=1";
@@ -491,18 +546,17 @@ sub update_master_id{
 
  sub get_set_of_first_letters {
    my $self = shift;
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
    my $visible = shift or undef;
 
    my $sth = undef;
    if(defined $visible and $visible eq '1'){
-      $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 0, 2) as let FROM Author
-         WHERE display=1
-         ORDER BY let ASC" ); 
+      # $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 0, 2) as let FROM Author WHERE display=1 ORDER BY let ASC" ); 
+      $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 1, 1) as let FROM Author WHERE display=1 ORDER BY let ASC" ); 
    }
    else{
-      $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 0, 2) as let FROM Author
-         ORDER BY let ASC" );   
+      # $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 0, 2) as let FROM Author ORDER BY let ASC" );   
+      $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 1, 1) as let FROM Author ORDER BY let ASC" );   
    }
    $sth->execute(); 
 
@@ -519,7 +573,7 @@ sub get_visibility_by_name {
    my $self = shift;
    my $name = shift;
    
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
 
    my $sth;
    $sth = $dbh->prepare( "SELECT display FROM Author WHERE master=? AND uid=?" );
@@ -534,7 +588,7 @@ sub get_visibility_by_name {
 ##############################################################################################################
 sub reassign_authors_to_entries {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     postprocess_all_entries_after_author_uids_change($self);
 
@@ -544,7 +598,7 @@ sub reassign_authors_to_entries {
 ##############################################################################################################
 sub reassign_authors_to_entries_and_create_authors {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     postprocess_all_entries_after_author_uids_change_w_creating_authors($self);
 
@@ -558,7 +612,7 @@ sub reassign_authors_to_entries_and_create_authors {
    my $self = shift;
    my $id = $self->param('id');
 
-   my $dbh = $self->db;
+   my $dbh = $self->app->db;
    my $master = get_master_for_id($dbh, $id);
    my $disp = get_visibility_for_id($self, $id);
 

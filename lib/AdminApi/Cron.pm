@@ -23,14 +23,14 @@ use Mojo::UserAgent;
 ##########################################################################################
 sub index {
 	my $self = shift;
-    my $backup_dbh = $self->backup_db;
+    my $backup_dbh = $self->app->backup_db;
 	
 	prepare_cron_table($backup_dbh);
     $self->render(template => 'display/cron', 
-        lr_0 => get_last_cron_run_in_hours($self->backup_db, 0), 
-        lr_1 => get_last_cron_run_in_hours($self->backup_db, 1), 
-        lr_2 => get_last_cron_run_in_hours($self->backup_db, 2), 
-        lr_3 => get_last_cron_run_in_hours($self->backup_db, 3)
+        lr_0 => get_last_cron_run_in_hours($self->app->backup_db, 0), 
+        lr_1 => get_last_cron_run_in_hours($self->app->backup_db, 1), 
+        lr_2 => get_last_cron_run_in_hours($self->app->backup_db, 2), 
+        lr_3 => get_last_cron_run_in_hours($self->app->backup_db, 3)
     );
 }
 ##########################################################################################
@@ -46,18 +46,18 @@ sub get_server_address {
 sub cron_day {
     my $self = shift;
     my $level = 0;
-    my $call_freq = 2;
+    my $call_freq = $self->config->{cron_day_freq_lock};
 
-    my $last_call = get_last_cron_run_in_hours($self->backup_db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->backup_db, $level);
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron day called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
     
-    log_cron_usage($self->backup_db, $level);
+    log_cron_usage($self->app->backup_db, $level);
     $self->write_log("Cron day started");
     
     ############ CRON ACTIONS
-    $self->helper_do_backup_current_state("cron");
+    $self->helper_do_mysql_backup_current_state("cron");
     ############ CRON ACTIONS STOP
 
     $self->write_log("Cron day finished");
@@ -68,14 +68,14 @@ sub cron_day {
 sub cron_night {
     my $self = shift;
     my $level = 1;
-    my $call_freq = 12;
+    my $call_freq = $self->config->{cron_night_freq_lock};
 
-    my $last_call = get_last_cron_run_in_hours($self->backup_db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->backup_db, $level);
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron night called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
 
-    log_cron_usage($self->backup_db, $level);
+    log_cron_usage($self->app->backup_db, $level);
     $self->write_log("Cron night started");
 
     ############ CRON ACTIONS
@@ -89,14 +89,14 @@ sub cron_night {
 sub cron_week {
     my $self = shift;
     my $level = 2;
-    my $call_freq = 144;
+    my $call_freq = $self->config->{cron_week_freq_lock};
 
-    my $last_call = get_last_cron_run_in_hours($self->backup_db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->backup_db, $level);
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron week called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
 
-    log_cron_usage($self->backup_db, $level);
+    log_cron_usage($self->app->backup_db, $level);
     $self->write_log("Cron week started");
 
     ############ CRON ACTIONS 
@@ -112,14 +112,14 @@ sub cron_week {
 sub cron_month {
     my $self = shift;
     my $level = 3;
-    my $call_freq = 648;
+    my $call_freq = $self->config->{cron_month_freq_lock};
 
-    my $last_call = get_last_cron_run_in_hours($self->backup_db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->backup_db, $level);
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron month called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
 
-    log_cron_usage($self->backup_db, $level);
+    log_cron_usage($self->app->backup_db, $level);
     $self->write_log("Cron month started");
 
     ############ CRON ACTIONS

@@ -87,11 +87,12 @@ sub getAllwLetter{
 
 
     my @params;
-    my $qry = "SELECT DISTINCT id, name, type, permalink, substr(name, 0, 2) as let FROM Tag WHERE name NOT NULL AND type = ? ";
+    # my $qry = "SELECT DISTINCT id, name, type, permalink, substr(name, 0, 2) as let FROM Tag WHERE name NOT NULL AND type = ? ";
+    my $qry = "SELECT DISTINCT id, name, type, permalink FROM Tag WHERE name IS NOT NULL AND type = ? ";
     push @params, $type;
     if(defined $letter){
         push @params, $letter;
-        $qry .= "AND let LIKE ? ";
+        $qry .= "AND substr(name, 1, 1) LIKE ? ";
     }
     $qry .= "ORDER BY name ASC";
 

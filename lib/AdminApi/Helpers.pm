@@ -44,7 +44,7 @@ sub register {
 
 	$app->helper(get_year_of_oldest_entry => sub {
         my $self = shift;
-        my $sth = $self->db->prepare( "SELECT MIN(year) as min FROM Entry" ) or die $self->db->errstr;  
+        my $sth = $self->app->db->prepare( "SELECT MIN(year) as min FROM Entry" ) or die $self->app->db->errstr;  
         $sth->execute(); 
         my $row = $sth->fetchrow_hashref();
         my $min = $row->{min};
@@ -63,7 +63,7 @@ sub register {
     $app->helper(can_delete_backup => sub {
         my $self = shift;
         my $bid = shift;
-        my $backup_dbh = $self->backup_db;
+        my $backup_dbh = $self->app->backup_db;
 
         my $b_fname = get_backup_filename($self, $bid);
         my $b_age = get_backup_age_in_days($self, $bid);
@@ -72,7 +72,11 @@ sub register {
         $file_exists = 1 if -e $b_fname;
 
 
-        return 1 if $file_exists == 1 and $b_age > 7; ###TODO: put this parameter into config!!
+        my $age_limit = $self->config->{allow_delete_backups_older_than};
+
+        # say "age limit is $age_limit, backup age: $b_age";
+
+        return 1 if $file_exists == 1 and $b_age > $age_limit;
         return 1 if $file_exists == 0;
         return 0;
     });
@@ -81,7 +85,7 @@ sub register {
     $app->helper(num_pubs => sub {
         my $self = shift;
 
-        my $sth = $self->db->prepare( "SELECT COUNT(id) as num FROM Entry" );  
+        my $sth = $self->app->db->prepare( "SELECT COUNT(id) as num FROM Entry" );  
         $sth->execute(); 
         my $row = $sth->fetchrow_hashref();
         my $num = $row->{num};
@@ -90,7 +94,8 @@ sub register {
 
     $app->helper(get_all_tag_types => sub {
         my $self = shift;
-        my @ttobjarr = TagTypeObj->getAll($self->db);
+        my $dbh = $self->app->db;
+        my @ttobjarr = TagTypeObj->getAll($dbh);
         return @ttobjarr;
         
         
@@ -102,7 +107,7 @@ sub register {
 
         say "get_tag_type_obj for type $type";
 
-        my $ttobj = TagTypeObj->getById($self->db, $type);
+        my $ttobj = TagTypeObj->getById($self->app->db, $type);
         return $ttobj;
 
         # return $ttobj->{name};
@@ -113,7 +118,7 @@ sub register {
         my $eid = shift;
         my $type = shift || 1;
 
-        my @tobjarr = TagObj->getTagsOfTypeForPaper($self->db, $eid, $type);
+        my @tobjarr = TagObj->getTagsOfTypeForPaper($self->app->db, $eid, $type);
         return @tobjarr;
     });
 
@@ -122,7 +127,7 @@ sub register {
         my $eid = shift;
         my $type = shift || 1;
 
-        my @tobjarr = TagObj->getUnassignedTagsOfTypeForPaper($self->db, $eid, $type);
+        my @tobjarr = TagObj->getUnassignedTagsOfTypeForPaper($self->app->db, $eid, $type);
         return @tobjarr;
     });
 
@@ -133,7 +138,7 @@ sub register {
     $app->helper(num_authors => sub {
         my $self = shift;
 
-        my $sth = $self->db->prepare( "SELECT COUNT(DISTINCT(master_id)) as num FROM Author " );  
+        my $sth = $self->app->db->prepare( "SELECT COUNT(DISTINCT(master_id)) as num FROM Author " );  
         $sth->execute(); 
         my $row = $sth->fetchrow_hashref();
         my $num = $row->{num};
@@ -143,7 +148,7 @@ sub register {
     $app->helper(num_visible_authors => sub {
         my $self = shift;
 
-        my $sth = $self->db->prepare( "SELECT COUNT(DISTINCT(master_id)) as num FROM Author WHERE display=1" );  
+        my $sth = $self->app->db->prepare( "SELECT COUNT(DISTINCT(master_id)) as num FROM Author WHERE display=1" );  
         $sth->execute(); 
         my $row = $sth->fetchrow_hashref();
         my $num = $row->{num};
@@ -172,26 +177,26 @@ sub register {
 
     $app->helper(get_num_teams => sub {
         my $self = shift;
-        my ($teams_arr_ref, $team_ids_arr_ref) = get_all_teams($self->db);
+        my ($teams_arr_ref, $team_ids_arr_ref) = get_all_teams($self->app->db);
         return scalar @$team_ids_arr_ref;
     });
 
     $app->helper(get_teams_id_arr => sub {
         my $self = shift;
-        my ($teams_arr_ref, $team_ids_arr_ref) = get_all_teams($self->db);
+        my ($teams_arr_ref, $team_ids_arr_ref) = get_all_teams($self->app->db);
         return @$team_ids_arr_ref;
     });
 
     $app->helper(get_team_name => sub {
         my $self = shift;
         my $id = shift;
-        return get_team_for_id($self->db, $id);
+        return get_team_for_id($self->app->db, $id);
     });
 
     $app->helper(get_tag_name => sub {
         my $self = shift;
         my $id = shift;
-        return get_tag_name_for_id($self->db, $id);
+        return get_tag_name_for_id($self->app->db, $id);
     });
 
     $app->helper(author_is_visible => sub {
@@ -221,7 +226,7 @@ sub register {
         my $self = shift;
         my $type = shift || 1;
 
-        my $sth = $self->db->prepare( "SELECT COUNT(id) as num FROM Tag WHERE type=?" );  
+        my $sth = $self->app->db->prepare( "SELECT COUNT(id) as num FROM Tag WHERE type=?" );  
         $sth->execute($type); 
         my $row = $sth->fetchrow_hashref();
         my $num = $row->{num};
@@ -232,7 +237,7 @@ sub register {
         my $self = shift;
         my $year = shift;
 
-        my $sth = $self->db->prepare( "SELECT COUNT(id) as num FROM Entry WHERE year=?" );  
+        my $sth = $self->app->db->prepare( "SELECT COUNT(id) as num FROM Entry WHERE year=?" );  
         $sth->execute($year); 
         my $row = $sth->fetchrow_hashref();
         my $num = $row->{num};
@@ -243,7 +248,7 @@ sub register {
         my $self = shift;
         my $type = shift;
         
-        return get_bibtex_types_for_our_type($self->db, $type);
+        return get_bibtex_types_for_our_type($self->app->db, $type);
     });
 
     $app->helper(helper_get_description_for_our_type => sub {
@@ -251,13 +256,13 @@ sub register {
         my $type = shift;
 
         
-        return get_description_for_our_type($self->db, $type);
+        return get_description_for_our_type($self->app->db, $type);
     });
 
     $app->helper(helper_get_landing_for_our_type => sub {
         my $self = shift;
         my $type = shift;
-        return get_landing_for_our_type($self->db, $type);
+        return get_landing_for_our_type($self->app->db, $type);
     });
 
     
@@ -265,7 +270,7 @@ sub register {
         my $self = shift;
         my $eid = shift;
 
-        return get_entry_title($self->db, $eid);
+        return get_entry_title($self->app->db, $eid);
       });
 
     
@@ -298,7 +303,7 @@ sub register {
     $app->helper(get_years_arr => sub {
         my $self = shift;
 
-        my $sth = $self->db->prepare( "SELECT DISTINCT year
+        my $sth = $self->app->db->prepare( "SELECT DISTINCT year
                                         FROM Entry
                                         LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
                                         LEFT JOIN Author ON Author.master_id = Entry_to_Author.author_id 
@@ -317,7 +322,7 @@ sub register {
         my $self = shift;
         my $mid = shift;
 
-        my $sth = $self->db->prepare( "SELECT COUNT(entry_id) as num FROM Entry_to_Author WHERE author_id=?" );  
+        my $sth = $self->app->db->prepare( "SELECT COUNT(entry_id) as num FROM Entry_to_Author WHERE author_id=?" );  
         $sth->execute($mid); 
         my $row = $sth->fetchrow_hashref();
         my $num = $row->{num};
@@ -328,7 +333,7 @@ sub register {
         my $self = shift;
         my $eid = shift;
 
-        my $sth = $self->db->prepare( "SELECT author_id FROM Entry_to_Author WHERE entry_id=?" );  
+        my $sth = $self->app->db->prepare( "SELECT author_id FROM Entry_to_Author WHERE entry_id=?" );  
         $sth->execute($eid); 
 
         my @authors;
@@ -344,7 +349,7 @@ sub register {
         my $self = shift;
         my $tid = shift;
 
-        my $sth = $self->db->prepare( "SELECT COUNT(entry_id) as num FROM Entry_to_Tag WHERE tag_id=?" );  
+        my $sth = $self->app->db->prepare( "SELECT COUNT(entry_id) as num FROM Entry_to_Tag WHERE tag_id=?" );  
         $sth->execute($tid); 
         my $row = $sth->fetchrow_hashref();
         my $num = $row->{num};
@@ -354,7 +359,7 @@ sub register {
     $app->helper(get_author_mids_arr => sub {
         my $self = shift;
 
-        my $sth = $self->db->prepare( "SELECT DISTINCT master_id FROM Author WHERE display = 1 ORDER BY master ASC" );  
+        my $sth = $self->app->db->prepare( "SELECT DISTINCT master_id FROM Author WHERE display = 1 ORDER BY master ASC" );  
         $sth->execute(); 
         my @arr;
         while(my $row = $sth->fetchrow_hashref()) {
@@ -368,7 +373,7 @@ sub register {
         my $self = shift;
         my $id = shift;
 
-        my $sth = $self->db->prepare( "SELECT master FROM Author WHERE id=?" );  
+        my $sth = $self->app->db->prepare( "SELECT master FROM Author WHERE id=?" );  
         $sth->execute($id); 
         my $row = $sth->fetchrow_hashref();
         my $master = $row->{master};
@@ -377,7 +382,7 @@ sub register {
 
     $app->helper(get_first_letters => sub {
            my $self = shift;
-           my $dbh = $self->db;
+           my $dbh = $self->app->db;
 
            my $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 0, 2) as let FROM Author
                  WHERE display=1

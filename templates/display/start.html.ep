@@ -1,5 +1,8 @@
 % layout 'admin';
 
+
+
+
 <div class="jumbotron">
     <h1>Hello!</h1>
     % if(session 'user'){

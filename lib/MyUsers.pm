@@ -8,49 +8,35 @@ use warnings;
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64); # sudo cpanm Crypt::Eksblowfish::Bcrypt
 use Crypt::Random; # sudo cpanm Crypt::Random
 use LWP::UserAgent;
+use Session::Token;
 
-# use Email::Send;
-# use Email::Send::Gmail;
-# use Email::Simple::Creator;
 
-# my $USERS = {
-#   pub_admin    => 'asdf'
-# };
 ####################################################################################################
 sub new { 
     my $class = shift;
     my $self = {};
     bless $self, $class;
 
-    prepare_backup_table();
-
     return $self;
     # bless {}, shift # the same but shorter :)
 };
 ####################################################################################################
 sub check {
-    my ($self, $user, $pass) = @_;
+    my ($self, $user, $pass, $dbh) = @_;
 
-    $self->insert_admin();
+    $self->prepare_user_table_mysql($dbh);
+    $self->insert_admin($dbh);
 
-    my $hash_from_db = $self->get_user_hash($user);
+    my $hash_from_db = $self->get_user_hash($user, $dbh);
     return undef if !defined $hash_from_db;
 
     if(defined $hash_from_db and defined $pass and $self->check_password($pass, $hash_from_db)==1){
-        $self->record_logging_in($user);
+        $self->record_logging_in($user, $dbh);
         return 1;
     }
 
     # Fail
     return undef;
-}
-
-
-
-####################################################################################################
-sub db{
-    my $dbh = DBI->connect('dbi:SQLite:dbname=user.db', '', '') or die $DBI::errstr;
-    return $dbh;
 }
 ####################################################################################################
 sub send_email{
@@ -86,19 +72,52 @@ sub send_email{
 sub generate_token{
     my $self = shift;
 
-    my @chars = ('0'..'9', 'A'..'Z', 'a'..'z');
-    my $len = 32;
-    my $string;
-    while($len--){ 
-        $string .= $chars[rand @chars] 
-    };
-    return $string;
-}
+    my $token = Session::Token->new(length => 32)->get;
+    return $token
 
+}
 ####################################################################################################
-sub prepare_backup_table{
+sub prepare_token_table_mysql{ 
     my $self = shift;
-    my $user_dbh = db();
+    my $user_dbh = shift;
+
+      $user_dbh->do("CREATE TABLE IF NOT EXISTS `Token`(
+        id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
+        token VARCHAR(250) NOT NULL,
+        email VARCHAR(250) NOT NULL,
+        requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT login_token_unique UNIQUE(token)
+      )");
+};
+####################################################################################################
+sub prepare_user_table_mysql{ 
+    my $self = shift;
+    my $user_dbh = shift;
+
+
+   $user_dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
+        id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
+        registration_time TIMESTAMP DEFAULT '0000-00-00 00:00:00',
+        last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        login VARCHAR(250) NOT NULL,
+        real_name VARCHAR(250) DEFAULT 'unnamed',
+        email VARCHAR(250) NOT NULL,
+        pass VARCHAR(250) NOT NULL,
+        pass2 VARCHAR(250) NOT NULL,
+        pass3 VARCHAR(250),
+        rank INTEGER(3) DEFAULT 0,
+        master_id INTEGER(8) DEFAULT 0,
+        tennant_id INTEGER(8) DEFAULT 0,
+        CONSTRAINT login_unique UNIQUE(login)
+      )");
+
+   $self->prepare_token_table_mysql($user_dbh);
+
+};
+####################################################################################################
+sub prepare_backup_table_sqlite{
+    my $self = shift;
+    my $user_dbh = shift;
 
 
    $user_dbh->do("CREATE TABLE IF NOT EXISTS Login(
@@ -129,16 +148,25 @@ sub save_token_email{
     my $self = shift;
     my $token = shift; 
     my $email = shift; 
-    my $user_dbh = db();
+    my $user_dbh = shift;
 
-    my $sth = $user_dbh->prepare("REPLACE INTO Token (id, email, token) VALUES (null, ?,?)");
+    my $sth = $user_dbh->prepare("INSERT INTO Token (requested, email, token) VALUES (CURRENT_TIMESTAMP, ?,?)");
     $sth->execute($email, $token);  
+}
+####################################################################################################
+sub remove_all_tokens_for_email{
+    my $self = shift;
+    my $email = shift; 
+    my $user_dbh = shift;
+
+    my $sth = $user_dbh->prepare("DELETE FROM Token WHERE email=?");
+    $sth->execute($email);  
 }
 ####################################################################################################
 sub remove_token{
     my $self = shift;
     my $token = shift; 
-    my $user_dbh = db();
+    my $user_dbh = shift;
 
     my $sth = $user_dbh->prepare("DELETE FROM Token WHERE token=?");
     $sth->execute($token);  
@@ -147,8 +175,8 @@ sub remove_token{
 sub get_email_for_token{
     my $self = shift;
     my $token = shift; 
+    my $user_dbh = shift;
 
-    my $user_dbh = db();
     my $sth = $user_dbh->prepare("SELECT email FROM Token WHERE token=?");
     $sth->execute($token);
 
@@ -156,11 +184,23 @@ sub get_email_for_token{
     return $row->{email};
 };
 ####################################################################################################
+sub get_login_for_id{
+    my $self = shift;
+    my $id = shift; 
+    my $user_dbh = shift;
+
+    my $sth = $user_dbh->prepare("SELECT login FROM Login WHERE id=?");
+    $sth->execute($id);
+
+    my $row = $sth->fetchrow_hashref();
+    return $row->{login} || 0;
+};
+####################################################################################################
 sub get_email{
     my $self = shift;
     my $login = shift; 
 
-    my $user_dbh = db();
+    my $user_dbh = shift;
     my $sth = $user_dbh->prepare("SELECT email FROM Login WHERE login=?");
     $sth->execute($login);
 
@@ -172,7 +212,7 @@ sub get_registration_time{
     my $self = shift;
     my $login = shift; 
 
-    my $user_dbh = db();
+    my $user_dbh = shift;
     my $sth = $user_dbh->prepare("SELECT registration_time FROM Login WHERE login=?");
     $sth->execute($login);
 
@@ -184,7 +224,7 @@ sub get_last_login{
     my $self = shift;
     my $login = shift; 
 
-    my $user_dbh = db();
+    my $user_dbh = shift;
     my $sth = $user_dbh->prepare("SELECT last_login FROM Login WHERE login=?");
     $sth->execute($login);
 
@@ -195,8 +235,8 @@ sub get_last_login{
 sub get_rank{
     my $self = shift;
     my $login = shift; 
+    my $user_dbh = shift;
 
-    my $user_dbh = db();
     my $sth = $user_dbh->prepare("SELECT rank FROM Login WHERE login=?");
     $sth->execute($login);
 
@@ -207,8 +247,8 @@ sub get_rank{
 sub login_exists{
     my $self = shift;
     my $uname = shift; 
+    my $user_dbh = shift;
 
-    my $user_dbh = db();
     my $sth = $user_dbh->prepare("SELECT COUNT(*) AS num FROM Login WHERE login=?");
     $sth->execute($uname);
     my $row = $sth->fetchrow_hashref();
@@ -219,8 +259,8 @@ sub login_exists{
 sub email_exists{
     my $self = shift;
     my $email = shift; 
+    my $user_dbh = shift;
 
-    my $user_dbh = db();
     my $sth = $user_dbh->prepare("SELECT COUNT(*) AS num FROM Login WHERE email=?");
     $sth->execute($email);
     my $row = $sth->fetchrow_hashref();
@@ -232,7 +272,7 @@ sub get_email_for_uname{
     my $self = shift;
     my $uname = shift; 
 
-    my $user_dbh = db();
+    my $user_dbh = shift;
     my $sth = $user_dbh->prepare("SELECT email FROM Login WHERE login=?");
     $sth->execute($uname);
     my $row = $sth->fetchrow_hashref();
@@ -243,7 +283,7 @@ sub set_new_password{
     my $self = shift; 
     my $email = shift; 
     my $pass_plaintext = shift;
-    my $user_dbh = db();
+    my $user_dbh = shift;
 
     if(defined $email and length($email)>3 and defined $pass_plaintext and length($pass_plaintext)>3){
         my $salt = salt();
@@ -257,6 +297,35 @@ sub set_new_password{
 };
 
 ####################################################################################################
+sub do_delete_user{
+    my $self = shift;
+    my $id = shift; 
+    my $dbh = shift;
+
+    my $usr_obj = UserObj->new({id => $id});
+    $usr_obj->initFromDB($dbh);
+    
+    if($self->login_exists($usr_obj->{login}, $dbh) and !defined $usr_obj->is_admin()){
+        my $sth = $dbh->prepare("DELETE FROM Login WHERE id=?");
+        $sth->execute($id);    
+    }
+};
+
+####################################################################################################
+sub promote_to_manager{
+    my $self = shift;
+    my $id = shift; 
+    my $dbh = shift;
+
+    my $usr_obj = UserObj->new({id => $id});
+    $usr_obj->initFromDB($dbh);
+    
+    if($self->login_exists($usr_obj->{login}, $dbh) and !defined $usr_obj->is_admin()){
+        my $sth = $dbh->prepare("DELETE FROM Login WHERE id=?");
+        $sth->execute($id);    
+    }
+};
+####################################################################################################
 sub add_new_user{
     my $self = shift; 
     my $uname = shift; 
@@ -264,29 +333,34 @@ sub add_new_user{
     my $name = shift || "unnamed"; 
     my $pass_plaintext = shift;
     my $rank = shift || "0"; 
-    my $user_dbh = db();
+    my $user_dbh = shift;
 
     if(defined $uname and length($uname)>1 and defined $email and length($email)>3 and defined $pass_plaintext and length($pass_plaintext)>3){
         my $salt = salt();
         my $hash = encrypt_password($pass_plaintext, $salt);
 
-        my $sth = $user_dbh->prepare("REPLACE INTO Login (login, email, pass, pass2, real_name, rank) VALUES (?,?,?,?,?,?)");
+
+        my $sth = $user_dbh->prepare("INSERT IGNORE INTO Login (login, email, pass, pass2, real_name, rank) VALUES (?,?,?,?,?,?)");
         $sth->execute($uname, $email, $hash, $salt, $name, $rank);
     }
 };
 ####################################################################################################
 sub insert_admin{
     my $self = shift;
-    # $self->add_new_user("pub_admin", 'piotr.rygielski@uni-wuerzburg.de', "Admin", "asdf", "3");
+    my $dbh = shift;
+    $self->add_new_user("pub_admin", 'piotr.rygielski@uni-wuerzburg.de', "Admin", "asdf", "3", $dbh);
 };
 ####################################################################################################
 sub get_user_hash{
     my $self = shift;
     my $login = shift;
+    my $user_dbh = shift;
+
+    
 
     return undef if !defined $login;
 
-    my $user_dbh = db();
+    
 
     my $sth = $user_dbh->prepare("SELECT login, pass FROM Login WHERE login=?");
     $sth->execute($login);
@@ -299,10 +373,10 @@ sub get_user_hash{
 sub get_user_real_name{
     my $self = shift;
     my $login = shift;
-
+    my $user_dbh = shift;
     return undef if !defined $login;
 
-    my $user_dbh = db();
+    
 
     my $sth = $user_dbh->prepare("SELECT real_name FROM Login WHERE login=?");
     $sth->execute($login);
@@ -315,12 +389,12 @@ sub get_user_real_name{
 sub record_logging_in{
     my $self = shift;
     my $login = shift;
-
+    my $user_dbh = shift;
     return undef if !defined $login;
     
-    my $user_dbh = db();
+    
 
-    my $sth = $user_dbh->prepare("UPDATE Login SET last_login=datetime('now','localtime') WHERE login=?");
+    my $sth = $user_dbh->prepare("UPDATE Login SET last_login=CURRENT_TIMESTAMP WHERE login=?");
     $sth->execute($login);
 };
 

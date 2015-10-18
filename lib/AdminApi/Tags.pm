@@ -27,7 +27,7 @@ use Mojo::Log;
 ### NOT USED!
 sub prepare_db{
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     $dbh->do("CREATE TABLE IF NOT EXISTS TagType(
         name TEXT,
@@ -58,7 +58,7 @@ sub prepare_db{
 
 sub index {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $letter = $self->param('letter') || '%';
     my $type = $self->param('type') || 1;
 
@@ -77,7 +77,7 @@ sub index {
 ####################################################################################
 sub get_first_letters{
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $type = shift || 1;
 
     my $sth = $dbh->prepare( "SELECT DISTINCT substr(name, 0, 2) as let FROM Tag WHERE type=? ORDER BY let ASC" ); 
@@ -95,7 +95,7 @@ sub add_tags_from_string {
     my $self = shift;
     my $tags_to_add = shift;
     my $type = shift || 1;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my @tag_ids;
     my @tags_arr;
@@ -144,7 +144,7 @@ sub add_tags_from_string {
 ####################################################################################
 sub add {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $type = $self->param('type') || 1;
 
     $self->render(template => 'tags/add', type => $type);
@@ -154,7 +154,7 @@ sub add {
 sub add_post {
     my $self = shift;
 
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $type = $self->param('type') || 1;
 
     my $tags_to_add = $self->param('new_tag');
@@ -175,7 +175,7 @@ sub add_and_assign {
     my $tags_to_add = $self->param('new_tag');
     my $eid = $self->param('eid');
     my $type = $self->param('type') || 1;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my @tag_ids = add_tags_from_string($self, $tags_to_add);
 
@@ -193,7 +193,7 @@ sub add_and_assign {
 
 sub edit {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $tagid = $self->param('id');
 
     # the tag as it is stored in the db
@@ -245,7 +245,7 @@ sub edit {
 ####################################################################################
 sub get_authors_for_tag_read{
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $tag_id = $self->param('tid');
     my $team = $self->param('team');
 
@@ -273,7 +273,7 @@ sub get_tags_for_author_read{
     my $user = $self->param('aid');
     my $maid = $user;
 
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     $maid = get_master_id_for_master($dbh, $user);
     if($maid == -1){
         #user input is already master id! using the user's input
@@ -297,7 +297,7 @@ sub get_tags_for_author_read{
         my $set = get_set_of_papers_for_author_and_tag($self, $maid, $tag_id);
         my $count =  scalar $set->members;
 
-        my $url = "/ly/p?author=".get_master_for_id($self->db, $maid)."&tag=".$tag."&title=1&navbar=1";
+        my $url = "/ly/p?author=".get_master_for_id($self->app->db, $maid)."&tag=".$tag."&title=1&navbar=1";
         
         my $obj = new TagCloudClass($tag);
         $obj->setURL($url);
@@ -322,7 +322,7 @@ sub get_tags_for_team_read{
     my $team = $self->param('tid');
     my $tid = $team;
 
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     $tid = get_team_id($dbh, $team); 
     if($tid == -1){
         #user input is already team id! using the user's input
@@ -346,7 +346,7 @@ sub get_tags_for_team_read{
         my $set = get_set_of_papers_for_team_and_tag($self, $tid, $tag_id);
         my $count =  scalar $set->members;
 
-        my $url = "/ly/p?team=".get_team_for_id($self->db, $tid)."&tag=".$tag."&title=1&navbar=1";
+        my $url = "/ly/p?team=".get_team_for_id($self->app->db, $tid)."&tag=".$tag."&title=1&navbar=1";
         
         my $obj = new TagCloudClass($tag);
         $obj->setURL($url);
@@ -368,7 +368,7 @@ sub get_tags_for_team_read{
 ####################################################################################
 sub get_authors_for_tag{
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
     my $tag_id = $self->param('tid');
 
     my $tag = get_tag_name_for_id($dbh, $tag_id);
@@ -382,7 +382,7 @@ sub get_authors_for_tag{
 
 sub delete {
     my $self = shift;
-    my $dbh = $self->db;
+    my $dbh = $self->app->db;
 
     my $tag_to_delete = $self->param('id_to_delete');
     my $type = $self->param('type') || 1;

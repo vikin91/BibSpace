@@ -10,7 +10,7 @@
 
   <body>
   <h1>Error 500...</h1>
-  <p>For this system, error 500 usually occurs when the app server has problems with talking to the database. If the server displays error 500 for 30 minutes or more, the app server will be automatically restarted. Twice per hour Piotr receives updates about the server status. He will fix it asap if the automatic restart does not help.</p>
+  <p>If this page appears for more than one hour, go to the intern-wiki and search for "error 500". You will be guided how to rescue the system.</p>
 
       %= include 'global_footer'
       

@@ -7,6 +7,10 @@
     
     %= include 'navi'
     <%= content_for 'navi' %>
+
+    %= include 'message_bar'
+    <%= content_for 'message_bar' %>
+
     <%= content %>
 
     %= include 'footer'

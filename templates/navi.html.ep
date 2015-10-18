@@ -15,6 +15,7 @@
             <li><a href="/profile"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
             % if(is_admin()){
                 <li><a href="/register"><span class="glyphicon glyphicon-log-in"></span> Register</a></li>
+                <li><a href="/manage_users"><i class="fa fa-users"></i> Manage Users</a></li>
             % }
             <li class="divider"></li>
             <li><a href="/logout"><span class="glyphicon glyphicon-off"></span> Logout</a></li>
@@ -364,25 +365,6 @@
     </div>
 
 % }
-
-
-% if (my $msg = flash 'msg') {
-    <div class="container">
-        <hr>
-        <div class="row">
-            <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
-              <div class="alert alert-warning">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <i class="fa  fa-exclamation-circle "></i> <strong>Message: </strong> <%=b($msg)%>
-              </div>
-            </div>
-        </div>
-    </div>
-    <hr>
-%}
-
-<br><br>
-
 
 
 
