@@ -166,13 +166,14 @@ sub post_gen_forgot_token {
         $do_gen = 1;
         # get email of this user
         $final_email = $self->users->get_email_for_uname($user, $dbh);
+        $self->write_log("Forgot: requesting new password for user $user");
     }
     if($self->users->email_exists($email, $dbh)==1){
         $do_gen = 1;
         $final_email = $email;
     }
 
-    $self->write_log("Forgot: requesting new password for user $user or email $email");
+    $self->write_log("Forgot: requesting new password for email $email");
 
     if($do_gen == 1 and $final_email ne ""){
 
@@ -182,15 +183,14 @@ sub post_gen_forgot_token {
         $self->users->send_email($token, $final_email);
 
         $self->write_log("Forgot: reset token sent to $final_email");
-
-        $self->stash(msg => 'Email with password reset instructions has been sent.');
-        $self->render(template => 'login/index');
+        $self->flash(msg => 'Email with password reset instructions has been sent. Expect an email from \'Mailgun Sandbox\'.');
+        $self->redirect_to('startpa');
 
     }
     else{
 
         $self->write_log("Forgot: user does not exist.");
-        $self->stash(msg => 'User or email don\'t exists. Try again.');
+        $self->stash(msg => 'User or email does not exists. Try again.');
         $self->render(template => 'login/forgot_request');
     }
 }
@@ -216,14 +216,16 @@ sub store_password {
     my $pass2 = $self->param('pass2');
     my $dbh = $self->app->db;
 
-    my $email = $self->users->get_email_for_token($token); #get it out of the DB for the token
+    my $email = $self->users->get_email_for_token($token, $dbh); #get it out of the DB for the token
 
 
-    if($self->users->email_exists($email) == 0){
+    if($self->users->email_exists($email, $dbh) == 0){
 
-        $self->stash(msg => 'Token invalid! Abuse will be reported.');
-        $self->write_log("Forgot: Token invalid! ($token)");
-        $self->render(template => 'login/index');
+        $self->flash(msg => 'Reset password token is invalid! Abuse will be reported.');
+        # $self->stash(msg => 'Reset password token is invalid! Abuse will be reported.');
+        $self->write_log("Forgot: Reset password token is invalid! ($token)");
+        $self->redirect_to('login_form');
+        # $self->render(template => 'login/index');
         return;
     }
 
@@ -232,14 +234,17 @@ sub store_password {
         if($self->users->set_new_password($email, $pass1, $dbh) == 1){
 
             $self->users->remove_token($token, $dbh);
-            $self->stash(msg => 'Change successuful. You may login now.');
-            $self->write_log("Forgot: Change successful");
-            $self->render(template => 'login/index');
+            $self->users->remove_all_tokens_for_email($email, $dbh);
+            $self->flash(msg => 'Password change successful. All your password reset tokens have been removed. You may login now.');
+            $self->write_log("Forgot: Password change successful for token $token.");
+            $self->redirect_to('login_form');
+            # $self->render(template => 'login/index');
             return;
         }
     }
     else{
-        $self->stash(msg => 'Passwords are not same. Try again.', token => $token);
+        $self->flash(msg => 'Passwords are not same. Try again.', token => $token);
+        $self->stash(token => $token);
         $self->write_log("Forgot: Chnage failed. Passwords are not same.");
         $self->render(template => 'login/set_new_password');    
         return;
@@ -248,7 +253,8 @@ sub store_password {
     $self->users->remove_token($token, $dbh);
     $self->write_log("Forgot: Chnage failed. Token deleted.");
     $self->stash(msg => 'Something went wrong. The password has not been changed. The reset token is no longer valid. You need to request a new one by clicking in \'I forgot my password\'.');
-    $self->render(template => 'login/index');
+    $self->redirect_to('login_form');
+    # $self->render(template => 'login/index');
 }
 
 

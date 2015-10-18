@@ -8,14 +8,9 @@ use warnings;
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64); # sudo cpanm Crypt::Eksblowfish::Bcrypt
 use Crypt::Random; # sudo cpanm Crypt::Random
 use LWP::UserAgent;
+use Session::Token;
 
-# use Email::Send;
-# use Email::Send::Gmail;
-# use Email::Simple::Creator;
 
-# my $USERS = {
-#   pub_admin    => 'asdf'
-# };
 ####################################################################################################
 sub new { 
     my $class = shift;
@@ -29,7 +24,8 @@ sub new {
 sub check {
     my ($self, $user, $pass, $dbh) = @_;
 
-    $self->insert_admin();
+    $self->prepare_user_table_mysql($dbh);
+    $self->insert_admin($dbh);
 
     my $hash_from_db = $self->get_user_hash($user, $dbh);
     return undef if !defined $hash_from_db;
@@ -42,16 +38,6 @@ sub check {
     # Fail
     return undef;
 }
-
-
-
-####################################################################################################
-# sub db{
-
-#     #old mysqlite db
-#     # my $dbh = DBI->connect('dbi:SQLite:dbname=user.db', '', '') or die $DBI::errstr;
-#     # return $dbh;
-# }
 ####################################################################################################
 sub send_email{
     my $self = shift;
@@ -86,25 +72,33 @@ sub send_email{
 sub generate_token{
     my $self = shift;
 
-    my @chars = ('0'..'9', 'A'..'Z', 'a'..'z');
-    my $len = 32;
-    my $string;
-    while($len--){ 
-        $string .= $chars[rand @chars] 
-    };
-    return $string;
-}
+    my $token = Session::Token->new(length => 32)->get;
+    return $token
 
+}
 ####################################################################################################
-sub prepare_backup_table_mysql{ #TODO: untested!!
+sub prepare_token_table_mysql{ 
+    my $self = shift;
+    my $user_dbh = shift;
+
+      $user_dbh->do("CREATE TABLE IF NOT EXISTS `Token`(
+        id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
+        token VARCHAR(250) NOT NULL,
+        email VARCHAR(250) NOT NULL,
+        requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT login_token_unique UNIQUE(token)
+      )");
+};
+####################################################################################################
+sub prepare_user_table_mysql{ 
     my $self = shift;
     my $user_dbh = shift;
 
 
    $user_dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
-        id INTEGER(5) PRIMARY KEY,
+        id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
         registration_time TIMESTAMP DEFAULT '0000-00-00 00:00:00',
-        last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         login VARCHAR(250) NOT NULL,
         real_name VARCHAR(250) DEFAULT 'unnamed',
         email VARCHAR(250) NOT NULL,
@@ -117,13 +111,8 @@ sub prepare_backup_table_mysql{ #TODO: untested!!
         CONSTRAINT login_unique UNIQUE(login)
       )");
 
-      $user_dbh->do("CREATE TABLE IF NOT EXISTS `Token`(
-        id INTEGER(5) PRIMARY KEY,
-        token VARCHAR(250) NOT NULL,
-        email VARCHAR(250) NOT NULL,
-        requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT login_token_unique UNIQUE(token)
-      )");
+   $self->prepare_token_table_mysql($user_dbh);
+
 };
 ####################################################################################################
 sub prepare_backup_table_sqlite{
@@ -161,9 +150,17 @@ sub save_token_email{
     my $email = shift; 
     my $user_dbh = shift;
 
-    # UPDATE Entry SET modified_time=CURRENT_TIMESTAMP WHERE 
-    my $sth = $user_dbh->prepare("INSERT IGNORE INTO Token (id, requested, email, token) VALUES (null, CURRENT_TIMESTAMP, ?,?)");
+    my $sth = $user_dbh->prepare("INSERT INTO Token (requested, email, token) VALUES (CURRENT_TIMESTAMP, ?,?)");
     $sth->execute($email, $token);  
+}
+####################################################################################################
+sub remove_all_tokens_for_email{
+    my $self = shift;
+    my $email = shift; 
+    my $user_dbh = shift;
+
+    my $sth = $user_dbh->prepare("DELETE FROM Token WHERE email=?");
+    $sth->execute($email);  
 }
 ####################################################################################################
 sub remove_token{
@@ -178,8 +175,8 @@ sub remove_token{
 sub get_email_for_token{
     my $self = shift;
     my $token = shift; 
-
     my $user_dbh = shift;
+
     my $sth = $user_dbh->prepare("SELECT email FROM Token WHERE token=?");
     $sth->execute($token);
 
@@ -262,8 +259,8 @@ sub login_exists{
 sub email_exists{
     my $self = shift;
     my $email = shift; 
-
     my $user_dbh = shift;
+
     my $sth = $user_dbh->prepare("SELECT COUNT(*) AS num FROM Login WHERE email=?");
     $sth->execute($email);
     my $row = $sth->fetchrow_hashref();
@@ -342,6 +339,7 @@ sub add_new_user{
         my $salt = salt();
         my $hash = encrypt_password($pass_plaintext, $salt);
 
+
         my $sth = $user_dbh->prepare("INSERT IGNORE INTO Login (login, email, pass, pass2, real_name, rank) VALUES (?,?,?,?,?,?)");
         $sth->execute($uname, $email, $hash, $salt, $name, $rank);
     }
@@ -349,13 +347,16 @@ sub add_new_user{
 ####################################################################################################
 sub insert_admin{
     my $self = shift;
-    # $self->add_new_user("pub_admin", 'piotr.rygielski@uni-wuerzburg.de', "Admin", "asdf", "3");
+    my $dbh = shift;
+    $self->add_new_user("pub_admin", 'piotr.rygielski@uni-wuerzburg.de', "Admin", "asdf", "3", $dbh);
 };
 ####################################################################################################
 sub get_user_hash{
     my $self = shift;
     my $login = shift;
     my $user_dbh = shift;
+
+    
 
     return undef if !defined $login;
 
