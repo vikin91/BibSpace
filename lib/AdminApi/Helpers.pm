@@ -22,9 +22,6 @@ sub register {
 
 	my ($self, $app) = @_;
 
-	$app->helper(mypluginhelper =>
-		sub { return 'I am your helper and I live in a plugin!'; });
-
     $app->helper(get_rank_of_current_user => sub {
         my $self = shift;
         my $uname = shift || $app->session('user');
