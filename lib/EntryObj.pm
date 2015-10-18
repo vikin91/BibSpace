@@ -16,15 +16,17 @@ use AdminApi::Core;
 sub new
 {
     my ($class, $args) = @_;
-    my $self = {
-        id    => $args->{id},
-        bibtex_key  => $args->{bibtex_key} || "",
-        type  => $args->{type} || "",
-        bib  => $args->{bib} || "",
-        html => $args->{html} || "no HTML for key ".$args->{bibtex_key},
+    my $self = {id    => $args->{id}+0,
+        entry_type  => $args->{entry_type} || 'paper',
+        bibtex_key  => $args->{bibtex_key},
+        bibtex_type  => $args->{bibtex_type},
+        bib  => $args->{bib},
+        html => $args->{html} || "no HTML",
         mtime  => $args->{mtime} || 0,
         ctime  => $args->{ctime} || 0,
         year  => $args->{year} || 0,
+        month  => $args->{month} || 0,
+        sort_month  => $args->{sort_month} || 0
     };
     return bless $self, $class;
 }
@@ -33,7 +35,7 @@ sub initFromDB{
     my $self = shift;
     my $dbh = shift;
 
-    my $qry = "SELECT DISTINCT id, bibtex_key, type, bib, html, modified_time, creation_time
+    my $qry = "SELECT DISTINCT id, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
                FROM Entry
                WHERE id = ?";
 
@@ -44,7 +46,10 @@ sub initFromDB{
     my $row = $sth->fetchrow_hashref();
     $self->{bibtex_key} = $row->{bibtex_key};
     $self->{year} = $row->{year};
-    $self->{type} = $row->{type} || "";
+    $self->{month} = $row->{month} || 0;
+    $self->{sort_month} = $row->{sort_month} || 0;
+    $self->{bibtex_type} = $row->{bibtex_type} || "";
+    $self->{entry_type} = $row->{entry_type} || "paper";
     $self->{bib} = $row->{bib} || "";
     $self->{html} = $row->{html} || "nohtml";
     $self->{ctime} = $row->{creation_time} || 0;
@@ -53,7 +58,95 @@ sub initFromDB{
 
 
 }
+########################################################################################################################
+sub isTalk{
+    my $self = shift;
+    if( $self->{entry_type} eq 'talk'){
+        return 1;
+    }
+    return 0;
+}
+########################################################################################################################
+sub isTalkBasedOnDB{
+    my $self = shift;
+    my $dbh = shift;
 
+    my $qry = "SELECT entry_type FROM Entry WHERE id = ?";
+    my $sth = $dbh->prepare( $qry );  
+    $sth->execute($self->{id});  
+
+    my $row = $sth->fetchrow_hashref();
+    if( $row->{entry_type} eq 'talk'){
+        return 1;
+    }
+    return 0;
+}
+########################################################################################################################
+sub isTalkBasedOnTag{
+    my $self = shift;
+    my $dbh = shift;
+    return $self->hasTag($dbh, "Talks");
+}
+########################################################################################################################
+sub makeTalk{
+    my $self = shift;
+    my $dbh = shift;
+
+    my $qry = "UPDATE Entry SET entry_type='talk' WHERE id = ?";
+    my $sth = $dbh->prepare( $qry );  
+    $sth->execute($self->{id});     
+}
+########################################################################################################################
+sub makePaper{
+    my $self = shift;
+    my $dbh = shift;
+
+    my $qry = "UPDATE Entry SET entry_type='paper' WHERE id = ?";
+    my $sth = $dbh->prepare( $qry );  
+    $sth->execute($self->{id});     
+}
+########################################################################################################################
+sub fixEntryTypeBasedOnTag{
+    my $self = shift;
+    my $dbh = shift;
+
+    #todo: could be otpimized to minimize db calls
+
+    if($self->isTalkBasedOnTag($dbh) and $self->isTalkBasedOnDB($dbh)){ 
+        say "both true: OK";
+    }
+    elsif($self->isTalkBasedOnTag($dbh) and $self->isTalkBasedOnDB($dbh) ==0 ){
+        say "tag true, DB false. Should write to DB";
+        $self->makeTalk($dbh); 
+    } 
+    elsif($self->isTalkBasedOnTag($dbh)==0 and $self->isTalkBasedOnDB($dbh) ){
+        say "tag false, DB true. do nothing";
+    }
+    else{
+        say "both false. Do nothing";
+    }
+}
+########################################################################################################################
+sub setMonth{
+    my $self = shift;
+    my $month = shift;
+    my $dbh = shift;
+
+    my $qry = "UPDATE Entry SET month=? WHERE id = ?";
+    my $sth = $dbh->prepare( $qry );  
+    $sth->execute($month, $self->{id});     
+}
+########################################################################################################################
+sub setSortMonth{
+    my $self = shift;
+    my $sort_month = shift;
+    my $dbh = shift;
+
+    my $qry = "UPDATE Entry SET sort_month=? WHERE id = ?";
+    my $sth = $dbh->prepare( $qry );  
+    $sth->execute($sort_month, $self->{id});     
+}
+########################################################################################################################
 sub hasTag{
     my $self = shift;
     my $dbh = shift;
@@ -81,10 +174,10 @@ sub getAll{
     my $self = shift;
     my $dbh = shift;
 
-    my $qry = "SELECT id, bibtex_key, type, bib, html, modified_time, creation_time
+    my $qry = "SELECT id, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
                 FROM Entry 
                 WHERE bibtex_key IS NOT NULL 
-                ORDER BY year DESC, modified_time ASC";
+                ORDER BY year DESC, sort_month DESC, modified_time ASC";
     my $sth = $dbh->prepare( $qry );  
     $sth->execute();  
 
@@ -94,7 +187,10 @@ sub getAll{
         my $obj = EntryObj->new({id => $row->{id},
                                 bibtex_key => $row->{bibtex_key},
                                 year => $row->{year},
-                                type => $row->{type},
+                                month => $row->{month},
+                                sort_month => $row->{sort_month},
+                                bibtex_type => $row->{bibtex_type},
+                                entry_type => $row->{entry_type},
                                 bib => $row->{bib},
                                 html => $row->{html},
                                 ctime => $row->{creation_time},
@@ -132,12 +228,12 @@ sub getFromArray{
     my @objs;
 
     if(defined $sort and $sort==1){
-        my $qry = "SELECT id, bibtex_key, type, bib, html, modified_time, creation_time
+        my $qry = "SELECT id, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
                 FROM Entry 
                 WHERE bibtex_key IS NOT NULL 
                 AND id IN (".$placeholders.")";
         if (defined $sort and $sort==1){
-            $qry .= "ORDER BY year DESC, modified_time ASC";
+            $qry .= "ORDER BY year DESC, sort_month DESC, modified_time ASC";
         }
         my $sth = $dbh->prepare_cached( $qry );  
         $sth->execute(@arr);  
@@ -145,7 +241,10 @@ sub getFromArray{
             my $obj = EntryObj->new({id => $row->{id},
                                 bibtex_key => $row->{bibtex_key},
                                 year => $row->{year},
-                                type => $row->{type},
+                                month => $row->{month},
+                                sort_month => $row->{sort_month},
+                                bibtex_type => $row->{bibtex_type},
+                                entry_type => $row->{entry_type},
                                 bib => $row->{bib},
                                 html => $row->{html},
                                 ctime => $row->{creation_time},
@@ -156,25 +255,8 @@ sub getFromArray{
     }
     else{ # TODO: pobieranie po jednym argumencie i dodawanie do tablicy objs krok po kroku aby utrzymac order!
 
-        # for my $eid (@arr){
-        #      my $qry = "SELECT id, key, type, bib, html, modified_time, creation_time FROM Entry WHERE key NOT NULL 
-        #         AND id=?";
-        #     my $sth = $dbh->prepare_cached( $qry );  
-        #     $sth->execute($eid);  
-        #     my $row = $sth->fetchrow_hashref();
-        #     my $obj = EntryObj->new({id => $row->{id},
-        #                         bibtex_key => $row->{bibtex_key},
-        #                         year => $row->{year},
-        #                         type => $row->{type},
-        #                         bib => $row->{bib},
-        #                         html => $row->{html},
-        #                         ctime => $row->{creation_time},
-        #                         mtime => $row->{modified_time},
-        #     });
-        #     push @objs, $obj;
-        # }
 
-        my $qry = "SELECT id, bibtex_key, type, bib, html, modified_time, creation_time
+        my $qry = "SELECT id, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
                 FROM Entry 
                 WHERE bibtex_key IS NOT NULL 
                 AND id IN (".$placeholders.") ORDER BY CASE id ";
@@ -193,7 +275,10 @@ sub getFromArray{
             my $obj = EntryObj->new({id => $row->{id},
                                 bibtex_key => $row->{bibtex_key},
                                 year => $row->{year},
-                                type => $row->{type},
+                                month => $row->{month},
+                                sort_month => $row->{sort_month},
+                                bibtex_type => $row->{bibtex_type},
+                                entry_type => $row->{entry_type},
                                 bib => $row->{bib},
                                 html => $row->{html},
                                 ctime => $row->{creation_time},
@@ -219,21 +304,31 @@ sub getByFilter{
 
     my $mid = shift;
     my $year = shift;
-    my $type = shift;
+    my $bibtex_type = shift;
+    my $entry_type = shift;
     my $tagid = shift;
     my $teamid = shift;
     my $visible = shift || 0;
     my $permalink = shift;
 
+    # say "   mid $mid
+    #         year $year
+    #         bibtex_type $bibtex_type
+    #         entry_type $entry_type
+    #         tagid $tagid
+    #         teamid $teamid
+    #         visible $visible
+    #         permalink $permalink";
+
     my @params;
 
-    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, bib, html, Entry.type, Entry.year, modified_time, creation_time
+    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, bib, html, Entry.bibtex_type, Entry.entry_type, Entry.year, Entry.month, Entry.sort_month, modified_time, creation_time
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
                 LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
                 LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
-                LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.type 
+                LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.bibtex_type 
                 LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
                 LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id 
                 WHERE Entry.bibtex_key IS NOT NULL ";
@@ -248,9 +343,13 @@ sub getByFilter{
         push @params, $year;
         $qry .= "AND Entry.year=? ";
     }
-    if(defined $type){
-        push @params, $type;
+    if(defined $bibtex_type){
+        push @params, $bibtex_type;
         $qry .= "AND OurType_to_Type.our_type=? ";
+    }
+    if(defined $entry_type){
+        push @params, $entry_type;
+        $qry .= "AND Entry.entry_type=? ";
     }
     if(defined $teamid){
         push @params, $teamid;
@@ -267,7 +366,7 @@ sub getByFilter{
         push @params, $permalink;
         $qry .= "AND Tag.permalink LIKE ?";
     } 
-    $qry .= "ORDER BY Entry.year DESC, Entry.creation_time DESC, Entry.modified_time DESC, Entry.bibtex_key ASC";
+    $qry .= "ORDER BY Entry.year DESC, Entry.sort_month DESC, Entry.creation_time DESC, Entry.modified_time DESC, Entry.bibtex_key ASC";
 
     # print $qry."\n";
 
@@ -278,14 +377,17 @@ sub getByFilter{
 
     while(my $row = $sth->fetchrow_hashref()) {
         my $obj = EntryObj->new({id => $row->{id},
-                                bibtex_key => $row->{bibtex_key},
-                                year => $row->{year},
-                                type => $row->{type},
-                                bib => $row->{bib},
-                                html => $row->{html},
-                                ctime => $row->{creation_time},
-                                mtime => $row->{modified_time},
-                            });
+                            bibtex_key => $row->{bibtex_key},
+                            year => $row->{year},
+                            month => $row->{month},
+                            sort_month => $row->{sort_month},
+                            bibtex_type => $row->{bibtex_type},
+                            entry_type => $row->{entry_type},
+                            bib => $row->{bib},
+                            html => $row->{html},
+                            ctime => $row->{creation_time},
+                            mtime => $row->{modified_time},
+        });
         push @objs, $obj;
     }
 
@@ -308,18 +410,18 @@ sub getByFilterNoTalks{
     my $permalink = shift;
 
     my @params;
-
-    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, bib, html, Entry.type, Entry.year, modified_time, creation_time
+    # AND Tag.name <> 'Talks' 
+    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, bib, html, Entry.bibtex_type, Entry.entry_type, Entry.year, Entry.month, Entry.sort_month, modified_time, creation_time
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
                 LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
                 LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
-                LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.type 
+                LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.bibtex_type 
                 LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
                 LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id 
                 WHERE Entry.bibtex_key IS NOT NULL 
-                AND Tag.name <> 'Talks' ";
+                AND Entry.entry_type == 'paper' ";
     if(defined $visible and $visible eq '1'){
         $qry .= "AND Author.display=1 ";
     }
@@ -350,7 +452,7 @@ sub getByFilterNoTalks{
         push @params, $permalink;
         $qry .= "AND Tag.permalink LIKE ?";
     } 
-    $qry .= "ORDER BY Entry.year DESC, Entry.creation_time DESC, Entry.modified_time DESC, Entry.bibtex_key ASC";
+    $qry .= "ORDER BY Entry.year DESC, Entry.sort_month DESC, Entry.creation_time DESC, Entry.modified_time DESC, Entry.bibtex_key ASC";
 
     # print $qry."\n";
 
@@ -361,14 +463,17 @@ sub getByFilterNoTalks{
 
     while(my $row = $sth->fetchrow_hashref()) {
         my $obj = EntryObj->new({id => $row->{id},
-                                bibtex_key => $row->{bibtex_key},
-                                year => $row->{year},
-                                type => $row->{type},
-                                bib => $row->{bib},
-                                html => $row->{html},
-                                ctime => $row->{creation_time},
-                                mtime => $row->{modified_time},
-                            });
+                            bibtex_key => $row->{bibtex_key},
+                            year => $row->{year},
+                            month => $row->{month},
+                            sort_month => $row->{sort_month},
+                            bibtex_type => $row->{bibtex_type},
+                            entry_type => $row->{entry_type},
+                            bib => $row->{bib},
+                            html => $row->{html},
+                            ctime => $row->{creation_time},
+                            mtime => $row->{modified_time},
+        });
         push @objs, $obj;
     }
 

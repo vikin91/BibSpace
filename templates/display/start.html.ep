@@ -46,7 +46,8 @@
 					<li>tag=[String]</li>
                     <li>permalink=[String]</li>
 					<li>team=[String]</li>
-					<li>type=[String]</li>
+					<li>bibtex_type=[String]  -- <strong>changed type to bibtex_type</strong></li>
+                    <li>entry_type=[paper, talk]  -- <strong>new</strong></li>
 					<li>year=[Integer]</li>
 				</ul>
 			</ul>

@@ -122,7 +122,8 @@ CREATE TABLE IF NOT EXISTS `OurType_to_Type`(
 
 
 ALTER TABLE Entry CHANGE type bibtex_type varchar(50) DEFAULT NULL;
-ALTER TABLE Entry ADD entry_type ENUM('entry', 'talk') NOT NULL AFTER id;
+ALTER TABLE Entry DROP COLUMN entry_type;
+ALTER TABLE Entry ADD entry_type ENUM('paper', 'talk') NOT NULL AFTER id;
 ALTER TABLE Entry ADD month TINYINT UNSIGNED DEFAULT 0 AFTER title;
 ALTER TABLE Entry ADD sort_month SMALLINT UNSIGNED DEFAULT 0 AFTER year;
 

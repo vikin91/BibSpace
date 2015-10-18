@@ -15,6 +15,7 @@ use AdminApi::Core;
 use AdminApi::Set;
 use AdminApi::Publications;
 use TagObj;
+use EntryObj;
 use TagTypeObj;
 
 use base 'Mojolicious::Plugin';
@@ -421,6 +422,104 @@ sub register {
         ';  
         return $hlp; 
     });
+
+    $app->helper(single_publication_row => sub {
+        my ($self, $obj, $burl, $j) = @_;
+        # my $obj = shift;
+        # my $burl = shift;
+        # my $j = shift;
+
+        my $t1 = "btn-success";
+        my $t2 = "btn-default";  
+        my $extra_msg = "";
+        if ($obj->isTalk()) {
+            $t1 = "btn-default";
+            $t2 = "btn-success";
+            if($obj->{bibtex_type} ne 'misc') {
+                $t2="btn-danger";
+                $extra_msg = ". Talks should have bibtex_type set to 'misc''"; 
+            }
+        }
+        return $obj->isTalk();
+        
+        
+
+        my $hlp = `
+            <td style="width: 120px;">
+                    <div class="btn-group">
+                        <a class="btn btn-warning" href="/publications/manage_tags/<%= $obj->{id} %><%=$burl%>"><span class="glyphicon glyphicon-tags"></span> T</a>
+                        <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
+                        <span class="glyphicon glyphicon-pencil"></span>
+                        <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="/publications/edit/<%=$obj->{id}%><%=$burl%>"><span class="glyphicon glyphicon-pencil" style="color: #5CB85C;"></span> Edit BibTeX</a></li>
+                            <li><a href="#modal-dialog-<%=$obj->{id}%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span> Delete...</a></li>
+                            <li><a href="/publications/show_authors/<%=$obj->{id}%><%=$burl%>"><span class="glyphicon glyphicon-user"></span> Show authors</a></li>
+                            <li><a href="/publications/regenerate/<%=$obj->{id}%><%=$burl%>"><span class="glyphicon glyphicon-refresh" style="color: #5CB85C;"></span> Regenerate HTML</a></li>
+                            <li><a href="/publications/add_pdf/<%=$obj->{id}%><%=$burl%>"><i class="fa fa-upload"></i><i class="fa fa-file-pdf-o"></i><i class="fa fa-file-powerpoint-o"></i> Upload pdf/slides</a></li>
+                            <li><a href="/publications/manage_tags/<%=$obj->{id}%><%=$burl%>"><span class="glyphicon glyphicon-tags"></span> Manage tags</a></li>
+                            <li><a href="/publications/manage_exceptions/<%=$obj->{id}%><%=$burl%>"><i class="fa fa-exclamation "></i> Manage exceptions</a></li>
+                        </ul>
+                    </div>
+
+
+                    <!-- MODAL DIALOG FOR DELETE -->
+                    <div id="modal-dialog-<%=$obj->{id}%>" class="modal">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+                                    <h3>Are you sure?</h3>
+                                    <p>Are you sure you want to delete item <span class="btn btn-default btn-sm"><%= $j %></span> key <span class="badge"><%=$obj->{key} %></span> ?</p>
+                                </div>
+                                <div class="modal-body">
+                                    %== $obj->{html}
+                                    <div class="modal-footer">
+                                        <a href="/publications/delete_sure/<%=$obj->{id}%><%=$burl%>" class="btn btn-danger"> Yes, delete it <span class="glyphicon glyphicon-trash"></span></a>
+                                        <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, I want to keep it <span class="glyphicon glyphicon-heart"></span> </button></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                  <!-- END OF MODAL DIALOG FOR DELETE -->
+                </td>
+
+                <!-- TALK/PAPER switch -->
+                <td style="width: 120px;">
+                    <div class="btn-group">
+
+                        <a class="btn <%=$t1%> btn-sm" href="/publications/make_paper/<%= $obj->{id} %><%=$burl%>" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
+                                <span class="glyphicon glyphicon-file"></span>
+                            </span>
+                        </a>
+                        <a href="/publications/make_talk/<%= $obj->{id} %><%=$burl%>" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
+                                <span class="glyphicon glyphicon-volume-up"></span>
+                            </span>
+                        </a>
+                    </div>
+                </td>
+                <!-- ID switch -->
+                <td>
+                  <button class="btn btn-default btn-sm" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> <%= $obj->{id} %></button>
+                </td>
+                <td>
+                    <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Created: <%=$obj->{ctime}%>, Modified: <%=$obj->{mtime}%>">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </td>
+                <td>
+                  <p class="btn btn-default btn-sm"><%= $j %></p>
+                </td>
+                
+                <td class="bibtexitem">
+                  %== $obj->{html}
+                </td>
+        `;  
+        return $hlp; 
+    });
+
 
 }
 

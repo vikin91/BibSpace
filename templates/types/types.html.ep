@@ -105,22 +105,22 @@
                         <p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-book"></span> <%= $otype %></p>
                     </td>
                     <td>
-                        <a class="btn btn-default btn-sm" href="/publications?type=<%= $otype %>">
+                        <a class="btn btn-default btn-sm" href="/publications?bibtex_type=<%= $otype %>">
                         <span class="glyphicon glyphicon-list-alt"></span> Show papers 
                         </a>
                     </td>
                     <td>
-                        <a class="btn btn-default btn-sm" href="/landing/publications?type=<%= $otype %>">
+                        <a class="btn btn-default btn-sm" href="/landing/publications?bibtex_type=<%= $otype %>">
                             <span class="glyphicon glyphicon-plane"></span> Landing page
                         </a>
                     </td>
                     <td>
-                      <a class="btn btn-default btn-sm" href="/landing-years/publications?type=<%= $otype %>">
+                      <a class="btn btn-default btn-sm" href="/landing-years/publications?bibtex_type=<%= $otype %>">
                             <span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing page
                       </a>
                     </td>
                     <td>
-                        <a class="btn btn-default btn-sm" href="/read/bibtex?type=<%= $otype %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of type <%= $otype %>">
+                        <a class="btn btn-default btn-sm" href="/read/bibtex?bibtex_type=<%= $otype %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of type <%= $otype %>">
                             <i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> BibTeX
                         </a>
                     </td>

@@ -268,6 +268,10 @@ sub startup {
     $superadmin->get('/profile/make_admin/:id')->to('login#make_admin');
     
     $manager->get('/log')->to('display#show_log');
+    $superadmin->get('/settings/fix_entry_types')->to('publications#fixEntryType');
+    $superadmin->get('/settings/fix_months')->to('publications#fixMonths');
+    
+    
     $manager->get('/settings/clean_all')->to('publications#clean_ugly_bibtex');
     $manager->get('/settings/regenerate_all_force')->to('publications#regenerate_html_for_all_force');
     $logged_user->get('/settings/regenerate_all')->to('publications#regenerate_html_for_all');
@@ -362,6 +366,7 @@ sub startup {
     $logged_user->get('/publications/untagged/:author/:tagtype')->to('publications#all_without_tag_for_author', tagtype => 1);
     
     $logged_user->get('/publications/candidates_to_delete')->to('publications#all_candidates_to_delete');
+    $logged_user->get('/publications/missing_month')->to('publications#all_without_missing_month');
     
     $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq'); 
     $logged_user->get('/publications/get/:id')->to('publications#single'); 
@@ -373,8 +378,12 @@ sub startup {
 
     # $logged_user->post('/publications/store/:id')->to('publications#post_store');
 
+    $logged_user->get('/publications/make_paper/:id')->to('publications#make_paper');
+    $logged_user->get('/publications/make_talk/:id')->to('publications#make_talk');
+
     $logged_user->get('/publications/edit/:id')->to('publications#get_edit');
     $logged_user->post('/publications/edit/store/:id')->to('publications#post_edit_store');
+    $logged_user->get('/publications/edit/store/:id')->to('publications#get_edit');
 
     $logged_user->get('/publications/regenerate/:id')->to('publications#regenerate_html');
     $logged_user->get('/publications/delete/:id')->to('publications#delete');

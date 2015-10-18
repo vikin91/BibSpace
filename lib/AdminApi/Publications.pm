@@ -23,7 +23,86 @@ use Mojo::Log;
 use EntryObj;
 use TagObj;
 
+####################################################################################
+sub isTalk {  # stupid code repetition!
+    my $self = shift;
+    my $obj = shift;
+    return $obj->isTalk();
+}
+####################################################################################
+sub fixMonths {
+    say "CALL: fixMonths ";
+    my $self = shift;
+    my $back_url = $self->param('back_url');
+    $back_url = '/publications' if $back_url eq $self->req->url->to_abs or $back_url eq '';
 
+    my @objs = EntryObj->getAll($self->app->db);
+    for my $o (@objs){
+            my $entry = new Text::BibTeX::Entry();
+            $entry->parse_s($o->{bib});
+
+            after_edit_process_month($self->app->db, $entry);
+
+            #check
+            # if($entry->exists('month')){
+            #     my $month_str = $entry->get('month');
+            #     my $month_numeric = get_month_numeric($month_str);
+
+            #     say "ENTRY $o->{id}  MONTH_STR $month_str MONTH_INT $month_numeric" if $month_numeric > 12 or $month_numeric == 0;
+            # }
+
+    }
+    $self->redirect_to($back_url);
+}
+####################################################################################
+sub fixEntryType {
+    say "CALL: fixEntryType ";
+    my $self = shift;
+    my $back_url = $self->param('back_url');
+    $back_url = '/publications' if $back_url eq $self->req->url->to_abs or $back_url eq '';
+
+    my @objs = EntryObj->getAll($self->app->db);
+    for my $o (@objs){
+        $o->fixEntryTypeBasedOnTag($self->app->db);
+    }
+
+    # $self->write_log("Cleaning ugly bibtex fields for all entries");
+    # $self->helper_clean_ugly_bibtex_fileds_for_all_entries();
+    # $self->write_log("Cleaning ugly bibtex fields for all entries has finished");
+    $self->redirect_to($back_url);
+}
+####################################################################################
+sub make_paper {
+    my $self = shift;
+    my $id = $self->param('id');
+    my $back_url = $self->param('back_url');
+    my $dbh = $self->app->db;
+
+    my $current = $self->req->url->to_abs;
+    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+
+    my $obj = EntryObj->new({id => $id});
+    $obj->initFromDB($dbh);
+    $obj->makePaper($dbh);
+
+    $self->redirect_to($back_url);
+};
+####################################################################################
+sub make_talk {
+    my $self = shift;
+    my $id = $self->param('id');
+    my $back_url = $self->param('back_url');
+    my $dbh = $self->app->db;
+
+    my $current = $self->req->url->to_abs;
+    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+
+    my $obj = EntryObj->new({id => $id});
+    $obj->initFromDB($dbh);
+    $obj->makeTalk($dbh);
+
+    $self->redirect_to($back_url);
+};
 ####################################################################################
 sub metalist {
 	say "CALL: metalist ";
@@ -46,7 +125,7 @@ sub meta {
 
     # FETCHING DATA FROM DB
     my $dbh = $self->app->db;
-    my $sth = $dbh->prepare( "SELECT DISTINCT id, bibtex_key, bib, html, type, modified_time, creation_time
+    my $sth = $dbh->prepare( "SELECT DISTINCT id, bibtex_key, bib, html
         FROM Entry 
         WHERE id = ?" );  
     $sth->execute($id);
@@ -441,6 +520,26 @@ sub show_unrelated_to_team{
     $self->render(template => 'publications/all'); 
 }
 ####################################################################################
+sub all_without_missing_month{
+    my $self = shift;
+    my $back_url = $self->param('back_url');
+    $back_url = '/publications' if $back_url eq $self->req->url->to_abs or $back_url eq '';
+    $self->write_log("Displaying entries without month");
+    
+    my @objs = ();
+    my @all_objs = EntryObj->getAll($self->app->db);
+    for my $o (@all_objs){
+        if($o->{month} < 1 or $o->{month} > 12){
+            push @objs, $o;
+        }
+    }
+
+    my $msg = "<p>This list contains entries with missing BibTeX field 'month'. Add this data to get the proper chronological sorting.</p> ";
+
+    $self->stash(objs => \@objs, msg => $msg);
+    $self->render(template => 'publications/all'); 
+}
+####################################################################################
 sub all_candidates_to_delete{
 	say "CALL: all_candidates_to_delete";
     my $self = shift;
@@ -611,16 +710,17 @@ sub landing_years_obj{
 
     foreach my $yr (@allkeys) {
         
-        my @objs = get_publications_main($self, undef, $yr, undef, undef, undef, 0, undef);
+        my @objs = get_publications_main($self, undef, $yr, undef, 'paper', undef, undef, 0, undef);
         
+        ### TODO: Quickfix not needed since 18 Oct 2015 - test it
         ### QUICKFIX START: Hide Entries with tag = Talks from the landing page
-        my @objs_with_excluded_tag;
-        for my $entry_obj (@objs){
-             if($entry_obj->hasTag($self->app->db, "Talks") == 0){ 
-                push @objs_with_excluded_tag, $entry_obj;
-             }
-        }
-        @objs = @objs_with_excluded_tag;
+        # my @objs_with_excluded_tag;
+        # for my $entry_obj (@objs){
+        #      if($entry_obj->hasTag($self->app->db, "Talks") == 0){ 
+        #         push @objs_with_excluded_tag, $entry_obj;
+        #      }
+        # }
+        # @objs = @objs_with_excluded_tag;
         ### QUICKFIX END: Hide Entries with tag = Talks from the landing page
 
         # delete the year from the @keys array if the year has 0 papers
@@ -667,41 +767,126 @@ sub landing_years_obj{
 sub landing_types_obj{
 	say "CALL: landing_types_obj";
     my $self = shift;
-    my $type = $self->param('type') || undef;
+    my $bibtex_type = $self->param('bibtex_type') || undef;
+    my $entry_type = $self->param('entry_type') || undef;
 
+    say "bibtex_type $bibtex_type";
+    say "entry_type $entry_type";
 
-    my %hash_dict;
-    my %hash_values;
+    my %hash_dict;      # key: bibtex_type (SELECT DISTINCT our_type FROM OurType_to_Type WHERE landing=1 ORDER BY our_type ASC)
+                        # value: description of type
+    my %hash_values;    # key: bibtex_type
+                        # value: ref to array of entry objects
 
     my @keys;
     my @all_keys = get_types_for_landing_page($self->app->db);
 
-    
-    if(defined $type){
-        push @keys, $type;
-    }
-    else{
-        @keys = @all_keys;
-    }
-
-    # foreach my $key (@all_keys){
-        
-    # }
-
     my @keys_with_papers;
+
+    # shitty ifs
+
+    # include talks only when
+    # 1 - entry_type eq talk
+    # 2 - both types undefined
+
+    # include only one bibtex type when
+    # 1 - bibtex_type defined and entry_type ne talk
     
-    # separate foreach loop to optimize preformance
-    foreach my $key (@keys){
-        my @objs = get_publications_main($self, undef, undef, $key, undef, undef, 0, undef);
-        
-        if(scalar @objs > 0){
+    # include all bibtex types but no talks
+    #
+
+    # include everything
+    # 1 - nothing defined
+
+    # only one bibtex type
+    if(defined $bibtex_type and (!defined $entry_type or $entry_type eq 'paper')){
+        # no talks
+        # single bibtex type
+        # say "OPTION 1 - only one type";
+        my $key = $bibtex_type;
+
+        my @paper_objs = get_publications_main($self, undef, undef, $bibtex_type, $entry_type, undef, undef, 0, undef);        
+        if(scalar @paper_objs > 0){
             $hash_dict{$key} = get_type_description($self->app->db, $key);
-            $hash_values{$key} = \@objs;
+            $hash_values{$key} = \@paper_objs;
             push @keys_with_papers, $key;
         }
+    }
+    # only talks
+    elsif(defined $entry_type and $entry_type eq 'talk'){
         
+        # say "OPTION 2 - talks only";
+        my $key = 'talk';
+
+        my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
+        if(scalar @talk_objs > 0){
+            $hash_dict{$key} = "Talks";
+            $hash_values{$key} = \@talk_objs;
+            push @keys_with_papers, $key;
+        }
+    }
+    # all but talks
+    elsif(!defined $bibtex_type and $entry_type eq 'paper'){
+        
+        # say "OPTION 3 - all but talks";
+        @keys = @all_keys;
+
+        foreach my $key (@keys){
+            my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);        
+            if(scalar @paper_objs > 0){
+                $hash_dict{$key} = get_type_description($self->app->db, $key);
+                $hash_values{$key} = \@paper_objs;
+                push @keys_with_papers, $key;
+            }
+        }
+    }
+    # all
+    elsif(!defined $entry_type and !defined $bibtex_type){
+
+        # say "OPTION 4 - all";
+        @keys = @all_keys;
+
+        foreach my $key (@keys){
+            my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);        
+            if(scalar @paper_objs > 0){
+                $hash_dict{$key} = get_type_description($self->app->db, $key);
+                $hash_values{$key} = \@paper_objs;
+                push @keys_with_papers, $key;
+            }
+        }
+        my $key = 'talk';
+
+        my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
+        if(scalar @talk_objs > 0){
+            $hash_dict{$key} = "Talks";
+            $hash_values{$key} = \@talk_objs;
+            push @keys_with_papers, $key;
+        }
+    }
+    else{
+        say "OPTION 5 - else";
     }
 
+    
+    # separate foreach loop to optimize preformance
+    # foreach my $key (@keys){
+    #     my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);        
+    #     if(scalar @paper_objs > 0){
+    #         $hash_dict{$key} = get_type_description($self->app->db, $key);
+    #         $hash_values{$key} = \@paper_objs;
+    #         push @keys_with_papers, $key;
+    #     }
+    # }
+
+    # if($inlcude_talks == 1){
+    #     my $key = 'talks';
+    #     my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
+    #     if(scalar @talk_objs > 0){
+    #         $hash_dict{$key} = "Talks";
+    #         $hash_values{$key} = \@talk_objs;
+    #         push @keys_with_papers, $key;
+    #     }
+    # }
 
     # WARNING, it depends on routing! anti-pattern! Correct it some day
     my $url = "/ly/p?".$self->req->url->query;
@@ -729,6 +914,9 @@ sub landing_types_obj{
 
     # say $navbar_html;
 
+    # hash_values:  key_bibtex_type -> ref_arr_entry_objects
+    # hash_dict:    key_bibtex_type -> description of the type
+    # keys_with_papers: non-empty -> key_bibtex_type
     return $self->display_landing(\%hash_values, \%hash_dict, \@keys_with_papers, $switchlink, $navbar_html);
 }
 
@@ -798,7 +986,7 @@ sub get_number_of_publications_in_year{
     my $self = shift;
     my $year = shift;
 
-    my @objs = get_publications_main($self, undef, $year, undef, undef, undef, 0, undef);
+    my @objs = get_publications_main($self, undef, $year, undef, undef, undef, undef, 0, undef);
     return scalar @objs;
 }
 ####################################################################################
@@ -808,11 +996,12 @@ sub get_publications_main{
 
     my $author = shift || $self->param('author') || undef;
     my $year = shift || $self->param('year') || undef;
-    my $type = shift || $self->param('type') || undef;
+    my $bibtex_type = shift || $self->param('bibtex_type') || undef;
+    my $entry_type = shift || $self->param('entry_type') || undef;
     my $tag = shift || $self->param('tag') || undef;
     my $team = shift || $self->param('team') || undef;
     my $permalink = shift || $self->param('permalink') || undef;
-    return get_publications_core($self, $author, $year, $type, $tag, $team, 0, $permalink);
+    return get_publications_core($self, $author, $year, $bibtex_type, $entry_type, $tag, $team, 0, $permalink);
 }
 ####################################################################################
 sub get_publications_core_from_array{
@@ -851,7 +1040,8 @@ sub get_publications_core{
     my $self = shift;
     my $author = shift;
     my $year = shift;
-    my $type = shift;
+    my $bibtex_type = shift;
+    my $entry_type = shift;
     my $tag = shift;
     my $team = shift;
     my $visible = shift || 0;
@@ -868,7 +1058,7 @@ sub get_publications_core{
     $tagid = undef unless defined $tag;
     
 
-    my @objs = EntryObj->getByFilter($dbh, $mid, $year, $type, $tagid, $teamid, $visible, $permalink);
+    my @objs = EntryObj->getByFilter($dbh, $mid, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink);
     return @objs;
 }
 ####################################################################################
@@ -900,10 +1090,10 @@ sub add_pdf {
     $self->write_log("Page: add pdf for paper id $id");
 
     # getting html preview
-    my $sth = $dbh->prepare( "SELECT DISTINCT bibtex_key, html, type FROM Entry WHERE id = ?" );  
+    my $sth = $dbh->prepare( "SELECT DISTINCT bibtex_key, html, bibtex_type FROM Entry WHERE id = ?" );  
     $sth->execute($id);
     my $row = $sth->fetchrow_hashref();
-    my $html_preview = $row->{html} || nohtml($row->{bibtex_key}, $row->{type});
+    my $html_preview = $row->{html} || nohtml($row->{bibtex_key}, $row->{bibtex_type});
     my $key = $row->{bibtex_key};
 
 
@@ -1085,13 +1275,13 @@ sub delete {
     $self->write_log("Delete entry eid $id. (delete_sure should follow) ");
 
     my $dbh = $self->app->db;
-    my $sth = $dbh->prepare( "SELECT DISTINCT key, html, type
+    my $sth = $dbh->prepare( "SELECT DISTINCT key, html, bibtex_type
       FROM Entry 
       WHERE id = ?" );  
    $sth->execute($id);
 
    my $row = $sth->fetchrow_hashref();
-   my $html_preview = $row->{html} || nohtml($row->{bibtex_key}, $row->{type});
+   my $html_preview = $row->{html} || nohtml($row->{bibtex_key}, $row->{bibtex_type});
    my $bibtex_key = $row->{bibtex_key};
   
 
@@ -1594,13 +1784,14 @@ sub postprocess_updated_entry{
     my $content = $entry->print_s;
     my $type = $entry->type;
 
-    my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, type=?, abstract=?, need_html_regen = 1, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
+    my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, bibtex_type=?, abstract=?, need_html_regen = 1, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
     $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
     $sth2->finish();
     $exit_code = 1;
     after_edit_process_authors($dbh, $entry);
     # after_edit_process_tags($dbh, $entry); 
     generate_html_for_key($dbh, $key);
+    after_edit_process_month($dbh, $entry);
 
     my ($html, $htmlbib) = get_html_for_bib($content, $key);
     $preview_html = $html;
@@ -1646,14 +1837,14 @@ sub postprocess_edited_entry{
     my $key_exists = $ary[0];
 
     if(!$preview and $key_exists==0){
-        my $sth2 = $dbh->prepare( "INSERT INTO Entry(title, bibtex_key, bib, year, type, abstract, creation_time, modified_time) VALUES(?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)" );  
+        my $sth2 = $dbh->prepare( "INSERT INTO Entry(title, bibtex_key, bib, year, bibtex_type, abstract, creation_time, modified_time) VALUES(?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)" );  
         $sth2->execute($title, $key, $content, $year, $type, $abstract);
         $sth2->finish();
         $exit_code = 0;
 
     }
     elsif(!$preview){ 
-         my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, type=?, abstract=?, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
+         my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, bibtex_type=?, abstract=?, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
          $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
          $sth2->finish();
          $exit_code = 1;
@@ -1663,6 +1854,7 @@ sub postprocess_edited_entry{
         after_edit_process_authors($dbh, $entry);
         after_edit_process_tags($dbh, $entry); 
         generate_html_for_key($dbh, $key);
+        after_edit_process_month($dbh, $entry);
 
         # $exit_code = "Your entry has been added, but please note: TODO: adjust those methods: after_edit_process_authors and after_edit_process_tags!";
     }
@@ -1680,7 +1872,31 @@ sub postprocess_edited_entry{
 
 
 
+
 ##########################################################################################
+
+sub after_edit_process_month{
+
+    my $dbh = shift;
+    my $entry = shift;
+
+    my $entry_key = $entry->key;
+    my $key = $entry_key;
+    my $eid = get_entry_id($dbh, $entry_key);
+
+
+    if($entry->exists('month')){
+        my $month_str = $entry->get('month');
+        my $month_numeric = get_month_numeric($month_str);
+
+        
+        my $obj = EntryObj->new({id => $eid});
+        $obj->initFromDB($dbh);
+        $obj->setMonth($month_numeric, $dbh);
+        $obj->setSortMonth($month_numeric, $dbh);
+    }
+};
+
 ##########################################################################################
 
 sub after_edit_process_tags{

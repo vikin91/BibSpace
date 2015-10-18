@@ -137,13 +137,13 @@ sub get_set_of_papers_for_team {
 
     my @params;
 
-    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, bib, html, Entry.type
+    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, bib, html, Entry.bibtex_type
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
                 LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
                 LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
-                LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.type 
+                LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.bibtex_type 
                 LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
                 WHERE Entry.bibtex_key IS NOT NULL ";
 

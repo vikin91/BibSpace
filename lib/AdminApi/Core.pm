@@ -81,6 +81,7 @@ our @EXPORT = qw(
     do_delete_backup
     do_delete_broken_or_old_backup
     prepare_backup_table
+    get_month_numeric
     );
 
 
@@ -99,6 +100,27 @@ our $bibtex2html_tmp_dir = "./tmp";
 #     my $row = $sth->fetchrow_hashref();
 #     return $row->{name};# || "not found";
 # }
+################################################################################
+sub get_month_numeric {
+    my $str = shift;
+    $str = lc($str);
+    $_ = $str;
+
+    return 1 if /jan/ or /january/ or /januar/ or /1/ or /01/;
+    return 2 if /feb/ or /february/ or /februar/ or /2/ or /02/;
+    return 3 if /mar/ or /march/  or /3/ or /03/;
+    return 4 if /apr/ or /april/  or /4/ or /04/;
+    return 5 if /may/ or /mai/ or /maj/ or /5/ or /05/;
+    return 6 if /jun/ or /june/ or /juni/ or /6/ or /06/;
+    return 7 if /jul/ or /july/ or /juli/ or /7/ or /07/;
+    return 8 if /aug/ or /august/ or /8/ or /08/;
+    return 9 if /sep/ or /september/ or /sept/ or /9/ or /09/;
+    return 10 if /oct/ or /october/ or /oktober/ or /10/ or /010/;
+    return 11 if /nov/ or /november/ or /11/ or /011/;
+    return 12 if /dec/ or /december/ or /dezember/ or /12/ or /012/;
+
+    return 0;
+}
 ################################################################################
 sub clean_tag_name {
    my $tag = shift;
@@ -712,26 +734,6 @@ sub get_type_description{
 
     my $db_type = get_DB_description_for_our_type($dbh, $type);
     return $db_type if defined $db_type;
-
-
-    if($type eq 'article'){
-        return "Peer-Reviewed Journal Articles";
-    }
-    if($type eq 'inproceedings'){
-        return "Peer-Reviewed International Conference and Workshop Papers";
-    }
-    if($type eq 'techreport'){
-        return "Technical Reports";
-    }
-    if($type eq 'misc'){
-        return "Other";
-    }
-    if($type eq 'theses'){
-        return "Theses";
-    }
-    if($type eq 'volumes'){
-        return "Books, Volumes and Theses";
-    }
 
     # in case of no secription, the name is the description itself
     return "Publications of type ".$type;
