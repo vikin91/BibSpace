@@ -66,6 +66,7 @@
             % my @examples_array;
             % push @examples_array, "/l/p?tag=Cloud&author=KounevSamuel&year=2013&title=1&switchlink=0";
             % push @examples_array, "/l/p?year=2012&entry_type=talk&title=1&switchlink=0";
+            % push @examples_array, "/l/p?title=1&switchlink=1&navbar=1";
             
             <ul>
                 % for my $example (@examples_array){

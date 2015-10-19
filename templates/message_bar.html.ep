@@ -2,33 +2,23 @@
 % my $thisY = Time::Piece::localtime->strftime('%Y');
 % use Mojo::ByteStream 'b';
 
+% my $msg_f = flash 'msg';
+% my $msg_s = stash 'msg';
+% my $msg = undef;
+% $msg = $msg_f if defined $msg_f;
+% $msg = $msg_s if defined $msg_s;
 
-
-% if (my $msg = flash 'msg') {
+% if (defined $msg) {
     <div class="container">
         <div class="row">
             <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
               <div class="alert alert-warning">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <i class="fa  fa-exclamation-circle "></i> <strong>Flash Message: </strong> <%=b($msg)%>
+                <i class="fa  fa-exclamation-circle "></i> <strong>Message: </strong> <%=b($msg)%>
               </div>
             </div>
         </div>
     </div>
-%}
-
-% if (my $msg = stash 'msg') {
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
-              <div class="alert alert-warning">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <i class="fa  fa-exclamation-circle "></i> <strong>Stash Message: </strong> <%=b($msg)%>
-              </div>
-            </div>
-        </div>
-    </div>
-
 %}
 
 

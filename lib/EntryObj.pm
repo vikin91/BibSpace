@@ -226,7 +226,7 @@ sub getFromArray{
 
     my @objs;
 
-    if (scalar @objs == 0){ # if the array is empty, return also empty array of objects. The SQL query below doesnt work for empty arrays
+    if (scalar @arr == 0){ # if the array is empty, return also empty array of objects. The SQL query below doesnt work for empty arrays
         return @objs;
     }
 

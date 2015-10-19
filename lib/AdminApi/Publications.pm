@@ -322,8 +322,8 @@ sub all_recently_added {
         push @array, $eid;
     }
 
-
     my @objs = get_publications_core_from_array($self, \@array, 0);
+
     $self->stash(objs => \@objs);
     $self->render(template => 'publications/all');  
 }
@@ -732,6 +732,8 @@ sub landing_years_obj{
     
 
     # WARNING, it depends on routing! anti-pattern! Correct it some day
+    # todo: this code is duplicated! fix it!
+
     my $url = "/l/p?".$self->req->url->query;
     my $url_msg = "Switch to grouping by types";
     my $switchlink = '<a class="bibtexitem" href="'.$url.'">'.$url_msg.'</a>';
@@ -742,11 +744,11 @@ sub landing_years_obj{
     my $navbar_html = '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL years]</a> ';
     $self->req->url->query->param(year => $tmp_year) if defined $tmp_year and $tmp_year ne "";
 
-    my $tmp_type = $self->req->url->query->param('type');
-    $self->req->url->query->remove('type');
+    my $tmp_type = $self->req->url->query->param('bibtex_type');
+    $self->req->url->query->remove('bibtex_type');
     $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL types]</a> ';
     $navbar_html .= '<br/>';
-    $self->req->url->query->param(type => $tmp_type) if defined $tmp_type and $tmp_type ne "";
+    $self->req->url->query->param(bibtex_type => $tmp_type) if defined $tmp_type and $tmp_type ne "";
 
     foreach my $key (reverse sort @keys) {
 
@@ -768,8 +770,8 @@ sub landing_types_obj{
     my $bibtex_type = $self->param('bibtex_type') || undef;
     my $entry_type = $self->param('entry_type') || undef;
 
-    say "bibtex_type $bibtex_type";
-    say "entry_type $entry_type";
+    # say "bibtex_type $bibtex_type";
+    # say "entry_type $entry_type";
 
     my %hash_dict;      # key: bibtex_type (SELECT DISTINCT our_type FROM OurType_to_Type WHERE landing=1 ORDER BY our_type ASC)
                         # value: description of type
@@ -898,14 +900,24 @@ sub landing_types_obj{
     my $navbar_html = '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL years]</a> ';
     $self->req->url->query->param(year => $tmp_year) if defined $tmp_year and $tmp_year ne "";
 
-    $self->req->url->query->remove('type');
+    $self->req->url->query->remove('bibtex_type');
+    $self->req->url->query->remove('entry_type');
     $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL types]</a> ';
     $navbar_html .= '<br/>';
 
     foreach my $key (sort @keys_with_papers) {
-
-        $self->req->url->query->param(type => $key);
-        $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">';
+        # say "key in keys_with_papers: $key";
+        
+        if($key eq 'talk'){
+            $self->req->url->query->remove('bibtex_type');
+            $self->req->url->query->param(entry_type => 'talk');
+            $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">';
+        }
+        else{
+            $self->req->url->query->remove('entry_type');
+            $self->req->url->query->param(bibtex_type => $key);
+            $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">';
+        }
         $navbar_html .= '['.$hash_dict{$key}.']';
         $navbar_html .= '</a> ';
     }
@@ -947,8 +959,8 @@ sub display_landing{
     my $tag_name_for_permalink = TagObj->get_tag_name_for_permalink($self->app->db, $permalink);
     $tag_name = $tag_name_for_permalink unless $tag_name_for_permalink eq -1;
     $tag_name = $permalink if !defined $self->param('tag') and $tag_name_for_permalink eq -1;
-    $tag_name =~ s/_+/_/g if defined $show_title and $show_title == 1;
-    $tag_name =~ s/_/\ /g if defined $show_title and $show_title == 1;
+    $tag_name =~ s/_+/_/g if defined $tag_name and defined $show_title and $show_title == 1;
+    $tag_name =~ s/_/\ /g if defined $tag_name and defined $show_title and $show_title == 1;
 
 
     my $title = "";
@@ -992,7 +1004,7 @@ sub get_number_of_publications_in_year{
 }
 ####################################################################################
 sub get_publications_main{
-	say "CALL: get_publications_main";
+	# say "CALL: get_publications_main";
     my $self = shift;
 
     my $author = shift || $self->param('author') || undef;
@@ -1039,7 +1051,7 @@ sub get_publications_core_from_set{
 ####################################################################################
 
 sub get_publications_core{
-	say "CALL: get_publications_core";
+	# say "CALL: get_publications_core";
     my $self = shift;
     my $author = shift;
     my $year = shift;

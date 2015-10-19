@@ -7,6 +7,8 @@
     
     %= include 'navi'
     <%= content_for 'navi' %>
+    
+    <br/>
 
     %= include 'message_bar'
     <%= content_for 'message_bar' %>
