@@ -19,14 +19,14 @@ This is private repository. No License is needed
 #### v1.4 19.10.2015 ####
 
 * Mojolicious updated to 6.24
-* Talks introduced. Every entry is now described with entry_type. Possible types are: paper, talk.
-* Filtering filed *type* has been removed. The fields *entry_type* and *bibtex_type* should be used now.
+* Talks introduced. Every entry is now described with *entry_type*. Possible types are: paper, talk.
+* Filtering filed *type* **has been removed**. The fields *entry_type* and *bibtex_type* should be used now.
 * Added field *month* and *sort_month* to DB. Normally sort_month = month. For now, *sort_month* cannot be set other as via setting *month* field in bibtex. This may change in the future.
-* Publications and talks are now sorted first by year, then by month. If month does not exist in Bibtex, month=0
-* Entries without field month are listed.
-* Adding talks by assigning *Talk* tag is now **deprecated1**
+* Publications and talks are now sorted first by year, then by month. If month does not exist in Bibtex then month=0
+* All entries without field month can be listed
+* Adding talks by assigning *Talk* tag is now **deprecated**
 * User management view added (admin only)
-* Automatic assignement of entry_type based on *talk* tag. This function can turn paper into talk, but not otherwise.
+* Automatic assignment of *entry_type* based on *talk* tag. This function can turn paper into talk, but not otherwise.
 * Automatic extraction of month field for all papers - based on *month* bibtex field.
 * Various bugfixes
 * **Known issues**
