@@ -57,7 +57,12 @@ sub make_user {
 
     my $usr_obj = UserObj->new({id => $profile_id});
     $usr_obj->initFromDB($dbh);
-    $usr_obj->make_user($dbh);
+    if($usr_obj->make_user($dbh)==0){
+        $self->write_log("Setting user \`$usr_obj->{login}\` to rank user.");
+    }
+    else{
+        $self->flash(msg => "User \`$usr_obj->{login}\` cannot become \`user\`.");
+    }
     $self->redirect_to('manage_users');
 }
 ####################################################################################
@@ -68,7 +73,12 @@ sub make_manager {
 
     my $usr_obj = UserObj->new({id => $profile_id});
     $usr_obj->initFromDB($dbh);
-    $usr_obj->make_manager($dbh);
+    if($usr_obj->make_manager($dbh)==0){
+        $self->write_log("Setting user \`$usr_obj->{login}\` to rank manager.");
+    }
+    else{
+        $self->flash(msg => "User \`$usr_obj->{login}\` cannot become \`manager\`.");
+    }
     $self->redirect_to('manage_users');
 }
 ####################################################################################
@@ -79,7 +89,12 @@ sub make_admin {
 
     my $usr_obj = UserObj->new({id => $profile_id});
     $usr_obj->initFromDB($dbh);
-    $usr_obj->make_admin($dbh);
+    if( $usr_obj->make_admin($dbh)==0 ){
+        $self->write_log("Setting user \`$usr_obj->{login}\` to rank admin.");
+    }
+    else{
+        $self->flash(msg => "User \`$usr_obj->{login}\` cannot become \`admin\`.");
+    }
     $self->redirect_to('manage_users');
 }
 ####################################################################################

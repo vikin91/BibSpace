@@ -20,6 +20,9 @@
             <a class="btn btn-success" href="/publications?author=<%= $master %>">
                 <i class="fa fa-files-o"></i> Show all <span class="badge"><%= num_pubs_for_author($id)%></span> papers of this author
             </a>
+            <a class="btn btn-info" href="/publications?author=<%= $master %>&entry_type=talk">
+                <i class="fa fa-microphone"></i> Show all talks of this author
+            </a>
 
             <a class="btn btn-default btn-sm" href="/landing/publications?author=<%= $master %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span></a>
             

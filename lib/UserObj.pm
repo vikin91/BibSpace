@@ -83,6 +83,7 @@ sub make_admin {
     my $qry = "UPDATE Login SET rank=2 WHERE id=?";
     my $sth = $dbh->prepare( $qry );  
     $sth->execute($self->{id});   
+    return 0;
 }
 ####################################################################################
 sub make_manager {
@@ -93,7 +94,9 @@ sub make_manager {
         my $qry = "UPDATE Login SET rank=1 WHERE id=?";
         my $sth = $dbh->prepare( $qry );  
         $sth->execute($self->{id});
+        return 0;
     }
+    return -1;
 }
 ####################################################################################
 sub make_user {
@@ -104,7 +107,9 @@ sub make_user {
         my $qry = "UPDATE Login SET rank=0 WHERE id=?";
         my $sth = $dbh->prepare( $qry );  
         $sth->execute($self->{id});
+        return 0;
     }
+    return -1;
 }
 ########################################################################################################################
 sub getAll{

@@ -273,7 +273,7 @@ sub get_set_of_authors_for_team {
 
       $set->insert($eid);
     }
-    print "Authors for team: ", $set, "\n";
+    # print "Authors for team: ", $set, "\n";
     return $set;
  }
 ####################################################################################
@@ -297,7 +297,7 @@ sub get_set_of_papers_for_author_id {
 
       $set->insert($eid);
     }
-    print "Papers for author $aid: ", $set, "\n";
+    # print "Papers for author $aid: ", $set, "\n";
     return $set;
  }
 

@@ -59,7 +59,7 @@
                                 </span>
                             </a>
                             <a href="#modal-dialog-talk-<%=$obj->{id}%>" data-toggle="modal" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
-                                    <span class="glyphicon glyphicon-volume-up"></span>
+                                    <i class="fa fa-microphone"></i>
                                 </span>
                             </a>
                             <!-- MODAL DIALOG FOR SWITCHIN PAPER/TALK -->
@@ -91,7 +91,7 @@
                                 </span>
                             </a>
                             <a href="/publications/make_talk/<%= $obj->{id} %><%=$burl%>" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
-                                    <span class="glyphicon glyphicon-volume-up"></span>
+                                    <i class="fa fa-microphone"></i>
                                 </span>
                             </a>
                         % }

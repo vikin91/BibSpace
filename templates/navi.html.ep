@@ -64,7 +64,7 @@
             <a href='/publications/candidates_to_delete' data-toggle="tooltip" data-placement="right" title="Show papers that may be potentially deleted from the system"><i class="fa fa-trash-o"></i> Show candidates for deletion</a>
         </li>
         <li>
-            <a href='/publications/missing_month' data-toggle="tooltip" data-placement="right" title="Show papers without field 'month'"><span class="glyphicon glyphicon-search"></span> Show papers without month field</a>
+            <a href='/publications/missing_month' data-toggle="tooltip" data-placement="right" title="Show papers without field 'month'"><span class="glyphicon glyphicon-search"></span> Show papers without <i>month</i> field</a>
         </li>
         
 <!--         <li>
@@ -87,7 +87,7 @@
 
         <li class="divider"></li>
         <li>
-            <a href='/publications?entry_type=talk'><span class="glyphicon glyphicon-volume-up"></span> <span>Show talks</span></a>
+            <a href='/publications?entry_type=talk'><i class="fa fa-microphone"></i> <span>Show talks</span></a>
         </li>
       <li class="divider"></li>
       <li role="presentation" class="dropdown-header">Papers of visible authors</li>
@@ -255,13 +255,15 @@
                 </a>
             </li>
             <li class="divider"></li>
+            <li role="presentation" class="dropdown-header">Sets entry_type to talk if the entry has tag 'talk'.</li>
             <li>
                 <a href='/settings/fix_entry_types<%=backurl($self)%>'>
-                    <i class="fa fa-magic"></i> Fix entry_type (paper/talk) based on Tag
-                    <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
+                    <i class="fa fa-magic"></i> Fix entry_type <i class="fa fa-microphone"></i> <span class="glyphicon glyphicon-file"></span> based on Tag
+                    <span class="badge">for all</span>
                 </a>
             </li>
             <li class="divider"></li>
+            <li role="presentation" class="dropdown-header">Calculates integer month field in DB based on bibtex field 'month' .</li>
             <li>
                 <a href='/settings/fix_months<%=backurl($self)%>'>
                     <i class="fa fa-magic"></i> Fix month numbers in DB

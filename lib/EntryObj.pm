@@ -224,8 +224,11 @@ sub getFromArray{
         $placeholders .= ",?";
     }
 
-
     my @objs;
+
+    if (scalar @objs == 0){ # if the array is empty, return also empty array of objects. The SQL query below doesnt work for empty arrays
+        return @objs;
+    }
 
     if(defined $sort and $sort==1){
         my $qry = "SELECT id, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
@@ -288,10 +291,6 @@ sub getFromArray{
         }
 
     }
-    
-    
-
-
     return @objs;
 }
 ########################################################################################################################

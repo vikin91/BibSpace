@@ -549,6 +549,8 @@ sub all_candidates_to_delete{
     my $set_all_papers = get_set_of_all_papers($self);
     my $end_set = $set_all_papers;
 
+    # print "A1 ", $end_set, "\n";
+
     my $set_of_all_teams = get_set_of_all_teams($self);
 
     foreach my $teamid($set_of_all_teams->members){
@@ -556,9 +558,12 @@ sub all_candidates_to_delete{
         $end_set = $end_set - $set_of_papers_related_to_team;
     }
 
+    # print "A2 ", $end_set, "\n";
+
     $end_set = $end_set - get_set_of_papers_with_exceptions($self);
+    # print "A3 ", $end_set, "\n";
     $end_set = $end_set - get_set_of_tagged_papers($self);
-    
+    # print "A4 ", $end_set, "\n";
 
     my @objs = get_publications_core_from_set($self, $end_set);
 
@@ -685,7 +690,12 @@ sub landing_years_obj{
 	say "CALL: landing_years_obj";
     my $self = shift;
     my $year = $self->param('year') || undef;
+    
+    # if you want to list talks+papers by default on the landing_years page, use the following line
+    # my $entry_type = $self->param('entry_type') || undef;
 
+    # if you want to list ONLY papers by default on the landing_years page, use the following line
+    my $entry_type = $self->param('entry_type') || 'paper';
 
 
     my $min_year = $self->get_year_of_oldest_entry;
@@ -710,19 +720,7 @@ sub landing_years_obj{
 
     foreach my $yr (@allkeys) {
         
-        my @objs = get_publications_main($self, undef, $yr, undef, 'paper', undef, undef, 0, undef);
-        
-        ### TODO: Quickfix not needed since 18 Oct 2015 - test it
-        ### QUICKFIX START: Hide Entries with tag = Talks from the landing page
-        # my @objs_with_excluded_tag;
-        # for my $entry_obj (@objs){
-        #      if($entry_obj->hasTag($self->app->db, "Talks") == 0){ 
-        #         push @objs_with_excluded_tag, $entry_obj;
-        #      }
-        # }
-        # @objs = @objs_with_excluded_tag;
-        ### QUICKFIX END: Hide Entries with tag = Talks from the landing page
-
+        my @objs = get_publications_main($self, undef, $yr, undef, $entry_type, undef, undef, 0, undef);
         # delete the year from the @keys array if the year has 0 papers
         if(scalar @objs > 0){
             $hash_dict{$yr} = $yr;
@@ -953,12 +951,15 @@ sub display_landing{
     $tag_name =~ s/_/\ /g if defined $show_title and $show_title == 1;
 
 
-    my $title = "Publications ";
+    my $title = "";
+    $title .= " Publications " if defined $self->param('entry_type') and $self->param('entry_type') eq 'paper';
+    $title .= " Talks " if defined $self->param('entry_type') and $self->param('entry_type') eq 'talk';
+    $title .= " Publications and talks" if !defined $self->param('entry_type');
     $title .= " of team ".$self->param('team') if defined $self->param('team');
     $title .= " of author ".$self->param('author') if defined $self->param('author');
     $title .= " tagged as ".$tag_name if defined $self->param('tag');
     $title .= " in category ".$tag_name if defined $self->param('permalink');
-    $title .= " of type ".$self->param('type') if defined $self->param('type');
+    $title .= " of type ".$self->param('bibtex_type') if defined $self->param('bibtex_type');
     $title .= " published in year ".$self->param('year') if defined $self->param('year');
 
     # my $url = $self->req->url;
@@ -1030,6 +1031,8 @@ sub get_publications_core_from_set{
     while (defined(my $e = $set->each)) {
         push @array, $e;
     }
+
+    # array may be empty here!
 
     return get_publications_core_from_array($self, \@array);
 }
