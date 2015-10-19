@@ -1487,15 +1487,18 @@ sub remove_exception{
 
 ## ADD form
 sub get_add {
-	say "CALL: get_add ";
-   my $self = shift;
+    say "CALL: get_add ";
+    my $self = shift;
+    my %mons = (1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9 =>'September',10=>'October',11=>'November',12=>'December');
 
    
-   my $bib = '
-@article{key,
-author = {Johny Example},
-title = {Selected aspects of some methods},
-year = {2015}
+   
+my $bib = '@article{key'.get_current_year().',
+    author = {Johny Example},
+    title = {{Selected aspects of some methods}},
+    year = {'.get_current_year().'},
+    month = {'.$mons{get_current_month()}.'},
+    day = {1--31},
 }';
 
    

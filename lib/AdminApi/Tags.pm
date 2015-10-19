@@ -10,6 +10,7 @@ use 5.010; #because of ~~
 use strict;
 use warnings;
 use DBI;
+use Scalar::Util qw(looks_like_number);
 
 use AdminApi::Core;
 use TagCloudClass;
@@ -249,15 +250,22 @@ sub get_authors_for_tag_read{
     my $tag_id = $self->param('tid');
     my $team = $self->param('team');
 
-    my $tag = get_tag_name_for_id($dbh, $tag_id);
-    if($tag == -1){
+    my $tag;
+
+    if(looks_like_number($tag_id)){
+        $tag = get_tag_name_for_id($dbh, $tag_id);    
+    }
+    else{
         $tag = $tag_id;
         $tag_id = get_tag_id($dbh, $tag);
     }
-
-    my $team_id = get_team_id($dbh, $team);
-    if( $team_id == -1 ){
+    
+    my $team_id;
+    if(looks_like_number($team)){
         $team_id = $team;
+    }
+    else{
+        $team = get_team_id($dbh, $team);    
     }
 
     my @authors = get_author_ids_for_tag_id($self, $tag_id);

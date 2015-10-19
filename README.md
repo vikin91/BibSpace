@@ -28,6 +28,7 @@ This is private repository. No License is needed
 * User management view added (admin only)
 * Automatic assignment of *entry_type* based on *talk* tag. This function can turn paper into talk, but not otherwise.
 * Automatic extraction of month field for all papers - based on *month* bibtex field.
+* Logging-in is now based on mysql database (connector errors are not a problem anymore). Sqlite is deprecated now.
 * Various bugfixes
 * **Known issues**
     * Talks are not shown on landing pages with years if *entry_type* is not specified (as requested by Samuel/Jürgen)

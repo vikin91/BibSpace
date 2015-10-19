@@ -82,6 +82,8 @@ our @EXPORT = qw(
     do_delete_broken_or_old_backup
     prepare_backup_table
     get_month_numeric
+    get_current_year
+    get_current_month
     );
 
 
@@ -100,6 +102,17 @@ our $bibtex2html_tmp_dir = "./tmp";
 #     my $row = $sth->fetchrow_hashref();
 #     return $row->{name};# || "not found";
 # }
+################################################################################
+sub get_current_month {
+  my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
+  return $mon;
+}
+################################################################################
+sub get_current_year {
+  my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
+
+  return $year+1900;
+}
 ################################################################################
 sub get_month_numeric {
     my $str = shift;
@@ -1128,12 +1141,14 @@ sub get_author_ids_for_tag_id {
    my $tag_id = shift;
    my $dbh = $self->app->db;
 
+   say "tag_id $tag_id";
+
    my $qry = "SELECT DISTINCT Entry_to_Author.author_id
             FROM Entry_to_Author 
             LEFT JOIN Entry_to_Tag ON Entry_to_Author.entry_id = Entry_to_Tag.entry_id 
             LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
             WHERE Entry_to_Tag.tag_id =? 
-            AND Entry_to_Author.author_id NOT NULL";
+            AND Entry_to_Author.author_id IS NOT NULL";
 
    my $sth = $dbh->prepare( $qry );  
    $sth->execute($tag_id); 
@@ -1154,14 +1169,14 @@ sub get_author_ids_for_tag_id_and_team {
    my $tag_id = shift;
    my $team_id = shift;
    my $dbh = $self->app->db;
-   my $current_year = 2015; ##TODO: GET THIS AUTOMATICALLY!!
+   my $current_year = get_current_year();
 
    my $qry = "SELECT DISTINCT Entry_to_Author.author_id
             FROM Entry_to_Author 
             LEFT JOIN Entry_to_Tag ON Entry_to_Author.entry_id = Entry_to_Tag.entry_id 
             LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
             WHERE Entry_to_Tag.tag_id =? 
-            AND Entry_to_Author.author_id NOT NULL
+            AND Entry_to_Author.author_id IS NOT NULL
             AND Entry_to_Author.author_id IN (
                 SELECT DISTINCT (author_id)
                 FROM Author_to_Team 
@@ -1169,7 +1184,7 @@ sub get_author_ids_for_tag_id_and_team {
                 ON Author.master_id = Author_to_Team.author_id
                 WHERE team_id=?
                 AND Author_to_Team.start <= ?
-                AND (Author_to_Team.stop == 0 OR Author_to_Team.stop >= ?)
+                AND ((Author_to_Team.stop = 0) OR (Author_to_Team.stop >= ?))
             )";
 
 
