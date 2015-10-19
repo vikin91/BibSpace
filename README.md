@@ -21,22 +21,12 @@ along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/li
 
     This file is still under construction and all information below this line should be treated as not ready yet.
 
-### Local installation ###
+### Installation ###
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+* TODO
 
-### Contribution guidelines ###
+### Changelog ###
 
-* Writing tests
-* Code review
-* Other guidelines
+#### v1.4 19.10.2015 ####
 
-### Who do I talk to? ###
-
-* Repo owner or admin
-* http://hex64.com
+* abc
