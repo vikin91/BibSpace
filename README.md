@@ -26,7 +26,8 @@ cd ~
 aptitude update
 aptitude upgrade
 aptitude install sudo # as root
-sudo aptitude install git curl cpanminus build-essential unzip nano
+sudo aptitude install git curl cpanminus build-essential unzip nano bibtex2html
+
 
 ### Download code
 git clone https://vikin9@bitbucket.org/vikin9/hex64publicationlistmanager.git
@@ -42,6 +43,7 @@ Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text:
 sudo cpanm -n Crypt::Random
 sudo cpanm Test::Differences Test::MockModule WWW::Mailgun
 
+sudo cpanm DBD::SQLite # will be obsolete soon, but still needed for backup functions
 
 
 ### Set permissions
@@ -84,8 +86,9 @@ morbo -l http://*:8080 ./script/admin_api
 
 ### See it in a browser
 http://YOUR_SERVER_IP:8080
-Admin login: admin
+Admin login: pub_admin
 Admin password: asdf
+
 ```
 
 
