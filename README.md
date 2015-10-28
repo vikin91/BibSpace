@@ -30,7 +30,7 @@ Crypt::Random Cwd File::Find DateTime File::Copy \
 Scalar::Util Text::BibTeX utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent
 ```
 * Copy files into a single location
-    ```
+```
        /home/xxx/hex64manager
         |- backups
         |- config
@@ -43,7 +43,7 @@ Scalar::Util Text::BibTeX utf8 File::Slurp DBI Exporter Set::Scalar Session::Tok
         |- templates
         |- tmp
         |- util
-    ```
+```
 * Set proper access rights 
     * `chmod 777 /home/xxx/hex64manager/log`
     * `... todo`
