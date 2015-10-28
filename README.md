@@ -4,7 +4,18 @@ This README would normally document whatever steps are necessary to get your app
 
 ### License ###
 
-This is private repository. No License is needed
+"Hex64 Publication List Manager" is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+"Hex64 Publication List Manager" is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/licenses/>.
 
 ### Status of this Readme file ###
 
@@ -12,7 +23,36 @@ This is private repository. No License is needed
 
 ### Installation ###
 
-* TODO
+1. Install Mojolicious
+    $ curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
+2. Install Perl libraries
+    sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Crypt::Random Cwd File::Find DateTime File::Copy Scalar::Util Text::BibTeX utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent
+3. Copy files into a single location
+    /home/xxx/hex64manager
+    |- backups
+    |- config
+    |- lib
+        |- ...
+    |- log
+    |- public
+    |- script
+    |- t
+    |- templates
+    |- tmp
+    |- util
+4. Set proper access rights
+    chmod 777 /home/xxx/hex64manager/log
+    ... todo
+5. Install mysql and create mysql tables
+  1. Sql commands are in files mysql_schema_user.sql and mysql_schema.sql
+6. Configure the connection to the database by editing file `config/default.conf`
+7. Run it!
+    hypnotoad /home/xxx/hex64manager/script/admin_api
+8. Stop it (if you need to)
+    hypnotoad -s /home/xxx/hex64manager/script/admin_api
+9. Run in developer mode
+    morbo -l http://*:8080 /home/xxx/hex64manager/script/admin_api
+
 
 ### Changelog ###
 
