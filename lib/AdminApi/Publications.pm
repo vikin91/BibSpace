@@ -804,7 +804,7 @@ sub landing_types_obj{
     if(defined $bibtex_type and (!defined $entry_type or $entry_type eq 'paper')){
         # no talks
         # single bibtex type
-        # say "OPTION 1 - only one type";
+        say "OPTION 1 - only one type";
         my $key = $bibtex_type;
 
         my @paper_objs = get_publications_main($self, undef, undef, $bibtex_type, $entry_type, undef, undef, 0, undef);        
@@ -817,7 +817,7 @@ sub landing_types_obj{
     # only talks
     elsif(defined $entry_type and $entry_type eq 'talk'){
         
-        # say "OPTION 2 - talks only";
+        say "OPTION 2 - talks only";
         my $key = 'talk';
 
         my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
@@ -828,9 +828,9 @@ sub landing_types_obj{
         }
     }
     # all but talks
-    elsif(!defined $bibtex_type and $entry_type eq 'paper'){
+    elsif(!defined $bibtex_type and defined $entry_type and $entry_type eq 'paper'){
         
-        # say "OPTION 3 - all but talks";
+        say "OPTION 3 - all but talks";
         @keys = @all_keys;
 
         foreach my $key (@keys){
@@ -845,7 +845,7 @@ sub landing_types_obj{
     # all
     elsif(!defined $entry_type and !defined $bibtex_type){
 
-        # say "OPTION 4 - all";
+        say "OPTION 4 - all";
         @keys = @all_keys;
 
         foreach my $key (@keys){
@@ -870,25 +870,6 @@ sub landing_types_obj{
     }
 
     
-    # separate foreach loop to optimize preformance
-    # foreach my $key (@keys){
-    #     my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);        
-    #     if(scalar @paper_objs > 0){
-    #         $hash_dict{$key} = get_type_description($self->app->db, $key);
-    #         $hash_values{$key} = \@paper_objs;
-    #         push @keys_with_papers, $key;
-    #     }
-    # }
-
-    # if($inlcude_talks == 1){
-    #     my $key = 'talks';
-    #     my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
-    #     if(scalar @talk_objs > 0){
-    #         $hash_dict{$key} = "Talks";
-    #         $hash_values{$key} = \@talk_objs;
-    #         push @keys_with_papers, $key;
-    #     }
-    # }
 
     # WARNING, it depends on routing! anti-pattern! Correct it some day
     my $url = "/ly/p?".$self->req->url->query;
