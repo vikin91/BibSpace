@@ -24,7 +24,9 @@ along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/li
 ### Installation ###
 
 1. Install Mojolicious
+
     $ curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
+
 2. Install Perl libraries
     sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Crypt::Random Cwd File::Find DateTime File::Copy Scalar::Util Text::BibTeX utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent
 3. Copy files into a single location
@@ -74,4 +76,3 @@ along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/li
     * Talks are not shown on landing pages with years if *entry_type* is not specified (as requested by Samuel/Jürgen)
     * *ISBN* field of *incollection* is not printed (Bibtex does not support such field as isbn)
     * Several minor antipatterns are still left in code
-
