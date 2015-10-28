@@ -22,7 +22,8 @@ along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/li
     This file is still under construction and all information below this line should be treated as not ready yet.
 
 ### Installation ###
-
+1. Test
+`rm -rf sss`
 #### Install Mojolicious ####
 
     $ curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
