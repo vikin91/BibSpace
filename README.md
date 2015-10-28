@@ -19,49 +19,72 @@ along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/li
 
 ### Installation ###
 
-* Install Mojolicious 
 ```
-curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
-```
-* Install Perl libraries
-```
-sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt \
-Crypt::Random Cwd File::Find DateTime File::Copy \
-Scalar::Util Text::BibTeX utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent
-```
-* Copy files into a single location
-```
-       /home/xxx/hex64manager
-        |- backups
-        |- config
-        |- lib
-            |- ...
-        |- log
-        |- public
-        |- script
-        |- t
-        |- templates
-        |- tmp
-        |- util
-```
-* Set proper access rights 
-    * `chmod 777 /home/xxx/hex64manager/log`
-    * `... todo`
-* Install mysql and create mysql tables
-    * Sql commands are in files mysql_schema_user.sql and mysql_schema.sql
-* Configure the connection to the database by editing file `config/default.conf`
-* Run it!
-```
-hypnotoad /home/xxx/hex64manager/script/admin_api
-```
-* Stop it (if you need to)
-```
-hypnotoad -s /home/xxx/hex64manager/script/admin_api
-```
-* Run in developer mode
 
-```
-morbo -l http://*:8080 /home/xxx/hex64manager/script/admin_api
+### Prepare your system (tested on Debian 8.1 x64)
+cd ~
+aptitude update
+aptitude upgrade
+aptitude install sudo # as root
+sudo aptitude install git curl cpanminus build-essential unzip
+
+### Download code
+git clone https://vikin9@bitbucket.org/vikin9/hex64publicationlistmanager.git
+cd hex64publicationlistmanager
+
+### Install Mojolicious
+curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
+
+### Install Perl libraries step 1
+sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy \
+Scalar::Util utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent Text::BibTeX 
+
+### Install Perl libraries step 2 (these may take longer)
+sudo cpanm Crypt::Random
+
+### Set permissions
+chmod 777 ./tmp
+chmod 555 ./log
+
+### Install mysql database and establish root password
+TODO! Standard mysql installation procedure on Debian
+
+### Create mysql database and tables
+mysql -u root -p
+# Enter your mysql_root password and type then in mysql console
+    CREATE DATABASE hex64publicationlistmanager;
+    CREATE USER 'hex64plm'@'localhost' IDENTIFIED BY 'secret_password';
+    GRANT ALL PRIVILEGES ON hex64publicationlistmanager.* TO 'hex64plm'@'localhost';
+    FLUSH PRIVILEGES;
+    quit;
+# Then again in linux shell
+mysql -u hex64plm -p hex64publicationlistmanager < mysql_schema_user.sql 
+mysql -u hex64plm -p hex64publicationlistmanager < mysql_schema.sql
+# enter your hex64plm mysql password (originally: secret_password)
+
+### Edit config file
+$EDITOR ./config/default.conf
+# set: 
+    db_host         => "localhost",
+    db_user         => "hex64plm",
+    db_database     => "hex64publicationlistmanager",
+    db_pass         => "secret_password", # or any other selected by you
+
+### Run it!
+hypnotoad ./script/admin_api
+
+### Stop it (if you need to)
+hypnotoad -s ./script/admin_api
+
+### Run in developer mode
+morbo -l http://*:8080 ./script/admin_api
+
+### See it in a browser
+http://YOUR_SERVER_IP:8080
+Admin login: admin
+Admin password: asdf
+
+
 ```
 
 
