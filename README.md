@@ -32,28 +32,28 @@ along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/li
 
 #### Copy files into a single location ####
     /home/xxx/hex64manager
-    |- backups
-    |- config
-    |- lib
-        |- ...
-    |- log
-    |- public
-    |- script
-    |- t
-    |- templates
-    |- tmp
-    |- util
-4. Set proper access rights
+        |- backups
+        |- config
+        |- lib
+            |- ...
+        |- log
+        |- public
+        |- script
+        |- t
+        |- templates
+        |- tmp
+        |- util
+#### Set proper access rights ####
     chmod 777 /home/xxx/hex64manager/log
     ... todo
-5. Install mysql and create mysql tables
-  1. Sql commands are in files mysql_schema_user.sql and mysql_schema.sql
-6. Configure the connection to the database by editing file `config/default.conf`
-7. Run it!
+#### Install mysql and create mysql tables ####
+* Sql commands are in files mysql_schema_user.sql and mysql_schema.sql
+#### Configure the connection to the database by editing file `config/default.conf` ####
+#### Run it! ####
     hypnotoad /home/xxx/hex64manager/script/admin_api
-8. Stop it (if you need to)
+#### Stop it (if you need to) ####
     hypnotoad -s /home/xxx/hex64manager/script/admin_api
-9. Run in developer mode
+#### Run in developer mode ####
     morbo -l http://*:8080 /home/xxx/hex64manager/script/admin_api
 
 
