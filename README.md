@@ -35,13 +35,14 @@ cd hex64publicationlistmanager
 ### Install Mojolicious
 curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
 
-### Install Perl libraries step 1
+### Install Perl libraries
 sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd \ 
 File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI \
 Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text::BibTeX  
+sudo cpanm -n Crypt::Random
+sudo cpanm Test::Differences Test::MockModule WWW::Mailgun
 
-### Install Perl libraries step 2 (these may take longer)
-sudo cpanm Crypt::Random
+
 
 ### Set permissions
 chmod 777 ./tmp
@@ -85,8 +86,6 @@ morbo -l http://*:8080 ./script/admin_api
 http://YOUR_SERVER_IP:8080
 Admin login: admin
 Admin password: asdf
-
-
 ```
 
 
