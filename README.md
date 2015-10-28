@@ -22,18 +22,19 @@ along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/li
     This file is still under construction and all information below this line should be treated as not ready yet.
 
 ### Installation ###
-1. Test
 
-  1. `rm -rf sss`
-#### Install Mojolicious ####
+1. Install Mojolicious 
+    1. `$ curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious`
+2. Install Perl libraries
+```
+sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt \
+Crypt::Random Cwd File::Find DateTime File::Copy \
+Scalar::Util Text::BibTeX utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent
+```
 
-    $ curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
-
-#### Install Perl libraries ####
-    sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Crypt::Random Cwd File::Find DateTime File::Copy Scalar::Util Text::BibTeX utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent
-
-#### Copy files into a single location ####
-    /home/xxx/hex64manager
+3. Copy files into a single location
+```
+       /home/xxx/hex64manager
         |- backups
         |- config
         |- lib
@@ -45,18 +46,26 @@ along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/li
         |- templates
         |- tmp
         |- util
-#### Set proper access rights ####
-    chmod 777 /home/xxx/hex64manager/log
-    ... todo
-#### Install mysql and create mysql tables ####
-* Sql commands are in files mysql_schema_user.sql and mysql_schema.sql
-#### Configure the connection to the database by editing file `config/default.conf` ####
-#### Run it! ####
-    hypnotoad /home/xxx/hex64manager/script/admin_api
-#### Stop it (if you need to) ####
-    hypnotoad -s /home/xxx/hex64manager/script/admin_api
-#### Run in developer mode ####
-    morbo -l http://*:8080 /home/xxx/hex64manager/script/admin_api
+```
+4. Set proper access rights 
+    1. `chmod 777 /home/xxx/hex64manager/log`
+    2. `... todo`
+5. Install mysql and create mysql tables
+    1. Sql commands are in files mysql_schema_user.sql and mysql_schema.sql
+6. Configure the connection to the database by editing file `config/default.conf`
+7. Run it!
+```
+hypnotoad /home/xxx/hex64manager/script/admin_api
+```
+8. Stop it (if you need to)
+```
+hypnotoad -s /home/xxx/hex64manager/script/admin_api
+```
+9. Run in developer mode
+
+```
+morbo -l http://*:8080 /home/xxx/hex64manager/script/admin_api
+```
 
 
 ### Changelog ###
