@@ -3,3 +3,4 @@ admin_api_test.conf
 config/test.conf
 config/demo.conf
 config/production.conf
+admin_api_demo.conf
