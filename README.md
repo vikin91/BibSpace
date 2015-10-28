@@ -32,6 +32,7 @@ sudo aptitude install git curl cpanminus build-essential unzip nano bibtex2html
 ### Download code
 git clone https://vikin9@bitbucket.org/vikin9/hex64publicationlistmanager.git
 cd hex64publicationlistmanager
+mkdir backups
 
 ### Install Mojolicious
 curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
@@ -49,6 +50,7 @@ sudo cpanm DBD::SQLite # will be obsolete soon, but still needed for backup func
 ### Set permissions
 chmod 777 ./tmp
 chmod 555 ./log
+chmod 555 ./backups
 
 ### Install mysql database and establish root password
 aptitude install mysql-server 
