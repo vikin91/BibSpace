@@ -26,7 +26,7 @@ cd ~
 aptitude update
 aptitude upgrade
 aptitude install sudo # as root
-sudo aptitude install git curl cpanminus build-essential unzip
+sudo aptitude install git curl cpanminus build-essential unzip nano
 
 ### Download code
 git clone https://vikin9@bitbucket.org/vikin9/hex64publicationlistmanager.git
@@ -37,7 +37,7 @@ curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
 
 ### Install Perl libraries step 1
 sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy \
-Scalar::Util utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent Text::BibTeX 
+Scalar::Util utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text::BibTeX  
 
 ### Install Perl libraries step 2 (these may take longer)
 sudo cpanm Crypt::Random
@@ -47,7 +47,8 @@ chmod 777 ./tmp
 chmod 555 ./log
 
 ### Install mysql database and establish root password
-TODO! Standard mysql installation procedure on Debian
+aptitude install mysql-server 
+# remeber the root password!
 
 ### Create mysql database and tables
 mysql -u root -p
@@ -63,7 +64,7 @@ mysql -u hex64plm -p hex64publicationlistmanager < mysql_schema.sql
 # enter your hex64plm mysql password (originally: secret_password)
 
 ### Edit config file
-$EDITOR ./config/default.conf
+nano ./config/default.conf
 # set: 
     db_host         => "localhost",
     db_user         => "hex64plm",
@@ -83,7 +84,6 @@ morbo -l http://*:8080 ./script/admin_api
 http://YOUR_SERVER_IP:8080
 Admin login: admin
 Admin password: asdf
-
 
 ```
 
