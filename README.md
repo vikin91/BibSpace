@@ -96,6 +96,11 @@ Admin password: asdf
 
 ### Changelog ###
 
+#### v1.4.1 28.10.2015 ####
+
+* Minor bugfixes
+* Installation procedure
+
 #### v1.4 19.10.2015 ####
 
 * Mojolicious updated to 6.24
