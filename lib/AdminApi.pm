@@ -18,30 +18,6 @@ use POSIX qw/strftime/;
 # 5 2 * * 0 curl http://localhost:8081/cron/week
 # 10 2 1 * * curl http://localhost:8081/cron/month
 
-# has config => sub {
-#     my $self = shift;
-#     my $address = Net::Address::IP::Local->public;
-#     # print $address;
-
-#     # my $config = $self->plugin('Config');
-#     my $config = undef;
-    
-#     # load default
-#     $config = $self->plugin('Config');
-
-#     if($self->app->home =~ /demo/){
-#         say "Loading demo config version";
-#         $config = $self->plugin('Config' => {file => 'admin_api_demo.conf'});
-#     }
-#     elsif($address =~ m/146\.185\.144\.116/){  # TEST SERVER
-#         $config = $self->plugin('Config' => {file => 'admin_api_test.conf'});
-#     }
-#     else{   # PRODUCTION
-#         $config = $self->plugin('Config' => {file => 'admin_api_production.conf'});
-#     }
-#     return $config;
-# };
-
 
 has db_connect_string => sub {
     my $self = shift;
@@ -88,7 +64,7 @@ sub startup {
     my $config = $self->app->config;
     
     # load default
-    $config = $self->plugin('Config');
+    $config = $self->plugin('Config' => {file => 'config/default.conf'});
 
     if($self->app->home =~ /demo/){
         say "Loading demo config version";
