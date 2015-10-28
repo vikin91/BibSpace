@@ -348,7 +348,7 @@ sub add_new_user{
 sub insert_admin{
     my $self = shift;
     my $dbh = shift;
-    $self->add_new_user("pub_admin", 'piotr.rygielski@uni-wuerzburg.de', "Admin", "asdf", "3", $dbh);
+    $self->add_new_user("pub_admin", 'your_email@email.com', "Admin", "asdf", "3", $dbh);
 };
 ####################################################################################################
 sub get_user_hash{

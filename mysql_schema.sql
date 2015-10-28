@@ -127,3 +127,30 @@ ALTER TABLE Entry ADD entry_type ENUM('paper', 'talk') NOT NULL AFTER id;
 ALTER TABLE Entry ADD month TINYINT UNSIGNED DEFAULT 0 AFTER title;
 ALTER TABLE Entry ADD sort_month SMALLINT UNSIGNED DEFAULT 0 AFTER year;
 
+
+REPLACE INTO OurType_to_Type VALUES('incollection','inproceedings',NULL,1);
+REPLACE INTO OurType_to_Type VALUES('incollection','bibtex-incollection',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('inproceedings','bibtex-inproceedings',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('inbook','book',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('mastersthesis','theses',NULL,1);
+REPLACE INTO OurType_to_Type VALUES('phdthesis','theses',NULL,1);
+REPLACE INTO OurType_to_Type VALUES('phdthesis','volumes',NULL,1);
+REPLACE INTO OurType_to_Type VALUES('proceedings','volumes',NULL,1);
+REPLACE INTO OurType_to_Type VALUES('article','article',NULL,1);
+REPLACE INTO OurType_to_Type VALUES('book','book',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('inbook','inbook',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('incollection','incollection',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('inproceedings','inproceedings',NULL,1);
+REPLACE INTO OurType_to_Type VALUES('manual','manual','Manuals',1);
+REPLACE INTO OurType_to_Type VALUES('mastersthesis','mastersthesis',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('misc','misc',NULL,1);
+REPLACE INTO OurType_to_Type VALUES('phdthesis','phdthesis',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('proceedings','proceedings',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('techreport','techreport',NULL,1);
+REPLACE INTO OurType_to_Type VALUES('unpublished','unpublished',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('book','volumes',NULL,0);
+REPLACE INTO OurType_to_Type VALUES('mastersthesis','supervised_theses','Supervised Theses',0);
+REPLACE INTO OurType_to_Type VALUES('phdthesis','supervised_theses','Supervised Theses',0);
+
+REPLACE INTO TagType VALUES('Tag','keyword',1);
+REPLACE INTO TagType VALUES('Category','cathegory of an entry',2);
