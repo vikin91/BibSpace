@@ -24,7 +24,7 @@ along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/li
 ### Installation ###
 1. Test
 
-`rm -rf sss`
+  1. `rm -rf sss`
 #### Install Mojolicious ####
 
     $ curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
