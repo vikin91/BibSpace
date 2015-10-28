@@ -391,7 +391,8 @@ sub all_without_tag {
 
     my $qry = "SELECT DISTINCT id, bibtex_key 
                 FROM Entry 
-                WHERE id NOT IN (
+                WHERE entry_type = 'paper' 
+                AND id NOT IN (
                     SELECT DISTINCT entry_id 
                     FROM Entry_to_Tag
                     LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
@@ -438,6 +439,7 @@ sub all_without_tag_for_author {
                 FROM Entry 
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
                 WHERE Entry_to_Author.author_id = ?
+                AND WHERE entry_type = 'paper'
                 AND id NOT IN (
                     SELECT DISTINCT entry_id 
                     FROM Entry_to_Tag

@@ -92,13 +92,16 @@ sub startup {
 
     if($self->app->home =~ /demo/){
         say "Loading demo config version";
-        $config = $self->plugin('Config' => {file => 'admin_api_demo.conf'});
+        $config = $self->plugin('Config' => {file => 'config/demo.conf'});
     }
     elsif($address =~ m/146\.185\.144\.116/){  # TEST SERVER
-        $config = $self->plugin('Config' => {file => 'admin_api_test.conf'});
+        $config = $self->plugin('Config' => {file => 'config/test.conf'});
     }
-    else{   # PRODUCTION
-        $config = $self->plugin('Config' => {file => 'admin_api_production.conf'});
+    elsif($address =~ m/132\.187\.10\.5/){  # PRODUCTION SERVER
+        $config = $self->plugin('Config' => {file => 'config/production.conf'});
+    }
+    else{   # DEFAULT
+        $config = $self->plugin('Config' => {file => 'config/default.conf'});
     }
 
 
@@ -106,40 +109,11 @@ sub startup {
     $self->plugin('AdminApi::Helpers');
     $self->plugin('AdminApi::CronHelpers');
 
-    # different secrets for different servers... and different call. I dunno why one is supported and second not
-
     $self->secrets( [$config->{key_cookie}] );
-
-    # this was fixed in new mojo
-    # if($address =~ m/146\.185\.144\.116/){  # TEST SERVER
-    #     $self->secrets( [$config->{key_cookie}] );
-    # }
-    # else{
-    #     $self->secret( $config->{key_cookie} );    
-    # }
-    
-
-    # this was fixed in new mojo
-    # $self->hook(before_dispatch => sub {
-    #     my $c = shift;
-
-    #     $c->req->url->base(Mojo::URL->new($config->{base_url})) if $self->mode eq 'production';
-    #     # print Dumper $c->req->url;
-    #     # push @{$c->req->url->base->path->trailing_slash(1)},
-    #     #       shift @{$c->req->url->path->leading_slash(0)};
-        
-    # });
 
     $self->helper(users => sub { state $users = MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
 
-    # $self->helper(db => sub {
-    #     $self->app->db;
-    # });
-
-    # $self->helper(backup_db => sub {
-    #     $self->app->backup_db;
-    # });
 
     $self->helper(backurl => sub {
         my $s = shift; 
