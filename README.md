@@ -36,8 +36,9 @@ cd hex64publicationlistmanager
 curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
 
 ### Install Perl libraries step 1
-sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy \
-Scalar::Util utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text::BibTeX  
+sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd \ 
+File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI \
+Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text::BibTeX  
 
 ### Install Perl libraries step 2 (these may take longer)
 sudo cpanm Crypt::Random
@@ -84,6 +85,7 @@ morbo -l http://*:8080 ./script/admin_api
 http://YOUR_SERVER_IP:8080
 Admin login: admin
 Admin password: asdf
+
 
 ```
 
