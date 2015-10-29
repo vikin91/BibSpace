@@ -17,6 +17,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/licenses/>.
 
+### Running demo ###
+
+Visit <http://www.hex64.com/> to see a (hopefully) running demo of the system. 
+
 ### Installation ###
 
 ```
