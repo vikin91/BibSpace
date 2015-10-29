@@ -30,7 +30,7 @@ sudo aptitude install git curl cpanminus build-essential unzip nano bibtex2html
 
 
 ### Download code
-git clone https://vikin9@bitbucket.org/vikin9/hex64publicationlistmanager.git
+git clone https://git@bitbucket.org/vikin9/hex64publicationlistmanager.git
 cd hex64publicationlistmanager
 mkdir backups
 
