@@ -17,6 +17,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/licenses/>.
 
+### Running demo ###
+
+Visit [hex64.com](http://www.hex64.com/) and click backend/frontend demo to have a quick overview of the running system. 
+
 ### Installation ###
 
 ```
@@ -39,8 +43,8 @@ curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
 
 ### Install Perl libraries
 sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd \ 
-File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI \
-Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text::BibTeX  
+ File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI \
+ Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text::BibTeX  
 sudo cpanm -n Crypt::Random
 sudo cpanm Test::Differences Test::MockModule WWW::Mailgun
 
