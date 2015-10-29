@@ -19,7 +19,7 @@ along with "Hex64 Publication List Manager".  If not, see <http://www.gnu.org/li
 
 ### Running demo ###
 
-Visit <http://www.hex64.com/> to see a (hopefully) running demo of the system. 
+Visit <http://www.hex64.com/> and click backend/frontend demo to have a quick overview of the running system. 
 
 ### Installation ###
 
