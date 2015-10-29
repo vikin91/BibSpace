@@ -43,8 +43,8 @@ curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
 
 ### Install Perl libraries
 sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd \ 
-File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI \
-Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text::BibTeX  
+ File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI \
+ Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text::BibTeX  
 sudo cpanm -n Crypt::Random
 sudo cpanm Test::Differences Test::MockModule WWW::Mailgun
 
