@@ -100,6 +100,11 @@ Admin password: asdf
 
 ### Changelog ###
 
+#### v1.4.2 26.11.2015 ####
+
+* Publications can now be hidden and unhidden without deleting them
+* get_publications_main was replaced by get_publications_main_hashed_args. Calls to get_publications_main return now undef.
+
 #### v1.4.1 28.10.2015 ####
 
 * Minor bugfixes
@@ -119,7 +124,9 @@ Admin password: asdf
 * Automatic extraction of month field for all papers - based on *month* bibtex field.
 * Logging-in is now based on mysql database (connector errors are not a problem anymore). Sqlite is deprecated now.
 * Various bugfixes
-* **Known issues**
-    * Talks are not shown on landing pages with years if *entry_type* is not specified (as requested by Samuel/Jürgen)
-    * *ISBN* field of *incollection* is not printed (Bibtex does not support such field as isbn)
-    * Several minor antipatterns are still left in code
+
+### Known issues ###
+* If an entry is hidden, the pdf/slides can still be downloaded if url of the file is known
+* Talks are not shown on landing pages with years if *entry_type* is not specified (as requested by Samuel/Jürgen)
+* *ISBN* field of *incollection* is not printed (Bibtex does not support such field as isbn)
+* Several minor antipatterns are still left in code
