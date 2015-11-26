@@ -20,6 +20,7 @@ sub new
         entry_type  => $args->{entry_type} || 'paper',
         bibtex_key  => $args->{bibtex_key},
         bibtex_type  => $args->{bibtex_type},
+        hidden  => $args->{hidden} || 0,
         bib  => $args->{bib},
         html => $args->{html} || "no HTML",
         mtime  => $args->{mtime} || 0,
@@ -35,7 +36,7 @@ sub initFromDB{
     my $self = shift;
     my $dbh = shift;
 
-    my $qry = "SELECT DISTINCT id, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
+    my $qry = "SELECT DISTINCT id, hidden, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
                FROM Entry
                WHERE id = ?";
 
@@ -47,6 +48,7 @@ sub initFromDB{
     $self->{bibtex_key} = $row->{bibtex_key};
     $self->{year} = $row->{year};
     $self->{month} = $row->{month} || 0;
+    $self->{hidden}  = $row->{hidden} || 0,
     $self->{sort_month} = $row->{sort_month} || 0;
     $self->{bibtex_type} = $row->{bibtex_type} || "";
     $self->{entry_type} = $row->{entry_type} || "paper";
@@ -57,6 +59,55 @@ sub initFromDB{
 
 
 
+}
+########################################################################################################################
+sub isHidden{
+    my $self = shift;
+    # say "id $self->{id} isHidden $self->{hidden}";
+    return $self->{hidden};
+}
+########################################################################################################################
+sub toggle_hide{
+    my $self = shift;
+    my $dbh = shift;
+
+    $self->initFromDB($dbh);
+
+    # say "toggling hide of id $self->{id}";
+    my $h = $self->isHidden();
+
+    if($h == 1){
+        # say "unhiding ($h)";
+        $self->unhide($dbh);
+    }
+    else{
+        # say "hiding ($h)";
+        $self->hide($dbh);   
+    }
+}
+########################################################################################################################
+sub hide{
+    my $self = shift;
+    my $dbh = shift;
+
+    # say "hiding id $self->{id}";
+
+    my $qry = "UPDATE Entry SET hidden=1 WHERE id = ?";
+    my $sth = $dbh->prepare( $qry );  
+    $sth->execute($self->{id});     
+    $self->{hidden} = 1;
+}
+########################################################################################################################
+sub unhide{
+    my $self = shift;
+    my $dbh = shift;
+
+    # say "unhiding id $self->{id}";
+
+    my $qry = "UPDATE Entry SET hidden=0 WHERE id = ?";
+    my $sth = $dbh->prepare( $qry );  
+    $sth->execute($self->{id});     
+    $self->{hidden} = 0;
 }
 ########################################################################################################################
 sub isTalk{
@@ -174,7 +225,7 @@ sub getAll{
     my $self = shift;
     my $dbh = shift;
 
-    my $qry = "SELECT id, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
+    my $qry = "SELECT id, hidden, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
                 FROM Entry 
                 WHERE bibtex_key IS NOT NULL 
                 ORDER BY year DESC, sort_month DESC, modified_time ASC";
@@ -188,6 +239,7 @@ sub getAll{
                                 bibtex_key => $row->{bibtex_key},
                                 year => $row->{year},
                                 month => $row->{month},
+                                hidden => $row->{hidden},
                                 sort_month => $row->{sort_month},
                                 bibtex_type => $row->{bibtex_type},
                                 entry_type => $row->{entry_type},
@@ -231,7 +283,7 @@ sub getFromArray{
     }
 
     if(defined $sort and $sort==1){
-        my $qry = "SELECT id, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
+        my $qry = "SELECT id, hidden, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
                 FROM Entry 
                 WHERE bibtex_key IS NOT NULL 
                 AND id IN (".$placeholders.")";
@@ -245,6 +297,7 @@ sub getFromArray{
                                 bibtex_key => $row->{bibtex_key},
                                 year => $row->{year},
                                 month => $row->{month},
+                                hidden => $row->{hidden},
                                 sort_month => $row->{sort_month},
                                 bibtex_type => $row->{bibtex_type},
                                 entry_type => $row->{entry_type},
@@ -259,7 +312,7 @@ sub getFromArray{
     else{ # TODO: pobieranie po jednym argumencie i dodawanie do tablicy objs krok po kroku aby utrzymac order!
 
 
-        my $qry = "SELECT id, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
+        my $qry = "SELECT id, hidden, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
                 FROM Entry 
                 WHERE bibtex_key IS NOT NULL 
                 AND id IN (".$placeholders.") ORDER BY CASE id ";
@@ -279,6 +332,7 @@ sub getFromArray{
                                 bibtex_key => $row->{bibtex_key},
                                 year => $row->{year},
                                 month => $row->{month},
+                                hidden => $row->{hidden},
                                 sort_month => $row->{sort_month},
                                 bibtex_type => $row->{bibtex_type},
                                 entry_type => $row->{entry_type},
@@ -309,6 +363,7 @@ sub getByFilter{
     my $teamid = shift;
     my $visible = shift || 0;
     my $permalink = shift;
+    my $hidden = shift;
 
     # say "   mid $mid
     #         year $year
@@ -317,11 +372,13 @@ sub getByFilter{
     #         tagid $tagid
     #         teamid $teamid
     #         visible $visible
-    #         permalink $permalink";
+    #         permalink $permalink
+    #         hidden $hidden
+    # ";
 
     my @params;
 
-    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, bib, html, Entry.bibtex_type, Entry.entry_type, Entry.year, Entry.month, Entry.sort_month, modified_time, creation_time
+    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.hidden, Entry.id, bib, html, Entry.bibtex_type, Entry.entry_type, Entry.year, Entry.month, Entry.sort_month, modified_time, creation_time
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
@@ -331,6 +388,10 @@ sub getByFilter{
                 LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
                 LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id 
                 WHERE Entry.bibtex_key IS NOT NULL ";
+    if(defined $hidden){
+        push @params, $hidden;
+        $qry .= "AND Entry.hidden=? ";
+    }
     if(defined $visible and $visible eq '1'){
         $qry .= "AND Author.display=1 ";
     }
@@ -379,6 +440,7 @@ sub getByFilter{
                             bibtex_key => $row->{bibtex_key},
                             year => $row->{year},
                             month => $row->{month},
+                            hidden => $row->{hidden},
                             sort_month => $row->{sort_month},
                             bibtex_type => $row->{bibtex_type},
                             entry_type => $row->{entry_type},
@@ -407,10 +469,11 @@ sub getByFilterNoTalks{
     my $teamid = shift;
     my $visible = shift || 0;
     my $permalink = shift;
+    my $hidden = shift;
 
     my @params;
     # AND Tag.name <> 'Talks' 
-    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, bib, html, Entry.bibtex_type, Entry.entry_type, Entry.year, Entry.month, Entry.sort_month, modified_time, creation_time
+    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.hidden, Entry.id, bib, html, Entry.bibtex_type, Entry.entry_type, Entry.year, Entry.month, Entry.sort_month, modified_time, creation_time
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
@@ -421,6 +484,10 @@ sub getByFilterNoTalks{
                 LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id 
                 WHERE Entry.bibtex_key IS NOT NULL 
                 AND Entry.entry_type == 'paper' ";
+    if(defined $hidden){
+        push @params, $hidden;
+        $qry .= "AND Entry.hidden=? ";
+    }
     if(defined $visible and $visible eq '1'){
         $qry .= "AND Author.display=1 ";
     }
@@ -465,6 +532,7 @@ sub getByFilterNoTalks{
                             bibtex_key => $row->{bibtex_key},
                             year => $row->{year},
                             month => $row->{month},
+                            hidden => $row->{hidden},
                             sort_month => $row->{sort_month},
                             bibtex_type => $row->{bibtex_type},
                             entry_type => $row->{entry_type},

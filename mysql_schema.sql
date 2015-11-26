@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS `Entry`(
       html_bib TEXT,
       abstract TEXT,
       title TEXT,
+      hidden TINYINT UNSIGNED DEFAULT 0,
+      month TINYINT UNSIGNED DEFAULT 0,
       year INTEGER(4),
       teams_str TEXT,
       people_str TEXT,
@@ -62,6 +64,7 @@ CREATE TABLE IF NOT EXISTS `Entry`(
       creation_time TIMESTAMP DEFAULT '0000-00-00 00:00:00',
       modified_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       need_html_regen INTEGER DEFAULT 1,
+      hidden TINYINT DEFAULT 0, 
       CONSTRAINT UNIQUE(bibtex_key),
       KEY idx_bibtex_key (bibtex_key)
       );
@@ -124,7 +127,8 @@ CREATE TABLE IF NOT EXISTS `OurType_to_Type`(
 ALTER TABLE Entry CHANGE type bibtex_type varchar(50) DEFAULT NULL;
 -- ALTER TABLE Entry DROP COLUMN entry_type;
 ALTER TABLE Entry ADD entry_type ENUM('paper', 'talk') NOT NULL AFTER id;
-ALTER TABLE Entry ADD month TINYINT UNSIGNED DEFAULT 0 AFTER title;
+ALTER TABLE Entry ADD hidden TINYINT UNSIGNED DEFAULT 0 AFTER title;
+ALTER TABLE Entry ADD month TINYINT UNSIGNED DEFAULT 0 AFTER year;
 ALTER TABLE Entry ADD sort_month SMALLINT UNSIGNED DEFAULT 0 AFTER year;
 
 
@@ -154,3 +158,5 @@ REPLACE INTO OurType_to_Type VALUES('phdthesis','supervised_theses','Supervised 
 
 REPLACE INTO TagType VALUES('Tag','keyword',1);
 REPLACE INTO TagType VALUES('Category','cathegory of an entry',2);
+
+-- hidden TINYINT DEFAULT 0,

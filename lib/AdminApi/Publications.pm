@@ -72,6 +72,54 @@ sub fixEntryType {
     $self->redirect_to($back_url);
 }
 ####################################################################################
+sub unhide {
+    my $self = shift;
+    my $id = $self->param('id');
+    my $back_url = $self->param('back_url');
+    my $dbh = $self->app->db;
+
+    my $current = $self->req->url->to_abs;
+    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+
+    my $obj = EntryObj->new({id => $id});
+    $obj->initFromDB($dbh);
+    $obj->unhide($dbh);
+
+    $self->redirect_to($back_url);
+};
+####################################################################################
+sub hide {
+    my $self = shift;
+    my $id = $self->param('id');
+    my $back_url = $self->param('back_url');
+    my $dbh = $self->app->db;
+
+    my $current = $self->req->url->to_abs;
+    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+
+    my $obj = EntryObj->new({id => $id});
+    $obj->initFromDB($dbh);
+    $obj->hide($dbh);
+
+    $self->redirect_to($back_url);
+};
+####################################################################################
+sub toggle_hide {
+    my $self = shift;
+    my $id = $self->param('id');
+    my $back_url = $self->param('back_url');
+    my $dbh = $self->app->db;
+
+    my $current = $self->req->url->to_abs;
+    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+
+    my $obj = EntryObj->new({id => $id});
+    $obj->initFromDB($dbh);
+    $obj->toggle_hide($dbh);
+
+    $self->redirect_to($back_url);
+};
+####################################################################################
 sub make_paper {
     my $self = shift;
     my $id = $self->param('id');
@@ -108,7 +156,7 @@ sub metalist {
 	say "CALL: metalist ";
     my $self = shift;
 
-    my @ids_arr = get_all_entry_ids($self->app->db);
+    my @ids_arr = get_all_non_hidden_entry_ids($self->app->db);
     $self->stash(ids => \@ids_arr);
 
     $self->render(template => 'publications/metalist'); 
@@ -125,9 +173,9 @@ sub meta {
 
     # FETCHING DATA FROM DB
     my $dbh = $self->app->db;
-    my $sth = $dbh->prepare( "SELECT DISTINCT id, bibtex_key, bib, html
+    my $sth = $dbh->prepare( "SELECT DISTINCT id, hidden, bibtex_key, bib, html
         FROM Entry 
-        WHERE id = ?" );  
+        WHERE id = ? AND hidden=0" );  
     $sth->execute($id);
 
     my $bib = "";
@@ -619,7 +667,8 @@ sub all_bibtex {
 
 	# my ($arr_html, $arr_key, $arr_id, $arr_bib) = get_publications_filter($self);
 
-    my @objs = get_publications_main($self);
+    # my @objs = get_publications_main($self);
+    my @objs = get_publications_main_hashed_args($self, {hidden => 0});
 
 	my $big_str = "<pre>\n";
 	foreach my $obj (@objs){
@@ -631,20 +680,19 @@ sub all_bibtex {
 	
 }
 ####################################################################################
-
 sub all {
 	say "CALL: all ";
+    # function called from admin interface
 	my $self = shift;
 
 
-    my @objs = get_publications_main($self);
-	$self->stash(objs => \@objs);
-
 	if ($self->session('user')){
+        my @objs = get_publications_main_hashed_args($self, {});
+        $self->stash(objs => \@objs);
 		$self->render(template => 'publications/all');  
 	}
 	else{
-		$self->render(template => 'publications/all_read');
+        return $self->all_read();
 	}
 }
 
@@ -654,7 +702,9 @@ sub all_read {
 	say "CALL: all_read ";
     my $self = shift;
 
-    my @objs = get_publications_main($self);
+    # my @objs = get_publications_main($self);
+
+    my @objs = get_publications_main_hashed_args($self, {hidden => 0});
     $self->stash(objs => \@objs);
 
     $self->render(template => 'publications/all_read');
@@ -667,7 +717,7 @@ sub single {
     my $self = shift;
     my $id = $self->param('id');
 
-    my @objs = get_single_publication($self, $id);
+    my @objs = get_single_publication($self, $id, undef); # undef - hidden=undef - for admin interface
     $self->stash(objs => \@objs);
     $self->render(template => 'publications/all');  
     
@@ -680,7 +730,7 @@ sub single_read {
     my $self = shift;
     my $id = $self->param('id');
 
-    my @objs = get_single_publication($self, $id);
+    my @objs = get_single_publication($self, $id, 0); # 0 - hidden=0
     $self->stash(objs => \@objs);
     $self->render(template => 'publications/all_read');
     
@@ -722,7 +772,11 @@ sub landing_years_obj{
 
     foreach my $yr (@allkeys) {
         
-        my @objs = get_publications_main($self, undef, $yr, undef, $entry_type, undef, undef, 0, undef);
+        # my @objs = get_publications_main($self, undef, $yr, undef, $entry_type, undef, undef, 0, undef);
+        my @objs = get_publications_main_hashed_args($self, {year => $yr, 
+                                                                entry_type => $entry_type, 
+                                                                visible => 0,
+                                                                hidden => 0});
         # delete the year from the @keys array if the year has 0 papers
         if(scalar @objs > 0){
             $hash_dict{$yr} = $yr;
@@ -807,7 +861,22 @@ sub landing_types_obj{
         say "OPTION 1 - only one type";
         my $key = $bibtex_type;
 
-        my @paper_objs = get_publications_main($self, undef, undef, $bibtex_type, $entry_type, undef, undef, 0, undef);        
+
+        # $args->{author}
+        # $args->{year}
+        # $args->{bibtex_type}
+        # $args->{entry_type}
+        # $args->{tag}
+        # $args->{team}
+        # $args->{visible}
+        # $args->{permalink}
+        # $args->{hidden}
+
+        # my @paper_objs = get_publications_main($self, undef, undef, $bibtex_type, $entry_type, undef, undef, 0, undef);        
+        my @paper_objs = get_publications_main_hashed_args($self, {bibtex_type => $bibtex_type, 
+                                                                    entry_type => $entry_type, 
+                                                                    visible => 0,
+                                                                    hidden => 0});
         if(scalar @paper_objs > 0){
             $hash_dict{$key} = get_type_description($self->app->db, $key);
             $hash_values{$key} = \@paper_objs;
@@ -820,7 +889,10 @@ sub landing_types_obj{
         say "OPTION 2 - talks only";
         my $key = 'talk';
 
-        my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
+        # my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
+        my @talk_objs = get_publications_main_hashed_args($self, { entry_type => 'talk', 
+                                                                    visible => 0,
+                                                                    hidden => 0});
         if(scalar @talk_objs > 0){
             $hash_dict{$key} = "Talks";
             $hash_values{$key} = \@talk_objs;
@@ -834,7 +906,11 @@ sub landing_types_obj{
         @keys = @all_keys;
 
         foreach my $key (@keys){
-            my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);        
+            # my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);        
+            my @paper_objs = get_publications_main_hashed_args($self, {bibtex_type => $key, 
+                                                                    entry_type => 'paper', 
+                                                                    visible => 0,
+                                                                    hidden => 0});
             if(scalar @paper_objs > 0){
                 $hash_dict{$key} = get_type_description($self->app->db, $key);
                 $hash_values{$key} = \@paper_objs;
@@ -849,7 +925,11 @@ sub landing_types_obj{
         @keys = @all_keys;
 
         foreach my $key (@keys){
-            my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);        
+            # my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef); 
+            my @paper_objs = get_publications_main_hashed_args($self, {bibtex_type => $key, 
+                                                                    entry_type => 'paper', 
+                                                                    visible => 0,
+                                                                    hidden => 0});
             if(scalar @paper_objs > 0){
                 $hash_dict{$key} = get_type_description($self->app->db, $key);
                 $hash_values{$key} = \@paper_objs;
@@ -858,7 +938,10 @@ sub landing_types_obj{
         }
         my $key = 'talk';
 
-        my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
+        # my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
+        my @talk_objs = get_publications_main_hashed_args($self, { entry_type => 'talk', 
+                                                                    visible => 0,
+                                                                    hidden => 0});
         if(scalar @talk_objs > 0){
             $hash_dict{$key} = "Talks";
             $hash_values{$key} = \@talk_objs;
@@ -986,9 +1069,27 @@ sub get_number_of_publications_in_year{
     return scalar @objs;
 }
 ####################################################################################
+sub get_publications_main_hashed_args{
+    my ($self, $args) = @_;
+
+    return get_publications_core($self, 
+                                 $args->{author} || $self->param('author') || undef, 
+                                 $args->{year} || $self->param('year') || undef,
+                                 $args->{bibtex_type} || $self->param('bibtex_type') || undef,
+                                 $args->{entry_type} || $self->param('entry_type') || undef,
+                                 $args->{tag} || $self->param('tag') || undef,
+                                 $args->{team} || $self->param('team') || undef,
+                                 $args->{visible} || 0,
+                                 $args->{permalink} || $self->param('permalink') || undef,
+                                 $args->{hidden},
+                                 );
+}
+####################################################################################
 sub get_publications_main{
-	# say "CALL: get_publications_main";
+	say "CALL: get_publications_main - calling this function without arguments hash is deprecated! Call get_publications_main_hashed_args instead!";
     my $self = shift;
+
+    return undef;
 
     my $author = shift || $self->param('author') || undef;
     my $year = shift || $self->param('year') || undef;
@@ -997,7 +1098,8 @@ sub get_publications_main{
     my $tag = shift || $self->param('tag') || undef;
     my $team = shift || $self->param('team') || undef;
     my $permalink = shift || $self->param('permalink') || undef;
-    return get_publications_core($self, $author, $year, $bibtex_type, $entry_type, $tag, $team, 0, $permalink);
+    my $hidden = shift || undef;
+    return get_publications_core($self, $author, $year, $bibtex_type, $entry_type, $tag, $team, 0, $permalink, $hidden);
 }
 ####################################################################################
 sub get_publications_core_from_array{
@@ -1044,6 +1146,7 @@ sub get_publications_core{
     my $team = shift;
     my $visible = shift || 0;
     my $permalink = shift;
+    my $hidden = shift;
 
     my $dbh = $self->app->db;
 
@@ -1056,21 +1159,28 @@ sub get_publications_core{
     $tagid = undef unless defined $tag;
     
 
-    my @objs = EntryObj->getByFilter($dbh, $mid, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink);
+    my @objs = EntryObj->getByFilter($dbh, $mid, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
     return @objs;
 }
 ####################################################################################
 sub get_single_publication {
-	say "CALL: get_single_publication ";
     my $self = shift;
     my $eid = shift;
+    my $hidden = shift;
     my $dbh = $self->app->db;
+
+    say "CALL: get_single_publication. Hidden=$hidden";
 
 
     my @objs;
     my $obj = EntryObj->new({id => $eid});
     $obj->initFromDB($dbh);
-    push @objs, $obj; # for not duplicating templates
+    if(defined $hidden and $obj->isHidden()==$hidden){
+        push @objs, $obj; 
+    }
+    elsif(!defined $hidden){
+        push @objs, $obj; 
+    }
 
     return @objs;
 };

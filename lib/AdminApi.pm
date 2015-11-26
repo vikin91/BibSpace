@@ -320,6 +320,11 @@ sub startup {
     
     $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq'); 
     $logged_user->get('/publications/get/:id')->to('publications#single'); 
+
+    $logged_user->get('/publications/hide/:id')->to('publications#hide'); 
+    $logged_user->get('/publications/unhide/:id')->to('publications#unhide'); 
+    $logged_user->get('/publications/toggle_hide/:id')->to('publications#toggle_hide'); 
+    
     # $anyone->get('/publications/get/:id')->to('publications#single_read'); 
     
 
@@ -352,6 +357,8 @@ sub startup {
     $logged_user->get('/publications/:eid/add_exception/:tid')->to('publications#add_exception');
 
     $logged_user->get('/publications/show_authors/:id')->to('publications#show_authors_of_entry');
+
+    
     
 
     # $logged_user->get('/publications/decimate')->to('publications#decimate');
@@ -371,9 +378,11 @@ sub startup {
     $anyone->get('/read/publications/meta/:id')->to('publications#meta');
 
     $anyone->get('/read/publications')->to('publications#all_read');
+    $anyone->get('/r/publications')->to('publications#all_read'); #ALIAS
     $anyone->get('/r/p')->to('publications#all_read'); #ALIAS
 
     $anyone->get('/read/bibtex')->to('publications#all_bibtex');
+    $anyone->get('/r/bibtex')->to('publications#all_bibtex'); #ALIAS
     $anyone->get('/r/b')->to('publications#all_bibtex'); #ALIAS
 
     # TODO: document this

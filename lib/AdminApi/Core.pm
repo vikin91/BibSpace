@@ -57,6 +57,7 @@ our @EXPORT = qw(
     get_landing_for_our_type
     toggle_landing_for_our_type
     get_all_entry_ids
+    get_all_non_hidden_entry_ids
     nohtml
     delete_entry_by_id
     get_author_ids_for_tag_id
@@ -533,6 +534,23 @@ sub delete_entry_by_id{
   my $sth3 = $dbh->prepare( "DELETE FROM Entry_to_Author WHERE entry_id = ?" );  
   $sth3->execute($id);
 };
+################################################################################
+sub get_all_non_hidden_entry_ids{
+   my $dbh = shift;
+   
+   my $qry = "SELECT DISTINCT id FROM Entry WHERE hidden=0";
+   my $sth = $dbh->prepare( $qry );  
+   $sth->execute(); 
+
+   my @ids;
+   
+   while(my $row = $sth->fetchrow_hashref()) {
+      my $eid = $row->{id};
+      push @ids, $eid if defined $eid;
+   }
+
+   return @ids;   
+}
 ################################################################################
 sub get_all_entry_ids{
    my $dbh = shift;

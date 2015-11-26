@@ -20,6 +20,7 @@
     %= stylesheet 'http://se2.informatik.uni-wuerzburg.de/pa/test1.css'
     %= stylesheet 'https://se2.informatik.uni-wuerzburg.de/pa/styles.css'
     %= stylesheet 'https://se2.informatik.uni-wuerzburg.de/pa/test1.css'
+    %= stylesheet '/test1.css'
 
     <script type="text/javascript">
          function showAbstract(divid) {
