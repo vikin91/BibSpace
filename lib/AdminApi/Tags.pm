@@ -302,8 +302,10 @@ sub get_tags_for_author_read{
         my $name = $tag;
         $name =~ s/_/\ /g;
 
-        my $set = get_set_of_papers_for_author_and_tag($self, $maid, $tag_id);
-        my $count =  scalar $set->members;
+        # my $set = get_set_of_papers_for_author_and_tag($self, $maid, $tag_id); # DEPRECATED!
+        my @objs = get_publications_main_hashed_args($self, {hidden => 0, author => $maid, tag=>$tag_id});
+        my $count =  scalar @objs;
+        
 
         my $url = "/ly/p?author=".get_master_for_id($self->app->db, $maid)."&tag=".$tag."&title=1&navbar=1";
         

@@ -281,7 +281,7 @@ sub login {
     my $pass = $self->param('pass');
     my $dbh = $self->app->db;
 
-    
+    say "Login: trying to log in as user $user";
 
     if(defined $user and defined $pass){
 

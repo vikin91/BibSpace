@@ -334,6 +334,8 @@ sub get_set_of_papers_for_author_and_tag {
     my $tid = shift;
     my $dbh = $self->app->db;
 
+    say "This function (get_set_of_papers_for_author_and_tag) may be deprecated! It does not take into account hidden!";
+
     my $set_author_papers = get_set_of_papers_for_author_id($self, $aid);
     my $set_tag_papers = get_set_of_papers_for_tag($self, $tid);
     

@@ -287,15 +287,23 @@ sub register {
         my $mid = shift;
         my $tag_id = shift;
 
-        my $set = get_set_of_papers_for_author_and_tag($self, $mid, $tag_id);
+        say "call HELPER num_pubs_for_author_and_tag";
 
-        return scalar $set->members;
+        my @objs = get_publications_main_hashed_args($self, {hidden => undef, author => $mid, tag=>$tag_id});
+        my $count =  scalar @objs;
+
+        return $count;
+
+        # my $set = get_set_of_papers_for_author_and_tag($self, $mid, $tag_id);
+        # return scalar $set->members;
       });
 
     $app->helper(num_pubs_for_author_and_team => sub {
         my $self = shift;
         my $mid = shift;
         my $team_id = shift;
+
+        say "call HELPER num_pubs_for_author_and_team";
 
         my $set = get_set_of_papers_for_author_and_team($self, $mid, $team_id);
         return scalar $set->members;
@@ -309,6 +317,7 @@ sub register {
                                         LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
                                         LEFT JOIN Author ON Author.master_id = Entry_to_Author.author_id 
                                         WHERE Author.display = 1
+                                        AND Entry.hidden = 0
                                         ORDER BY year DESC" );  
         $sth->execute(); 
         my @arr;
@@ -346,11 +355,23 @@ sub register {
         return @authors; 
       });
 
+    $app->helper(num_unhidden_pubs_for_tag => sub {
+        my $self = shift;
+        my $tid = shift;
+
+        my $sth = $self->app->db->prepare( "SELECT COUNT(Entry_to_Tag.entry_id) as num FROM Entry_to_Tag LEFT JOIN Entry ON Entry.id = Entry_to_Tag.entry_id WHERE tag_id=? AND hidden=0" );  
+        $sth->execute($tid); 
+        my $row = $sth->fetchrow_hashref();
+        my $num = $row->{num};
+        return $num; 
+      });
+
+
     $app->helper(num_pubs_for_tag => sub {
         my $self = shift;
         my $tid = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(entry_id) as num FROM Entry_to_Tag WHERE tag_id=?" );  
+        my $sth = $self->app->db->prepare( "SELECT COUNT(Entry_to_Tag.entry_id) as num FROM Entry_to_Tag LEFT JOIN Entry ON Entry.id = Entry_to_Tag.entry_id WHERE tag_id=?" );  
         $sth->execute($tid); 
         my $row = $sth->fetchrow_hashref();
         my $num = $row->{num};
