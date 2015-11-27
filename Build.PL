@@ -1,4 +1,4 @@
-use Module::Build::Mojolicious clean_install => 1;
+use Module::Build::Mojolicious clean_install => 0;
 my $builder = Module::Build::Mojolicious->new(
 module_name => 'Hex64Publications',
 dist_author => 'me',
