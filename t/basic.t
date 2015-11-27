@@ -3,6 +3,8 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 
+## :P
+
 my $author_id = 527;
 my $entry_id = 792;
 my $entry_bibtex_key = "WaSpKo-SIMUTools-QPNParallelSimulation";
@@ -99,9 +101,10 @@ $t_anyone->get_ok("/r/p/get/$entry_id")->content_unlike(qr/$entry_bibtex_key/i);
 $t_anyone->get_ok("/landing-years/publications")->content_unlike(qr/$entry_bibtex_key/i);
 $t_anyone->get_ok("/landing/publications")->content_unlike(qr/$entry_bibtex_key/i);
 $t_anyone->get_ok("/r/b")->content_unlike(qr/$entry_bibtex_key/i);
+$t_logged_in->get_ok("/publications/unhide/$entry_id");
 
 
-
+# todo: Opisy testow: ok($t->get_ok($_)->status_is(403) => "$_ no creds : 403") for @urls;
 
 done_testing();
 
