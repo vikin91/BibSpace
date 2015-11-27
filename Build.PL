@@ -2,6 +2,7 @@ use Module::Build::Mojolicious clean_install => 1;
 my $builder = Module::Build::Mojolicious->new(
 module_name => 'Hex64Publications',
 dist_author => 'me',
+version => '1.4.2',
 license => 'perl',
 configure_requires => {
   'Module::Build::Mojolicious' => 0,
