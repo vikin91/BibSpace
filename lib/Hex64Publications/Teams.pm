@@ -1,4 +1,4 @@
-package AdminApi::Teams;
+package Hex64Publications::Teams;
 
 use utf8;
 use DateTime;
@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use DBI;
 
-use AdminApi::Core;
+use Hex64Publications::Core;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

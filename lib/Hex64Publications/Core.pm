@@ -1,4 +1,4 @@
-package AdminApi::Core;
+package Hex64Publications::Core;
 
 use Data::Dumper;
 use utf8;

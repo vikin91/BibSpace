@@ -1,7 +1,7 @@
-package AdminApi;
+package Hex64Publications;
 
-use AdminApi::Core;
-use AdminApi::Publications;
+use Hex64Publications::Core;
+use Hex64Publications::Publications;
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Net::Address::IP::Local;
@@ -9,7 +9,7 @@ use Net::Address::IP::Local;
 
 use Time::Piece;
 use MyUsers;
-use AdminApi::Helpers;
+use Hex64Publications::Helpers;
 use Data::Dumper;
 use POSIX qw/strftime/;
 
@@ -80,10 +80,12 @@ sub startup {
         $config = $self->plugin('Config' => {file => 'config/default.conf'});
     }
 
+    $app->plugin('InstallablePaths');
 
 
-    $self->plugin('AdminApi::Helpers');
-    $self->plugin('AdminApi::CronHelpers');
+
+    $self->plugin('Hex64Publications::Helpers');
+    $self->plugin('Hex64Publications::CronHelpers');
 
     $self->secrets( [$config->{key_cookie}] );
 

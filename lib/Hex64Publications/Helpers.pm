@@ -1,4 +1,4 @@
-package AdminApi::Helpers;
+package Hex64Publications::Helpers;
 
 use Data::Dumper;
 use utf8;
@@ -11,9 +11,9 @@ use strict;
 use warnings;
 use DBI;
 
-use AdminApi::Core;
-use AdminApi::Set;
-use AdminApi::Publications;
+use Hex64Publications::Core;
+use Hex64Publications::Set;
+use Hex64Publications::Publications;
 use TagObj;
 use EntryObj;
 use TagTypeObj;

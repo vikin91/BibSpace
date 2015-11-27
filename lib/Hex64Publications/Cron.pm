@@ -1,4 +1,4 @@
-package AdminApi::Cron;
+package Hex64Publications::Cron;
 
 use Data::Dumper;
 use utf8;

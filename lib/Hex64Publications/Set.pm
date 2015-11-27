@@ -1,4 +1,4 @@
-package AdminApi::Set;
+package Hex64Publications::Set;
 
 use Data::Dumper;
 use utf8;
@@ -11,7 +11,7 @@ use strict;
 use warnings;
 use DBI;
 
-use AdminApi::Core;
+use Hex64Publications::Core;
 
 use Set::Scalar;
 

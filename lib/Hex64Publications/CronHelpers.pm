@@ -1,4 +1,4 @@
-package AdminApi::CronHelpers;
+package Hex64Publications::CronHelpers;
 
 use utf8;
 use DateTime;
@@ -10,9 +10,9 @@ use warnings;
 use DBI;
 use File::Copy qw(copy);
 
-use AdminApi::Core;
-use AdminApi::Set;
-use AdminApi::Publications;
+use Hex64Publications::Core;
+use Hex64Publications::Set;
+use Hex64Publications::Publications;
 
 use base 'Mojolicious::Plugin';
 sub register {

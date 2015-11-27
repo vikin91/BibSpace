@@ -1,4 +1,4 @@
-package AdminApi::Tagtypes;
+package Hex64Publications::Tagtypes;
 
 use Data::Dumper;
 use utf8;
@@ -11,7 +11,7 @@ use strict;
 use warnings;
 use DBI;
 
-use AdminApi::Core;
+use Hex64Publications::Core;
 use TagTypeObj;
 
 use Mojo::Base 'Mojolicious::Controller';

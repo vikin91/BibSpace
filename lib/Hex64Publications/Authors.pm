@@ -1,4 +1,4 @@
-package AdminApi::Authors;
+package Hex64Publications::Authors;
 
 use Data::Dumper;
 use utf8;
@@ -11,8 +11,8 @@ use strict;
 use warnings;
 use DBI;
 
-use AdminApi::Core;
-use AdminApi::Publications;
+use Hex64Publications::Core;
+use Hex64Publications::Publications;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

@@ -11,7 +11,7 @@ use strict;
 use warnings;
 use DBI;
 
-use AdminApi::Core;
+use Hex64Publications::Core;
 
 sub new
 {

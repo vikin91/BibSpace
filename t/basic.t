@@ -10,13 +10,13 @@ my $entry_id = 792;
 my $entry_bibtex_key = "WaSpKo-SIMUTools-QPNParallelSimulation";
 my $tag_id = 31;
 
-my $t_anyone = Test::Mojo->new('AdminApi');
+my $t_anyone = Test::Mojo->new('Hex64Publications');
 $t_anyone->get_ok('/')->status_is(200)->content_like(qr/Please login or register/i);
 
 
 
 
-my $t_logged_in = Test::Mojo->new('AdminApi');
+my $t_logged_in = Test::Mojo->new('Hex64Publications');
 $t_logged_in->ua->max_redirects(10);
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
@@ -80,7 +80,7 @@ $t_anyone->get_ok("/read/publications/meta/$entry_id")->content_unlike(qr/Cannot
 
 
 # shall I refresh it to avoid timeouts by testing??
-$t_logged_in = Test::Mojo->new('AdminApi');
+$t_logged_in = Test::Mojo->new('Hex64Publications');
 $t_logged_in->ua->max_redirects(10);
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },

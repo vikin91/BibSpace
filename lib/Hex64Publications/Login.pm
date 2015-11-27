@@ -1,4 +1,4 @@
-package AdminApi::Login;
+package Hex64Publications::Login;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use UserObj;
