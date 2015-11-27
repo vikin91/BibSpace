@@ -56,7 +56,7 @@ has backup_db => sub {
 
 sub startup {
     my $self = shift;
-    
+    $self->app->plugin('InstallablePaths');
     my $address = Net::Address::IP::Local->public;
     # print $address;
 
@@ -64,7 +64,7 @@ sub startup {
     my $config = $self->app->config;
     
     # load default
-    $config = $self->plugin('Config' => {file => 'config/default.conf'});
+    $config = $self->plugin('Config' => {file => 'lib/Hex64Publications/files/config/default.conf'});
 
     if($self->app->home =~ /demo/){
         say "Loading demo config version";
@@ -77,10 +77,9 @@ sub startup {
         $config = $self->plugin('Config' => {file => 'config/production.conf'});
     }
     else{   # DEFAULT
-        $config = $self->plugin('Config' => {file => 'config/default.conf'});
+        $config = $self->plugin('Config' => {file => 'lib/Hex64Publications/files/config/default.conf'});
     }
 
-    $app->plugin('InstallablePaths');
 
 
 
