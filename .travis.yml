@@ -16,6 +16,7 @@ before_install:
   - sudo apt-get install -y ocaml libbtparse-dev libdbd-mysql-perl
   - bash install-bibtex2html.sh
   - mysql -e "create database IF NOT EXISTS test;" -uroot
+  - echo "USE mysql;\nUPDATE user SET password=PASSWORD('password') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
   - mv config/default.conf config/default.conf.bak
   - cp config/testing.conf config/default.conf
 
