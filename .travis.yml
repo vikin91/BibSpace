@@ -31,10 +31,6 @@ before_install:
     - mv config/default.conf config/default.conf.bak
     - cp config/testing.conf config/default.conf
 
-before_script:
-    - mysql --version
-    - mysql -e "SELECT VERSION();"
-    - mysql -e "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION, STRICT_TRANS_TABLES'"
 
 install:
     - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
@@ -44,6 +40,10 @@ install:
     - cpanm --quiet --notest Net::Address::IP::Local Text::BibTeX HTML::TagCloud::Sortable Crypt::Random 
     - cpanm --quiet --notest Test::Differences Test::MockModule WWW::Mailgun
     # - cpanm --quiet --notest --installdeps .
+
+before_script:
+    - mysql --version
+    - mysql -e "SELECT VERSION();"
 
 sudo: true
 

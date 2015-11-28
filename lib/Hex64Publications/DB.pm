@@ -53,30 +53,30 @@ sub create_main_db{
          PRIMARY KEY (author_id, team_id)
          )");
 
-   # version for old Mysql
-   $dbh->do("CREATE TABLE IF NOT EXISTS `Entry`(
-          id INTEGER(8) PRIMARY KEY AUTO_INCREMENT,
-          entry_type ENUM('paper', 'talk') NOT NULL,
-          bibtex_key VARCHAR(250), 
-          bibtex_type VARCHAR(50)DEFAULT NULL, 
-          bib TEXT, 
-          html TEXT,
-          html_bib TEXT,
-          abstract TEXT,
-          title TEXT,
-          hidden TINYINT UNSIGNED DEFAULT 0,
-          year INTEGER(4),
-          month TINYINT UNSIGNED DEFAULT 0,
-          sort_month SMALLINT UNSIGNED DEFAULT 0,
-          teams_str TEXT,
-          people_str TEXT,
-          tags_str TEXT,
-          creation_time TIMESTAMP DEFAULT '0000-00-00 00:00:00',
-          modified_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          need_html_regen INTEGER DEFAULT 1,
-          CONSTRAINT UNIQUE(bibtex_key),
-          KEY idx_bibtex_key (bibtex_key)
-          )");
+   # # version for old Mysql
+   # $dbh->do("CREATE TABLE IF NOT EXISTS `Entry`(
+   #        id INTEGER(8) PRIMARY KEY AUTO_INCREMENT,
+   #        entry_type ENUM('paper', 'talk') NOT NULL,
+   #        bibtex_key VARCHAR(250), 
+   #        bibtex_type VARCHAR(50)DEFAULT NULL, 
+   #        bib TEXT, 
+   #        html TEXT,
+   #        html_bib TEXT,
+   #        abstract TEXT,
+   #        title TEXT,
+   #        hidden TINYINT UNSIGNED DEFAULT 0,
+   #        year INTEGER(4),
+   #        month TINYINT UNSIGNED DEFAULT 0,
+   #        sort_month SMALLINT UNSIGNED DEFAULT 0,
+   #        teams_str TEXT,
+   #        people_str TEXT,
+   #        tags_str TEXT,
+   #        creation_time TIMESTAMP DEFAULT '0000-00-00 00:00:00',
+   #        modified_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+   #        need_html_regen INTEGER DEFAULT 1,
+   #        CONSTRAINT UNIQUE(bibtex_key),
+   #        KEY idx_bibtex_key (bibtex_key)
+   #        )");
 
    # version for new Mysql
    $dbh->do("CREATE TABLE IF NOT EXISTS `Entry`(
