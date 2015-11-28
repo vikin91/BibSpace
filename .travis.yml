@@ -8,11 +8,16 @@ perl:
     # - "5.14"
     # - "5.12"
     # - "5.10"
+services:
+  - mysql
 
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y ocaml libbtparse-dev libdbd-mysql-perl
   - bash install-bibtex2html.sh
+  - mysql -e "create database IF NOT EXISTS test;" -uroot
+  - mv config/default.conf config/default.conf.bak
+  - cp config/testing.conf config/default.conf
 
 install:
     - export RELEASE_TESTING=1 AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
@@ -23,3 +28,6 @@ sudo: true
 
 notifications:
     email: true
+
+after_script:
+    - mv config/default.conf.bak config/default.conf
