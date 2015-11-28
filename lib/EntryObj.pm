@@ -31,7 +31,7 @@ sub new
     };
     return bless $self, $class;
 }
-
+########################################################################################################################
 sub initFromDB{
     my $self = shift;
     my $dbh = shift;
@@ -58,6 +58,27 @@ sub initFromDB{
     $self->{mtime} = $row->{modified_time} || 0;
 
 
+
+}
+########################################################################################################################
+sub getByBibtexKey{
+    my $self = shift;
+    my $dbh = shift;
+    my $bibtex_key = shift;
+
+    my $qry = "SELECT DISTINCT id, bibtex_key
+               FROM Entry
+               WHERE bibtex_key = ?";
+
+    my $sth = $dbh->prepare( $qry );  
+    $sth->execute($bibtex_key);  
+
+  
+    my $row = $sth->fetchrow_hashref();
+    my $obj = EntryObj->new({id => $row->{id}});
+    $obj->initFromDB($dbh);
+
+    return $obj;
 
 }
 ########################################################################################################################

@@ -1,0 +1,112 @@
+% use Mojo::ByteStream 'b';
+% layout 'admin';
+
+% my $back_url = param 'back_url'  || "/publications";
+  
+<div class="container">
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+            <a class="btn btn-default" href="<%= $back_url %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+            <div class="alert alert-warning">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <i class="fa  fa-exclamation-circle "></i> <strong>Adding mode</strong> You operate on an not saved entry! 
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+             
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+            % if($exit_code eq '-1'){
+                <div class="alert alert-danger">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa  fa-exclamation-circle "></i> You have bibtex errors! Not saving!
+                </div>
+            %}elsif($exit_code eq '-2'){
+                <div class="alert alert-info">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa fa-info-circle"></i> Displaying preview
+                </div>
+            %}elsif($exit_code eq '0'){ 
+                <div class="alert alert-success">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa fa-check-circle"></i> Entry added ok
+                </div>
+            %}elsif($exit_code eq '1'){
+                <div class="alert alert-success">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa fa-check-circle"></i> Entry updated ok
+                </div>
+            %}elsif($exit_code eq '2'){
+                <div class="alert alert-success">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa fa-check-circle"></i> The proposed key is OK.
+                </div>
+            %}elsif($exit_code eq '3'){
+                <div class="alert alert-danger">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa  fa-exclamation-circle "></i> The proposed key exists already in DB under ID <button class="btn btn-danger btn-xs" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> <%= $existing_id %></button>. 
+                    <br>
+                    <a class="btn btn-info btn-xs" href="/publications/get/<%=$existing_id%>" target="_blank"><span class="glyphicon glyphicon-search"></span>Show me the existing entry ID <%= $existing_id %> in a new window</a>
+                    <br>
+                    Entry has not been saved. Please pick another BibTeX key.
+                </div>
+            %}elsif(defined $exit_code and $exit_code ne ''){
+                <div class="alert alert-warning"><i class="fa fa-question-circle"></i> Unknown exit code: <%= $exit_code %></div>
+            %}
+        </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-xs-12">
+        % if($preview ne ''){
+          <div class="panel panel-default">
+            <div class="panel-body">
+              %= b($preview)
+            </div>
+          </div>
+        %}
+    </div>
+  </div>
+
+    <div class="row">
+        <form class="form-horizontal" role="form" action="/publications/add/store/" method="post">
+            <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+                <div class="form-group">
+                    <label for="bibtex">BibTeX code</label>
+                    <textarea class="form-control" rows="12" id="description" name="new_bib"><%= $bib%></textarea>
+                </div>
+                <div class="form-group">
+                    <button name="check_key" value="check_key" type="submit" class="btn btn-default"><i class="fa fa-exclamation-triangle" style="color: red;"></i> Check if BibTeX key exists</button>
+                    % if($exit_code eq '3'){
+                        <button class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> <del>Push to DB</del></button>
+                    % }
+                    % else{
+                        <button name="save" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Push to DB</button>
+                    % }
+                    <button name="preview" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Preview</button>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
+                <div class="alert alert-info">
+                    %=b(bibtex_help())
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+
+
+</div>
+
+
+
+
+
+

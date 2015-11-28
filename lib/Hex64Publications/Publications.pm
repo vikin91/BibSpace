@@ -23,6 +23,13 @@ use Mojo::Log;
 use EntryObj;
 use TagObj;
 
+
+####################################################################################
+sub get_back_url {
+    my $self = shift;
+    my $back_url = shift;
+    return '/publications' if !defined $back_url or $back_url eq '' or $back_url eq $self->req->url->to_abs;
+}
 ####################################################################################
 sub isTalk {  # stupid code repetition!
     my $self = shift;
@@ -34,7 +41,7 @@ sub fixMonths {
     say "CALL: fixMonths ";
     my $self = shift;
     my $back_url = $self->param('back_url');
-    $back_url = '/publications' if $back_url eq $self->req->url->to_abs or $back_url eq '';
+    $back_url = $self->get_back_url($back_url);
 
     my @objs = EntryObj->getAll($self->app->db);
     for my $o (@objs){
@@ -59,7 +66,7 @@ sub fixEntryType {
     say "CALL: fixEntryType ";
     my $self = shift;
     my $back_url = $self->param('back_url');
-    $back_url = '/publications' if $back_url eq $self->req->url->to_abs or $back_url eq '';
+    $back_url = $self->get_back_url($back_url);
 
     my @objs = EntryObj->getAll($self->app->db);
     for my $o (@objs){
@@ -78,8 +85,7 @@ sub unhide {
     my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
 
-    my $current = $self->req->url->to_abs;
-    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+    $back_url = $self->get_back_url($back_url);
 
     my $obj = EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
@@ -87,6 +93,7 @@ sub unhide {
 
     $self->redirect_to($back_url);
 };
+
 ####################################################################################
 sub hide {
     my $self = shift;
@@ -94,8 +101,7 @@ sub hide {
     my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
 
-    my $current = $self->req->url->to_abs;
-    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+    $back_url = $self->get_back_url($back_url);
 
     my $obj = EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
@@ -110,8 +116,7 @@ sub toggle_hide {
     my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
 
-    my $current = $self->req->url->to_abs;
-    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+    $back_url = $self->get_back_url($back_url);
 
     my $obj = EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
@@ -126,8 +131,7 @@ sub make_paper {
     my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
 
-    my $current = $self->req->url->to_abs;
-    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+    $back_url = $self->get_back_url($back_url);
 
     my $obj = EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
@@ -142,8 +146,7 @@ sub make_talk {
     my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
 
-    my $current = $self->req->url->to_abs;
-    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+    $back_url = $self->get_back_url($back_url);
 
     my $obj = EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
@@ -480,20 +483,21 @@ sub all_without_tag_for_author {
     }
     
     
+    my $str = "Displaying papers without any tag of type $tagtype for author id $aid";
+    $self->write_log($str);
+    say $str;
 
-    $self->write_log("Displaying papers without any tag of type $tagtype for author id $aid");
-
-    my $qry = "SELECT DISTINCT id, bibtex_key 
+    my $qry = "SELECT DISTINCT id, bibtex_key, year, sort_month
                 FROM Entry 
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
                 WHERE Entry_to_Author.author_id = ?
-                AND WHERE entry_type = 'paper'
+                AND entry_type='paper'
                 AND id NOT IN (
                     SELECT DISTINCT entry_id 
                     FROM Entry_to_Tag
                     LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
                     WHERE Tag.type = ?)
-                ORDER BY year DESC";
+                ORDER BY year, sort_month DESC";
     my $sth = $dbh->prepare( $qry );  
     $sth->execute($aid, $tagtype); 
 
@@ -750,7 +754,7 @@ sub landing_years_obj{
     my $entry_type = $self->param('entry_type') || 'paper';
 
 
-    my $min_year = $self->get_year_of_oldest_entry;
+    my $min_year = $self->get_year_of_oldest_entry || 0;
     my $max_year = $self->current_year;
     if($self->current_month > 8){
         $max_year++;
@@ -1197,9 +1201,7 @@ sub regenerate_html_for_all {
   my $back_url = $self->param('back_url');
 
   my $dbh = $self->app->db;
-
-  my $current = $self->req->url->to_abs;
-  $back_url = '/publications' if !defined $back_url or $back_url eq $current or $back_url eq '';
+  $back_url = $self->get_back_url($back_url);
 
   $self->write_log("regenerate_html_for_all is running");
 
@@ -1217,8 +1219,7 @@ sub regenerate_html_for_all_force {
 
     my $dbh = $self->app->db;
     
-    my $current = $self->req->url->to_abs;
-    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+    $back_url = $self->get_back_url($back_url);
 
     $self->write_log("regenerate_html_for_all FORCE is running");
 
@@ -1239,9 +1240,7 @@ sub regenerate_html {
 
     my $dbh = $self->app->db;
 
-    
-    my $current = $self->req->url->to_abs;
-    $back_url = '/publications' if $back_url eq $current or $back_url eq '';
+$back_url = $self->get_back_url($back_url);
 
     generate_html_for_id($dbh, $id);
     $self->redirect_to($back_url);
@@ -1939,7 +1938,7 @@ sub clean_ugly_bibtex {
     my $self = shift;
     my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
-    $back_url = '/publications' if $back_url eq $self->req->url->to_abs or $back_url eq '';
+    $back_url = $self->get_back_url($back_url);
 
     $self->write_log("Cleaning ugly bibtex fields for all entries");
 

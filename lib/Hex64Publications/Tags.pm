@@ -124,7 +124,7 @@ sub add_tags_from_string {
         foreach my $tag (@tags_arr) {
             my $qry = 'INSERT INTO Tag(name, type) VALUES (?,?)';
             my $sth = $dbh->prepare( $qry );  
-            $sth->execute($tag,$type); 
+            $sth->execute($tag, $type); 
             $sth->finish();
         } 
         

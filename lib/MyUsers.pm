@@ -97,7 +97,7 @@ sub prepare_user_table_mysql{
 
    $user_dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
         id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
-        registration_time TIMESTAMP DEFAULT '0000-00-00 00:00:00',
+        registration_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         login VARCHAR(250) NOT NULL,
         real_name VARCHAR(250) DEFAULT 'unnamed',

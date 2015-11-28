@@ -860,7 +860,7 @@ sub get_all_existing_bibtex_types{
 sub get_all_bibtex_types{
     my $dbh = shift;
 
-    my $qry = "SELECT DISTINCT bibtex_type
+    my $qry = "SELECT DISTINCT bibtex_type, our_type
            FROM OurType_to_Type
            ORDER BY our_type ASC";
     my $sth = $dbh->prepare( $qry );  
@@ -1404,7 +1404,7 @@ sub get_tags_for_team {
 
     my @params;
 
-    my $qry = "SELECT DISTINCT Tag.id as tagid, Tag.name as tagname
+    my $qry = "SELECT DISTINCT Entry.year, Tag.id as tagid, Tag.name as tagname
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 

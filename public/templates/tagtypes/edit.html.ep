@@ -1,0 +1,70 @@
+% layout 'admin';
+
+% my $id = $obj->{id};
+% my $name = $obj->{name};
+% my $comment = $obj->{comment};
+
+<div class="container" style="margin-top:30px">
+  <div class="row">
+      <div class="col-md-1"></div>
+      <div class="col-md-6">
+        <a class="btn btn-success" href="/tagtypes"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all tag types</a>
+      </div>
+  </div>
+  <br>
+  <div class="row">
+      <div class="col-md-1"></div>
+      <div class="col-md-6">
+        <div class="alert alert-warning">
+            <button class="close" aria-hidden="true" data-dismiss="alert" type="button">×</button>
+            <i class="fa fa-exclamation-circle "></i>
+            <strong>Editing</strong> You are editing only the name of the tag type with id <%= $id %> (<%= $name %>)! All papers tagged with this tag type will be tagged with the new type.
+        </div>
+      </div>
+  </div>
+  
+  % if( defined $saved and $saved==1 ){
+    <div class="row">
+      <div class="col-md-1"></div>
+      <div class="col-md-6">
+        <div class="alert alert-success">
+            <button class="close" aria-hidden="true" data-dismiss="alert" type="button">×</button>
+            <i class="fa fa-exclamation-circle "></i>
+            <strong>Changes </strong> are saved.
+        </div>
+      </div>
+    </div>
+  %}
+  
+
+  <br>
+  <div class="row">
+    
+  	<div class="col-md-1"></div>
+  	<div class="col-md-6">
+   		<div class="panel panel-default">
+    			<div class="panel-heading">
+    				<h3 class="panel-title"><strong>Edit Tag type id <%= $id %> (<%= $name %>)</strong></h3>
+    			</div>
+    			<div class="panel-body">
+                <!-- FORM -->
+                <form role="form" method="post" action="/tagtypes/edit/<%= $id %>">
+                    <div class="form-group">
+                        <label for="user">Edit tag type</label>
+                        <input type="text" class="form-control" style="border-radius:0px" name="new_name" id="new_name" placeholder="Porpose a compact name. Spaces will be changed to underscores." value="<%= $name %>">
+                        <input type="text" class="form-control" style="border-radius:0px" name="new_comment" id="new_comment" placeholder="Comment to this catogory." value="<%= $comment %>">
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-default">Save</button>
+                </form>
+                <!-- FORM END -->
+    			</div>
+  		</div>
+  	</div>
+  </div>
+</div>
+
+
+
+%################################################################################################################
+%################################################################################################################
+%################################################################################################################

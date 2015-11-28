@@ -56,6 +56,25 @@ sub get_tag_name_for_permalink{
     return $name;
 }
 
+
+##########################################################################
+sub getByName{
+    my $self = shift;
+    my $dbh = shift;
+    my $name = shift;
+
+    my $sth = $dbh->prepare( "SELECT id FROM Tag WHERE name=?" );     
+    $sth->execute($name);
+
+    my $row = $sth->fetchrow_hashref();
+    my $id = $row->{id} || -1;
+
+    my $obj = TagObj->new({id => $row->{id}});
+    $obj->initFromDB($dbh);
+
+    return $obj;
+
+}
 ##########################################################################
 sub getAll{
     my $self = shift;

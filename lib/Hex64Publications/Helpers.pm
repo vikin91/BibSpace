@@ -381,7 +381,7 @@ sub register {
     $app->helper(get_author_mids_arr => sub {
         my $self = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT DISTINCT master_id FROM Author WHERE display = 1 ORDER BY master ASC" );  
+        my $sth = $self->app->db->prepare( "SELECT DISTINCT master_id, master FROM Author WHERE display = 1 ORDER BY master ASC" );  
         $sth->execute(); 
         my @arr;
         while(my $row = $sth->fetchrow_hashref()) {

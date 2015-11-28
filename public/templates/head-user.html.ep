@@ -1,0 +1,40 @@
+<head>
+    <!-- this is head-user -->
+    <meta name="comment" content="head-user">
+    <meta http-equiv="Content-Type" >
+    <meta content="text/html>
+    <meta charset="UTF-8">
+    <meta http-equiv="Pragma" content="no-cache">
+    
+    %= javascript 'http://code.jquery.com/jquery-latest.min.js'
+
+    % my $burl = config 'base_url';
+
+    %= stylesheet 'http://se2.informatik.uni-wuerzburg.de/pa/styles.css'
+    %= stylesheet 'http://se2.informatik.uni-wuerzburg.de/pa/test1.css'
+
+
+    
+
+    
+    
+    <script type="text/javascript">
+         function showAbstract(divid) {
+            $('div#'+divid).toggle(); 
+         };
+  </script>
+
+    % my $address = Net::Address::IP::Local->public;
+    % if($address =~ m/146\.185\.144\.116/){
+        <title> TEST SYTSTEM: Publication list management</title>
+    % }
+    % else{
+        <title>Publication list management</title>
+    % }
+  
+</head>
+
+
+
+
+

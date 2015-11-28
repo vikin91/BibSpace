@@ -1,0 +1,54 @@
+% layout 'admin';
+% use Mojo::ByteStream 'b';
+
+% my @objs = @{$objs};
+% my $size = scalar @objs;
+
+% my $loc_html = int 77.7*$size;
+
+% my $burl = backurl($self);
+% my $back_url = $burl;
+
+<div class="container">
+
+
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <a class="btn btn-success" href='/publications/add?back_url=<%= $back_url %>'><span class="glyphicon glyphicon-plus"></span> Add new publication</a>
+        <br><br>
+
+        <table class="table table-condensed table-hover">
+          <thead>
+            <td ><button class="btn btn-default btn-sm">Controls</button></td>
+            <td ><button class="btn btn-default btn-sm">Paper/Talk</button></td>
+            <td ><button class="btn btn-default btn-sm">ID</button></td>
+            <td ><button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-calendar"></span><span class="glyphicon glyphicon-time"></span></button></td>
+            <td ><button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-calendar"></span> / <span class="glyphicon glyphicon-sort-by-attributes"></span></button></td>
+            <td ><button class="btn btn-default btn-sm">No.</button></td>
+            <td><button class="btn btn-default btn-sm">HTML</button></td>
+          </thead>
+          <tbody>
+         % my $i = 0;
+         % my $j = $size;
+         %
+         % foreach my $obj (@objs){
+         %    if (defined $obj) {
+         %      if ($obj->isHidden() == 1) {
+                <!-- <tr valign="top" class="hiddenrow"style="background-color: #BBB;"> -->
+                <tr valign="top" class="hiddenrow"> 
+         %      }
+         %      else{
+                <tr valign="top">
+         %      }
+                    %= include 'publications_table_row', burl => $burl, obj => $obj, j => $j, use_modal => 0;
+                </tr>
+                % $i++;
+                % $j--;
+              %}
+          %}
+        </tbody>
+        </table> 
+      </div>
+    </div>
+</div>
+

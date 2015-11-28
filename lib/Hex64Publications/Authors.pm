@@ -35,7 +35,8 @@ sub show {
 
     my @params;
     #my $qry = "SELECT master_id, id, master, display, substr(master, 0, 2) AS let FROM Author WHERE master IS NOT NULL ";
-    my $qry = "SELECT master_id, id, master, display FROM Author WHERE master IS NOT NULL ";
+    # my $qry = "SELECT master_id, id, master, display FROM Author WHERE master IS NOT NULL ";
+    my $qry = "SELECT master_id, id, master, display FROM Author WHERE id=master_id AND master IS NOT NULL ";
 
     if(defined $visible and $visible eq '1'){
         $qry .= "AND display=1 ";
@@ -50,9 +51,8 @@ sub show {
       $qry .= "AND substr(master, 1, 1) LIKE ? "; # mysql
       
     }
-    $qry .= "GROUP BY master_id ORDER BY display DESC, master ASC";
-
-    print $qry."\n";
+    # $qry .= "GROUP BY master_id ORDER BY display DESC, master ASC";
+    $qry .= "ORDER BY display DESC, master ASC";
 
     $self->write_log("Show authors: visible $visible, letter $letter, search $search");
 

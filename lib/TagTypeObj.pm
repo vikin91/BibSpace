@@ -24,6 +24,28 @@ sub new
     return bless $self, $class;
 }
 
+sub getByName{
+    my $self = shift;
+    my $dbh = shift;
+    my $name = shift;
+    
+    my $qry = "SELECT DISTINCT id, name, comment
+               FROM TagType
+               WHERE name = ?";
+
+    my $sth = $dbh->prepare( $qry );  
+    $sth->execute($name);  
+
+  
+    my $row = $sth->fetchrow_hashref();
+    my $obj = TagTypeObj->new({id => $row->{id},
+                                name => $row->{name},
+                                comment => $row->{comment},
+                            });
+
+    return $obj;
+}
+
 sub getById{
     my $self = shift;
     my $dbh = shift;

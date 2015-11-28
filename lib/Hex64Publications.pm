@@ -1,6 +1,8 @@
 package Hex64Publications;
 
+use Hex64Publications::DB;
 use Hex64Publications::Core;
+use Hex64Publications::Search;
 use Hex64Publications::Publications;
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -64,7 +66,7 @@ sub startup {
     my $config = $self->app->config;
     
     # load default
-    $config = $self->plugin('Config' => {file => 'lib/Hex64Publications/files/config/default.conf'});
+    $config = $self->plugin('Config' => {file => 'config/default.conf'});
 
     if($self->app->home =~ /demo/){
         say "Loading demo config version";
@@ -77,10 +79,11 @@ sub startup {
         $config = $self->plugin('Config' => {file => 'config/production.conf'});
     }
     else{   # DEFAULT
-        $config = $self->plugin('Config' => {file => 'lib/Hex64Publications/files/config/default.conf'});
+        # $config = $self->plugin('Config' => {file => 'lib/Hex64Publications/files/config/default.conf'});
+        $config = $self->plugin('Config' => {file => 'config/default.conf'});
     }
 
-
+    $self->create_main_db($self->app->db);
 
 
     $self->plugin('Hex64Publications::Helpers');
@@ -269,6 +272,9 @@ sub startup {
     
     $logged_user->get('/authors/visible')->to('authors#show_visible');
     $logged_user->get('/authors/toggle_visibility/:id')->to('authors#toggle_visibility');  
+
+    ################ SEARCH ################
+    $anyone->get('/search/:type/:q')->to('search#search');
 
     ################ TAG TYPES ################
     # $logged_user->get('/tags/')->to('tags#index')->name("tags_index");

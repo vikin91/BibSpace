@@ -1,0 +1,134 @@
+% use Mojo::ByteStream 'b';
+% layout 'admin';
+
+% my @all_otypes = @{$all_otypes};
+% my @all_btypes = @{$all_btypes};
+% my @assigned_btypes = @{$assigned_btypes};
+% my $type = $type;
+% my $description = helper_get_description_for_our_type($type);
+
+<div class="container">
+
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <a class="btn btn-default" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+        </div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+            <span class="btn btn-info" ><span class="glyphicon glyphicon-book"></span> Managing type <strong><%= $type %></strong></span>
+        </div>
+    </div>
+
+    <hr> 
+
+    % if (my $msg = flash 'message') {
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-xs-12">
+                <div class="alert alert-danger">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    %= b($msg)
+                </div>
+            </div>
+        </div>
+        
+        <hr> 
+    % }   
+
+
+    
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <button type="button" class="btn btn-success">
+                <span class="glyphicon glyphicon-book"></span> Mapped types 
+            </button>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+            <span class="btn btn-info" ><span class="glyphicon glyphicon-book"></span> <strong><%= $type %></strong> = </span>
+            % foreach my $a_type (@assigned_btypes){
+                <div class="btn-group">
+                    <span type="button" class="btn btn-default">
+                        <span class="glyphicon glyphicon-book"></span> <%= $a_type %>
+                    </span>
+                    <a class="btn btn-default" href='/types/<%= $type %>/unmap/<%= $a_type %><%=backurl%>'><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
+                </div>
+            % }
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-book"></span> BibTeX types </button>
+        </div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+            % 
+            % foreach my $b_type (@$all_btypes){
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-sm">
+                        <span class="glyphicon glyphicon-book" style="color: #5CB85C;"></span> <%= $b_type %>
+                    </button>
+                    <a class="btn btn-default btn-sm" href='/types/<%= $type %>/map/<%= $b_type %><%=backurl%>'><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span></a>
+                </div>
+            % }
+        </div>
+    </div>
+
+    <hr>
+
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <button type="button" class="btn btn-success" data-toggle="tooltip" data-placement="bottom" title="This description will appear on the landing pages as a header for papers with that type ">
+                Description for <br> Landing page
+            </button>
+        </div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+            <form class="form-horizontal" role="form" method="POST" action="/types/store_description">
+              <div class="input-group">
+                <input type="hidden" name="our_type" value="<%= $type %>"></input>
+                <input type="hidden" name="back_url" value="<%= $back_url %>"></input>
+                <input class="form-control" type="text" name="new_description" placeholder="New description" value="<%= $description %>"></input>
+                <div class="input-group-btn">
+                    <button class="btn btn-default" type="submit" data-toggle="tooltip" data-placement="bottom" title="Save"> <i class="glyphicon glyphicon-floppy-disk" style="color: red;"></i> </button>
+                </div>
+              </div>
+          </form>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <button type="button" class="btn btn-success" data-toggle="tooltip" data-placement="bottom" title="todo">
+                Visible on <br> Landing page?
+            </button>
+        </div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+            <a href="/types/toggle/<%= $type %>">
+            <div class="btn-group" data-toggle="tooltip" data-placement="bottom" title="Toggle appearing on landing page">
+            % if(helper_get_landing_for_our_type($type) == 1){
+                <span class="btn btn-success active">Yes</span>
+                <span class="btn btn-success">No</span>
+            %}
+            %else{
+                <span class="btn btn-danger">Yes</span>
+                <span class="btn btn-danger active">No</span>
+            %}
+            </div>
+            </a>
+        </div>
+    </div>
+
+
+
+
+</div> <!-- container -->
+
+
+
+
+
+

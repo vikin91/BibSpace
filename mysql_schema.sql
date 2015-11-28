@@ -45,23 +45,29 @@ CREATE TABLE IF NOT EXISTS `Author_to_Team`(
          PRIMARY KEY (author_id, team_id)
          );
 
+-- ALTER TABLE Entry ADD entry_type ENUM('paper', 'talk') NOT NULL AFTER id;
+-- ALTER TABLE Entry ADD hidden TINYINT UNSIGNED DEFAULT 0 AFTER title;
+-- ALTER TABLE Entry ADD month TINYINT UNSIGNED DEFAULT 0 AFTER year;
+-- ALTER TABLE Entry ADD sort_month SMALLINT UNSIGNED DEFAULT 0 AFTER year;
+
 
 CREATE TABLE IF NOT EXISTS `Entry`(
       id INTEGER(8) PRIMARY KEY AUTO_INCREMENT,
+      entry_type ENUM('paper', 'talk') NOT NULL,
       bibtex_key VARCHAR(250), 
-      type VARCHAR(50), 
+      bibtex_type VARCHAR(50)DEFAULT NULL, 
       bib TEXT, 
       html TEXT,
       html_bib TEXT,
       abstract TEXT,
       title TEXT,
-      hidden TINYINT UNSIGNED DEFAULT 0,
-      month TINYINT UNSIGNED DEFAULT 0,
       year INTEGER(4),
+      month TINYINT UNSIGNED DEFAULT 0,
+      sort_month SMALLINT UNSIGNED DEFAULT 0,
       teams_str TEXT,
       people_str TEXT,
       tags_str TEXT,
-      creation_time TIMESTAMP DEFAULT '0000-00-00 00:00:00',
+      creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       modified_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       need_html_regen INTEGER DEFAULT 1,
       hidden TINYINT DEFAULT 0, 
@@ -124,12 +130,12 @@ CREATE TABLE IF NOT EXISTS `OurType_to_Type`(
 
 
 
-ALTER TABLE Entry CHANGE type bibtex_type varchar(50) DEFAULT NULL;
--- ALTER TABLE Entry DROP COLUMN entry_type;
-ALTER TABLE Entry ADD entry_type ENUM('paper', 'talk') NOT NULL AFTER id;
-ALTER TABLE Entry ADD hidden TINYINT UNSIGNED DEFAULT 0 AFTER title;
-ALTER TABLE Entry ADD month TINYINT UNSIGNED DEFAULT 0 AFTER year;
-ALTER TABLE Entry ADD sort_month SMALLINT UNSIGNED DEFAULT 0 AFTER year;
+-- ALTER TABLE Entry CHANGE type bibtex_type varchar(50) DEFAULT NULL;
+-- -- ALTER TABLE Entry DROP COLUMN entry_type;
+-- ALTER TABLE Entry ADD entry_type ENUM('paper', 'talk') NOT NULL AFTER id;
+-- ALTER TABLE Entry ADD hidden TINYINT UNSIGNED DEFAULT 0 AFTER title;
+-- ALTER TABLE Entry ADD month TINYINT UNSIGNED DEFAULT 0 AFTER year;
+-- ALTER TABLE Entry ADD sort_month SMALLINT UNSIGNED DEFAULT 0 AFTER year;
 
 
 REPLACE INTO OurType_to_Type VALUES('incollection','inproceedings',NULL,1);
