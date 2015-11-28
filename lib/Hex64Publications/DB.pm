@@ -69,7 +69,7 @@ sub create_main_db{
           teams_str TEXT,
           people_str TEXT,
           tags_str TEXT,
-          creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          creation_time TIMESTAMP DEFAULT '0000-00-00 00:00:00',
           modified_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           need_html_regen INTEGER DEFAULT 1,
           CONSTRAINT UNIQUE(bibtex_key),
