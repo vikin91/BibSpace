@@ -1498,7 +1498,8 @@ sub create_user_id {
 
    $userID =~ s/\\k\{a\}/a/g;   # makes \k{a} -> a
    $userID =~ s/\\l/l/g;   # makes \l -> l
-   $userID =~ s/\\r{u}/u/g;   # makes \r{u} -> u
+   $userID =~ s/\\r\{u\}/u/g;   # makes \r{u} -> u
+   $userID =~ s/\\r{u}/u/g;   # makes \r{u} -> u # the same but not escaped
 
    $userID =~ s/\{(.)\}/$1/g;   # makes {x} -> x
    $userID =~ s/\{\\\"(.)\}/$1e/g;   # makes {\"x} -> xe

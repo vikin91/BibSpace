@@ -10,6 +10,7 @@ perl:
     # - "5.10"
 
 before_install:
+  - bash install-bibtex2html.sh
   - sudo apt-get update -qq
   - sudo apt-get install -y bibtex2html libbtparse-dev
 
@@ -21,6 +22,6 @@ install:
 sudo: true
 
 notifications:
-    email: false
+    email: true
 
 version: 1.4.2
