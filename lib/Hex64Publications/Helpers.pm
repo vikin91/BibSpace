@@ -14,6 +14,7 @@ use DBI;
 use Hex64Publications::Core;
 use Hex64Publications::Set;
 use Hex64Publications::Publications;
+use Hex64Publications::BackupFunctions;
 use TagObj;
 use EntryObj;
 use TagTypeObj;
@@ -22,6 +23,8 @@ use base 'Mojolicious::Plugin';
 sub register {
 
 	my ($self, $app) = @_;
+
+    # TODO: Move all implementations to a separate files to avoid code redundancy! Here only function calls should be present, not theirs implementation
 
     $app->helper(get_rank_of_current_user => sub {
         my $self = shift;

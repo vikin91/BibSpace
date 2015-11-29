@@ -1,17 +1,18 @@
 package Hex64Publications;
 
 use Hex64Publications::DB;
-use Hex64Publications::Core;
-use Hex64Publications::Search;
-use Hex64Publications::Publications;
+require Hex64Publications::Core;
+require Hex64Publications::Search;
+require Hex64Publications::BackupFunctions;
+require Hex64Publications::Publications;
+require Hex64Publications::Helpers;
+
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Net::Address::IP::Local;
 
-
 use Time::Piece;
 use MyUsers;
-use Hex64Publications::Helpers;
 use Data::Dumper;
 use POSIX qw/strftime/;
 
@@ -47,7 +48,10 @@ has db => sub {
 
 has backup_db => sub {
     my $self = shift;
-    DBI->connect('dbi:SQLite:dbname='.$self->config->{backup_db}, '', '') or die $DBI::errstr;
+    say "call: app->backup_db. DEPRECATED!!";
+    return $self->app->db;
+
+    # DBI->connect('dbi:SQLite:dbname='.$self->config->{backup_db}, '', '') or die $DBI::errstr;
 };
 
 # has log => sub {
@@ -233,11 +237,11 @@ sub startup {
     $logged_user->get('/settings/regenerate_all')->to('publications#regenerate_html_for_all');
     
     $anyone->get('/backup/do')->to('backup#save');
-    $logged_user->get('/backup')->to('backup#backup');
+    $logged_user->get('/backup')->to('backup#index');
     $logged_user->get('/backup/download/:file')->to('backup#backup_download');    
     $superadmin->get('/restore/delete/:id')->to('backup#delete_backup');
     $manager->get('/restore/do/:id')->to('backup#restore_backup');
-    $manager->get('/backup/cleanup')->to('backup#delete_broken_or_old_backup');
+    $manager->get('/backup/cleanup')->to('backup#cleanup');
 
 
     ################ TYPES ################    

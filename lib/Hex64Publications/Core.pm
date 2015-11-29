@@ -1,5 +1,8 @@
 package Hex64Publications::Core;
 
+require Hex64Publications::DB;
+# use Hex64Publications::BackupFunctions;
+
 use Data::Dumper;
 use utf8;
 use Text::BibTeX; # parsing bib files
@@ -67,7 +70,6 @@ our @EXPORT = qw(
     add_field_to_bibtex_code
     has_bibtex_field
     clean_tag_name
-    get_dir_size
     get_visibility_for_id
     postprocess_all_entries_after_author_uids_change
     postprocess_all_entries_after_author_uids_change_w_creating_authors
@@ -75,13 +77,8 @@ our @EXPORT = qw(
     get_html_for_entry_id
     get_exceptions_for_entry_id
     get_year_for_entry_id
-    get_backup_filename
-    get_backup_creation_time
-    get_backup_age_in_days
     clean_ugly_bibtex_fileds
     clean_ugly_bibtex_fileds_for_all_entries
-    do_delete_backup
-    do_delete_broken_or_old_backup
     prepare_backup_table
     get_month_numeric
     get_current_year
@@ -98,6 +95,8 @@ our @EXPORT = qw(
 
 
 our $bibtex2html_tmp_dir = "./tmp";
+####################################################################################
+
 ####################################################################################
 sub get_number_of_publications_in_year{
   say "CALL: get_number_of_publications_in_year";
@@ -298,105 +297,6 @@ sub nohtml{
    my $type = shift;
    return "<span class=\"label label-danger\">NO HTML </span><span class=\"label label-default\">($type) $key</span>" . "<BR>";
 }
-####################################################################################
-sub do_delete_backup{   # added 22.08.14
-    my $self = shift;
-    my $id = shift;
-    my $backup_dbh = $self->app->backup_db;
-
-    prepare_backup_table($backup_dbh);
-
-    my $sth = $backup_dbh->prepare("SELECT filename FROM Backup WHERE id = ?");
-    $sth->execute($id);
-    my $row = $sth->fetchrow_hashref();
-    my $fname = $row->{filename};
-
-    my $sth2 = $backup_dbh->prepare("DELETE FROM Backup WHERE id=?");
-    $sth2->execute($id);
-
-    $self->write_log("destroying backup id $id");
-
-    unlink $fname; 
-
-    $self->redirect_to("/backup");
-}
-####################################################################################
-sub do_delete_broken_or_old_backup {   # added 22.08.14
-    my $self = shift;
-    my $backup_dbh = $self->app->backup_db;
-
-    prepare_backup_table($backup_dbh);
-
-    my $sth = $backup_dbh->prepare("SELECT id, creation_time, filename FROM Backup ORDER BY creation_time DESC");
-    $sth->execute();
-
-    my $backup_age_in_days_to_delete_automatically = $self->config->{backup_age_in_days_to_delete_automatically};
-    my $file_age_counter = 1; # 1 (one) backup will not be deleted for files older than $backup_age_in_days_to_delete
-
-
-    my @ids;
-    my @fnames;
-    # $exists = 1 if -e $fname;
-
-    while(my $row = $sth->fetchrow_hashref()) {
-        my $id = $row->{id};
-        my $fname = $row->{filename};
-
-        push @ids, $id;
-        push @fnames, $fname;
-    }
-
-    my $i = 0;
-    foreach my $id (@ids){
-        my $b_age = get_backup_age_in_days($self, $id);
-        my $fname = $fnames[$i];
-        my $exists = 0;
-        $exists = 1 if -e $fname;
-
-        if($exists == 0){
-            # CAN DELETE
-            do_delete_backup($self, $id);
-        }
-        else{   # file exists
-            if($b_age > $backup_age_in_days_to_delete_automatically){
-                # we delete only automatically-created backups
-                if($fname =~ /cron/){
-                    if($file_age_counter >0){   # we leave some untouched
-                        $file_age_counter = $file_age_counter - 1;
-                    }
-                    else{   # rest should be deleted
-                        do_delete_backup($self, $id);
-                    }
-                }
-            }
-        }
-        $i = $i+1;
-    }
-}
-####################################################################################
-sub prepare_backup_table{
-   my $backup_dbh = shift;
-
-
-   $backup_dbh->do("CREATE TABLE IF NOT EXISTS Backup(
-      id INTEGER PRIMARY KEY,
-      creation_time INTEGER,
-      filename TEXT,
-      UNIQUE(filename) ON CONFLICT REPLACE
-      )");
-
-    # FOR THE FUTURE!!
-    $backup_dbh->do("CREATE TABLE IF NOT EXISTS User(
-      id INTEGER PRIMARY KEY,
-      login TEXT NOT NULL,
-      email TEXT,
-      passwd TEXT NOT NULL,
-      name TEXT,
-      rank INTEGER DEFAULT 0,
-      master_id INTEGER DEFAULT 0,
-      tennant_id INTEGER DEFAULT 0
-      )");
-};
 ##################################################################
 sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their authors ONLY. No tags, no regeneration.
     my $self = shift;
@@ -1732,52 +1632,6 @@ sub tune_html{
 
 
    $s;
-}
-
-################################################################################
-
-sub get_dir_size {
-  my $dir  = shift;
-  my $size = 0;
-
-  find( sub { $size += -f $_ ? -s _ : 0 }, $dir );
-
-  return $size;
-};
-
-####################################################################################
-sub get_backup_filename{
-    my $self = shift;
-    my $bip = shift;
-    my $backup_dbh = $self->app->backup_db;
-
-    my $sth = $backup_dbh->prepare("SELECT filename FROM Backup WHERE id=? LIMIT 1");
-    $sth->execute($bip);
-    my $row = $sth->fetchrow_hashref();
-    return $row->{filename} || undef;
-}
-
-####################################################################################
-sub get_backup_creation_time{
-    my $self = shift;
-    my $bip = shift;
-    my $backup_dbh = $self->app->backup_db;
-
-    my $sth = $backup_dbh->prepare("SELECT creation_time FROM Backup WHERE id=? LIMIT 1");
-    $sth->execute($bip);
-    my $row = $sth->fetchrow_hashref();
-    return $row->{creation_time} || undef;
-}
-####################################################################################
-sub get_backup_age_in_days{
-    my $self = shift;
-    my $bid = shift;
-    my $backup_dbh = $self->app->backup_db;
-
-    my $sth = $backup_dbh->prepare("SELECT (julianday('now', 'localtime') - julianday(creation_time)) as age FROM Backup WHERE id=? LIMIT 1");
-    $sth->execute($bid);
-    my $row = $sth->fetchrow_hashref();
-    return $row->{age} || -1;
 }
 
 ################################################################################

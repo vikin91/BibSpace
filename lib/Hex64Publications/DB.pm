@@ -15,14 +15,42 @@ our @ISA= qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw( 
+    create_backup_table
     create_main_db
     prepare_token_table_mysql
     prepare_user_table_mysql
+    prepare_cron_table
     );
 
 
 
 our $bibtex2html_tmp_dir = "./tmp";
+##########################################################################################
+sub prepare_cron_table{
+   my $dbh = shift;
+
+    $dbh->do("CREATE TABLE IF NOT EXISTS Cron(
+      type INTEGER PRIMARY KEY,
+      last_run_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )");
+
+    $dbh->do("REPLACE INTO CRON (type) VALUES (0)");
+    $dbh->do("REPLACE INTO CRON (type) VALUES (1)");
+    $dbh->do("REPLACE INTO CRON (type) VALUES (2)");
+    $dbh->do("REPLACE INTO CRON (type) VALUES (3)");
+};
+####################################################################################
+sub create_backup_table{
+    my $dbh = shift;
+    say "CALL: create_backup_table";
+
+    $dbh->do("CREATE TABLE IF NOT EXISTS `Backup`(
+            id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
+            creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            filename VARCHAR(250),
+            CONSTRAINT backup_filename_unique UNIQUE(filename)
+      )");
+}
 ####################################################################################
 sub create_main_db{
     say "CALL: create_main_db";

@@ -13,62 +13,21 @@ use File::Copy qw(copy);
 use Hex64Publications::Core;
 use Hex64Publications::Set;
 use Hex64Publications::Publications;
+use Hex64Publications::BackupFunctions;
 
 use base 'Mojolicious::Plugin';
 sub register {
 
 	my ($self, $app) = @_;
 
+        # TODO: Move all implementations to a separate files to avoid code redundancy! Here only function calls should be present, not theirs implementation
+        # helper_do_mysql_backup_current_state is a positive example
+        # helper_regenerate_html_for_all is a negative example
+
     $app->helper(helper_do_mysql_backup_current_state => sub {
-
         my $self = shift;
         my $fname_prefix = shift || "normal";
-
-        my $backup_dbh = $self->app->backup_db;  
-        my $normal_dbh = $self->app->db;
-
-        my $backup_dir = "./backups";
-        my $str = Time::Piece::localtime->strftime('%Y%m%d-%H%M%S');
-        my $dbfname = $backup_dir."/backup-".$fname_prefix."-full-db-".$str.".sql";
-
-        my $db_host = $self->config->{db_host};
-        my $db_user = $self->config->{db_user};
-        my $db_database = $self->config->{db_database};
-        my $db_pass = $self->config->{db_pass};
-
-        `mysqldump -u $db_user -p$db_pass $db_database > $dbfname`;
-        if ($? == 0){
-            say "Backup succeded to file $dbfname";
-            }
-        else{
-            say "Backup FAILED to file $dbfname";
-        }
-
-        my $sth = $backup_dbh->prepare("INSERT INTO Backup(creation_time, filename) VALUES (datetime('now','localtime'), ?)");
-        $sth->execute($dbfname);
-        
-        return $dbfname;
-    });
-
-    $app->helper(helper_do_sqlite_backup_current_state => sub {
-
-        my $self = shift;
-        my $fname_prefix = shift || "normal";
-
-        my $backup_dbh = $self->app->backup_db;  
-        my $normal_dbh = $self->app->db;
-
-        my $backup_dir = "./backups";
-        my $str = Time::Piece::localtime->strftime('%Y%m%d-%H%M%S');
-        my $dbfname = $backup_dir."/backup-".$fname_prefix."-full-db-".$str.".db";
-
-        # $normal_dbh->disconnect();
-        copy("bib.db", $dbfname);
-
-        my $sth = $backup_dbh->prepare("INSERT INTO Backup(creation_time, filename) VALUES (datetime('now','localtime'), ?)");
-        $sth->execute($dbfname);
-        
-        return $dbfname;
+        return do_mysql_db_backup($self, $fname_prefix);
     });
 
     $app->helper(helper_regenerate_html_for_all => sub {

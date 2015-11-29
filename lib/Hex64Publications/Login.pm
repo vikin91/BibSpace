@@ -20,7 +20,7 @@ sub under_check_is_manager {
     my $self = shift;
     my $dbh = $self->app->db;
 
-    return 1 if self->check_is_manager();
+    return 1 if $self->check_is_manager();
 
 
     $self->render(text => 'Your need _manager_ rights to access this page.');
@@ -41,7 +41,7 @@ sub under_check_is_admin {
     my $self = shift;
     my $dbh = $self->app->db;
 
-    return 1 if self->check_is_admin();
+    return 1 if $self->check_is_admin();
 
     $self->render(text => 'Your need _admin_ rights to access this page.');
     return 0;
@@ -414,11 +414,11 @@ sub post_do_register{
     my $can_register = $config->{registration_enabled};
 
 
-    # if( (!defined $self->check_is_admin() or $self->check_is_admin() == 0) and (!defined $can_register or $can_register == 0) ){
-    #     $self->redirect_to('/noregister');
-    #     return;
-    # }
-    # else{
+    if( (!defined $self->check_is_admin() or $self->check_is_admin() == 0) and (!defined $can_register or $can_register == 0) ){
+        $self->redirect_to('/noregister');
+        return;
+    }
+    else{
         
         my $login = $self->param('login');
         my $name = $self->param('name');
@@ -492,7 +492,7 @@ sub post_do_register{
             # return;
         }
 
-    # }
+    }
 }
 
 1;

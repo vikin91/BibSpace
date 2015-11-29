@@ -1,4 +1,6 @@
 package Hex64Publications::Cron;
+use Hex64Publications::DB;
+
 
 use Data::Dumper;
 use utf8;
@@ -23,14 +25,14 @@ use Mojo::UserAgent;
 ##########################################################################################
 sub index {
 	my $self = shift;
-    my $backup_dbh = $self->app->backup_db;
+    my $dbh = $self->app->db;
 	
-	prepare_cron_table($backup_dbh);
+	prepare_cron_table($dbh);
     $self->render(template => 'display/cron', 
-        lr_0 => get_last_cron_run_in_hours($self->app->backup_db, 0), 
-        lr_1 => get_last_cron_run_in_hours($self->app->backup_db, 1), 
-        lr_2 => get_last_cron_run_in_hours($self->app->backup_db, 2), 
-        lr_3 => get_last_cron_run_in_hours($self->app->backup_db, 3)
+        lr_0 => get_last_cron_run_in_hours($dbh, 0), 
+        lr_1 => get_last_cron_run_in_hours($dbh, 1), 
+        lr_2 => get_last_cron_run_in_hours($dbh, 2), 
+        lr_3 => get_last_cron_run_in_hours($dbh, 3)
     );
 }
 ##########################################################################################
@@ -48,12 +50,12 @@ sub cron_day {
     my $level = 0;
     my $call_freq = $self->config->{cron_day_freq_lock};
 
-    my $last_call = get_last_cron_run_in_hours($self->app->backup_db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->db, $level);
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron day called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
     
-    log_cron_usage($self->app->backup_db, $level);
+    log_cron_usage($self->app->db, $level);
     $self->write_log("Cron day started");
     
     ############ CRON ACTIONS
@@ -70,12 +72,12 @@ sub cron_night {
     my $level = 1;
     my $call_freq = $self->config->{cron_night_freq_lock};
 
-    my $last_call = get_last_cron_run_in_hours($self->app->backup_db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->db, $level);
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron night called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
 
-    log_cron_usage($self->app->backup_db, $level);
+    log_cron_usage($self->app->db, $level);
     $self->write_log("Cron night started");
 
     ############ CRON ACTIONS
@@ -91,12 +93,12 @@ sub cron_week {
     my $level = 2;
     my $call_freq = $self->config->{cron_week_freq_lock};
 
-    my $last_call = get_last_cron_run_in_hours($self->app->backup_db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->db, $level);
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron week called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
 
-    log_cron_usage($self->app->backup_db, $level);
+    log_cron_usage($self->app->db, $level);
     $self->write_log("Cron week started");
 
     ############ CRON ACTIONS 
@@ -114,12 +116,12 @@ sub cron_month {
     my $level = 3;
     my $call_freq = $self->config->{cron_month_freq_lock};
 
-    my $last_call = get_last_cron_run_in_hours($self->app->backup_db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->db, $level);
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron month called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
 
-    log_cron_usage($self->app->backup_db, $level);
+    log_cron_usage($self->app->db, $level);
     $self->write_log("Cron month started");
 
     ############ CRON ACTIONS
@@ -135,41 +137,28 @@ sub cron_month {
 
 ##########################################################################################
 sub log_cron_usage{
-    my $backup_dbh = shift;
+    my $dbh = shift;
     my $level = shift;
 
-    prepare_cron_table($backup_dbh);
-    my $sth = $backup_dbh->prepare( "REPLACE INTO CRON (type) VALUES (?)" );  
+    prepare_cron_table($dbh);
+    my $sth = $dbh->prepare( "REPLACE INTO CRON (type) VALUES (?)" );  
     $sth->execute($level);
 };
 ##########################################################################################
 sub get_last_cron_run_in_hours{
-    my $backup_dbh = shift;
+    my $dbh = shift;
     my $level = shift;
+    prepare_cron_table($dbh);
 
-    prepare_cron_table($backup_dbh);
-
-    my $sth = $backup_dbh->prepare("SELECT (strftime('%s', datetime('now', 'localtime')) - strftime('%s', last_run_time))/3600 as age FROM Cron WHERE type=?");
+    my $sth = $dbh->prepare("SELECT ABS(TIMESTAMPDIFF(HOUR, CURRENT_TIMESTAMP, last_run_time)) as age FROM Cron WHERE type=?");
     $sth->execute($level);
     my $row = $sth->fetchrow_hashref();
-    my $age = $row->{age}; 
-    return -1 if !defined $age;
-    return $age;
-    
-};
-##########################################################################################
-sub prepare_cron_table{
-   my $backup_dbh = shift;
 
-    $backup_dbh->do("CREATE TABLE IF NOT EXISTS Cron(
-      type INTEGER PRIMARY KEY,
-      last_run_time INTEGER DEFAULT (datetime('now','localtime'))
-      )");
+    my $ret = -1;
+    $ret = $row->{age} if $row->{age} >= 0;
+    return $ret;
 
-    $backup_dbh->do("INSERT OR IGNORE INTO CRON (type) VALUES (0)");
-    $backup_dbh->do("INSERT OR IGNORE INTO CRON (type) VALUES (1)");
-    $backup_dbh->do("INSERT OR IGNORE INTO CRON (type) VALUES (2)");
-    $backup_dbh->do("INSERT OR IGNORE INTO CRON (type) VALUES (3)");
 };
+
 ##########################################################################################
 1;

@@ -4548,3 +4548,1459 @@
 [2015-11-29 02:19:02] (not_logged_in): Login: informing that registration is disabled.
 [2015-11-29 02:19:05] (not_logged_in): Login: informing that registration is disabled.
 [2015-11-29 02:19:06] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 02:20:31] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 02:20:31] (pub_admin): Login success
+[2015-11-29 02:20:31] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 02:20:31] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 02:20:33] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 02:20:33] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 02:20:33] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 02:20:33] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 02:20:33] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 02:20:33] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 02:20:33] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 02:20:34] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 02:20:34] (not_logged_in): Forgot: reset token clicked (ka8viDPoNZkyks6bPnWdOe1skOEJTsrw)
+[2015-11-29 02:20:34] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 02:20:34] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 02:20:35] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 02:20:35] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 02:20:35] (not_logged_in): Forgot: reset token clicked (ka8viDPoNZkyks6bPnWdOe1skOEJTsrw)
+[2015-11-29 02:20:35] (not_logged_in): Forgot: Password change successful for token ka8viDPoNZkyks6bPnWdOe1skOEJTsrw.
+[2015-11-29 02:20:35] (not_logged_in): Login: displaying login form.
+[2015-11-29 02:20:35] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 02:20:35] (not_logged_in): Login: displaying login form.
+[2015-11-29 02:20:35] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 02:20:35] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 02:20:35] (pub_admin): Login: displaying registration form.
+[2015-11-29 02:20:35] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 02:20:35] (pub_admin): Login: received registration data from login: ivLE7kRe2gy8cPCdWCYu6tFMYqt4mrIR, email: h@example.com.
+[2015-11-29 02:20:35] (pub_admin): Login: registration unsuccessful for login: ivLE7kRe2gy8cPCdWCYu6tFMYqt4mrIR. Passwords don't match
+[2015-11-29 02:20:35] (pub_admin): Login: displaying registration form.
+[2015-11-29 02:20:35] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 02:20:35] (pub_admin): Login: received registration data from login: ivLE7kRe2gy8cPCdWCYu6tFMYqt4mrIR, email: h@example.com.
+[2015-11-29 02:20:35] (pub_admin): Login: registration unsuccessful for login: ivLE7kRe2gy8cPCdWCYu6tFMYqt4mrIR. Password too short.
+[2015-11-29 02:20:35] (pub_admin): Login: displaying registration form.
+[2015-11-29 02:20:35] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 02:20:35] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 02:20:35] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 02:20:35] (pub_admin): Login: displaying registration form.
+[2015-11-29 02:20:35] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 02:20:35] (pub_admin): Login: received registration data from login: ivLE7kRe2gy8cPCdWCYu6tFMYqt4mrIR, email: ivLE7kRe2gy8cPCdWCYu6tFMYqt4mrIR@example.com.
+[2015-11-29 02:20:35] (pub_admin): Login: registration successful for login: ivLE7kRe2gy8cPCdWCYu6tFMYqt4mrIR.
+[2015-11-29 02:20:35] (pub_admin): Login: received registration data from login: pub_admin, email: ivLE7kRe2gy8cPCdWCYu6tFMYqt4mrIR@example.com.
+[2015-11-29 02:20:35] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 02:20:35] (pub_admin): Login: displaying registration form.
+[2015-11-29 02:20:35] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 02:20:47] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 02:20:47] (pub_admin): Login success
+[2015-11-29 02:20:47] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 02:20:47] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 02:20:47] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 02:20:47] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 02:20:48] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 02:20:48] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 02:20:48] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 02:20:48] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 02:20:48] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 02:20:49] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 02:20:49] (not_logged_in): Forgot: reset token clicked (iKekBtgg6QPHyHnJ0pSbOSBGlYBFuEcw)
+[2015-11-29 02:20:49] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 02:20:49] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 02:20:49] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 02:20:49] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 02:20:49] (not_logged_in): Forgot: reset token clicked (iKekBtgg6QPHyHnJ0pSbOSBGlYBFuEcw)
+[2015-11-29 02:20:49] (not_logged_in): Forgot: Password change successful for token iKekBtgg6QPHyHnJ0pSbOSBGlYBFuEcw.
+[2015-11-29 02:20:50] (not_logged_in): Login: displaying login form.
+[2015-11-29 02:20:50] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 02:20:50] (not_logged_in): Login: displaying login form.
+[2015-11-29 02:20:50] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 02:20:50] (not_logged_in): Login: displaying registration form.
+[2015-11-29 02:20:50] (not_logged_in): Login: received registration data from login: 6DtltGtpmBHwFMcJvUj5bT4tp9DJwJPb, email: h@example.com.
+[2015-11-29 02:20:50] (not_logged_in): Login: registration unsuccessful for login: 6DtltGtpmBHwFMcJvUj5bT4tp9DJwJPb. Passwords don't match
+[2015-11-29 02:20:50] (not_logged_in): Login: displaying registration form.
+[2015-11-29 02:20:50] (not_logged_in): Login: received registration data from login: 6DtltGtpmBHwFMcJvUj5bT4tp9DJwJPb, email: h@example.com.
+[2015-11-29 02:20:50] (not_logged_in): Login: registration unsuccessful for login: 6DtltGtpmBHwFMcJvUj5bT4tp9DJwJPb. Password too short.
+[2015-11-29 02:20:50] (not_logged_in): Login: displaying registration form.
+[2015-11-29 02:20:50] (not_logged_in): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 02:20:50] (not_logged_in): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 02:20:50] (not_logged_in): Login: displaying registration form.
+[2015-11-29 02:20:50] (not_logged_in): Login: received registration data from login: 6DtltGtpmBHwFMcJvUj5bT4tp9DJwJPb, email: 6DtltGtpmBHwFMcJvUj5bT4tp9DJwJPb@example.com.
+[2015-11-29 02:20:50] (not_logged_in): Login: registration successful for login: 6DtltGtpmBHwFMcJvUj5bT4tp9DJwJPb.
+[2015-11-29 02:20:50] (not_logged_in): Login: received registration data from login: pub_admin, email: 6DtltGtpmBHwFMcJvUj5bT4tp9DJwJPb@example.com.
+[2015-11-29 02:20:50] (not_logged_in): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 02:20:50] (not_logged_in): Login: displaying registration form.
+[2015-11-29 02:20:50] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 02:20:50] (pub_admin): Login: displaying registration form.
+[2015-11-29 02:20:50] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 02:20:50] (pub_admin): Login: received registration data from login: Qe8sOBKBeMSUFa8U6xOorR6YxoVlm1oT, email: h@example.com.
+[2015-11-29 02:20:50] (pub_admin): Login: registration unsuccessful for login: Qe8sOBKBeMSUFa8U6xOorR6YxoVlm1oT. Passwords don't match
+[2015-11-29 02:20:50] (pub_admin): Login: displaying registration form.
+[2015-11-29 02:20:50] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 02:20:50] (pub_admin): Login: received registration data from login: Qe8sOBKBeMSUFa8U6xOorR6YxoVlm1oT, email: h@example.com.
+[2015-11-29 02:20:50] (pub_admin): Login: registration unsuccessful for login: Qe8sOBKBeMSUFa8U6xOorR6YxoVlm1oT. Password too short.
+[2015-11-29 02:20:50] (pub_admin): Login: displaying registration form.
+[2015-11-29 02:20:50] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 02:20:50] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 02:20:50] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 02:20:50] (pub_admin): Login: displaying registration form.
+[2015-11-29 02:20:50] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 02:20:50] (pub_admin): Login: received registration data from login: Qe8sOBKBeMSUFa8U6xOorR6YxoVlm1oT, email: Qe8sOBKBeMSUFa8U6xOorR6YxoVlm1oT@example.com.
+[2015-11-29 02:20:50] (pub_admin): Login: registration successful for login: Qe8sOBKBeMSUFa8U6xOorR6YxoVlm1oT.
+[2015-11-29 02:20:51] (pub_admin): Login: received registration data from login: pub_admin, email: Qe8sOBKBeMSUFa8U6xOorR6YxoVlm1oT@example.com.
+[2015-11-29 02:20:51] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 02:20:51] (pub_admin): Login: displaying registration form.
+[2015-11-29 02:20:51] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 13:19:12] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:19:12] (pub_admin): Login success
+[2015-11-29 13:19:12] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 13:19:12] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 13:19:13] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 13:19:13] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 13:19:14] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 13:19:14] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 13:19:14] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 13:19:14] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 13:19:14] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 13:19:14] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 13:19:14] (not_logged_in): Forgot: reset token clicked (wCQ8hoaM43VuGtGRjpbPisJOtMDGu8a3)
+[2015-11-29 13:19:14] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 13:19:14] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 13:19:15] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 13:19:15] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 13:19:15] (not_logged_in): Forgot: reset token clicked (wCQ8hoaM43VuGtGRjpbPisJOtMDGu8a3)
+[2015-11-29 13:19:15] (not_logged_in): Forgot: Password change successful for token wCQ8hoaM43VuGtGRjpbPisJOtMDGu8a3.
+[2015-11-29 13:19:15] (not_logged_in): Login: displaying login form.
+[2015-11-29 13:19:15] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 13:19:15] (not_logged_in): Login: displaying login form.
+[2015-11-29 13:19:15] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 13:19:15] (not_logged_in): Login: displaying registration form.
+[2015-11-29 13:19:15] (not_logged_in): Login: received registration data from login: vBRFeJGXDK1rbeers9hC4bPFPUOFTlZ1, email: h@example.com.
+[2015-11-29 13:19:15] (not_logged_in): Login: registration unsuccessful for login: vBRFeJGXDK1rbeers9hC4bPFPUOFTlZ1. Passwords don't match
+[2015-11-29 13:19:15] (not_logged_in): Login: displaying registration form.
+[2015-11-29 13:19:15] (not_logged_in): Login: received registration data from login: vBRFeJGXDK1rbeers9hC4bPFPUOFTlZ1, email: h@example.com.
+[2015-11-29 13:19:15] (not_logged_in): Login: registration unsuccessful for login: vBRFeJGXDK1rbeers9hC4bPFPUOFTlZ1. Password too short.
+[2015-11-29 13:19:15] (not_logged_in): Login: displaying registration form.
+[2015-11-29 13:19:15] (not_logged_in): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 13:19:15] (not_logged_in): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 13:19:15] (not_logged_in): Login: displaying registration form.
+[2015-11-29 13:19:15] (not_logged_in): Login: received registration data from login: vBRFeJGXDK1rbeers9hC4bPFPUOFTlZ1, email: vBRFeJGXDK1rbeers9hC4bPFPUOFTlZ1@example.com.
+[2015-11-29 13:19:15] (not_logged_in): Login: registration successful for login: vBRFeJGXDK1rbeers9hC4bPFPUOFTlZ1.
+[2015-11-29 13:19:16] (not_logged_in): Login: received registration data from login: pub_admin, email: vBRFeJGXDK1rbeers9hC4bPFPUOFTlZ1@example.com.
+[2015-11-29 13:19:16] (not_logged_in): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 13:19:16] (not_logged_in): Login: displaying registration form.
+[2015-11-29 13:19:16] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 13:19:16] (pub_admin): Login: displaying registration form.
+[2015-11-29 13:19:16] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 13:19:16] (pub_admin): Login: received registration data from login: D9Q1vCA6AWaCCf085CnHD6zKHiyn674u, email: h@example.com.
+[2015-11-29 13:19:16] (pub_admin): Login: registration unsuccessful for login: D9Q1vCA6AWaCCf085CnHD6zKHiyn674u. Passwords don't match
+[2015-11-29 13:19:16] (pub_admin): Login: displaying registration form.
+[2015-11-29 13:19:16] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 13:19:16] (pub_admin): Login: received registration data from login: D9Q1vCA6AWaCCf085CnHD6zKHiyn674u, email: h@example.com.
+[2015-11-29 13:19:16] (pub_admin): Login: registration unsuccessful for login: D9Q1vCA6AWaCCf085CnHD6zKHiyn674u. Password too short.
+[2015-11-29 13:19:16] (pub_admin): Login: displaying registration form.
+[2015-11-29 13:19:16] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 13:19:16] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 13:19:16] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 13:19:16] (pub_admin): Login: displaying registration form.
+[2015-11-29 13:19:16] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 13:19:16] (pub_admin): Login: received registration data from login: D9Q1vCA6AWaCCf085CnHD6zKHiyn674u, email: D9Q1vCA6AWaCCf085CnHD6zKHiyn674u@example.com.
+[2015-11-29 13:19:16] (pub_admin): Login: registration successful for login: D9Q1vCA6AWaCCf085CnHD6zKHiyn674u.
+[2015-11-29 13:19:16] (pub_admin): Login: received registration data from login: pub_admin, email: D9Q1vCA6AWaCCf085CnHD6zKHiyn674u@example.com.
+[2015-11-29 13:19:16] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 13:19:16] (pub_admin): Login: displaying registration form.
+[2015-11-29 13:19:16] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 13:21:37] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:21:37] (pub_admin): Login success
+[2015-11-29 13:22:21] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:22:21] (pub_admin): Login success
+[2015-11-29 13:22:21] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:22:21] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:27:28] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:27:28] (pub_admin): Login success
+[2015-11-29 13:27:29] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:27:29] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:27:51] (not_logged_in): Login: displaying login form.
+[2015-11-29 13:27:52] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:27:52] (pub_admin): Login success
+[2015-11-29 13:27:57] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:27:57] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:28:10] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:28:10] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:28:12] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:28:12] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:28:13] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:28:13] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:29:24] (pub_admin): Cron day started
+[2015-11-29 13:29:24] (pub_admin): Cron day finished
+[2015-11-29 13:31:37] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:31:37] (pub_admin): Login success
+[2015-11-29 13:31:37] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:31:37] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:31:47] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:31:47] (pub_admin): Login success
+[2015-11-29 13:32:08] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:32:08] (pub_admin): Login success
+[2015-11-29 13:32:26] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:32:26] (pub_admin): Login success
+[2015-11-29 13:32:38] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:32:39] (pub_admin): Login success
+[2015-11-29 13:32:49] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:32:50] (pub_admin): Login success
+[2015-11-29 13:33:04] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:33:04] (pub_admin): Login success
+[2015-11-29 13:33:38] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:33:38] (pub_admin): Login success
+[2015-11-29 13:34:22] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:34:22] (pub_admin): Login success
+[2015-11-29 13:34:47] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:34:47] (pub_admin): Login success
+[2015-11-29 13:34:55] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:34:55] (pub_admin): Login success
+[2015-11-29 13:38:54] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:38:55] (pub_admin): Login success
+[2015-11-29 13:39:14] (pub_admin): downloading backup backups/backup-testing-full-db-20151129-133855.sql
+[2015-11-29 13:40:25] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:40:25] (pub_admin): Login success
+[2015-11-29 13:40:29] (pub_admin): downloading backup backups/backup-testing-full-db-20151129-134025.sql
+[2015-11-29 13:42:39] (pub_admin): destroying backup id 141
+[2015-11-29 13:42:39] (pub_admin): destroying backup id 140
+[2015-11-29 13:42:39] (pub_admin): destroying backup id 139
+[2015-11-29 13:42:39] (pub_admin): destroying backup id 138
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 137
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 136
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 135
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 134
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 133
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 132
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 131
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 130
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 129
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 128
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 127
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 126
+[2015-11-29 13:42:40] (pub_admin): destroying backup id 125
+[2015-11-29 13:42:42] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:42:42] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:42:47] (pub_admin): downloading backup backups/backup-normal-full-db-20151129-134242.sql
+[2015-11-29 13:43:29] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:43:29] (pub_admin): Login success
+[2015-11-29 13:45:26] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:45:26] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 13:45:26] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 13:45:26] (pub_admin): restoring backup from file ./backups/backup-testing-full-db-20151129-134329.sql
+[2015-11-29 13:53:13] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:53:13] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:53:15] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:53:15] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:56:51] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:56:51] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:56:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:56:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:56:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:56:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:58:19] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 13:58:19] (pub_admin): creating backup with prefix normal
+[2015-11-29 13:58:24] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 13:58:24] (pub_admin): Login success
+[2015-11-29 14:00:17] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:00:17] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:00:35] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:00:35] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:02:09] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 14:02:10] (pub_admin): Login success
+[2015-11-29 14:07:27] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:07:27] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:07:29] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:07:29] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:09:31] (pub_admin): destroying backup id 4
+[2015-11-29 14:09:31] (pub_admin): destroying backup id 3
+[2015-11-29 14:09:31] (pub_admin): destroying backup id 2
+[2015-11-29 14:09:31] (pub_admin): destroying backup id 1
+[2015-11-29 14:12:57] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:12:57] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:15:08] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:15:08] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:15:26] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:15:26] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:15:27] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:15:27] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:15:30] (pub_admin): downloading backup backups/backup-normal-full-db-20151129-141527.sql
+[2015-11-29 14:15:34] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:15:34] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:15:34] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:15:34] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-141527.sql
+[2015-11-29 14:15:37] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:15:37] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:15:37] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:15:37] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-141526.sql
+[2015-11-29 14:16:34] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:16:34] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:16:35] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:16:35] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:16:37] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:16:37] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:16:37] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:16:38] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-141257.sql
+[2015-11-29 14:16:58] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:16:59] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:16:59] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:16:59] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:17:04] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:17:04] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:17:05] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:17:05] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:17:09] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:17:10] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:19:52] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:19:52] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:20:49] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:20:49] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:20:49] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:20:49] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-141659.sql
+[2015-11-29 14:20:51] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:20:51] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:20:52] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:20:52] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:20:56] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:20:56] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:20:56] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:20:56] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-141659.sql
+[2015-11-29 14:21:31] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:21:31] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:21:32] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:21:32] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:21:34] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:21:34] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:21:34] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:21:34] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-141659.sql
+[2015-11-29 14:21:55] (pub_admin): Post_add_store add publication with bib @article{key2015,
+    author = {Johny Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 14:22:00] (pub_admin): Post_add_store add publication with bib @article{key2015wwwwww,
+    author = {Johny Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 14:22:01] (pub_admin): Post_add_store add publication with bib @article{key2015wwwwww,
+    author = {Johny Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 14:22:02] (pub_admin): Post_add_store add publication with bib @article{key2015wwwwww,
+    author = {Johny Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 14:22:02] (pub_admin): Editing publication entry id 6
+[2015-11-29 14:22:10] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:22:10] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:22:11] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:22:11] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-141659.sql
+[2015-11-29 14:24:21] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:24:21] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:24:24] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:24:24] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:24:25] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:24:25] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:24:27] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:24:27] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:24:27] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:24:27] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-141659.sql
+[2015-11-29 14:24:57] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:24:57] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:24:58] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:24:58] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:24:59] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:24:59] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:25:02] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:25:02] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:25:02] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:25:02] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-142458.sql
+[2015-11-29 14:25:05] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:25:05] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:25:06] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:25:06] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-142458.sql
+[2015-11-29 14:25:51] (pub_admin): destroying backup id 10
+[2015-11-29 14:25:51] (pub_admin): destroying backup id 9
+[2015-11-29 14:25:51] (pub_admin): destroying backup id 8
+[2015-11-29 14:25:51] (pub_admin): destroying backup id 7
+[2015-11-29 14:25:51] (pub_admin): destroying backup id 6
+[2015-11-29 14:25:51] (pub_admin): destroying backup id 5
+[2015-11-29 14:25:52] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:25:52] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:25:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:25:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:25:54] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:25:54] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:25:58] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:25:58] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:25:58] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:25:58] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-142552.sql
+[2015-11-29 14:26:09] (pub_admin): Post_add_store add publication with bib @article{key2fffffff015,
+    author = {Johny Example},
+    title = {{Selected affffffspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 14:26:09] (pub_admin): Editing publication entry id 6
+[2015-11-29 14:26:23] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:26:24] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:26:24] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:26:24] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-142554.sql
+[2015-11-29 14:27:47] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 14:27:47] (pub_admin): Login success
+[2015-11-29 14:28:02] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 14:28:02] (pub_admin): Login success
+[2015-11-29 14:31:39] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 14:31:39] (pub_admin): Login success
+[2015-11-29 14:34:22] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:34:22] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:34:22] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:34:22] (pub_admin): restoring backup from file ./backups/backup-testing-full-db-20151129-143139.sql
+[2015-11-29 14:34:59] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:34:59] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:35:04] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:35:04] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:35:04] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:35:04] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-142554.sql
+[2015-11-29 14:35:08] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:35:08] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:35:09] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:35:09] (pub_admin): restoring backup from file ./backups/backup-normal-full-db-20151129-142553.sql
+[2015-11-29 14:40:48] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 14:40:48] (not_logged_in): Login: Bad username or password for user pub_admin
+[2015-11-29 14:40:49] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 14:40:49] (pub_admin): Login success
+[2015-11-29 14:40:49] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 14:40:49] (pub_admin): Login success
+[2015-11-29 14:40:49] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 14:40:49] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 14:41:31] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 14:41:31] (pub_admin): Login success
+[2015-11-29 14:41:31] (not_logged_in): Dumping bib form DB for team: full
+[2015-11-29 14:41:31] (not_logged_in): creating backup with prefix pre-restore
+[2015-11-29 14:41:31] (not_logged_in): Cleaning the whole DB before restoring.
+[2015-11-29 14:41:31] (not_logged_in): restoring backup from file ./backups/backup-testing-full-db-20151129-144131.sql
+[2015-11-29 14:42:16] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 14:42:16] (pub_admin): Login success
+[2015-11-29 14:51:55] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:51:55] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:51:58] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:51:58] (pub_admin): creating backup with prefix pre-restore
+[2015-11-29 14:51:58] (pub_admin): Cleaning the whole DB before restoring.
+[2015-11-29 14:51:58] (pub_admin): restoring backup from file ./backups/backup-pre-restore-full-db-20151129-142624.sql
+[2015-11-29 14:52:05] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:52:05] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:54:46] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:54:47] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:54:50] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:54:50] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:54:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:54:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:55:16] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:55:16] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:55:19] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:55:19] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 31
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 30
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 29
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 28
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 27
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 26
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 25
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 24
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 22
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 23
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 21
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 20
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 19
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 18
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 17
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 16
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 15
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 14
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 13
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 12
+[2015-11-29 14:57:42] (pub_admin): destroying backup id 11
+[2015-11-29 14:58:23] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:23] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:23] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:24] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:24] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:24] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:24] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:24] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:24] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:24] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:24] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:24] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:24] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:24] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:24] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:24] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:30] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:30] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:31] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:31] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:32] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:32] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:33] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:33] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:34] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:34] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:35] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:35] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:36] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:36] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:37] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:37] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:37] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:37] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:40] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:40] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:41] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:41] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:58:41] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 14:58:41] (pub_admin): creating backup with prefix normal
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 50
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 49
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 47
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 46
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 45
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 44
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 43
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 42
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 41
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 40
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 33
+[2015-11-29 14:59:16] (pub_admin): destroying backup id 32
+[2015-11-29 15:00:12] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:00:12] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:00:12] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:00:12] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:00:15] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:00:15] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:00:17] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:00:17] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:00:18] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:00:18] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:00:19] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:00:19] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:43] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:43] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:43] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:43] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:44] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:44] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:44] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:44] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:45] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:45] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:50] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:50] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:51] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:51] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:51] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:52] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:52] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:52] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:53] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:53] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:54] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:54] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:54] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:54] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:54] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:54] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:54] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:54] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:54] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:54] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:54] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:54] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:54] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:54] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:55] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:55] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:55] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:55] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:55] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:55] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:56] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:56] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:57] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:57] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:57] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:57] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:58] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:58] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:58] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:58] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:58] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:58] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:02:58] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:02:58] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:03:10] (pub_admin): destroying backup id 86
+[2015-11-29 15:03:10] (pub_admin): destroying backup id 90
+[2015-11-29 15:03:10] (pub_admin): destroying backup id 84
+[2015-11-29 15:03:10] (pub_admin): destroying backup id 80
+[2015-11-29 15:03:10] (pub_admin): destroying backup id 83
+[2015-11-29 15:03:10] (pub_admin): destroying backup id 73
+[2015-11-29 15:03:10] (pub_admin): destroying backup id 65
+[2015-11-29 15:03:11] (pub_admin): destroying backup id 64
+[2015-11-29 15:03:11] (pub_admin): destroying backup id 63
+[2015-11-29 15:03:11] (pub_admin): destroying backup id 62
+[2015-11-29 15:03:11] (pub_admin): destroying backup id 61
+[2015-11-29 15:03:11] (pub_admin): destroying backup id 58
+[2015-11-29 15:03:11] (pub_admin): destroying backup id 57
+[2015-11-29 15:03:11] (pub_admin): destroying backup id 56
+[2015-11-29 15:03:11] (pub_admin): destroying backup id 55
+[2015-11-29 15:03:11] (pub_admin): destroying backup id 54
+[2015-11-29 15:03:11] (pub_admin): destroying backup id 52
+[2015-11-29 15:04:55] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:55] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:04:56] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:56] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:04:56] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:56] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:04:56] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:56] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:04:56] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:56] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:04:56] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:56] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:04:56] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:56] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:04:56] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:56] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:04:57] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:57] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:04:57] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:57] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:04:57] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:04:57] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:05:00] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:05:00] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:05:01] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:05:01] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:05:02] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:05:02] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:05:03] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:05:03] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:05:03] (pub_admin): Dumping bib form DB for team: full
+[2015-11-29 15:05:03] (pub_admin): creating backup with prefix normal
+[2015-11-29 15:05:19] (pub_admin): destroying backup id 106
+[2015-11-29 15:05:19] (pub_admin): destroying backup id 104
+[2015-11-29 15:05:19] (pub_admin): destroying backup id 103
+[2015-11-29 15:05:19] (pub_admin): destroying backup id 102
+[2015-11-29 15:05:19] (pub_admin): destroying backup id 98
+[2015-11-29 15:05:19] (pub_admin): destroying backup id 101
+[2015-11-29 15:05:19] (pub_admin): destroying backup id 91
+[2015-11-29 15:05:32] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:05:32] (pub_admin): Login success
+[2015-11-29 15:05:55] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:05:55] (pub_admin): Login success
+[2015-11-29 15:05:55] (not_logged_in): Dumping bib form DB for team: full
+[2015-11-29 15:05:55] (not_logged_in): creating backup with prefix pre-restore
+[2015-11-29 15:05:56] (not_logged_in): Cleaning the whole DB before restoring.
+[2015-11-29 15:05:56] (not_logged_in): restoring backup from file ./backups/backup-testing-full-db-20151129-150555.sql
+[2015-11-29 15:06:15] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:06:15] (pub_admin): Login success
+[2015-11-29 15:06:15] (not_logged_in): Dumping bib form DB for team: full
+[2015-11-29 15:06:15] (not_logged_in): creating backup with prefix pre-restore
+[2015-11-29 15:06:15] (not_logged_in): Cleaning the whole DB before restoring.
+[2015-11-29 15:06:15] (not_logged_in): restoring backup from file ./backups/backup-testing-full-db-20151129-150615.sql
+[2015-11-29 15:06:16] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:06:16] (not_logged_in): Login: Bad username or password for user pub_admin
+[2015-11-29 15:06:17] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:06:17] (pub_admin): Login success
+[2015-11-29 15:06:17] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:06:18] (pub_admin): Login success
+[2015-11-29 15:06:18] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:06:18] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:06:18] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:06:18] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 15:06:19] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:06:19] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:06:19] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 15:06:19] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:06:19] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:06:20] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:06:20] (not_logged_in): Forgot: reset token clicked (hQqNYZZCWipTDhgvADEDRC9XSugb2lEy)
+[2015-11-29 15:06:20] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:06:20] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:06:21] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:06:21] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 15:06:21] (not_logged_in): Forgot: reset token clicked (hQqNYZZCWipTDhgvADEDRC9XSugb2lEy)
+[2015-11-29 15:06:21] (not_logged_in): Forgot: Password change successful for token hQqNYZZCWipTDhgvADEDRC9XSugb2lEy.
+[2015-11-29 15:06:21] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:06:21] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 15:06:21] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:06:21] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 15:06:21] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:06:21] (not_logged_in): Login: received registration data from login: 1PWtrnHjiQZh0xweNDX7msT6BbinCHuI, email: h@example.com.
+[2015-11-29 15:06:21] (not_logged_in): Login: registration unsuccessful for login: 1PWtrnHjiQZh0xweNDX7msT6BbinCHuI. Passwords don't match
+[2015-11-29 15:06:21] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:06:21] (not_logged_in): Login: received registration data from login: 1PWtrnHjiQZh0xweNDX7msT6BbinCHuI, email: h@example.com.
+[2015-11-29 15:06:21] (not_logged_in): Login: registration unsuccessful for login: 1PWtrnHjiQZh0xweNDX7msT6BbinCHuI. Password too short.
+[2015-11-29 15:06:21] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:06:21] (not_logged_in): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:06:21] (not_logged_in): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:06:21] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:06:21] (not_logged_in): Login: received registration data from login: 1PWtrnHjiQZh0xweNDX7msT6BbinCHuI, email: 1PWtrnHjiQZh0xweNDX7msT6BbinCHuI@example.com.
+[2015-11-29 15:06:21] (not_logged_in): Login: registration successful for login: 1PWtrnHjiQZh0xweNDX7msT6BbinCHuI.
+[2015-11-29 15:06:21] (not_logged_in): Login: received registration data from login: pub_admin, email: 1PWtrnHjiQZh0xweNDX7msT6BbinCHuI@example.com.
+[2015-11-29 15:06:21] (not_logged_in): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:06:21] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:06:21] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 15:06:21] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:06:21] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:06:21] (pub_admin): Login: received registration data from login: bGRDTgRTAuRljfUHU7AaIUE6lOkGj9eL, email: h@example.com.
+[2015-11-29 15:06:21] (pub_admin): Login: registration unsuccessful for login: bGRDTgRTAuRljfUHU7AaIUE6lOkGj9eL. Passwords don't match
+[2015-11-29 15:06:21] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:06:21] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:06:21] (pub_admin): Login: received registration data from login: bGRDTgRTAuRljfUHU7AaIUE6lOkGj9eL, email: h@example.com.
+[2015-11-29 15:06:21] (pub_admin): Login: registration unsuccessful for login: bGRDTgRTAuRljfUHU7AaIUE6lOkGj9eL. Password too short.
+[2015-11-29 15:06:21] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:06:21] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:06:21] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:06:22] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:06:22] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:06:22] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:06:22] (pub_admin): Login: received registration data from login: bGRDTgRTAuRljfUHU7AaIUE6lOkGj9eL, email: bGRDTgRTAuRljfUHU7AaIUE6lOkGj9eL@example.com.
+[2015-11-29 15:06:22] (pub_admin): Login: registration successful for login: bGRDTgRTAuRljfUHU7AaIUE6lOkGj9eL.
+[2015-11-29 15:06:22] (pub_admin): Login: received registration data from login: pub_admin, email: bGRDTgRTAuRljfUHU7AaIUE6lOkGj9eL@example.com.
+[2015-11-29 15:06:22] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:06:22] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:06:22] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:06:35] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:06:35] (pub_admin): Login success
+[2015-11-29 15:06:35] (not_logged_in): Dumping bib form DB for team: full
+[2015-11-29 15:06:35] (not_logged_in): creating backup with prefix pre-restore
+[2015-11-29 15:06:35] (not_logged_in): Cleaning the whole DB before restoring.
+[2015-11-29 15:06:35] (not_logged_in): restoring backup from file ./backups/backup-testing-full-db-20151129-150635.sql
+[2015-11-29 15:06:36] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:06:36] (not_logged_in): Login: Bad username or password for user pub_admin
+[2015-11-29 15:06:36] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:06:36] (pub_admin): Login success
+[2015-11-29 15:06:37] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:06:37] (pub_admin): Login success
+[2015-11-29 15:06:37] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:06:37] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:06:38] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:06:38] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 15:06:38] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:06:38] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:06:38] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 15:06:38] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:06:38] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:06:39] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:06:39] (not_logged_in): Forgot: reset token clicked (9amsSmafbRvL22Jcf1ZUq7ccxhJrbWG6)
+[2015-11-29 15:06:39] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:06:39] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:06:40] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:06:40] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 15:06:40] (not_logged_in): Forgot: reset token clicked (9amsSmafbRvL22Jcf1ZUq7ccxhJrbWG6)
+[2015-11-29 15:06:40] (not_logged_in): Forgot: Password change successful for token 9amsSmafbRvL22Jcf1ZUq7ccxhJrbWG6.
+[2015-11-29 15:06:40] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:06:40] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 15:06:40] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:06:40] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 15:06:40] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:06:40] (not_logged_in): Login: received registration data from login: 0EJJVdcQWl87lpZvXdD0I1Kwl0saN8PX, email: h@example.com.
+[2015-11-29 15:06:40] (not_logged_in): Login: registration unsuccessful for login: 0EJJVdcQWl87lpZvXdD0I1Kwl0saN8PX. Passwords don't match
+[2015-11-29 15:06:40] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:06:40] (not_logged_in): Login: received registration data from login: 0EJJVdcQWl87lpZvXdD0I1Kwl0saN8PX, email: h@example.com.
+[2015-11-29 15:06:40] (not_logged_in): Login: registration unsuccessful for login: 0EJJVdcQWl87lpZvXdD0I1Kwl0saN8PX. Password too short.
+[2015-11-29 15:06:40] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:06:40] (not_logged_in): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:06:40] (not_logged_in): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:06:40] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:06:40] (not_logged_in): Login: received registration data from login: 0EJJVdcQWl87lpZvXdD0I1Kwl0saN8PX, email: 0EJJVdcQWl87lpZvXdD0I1Kwl0saN8PX@example.com.
+[2015-11-29 15:06:40] (not_logged_in): Login: registration successful for login: 0EJJVdcQWl87lpZvXdD0I1Kwl0saN8PX.
+[2015-11-29 15:06:40] (not_logged_in): Login: received registration data from login: pub_admin, email: 0EJJVdcQWl87lpZvXdD0I1Kwl0saN8PX@example.com.
+[2015-11-29 15:06:40] (not_logged_in): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:06:40] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:06:40] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 15:06:41] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:06:41] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:06:41] (pub_admin): Login: received registration data from login: 9YM6bbDxWNuXRTEMnHLWIiW4Q3WzTEch, email: h@example.com.
+[2015-11-29 15:06:41] (pub_admin): Login: registration unsuccessful for login: 9YM6bbDxWNuXRTEMnHLWIiW4Q3WzTEch. Passwords don't match
+[2015-11-29 15:06:41] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:06:41] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:06:41] (pub_admin): Login: received registration data from login: 9YM6bbDxWNuXRTEMnHLWIiW4Q3WzTEch, email: h@example.com.
+[2015-11-29 15:06:41] (pub_admin): Login: registration unsuccessful for login: 9YM6bbDxWNuXRTEMnHLWIiW4Q3WzTEch. Password too short.
+[2015-11-29 15:06:41] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:06:41] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:06:41] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:06:41] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:06:41] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:06:41] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:06:41] (pub_admin): Login: received registration data from login: 9YM6bbDxWNuXRTEMnHLWIiW4Q3WzTEch, email: 9YM6bbDxWNuXRTEMnHLWIiW4Q3WzTEch@example.com.
+[2015-11-29 15:06:41] (pub_admin): Login: registration successful for login: 9YM6bbDxWNuXRTEMnHLWIiW4Q3WzTEch.
+[2015-11-29 15:06:41] (pub_admin): Login: received registration data from login: pub_admin, email: 9YM6bbDxWNuXRTEMnHLWIiW4Q3WzTEch@example.com.
+[2015-11-29 15:06:41] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:06:41] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:06:41] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:06:58] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:06:58] (pub_admin): Login success
+[2015-11-29 15:06:59] (not_logged_in): Dumping bib form DB for team: full
+[2015-11-29 15:06:59] (not_logged_in): creating backup with prefix pre-restore
+[2015-11-29 15:06:59] (not_logged_in): Cleaning the whole DB before restoring.
+[2015-11-29 15:06:59] (not_logged_in): restoring backup from file ./backups/backup-testing-full-db-20151129-150658.sql
+[2015-11-29 15:07:00] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:07:00] (not_logged_in): Login: Bad username or password for user pub_admin
+[2015-11-29 15:07:00] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:07:00] (pub_admin): Login success
+[2015-11-29 15:07:01] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:07:01] (pub_admin): Login success
+[2015-11-29 15:07:01] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:07:01] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:07:02] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:07:02] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 15:07:02] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:07:02] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:07:02] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 15:07:02] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:07:02] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:07:03] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:07:03] (not_logged_in): Forgot: reset token clicked (NBhhhswGqpwgTMjB3OAgVOqUmz5MABBL)
+[2015-11-29 15:07:03] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:07:03] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:07:04] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:07:04] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 15:07:04] (not_logged_in): Forgot: reset token clicked (NBhhhswGqpwgTMjB3OAgVOqUmz5MABBL)
+[2015-11-29 15:07:04] (not_logged_in): Forgot: Password change successful for token NBhhhswGqpwgTMjB3OAgVOqUmz5MABBL.
+[2015-11-29 15:07:04] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:07:04] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 15:07:04] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:07:04] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 15:07:04] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:07:04] (not_logged_in): Login: received registration data from login: H0qELH6C5D407D6nqI6uDohFNey1vP6K, email: h@example.com.
+[2015-11-29 15:07:04] (not_logged_in): Login: registration unsuccessful for login: H0qELH6C5D407D6nqI6uDohFNey1vP6K. Passwords don't match
+[2015-11-29 15:07:04] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:07:04] (not_logged_in): Login: received registration data from login: H0qELH6C5D407D6nqI6uDohFNey1vP6K, email: h@example.com.
+[2015-11-29 15:07:04] (not_logged_in): Login: registration unsuccessful for login: H0qELH6C5D407D6nqI6uDohFNey1vP6K. Password too short.
+[2015-11-29 15:07:04] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:07:04] (not_logged_in): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:07:04] (not_logged_in): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:07:04] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:07:04] (not_logged_in): Login: received registration data from login: H0qELH6C5D407D6nqI6uDohFNey1vP6K, email: H0qELH6C5D407D6nqI6uDohFNey1vP6K@example.com.
+[2015-11-29 15:07:04] (not_logged_in): Login: registration successful for login: H0qELH6C5D407D6nqI6uDohFNey1vP6K.
+[2015-11-29 15:07:04] (not_logged_in): Login: received registration data from login: pub_admin, email: H0qELH6C5D407D6nqI6uDohFNey1vP6K@example.com.
+[2015-11-29 15:07:04] (not_logged_in): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:07:04] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:07:04] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 15:07:04] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:07:04] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:07:04] (pub_admin): Login: received registration data from login: e15iFSEtvrb7cBaSMn34gSutCuA2fAAA, email: h@example.com.
+[2015-11-29 15:07:05] (pub_admin): Login: registration unsuccessful for login: e15iFSEtvrb7cBaSMn34gSutCuA2fAAA. Passwords don't match
+[2015-11-29 15:07:05] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:07:05] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:07:05] (pub_admin): Login: received registration data from login: e15iFSEtvrb7cBaSMn34gSutCuA2fAAA, email: h@example.com.
+[2015-11-29 15:07:05] (pub_admin): Login: registration unsuccessful for login: e15iFSEtvrb7cBaSMn34gSutCuA2fAAA. Password too short.
+[2015-11-29 15:07:05] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:07:05] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:07:05] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:07:05] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:07:05] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:07:05] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:07:05] (pub_admin): Login: received registration data from login: e15iFSEtvrb7cBaSMn34gSutCuA2fAAA, email: e15iFSEtvrb7cBaSMn34gSutCuA2fAAA@example.com.
+[2015-11-29 15:07:05] (pub_admin): Login: registration successful for login: e15iFSEtvrb7cBaSMn34gSutCuA2fAAA.
+[2015-11-29 15:07:05] (pub_admin): Login: received registration data from login: pub_admin, email: e15iFSEtvrb7cBaSMn34gSutCuA2fAAA@example.com.
+[2015-11-29 15:07:05] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:07:05] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:07:05] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:07:06] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:07:06] (pub_admin): Login success
+[2015-11-29 15:07:06] (pub_admin): add new author: author with proposed master (ExampleJohn) exists!
+[2015-11-29 15:07:06] (pub_admin): add_new_user_id_to_master for master id 1 and new_user_id ExampleJoe was succesfull.
+[2015-11-29 15:07:06] (pub_admin): Post_add_store add publication with bib @article{key2015_0011,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:07:06] (pub_admin): Post_add_store add publication with bib @article{key2015_0022,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:07:06] (pub_admin): Adding new tag ->Test<-
+[2015-11-29 15:07:06] (pub_admin): Adding new tag ->Second_test<-
+[2015-11-29 15:07:06] (pub_admin): tags added: second_test, ids: 103
+[2015-11-29 15:07:06] (pub_admin): Deleting tag id: 103.
+[2015-11-29 15:07:29] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:07:29] (pub_admin): Login success
+[2015-11-29 15:07:29] (not_logged_in): Dumping bib form DB for team: full
+[2015-11-29 15:07:30] (not_logged_in): creating backup with prefix pre-restore
+[2015-11-29 15:07:30] (not_logged_in): Cleaning the whole DB before restoring.
+[2015-11-29 15:07:30] (not_logged_in): restoring backup from file ./backups/backup-testing-full-db-20151129-150729.sql
+[2015-11-29 15:07:31] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:07:31] (not_logged_in): Login: Bad username or password for user pub_admin
+[2015-11-29 15:07:31] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:07:31] (pub_admin): Login success
+[2015-11-29 15:07:32] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:07:32] (pub_admin): Login success
+[2015-11-29 15:07:32] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:07:32] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:07:33] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:07:33] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 15:07:33] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:07:33] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:07:33] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 15:07:33] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:07:33] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:07:34] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:07:34] (not_logged_in): Forgot: reset token clicked (KsDxNvy1bU8chhLeIVt3Dyozcb7anG3q)
+[2015-11-29 15:07:34] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:07:34] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:07:35] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:07:35] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 15:07:35] (not_logged_in): Forgot: reset token clicked (KsDxNvy1bU8chhLeIVt3Dyozcb7anG3q)
+[2015-11-29 15:07:35] (not_logged_in): Forgot: Password change successful for token KsDxNvy1bU8chhLeIVt3Dyozcb7anG3q.
+[2015-11-29 15:07:35] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:07:35] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 15:07:35] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:07:35] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 15:07:35] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:07:35] (not_logged_in): Login: received registration data from login: 2YBl1kVLzlaIHbyOijlxd76l5ltEJzw4, email: h@example.com.
+[2015-11-29 15:07:35] (not_logged_in): Login: registration unsuccessful for login: 2YBl1kVLzlaIHbyOijlxd76l5ltEJzw4. Passwords don't match
+[2015-11-29 15:07:35] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:07:35] (not_logged_in): Login: received registration data from login: 2YBl1kVLzlaIHbyOijlxd76l5ltEJzw4, email: h@example.com.
+[2015-11-29 15:07:35] (not_logged_in): Login: registration unsuccessful for login: 2YBl1kVLzlaIHbyOijlxd76l5ltEJzw4. Password too short.
+[2015-11-29 15:07:35] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:07:35] (not_logged_in): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:07:35] (not_logged_in): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:07:35] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:07:35] (not_logged_in): Login: received registration data from login: 2YBl1kVLzlaIHbyOijlxd76l5ltEJzw4, email: 2YBl1kVLzlaIHbyOijlxd76l5ltEJzw4@example.com.
+[2015-11-29 15:07:35] (not_logged_in): Login: registration successful for login: 2YBl1kVLzlaIHbyOijlxd76l5ltEJzw4.
+[2015-11-29 15:07:35] (not_logged_in): Login: received registration data from login: pub_admin, email: 2YBl1kVLzlaIHbyOijlxd76l5ltEJzw4@example.com.
+[2015-11-29 15:07:35] (not_logged_in): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:07:35] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:07:35] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 15:07:35] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:07:35] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:07:35] (pub_admin): Login: received registration data from login: OIAXRx8JUSTSrOfuYwjG4DDq18DrHIGs, email: h@example.com.
+[2015-11-29 15:07:35] (pub_admin): Login: registration unsuccessful for login: OIAXRx8JUSTSrOfuYwjG4DDq18DrHIGs. Passwords don't match
+[2015-11-29 15:07:35] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:07:35] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:07:35] (pub_admin): Login: received registration data from login: OIAXRx8JUSTSrOfuYwjG4DDq18DrHIGs, email: h@example.com.
+[2015-11-29 15:07:36] (pub_admin): Login: registration unsuccessful for login: OIAXRx8JUSTSrOfuYwjG4DDq18DrHIGs. Password too short.
+[2015-11-29 15:07:36] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:07:36] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:07:36] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:07:36] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:07:36] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:07:36] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:07:36] (pub_admin): Login: received registration data from login: OIAXRx8JUSTSrOfuYwjG4DDq18DrHIGs, email: OIAXRx8JUSTSrOfuYwjG4DDq18DrHIGs@example.com.
+[2015-11-29 15:07:36] (pub_admin): Login: registration successful for login: OIAXRx8JUSTSrOfuYwjG4DDq18DrHIGs.
+[2015-11-29 15:07:36] (pub_admin): Login: received registration data from login: pub_admin, email: OIAXRx8JUSTSrOfuYwjG4DDq18DrHIGs@example.com.
+[2015-11-29 15:07:36] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:07:36] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:07:36] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:07:36] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:07:37] (pub_admin): Login success
+[2015-11-29 15:07:37] (pub_admin): add new author: author with proposed master (ExampleJohn) exists!
+[2015-11-29 15:07:37] (pub_admin): add_new_user_id_to_master for master id 1 and new_user_id ExampleJoe was succesfull.
+[2015-11-29 15:07:37] (pub_admin): Post_add_store add publication with bib @article{key2015_0011,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:07:37] (pub_admin): Post_add_store add publication with bib @article{key2015_0022,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:07:37] (pub_admin): Adding new tag ->Test<-
+[2015-11-29 15:07:37] (pub_admin): Adding new tag ->Second_test<-
+[2015-11-29 15:07:37] (pub_admin): tags added: second_test, ids: 105
+[2015-11-29 15:07:37] (pub_admin): Deleting tag id: 105.
+[2015-11-29 15:07:37] (pub_admin): Displaying papers without any tag of type 21 for author id 1
+[2015-11-29 15:07:38] (pub_admin): reassing papers to authors started
+[2015-11-29 15:07:38] (pub_admin): reassing papers to authors finished
+[2015-11-29 15:07:38] (pub_admin): reassigning papers to authors (with authors creation) started
+[2015-11-29 15:07:38] (pub_admin): reassigning papers to authors (with authors creation) finished
+[2015-11-29 15:07:38] (pub_admin): Cleaning ugly bibtex fields for all entries
+[2015-11-29 15:07:38] (pub_admin): clean_ugly_bibtex_fileds_for_all_entries started
+[2015-11-29 15:07:38] (pub_admin): clean_ugly_bibtex_fileds_for_all_entries finished
+[2015-11-29 15:07:38] (pub_admin): Cleaning ugly bibtex fields for all entries has finished
+[2015-11-29 15:07:38] (pub_admin): regenerate_html_for_all is running
+[2015-11-29 15:07:38] (pub_admin): regenerate_html_for_all has finished
+[2015-11-29 15:07:38] (pub_admin): regenerate_html_for_all FORCE is running
+[2015-11-29 15:07:38] (pub_admin): regenerate_html_for_all FORCE has finished
+[2015-11-29 15:15:41] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:15:41] (pub_admin): Login success
+[2015-11-29 15:15:41] (not_logged_in): Dumping bib form DB for team: full
+[2015-11-29 15:15:41] (not_logged_in): creating backup with prefix pre-restore
+[2015-11-29 15:15:41] (not_logged_in): Cleaning the whole DB before restoring.
+[2015-11-29 15:15:41] (not_logged_in): restoring backup from file ./backups/backup-testing-full-db-20151129-151541.sql
+[2015-11-29 15:15:42] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:15:42] (not_logged_in): Login: Bad username or password for user pub_admin
+[2015-11-29 15:15:42] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:15:42] (pub_admin): Login success
+[2015-11-29 15:15:43] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:15:43] (pub_admin): Login success
+[2015-11-29 15:15:43] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:15:43] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:15:44] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:15:44] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 15:15:45] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:15:45] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:15:45] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 15:15:45] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:15:45] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:15:46] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:15:46] (not_logged_in): Forgot: reset token clicked (6oRBU2x8sW2FHyAkjviaiHfP7ZC9LWO1)
+[2015-11-29 15:15:46] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:15:46] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:15:46] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:15:46] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 15:15:46] (not_logged_in): Forgot: reset token clicked (6oRBU2x8sW2FHyAkjviaiHfP7ZC9LWO1)
+[2015-11-29 15:15:46] (not_logged_in): Forgot: Password change successful for token 6oRBU2x8sW2FHyAkjviaiHfP7ZC9LWO1.
+[2015-11-29 15:15:46] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:15:46] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 15:15:46] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:15:47] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 15:15:47] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:15:47] (not_logged_in): Login: received registration data from login: 5Vi1pBUx8BrIRbC8mMOP3tqyiBr02Rw3, email: h@example.com.
+[2015-11-29 15:15:47] (not_logged_in): Login: registration unsuccessful for login: 5Vi1pBUx8BrIRbC8mMOP3tqyiBr02Rw3. Passwords don't match
+[2015-11-29 15:15:47] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:15:47] (not_logged_in): Login: received registration data from login: 5Vi1pBUx8BrIRbC8mMOP3tqyiBr02Rw3, email: h@example.com.
+[2015-11-29 15:15:47] (not_logged_in): Login: registration unsuccessful for login: 5Vi1pBUx8BrIRbC8mMOP3tqyiBr02Rw3. Password too short.
+[2015-11-29 15:15:47] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:15:47] (not_logged_in): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:15:47] (not_logged_in): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:15:47] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:15:47] (not_logged_in): Login: received registration data from login: 5Vi1pBUx8BrIRbC8mMOP3tqyiBr02Rw3, email: 5Vi1pBUx8BrIRbC8mMOP3tqyiBr02Rw3@example.com.
+[2015-11-29 15:15:47] (not_logged_in): Login: registration successful for login: 5Vi1pBUx8BrIRbC8mMOP3tqyiBr02Rw3.
+[2015-11-29 15:15:47] (not_logged_in): Login: received registration data from login: pub_admin, email: 5Vi1pBUx8BrIRbC8mMOP3tqyiBr02Rw3@example.com.
+[2015-11-29 15:15:47] (not_logged_in): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:15:47] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:15:47] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 15:15:47] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:15:47] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:15:47] (pub_admin): Login: received registration data from login: Z1ocoiK8flqtKQP6zW3lPsyVIxqV78BG, email: h@example.com.
+[2015-11-29 15:15:47] (pub_admin): Login: registration unsuccessful for login: Z1ocoiK8flqtKQP6zW3lPsyVIxqV78BG. Passwords don't match
+[2015-11-29 15:15:47] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:15:47] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:15:47] (pub_admin): Login: received registration data from login: Z1ocoiK8flqtKQP6zW3lPsyVIxqV78BG, email: h@example.com.
+[2015-11-29 15:15:47] (pub_admin): Login: registration unsuccessful for login: Z1ocoiK8flqtKQP6zW3lPsyVIxqV78BG. Password too short.
+[2015-11-29 15:15:47] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:15:47] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:15:47] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:15:47] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:15:47] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:15:47] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:15:47] (pub_admin): Login: received registration data from login: Z1ocoiK8flqtKQP6zW3lPsyVIxqV78BG, email: Z1ocoiK8flqtKQP6zW3lPsyVIxqV78BG@example.com.
+[2015-11-29 15:15:47] (pub_admin): Login: registration successful for login: Z1ocoiK8flqtKQP6zW3lPsyVIxqV78BG.
+[2015-11-29 15:15:47] (pub_admin): Login: received registration data from login: pub_admin, email: Z1ocoiK8flqtKQP6zW3lPsyVIxqV78BG@example.com.
+[2015-11-29 15:15:47] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:15:47] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:15:48] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:15:48] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:15:48] (pub_admin): Login success
+[2015-11-29 15:15:48] (pub_admin): add new author: author with proposed master (ExampleJohn) exists!
+[2015-11-29 15:15:48] (pub_admin): add_new_user_id_to_master for master id 1 and new_user_id ExampleJoe was succesfull.
+[2015-11-29 15:15:48] (pub_admin): Post_add_store add publication with bib @article{key2015_0011,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:15:48] (pub_admin): Post_add_store add publication with bib @article{key2015_0022,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:15:49] (pub_admin): Adding new tag ->Test<-
+[2015-11-29 15:15:49] (pub_admin): Adding new tag ->Second_test<-
+[2015-11-29 15:15:49] (pub_admin): tags added: second_test, ids: 107
+[2015-11-29 15:15:49] (pub_admin): Deleting tag id: 107.
+[2015-11-29 15:15:49] (pub_admin): Displaying papers without any tag of type 21 for author id 1
+[2015-11-29 15:15:49] (pub_admin): reassing papers to authors started
+[2015-11-29 15:15:49] (pub_admin): reassing papers to authors finished
+[2015-11-29 15:15:49] (pub_admin): reassigning papers to authors (with authors creation) started
+[2015-11-29 15:15:50] (pub_admin): reassigning papers to authors (with authors creation) finished
+[2015-11-29 15:15:50] (pub_admin): Cleaning ugly bibtex fields for all entries
+[2015-11-29 15:15:50] (pub_admin): clean_ugly_bibtex_fileds_for_all_entries started
+[2015-11-29 15:15:50] (pub_admin): clean_ugly_bibtex_fileds_for_all_entries finished
+[2015-11-29 15:15:50] (pub_admin): Cleaning ugly bibtex fields for all entries has finished
+[2015-11-29 15:15:50] (pub_admin): regenerate_html_for_all is running
+[2015-11-29 15:15:50] (pub_admin): regenerate_html_for_all has finished
+[2015-11-29 15:15:50] (pub_admin): regenerate_html_for_all FORCE is running
+[2015-11-29 15:15:50] (pub_admin): regenerate_html_for_all FORCE has finished
+[2015-11-29 15:16:49] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:16:49] (pub_admin): Login success
+[2015-11-29 15:16:49] (not_logged_in): Dumping bib form DB for team: full
+[2015-11-29 15:16:49] (not_logged_in): creating backup with prefix pre-restore
+[2015-11-29 15:16:50] (not_logged_in): Cleaning the whole DB before restoring.
+[2015-11-29 15:16:50] (not_logged_in): restoring backup from file ./backups/backup-testing-full-db-20151129-151649.sql
+[2015-11-29 15:16:51] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:16:51] (not_logged_in): Login: Bad username or password for user pub_admin
+[2015-11-29 15:16:51] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:16:51] (pub_admin): Login success
+[2015-11-29 15:16:52] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:16:52] (pub_admin): Login success
+[2015-11-29 15:16:52] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:16:52] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:16:52] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:16:53] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 15:16:53] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:16:53] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:16:53] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 15:16:53] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:16:53] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:16:54] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:16:54] (not_logged_in): Forgot: reset token clicked (3tWZ0mUM6oidqVykZbETd0tu7twloCMN)
+[2015-11-29 15:16:54] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:16:54] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:16:55] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:16:55] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 15:16:55] (not_logged_in): Forgot: reset token clicked (3tWZ0mUM6oidqVykZbETd0tu7twloCMN)
+[2015-11-29 15:16:55] (not_logged_in): Forgot: Password change successful for token 3tWZ0mUM6oidqVykZbETd0tu7twloCMN.
+[2015-11-29 15:16:55] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:16:55] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 15:16:55] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:16:55] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 15:16:55] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:16:55] (not_logged_in): Login: received registration data from login: cCGX5XxXkZIkBwsRjKhxvcSvbUKfIHvt, email: h@example.com.
+[2015-11-29 15:16:55] (not_logged_in): Login: registration unsuccessful for login: cCGX5XxXkZIkBwsRjKhxvcSvbUKfIHvt. Passwords don't match
+[2015-11-29 15:16:55] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:16:55] (not_logged_in): Login: received registration data from login: cCGX5XxXkZIkBwsRjKhxvcSvbUKfIHvt, email: h@example.com.
+[2015-11-29 15:16:55] (not_logged_in): Login: registration unsuccessful for login: cCGX5XxXkZIkBwsRjKhxvcSvbUKfIHvt. Password too short.
+[2015-11-29 15:16:55] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:16:55] (not_logged_in): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:16:55] (not_logged_in): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:16:55] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:16:55] (not_logged_in): Login: received registration data from login: cCGX5XxXkZIkBwsRjKhxvcSvbUKfIHvt, email: cCGX5XxXkZIkBwsRjKhxvcSvbUKfIHvt@example.com.
+[2015-11-29 15:16:55] (not_logged_in): Login: registration successful for login: cCGX5XxXkZIkBwsRjKhxvcSvbUKfIHvt.
+[2015-11-29 15:16:55] (not_logged_in): Login: received registration data from login: pub_admin, email: cCGX5XxXkZIkBwsRjKhxvcSvbUKfIHvt@example.com.
+[2015-11-29 15:16:55] (not_logged_in): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:16:55] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:16:55] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 15:16:55] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:16:55] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:16:56] (pub_admin): Login: received registration data from login: 7Xkm46kgnIfUrh38lqktYC7WsJ8znLs0, email: h@example.com.
+[2015-11-29 15:16:56] (pub_admin): Login: registration unsuccessful for login: 7Xkm46kgnIfUrh38lqktYC7WsJ8znLs0. Passwords don't match
+[2015-11-29 15:16:56] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:16:56] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:16:56] (pub_admin): Login: received registration data from login: 7Xkm46kgnIfUrh38lqktYC7WsJ8znLs0, email: h@example.com.
+[2015-11-29 15:16:56] (pub_admin): Login: registration unsuccessful for login: 7Xkm46kgnIfUrh38lqktYC7WsJ8znLs0. Password too short.
+[2015-11-29 15:16:56] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:16:56] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:16:56] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:16:56] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:16:56] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:16:56] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:16:56] (pub_admin): Login: received registration data from login: 7Xkm46kgnIfUrh38lqktYC7WsJ8znLs0, email: 7Xkm46kgnIfUrh38lqktYC7WsJ8znLs0@example.com.
+[2015-11-29 15:16:56] (pub_admin): Login: registration successful for login: 7Xkm46kgnIfUrh38lqktYC7WsJ8znLs0.
+[2015-11-29 15:16:56] (pub_admin): Login: received registration data from login: pub_admin, email: 7Xkm46kgnIfUrh38lqktYC7WsJ8znLs0@example.com.
+[2015-11-29 15:16:56] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:16:56] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:16:56] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:16:57] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:16:57] (pub_admin): Login success
+[2015-11-29 15:16:57] (pub_admin): add new author: author with proposed master (ExampleJohn) exists!
+[2015-11-29 15:16:57] (pub_admin): add_new_user_id_to_master for master id 1 and new_user_id ExampleJoe was succesfull.
+[2015-11-29 15:16:57] (pub_admin): Post_add_store add publication with bib @article{key2015_0011,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:16:57] (pub_admin): Post_add_store add publication with bib @article{key2015_0022,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:16:57] (pub_admin): Adding new tag ->Test<-
+[2015-11-29 15:16:57] (pub_admin): Adding new tag ->Second_test<-
+[2015-11-29 15:16:57] (pub_admin): tags added: second_test, ids: 109
+[2015-11-29 15:16:57] (pub_admin): Deleting tag id: 109.
+[2015-11-29 15:16:57] (pub_admin): Displaying papers without any tag of type 21 for author id 1
+[2015-11-29 15:16:58] (pub_admin): reassing papers to authors started
+[2015-11-29 15:16:58] (pub_admin): reassing papers to authors finished
+[2015-11-29 15:16:58] (pub_admin): reassigning papers to authors (with authors creation) started
+[2015-11-29 15:16:58] (pub_admin): reassigning papers to authors (with authors creation) finished
+[2015-11-29 15:16:58] (pub_admin): Cleaning ugly bibtex fields for all entries
+[2015-11-29 15:16:58] (pub_admin): clean_ugly_bibtex_fileds_for_all_entries started
+[2015-11-29 15:16:58] (pub_admin): clean_ugly_bibtex_fileds_for_all_entries finished
+[2015-11-29 15:16:58] (pub_admin): Cleaning ugly bibtex fields for all entries has finished
+[2015-11-29 15:16:58] (pub_admin): regenerate_html_for_all is running
+[2015-11-29 15:16:58] (pub_admin): regenerate_html_for_all has finished
+[2015-11-29 15:16:58] (pub_admin): regenerate_html_for_all FORCE is running
+[2015-11-29 15:16:58] (pub_admin): regenerate_html_for_all FORCE has finished
+[2015-11-29 15:19:47] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:19:47] (pub_admin): Login success
+[2015-11-29 15:19:47] (not_logged_in): Dumping bib form DB for team: full
+[2015-11-29 15:19:47] (not_logged_in): creating backup with prefix pre-restore
+[2015-11-29 15:19:47] (not_logged_in): Cleaning the whole DB before restoring.
+[2015-11-29 15:19:47] (not_logged_in): restoring backup from file ./backups/backup-testing-full-db-20151129-151947.sql
+[2015-11-29 15:19:48] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:19:48] (not_logged_in): Login: Bad username or password for user pub_admin
+[2015-11-29 15:19:48] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:19:48] (pub_admin): Login success
+[2015-11-29 15:19:49] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:19:49] (pub_admin): Login success
+[2015-11-29 15:19:49] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:19:49] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:19:50] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:19:50] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 15:19:51] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:19:51] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:19:51] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 15:19:51] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:19:51] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:19:51] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:19:51] (not_logged_in): Forgot: reset token clicked (AOETmV6R0LnNGC2H7S7f4sLZMQNLIp4M)
+[2015-11-29 15:19:51] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:19:51] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:19:52] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:19:52] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 15:19:52] (not_logged_in): Forgot: reset token clicked (AOETmV6R0LnNGC2H7S7f4sLZMQNLIp4M)
+[2015-11-29 15:19:52] (not_logged_in): Forgot: Password change successful for token AOETmV6R0LnNGC2H7S7f4sLZMQNLIp4M.
+[2015-11-29 15:19:52] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:19:52] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 15:19:52] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:19:52] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 15:19:52] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:19:52] (not_logged_in): Login: received registration data from login: 0dS6UIFmsszSFrkK6JOKOGJWE9yonrJJ, email: h@example.com.
+[2015-11-29 15:19:52] (not_logged_in): Login: registration unsuccessful for login: 0dS6UIFmsszSFrkK6JOKOGJWE9yonrJJ. Passwords don't match
+[2015-11-29 15:19:52] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:19:53] (not_logged_in): Login: received registration data from login: 0dS6UIFmsszSFrkK6JOKOGJWE9yonrJJ, email: h@example.com.
+[2015-11-29 15:19:53] (not_logged_in): Login: registration unsuccessful for login: 0dS6UIFmsszSFrkK6JOKOGJWE9yonrJJ. Password too short.
+[2015-11-29 15:19:53] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:19:53] (not_logged_in): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:19:53] (not_logged_in): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:19:53] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:19:53] (not_logged_in): Login: received registration data from login: 0dS6UIFmsszSFrkK6JOKOGJWE9yonrJJ, email: 0dS6UIFmsszSFrkK6JOKOGJWE9yonrJJ@example.com.
+[2015-11-29 15:19:53] (not_logged_in): Login: registration successful for login: 0dS6UIFmsszSFrkK6JOKOGJWE9yonrJJ.
+[2015-11-29 15:19:53] (not_logged_in): Login: received registration data from login: pub_admin, email: 0dS6UIFmsszSFrkK6JOKOGJWE9yonrJJ@example.com.
+[2015-11-29 15:19:53] (not_logged_in): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:19:53] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:19:53] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 15:19:53] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:19:53] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:19:53] (pub_admin): Login: received registration data from login: YrxgeESms23LKRsBzlcHURneBqNU3LnF, email: h@example.com.
+[2015-11-29 15:19:53] (pub_admin): Login: registration unsuccessful for login: YrxgeESms23LKRsBzlcHURneBqNU3LnF. Passwords don't match
+[2015-11-29 15:19:53] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:19:53] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:19:53] (pub_admin): Login: received registration data from login: YrxgeESms23LKRsBzlcHURneBqNU3LnF, email: h@example.com.
+[2015-11-29 15:19:53] (pub_admin): Login: registration unsuccessful for login: YrxgeESms23LKRsBzlcHURneBqNU3LnF. Password too short.
+[2015-11-29 15:19:53] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:19:53] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:19:53] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:19:53] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:19:53] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:19:53] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:19:53] (pub_admin): Login: received registration data from login: YrxgeESms23LKRsBzlcHURneBqNU3LnF, email: YrxgeESms23LKRsBzlcHURneBqNU3LnF@example.com.
+[2015-11-29 15:19:53] (pub_admin): Login: registration successful for login: YrxgeESms23LKRsBzlcHURneBqNU3LnF.
+[2015-11-29 15:19:53] (pub_admin): Login: received registration data from login: pub_admin, email: YrxgeESms23LKRsBzlcHURneBqNU3LnF@example.com.
+[2015-11-29 15:19:53] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:19:53] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:19:53] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:19:54] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:19:54] (pub_admin): Login success
+[2015-11-29 15:19:54] (pub_admin): add new author: author with proposed master (ExampleJohn) exists!
+[2015-11-29 15:19:54] (pub_admin): add_new_user_id_to_master for master id 1 and new_user_id ExampleJoe was succesfull.
+[2015-11-29 15:19:54] (pub_admin): Post_add_store add publication with bib @article{key2015_0011,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:19:54] (pub_admin): Post_add_store add publication with bib @article{key2015_0022,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:19:54] (pub_admin): Adding new tag ->Test<-
+[2015-11-29 15:19:55] (pub_admin): Adding new tag ->Second_test<-
+[2015-11-29 15:19:55] (pub_admin): tags added: second_test, ids: 111
+[2015-11-29 15:19:55] (pub_admin): Deleting tag id: 111.
+[2015-11-29 15:19:55] (pub_admin): Displaying papers without any tag of type 21 for author id 1
+[2015-11-29 15:19:55] (pub_admin): reassing papers to authors started
+[2015-11-29 15:19:55] (pub_admin): reassing papers to authors finished
+[2015-11-29 15:19:55] (pub_admin): reassigning papers to authors (with authors creation) started
+[2015-11-29 15:19:55] (pub_admin): reassigning papers to authors (with authors creation) finished
+[2015-11-29 15:19:55] (pub_admin): Cleaning ugly bibtex fields for all entries
+[2015-11-29 15:19:55] (pub_admin): clean_ugly_bibtex_fileds_for_all_entries started
+[2015-11-29 15:19:55] (pub_admin): clean_ugly_bibtex_fileds_for_all_entries finished
+[2015-11-29 15:19:55] (pub_admin): Cleaning ugly bibtex fields for all entries has finished
+[2015-11-29 15:19:55] (pub_admin): regenerate_html_for_all is running
+[2015-11-29 15:19:55] (pub_admin): regenerate_html_for_all has finished
+[2015-11-29 15:19:55] (pub_admin): regenerate_html_for_all FORCE is running
+[2015-11-29 15:19:56] (pub_admin): regenerate_html_for_all FORCE has finished
+[2015-11-29 15:21:56] (pub_admin): Cron day started
+[2015-11-29 15:21:59] (pub_admin): Cron night started
+[2015-11-29 15:21:59] (pub_admin): Cron night finished
+[2015-11-29 15:22:00] (pub_admin): Cron week started
+[2015-11-29 15:22:02] (pub_admin): Cron month started
+[2015-11-29 15:35:36] (pub_admin): Cron day started
+[2015-11-29 15:35:36] (pub_admin): Cron day started
+[2015-11-29 15:36:21] (pub_admin): Cron day started
+[2015-11-29 15:36:21] (pub_admin): Cron day finished
+[2015-11-29 15:36:24] (pub_admin): Cron night started
+[2015-11-29 15:36:24] (pub_admin): Cron night finished
+[2015-11-29 15:36:25] (pub_admin): Cron week started
+[2015-11-29 15:36:25] (pub_admin): Cron week finished
+[2015-11-29 15:36:27] (pub_admin): Cron month started
+[2015-11-29 15:36:27] (pub_admin): Cron month finished
+[2015-11-29 15:37:02] (pub_admin): Cron week started
+[2015-11-29 15:37:02] (pub_admin): Cron week finished
+[2015-11-29 15:37:04] (pub_admin): Cron month started
+[2015-11-29 15:37:04] (pub_admin): Cron month finished
+[2015-11-29 15:37:23] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:37:23] (pub_admin): Login success
+[2015-11-29 15:37:23] (not_logged_in): Dumping bib form DB for team: full
+[2015-11-29 15:37:23] (not_logged_in): creating backup with prefix pre-restore
+[2015-11-29 15:37:23] (not_logged_in): Cleaning the whole DB before restoring.
+[2015-11-29 15:37:23] (not_logged_in): restoring backup from file ./backups/backup-testing-full-db-20151129-153723.sql
+[2015-11-29 15:37:24] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:37:24] (not_logged_in): Login: Bad username or password for user pub_admin
+[2015-11-29 15:37:25] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:37:25] (pub_admin): Login success
+[2015-11-29 15:37:25] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:37:25] (pub_admin): Login success
+[2015-11-29 15:37:26] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:37:26] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:37:26] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:37:26] (not_logged_in): Forgot: requesting new password for email your_email@email.com
+[2015-11-29 15:37:27] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:37:27] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:37:27] (not_logged_in): Forgot: user does not exist.
+[2015-11-29 15:37:27] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:37:27] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:37:28] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:37:28] (not_logged_in): Forgot: reset token clicked (S8TlTThG6WfmeQQO2zTfN3mGNom7fsGm)
+[2015-11-29 15:37:28] (not_logged_in): Forgot: requesting new password for user pub_admin
+[2015-11-29 15:37:28] (not_logged_in): Forgot: requesting new password for email 
+[2015-11-29 15:37:28] (not_logged_in): Forgot: reset token sent to your_email@email.com
+[2015-11-29 15:37:28] (not_logged_in): Forgot: Chnage failed. Passwords are not same.
+[2015-11-29 15:37:28] (not_logged_in): Forgot: reset token clicked (S8TlTThG6WfmeQQO2zTfN3mGNom7fsGm)
+[2015-11-29 15:37:29] (not_logged_in): Forgot: Password change successful for token S8TlTThG6WfmeQQO2zTfN3mGNom7fsGm.
+[2015-11-29 15:37:29] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:37:29] (not_logged_in): Forgot: Reset password token is invalid! (invalid_token)
+[2015-11-29 15:37:29] (not_logged_in): Login: displaying login form.
+[2015-11-29 15:37:29] (not_logged_in): Login: informing that registration is disabled.
+[2015-11-29 15:37:29] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:37:29] (not_logged_in): Login: received registration data from login: fKBcLuRHqUTBYPa9geLDDCfR3yC4Ax5L, email: h@example.com.
+[2015-11-29 15:37:29] (not_logged_in): Login: registration unsuccessful for login: fKBcLuRHqUTBYPa9geLDDCfR3yC4Ax5L. Passwords don't match
+[2015-11-29 15:37:29] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:37:29] (not_logged_in): Login: received registration data from login: fKBcLuRHqUTBYPa9geLDDCfR3yC4Ax5L, email: h@example.com.
+[2015-11-29 15:37:29] (not_logged_in): Login: registration unsuccessful for login: fKBcLuRHqUTBYPa9geLDDCfR3yC4Ax5L. Password too short.
+[2015-11-29 15:37:29] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:37:29] (not_logged_in): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:37:29] (not_logged_in): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:37:29] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:37:29] (not_logged_in): Login: received registration data from login: fKBcLuRHqUTBYPa9geLDDCfR3yC4Ax5L, email: fKBcLuRHqUTBYPa9geLDDCfR3yC4Ax5L@example.com.
+[2015-11-29 15:37:29] (not_logged_in): Login: registration successful for login: fKBcLuRHqUTBYPa9geLDDCfR3yC4Ax5L.
+[2015-11-29 15:37:29] (not_logged_in): Login: received registration data from login: pub_admin, email: fKBcLuRHqUTBYPa9geLDDCfR3yC4Ax5L@example.com.
+[2015-11-29 15:37:29] (not_logged_in): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:37:29] (not_logged_in): Login: displaying registration form.
+[2015-11-29 15:37:29] (pub_admin): Login: informing that registration is disabled.
+[2015-11-29 15:37:29] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:37:29] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:37:29] (pub_admin): Login: received registration data from login: e89SwhT2K0nWLBJZPVkxr4i3yRzlmvnY, email: h@example.com.
+[2015-11-29 15:37:29] (pub_admin): Login: registration unsuccessful for login: e89SwhT2K0nWLBJZPVkxr4i3yRzlmvnY. Passwords don't match
+[2015-11-29 15:37:29] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:37:29] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:37:29] (pub_admin): Login: received registration data from login: e89SwhT2K0nWLBJZPVkxr4i3yRzlmvnY, email: h@example.com.
+[2015-11-29 15:37:29] (pub_admin): Login: registration unsuccessful for login: e89SwhT2K0nWLBJZPVkxr4i3yRzlmvnY. Password too short.
+[2015-11-29 15:37:29] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:37:29] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:37:30] (pub_admin): Login: received registration data from login: , email: h@example.com.
+[2015-11-29 15:37:30] (pub_admin): Login: registration unsuccessful for login: . Input missing.
+[2015-11-29 15:37:30] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:37:30] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:37:30] (pub_admin): Login: received registration data from login: e89SwhT2K0nWLBJZPVkxr4i3yRzlmvnY, email: e89SwhT2K0nWLBJZPVkxr4i3yRzlmvnY@example.com.
+[2015-11-29 15:37:30] (pub_admin): Login: registration successful for login: e89SwhT2K0nWLBJZPVkxr4i3yRzlmvnY.
+[2015-11-29 15:37:30] (pub_admin): Login: received registration data from login: pub_admin, email: e89SwhT2K0nWLBJZPVkxr4i3yRzlmvnY@example.com.
+[2015-11-29 15:37:30] (pub_admin): Login: registration unsuccessful for login: pub_admin. Login taken.
+[2015-11-29 15:37:30] (pub_admin): Login: displaying registration form.
+[2015-11-29 15:37:30] (pub_admin): Login: displaying registration form for super admin!
+[2015-11-29 15:37:31] (not_logged_in): Login: trying to log in as user pub_admin
+[2015-11-29 15:37:31] (pub_admin): Login success
+[2015-11-29 15:37:31] (pub_admin): add new author: author with proposed master (ExampleJohn) exists!
+[2015-11-29 15:37:31] (pub_admin): add_new_user_id_to_master for master id 1 and new_user_id ExampleJoe was succesfull.
+[2015-11-29 15:37:31] (pub_admin): Post_add_store add publication with bib @article{key2015_0011,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:37:31] (pub_admin): Post_add_store add publication with bib @article{key2015_0022,
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
+    month = {October},
+    day = {1--31},
+}
+[2015-11-29 15:37:31] (pub_admin): Adding new tag ->Test<-
+[2015-11-29 15:37:31] (pub_admin): Adding new tag ->Second_test<-
+[2015-11-29 15:37:31] (pub_admin): tags added: second_test, ids: 113
+[2015-11-29 15:37:31] (pub_admin): Deleting tag id: 113.
+[2015-11-29 15:37:31] (pub_admin): Displaying papers without any tag of type 21 for author id 1
+[2015-11-29 15:37:32] (pub_admin): Cron day started
+[2015-11-29 15:37:32] (pub_admin): Cron day finished
+[2015-11-29 15:37:32] (pub_admin): Cron night started
+[2015-11-29 15:37:32] (pub_admin): Cron night finished
+[2015-11-29 15:37:32] (pub_admin): Cron week started
+[2015-11-29 15:37:32] (pub_admin): Cron week finished
+[2015-11-29 15:37:32] (pub_admin): Cron month started
+[2015-11-29 15:37:32] (pub_admin): Cron month finished
+[2015-11-29 15:37:32] (pub_admin): reassing papers to authors started
+[2015-11-29 15:37:32] (pub_admin): reassing papers to authors finished
+[2015-11-29 15:37:32] (pub_admin): reassigning papers to authors (with authors creation) started
+[2015-11-29 15:37:32] (pub_admin): reassigning papers to authors (with authors creation) finished
+[2015-11-29 15:37:32] (pub_admin): Cleaning ugly bibtex fields for all entries
+[2015-11-29 15:37:32] (pub_admin): clean_ugly_bibtex_fileds_for_all_entries started
+[2015-11-29 15:37:32] (pub_admin): clean_ugly_bibtex_fileds_for_all_entries finished
+[2015-11-29 15:37:32] (pub_admin): Cleaning ugly bibtex fields for all entries has finished
+[2015-11-29 15:37:32] (pub_admin): regenerate_html_for_all is running
+[2015-11-29 15:37:32] (pub_admin): regenerate_html_for_all has finished
+[2015-11-29 15:37:32] (pub_admin): regenerate_html_for_all FORCE is running
+[2015-11-29 15:37:32] (pub_admin): regenerate_html_for_all FORCE has finished
