@@ -2,9 +2,7 @@ package MyUsers;
 
 use strict;
 use warnings;
-
-
-# use Crypt::PBKDF2;  # sudo cpanm Crypt::PBKDF2
+use Hex64Publications::DB;
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64); # sudo cpanm Crypt::Eksblowfish::Bcrypt
 use Crypt::Random; # sudo cpanm Crypt::Random
 use LWP::UserAgent;
@@ -77,73 +75,6 @@ sub generate_token{
 
 }
 ####################################################################################################
-sub prepare_token_table_mysql{ 
-    my $self = shift;
-    my $user_dbh = shift;
-
-      $user_dbh->do("CREATE TABLE IF NOT EXISTS `Token`(
-        id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
-        token VARCHAR(250) NOT NULL,
-        email VARCHAR(250) NOT NULL,
-        requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT login_token_unique UNIQUE(token)
-      )");
-};
-####################################################################################################
-sub prepare_user_table_mysql{ 
-    my $self = shift;
-    my $user_dbh = shift;
-
-
-   $user_dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
-        id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
-        registration_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        login VARCHAR(250) NOT NULL,
-        real_name VARCHAR(250) DEFAULT 'unnamed',
-        email VARCHAR(250) NOT NULL,
-        pass VARCHAR(250) NOT NULL,
-        pass2 VARCHAR(250) NOT NULL,
-        pass3 VARCHAR(250),
-        rank INTEGER(3) DEFAULT 0,
-        master_id INTEGER(8) DEFAULT 0,
-        tennant_id INTEGER(8) DEFAULT 0,
-        CONSTRAINT login_unique UNIQUE(login)
-      )");
-
-   $self->prepare_token_table_mysql($user_dbh);
-
-};
-####################################################################################################
-sub prepare_backup_table_sqlite{
-    my $self = shift;
-    my $user_dbh = shift;
-
-
-   $user_dbh->do("CREATE TABLE IF NOT EXISTS Login(
-        id INTEGER PRIMARY KEY,
-        registration_time DATE DEFAULT (datetime('now','localtime')),
-        last_login DATE DEFAULT (datetime('now','localtime')),
-        login TEXT NOT NULL,
-        real_name TEXT DEFAULT 'unnamed',
-        email TEXT NOT NULL,
-        pass TEXT NOT NULL,
-        pass2 TEXT DEFAULT NULL,
-        pass3 TEXT DEFAULT NULL,
-        rank INTEGER DEFAULT 0,
-        master_id INTEGER DEFAULT 0,
-        tennant_id INTEGER DEFAULT 0,
-        UNIQUE(login) ON CONFLICT IGNORE
-      )");
-
-      $user_dbh->do("CREATE TABLE IF NOT EXISTS Token(
-        id INTEGER PRIMARY KEY,
-        token TEXT NOT NULL,
-        email TEXT NOT NULL,
-        UNIQUE(token) ON CONFLICT IGNORE
-      )");
-};
-####################################################################################################
 sub save_token_email{
     my $self = shift;
     my $token = shift; 
@@ -152,6 +83,18 @@ sub save_token_email{
 
     my $sth = $user_dbh->prepare("INSERT INTO Token (requested, email, token) VALUES (CURRENT_TIMESTAMP, ?,?)");
     $sth->execute($email, $token);  
+}
+####################################################################################################
+sub get_token_for_email {  #### FOR TESTING ONLY
+    my $self = shift;
+    my $email = shift; 
+    my $user_dbh = shift;
+
+    my $sth = $user_dbh->prepare("SELECT token, email FROM Token WHERE email=?");
+    $sth->execute($email);
+
+    my $row = $sth->fetchrow_hashref();
+    return $row->{token} || -1;
 }
 ####################################################################################################
 sub remove_all_tokens_for_email{

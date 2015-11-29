@@ -65,6 +65,7 @@ our @EXPORT = qw(
     get_tags_for_author
     get_tags_for_team
     add_field_to_bibtex_code
+    has_bibtex_field
     clean_tag_name
     get_dir_size
     get_visibility_for_id
@@ -475,6 +476,7 @@ sub clean_ugly_bibtex_fileds {
     my $dbh = shift;
     my $eid = shift;
 
+    # TODO: move this into config
     our @bib_fields_to_delete = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
 
     my @ary = $dbh->selectrow_array("SELECT bib FROM Entry WHERE id = ?", undef, $eid);  
@@ -1451,6 +1453,8 @@ sub add_field_to_bibtex_code {
     my $field = shift;
     my $value = shift;
 
+    say "call: add_field_to_bibtex_code eid $eid field $field value $value";
+
     my @ary = $dbh->selectrow_array("SELECT bib FROM Entry WHERE id = ?", undef, $eid);  
     my $entry_str = $ary[0];
 
@@ -1458,7 +1462,6 @@ sub add_field_to_bibtex_code {
     $entry->parse_s($entry_str);
     return -1 unless $entry->parse_ok;
     my $key = $entry->key;
-
     $entry->set ($field, $value);
     my $new_bib = $entry->print_s;
 
@@ -1468,7 +1471,22 @@ sub add_field_to_bibtex_code {
     $sth2->execute($new_bib, $eid);
     $sth2->finish();
 };
+####################################################################################
+sub has_bibtex_field {
+    my $dbh = shift;
+    my $eid = shift;
+    my $field = shift;
 
+    my @ary = $dbh->selectrow_array("SELECT bib FROM Entry WHERE id = ?", undef, $eid);  
+    my $entry_str = $ary[0];
+
+    my $entry = new Text::BibTeX::Entry();
+    $entry->parse_s($entry_str);
+    return -1 unless $entry->parse_ok;
+    my $key = $entry->key;
+
+    return $entry->exists($field);
+}
 ################################################################################
 
 sub create_user_id {
@@ -1764,22 +1782,5 @@ sub get_backup_age_in_days{
 
 ################################################################################
 
-sub push_to_android{
-   my $title = shift;
-   my $msg = shift;
-   my $prio = shift || "0";
-
-   my $zwave_cloud_token = "a8jmejY1N7URwqmbw6ozzLRSVcxc6x";
-
-   LWP::UserAgent->new()->post(
-      "https://api.pushover.net/1/messages.json", [
-      "token" => $zwave_cloud_token,
-      "user" => "uE1LVvrmStam9R25Kqk2JQXvuHEB56",
-      "url" => "http://146.185.144.116:8080/private/20",
-      "title" => $title,
-      "priority" => $prio,
-      "message" => $msg,
-   ]) if defined $msg and defined $title;
-};
 
 1;

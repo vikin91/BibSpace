@@ -2,6 +2,7 @@
 % my $thisY = Time::Piece::localtime->strftime('%Y');
 % use Mojo::ByteStream 'b';
 
+<!-- Message bar -->
 % my $msg_f = flash 'msg';
 % my $msg_s = stash 'msg';
 % my $msg = undef;
@@ -21,7 +22,7 @@
     </div>
 %}
 
-
+<!-- End of Message bar -->
 
 
 

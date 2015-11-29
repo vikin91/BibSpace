@@ -16,6 +16,8 @@ our @ISA= qw( Exporter );
 # these are exported by default.
 our @EXPORT = qw( 
     create_main_db
+    prepare_token_table_mysql
+    prepare_user_table_mysql
     );
 
 
@@ -161,6 +163,77 @@ sub create_main_db{
     # $dbh->do("ALTER TABLE Entry ADD month TINYINT UNSIGNED DEFAULT 0 AFTER year");
     # $dbh->do("ALTER TABLE Entry ADD sort_month SMALLINT UNSIGNED DEFAULT 0 AFTER year");
 
+    $self->prepare_token_table_mysql($dbh);
+    $self->prepare_user_table_mysql($dbh);
+
 };
+
+####################################################################################################
+sub prepare_token_table_mysql{ 
+    my $self = shift;
+    my $user_dbh = shift;
+
+      $user_dbh->do("CREATE TABLE IF NOT EXISTS `Token`(
+        id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
+        token VARCHAR(250) NOT NULL,
+        email VARCHAR(250) NOT NULL,
+        requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT login_token_unique UNIQUE(token)
+      )");
+};
+####################################################################################################
+sub prepare_user_table_mysql{ 
+    my $self = shift;
+    my $user_dbh = shift;
+
+
+   $user_dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
+        id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
+        registration_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        login VARCHAR(250) NOT NULL,
+        real_name VARCHAR(250) DEFAULT 'unnamed',
+        email VARCHAR(250) NOT NULL,
+        pass VARCHAR(250) NOT NULL,
+        pass2 VARCHAR(250) NOT NULL,
+        pass3 VARCHAR(250),
+        rank INTEGER(3) DEFAULT 0,
+        master_id INTEGER(8) DEFAULT 0,
+        tennant_id INTEGER(8) DEFAULT 0,
+        CONSTRAINT login_unique UNIQUE(login)
+      )");
+
+   $self->prepare_token_table_mysql($user_dbh);
+
+};
+# ####################################################################################################
+# sub prepare_backup_table_sqlite{
+#     my $self = shift;
+#     my $user_dbh = shift;
+
+
+#    $user_dbh->do("CREATE TABLE IF NOT EXISTS Login(
+#         id INTEGER PRIMARY KEY,
+#         registration_time DATE DEFAULT (datetime('now','localtime')),
+#         last_login DATE DEFAULT (datetime('now','localtime')),
+#         login TEXT NOT NULL,
+#         real_name TEXT DEFAULT 'unnamed',
+#         email TEXT NOT NULL,
+#         pass TEXT NOT NULL,
+#         pass2 TEXT DEFAULT NULL,
+#         pass3 TEXT DEFAULT NULL,
+#         rank INTEGER DEFAULT 0,
+#         master_id INTEGER DEFAULT 0,
+#         tennant_id INTEGER DEFAULT 0,
+#         UNIQUE(login) ON CONFLICT IGNORE
+#       )");
+
+#       $user_dbh->do("CREATE TABLE IF NOT EXISTS Token(
+#         id INTEGER PRIMARY KEY,
+#         token TEXT NOT NULL,
+#         email TEXT NOT NULL,
+#         UNIQUE(token) ON CONFLICT IGNORE
+#       )");
+# };
 
 1;

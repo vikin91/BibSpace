@@ -59,6 +59,7 @@ has backup_db => sub {
 sub startup {
     my $self = shift;
     $self->app->plugin('InstallablePaths');
+    $self->app->plugin('RenderFile');
     my $address = Net::Address::IP::Local->public;
     # print $address;
 
@@ -185,11 +186,11 @@ sub startup {
 
     $anyone->get('/forgot')->to('login#forgot');
     $anyone->post('/forgot/gen')->to('login#post_gen_forgot_token');
-    $anyone->get('/forgot/reset/:token')->to('login#token_clicked');
+    $anyone->get('/forgot/reset/:token')->to('login#token_clicked')->name("token_clicked");
     $anyone->post('/forgot/store')->to('login#store_password');
     
 
-    $anyone->any('/login_form')->to('login#login_form')->name('login_form');
+    $anyone->get('/login_form')->to('login#login_form')->name('login_form');
     $anyone->post('/do_login')->to('login#login')->name('do_login');
     $anyone->get('/youneedtologin')->to('login#not_logged_in')->name('youneedtologin');
     $anyone->get('/badpassword')->to('login#bad_password')->name('badpassword');
@@ -200,13 +201,14 @@ sub startup {
     $anyone->any('/test/404')->to('display#test404');
 
     $anyone->get('/register')->to('login#register')->name('register');
-    $anyone->post('/register')->to('login#post_do_register');
+    $anyone->get('/register_dummy')->to('login#dummy')->name('dummy');
+    $anyone->post('/register')->to('login#post_do_register')->name('post_do_register');
     $anyone->any('/noregister')->to('login#register_disabled');
 
   
     my $logged_user = $anyone->under->to('login#check_is_logged_in');
-    my $manager = $logged_user->under->to('login#check_is_manager');
-    my $superadmin = $logged_user->under->to('login#check_is_admin');
+    my $manager = $logged_user->under->to('login#under_check_is_manager');
+    my $superadmin = $logged_user->under->to('login#under_check_is_admin');
 
 
     
@@ -313,6 +315,7 @@ sub startup {
     $logged_user->get('/publications-set')->to('publications#all_defined_by_set'); 
     # description of this function is included with the code
     # $anyone->get('/publications/special/:id')->to('publications#special_map_pdf_to_local_file'); # use with extreeme caution!
+    $superadmin->get('/publications/fix_urls')->to('publications#replace_urls_to_file_serving_function');
     # EXPERIMENTAL END
 
     $logged_user->get('/publications')->to('publications#all'); # logged_user icons!
@@ -327,6 +330,7 @@ sub startup {
     
     $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq'); 
     $logged_user->get('/publications/get/:id')->to('publications#single'); 
+    $logged_user->get('/publications/download/:filetype/:id')->to('publications#download')->name('download_publication'); 
 
     $logged_user->get('/publications/hide/:id')->to('publications#hide'); 
     $logged_user->get('/publications/unhide/:id')->to('publications#unhide'); 

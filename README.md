@@ -46,7 +46,7 @@ sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd \
  File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI \
  Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text::BibTeX HTML::TagCloud::Sortable DBD::mysql
 sudo cpanm -n Crypt::Random
-sudo cpanm Test::Differences Test::MockModule WWW::Mailgun
+sudo cpanm Test::Differences Test::MockModule WWW::Mailgun Mojolicious::Plugin::RenderFile
 
 sudo cpanm DBD::SQLite # will be obsolete soon, but still needed for backup functions
 

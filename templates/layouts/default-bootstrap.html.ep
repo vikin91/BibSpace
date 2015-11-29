@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html>
+    <!--default0boot-->
     %= include 'head-admin'
     <%= content_for 'header' %>
 
     <body>
+
+    %= include 'message_bar'
+    <%= content_for 'message_bar' %>
     
     <%= content %>
+
+
+
+
+
     %= include 'footer'
     <%= content_for 'footer' %>
 

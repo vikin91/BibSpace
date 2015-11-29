@@ -38,7 +38,7 @@ install:
     - cpanm --quiet --notest Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util 
     - cpanm --quiet --notest utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent 
     - cpanm --quiet --notest Net::Address::IP::Local Text::BibTeX HTML::TagCloud::Sortable Crypt::Random 
-    - cpanm --quiet --notest Test::Differences Test::MockModule WWW::Mailgun
+    - cpanm --quiet --notest Test::Differences Test::MockModule WWW::Mailgun Mojolicious::Plugin::RenderFile
     # - cpanm --quiet --notest --installdeps .
 
 before_script:

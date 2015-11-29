@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
+    <!--default-->
     %= include 'head-user'
     <%= content_for 'header' %>
 
     <body>
-    
+
+    %= include 'message_bar'
+    <%= content_for 'message_bar' %>
+
     <%= content %>
+
+
 
     %= include 'global_footer'
   </body>

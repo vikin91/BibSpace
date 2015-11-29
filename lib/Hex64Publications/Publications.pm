@@ -1062,17 +1062,82 @@ sub display_landing{
     $self->render(template => 'publications/landing_obj');
 }
 
+####################################################################################
+sub download {
+    my $self = shift;
+    my $id = $self->param('id');      # entry ID
+    my $filetype = $self->param('filetype') || 'paper';  # paper, slides
 
+    $self->write_log("Requesting download: filetype $filetype, id $id. ");
+
+
+
+    my $filequery = "";
+    my $directory = $self->app->static->paths->[0];
+
+    if($filetype eq 'paper'){
+        $filequery = "paper-".$id.".";
+        $directory .= "/uploads/papers/";
+    }
+    elsif($filetype eq 'slides'){
+        $filequery = "slides-paper-".$id.".";
+        $directory .= "uploads/slides/";
+    }
+    elsif($filetype eq 'other'){
+        $filequery = "unknown-".$id.".";
+        $directory .= "uploads/unknown/";
+    }
+    else{
+        $self->write_log("Wrong filetype $filetype, id $id. ");
+        $self->render(text => "File not found");
+    }
+
+    my $filename = undef;
+    # say "directory $directory";
+
+    opendir(DIR, $directory) or die $!;
+    while (my $file = readdir(DIR)) {
+
+        # Use a regular expression to ignore files beginning with a period
+        next if ($file =~ m/^\./);
+        say "file $file";
+        say "filequery $filequery";
+        if($file eq $filequery."pdf"){
+            $filename = $file;    
+            say "MATCH! $file";
+        }
+
+    }
+    closedir(DIR);
+
+    
+
+    if(!defined $filename){
+        $self->write_log("Unsuccesful download filetype $filetype, id $id. ");
+        $self->render(text => "File not found");
+        return;
+    }
+
+    my $path_to_serve = $directory.$filename;
+    say "Serving $path_to_serve";
+
+    # $self->res->headers->content_disposition("attachment; filename=downld.pdf");
+    # $self->reply->static($path_to_serve);
+
+    $self->write_log("Serving file $filename");
+    $self->render_file('filepath' => $path_to_serve,  'filename' => $filename);
+    # $self->render_static($path_to_serve);
+}
 ####################################################################################
 
 sub add_pdf {
 	say "CALL: add_pdf ";
     my $self = shift;
     my $id = $self->param('id');
-    my $back_url = $self->param('back_url') || '/publications';
-    # my $msg = $self->param('message') || '';
+    my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
-    $back_url = '/publications' if $back_url eq $self->req->url->to_abs;
+    $back_url = $self->get_back_url($back_url);
+    
 
     $self->write_log("Page: add pdf for paper id $id");
 
@@ -1172,7 +1237,11 @@ sub add_pdf_post{
         $uploaded_file->move_to("public/".$file_path); ### WORKS!!!
 
         ### TODO Feb 2015: move $self->req->url->base to a parameter!!
-        my $file_url = $self->req->url->base."/pa/".$file_path;
+        
+        my $base_url = $self->config->{base_url};
+        $base_url = "" if $self->config->{base_url} eq '/';
+        
+        my $file_url = $self->req->url->base.$base_url.$file_path;
 
         $self->write_log("Saving attachment for paper id $id under: $file_url");
 
@@ -1955,6 +2024,39 @@ sub clean_ugly_bibtex {
 
 
 
+
+####################################################################################
+
+## SPECIAL FUNCTION
+# replaces all bibtex entries to serve the /publications/donwload/type/id instaed of the file path
+
+sub replace_urls_to_file_serving_function{
+    say "CALL: replace_urls_to_file_serving_function";
+    my $self = shift;
+    my $dbh = $self->app->db;
+    
+    my $base_url = $self->config->{base_url};
+    $base_url = "" if $self->config->{base_url} eq '/';
+
+
+    my @all_entries = EntryObj->getAll($dbh);
+    
+    for my $e (@all_entries){
+        my $relative_url = $self->url_for('download_publication', filetype => 'paper', id => $e->{id});
+        my $url = $self->req->url->base.$base_url.$relative_url;
+
+        # check if the entry has pdf
+        if(has_bibtex_field($dbh, $e->{id}, "pdf")){
+            say "id $e->{id}, url: $url";
+            add_field_to_bibtex_code($dbh, $e->{id}, "pdf_test", $url);        
+        }
+
+        
+        # generate_html_for_id($dbh, $e->{id});
+    }
+
+    $self->render(text => 'ok');
+};
 
 ####################################################################################
 

@@ -1,8 +1,10 @@
 package Hex64Publications::Login;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
+use Hex64Publications::DB;
 use UserObj;
 
+use Data::Dumper;
 
 ####################################################################################
 # for _under_ -checking if user is logged in to access other pages
@@ -14,27 +16,44 @@ sub check_is_logged_in {
 }
 ####################################################################################
 # for _under_ -checking
-sub check_is_manager {
+sub under_check_is_manager {
     my $self = shift;
     my $dbh = $self->app->db;
-    my $rank = $self->users->get_rank($self->session('user'), $dbh);
-    return 1 if $rank > 0;
+
+    return 1 if self->check_is_manager();
 
 
     $self->render(text => 'Your need _manager_ rights to access this page.');
     return undef;
 }
+
+sub check_is_manager {
+    my $self = shift;
+    my $dbh = $self->app->db;
+    my $rank = $self->users->get_rank($self->session('user'), $dbh);
+    return 1 if $rank > 0;
+    return 0;
+
+}
 ####################################################################################
 # for _under_ -checking
+sub under_check_is_admin {
+    my $self = shift;
+    my $dbh = $self->app->db;
+
+    return 1 if self->check_is_admin();
+
+    $self->render(text => 'Your need _admin_ rights to access this page.');
+    return 0;
+}
+
 sub check_is_admin {
     my $self = shift;
     my $dbh = $self->app->db;
 
     my $rank = $self->users->get_rank($self->session('user'), $dbh);
     return 1 if $rank > 1;
-
-    $self->render(text => 'Your need _admin_ rights to access this page.');
-    return undef;
+    return 0;
 }
 
 ####################################################################################
@@ -177,13 +196,16 @@ sub post_gen_forgot_token {
     my $do_gen = 0;
     my $final_email = "";
 
+    # say "call: post_gen_forgot_token user $user, email $email";
+
+
     if($self->users->login_exists($user, $dbh)==1){
         $do_gen = 1;
         # get email of this user
         $final_email = $self->users->get_email_for_uname($user, $dbh);
         $self->write_log("Forgot: requesting new password for user $user");
     }
-    if($self->users->email_exists($email, $dbh)==1){
+    elsif($self->users->email_exists($email, $dbh)==1){
         $do_gen = 1;
         $final_email = $email;
     }
@@ -191,7 +213,6 @@ sub post_gen_forgot_token {
     $self->write_log("Forgot: requesting new password for email $email");
 
     if($do_gen == 1 and $final_email ne ""){
-
 
         my $token = $self->users->generate_token(); 
         $self->users->save_token_email($token, $final_email, $dbh);
@@ -215,6 +236,8 @@ sub token_clicked {
     my $token = $self->param('token');
     my $dbh = $self->app->db;
 
+    say "call: token_clicked";
+
     # verify if token exists
     # display form for setting new password. 
 
@@ -233,6 +256,7 @@ sub store_password {
 
     my $email = $self->users->get_email_for_token($token, $dbh); #get it out of the DB for the token
 
+    my $final_error=1;
 
     if($self->users->email_exists($email, $dbh) == 0){
 
@@ -259,16 +283,21 @@ sub store_password {
     }
     else{
         $self->flash(msg => 'Passwords are not same. Try again.', token => $token);
-        $self->stash(token => $token);
+        $self->stash(msg => 'Passwords are not same. Try again.', token => $token);
         $self->write_log("Forgot: Chnage failed. Passwords are not same.");
-        $self->render(template => 'login/set_new_password');    
-        return;
+        $final_error=0;
+        $self->redirect_to('token_clicked', token => $token);
+        # $self->render(template => 'login/set_new_password');    
+        # return;
     }
 
-    $self->users->remove_token($token, $dbh);
-    $self->write_log("Forgot: Chnage failed. Token deleted.");
-    $self->stash(msg => 'Something went wrong. The password has not been changed. The reset token is no longer valid. You need to request a new one by clicking in \'I forgot my password\'.');
-    $self->redirect_to('login_form');
+    
+    if($final_error==1){
+        $self->users->remove_token($token, $dbh);
+        $self->write_log("Forgot: Chnage failed. Token deleted.");
+        $self->stash(msg => 'Something went wrong. The password has not been changed. The reset token is no longer valid. You need to request a new one by clicking in \'I forgot my password\'.');
+        $self->redirect_to('login_form');
+    }
     # $self->render(template => 'login/index');
 }
 
@@ -349,9 +378,12 @@ sub logout {
 ####################################################################################
 sub register{
     my $self = shift;
-    my $config = $self->app->config;
-    my $can_register = $config->{registration_enabled};
-    my $dbh = $self->app->db;
+    my $can_register = $self->app->config->{registration_enabled};
+
+    # my $dbh = $self->app->db;
+
+    # say "call: register check_is_admin: ".$self->check_is_admin();
+    # say "call: register can_register : ".$can_register;
 
     
     if( (defined $self->check_is_admin() and $self->check_is_admin() == 1) or (defined $can_register and $can_register == 1) ){
@@ -381,11 +413,12 @@ sub post_do_register{
     my $config = $self->app->config;
     my $can_register = $config->{registration_enabled};
 
-    if( (!defined $self->check_is_admin() or $self->check_is_admin() == 0) and (!defined $can_register or $can_register == 0) ){
-        $self->redirect_to('/noregister');
-        return;
-    }
-    else{
+
+    # if( (!defined $self->check_is_admin() or $self->check_is_admin() == 0) and (!defined $can_register or $can_register == 0) ){
+    #     $self->redirect_to('/noregister');
+    #     return;
+    # }
+    # else{
         
         my $login = $self->param('login');
         my $name = $self->param('name');
@@ -393,10 +426,14 @@ sub post_do_register{
         my $password1 = $self->param('password1');
         my $password2 = $self->param('password2');
 
-        $self->write_log("Login: received registration data from login: $login, email: $email.");
+        my $s = "Login: received registration data from login: $login, email: $email.";
+        say "call: post_do_register: $s";
+        say "call: post_do_register: $s"." password1 $password1 password2 $password2";
+
+        $self->write_log($s);
 
 
-        if(defined $login and defined $email and defined $password1 and defined $password2){
+        if(defined $login and length($login)>0 and defined $email and length($email)>0 and defined $password1 and defined $password2){
 
             if(length($password1) == length($password2) and  $password2 eq $password1){
 
@@ -407,49 +444,55 @@ sub post_do_register{
                         # $self->stash(msg => "User created successfully! You may now login using login: $login.");
 
                         $self->flash(msg => "User created successfully! You may now login using login: $login.");
+                        $self->stash(msg => "User created successfully! You may now login using login: $login.");
                         $self->write_log("Login: registration successful for login: $login.");
                         $self->redirect_to('startpa');
-                        return;
+                        # return;
                     }
                     else{
                         # $self->stash(msg => "This login is already taken");
 
                         $self->flash(msg => "This login is already taken", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
+                        $self->stash(msg => "This login is already taken", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
                         $self->write_log("Login: registration unsuccessful for login: $login. Login taken.");
                         $self->redirect_to('register');
                         # $self->render(template => 'login/register');
-                        return;
+                        # return;
                     }
                 }
                 else{
                     # $self->stash(msg => "Password is too short");
+
                     
                     $self->flash(msg => "Password is too short, use minimum 4 symbols", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
+                    $self->stash(msg => "Password is too short, use minimum 4 symbols", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
                     $self->write_log("Login: registration unsuccessful for login: $login. Password too short.");
                     $self->redirect_to('register');
                     # $self->render(template => 'login/register');
-                    return;
+                    # return;
                 }
             }
             else{
                 # $self->stash(msg => "Passwords don't match!");
                 $self->flash(msg => "Passwords don't match!", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
+                $self->stash(msg => "Passwords don't match!", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
                 $self->write_log("Login: registration unsuccessful for login: $login. Passwords don't match");
                 $self->redirect_to('register');
                 # $self->render(template => 'login/register');
-                return;
+                # return;
             }
         }
         else{
             # $self->stash(msg => "Some input is missing!");
             $self->flash(msg => "Some input is missing!", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
+            $self->stash(msg => "Some input is missing!", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
             $self->write_log("Login: registration unsuccessful for login: $login. Input missing.");
-            $self->redirect_to('register');
+            $self->redirect_to('register', msg => "Some input is missing!", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
             # $self->render(template => 'login/register');
-            return;
+            # return;
         }
 
-    }
+    # }
 }
 
 1;

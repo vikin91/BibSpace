@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+    <!--default-admin-->
     %= include 'head'
     <%= content_for 'header' %>
 
