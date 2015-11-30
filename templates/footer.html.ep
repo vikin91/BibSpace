@@ -1,0 +1,12 @@
+<script>
+    $(function(){
+        $('a[data-toggle=tooltip]').tooltip({container: 'body'});
+        $('span[data-toggle=tooltip]').tooltip({container: 'body'});
+        $('div[data-toggle=tooltip]').tooltip({container: 'body'});
+        $('button[data-toggle=tooltip]').tooltip({container: 'body'});
+    });
+</script>
+
+
+
+

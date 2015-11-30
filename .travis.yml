@@ -1,0 +1,54 @@
+language: perl
+perl:
+    # - "blead"
+    # - "5.22"
+    - "5.20"
+    # - "5.18"
+    # - "5.16"
+    # - "5.14"
+    # - "5.12"
+    # - "5.10"
+services:
+  - mysql
+
+before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -y ocaml libbtparse-dev libdbd-mysql-perl
+    - bash install-bibtex2html.sh
+    - "sudo apt-get remove mysql-common mysql-server-5.5 mysql-server-core-5.5 mysql-client-5.5 mysql-client-core-5.5"
+    - "sudo apt-get autoremove"
+    - "sudo apt-get install libaio1"
+    - "wget -O mysql-5.6.14.deb http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-5.6.14-debian6.0-x86_64.deb/from/http://cdn.mysql.com/"
+    - "sudo dpkg -i mysql-5.6.14.deb"
+    - "sudo cp /opt/mysql/server-5.6/support-files/mysql.server /etc/init.d/mysql.server"
+    - "sudo ln -s /opt/mysql/server-5.6/bin/* /usr/bin/"
+    - "sudo sed -i'' 's/table_cache/table_open_cache/' /etc/mysql/my.cnf"
+    - "sudo sed -i'' 's/log_slow_queries/slow_query_log/' /etc/mysql/my.cnf"
+    - "sudo sed -i'' 's/basedir[^=]\\+=.*$/basedir = \\/opt\\/mysql\\/server-5.6/' /etc/mysql/my.cnf"
+    - "sudo /etc/init.d/mysql.server start"
+    - mysql -e "create database IF NOT EXISTS test;" -uroot
+    - echo "USE mysql;\nUPDATE user SET password=PASSWORD('password') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
+    - mv config/default.conf config/default.conf.bak
+    - cp config/testing.conf config/default.conf
+
+
+install:
+    - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
+    - cpanm --quiet --notest Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper 
+    - cpanm --quiet --notest Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util 
+    - cpanm --quiet --notest utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent 
+    - cpanm --quiet --notest Net::Address::IP::Local Text::BibTeX HTML::TagCloud::Sortable Crypt::Random 
+    - cpanm --quiet --notest Test::Differences Test::MockModule WWW::Mailgun Mojolicious::Plugin::RenderFile
+    # - cpanm --quiet --notest --installdeps .
+
+before_script:
+    - mysql --version
+    - mysql -e "SELECT VERSION();"
+
+sudo: true
+
+notifications:
+    email: true
+
+after_script:
+    - mv config/default.conf.bak config/default.conf
