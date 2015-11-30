@@ -49,8 +49,8 @@ sudo cpanm -n Text::BibTeX HTML::TagCloud::Sortable DBD::mysql
 sudo cpanm -n Crypt::Random
 sudo cpanm -n Test::Differences Test::MockModule WWW::Mailgun Mojolicious::Plugin::RenderFile
 
-Optionally:
-sudo cpanm -n Module::Build::CleanInstall Module::Build::Mojolicious
+Optionally for building package:
+sudo cpanm --notest Module::Build::CleanInstall Module::Build::Mojolicious
 
 sudo cpanm DBD::SQLite # will be obsolete soon, but still needed for backup functions
 
