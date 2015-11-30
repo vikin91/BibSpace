@@ -89,6 +89,7 @@ sub startup {
     }
 
     $self->create_main_db($self->app->db);
+    create_backup_table($self->app->db);
 
 
     $self->plugin('Hex64Publications::Helpers');
