@@ -42,11 +42,15 @@ mkdir backups
 curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
 
 ### Install Perl libraries
-sudo cpanm Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd \ 
- File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI \
- Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local Text::BibTeX HTML::TagCloud::Sortable DBD::mysql
+sudo cpanm -n Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd
+sudo cpanm -n  File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI
+sudo cpanm -n Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local 
+sudo cpanm -n Text::BibTeX HTML::TagCloud::Sortable DBD::mysql
 sudo cpanm -n Crypt::Random
-sudo cpanm Test::Differences Test::MockModule WWW::Mailgun Mojolicious::Plugin::RenderFile
+sudo cpanm -n Test::Differences Test::MockModule WWW::Mailgun Mojolicious::Plugin::RenderFile
+
+Optionally:
+sudo cpanm -n Module::Build::CleanInstall Module::Build::Mojolicious
 
 sudo cpanm DBD::SQLite # will be obsolete soon, but still needed for backup functions
 
