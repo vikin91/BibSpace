@@ -814,17 +814,16 @@ sub get_type_description{
 ################################################################################
 sub get_all_teams{
    my $dbh = shift;
-   
-   my $qry = "SELECT DISTINCT id, name FROM Team";
-   my $sth = $dbh->prepare( $qry );  
-   $sth->execute(); 
 
+   # todo: optimize it!!!
+   
+   my @all_teams = $dbh->resultset('Team')->all;
    my @teams;
    my @ids;
    
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $tid = $row->{id};
-      my $team = $row->{name};
+   for my $t(@all_teams){
+      my $tid = $t->id;
+      my $team = $t->name;
 
       push @teams, $team if defined $team;
       push @ids, $tid if defined $tid;

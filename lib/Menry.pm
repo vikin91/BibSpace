@@ -9,11 +9,12 @@ use Menry::Controller::Search;
 use Menry::Controller::BackupFunctions;
 use Menry::Controller::Publications;
 use Menry::Controller::Helpers;
+use Menry::Functions::MyUsers;
 
 use Net::Address::IP::Local;
 
 use Time::Piece;
-use MyUsers;
+
 use Data::Dumper;
 use POSIX qw/strftime/;
 
@@ -64,7 +65,7 @@ sub startup {
 
     $self->secrets( [$config->{key_cookie}] );
 
-    $self->helper(users => sub { state $users = MyUsers->new });
+    $self->helper(users => sub { state $users = Menry::Functions::MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
 
 

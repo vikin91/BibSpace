@@ -1,5 +1,6 @@
 package Menry::Functions::MyUsers;
 use Menry::Controller::DB;
+use Menry::Schema;
 
 use strict;
 use warnings;
@@ -20,9 +21,9 @@ sub new {
 };
 ####################################################################################################
 sub check {
+    print "call Menry::Functions::MyUsers check \n";
     my ($self, $user, $pass, $dbh) = @_;
 
-    $self->prepare_user_table_mysql($dbh);
     $self->insert_admin($dbh);
 
     my $hash_from_db = $self->get_user_hash($user, $dbh);
@@ -88,13 +89,16 @@ sub save_token_email{
 sub get_token_for_email {  #### FOR TESTING ONLY
     my $self = shift;
     my $email = shift; 
-    my $user_dbh = shift;
+    
+    my $rs = $self->app->db->resultset('Token');
 
-    my $sth = $user_dbh->prepare("SELECT token, email FROM Token WHERE email=?");
-    $sth->execute($email);
+    my $query_rs = $rs->search({ email => $email });
+    my $first = $query_rs->first;
+    my $found = $first->token || -1;
 
-    my $row = $sth->fetchrow_hashref();
-    return $row->{token} || -1;
+    print "call: get_token_for_email: found $found \n";
+
+    return $found;
 }
 ####################################################################################################
 sub remove_all_tokens_for_email{
@@ -166,25 +170,17 @@ sub get_registration_time{
 sub get_last_login{
     my $self = shift;
     my $login = shift; 
+    my $dbh = shift;
 
-    my $user_dbh = shift;
-    my $sth = $user_dbh->prepare("SELECT last_login FROM Login WHERE login=?");
-    $sth->execute($login);
-
-    my $row = $sth->fetchrow_hashref();
-    return $row->{last_login};
+    return $dbh->resultset('Login')->search({ login => $login })->first->last_login;
 };
 ####################################################################################################
 sub get_rank{
     my $self = shift;
     my $login = shift; 
-    my $user_dbh = shift;
+    my $dbh = shift;
 
-    my $sth = $user_dbh->prepare("SELECT rank FROM Login WHERE login=?");
-    $sth->execute($login);
-
-    my $row = $sth->fetchrow_hashref();
-    return $row->{rank} || 0;
+    return $dbh->resultset('Login')->search({ login => $login })->first->rank;
 };
 ####################################################################################################
 sub login_exists{
@@ -202,24 +198,19 @@ sub login_exists{
 sub email_exists{
     my $self = shift;
     my $email = shift; 
-    my $user_dbh = shift;
+    my $dbh = shift;
 
-    my $sth = $user_dbh->prepare("SELECT COUNT(*) AS num FROM Login WHERE email=?");
-    $sth->execute($email);
-    my $row = $sth->fetchrow_hashref();
-    my $num = $row->{num} || 0;
+    my $num = $dbh->resultset('Login')->search({ email => $email })->count;
     return $num>0;
+    
 };
 ####################################################################################################
 sub get_email_for_uname{
     my $self = shift;
     my $uname = shift; 
+    my $dbh = shift;
 
-    my $user_dbh = shift;
-    my $sth = $user_dbh->prepare("SELECT email FROM Login WHERE login=?");
-    $sth->execute($uname);
-    my $row = $sth->fetchrow_hashref();
-    return $row->{email};
+    return $dbh->resultset('Login')->search({ login => $uname })->first->email;
 };
 ####################################################################################################
 sub set_new_password{
@@ -276,69 +267,72 @@ sub add_new_user{
     my $name = shift || "unnamed"; 
     my $pass_plaintext = shift;
     my $rank = shift || "0"; 
-    my $user_dbh = shift;
 
-    if(defined $uname and length($uname)>1 and defined $email and length($email)>3 and defined $pass_plaintext and length($pass_plaintext)>3){
+    my $schema = shift; 
+
+    print "call Menry::Functions::MyUsers add_new_user \n";
+
+    if(defined $uname 
+        and length($uname)>1 
+        and defined $email 
+        and length($email)>3 
+        and defined $pass_plaintext 
+        and length($pass_plaintext)>3){
+
         my $salt = salt();
         my $hash = encrypt_password($pass_plaintext, $salt);
-
-
-        my $sth = $user_dbh->prepare("INSERT IGNORE INTO Login (login, email, pass, pass2, real_name, rank) VALUES (?,?,?,?,?,?)");
-        $sth->execute($uname, $email, $hash, $salt, $name, $rank);
+        
+        my $new_user = $schema->resultset('Login')->find_or_create({ 
+                                                    login => $uname,
+                                                    email => $email,
+                                                    pass => $hash,
+                                                    pass2 => $salt,
+                                                    real_name => $name,
+                                                    rank => $rank
+                                                    });
+        return $new_user->in_storage();
+        # $new_user->insert;
     }
+    return 0;
 };
 ####################################################################################################
 sub insert_admin{
     my $self = shift;
     my $dbh = shift;
+
+    print "call Menry::Functions::MyUsers insert_admin \n";
+
     $self->add_new_user("pub_admin", 'your_email@email.com', "Admin", "asdf", "3", $dbh);
 };
 ####################################################################################################
 sub get_user_hash{
     my $self = shift;
     my $login = shift;
-    my $user_dbh = shift;
-
-    
+    my $dbh = shift;
 
     return undef if !defined $login;
-
-    
-
-    my $sth = $user_dbh->prepare("SELECT login, pass FROM Login WHERE login=?");
-    $sth->execute($login);
-    my $row = $sth->fetchrow_hashref();
-    my $hash = $row->{pass};
-
-    return $hash;
+    return $dbh->resultset('Login')->search({ login => $login })->first->pass;
 };
 ####################################################################################################
 sub get_user_real_name{
     my $self = shift;
     my $login = shift;
-    my $user_dbh = shift;
+    my $dbh = shift;
+
     return undef if !defined $login;
-
-    
-
-    my $sth = $user_dbh->prepare("SELECT real_name FROM Login WHERE login=?");
-    $sth->execute($login);
-    my $row = $sth->fetchrow_hashref();
-    my $real_name = $row->{real_name};
-
-    return $real_name;
+    return $dbh->resultset('Login')->search({ login => $login })->first->real_name;
 }
 ####################################################################################################
 sub record_logging_in{
     my $self = shift;
     my $login = shift;
-    my $user_dbh = shift;
-    return undef if !defined $login;
-    
-    
+    my $dbh = shift;
 
-    my $sth = $user_dbh->prepare("UPDATE Login SET last_login=CURRENT_TIMESTAMP WHERE login=?");
-    $sth->execute($login);
+    return undef if !defined $login;
+  
+    my $row = $dbh->resultset('Login')->find({ login => $login });
+    $row->last_login(\"current_timestamp");
+    $row->update;
 };
 
 

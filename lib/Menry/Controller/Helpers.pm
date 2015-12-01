@@ -7,6 +7,7 @@ use Menry::Controller::BackupFunctions;
 use Menry::Functions::TagObj;
 use Menry::Functions::EntryObj;
 use Menry::Functions::TagTypeObj;
+use Menry::Schema;
 
 use Data::Dumper;
 use utf8;
@@ -89,21 +90,15 @@ sub register {
 
     $app->helper(num_pubs => sub {
         my $self = shift;
-
-        my $sth = $self->app->db->prepare( "SELECT COUNT(id) as num FROM Entry" );  
-        $sth->execute(); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
+        my $num = $self->app->db->resultset('Entry')->count;
         return $num; 
       });
 
     $app->helper(get_all_tag_types => sub {
         my $self = shift;
-        my $dbh = $self->app->db;
-        my @ttobjarr = TagTypeObj->getAll($dbh);
+
+        my @ttobjarr = $self->app->db->resultset('TagType')->all;
         return @ttobjarr;
-        
-        
       });
 
     $app->helper(get_tag_type_obj => sub {
@@ -143,20 +138,21 @@ sub register {
     $app->helper(num_authors => sub {
         my $self = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(DISTINCT(master_id)) as num FROM Author " );  
-        $sth->execute(); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
+        my $num = $self->app->db->resultset('Author')->search(
+          {}, 
+          {columns => [{ 'd_master_id' => { distinct => 'me.master_id' } }],}
+        )->count;
+
         return $num; 
       });
 
     $app->helper(num_visible_authors => sub {
         my $self = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(DISTINCT(master_id)) as num FROM Author WHERE display=1" );  
-        $sth->execute(); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
+        my $num = $self->app->db->resultset('Author')->search(
+          {'display' => 1}, 
+          {columns => [{ 'd_master_id' => { distinct => 'me.master_id' } }],}
+        )->count;
         return $num; 
       });
 
@@ -231,21 +227,14 @@ sub register {
         my $self = shift;
         my $type = shift || 1;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(id) as num FROM Tag WHERE type=?" );  
-        $sth->execute($type); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
-        return $num; 
+        return $self->app->db->resultset('Tag')->search({ type => $type })->count;
       });
 
     $app->helper(num_pubs_for_year => sub {
         my $self = shift;
         my $year = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(id) as num FROM Entry WHERE year=?" );  
-        $sth->execute($year); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
+        my $num = $self->app->db->resultset('Entry')->search({ year => $year })->count;
         return $num; 
       });
 
@@ -316,19 +305,23 @@ sub register {
     $app->helper(get_years_arr => sub {
         my $self = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT DISTINCT year
-                                        FROM Entry
-                                        LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
-                                        LEFT JOIN Author ON Author.master_id = Entry_to_Author.author_id 
-                                        WHERE Author.display = 1
-                                        AND Entry.hidden = 0
-                                        ORDER BY year DESC" );  
-        $sth->execute(); 
-        my @arr;
-        while(my $row = $sth->fetchrow_hashref()) {
-            my $yr = $row->{year};
-            push @arr, $yr;
-        }        
+        my @arr = $self->app->db->resultset('Entry')->search(
+            { 
+                'hidden' => 0,
+                'display' => 1
+            },
+            { 
+                join => {'entry_to_authors' => 'author'},
+                order_by  => [ 'year' ],
+                
+            }
+            );
+        # SELECT me.id, me.entry_type, me.bibtex_key, me.bibtex_type, me.bib, me.html, me.html_bib, me.abstract, me.title, me.hidden, me.year, me.month, me.sort_month, me.teams_str, me.people_str, me.tags_str, me.creation_time, me.modified_time, me.need_html_regen 
+        # FROM Entry me 
+        # LEFT JOIN Entry_to_Author entry_to_authors ON entry_to_authors.entry_id = me.id 
+        # LEFT JOIN Author author ON author.master_id = entry_to_authors.author_id 
+        # WHERE ( ( display = ? AND hidden = ? ) ) ORDER BY year: '1', '0'
+
         return @arr; 
       });
 
@@ -336,10 +329,8 @@ sub register {
         my $self = shift;
         my $mid = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(entry_id) as num FROM Entry_to_Author WHERE author_id=?" );  
-        $sth->execute($mid); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
+        my $num = $self->app->db->resultset('EntryToAuthor')->search({ author_id => $mid })->count;
+        # TODO: Checkme!
         return $num; 
       });
 
@@ -347,16 +338,15 @@ sub register {
         my $self = shift;
         my $eid = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT author_id FROM Entry_to_Author WHERE entry_id=?" );  
-        $sth->execute($eid); 
-
-        my @authors;
-        while(my $row = $sth->fetchrow_hashref()){
-            my $author_id = $row->{author_id};    
-            push @authors, $author_id;
+        my @authors = $self->app->db->resultset('EntryToAuthor')->search({ entry_id => $eid })->all;
+        # my $sth = $self->app->db->prepare( "SELECT author_id FROM Entry_to_Author WHERE entry_id=?" );  
+        # $sth->execute($eid); 
+        my @aids;
+        for my $a(@authors){
+            push @aids, $a->id;
         }
         
-        return @authors; 
+        return @aids; 
       });
 
     $app->helper(num_unhidden_pubs_for_tag => sub {
@@ -385,25 +375,34 @@ sub register {
     $app->helper(get_author_mids_arr => sub {
         my $self = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT DISTINCT master_id, master FROM Author WHERE display = 1 ORDER BY master ASC" );  
-        $sth->execute(); 
-        my @arr;
-        while(my $row = $sth->fetchrow_hashref()) {
-            my $mid = $row->{master_id};
-            push @arr, $mid;
-        }        
+        my @arr = $self->app->db->resultset('Author')->search(
+          {'display' => 1}, 
+          {
+            columns => [{ 'd_master_id' => { distinct => 'me.master_id' } }, 'master'],
+            order_by => { '-asc' => ['master'] },
+            }
+        )->all;
+
+
+        # TODO:: CHECK ME!!
+        for my $a (@arr){
+            print "\n".$a->master_id." \n";
+        }
+
+        # WAS: SELECT DISTINCT master_id, master FROM Author WHERE display = 1 ORDER BY master ASC
+
+            
         return @arr; 
       });
 
     $app->helper(get_master_for_id => sub {
         my $self = shift;
-        my $id = shift;
+        my $aid = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT master FROM Author WHERE id=?" );  
-        $sth->execute($id); 
-        my $row = $sth->fetchrow_hashref();
-        my $master = $row->{master};
-        return $master; 
+        my $row = $self->app->db->resultset('Author')->search({ id => $aid })->first;
+        return $row->master if defined $row;
+        return "undef";
+
       });
 
     $app->helper(get_first_letters => sub {

@@ -1,5 +1,12 @@
 package Menry::Controller::Publications;
 
+use Menry::Controller::Core;
+use Menry::Controller::Set;
+use Menry::Functions::EntryObj;
+use Menry::Functions::TagObj;
+use Menry::Schema;
+
+
 use Data::Dumper;
 use utf8;
 use Text::BibTeX; # parsing bib files
@@ -9,10 +16,6 @@ use Time::Piece;
 use 5.010; #because of ~~
 use strict;
 use warnings;
-use DBI;
-
-use Menry::Controller::Core;
-use Menry::Controller::Set;
 
 use Set::Scalar;
 
@@ -20,8 +23,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::UserAgent;
 use Mojo::Log;
-use EntryObj;
-use TagObj;
+
 
 
 ####################################################################################

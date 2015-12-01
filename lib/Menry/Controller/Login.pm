@@ -2,7 +2,7 @@ package Menry::Controller::Login;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Menry::Controller::DB;
-use Menry::UserObj;
+use Menry::Functions::UserObj;
 
 use Data::Dumper;
 
