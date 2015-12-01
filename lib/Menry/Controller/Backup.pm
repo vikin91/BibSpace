@@ -13,7 +13,7 @@ use DBI;
 use File::Copy qw(copy);
 
 use Menry::Controller::Core;
-use Menry::Controller::BackupFunctions;
+use Menry::Functions::BackupFunctions;
 use Menry::Controller::DB;
 
 use Mojo::Base 'Mojolicious::Controller';

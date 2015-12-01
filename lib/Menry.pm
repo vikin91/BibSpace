@@ -6,9 +6,10 @@ use Menry::Schema;
 use Menry::Controller::DB;
 use Menry::Controller::Core;
 use Menry::Controller::Search;
-use Menry::Controller::BackupFunctions;
 use Menry::Controller::Publications;
 use Menry::Controller::Helpers;
+
+use Menry::Functions::BackupFunctions;
 use Menry::Functions::MyUsers;
 
 use Net::Address::IP::Local;

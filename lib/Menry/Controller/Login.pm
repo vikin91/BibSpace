@@ -1,8 +1,10 @@
 package Menry::Controller::Login;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
+
 use Menry::Controller::DB;
-use Menry::Functions::UserObj;
+# use Menry::Functions::UserObj;
+package Menry::Functions::LoginFunctions;
 
 use Data::Dumper;
 
@@ -26,7 +28,7 @@ sub under_check_is_manager {
     $self->render(text => 'Your need _manager_ rights to access this page.');
     return undef;
 }
-
+####################################################################################
 sub check_is_manager {
     my $self = shift;
     my $dbh = $self->app->db;
@@ -46,7 +48,7 @@ sub under_check_is_admin {
     $self->render(text => 'Your need _admin_ rights to access this page.');
     return 0;
 }
-
+####################################################################################
 sub check_is_admin {
     my $self = shift;
     my $dbh = $self->app->db;

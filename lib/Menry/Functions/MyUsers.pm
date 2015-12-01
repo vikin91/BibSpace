@@ -8,6 +8,9 @@ use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64); # sudo cpanm Cr
 use Crypt::Random; # sudo cpanm Crypt::Random
 use LWP::UserAgent;
 use Session::Token;
+use WWW::Mailgun;
+
+use feature 'say';
 
 
 ####################################################################################################
@@ -52,7 +55,7 @@ sub send_email{
 
     my $subject = 'Publiste password reset';
 
-    use WWW::Mailgun;
+    
 
     my $mg = WWW::Mailgun->new({ 
         key => 'key-63d3ad88cb84764a78730eda3aee0973',
@@ -80,91 +83,71 @@ sub save_token_email{
     my $self = shift;
     my $token = shift; 
     my $email = shift; 
-    my $user_dbh = shift;
+    my $dbh = shift;
 
-    my $sth = $user_dbh->prepare("INSERT INTO Token (requested, email, token) VALUES (CURRENT_TIMESTAMP, ?,?)");
-    $sth->execute($email, $token);  
+    my $new_token = $dbh->resultset('Token')->find_or_create({ 
+                                                    requested => undef,
+                                                    email => $email,
+                                                    token => $token,
+                                                    });
+    return $new_token->in_storage();
 }
 ####################################################################################################
 sub get_token_for_email {  #### FOR TESTING ONLY
     my $self = shift;
     my $email = shift; 
-    
-    my $rs = $self->app->db->resultset('Token');
+    my $dbh = shift;
 
-    my $query_rs = $rs->search({ email => $email });
-    my $first = $query_rs->first;
-    my $found = $first->token || -1;
-
-    print "call: get_token_for_email: found $found \n";
-
-    return $found;
-}
+    return $dbh->resultset('Token')->search({ email => $email })->get_column('token')->first;
+};
 ####################################################################################################
 sub remove_all_tokens_for_email{
     my $self = shift;
     my $email = shift; 
-    my $user_dbh = shift;
+    my $dbh = shift;
 
-    my $sth = $user_dbh->prepare("DELETE FROM Token WHERE email=?");
-    $sth->execute($email);  
-}
+    return $dbh->resultset('Token')->search({ email => $email })->delete;
+};
 ####################################################################################################
 sub remove_token{
     my $self = shift;
     my $token = shift; 
-    my $user_dbh = shift;
+    my $dbh = shift;
 
-    my $sth = $user_dbh->prepare("DELETE FROM Token WHERE token=?");
-    $sth->execute($token);  
-}
+    return $dbh->resultset('Token')->search({ token => $token })->delete;
+};
 ####################################################################################################
 sub get_email_for_token{
     my $self = shift;
     my $token = shift; 
-    my $user_dbh = shift;
+    my $dbh = shift;
 
-    my $sth = $user_dbh->prepare("SELECT email FROM Token WHERE token=?");
-    $sth->execute($token);
-
-    my $row = $sth->fetchrow_hashref();
-    return $row->{email};
+    return $dbh->resultset('Token')->search({ token => $token })->get_column('email')->first;
 };
 ####################################################################################################
 sub get_login_for_id{
     my $self = shift;
     my $id = shift; 
-    my $user_dbh = shift;
+    my $dbh = shift;
 
-    my $sth = $user_dbh->prepare("SELECT login FROM Login WHERE id=?");
-    $sth->execute($id);
-
-    my $row = $sth->fetchrow_hashref();
-    return $row->{login} || 0;
+    my $u = $dbh->resultset('Login')->find({ id => $id });
+    return $u->login if defined $u;
+    return undef;
 };
 ####################################################################################################
 sub get_email{
     my $self = shift;
-    my $login = shift; 
+    say "!!! OBSOLETE !!! call Menry::Functions::MyUsers: get_email";
 
-    my $user_dbh = shift;
-    my $sth = $user_dbh->prepare("SELECT email FROM Login WHERE login=?");
-    $sth->execute($login);
-
-    my $row = $sth->fetchrow_hashref();
-    return $row->{email} || 0;
+    return $self->get_email_for_uname(shift, shift);
 };
 ####################################################################################################
 sub get_registration_time{
     my $self = shift;
     my $login = shift; 
+    my $dbh = shift;
 
-    my $user_dbh = shift;
-    my $sth = $user_dbh->prepare("SELECT registration_time FROM Login WHERE login=?");
-    $sth->execute($login);
-
-    my $row = $sth->fetchrow_hashref();
-    return $row->{registration_time};
+    return $dbh->resultset('Login')->search({ login => $login })->get_column('registration_time')->first;
 };
 ####################################################################################################
 sub get_last_login{
@@ -172,7 +155,7 @@ sub get_last_login{
     my $login = shift; 
     my $dbh = shift;
 
-    return $dbh->resultset('Login')->search({ login => $login })->first->last_login;
+    return $dbh->resultset('Login')->search({ login => $login })->get_column('last_login')->first;
 };
 ####################################################################################################
 sub get_rank{
@@ -180,18 +163,15 @@ sub get_rank{
     my $login = shift; 
     my $dbh = shift;
 
-    return $dbh->resultset('Login')->search({ login => $login })->first->rank;
+    return $dbh->resultset('Login')->search({ login => $login })->get_column('rank')->first;
 };
 ####################################################################################################
 sub login_exists{
     my $self = shift;
     my $uname = shift; 
-    my $user_dbh = shift;
+    my $dbh = shift;
 
-    my $sth = $user_dbh->prepare("SELECT COUNT(*) AS num FROM Login WHERE login=?");
-    $sth->execute($uname);
-    my $row = $sth->fetchrow_hashref();
-    my $num = $row->{num} || 0;
+    my $num = $dbh->resultset('Login')->search({ login => $uname })->count;
     return $num>0;
 };
 ####################################################################################################
@@ -210,22 +190,22 @@ sub get_email_for_uname{
     my $uname = shift; 
     my $dbh = shift;
 
-    return $dbh->resultset('Login')->search({ login => $uname })->first->email;
+    return $dbh->resultset('Login')->search({ login => $uname })->get_column('email')->first;
 };
 ####################################################################################################
 sub set_new_password{
     my $self = shift; 
     my $email = shift; 
     my $pass_plaintext = shift;
-    my $user_dbh = shift;
+    my $dbh = shift;
 
     if(defined $email and length($email)>3 and defined $pass_plaintext and length($pass_plaintext)>3){
         my $salt = salt();
         my $hash = encrypt_password($pass_plaintext, $salt);
 
-        my $sth = $user_dbh->prepare("UPDATE Login SET pass=?, pass2=? WHERE email=?");
-        $sth->execute($hash, $salt, $email);
-        return 1;
+        my $u = $dbh->resultset('Login')->search({ email => $email });
+        my $result = $u->update({pass => $hash, pass2 => $salt});
+        return 1 if defined $result;
     }
     return 0;
 };
@@ -236,12 +216,14 @@ sub do_delete_user{
     my $id = shift; 
     my $dbh = shift;
 
-    my $usr_obj = UserObj->new({id => $id});
-    $usr_obj->initFromDB($dbh);
+    my $user_rs = $dbh->resultset('Login')->find({ id => $id });
+    return undef if !defined $user_rs;
+
+    my $usr = $user_rs;
     
-    if($self->login_exists($usr_obj->{login}, $dbh) and !defined $usr_obj->is_admin()){
-        my $sth = $dbh->prepare("DELETE FROM Login WHERE id=?");
-        $sth->execute($id);    
+    if($self->login_exists($usr->login, $dbh)){ # and !defined $usr_obj->is_admin()){
+
+        return $dbh->resultset('Login')->search({ id => $id })->first->delete;
     }
 };
 
@@ -251,13 +233,9 @@ sub promote_to_manager{
     my $id = shift; 
     my $dbh = shift;
 
-    my $usr_obj = UserObj->new({id => $id});
-    $usr_obj->initFromDB($dbh);
-    
-    if($self->login_exists($usr_obj->{login}, $dbh) and !defined $usr_obj->is_admin()){
-        my $sth = $dbh->prepare("DELETE FROM Login WHERE id=?");
-        $sth->execute($id);    
-    }
+    my $u = $dbh->resultset('Login')->search({ id => $id });
+    my $result = $u->update({rank => 1});
+    return 1 if defined $result;
 };
 ####################################################################################################
 sub add_new_user{
@@ -302,7 +280,7 @@ sub insert_admin{
 
     print "call Menry::Functions::MyUsers insert_admin \n";
 
-    $self->add_new_user("pub_admin", 'your_email@email.com', "Admin", "asdf", "3", $dbh);
+    return $self->add_new_user("pub_admin", 'your_email@email.com', "Admin", "asdf", "3", $dbh);
 };
 ####################################################################################################
 sub get_user_hash{
@@ -311,7 +289,8 @@ sub get_user_hash{
     my $dbh = shift;
 
     return undef if !defined $login;
-    return $dbh->resultset('Login')->search({ login => $login })->first->pass;
+    return $dbh->resultset('Login')->search({ login => $login })->get_column('pass')->first;
+    # return $u->pass if defined $u;
 };
 ####################################################################################################
 sub get_user_real_name{
@@ -320,7 +299,7 @@ sub get_user_real_name{
     my $dbh = shift;
 
     return undef if !defined $login;
-    return $dbh->resultset('Login')->search({ login => $login })->first->real_name;
+    return $dbh->resultset('Login')->search({ login => $login })->get_column('real_name')->first;
 }
 ####################################################################################################
 sub record_logging_in{
@@ -329,10 +308,14 @@ sub record_logging_in{
     my $dbh = shift;
 
     return undef if !defined $login;
+
+    # my $u = $dbh->resultset('Login')->search({ email => $email });
+    #     my $result = $u->update({pass => $hash, pass2 => $salt});
+    #     return 1 if defined $result;
   
-    my $row = $dbh->resultset('Login')->find({ login => $login });
-    $row->last_login(\"current_timestamp");
-    $row->update;
+    my $row = $dbh->resultset('Login')->search({ login => $login });
+    return $row->update({last_login => \"current_timestamp"});
+    
 };
 
 

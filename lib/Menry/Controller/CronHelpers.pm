@@ -13,7 +13,7 @@ use File::Copy qw(copy);
 use Menry::Controller::Core;
 use Menry::Controller::Set;
 use Menry::Controller::Publications;
-use Menry::Controller::BackupFunctions;
+use Menry::Functions::BackupFunctions;
 
 use base 'Mojolicious::Plugin';
 sub register {

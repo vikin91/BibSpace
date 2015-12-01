@@ -1,4 +1,4 @@
-package Menry::Controller::BackupFunctions;
+package Menry::Functions::BackupFunctions;
 
 use Menry::Controller::DB;
 use Menry::Controller::Core;

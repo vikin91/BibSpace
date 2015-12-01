@@ -3,7 +3,7 @@ package Menry::Controller::Helpers;
 use Menry::Controller::Core;
 use Menry::Controller::Set;
 use Menry::Controller::Publications;
-use Menry::Controller::BackupFunctions;
+use Menry::Functions::BackupFunctions;
 use Menry::Functions::TagObj;
 use Menry::Functions::EntryObj;
 use Menry::Functions::TagTypeObj;
@@ -341,6 +341,13 @@ sub register {
         my @authors = $self->app->db->resultset('EntryToAuthor')->search({ entry_id => $eid })->all;
         # my $sth = $self->app->db->prepare( "SELECT author_id FROM Entry_to_Author WHERE entry_id=?" );  
         # $sth->execute($eid); 
+
+        say "We have a TODO in: helper(get_authors_of_entry";
+        # TODO: try this!
+        # Or, you can use the DBIx::Class::ResultSetColumn, which gets returned when you ask the ResultSet for a column using get_column:
+        # my $cost = $schema->resultset('Items')->get_column('Cost');
+        # my $tc = $cost->sum;
+
         my @aids;
         for my $a(@authors){
             push @aids, $a->id;
