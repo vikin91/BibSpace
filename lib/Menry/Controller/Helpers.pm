@@ -302,8 +302,14 @@ sub register {
         return scalar $set->members;
       });
 
+
+
     $app->helper(get_years_arr => sub {
         my $self = shift;
+
+        say "helper(get_years_arr";
+
+
 
         my @arr = $self->app->db->resultset('Entry')->search(
             { 
@@ -311,16 +317,11 @@ sub register {
                 'display' => 1
             },
             { 
-                join => {'entry_to_authors' => 'author'},
-                order_by  => [ 'year' ],
-                
+                join => {'entry_to_authors' => 'author'}, 
+                columns => [{ 'd_year' => { distinct => 'me.year' } }],
+                order_by => { '-desc' => ['year'] },
             }
-            );
-        # SELECT me.id, me.entry_type, me.bibtex_key, me.bibtex_type, me.bib, me.html, me.html_bib, me.abstract, me.title, me.hidden, me.year, me.month, me.sort_month, me.teams_str, me.people_str, me.tags_str, me.creation_time, me.modified_time, me.need_html_regen 
-        # FROM Entry me 
-        # LEFT JOIN Entry_to_Author entry_to_authors ON entry_to_authors.entry_id = me.id 
-        # LEFT JOIN Author author ON author.master_id = entry_to_authors.author_id 
-        # WHERE ( ( display = ? AND hidden = ? ) ) ORDER BY year: '1', '0'
+            )->get_column('d_year')->all;
 
         return @arr; 
       });
@@ -329,7 +330,13 @@ sub register {
         my $self = shift;
         my $mid = shift;
 
-        my $num = $self->app->db->resultset('EntryToAuthor')->search({ author_id => $mid })->count;
+        # my $num = $self->app->db->resultset('EntryToAuthor')->search({ author_id => $mid })->count;
+        my $num = $self->app->db->resultset('Entry')->search(
+            {},
+            { 
+                join => {'entry_to_authors' => 'author'}, 
+            }
+            )->count;
         # TODO: Checkme!
         return $num; 
       });
@@ -339,6 +346,8 @@ sub register {
         my $eid = shift;
 
         my @authors = $self->app->db->resultset('EntryToAuthor')->search({ entry_id => $eid })->all;
+
+        my @aids = $self->app->db->resultset('EntryToAuthor')->search({ entry_id => $eid })->get_column('d_year')->all;
         # my $sth = $self->app->db->prepare( "SELECT author_id FROM Entry_to_Author WHERE entry_id=?" );  
         # $sth->execute($eid); 
 
@@ -348,10 +357,10 @@ sub register {
         # my $cost = $schema->resultset('Items')->get_column('Cost');
         # my $tc = $cost->sum;
 
-        my @aids;
-        for my $a(@authors){
-            push @aids, $a->id;
-        }
+        # my @aids;
+        # for my $a(@authors){
+        #     push @aids, $a->id;
+        # }
         
         return @aids; 
       });
@@ -382,19 +391,24 @@ sub register {
     $app->helper(get_author_mids_arr => sub {
         my $self = shift;
 
-        my @arr = $self->app->db->resultset('Author')->search(
+        my @rs = $self->app->db->resultset('Author')->search(
           {'display' => 1}, 
           {
-            columns => [{ 'd_master_id' => { distinct => 'me.master_id' } }, 'master'],
+            columns => [{ 'distinct_master_id' => { distinct => 'me.master_id' }}, 'id', 'master', 'display'],
             order_by => { '-asc' => ['master'] },
             }
         )->all;
 
 
-        # TODO:: CHECK ME!!
-        for my $a (@arr){
-            print "\n".$a->master_id." \n";
-        }
+        # SELECT DISTINCT( me.master_id ), me.master, me.display 
+        # FROM Author me 
+        # WHERE ( display = ? ) ORDER BY master ASC: '1'
+
+        # print Dumper($rs);
+
+        my @arr = $rs[0]->get_column('id');
+
+        print Dumper(\@arr);
 
         # WAS: SELECT DISTINCT master_id, master FROM Author WHERE display = 1 ORDER BY master ASC
 

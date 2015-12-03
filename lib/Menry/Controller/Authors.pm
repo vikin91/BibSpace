@@ -152,41 +152,55 @@ sub edit_author {
    my $self = shift;
    my $id = $self->param('id');
    my $back_url = $self->param('back_url') || "/publications";
-
    my $dbh = $self->app->db;
-   my $master = get_master_for_id($dbh, $id);
+
+   my $a = $dbh->resultset('Author')->search({'display' => 1, id => $id})->first;
+   my @uids = $dbh->resultset('Author')->search({master_id => $id})->get_column('uid')->all;
+   my @aids = $dbh->resultset('Author')->search({master_id => $id})->get_column('id')->all;
+
+   my $master = $a->master;
+   my $disp = $a->display;
+
 
    $self->write_log("edit_author: master: $master. id: $id.");
 
-   my @uids;
-   my @aids;
-
-   my $qry = "SELECT master, uid, id, display
-               FROM Author 
-               WHERE master_id=?";
-   my $sth = $dbh->prepare( $qry );  
-   $sth->execute($id); 
-
-   my $disp = 0;
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $uid = $row->{uid} || "no_id";
-      my $aid = $row->{id} || "-1";
-      $disp = 1 if $row->{display} == 1;
-      push @uids, $uid;
-      push @aids, $aid;
-   }
-
-   my ($all_teams_arr, $all_teams_ids_arr) = get_all_teams($dbh);
-
-   my ($teams_arr, $start_arr, $stop_arr, $team_id_arr) = get_teams_of_author($self, $id);
-
-   my ($tag_ids_arr_ref, $tags_arr_ref) = get_tags_for_author($self, $id);
 
 
-   $self->stash(master  => $master, id => $id, uids => \@uids, aids => \@aids, disp => $disp, 
-                teams => $teams_arr, team_ids => $team_id_arr, start_arr => $start_arr, stop_arr => $stop_arr, back_url => $back_url, exit_code => '',
-                tag_ids => $tag_ids_arr_ref, tags => $tags_arr_ref,
-                all_teams => $all_teams_arr, all_teams_ids => $all_teams_ids_arr);
+
+   my $teams_a = $self->app->db->resultset('AuthorToTeam')->search(
+            {'author_id' => $id},
+            { 
+                join => {'team' }, 
+            }
+            );
+
+
+
+   my (@tag_ids_arr_ref, @tags_arr_ref) = (('1'), ('undef'));#get_tags_for_author($self, $id);
+
+# say "master ".Dumper($master);
+# say "id ".Dumper($id);
+# say "uids ".Dumper(\@$uids);
+# say "aids ".Dumper(\@aids);
+# say "disp ".Dumper($disp);
+# say "teams ".Dumper(\@teams);
+# say "team_ids ".Dumper(\@team_ids);
+# say "start_arr ".Dumper(\@start_arr);
+# say "stop_arr ".Dumper(\@stop_arr);
+# say "tag_ids ".Dumper(\@tag_ids);
+# say "tags ".Dumper(\@tags);
+# say "all_teams ".Dumper(\@all_teams);
+# say "all_teams_ids ".Dumper(\@all_teams_ids);
+    
+    my @a2t = $teams_a->all;
+    my @teams = $dbh->resultset('Team')->all;
+
+   $self->stash(author => $a, a2t => \@a2t, teams => \@teams, aids => \@aids, uids => \@uids, back_url => $back_url, exit_code => '');
+
+   # $self->stash(master  => $master, id => $id, uids => \@uids, aids => \@aids, disp => $disp, 
+   #              teams => \@teams_arr, team_ids => \@team_id_arr, start_arr => \@start_arr, stop_arr =>\@stop_arr, back_url => $back_url, exit_code => '',
+   #              tag_ids => \@tag_ids_arr_ref, tags => \@tags_arr_ref,
+   #              all_teams => \@all_teams_arr, all_teams_ids => \@all_teams_ids_arr);
    $self->render(template => 'authors/edit_author');
 }
 ##############################################################################################################

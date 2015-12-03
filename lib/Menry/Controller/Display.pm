@@ -6,10 +6,8 @@ use Text::BibTeX; # parsing bib files
 use DateTime;
 use File::Slurp;
 use Time::Piece;
-use 5.010; #because of ~~
 use strict;
 use warnings;
-use DBI;
 
 use Mojo::Base 'Mojolicious::Controller';
 

@@ -289,16 +289,18 @@
         <li>
             <a href='/backup<%=backurl($self)%>'><i class="fa fa-hdd-o"></i><span> Manage backups</span></a>
         </li>
+        % if(is_admin()){
         <li>
-            <a href='/cron'>
+            <a href=<%=url_for('/cron')%>>
                 <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Show cron tasks 
             </a>
         </li>
         <li>
-            <a href='/log?num=100&back_url=<%=backurl_short%>'>
+            <a href=<%=url_for('/log')->query(num => '100', back_url => backurl_short)%> >
                 <i class="fa fa-list-ol"></i> Show log
             </a>
         </li>
+        % }
   </ul>
 </div>
 
