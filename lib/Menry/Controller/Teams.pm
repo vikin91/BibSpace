@@ -17,29 +17,13 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 ################################################################################################################
 
 sub show {
-   my $self = shift;
-   my $dbh = $self->app->db;
-   
-   my $sth = $dbh->prepare( "SELECT id, name, parent FROM Team
-         ORDER BY name ASC" );  
-   $sth->execute(); 
+    my $self = shift;
+    my $dbh = $self->app->db;
 
-   my @teams;
-   my @ids;
+    my @teams = $dbh->resultset('Team')->all;
 
-   my $i = 1;
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $team = $row->{name} || "noname-team";
-      my $id = $row->{id};
-
-      push @teams, $team;
-      push @ids, $id;
-      $i++;
-   }
-   
-   
-   $self->stash(teams_arr  => \@teams, ids_arr  => \@ids);
-   $self->render(template => 'teams/teams', layout => 'admin');
+    $self->stash(teams  => \@teams);
+    $self->render(template => 'teams/teams', layout => 'admin');
  };
 
 ################################################################################################################
@@ -64,23 +48,18 @@ sub add_team_post {
     my $new_team = $self->param('new_team');
 
     if(defined $new_team){
-        my $existing_team = get_team_id($dbh, $new_team);
-        if($existing_team == -1){
-            
-            my $sth = $dbh->prepare('INSERT INTO Team(name) VALUES(?)');
-            $sth->execute($new_team);    
 
-            my $teamid = $dbh->last_insert_id(undef, undef, 'Team', 'id');
+        my $num = $dbh->resultset('Team')->search({name => $new_team})->count;
+        if($num == 0){
 
-            if(!defined $teamid){
-                $self->flash(msg => "Something went wrong. The Team $new_team has not beed added");
-                $self->redirect_to('/teams/add');
-                return;
-            }
-            
-            $self->write_log("add new team: Added new team with proposed name ($new_team). Team id is $teamid.");
+            my $new_team = $dbh->resultset('Team')->find_or_create({ 
+                                        name => $new_team,
+                                        });
 
-            $self->redirect_to('/teams/edit/'.$teamid); 
+
+            $self->write_log("add new team: Added new team with proposed name ($new_team). Team id is ".$new_team->id);
+
+            $self->redirect_to('/teams/edit/'.$new_team->id); 
             return;
             
         }
@@ -166,7 +145,13 @@ sub edit {
 
     # TODO: Implement me!!
 
-    return team_members($self);
+    # return team_members($self);
+       my $qry = "SELECT DISTINCT (author_id), start, stop
+            FROM Author_to_Team 
+            JOIN Author 
+            ON Author.master_id = Author_to_Team.author_id
+            WHERE team_id=?
+            ORDER BY display DESC";#, uid ASC";
 
     $self->redirect_to('/teams');
 }

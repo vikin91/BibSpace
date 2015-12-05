@@ -2,12 +2,7 @@
 % use Mojo::ByteStream 'b';
 
 
-% # author 
-% my @a2t = @$a2t;
-% my @teams = @$teams;
-% my @aids = @$aids;
-% my @uids = @$uids;
-% my $master = $a->master;
+% my $master = $author->master;
 
 
 
@@ -40,8 +35,8 @@
         <div class="col-lg-8 col-md-8 col-xs-8">
             % my @ttobjs = get_all_tag_types($self);
             % foreach my $ttobj (@ttobjs){
-                <a class="btn btn-default" href="/publications/untagged/<%= $id %>/<%=$ttobj->{id}%>">
-                    <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without <%=$ttobj->{name}%>
+                <a class="btn btn-default" href="/publications/untagged/<%= $id %>/<%=$ttobj->id%>">
+                    <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without <%=$ttobj->name%>
                 </a>
             % }
         </div>
@@ -86,16 +81,16 @@
       <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-user"></span> User IDs</span>
     </div>
     <div class="col-lg-4 col-md-4 col-xs-4">
-        % my $i = 0;
-        % for my $uid (@$uids){
-            % my $aid = $author_ids[$i];
+        % my @authors = $author->authors->all;
+
+        % for my $au (@authors){
+            
             <div class="btn-group">
-              <button type="button" class="btn btn-default"><%= $uid %> <span class="glyphicon glyphicon-barcode"></span> <%=$aid%></button>
-              %if($aid != $id){
-                  <a class="btn btn-default" href='/authors/<%=$id%>/remove_uid/<%= $aid %><%=backurl($self)%>'><span style="color: white">|</span><span class="glyphicon glyphicon-minus" style="color: red;"></span></a>
+              <button type="button" class="btn btn-default"><%= $au->uid %> <span class="glyphicon glyphicon-barcode"></span> <%=$au->id%></button>
+              %if($au->id != $author->id){
+                  <a class="btn btn-default" href='/authors/<%=$author->id%>/remove_uid/<%= $au->id %><%=backurl($self)%>'><span style="color: white">|</span><span class="glyphicon glyphicon-minus" style="color: red;"></span></a>
               %}
             </div>
-            % $i++;
         %}
         <form class="form-horizontal" role="form" method="POST" action="/authors/edit">
           <div class="input-group">
@@ -121,7 +116,7 @@
         <div class="col-lg-4 col-md-4 col-xs-4">
             <a href="/authors/toggle_visibility/<%=$id%><%=backurl($self)%>">
             <div class="btn-group" data-toggle="tooltip" data-placement="bottom" title="Toggle visibility">
-            % if ($disp eq '1'){
+            % if ($author->display eq '1'){
               <span class="btn btn-success active"><span class="glyphicon glyphicon-eye-open"></span></span>
               <span class="btn btn-success"><span class="glyphicon glyphicon-eye-close"></span></span>
             %}
@@ -143,55 +138,56 @@
           <span href ="#" class="btn btn-default pull-right" title=""><i class="fa fa-users"></i> Teams membership</span>
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            % my $j=0;
             <table class="table-condensed">
 
-            %foreach my $team (@$teams){
-            %   my $team_id = $team_ids[$j];  
+            % my @a_t_teams = $author->author_to_teams;
+
+            % foreach my $a2t (@a_t_teams){
+            % my $team = $a2t->team;
             <tr>
                 <td>
                     <div class="btn-group pull-right">
-                        <a type="button" class="btn btn-default" href="/teams/edit/<%=$team_id%><%=backurl($self)%>">
-                            <i class="fa fa-users" style="color: #5CB85C;"></i> <%= $team %>  <i class="fa fa-external-link"></i>
+                        <a type="button" class="btn btn-default" href="/teams/edit/<%=$team->id%><%=backurl($self)%>">
+                            <i class="fa fa-users" style="color: #5CB85C;"></i> <%= $team->name %>  <i class="fa fa-external-link"></i>
                         </a>
-                        <a class="btn btn-default" href='/authors/<%=$id%>/remove_from_team/<%= $team_id %><%=backurl($self)%>'  data-toggle="tooltip" data-placement="bottom" title="Remove from team"><span class="glyphicon glyphicon-minus" style="color: red;"></span> <span style="color: white">|</span></a>
+                        <a class="btn btn-default" href='/authors/<%=$id%>/remove_from_team/<%= $team->id %><%=backurl($self)%>'  data-toggle="tooltip" data-placement="bottom" title="Remove from team"><span class="glyphicon glyphicon-minus" style="color: red;"></span> <span style="color: white">|</span></a>
                     </div>
                 </td>
                 <td>
                     
-                    <a href="#modal-dialog-dates-team-<%=$team_id%>-author-<%=$id%>" data-toggle="modal">
+                    <a href="#modal-dialog-dates-team-<%=$team->id %>-author-<%=$author->id%>" data-toggle="modal">
                         <div data-toggle="tooltip" data-placement="right" title="Click to edit">
                             <div class="btn-group pull-right">
                                 <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Joined the group in year">
-                                    <i class="fa fa-sun-o"></i> <%= $start_a[$j] %>
+                                    <i class="fa fa-sun-o"></i> <%= $a2t->start %>
                                 </span>
                                 <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Left the group in year">
-                                    <i class="fa fa-moon-o"></i> <%= $stop_a[$j] || b('&#8734;') %>
+                                    <i class="fa fa-moon-o"></i> <%= $a2t->stop || b('&#8734;') %>
                                 </span>
                             </div>
                         </div>
                     </a>
 
                     <!-- MODAL DIALOG FOR EDIT DATES OF MEMBERSHIP -->
-                    <div id="modal-dialog-dates-team-<%=$team_id%>-author-<%=$id%>" class="modal">
+                    <div id="modal-dialog-dates-team-<%=$team->id%>-author-<%=$author->id%>" class="modal">
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
-                                    <h4>Edit membership dates of <strong><%= $master %></strong> in team <strong><%= $team %></strong>.</h4>
+                                    <h4>Edit membership dates of <strong><%= $master %></strong> in team <strong><%= $team->name %></strong>.</h4>
                                 </div>
                                 <div class="modal-body">
 
                                     <form class="form-inline" role="form" method="POST" action="/authors/edit_membership_dates">
                                         <div class="form-group">
-                                            <input type="hidden" name="tid" value="<%= $team_id %>"></input>
-                                            <input type="hidden" name="aid" value="<%= $id %>"></input>
+                                            <input type="hidden" name="tid" value="<%= $team->id %>"></input>
+                                            <input type="hidden" name="aid" value="<%= $author->id %>"></input>
                                             <div class="input-group input-group-lg">
                                                 <span class="input-group-addon"><i class="fa fa-sun-o"></i></span>
-                                                <input class="form-control" type="text" name="new_start" placeholder="new_start" value="<%= $start_a[$j] %>"></input>
+                                                <input class="form-control" type="text" name="new_start" placeholder="new_start" value="<%= $a2t->start %>"></input>
                                             </div>
                                             <div class="input-group input-group-lg">
-                                                <input class="form-control" type="text" name="new_stop" placeholder="New stop. Type 0 for infinity" value="<%= $stop_a[$j] %>"></input>
+                                                <input class="form-control" type="text" name="new_stop" placeholder="New stop. Type 0 for infinity" value="<%= $a2t->stop %>"></input>
                                                 <span class="input-group-addon"><i class="fa fa-moon-o"></i></span>
                                             </div>
                                         </div>
@@ -209,11 +205,11 @@
                 </td>
                 <td>
                     <a class="btn btn-default" href="/publications?author=<%= $master %>&team=<%= $team %>">
-                        Show  <span class="badge"><%= num_pubs_for_author_and_team($id, $team_id)%> <i class="fa fa-files-o"></i></span> of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i> 
+                        Show  <span class="badge"> XXX <%= num_pubs_for_author_and_team($author->id, $team->id)%>
+                        <i class="fa fa-files-o"></i></span> of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i> 
                     </a>
                 </td>
             </tr>
-              % $j++;
             %}
             </table>
         </div>
@@ -230,15 +226,14 @@
         </div>
         <div class="col-lg-6 col-md-6 col-xs-6">
             % my $jj = 0;
-            % foreach my $team (@all_teams){
-            %   my $team_id = $all_teams_ids[$jj];  
+            % foreach my $team (@$all_teams){
                 <div class="btn-group">
-                    <a type="button" class="btn btn-default btn-sm" href="/teams/edit/<%=$team_id%><%=backurl($self)%>">
+                    <a type="button" class="btn btn-default btn-sm" href="/teams/edit/<%= $team->id %><%=backurl($self)%>">
                         <span style="color: gray">
-                            <i class="fa fa-users"></i> <%= $team %>  <i class="fa fa-external-link"></i>
+                            <i class="fa fa-users"></i> <%= $team->name %>  <i class="fa fa-external-link"></i>
                         </span>
                     </a>
-                  <a class="btn btn-default btn-sm" href='/authors/<%=$id%>/add_to_team/<%= $team_id %><%=backurl($self)%>'><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span style="color: white">|</span></a>
+                  <a class="btn btn-default btn-sm" href='/authors/<%=$author->id%>/add_to_team/<%= $team->id %><%=backurl($self)%>'><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span style="color: white">|</span></a>
               </div>
                 % $jj++;
             % }
@@ -247,7 +242,7 @@
 
     <hr>
 
-    <div class="row">
+<!--     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
           <span href ="#" class="btn btn-default pull-right" title=""><i class="fa fa-tags"></i> Has papers with tags</span>
         </div>
@@ -267,7 +262,7 @@
               % $k++;
             %}
         </div>
-    </div> 
+    </div>  -->
 
     <hr>
 

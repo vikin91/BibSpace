@@ -25,71 +25,60 @@ sub show {
     my $search = $self->param('search') || '%';
     my $letter = $self->param('letter') || '%';
 
-   if($letter ne '%'){
+    if($letter ne '%'){
       $letter.='%';
-   }
-   if($search ne '%'){
+    }
+    if($search ne '%'){
       $search = '%'.$search;
       $search.='%';
-   }
+    }
 
-    my @params;
-    #my $qry = "SELECT master_id, id, master, display, substr(master, 0, 2) AS let FROM Author WHERE master IS NOT NULL ";
-    # my $qry = "SELECT master_id, id, master, display FROM Author WHERE master IS NOT NULL ";
-    my $qry = "SELECT master_id, id, master, display FROM Author WHERE id=master_id AND master IS NOT NULL ";
+    my @uinq_master_id = $dbh->resultset('Author')->search(
+        {'master_id' => {'!=', undef}},
+        {columns => [{ 'd_master_id' => { distinct => 'me.master_id' } }],}
+        )->get_column('d_master_id')->all;
+
+    print Dumper(\@uinq_master_id);
+    
+    my @authors;
+    my $ars = $dbh->resultset('Author')->search_rs({id => {'in' => \@uinq_master_id}});
+
+    @authors = $ars->all;
+
+    for my $a (@authors){
+        say $a->uid;#get_column('uid');
+    }
 
     if(defined $visible and $visible eq '1'){
-        $qry .= "AND display=1 ";
+        $ars = $ars->search_rs({'display' => 1});
     }
     if(defined $search and $search ne '%'){
-      push @params, $search;
-      $qry .= "AND master LIKE ? ";
+        $ars = $ars->search_rs({ 'master' => { like => $search } });
     }
     elsif(defined $letter and $letter ne '%'){
-      push @params, $letter;
-      # $qry .= "AND let LIKE ? ";
-      $qry .= "AND substr(master, 1, 1) LIKE ? "; # mysql
-      
+        $ars = $ars->search_rs({ 'master' => { like => $letter } });
     }
-    # $qry .= "GROUP BY master_id ORDER BY display DESC, master ASC";
-    $qry .= "ORDER BY display DESC, master ASC";
+    @authors = $ars->all;
+
+
+
+
+    my @letters = $dbh->resultset('Author')->search(
+        {},
+        {
+          columns => [{ 'd_letter' => { distinct => { SUBSTR => 'master, 1, 1' } } }],
+        }
+    )->get_column('d_letter')->all;
+
 
     $self->write_log("Show authors: visible $visible, letter $letter, search $search");
-
-    my $sth = $dbh->prepare_cached( $qry );  
-    $sth->execute(@params); 
-
+    say "Show authors: visible $visible, letter $letter, search $search";
    
-   my @autorzy_id_arr;
-   my @autorzy_names_arr;
-   my %autorzy_display;
 
-   my $i = 1;
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $master = $row->{master} || "000 This author has no master_id!" . "<BR>";
+   # get_set_of_first_letters($self, $visible);
 
 
-      # my $disp = $row->{display} || "0";
-
-      my $master_id = $row->{master_id};
-      my $id = $row->{id};
-      $master_id = $id if !defined $master_id;
-
-      # my $id = get_author_id_for_master($dbh, $master);
-      my $mid = $master_id; #get_master_id_for_master($dbh, $master);
-
-      my $disp = get_visibility_for_id($self, $mid);      
-
-      push @autorzy_id_arr, $mid;
-      push @autorzy_names_arr, $master;
-
-      $autorzy_display{$mid} = $disp;
-      $i++;
-   }
-
-   
-   my @letters = get_set_of_first_letters($self, $visible);
-   $self->stash(visible => $visible, names_arr  => \@autorzy_names_arr, disp => \%autorzy_display, letters => \@letters, ids_arr => \@autorzy_id_arr);
+   $self->stash(visible => $visible, authors  => \@authors, letters => \@letters);
 
    $self->render(template => 'authors/authors');
  }
@@ -114,35 +103,38 @@ sub add_post {
 
      
      if(defined $new_master){
+        my $num = $dbh->resultset('Author')->search({'uid' => $new_master})->count;
+        say "num authors with $new_master = $num";
+        if($num == 0){
 
-          my $existing_author = get_master_id_for_uid($dbh, $new_master);
-          if($existing_author == -1){
+          # my $sth = $dbh->prepare('INSERT INTO Author(uid, master) VALUES(?, ?)');
+          # $sth->execute($new_master, $new_master);
+          # my $aid = $dbh->last_insert_id(undef, undef, 'Author', 'id');
 
-              my $sth = $dbh->prepare('INSERT INTO Author(uid, master) VALUES(?, ?)');
-              $sth->execute($new_master, $new_master);
-              my $aid = $dbh->last_insert_id(undef, undef, 'Author', 'id');
+          my $new_user = $dbh->resultset('Author')->find_or_create({ 
+                                        uid => $new_master,
+                                        master => $new_master,
+                                        display => 1,
+                                        });
+
+          # my $a = $dbh->resultset('Author')->find({ 'master' => $new_master})->first;
+          $new_user->update({'master_id' => $new_user->id});
 
 
-              my $sth2 = $dbh->prepare('UPDATE Author SET master_id=?, display=1 WHERE id=?');
-              $sth2->execute($aid, $aid);
+          # my $sth2 = $dbh->prepare('UPDATE Author SET master_id=?, display=1 WHERE id=?');
+          # $sth2->execute($aid, $aid);
 
-              if(!defined $aid){
-                  $self->flash(msg => "Something went wrong. The Author has not beed added");
-                  $self->redirect_to('/authors/add');
-                  return;
-              }
+          $self->write_log("add new author: Added new author with proposed master ($new_master). Author id is ".$new_user->id);
 
-              $self->write_log("add new author: Added new author with proposed master ($new_master). Author id is $aid.");
-
-              $self->redirect_to('/authors/edit/'.$aid); 
-              return;
-          }
-          else{
+          $self->redirect_to('/authors/edit/'.$new_user->id); 
+          return;
+        }
+        else{
             $self->write_log("add new author: author with proposed master ($new_master) exists!");
             $self->flash(msg => "Author with such MasterID exists! Pick a different one.");
             $self->redirect_to('/authors/add');
             return;
-          }
+        }
      }
      
      $self->redirect_to('/authors/add');
@@ -155,14 +147,17 @@ sub edit_author {
    my $dbh = $self->app->db;
 
    my $a = $dbh->resultset('Author')->search({'display' => 1, id => $id})->first;
+
+   $self->redirect_to('/authors') unless defined $a;
+
    my @uids = $dbh->resultset('Author')->search({master_id => $id})->get_column('uid')->all;
    my @aids = $dbh->resultset('Author')->search({master_id => $id})->get_column('id')->all;
 
-   my $master = $a->master;
-   my $disp = $a->display;
+    # my $master = $a->master;
+   # my $disp = $a->display;
 
 
-   $self->write_log("edit_author: master: $master. id: $id.");
+   # $self->write_log("edit_author: master: $master. id: $id.");
 
 
 
@@ -170,32 +165,17 @@ sub edit_author {
    my $teams_a = $self->app->db->resultset('AuthorToTeam')->search(
             {'author_id' => $id},
             { 
-                join => {'team' }, 
+                join => 'team', 
             }
             );
 
-
-
-   my (@tag_ids_arr_ref, @tags_arr_ref) = (('1'), ('undef'));#get_tags_for_author($self, $id);
-
-# say "master ".Dumper($master);
-# say "id ".Dumper($id);
-# say "uids ".Dumper(\@$uids);
-# say "aids ".Dumper(\@aids);
-# say "disp ".Dumper($disp);
-# say "teams ".Dumper(\@teams);
-# say "team_ids ".Dumper(\@team_ids);
-# say "start_arr ".Dumper(\@start_arr);
-# say "stop_arr ".Dumper(\@stop_arr);
-# say "tag_ids ".Dumper(\@tag_ids);
-# say "tags ".Dumper(\@tags);
-# say "all_teams ".Dumper(\@all_teams);
-# say "all_teams_ids ".Dumper(\@all_teams_ids);
     
     my @a2t = $teams_a->all;
-    my @teams = $dbh->resultset('Team')->all;
+    my @all_teams = $dbh->resultset('Team')->all;
+    my @tag_ids = (); # TODO: Query this
 
-   $self->stash(author => $a, a2t => \@a2t, teams => \@teams, aids => \@aids, uids => \@uids, back_url => $back_url, exit_code => '');
+
+   $self->stash(author => $a, all_teams => \@all_teams,  tag_ids => \@tag_ids, back_url => $back_url, exit_code => '');
 
    # $self->stash(master  => $master, id => $id, uids => \@uids, aids => \@aids, disp => $disp, 
    #              teams => \@teams_arr, team_ids => \@team_id_arr, start_arr => \@start_arr, stop_arr =>\@stop_arr, back_url => $back_url, exit_code => '',
@@ -207,16 +187,17 @@ sub edit_author {
 sub can_be_deleted{
   my $self = shift;
   my $id = shift;
+  my $dbh = $self->app->db;
 
-  my $visibility = get_visibility_for_id($self, $id);
+  my $a = $dbh->resultset('Author')->search({id => $id})->first;
+
+  return $a->can_be_deleted();
 
 
-  my ($teams_arr, $start_arr, $stop_arr, $team_id_arr) = get_teams_of_author($self, $id);
-  my $num_teams = scalar @$teams_arr;
-
-
-  return 1 if $num_teams == 0 and $visibility == 0;
-  return 0;
+  # my ($teams_arr, $start_arr, $stop_arr, $team_id_arr) = get_teams_of_author($self, $id);
+  # my $num_teams = scalar @$teams_arr;
+  # return 1 if $num_teams == 0 and $visibility == 0;
+  # return 0;
 }
 ##############################################################################################################
 sub add_to_team {
@@ -224,6 +205,8 @@ sub add_to_team {
     my $dbh = $self->app->db;
     my $master_id = $self->param('id');
     my $team_id = $self->param('tid');
+
+    my $a = $dbh->resultset('Author')->search({id => $master_id})->first;
 
     add_team_for_author($self, $master_id, $team_id);
 
@@ -259,46 +242,58 @@ sub remove_uid{
 ##############################################################################################################
 ### POST like for HTML forms, not a blog post
 sub edit_post {
-     my $self = shift;
-     my $dbh = $self->app->db;
+    my $self = shift;
+    my $dbh = $self->app->db;
 
-     my $id = $self->param('id');
-     my $master = get_master_for_id($dbh, $id);
+    my $id = $self->param('id');
+    my $a = $dbh->resultset('Author')->search({id => $id})->first;
+     
+    # my @cols   = $a->result_source->columns;
+    # say "======";
+    # for my $c (@cols) {
+    #     my $val = $a->get_column( $c );
+    #     say "$c: $val";
+    # }
+    # say "======";
+
+
+     my $master = $a->master;
+
      my $new_master = $self->param('new_master');
      my $new_user_id = $self->param('new_user_id');
 
      my $visibility = $self->param('visibility');
 
 
-     if(defined $master){
-         if(defined $new_master){
-               my $status = update_master_id($self, $id, $new_master);
-               # 0 OK
-               # -1 conflict 
-               # >0 new master id
-               if($status > 0){
-                  $self->write_log("change master for master id $id and new master $new_master - status: $status. AUTHOR ID HAS CHANGED!");
-                  $self->redirect_to('/authors/edit/'.$status);
-               }
-               else{
-                  $self->write_log("change master for master id $id and new master $new_master - status: $status. SUCH AUTHOR EXISTS ALREADY under id $status!");
-                  $self->redirect_to('/authors/edit/'.$id); 
-               }
+    if(defined $master){
+        if(defined $new_master){
+            $a->update({'master' => $new_master});
+
+            my $status = 0; #update_master_id($self, $id, $new_master);
+
+            # 0 OK
+            # -1 conflict 
+            # >0 new master id
+            if($status > 0){
+              $self->write_log("change master for master id $id and new master $new_master - status: $status. AUTHOR ID HAS CHANGED!");
+              $self->redirect_to('/authors/edit/'.$status);
+            }
+            else{
+              $self->write_log("change master for master id $id and new master $new_master - status: $status. SUCH AUTHOR EXISTS ALREADY under id $status!");
+              $self->redirect_to('/authors/edit/'.$id); 
+            }
                
-         }
-         elsif(defined $visibility){
-               toggle_visibility($self, $id);
-         }
-         elsif(defined $new_user_id){
-              my $success = add_new_user_id_to_master($self, $id, $new_user_id);
-              if($success==0){
-                  $self->write_log("add_new_user_id_to_master for master id $id and new_user_id $new_user_id was succesfull.");  
-                  say "add_new_user_id_to_master for master id $id and new_user_id $new_user_id was succesfull.";
-              }
-              else{
-                  $self->write_log("add_new_user_id_to_master for master id $id and new_user_id $new_user_id was UNSUCCESSFUL: such user already exists.");   
-                  say "add_new_user_id_to_master for master id $id and new_user_id $new_user_id was UNSUCCESSFUL: such user already exists.";
-              }
+        }
+        elsif(defined $visibility){
+            $a->toggle_visibility();
+        }
+        elsif(defined $new_user_id){
+
+            my $new_user = $dbh->resultset('Author')->find_or_create({ 
+                                uid => $new_user_id,
+                                master_id => $a->id,
+                                master => $a->master,
+                                });
          }
      }
      $self->redirect_to('/authors/edit/'.$id);
@@ -356,31 +351,27 @@ sub delete_author {
      my $dbh = $self->app->db;
      my $id = $self->param('id');
 
-     my $visibility = get_visibility_for_id($self, $id);
-
-     if(defined $id and $id != -1 and can_be_deleted($self, $id)==1){
-        delete_author_force($self, $id);
-        return;
+     my $a = $dbh->resultset('Author')->search({id => $id})->first;
+     if($a->can_be_deleted()){
+        $a->delete;
      }
 
-    my $back_url = $self->param('back_url') || "/authors?visible=1";
+    my $back_url = "/authors?visible=1";
     $self->redirect_to($back_url);
      
 };
 ##############################################################################################################
 sub delete_author_force {
-     my $self = shift;
-     my $dbh = $self->app->db;
-     my $id = $self->param('id');
+    my $self = shift;
+    my $dbh = $self->app->db;
+    my $id = $self->param('id');
 
-     do_delete_author_force($self, $id);
-    
-    my $back_url = "/authors?visible=1";
+    my $a = $dbh->resultset('Author')->search({id => $id})->first->delete;
+
     $self->flash(msg => "Author with id $id removed successfully.");
     $self->write_log("Author with id $id removed successfully.");
 
-    # say "delete_author_force: going back to: $back_url";
-
+    my $back_url = "/authors?visible=1";
     $self->redirect_to($back_url);
      
 };
@@ -469,11 +460,12 @@ sub remove_user_id_from_master{
   my $mid = shift;
   my $uid = shift;
   my $dbh = $self->app->db;
+
   
   # cannot remove aid that is muid, because you would remove the user completly
   if($mid != $uid){
-      my $sth = $dbh->prepare('DELETE FROM Author WHERE id=? AND master_id=?');
-      $sth->execute($uid, $mid);  
+        my $a = $dbh->resultset('Author')->search({master_id => $mid, id => $uid})->first->delete;
+
   }
   else{
     say "remove_user_id_from_master: cannot remove aid that is muid, because you would remove the user completly";

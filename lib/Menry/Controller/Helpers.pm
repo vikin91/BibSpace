@@ -30,17 +30,21 @@ sub register {
 
     $app->helper(get_rank_of_current_user => sub {
         my $self = shift;
-        my $uname = shift || $app->session('user');
-        my $user_dbh = DBI->connect('dbi:SQLite:dbname='.$app->config->{user_db}, '', '') or die $DBI::errstr;
 
-        my $sth = $user_dbh->prepare("SELECT rank FROM Login WHERE login=?");
-        $sth->execute($uname);
-        my $row = $sth->fetchrow_hashref();
-        my $rank = $row->{rank};
+        my $u = $app->db->resultset('Login')->search({ login => $app->session('user') })->first;
+        return $u->rank;
 
-        $rank = 0 unless defined $rank;
+        # my $uname = shift || $app->session('user');
+        # my $user_dbh = DBI->connect('dbi:SQLite:dbname='.$app->config->{user_db}, '', '') or die $DBI::errstr;
 
-        return $rank;
+        # my $sth = $user_dbh->prepare("SELECT rank FROM Login WHERE login=?");
+        # $sth->execute($uname);
+        # my $row = $sth->fetchrow_hashref();
+        # my $rank = $row->{rank};
+
+        # $rank = 0 unless defined $rank;
+
+        # return $rank;
     });
 
 	$app->helper(current_year => sub {
@@ -105,7 +109,7 @@ sub register {
         my $self = shift;
         my $type = shift || 1;
 
-        say "get_tag_type_obj for type $type";
+        # say "get_tag_type_obj for type $type";
 
         my $ttobj = TagTypeObj->getById($self->app->db, $type);
         return $ttobj;
@@ -160,9 +164,11 @@ sub register {
         my $self = shift;
         my $id = shift;
 
-        my ($author_ids_ref, $start_arr_ref, $stop_arr_ref) = get_team_members($self, $id);
-        my $num_authors = scalar @$author_ids_ref;
-        return $num_authors;
+        # my ($author_ids_ref, $start_arr_ref, $stop_arr_ref) = get_team_members($self, $id);
+        # my $num_authors = scalar @$author_ids_ref;
+        
+        say "fixme! helper(get_num_members_for_team";
+        return 1;
     });
 
     $app->helper(team_can_be_deleted => sub {
@@ -191,7 +197,7 @@ sub register {
     $app->helper(get_team_name => sub {
         my $self = shift;
         my $id = shift;
-        return get_team_for_id($self->app->db, $id);
+        return $self->app->db->resultset('Team')->search({id => $id})->get_column('name')->first;
     });
 
     $app->helper(get_tag_name => sub {
@@ -307,10 +313,6 @@ sub register {
     $app->helper(get_years_arr => sub {
         my $self = shift;
 
-        say "helper(get_years_arr";
-
-
-
         my @arr = $self->app->db->resultset('Entry')->search(
             { 
                 'hidden' => 0,
@@ -397,18 +399,15 @@ sub register {
             columns => [{ 'distinct_master_id' => { distinct => 'me.master_id' }}, 'id', 'master', 'display'],
             order_by => { '-asc' => ['master'] },
             }
-        )->all;
+        )->get_column('id')->all;
 
 
         # SELECT DISTINCT( me.master_id ), me.master, me.display 
         # FROM Author me 
         # WHERE ( display = ? ) ORDER BY master ASC: '1'
+        my @arr = @rs;#->get_column('id');
 
-        # print Dumper($rs);
 
-        my @arr = $rs[0]->get_column('id');
-
-        print Dumper(\@arr);
 
         # WAS: SELECT DISTINCT master_id, master FROM Author WHERE display = 1 ORDER BY master ASC
 

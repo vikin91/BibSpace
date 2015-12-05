@@ -149,7 +149,7 @@ Related object: L<Menry::Schema::Result::Author>
 =cut
 
 __PACKAGE__->belongs_to(
-  "master",
+  "master_author",
   "Menry::Schema::Result::Author",
   { id => "master_id" },
   {
@@ -174,6 +174,32 @@ __PACKAGE__->many_to_many("entries", "entry_to_authors", "entry");
 # Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-11-30 22:34:38
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:8XjzPw8pK5PJ+e7udXAVOQ
 
+sub can_be_deleted {
+  my ($self) = @_;
+
+  # return Email::Address->parse($self->email)->host;
+  1;
+}
+
+sub toggle_visibility {
+    my ($self) = @_;
+
+    if($self->display ==1){
+        $self->display = 0;
+    }
+    else{
+        $self->display = 1;
+    }
+}
+
+
+# sub print{
+#     my ($self) = @_;
+#     my $rs = $self->first->hashref_rs;
+#     while (my $row = $rs->next) {
+#         print Dumper $row;
+#     }
+# }
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

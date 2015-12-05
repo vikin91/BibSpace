@@ -172,6 +172,19 @@ __PACKAGE__->add_unique_constraint("login_unique", ["login"]);
 # Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-11-30 22:34:38
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:fZWm4hIjMklHeJeIO61QUA
 
+sub is_admin {
+  my ($self) = @_;
+
+  my $rank = $self->rank;
+  return $rank > 1;
+}
+
+sub is_manager {
+  my ($self) = @_;
+
+  my $rank = $self->rank;
+  return $rank > 0;
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

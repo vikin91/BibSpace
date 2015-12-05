@@ -51,15 +51,6 @@ sub fixMonths {
             $entry->parse_s($o->{bib});
 
             after_edit_process_month($self->app->db, $entry);
-
-            #check
-            # if($entry->exists('month')){
-            #     my $month_str = $entry->get('month');
-            #     my $month_numeric = get_month_numeric($month_str);
-
-            #     say "ENTRY $o->{id}  MONTH_STR $month_str MONTH_INT $month_numeric" if $month_numeric > 12 or $month_numeric == 0;
-            # }
-
     }
     $self->redirect_to($back_url);
 }
@@ -1580,7 +1571,7 @@ sub post_add_store {
   my $param_prev = $self->param('preview') || "";
   my $param_save = $self->param('save') || "";
 
-  # say "preview $param_prev";
+    # say "preview $param_prev";
   # say "save $param_save";
 
   if(defined $key and $key =~ /^[+-]?\d+$/ and $key == -1){   # generate bibtex errors

@@ -27,22 +27,22 @@ our @EXPORT = qw(
     send_email
     );
 
-####################################################################################
-sub check_is_admin {
-    my $user = shift;
-    my $dbh = shift;
-    my $u = $dbh->resultset('Login')->search({ login => $user })->first;
-    return $u->rank > 1 if defined $u;
-    return undef;
-}
-####################################################################################
-sub check_is_manager {
-    my $user = shift;
-    my $dbh = shift;
-    my $u = $dbh->resultset('Login')->search({ login => $user })->first;
-    return $u->rank > 0 if defined $u;
-    return undef;
-}
+# ####################################################################################
+# sub check_is_admin {
+#     my $user = shift;
+#     my $dbh = shift;
+#     my $u = $dbh->resultset('Login')->search({ login => $user })->first;
+#     return $u->rank > 1 if defined $u;
+#     return undef;
+# }
+# ####################################################################################
+# sub check_is_manager {
+#     my $user = shift;
+#     my $dbh = shift;
+#     my $u = $dbh->resultset('Login')->search({ login => $user })->first;
+#     return $u->rank > 0 if defined $u;
+#     return undef;
+# }
 ####################################################################################################
 sub check {
     print "call Menry::Controller::Login check \n";

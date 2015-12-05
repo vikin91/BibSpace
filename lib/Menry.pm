@@ -98,12 +98,14 @@ sub startup {
 
     $self->helper(is_manager => sub {
         my $self = shift; 
-        return check_is_manager($self->session('user'), $self->app->db);
+        my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
+        return 1 if $u->is_manager();
     });
 
     $self->helper(is_admin => sub {
         my $self = shift; 
-        return check_is_admin($self->session('user'), $self->app->db);
+        my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
+        return 1 if $u->is_admin();
     });
 
 

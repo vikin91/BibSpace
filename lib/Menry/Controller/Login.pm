@@ -25,7 +25,8 @@ sub under_check_is_manager {
     my $self = shift;
     say "under_check_is_manager";
 
-    return 1 if check_is_manager($self->session('user'), $self->app->db);
+    my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
+    return 1 if $u->is_manager();
     $self->render(text => 'Your need _manager_ rights to access this page.');
     return undef;
 }
@@ -35,7 +36,8 @@ sub under_check_is_admin {
     my $self = shift;
     say "under_check_is_admin";
 
-    return 1 if check_is_admin($self->session('user'), $self->app->db);
+    my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
+    return 1 if $u->is_admin();
     $self->render(text => 'Your need _admin_ rights to access this page.');
     return undef;
 }
