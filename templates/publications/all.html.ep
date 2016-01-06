@@ -4,7 +4,7 @@
 % my @objs = @{$objs};
 % my $size = scalar @objs;
 
-% my $loc_html = int 77.7*$size;
+
 
 % my $burl = backurl($self);
 % my $back_url = $burl;

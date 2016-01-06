@@ -1,5 +1,7 @@
 package Menry::Controller::Authors;
 
+use Menry::Functions::AuthorsFunctions;
+
 use Data::Dumper;
 use utf8;
 use Text::BibTeX; # parsing bib files
@@ -143,10 +145,10 @@ sub add_post {
 sub edit_author {
    my $self = shift;
    my $id = $self->param('id');
-   my $back_url = $self->param('back_url') || "/publications";
+   my $back_url = $self->param('back_url') || "/authors";
    my $dbh = $self->app->db;
 
-   my $a = $dbh->resultset('Author')->search({'display' => 1, id => $id})->first;
+   my $a = $dbh->resultset('Author')->search({id => $id})->first;
 
    $self->redirect_to('/authors') unless defined $a;
 
@@ -615,29 +617,26 @@ sub reassign_authors_to_entries_and_create_authors {
 ##############################################################################################################
 
  sub toggle_visibility {
-   my $self = shift;
-   my $id = $self->param('id');
+    my $self = shift;
+    my $id = $self->param('id');
+    my $dbh = $self->app->db;
+    
+    my $a = $dbh->resultset('Author')->search({ id => $id })->first;
+    my $disp = $a->display;
+    if($disp == 1){
+        $dbh->resultset('Author')->search({ id => $id })->update({display => 0});
+    }
+    else{
+        $dbh->resultset('Author')->search({ id => $id })->update({display => 1});
+    }
+    $disp = $a->display;
+    
 
-   my $dbh = $self->app->db;
-   my $master = get_master_for_id($dbh, $id);
-   my $disp = get_visibility_for_id($self, $id);
-
-   my $sth2;
-
-   $sth2 = $dbh->prepare('UPDATE Author SET display=? WHERE id=?');
-   if($disp == 1){
-      $sth2->execute(0, $id); 
-   }
-   else{
-      $sth2->execute(1, $id); 
-   }
-
+   
    $self->write_log("Author with id $id has now visibility set to $disp");
    say "Author with id $id has now visibility set to $disp";
 
    
-   $sth2->finish() if defined $sth2;
-
    my $back_url = $self->param('back_url') || "/authors?visible=1";
    $self->redirect_to($back_url);
 };

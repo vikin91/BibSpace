@@ -379,18 +379,23 @@ sub get_set_of_teams_for_author_id_w_year {
     my $set = new Set::Scalar;
 
 
-    my $qry = "SELECT author_id, team_id 
-            FROM Author_to_Team 
-            WHERE author_id=?
-            AND start <= ?  AND (stop >= ? OR stop = 0)";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($aid, $year, $year); 
+    my $rs = $dbh->resultset('AuthorToTeam')->search(
+    {
+        '-and' => [
+            'author_id' => $aid,
+            'start' => {'<=', $year},
+            '-or' => [
+                'stop' => 0,
+                'stop' => {'>=', $year},
+            ]
+        ]
+    })->get_column('team_id');
 
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $tid = $row->{team_id};
-
-      $set->insert($tid);
+    for my $tid ($rs->all) {
+        $set->insert($tid);
     }
+
+    
     print "Teams for author $aid: ", $set, "\n";
     return $set;
  }
@@ -404,16 +409,10 @@ sub get_set_of_teams_for_author_id {
     my $set = new Set::Scalar;
 
 
-    my $qry = "SELECT author_id, team_id 
-            FROM Author_to_Team 
-            WHERE author_id=?";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($aid); 
+    my $rs = $self->app->db->resultset('AuthorToTeam')->search({author_id => $aid})->get_column('team_id');
 
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $tid = $row->{team_id};
-
-      $set->insert($tid);
+    for my $tid ($rs->all) {
+        $set->insert($tid);
     }
     print "Teams for author $aid: ", $set, "\n";
     return $set;
@@ -428,13 +427,10 @@ sub get_set_of_authors_for_entry_id {
     my $set = new Set::Scalar;
 
 
-    my $qry = "SELECT author_id FROM Entry_to_Author WHERE entry_id=?";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($eid); 
+    my $rs = $self->app->db->resultset('EntryToAuthor')->search({entry_id => $eid})->get_column('author_id');
 
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $aid = $row->{author_id};
 
+    for my $aid ($rs->all) {
       $set->insert($aid);
     }
     print "Authors of entry $eid: ", $set, "\n";
@@ -446,7 +442,8 @@ sub get_set_of_teams_for_entry_id {
     my $eid = shift;
     my $dbh = $self->app->db;
 
-    my $entry_year = get_year_for_entry_id($dbh, $eid);
+    my $rs = $self->app->db->resultset('Entry')->search({id => $eid})->get_column('year');
+    my $entry_year = $rs->first;
 
     my $teams_for_paper = new Set::Scalar;
 

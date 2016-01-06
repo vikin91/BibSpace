@@ -25,7 +25,7 @@ has db => sub {
     # my $s = Menry::Schema->connect('dbi:SQLite:my2.db');
     my $s = Menry::Schema->connect('dbi:mysql:database=hex64publicationlistmanager;host=localhost', 'root', 's3kr1t');
     # $s->deploy();
-    $s->storage->debug(1);
+    # $s->storage->debug(1);
     $s;
 };
 
@@ -329,7 +329,7 @@ sub startup {
     $logged_user->get('/publications/edit/store/:id')->to('publications#get_edit');
 
     $logged_user->get('/publications/regenerate/:id')->to('publications#regenerate_html');
-    $logged_user->get('/publications/delete/:id')->to('publications#delete');
+    # $logged_user->get('/publications/delete/:id')->to('publications#delete');
     $logged_user->get('/publications/delete_sure/:id')->to('publications#delete_sure');
 
     $logged_user->get('/publications/add_pdf/:id')->to('publications#add_pdf');

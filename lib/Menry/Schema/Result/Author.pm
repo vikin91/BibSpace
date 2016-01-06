@@ -177,7 +177,6 @@ __PACKAGE__->many_to_many("entries", "entry_to_authors", "entry");
 sub can_be_deleted {
   my ($self) = @_;
 
-  # return Email::Address->parse($self->email)->host;
   1;
 }
 

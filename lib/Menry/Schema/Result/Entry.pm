@@ -312,6 +312,15 @@ __PACKAGE__->many_to_many("teams", "exceptions_entry_to_teams", "team");
 # Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-11-30 22:34:38
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:o4QS6GYqglPI/mWpQBENxA
 
+sub isHidden {
+  my ($self) = @_;
+  return $self->hidden == 1;
+}
+
+sub isTalk {
+  my ($self) = @_;
+  return $self->entry_type eq 'talk';
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;
