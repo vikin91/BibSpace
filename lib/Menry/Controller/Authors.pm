@@ -155,14 +155,6 @@ sub edit_author {
    my @uids = $dbh->resultset('Author')->search({master_id => $id})->get_column('uid')->all;
    my @aids = $dbh->resultset('Author')->search({master_id => $id})->get_column('id')->all;
 
-    # my $master = $a->master;
-   # my $disp = $a->display;
-
-
-   # $self->write_log("edit_author: master: $master. id: $id.");
-
-
-
 
    my $teams_a = $self->app->db->resultset('AuthorToTeam')->search(
             {'author_id' => $id},
@@ -173,7 +165,7 @@ sub edit_author {
 
     
     my @a2t = $teams_a->all;
-    my @all_teams = $dbh->resultset('Team')->all;
+    my @all_teams = $dbh->resultset('Team')->all; # CHANGE TO ALL WHERE NOT MEMBER
     my @tag_ids = (); # TODO: Query this
 
 
@@ -209,8 +201,11 @@ sub add_to_team {
     my $team_id = $self->param('tid');
 
     my $a = $dbh->resultset('Author')->search({id => $master_id})->first;
-
-    add_team_for_author($self, $master_id, $team_id);
+    $dbh->resultset('AuthorToTeam')->find_or_create({
+            team_id => $team_id, 
+            author_id => $master_id
+            });
+    $self->write_log("Author with master id $master_id becomes a member of team with id $team_id.");
 
     my $back_url = $self->param('back_url') || "/authors?visible=1";
     $self->redirect_to($back_url);
@@ -222,7 +217,11 @@ sub remove_from_team {
     my $master_id = $self->param('id');
     my $team_id = $self->param('tid');
 
-    remove_team_for_author($self, $master_id, $team_id);
+    my $a = $dbh->resultset('AuthorToTeam')->search({team_id => $team_id, author_id => $master_id})->delete;
+    
+    # $a->delete_related('author_to_teams', { team_id => $team_id });  # removes all memebers of the team
+
+    # remove_team_for_author($self, $master_id, $team_id);
 
     my $back_url = $self->param('back_url') || "/authors?visible=1";
     $self->redirect_to($back_url);
@@ -341,10 +340,8 @@ sub do_edit_membership_dates{
     my $new_stop = shift;
     my $dbh = $self->app->db;
 
-    # double check!
     if(defined $aid and $aid > 0 and defined $tid and $tid > 0 and defined $new_start and $new_start >= 0 and defined $new_stop and $new_stop >= 0 and ($new_stop == 0 or $new_start <= $new_stop)){
-        my $sth = $dbh->prepare('UPDATE Author_to_Team SET start=?, stop=? WHERE author_id=? AND team_id=?');
-        $sth->execute($new_start, $new_stop, $aid, $tid); 
+        my $rs = $dbh->resultset('AuthorToTeam')->search({'team_id' => $tid, 'author_id' => $aid})->update({start => $new_start, stop => $new_stop});
     }
 }
 ##############################################################################################################

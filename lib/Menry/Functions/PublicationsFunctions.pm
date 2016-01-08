@@ -257,16 +257,17 @@ sub getPublicationsByFilter{
     my $permalink = shift;
     my $hidden = shift;
 
-    # say "   mid $mid
-    #         year $year
-    #         bibtex_type $bibtex_type
-    #         entry_type $entry_type
-    #         tagid $tagid
-    #         teamid $teamid
-    #         visible $visible
-    #         permalink $permalink
-    #         hidden $hidden
-    # ";
+    say "   =====
+            mid $mid
+            year $year
+            bibtex_type $bibtex_type
+            entry_type $entry_type
+            tagid $tagid
+            teamid $teamid
+            visible $visible
+            permalink $permalink
+            hidden $hidden
+    ";
 
     # search({ 
     #     'hidden' => $hidden,
@@ -298,20 +299,28 @@ sub getPublicationsByFilter{
     $rs = $rs->search({'OurType_to_Type.our_type' => $bibtex_type}) if defined $bibtex_type;
     $rs = $rs->search({'entry_type' => $entry_type}) if defined $entry_type;
 
-    # (Exceptions_Entry_to_Team.team_id=? ) OR (Author_to_Team.team_id=? AND start <= Entry.year  AND (stop >= Entry.year OR stop = 0))
+    # # (Exceptions_Entry_to_Team.team_id=? ) OR (Author_to_Team.team_id=? AND start <= Entry.year  AND (stop >= Entry.year OR stop = 0))
     $rs = $rs->search({
         '-or' => [
-            'Exceptions_Entry_to_Team.team_id' => $teamid,
+            'exceptions_entry_to_teams.team_id' => $teamid,
             '-and' => [
-                'Author_to_Team.team_id' => $teamid,
-                'Author_to_Team.start' => {'<=', 'Entry.year'},
+                'author_to_teams.team_id' => $teamid,
+                'author_to_teams.start' => {'<=', \'me.year'},
                 '-or' => [
-                    'Author_to_Team.stop' => 0,
-                    'Author_to_Team.stop' => {'>=', 'Entry.year'},
+                    'author_to_teams.stop' => 0,
+                    'author_to_teams.stop' => {'>=', \'me.year'},
                 ]
             ]
         ]
     }) if defined $teamid;
+    
+    # $rs = $rs->search({
+    #     '-and' => [
+    #         'author_to_teams.team_id' => $teamid,
+    #         'author_to_teams.start' => {'<=', 'me.year'},
+    #     ]
+    # }) if defined $teamid;
+
     $rs = $rs->search({'Entry_to_Tag.tag_id' => {'like', $tagid} }) if defined $tagid;
     $rs = $rs->search({'Tag.permalink' => {'like', $permalink} }) if defined $permalink;
 

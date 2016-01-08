@@ -204,8 +204,8 @@
                     <!-- END OF MODAL EDIT DATES OF MEMBERSHIP -->
                 </td>
                 <td>
-                    <a class="btn btn-default" href="/publications?author=<%= $master %>&team=<%= $team %>">
-                        Show  <span class="badge"> XXX <%= num_pubs_for_author_and_team($author->id, $team->id)%>
+                    <a class="btn btn-default" href="/publications?author=<%= $master %>&team=<%= $team->name %>">
+                        Show  <span class="badge"> <%= num_pubs_for_author_and_team($author->id, $team->id)%>
                         <i class="fa fa-files-o"></i></span> of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i> 
                     </a>
                 </td>

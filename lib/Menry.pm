@@ -25,7 +25,7 @@ has db => sub {
     # my $s = Menry::Schema->connect('dbi:SQLite:my2.db');
     my $s = Menry::Schema->connect('dbi:mysql:database=hex64publicationlistmanager;host=localhost', 'root', 's3kr1t');
     # $s->deploy();
-    # $s->storage->debug(1);
+    $s->storage->debug(0);
     $s;
 };
 

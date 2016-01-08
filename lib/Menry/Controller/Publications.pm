@@ -733,6 +733,7 @@ sub publications_get_publications_core{  ## TODO: Rename, move to proper module
     $master_id = undef unless defined $author;
     $tagid = undef unless defined $tag;
 
+    say "getPublicationsByFilter($master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);";
     my @objs = getPublicationsByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
     return @objs;
 }

@@ -162,13 +162,10 @@ sub register {
 
     $app->helper(get_num_members_for_team => sub {
         my $self = shift;
-        my $id = shift;
+        my $teamid = shift;
 
-        # my ($author_ids_ref, $start_arr_ref, $stop_arr_ref) = get_team_members($self, $id);
-        # my $num_authors = scalar @$author_ids_ref;
-        
-        say "fixme! helper(get_num_members_for_team";
-        return 1;
+        return $self->app->db->resultset('AuthorToTeam')->search({team_id => $teamid})->count;
+
     });
 
     $app->helper(team_can_be_deleted => sub {

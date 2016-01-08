@@ -25,13 +25,9 @@ our @ISA= qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw( 
-    get_author_id_for_uid
-    get_author_id_for_master
-    get_master_for_id
-    get_html_for_bib
     get_teams_of_author
     get_team_members
-    add_team_for_author
+    
     remove_team_for_author
     uniq
     get_entry_id
@@ -886,20 +882,7 @@ sub get_tag_name_for_id{
 #    return $name;
 # }
 
-################################################################################
-sub add_team_for_author {
-   my $self = shift;
-   my $master_id = shift;
-   my $teamid = shift;
 
-   my $dbh = $self->app->db;
-
-   my $qry = "INSERT IGNORE INTO Author_to_Team(author_id, team_id) VALUES (?,?)";
-   my $sth = $dbh->prepare( $qry );  
-   $sth->execute($master_id, $teamid); 
-
-   $self->write_log("Author with master id $master_id becomes a member of team with id $teamid.");
-}
 ################################################################################
 sub remove_team_for_author {
    my $self = shift;

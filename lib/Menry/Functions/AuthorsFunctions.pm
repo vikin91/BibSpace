@@ -18,9 +18,25 @@ our @ISA= qw( Exporter );
 our @EXPORT = qw( 
     postprocess_all_entries_after_author_uids_change_w_creating_authors
     postprocess_all_entries_after_author_uids_change
+    add_team_for_author
     );
 
 
+################################################################################
+sub add_team_for_author {
+   my $self = shift;
+   my $master_id = shift;
+   my $team_id = shift;
+
+   my $dbh = $self->app->db;
+
+   $dbh->resultset('AuthorToTeam')->find_or_create({
+            team_id => $team_id, 
+            author_id => $master_id
+            });
+
+   $self->write_log("Author with master id $master_id becomes a member of team with id $team_id.");
+}
 ##################################################################
 sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assigns papers to their authors ONLY. No tags, no regeneration. Not existing authors will be created
     my $self = shift;
