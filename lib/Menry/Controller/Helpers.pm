@@ -18,6 +18,7 @@ use Time::Piece;
 use 5.010; #because of ~~
 use strict;
 use warnings;
+use List::Util qw(any);
 
 
 
@@ -100,9 +101,7 @@ sub register {
 
     $app->helper(get_all_tag_types => sub {
         my $self = shift;
-
-        my @ttobjarr = $self->app->db->resultset('TagType')->all;
-        return @ttobjarr;
+        return $self->app->db->resultset('TagType')->all;
       });
 
     $app->helper(get_tag_type_obj => sub {
@@ -122,8 +121,12 @@ sub register {
         my $eid = shift;
         my $type = shift || 1;
 
-        my @tobjarr = TagObj->getTagsOfTypeForPaper($self->app->db, $eid, $type);
-        return @tobjarr;
+        my $entry = $self->app->db->resultset('Entry')->search({ id => $eid})->first;
+
+        my @tags_for_entry = $entry->tags->search({type => $type})->all;
+        return @tags_for_entry;
+        # my @tobjarr = TagObj->getTagsOfTypeForPaper($self->app->db, $eid, $type);
+        # return @tobjarr;
     });
 
     $app->helper(get_unassigned_tags_of_type_for_paper => sub {
@@ -131,8 +134,23 @@ sub register {
         my $eid = shift;
         my $type = shift || 1;
 
-        my @tobjarr = TagObj->getUnassignedTagsOfTypeForPaper($self->app->db, $eid, $type);
-        return @tobjarr;
+        my $entry = $self->app->db->resultset('Entry')->search({ id => $eid})->first;
+
+        my @all = $self->app->db->resultset('Tag')->search({type => $type})->all;
+        my @entry_tags = $entry->tags->search({type => $type})->all;
+
+        my @all_name = $self->app->db->resultset('Tag')->search({type => $type})->get_column('name')->all;
+        my @entry_tags_name = $entry->tags->search({type => $type})->get_column('name')->all;
+
+        my @unassigned_tags;
+        for my $t (@all){
+            my $name = $t->name;
+            if (grep( /^$name$/, @entry_tags_name) == 0){
+                say "helper get_unassigned_tags_of_type_for_paper: marking ".$t->name." as unassigned. ";
+                push @unassigned_tags, $t;
+            }
+        }
+        return @unassigned_tags;
     });
 
     
@@ -263,12 +281,12 @@ sub register {
     });
 
     
-    $app->helper(helper_get_entry_title => sub {
-        my $self = shift;
-        my $eid = shift;
+    # $app->helper(helper_get_entry_title => sub {
+    #     my $self = shift;
+    #     my $eid = shift;
 
-        return get_entry_title($self->app->db, $eid);
-      });
+    #     return get_entry_title($self->app->db, $eid);
+    #   });
 
     
 
@@ -357,10 +375,12 @@ sub register {
         my $self = shift;
         my $tid = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(Entry_to_Tag.entry_id) as num FROM Entry_to_Tag LEFT JOIN Entry ON Entry.id = Entry_to_Tag.entry_id WHERE tag_id=?" );  
-        $sth->execute($tid); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
+        my $num = $self->app->db->resultset('Tag')->search({ id => $tid })->first->entries->count;
+
+        # my $sth = $self->app->db->prepare( "SELECT COUNT(Entry_to_Tag.entry_id) as num FROM Entry_to_Tag LEFT JOIN Entry ON Entry.id = Entry_to_Tag.entry_id WHERE tag_id=?" );  
+        # $sth->execute($tid); 
+        # my $row = $sth->fetchrow_hashref();
+        # my $num = $row->{num};
         return $num; 
       });
 

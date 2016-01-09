@@ -89,8 +89,8 @@ our $bibtex2html_tmp_dir = "./tmp";
 ####################################################################################
 
 ####################################################################################
-sub get_number_of_publications_in_year{
-  say "CALL: get_number_of_publications_in_year";
+sub get_number_of_publications_in_year{ 
+ say "CALL (core): get_number_of_publications_in_year";
     my $self = shift;
     my $year = shift;
 
@@ -98,7 +98,8 @@ sub get_number_of_publications_in_year{
     return scalar @objs;
 }
 ####################################################################################
-sub get_publications_main_hashed_args{
+sub get_publications_main_hashed_args{ 
+ say "CALL (core): get_publications_main_hashed_args";
     my ($self, $args) = @_;
 
     return get_publications_core($self, $args);
@@ -115,8 +116,9 @@ sub get_publications_main_hashed_args{
                                  # );
 }
 ####################################################################################
-sub get_publications_main{
-  say "CALL: get_publications_main - calling this function without arguments hash is deprecated! Call get_publications_main_hashed_args instead!";
+sub get_publications_main{ 
+ say "CALL (core): get_publications_main";
+  say "CALL (core): get_publications_main - calling this function without arguments hash is deprecated! Call get_publications_main_hashed_args instead!";
     my $self = shift;
 
     return undef;
@@ -132,8 +134,8 @@ sub get_publications_main{
     return get_publications_core($self, $author, $year, $bibtex_type, $entry_type, $tag, $team, 0, $permalink, $hidden);
 }
 ####################################################################################
-sub get_publications_core_from_array{
-  say "CALL: get_publications_core_from_array";
+sub get_publications_core_from_array{ 
+ say "CALL (core): get_publications_core_from_array";
     my $self = shift;
     my $array = shift;
     my $sort = shift;
@@ -147,8 +149,8 @@ sub get_publications_core_from_array{
 
 }
 ########################################################################################################################################################################
-sub get_publications_core_from_set{
-  say "CALL: get_publications_core_from_set";
+sub get_publications_core_from_set{ 
+ say "CALL (core): get_publications_core_from_set";
     my $self = shift;
     my $set = shift;
     
@@ -165,7 +167,8 @@ sub get_publications_core_from_set{
 }
 ####################################################################################
 
-sub get_publications_core{
+sub get_publications_core{ 
+ say "CALL (core): get_publications_core";
 
     my ($self, $args) = @_;
     my $author = $args->{author} || $self->param('author') || undef, 
@@ -196,13 +199,14 @@ sub get_publications_core{
     return @objs;
 }
 ####################################################################################
-sub get_single_publication {
+sub get_single_publication { 
+ say "CALL (core): get_single_publication ";
     my $self = shift;
     my $eid = shift;
     my $hidden = shift;
     my $dbh = $self->app->db;
 
-    say "CALL: get_single_publication. Hidden=$hidden";
+    say "CALL (core): get_single_publication. Hidden=$hidden";
 
 
     my @objs;
@@ -219,7 +223,8 @@ sub get_single_publication {
 };
 ####################################################################################
 # ################################################################################
-# sub getTagTypeName{
+# sub getTagTypeName{ 
+ say "CALL (core): getTagTypeName";
 #     my $self = shift;
 #     my $type = shift || 1;
 
@@ -231,18 +236,21 @@ sub get_single_publication {
 #     return $row->{name};# || "not found";
 # }
 ################################################################################
-sub get_current_month {
+sub get_current_month { 
+ say "CALL (core): get_current_month ";
   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
   return $mon;
 }
 ################################################################################
-sub get_current_year {
+sub get_current_year { 
+ say "CALL (core): get_current_year ";
   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
 
   return $year+1900;
 }
 ################################################################################
-sub get_month_numeric {
+sub get_month_numeric { 
+ say "CALL (core): get_month_numeric ";
     my $str = shift;
     $str = lc($str);
     $_ = $str;
@@ -263,7 +271,8 @@ sub get_month_numeric {
     return 0;
 }
 ################################################################################
-sub clean_tag_name {
+sub clean_tag_name { 
+ say "CALL (core): clean_tag_name ";
    my $tag = shift;
    $tag =~ s/^\s+|\s+$//g;
    $tag =~ s/\s/_/g;
@@ -275,11 +284,13 @@ sub clean_tag_name {
    return ucfirst($tag);
 }
 ################################################################################
-sub uniq {
+sub uniq { 
+ say "CALL (core): uniq ";
     return keys %{{ map { $_ => 1 } @_ }};
 }
 ################################################################################
-sub nohtml{
+sub nohtml{ 
+ say "CALL (core): nohtml";
    my $key = shift;
    my $type = shift;
    my $extra = shift || "";
@@ -292,7 +303,8 @@ sub nohtml{
 
 
 ####################################################################################
-sub clean_ugly_bibtex_fileds_for_all_entries {
+sub clean_ugly_bibtex_fileds_for_all_entries { 
+ say "CALL (core): clean_ugly_bibtex_fileds_for_all_entries ";
     my $self = shift;
     my $dbh = $self->app->db;
     $self->write_log("clean_ugly_bibtex_fileds_for_all_entries started");
@@ -305,7 +317,8 @@ sub clean_ugly_bibtex_fileds_for_all_entries {
     $self->write_log("clean_ugly_bibtex_fileds_for_all_entries finished");
 };
 ####################################################################################
-sub clean_ugly_bibtex_fileds {
+sub clean_ugly_bibtex_fileds { 
+ say "CALL (core): clean_ugly_bibtex_fileds ";
     my $dbh = shift;
     my $eid = shift;
 
@@ -352,7 +365,8 @@ sub clean_ugly_bibtex_fileds {
 
 
 
-sub get_visibility_for_id {
+sub get_visibility_for_id { 
+ say "CALL (core): get_visibility_for_id ";
    my $self = shift;
    my $id = shift;
    
@@ -368,7 +382,8 @@ sub get_visibility_for_id {
    return $disp;
 }
 ################################################################################
-sub delete_entry_by_id{
+sub delete_entry_by_id{ 
+ say "CALL (core): delete_entry_by_id";
   my $dbh = shift;
   my $id = shift;
 
@@ -382,7 +397,8 @@ sub delete_entry_by_id{
   $sth3->execute($id);
 };
 ################################################################################
-sub get_all_non_hidden_entry_ids{
+sub get_all_non_hidden_entry_ids{ 
+ say "CALL (core): get_all_non_hidden_entry_ids";
    my $dbh = shift;
    
    my $qry = "SELECT DISTINCT id FROM Entry WHERE hidden=0";
@@ -399,7 +415,8 @@ sub get_all_non_hidden_entry_ids{
    return @ids;   
 }
 ################################################################################
-sub get_all_entry_ids{
+sub get_all_entry_ids{ 
+ say "CALL (core): get_all_entry_ids";
    my $dbh = shift;
    
    my $qry = "SELECT DISTINCT id FROM Entry";
@@ -416,7 +433,8 @@ sub get_all_entry_ids{
    return @ids;   
 }
 ################################################################################
-sub get_all_tags{
+sub get_all_tags{ 
+ say "CALL (core): get_all_tags";
    my $dbh = shift;
    
    my $qry = "SELECT DISTINCT id, name FROM Tag ORDER BY name ASC";
@@ -440,7 +458,8 @@ sub get_all_tags{
    return (\@tags, \@ids, \@parents);   
 }
 ################################################################################
-sub get_types_for_landing_page{
+sub get_types_for_landing_page{ 
+ say "CALL (core): get_types_for_landing_page";
     my $dbh = shift;
 
     my $qry = "SELECT DISTINCT our_type FROM OurType_to_Type WHERE landing=1 ORDER BY our_type ASC";
@@ -461,7 +480,8 @@ sub get_types_for_landing_page{
     # return @otypes;
 }
 ################################################################################
-sub get_bibtex_types_for_our_type{
+sub get_bibtex_types_for_our_type{ 
+ say "CALL (core): get_bibtex_types_for_our_type";
     my $dbh = shift;
     my $type = shift;
 
@@ -481,7 +501,8 @@ sub get_bibtex_types_for_our_type{
     return @btypes;
 }
 ################################################################################
-sub get_description_for_our_type{
+sub get_description_for_our_type{ 
+ say "CALL (core): get_description_for_our_type";
     my $dbh = shift;
     my $type = shift;
 
@@ -496,7 +517,8 @@ sub get_description_for_our_type{
     return $description;
 }
 ################################################################################
-sub get_landing_for_our_type{
+sub get_landing_for_our_type{ 
+ say "CALL (core): get_landing_for_our_type";
     my $dbh = shift;
     my $type = shift;
 
@@ -511,7 +533,8 @@ sub get_landing_for_our_type{
     return $landing;
 }
 ################################################################################
-sub set_landing_for_our_type{
+sub set_landing_for_our_type{ 
+ say "CALL (core): set_landing_for_our_type";
     my $dbh = shift;
     my $type = shift;
     my $val = shift;
@@ -526,7 +549,8 @@ sub set_landing_for_our_type{
 }
 
 ################################################################################
-sub toggle_landing_for_our_type{
+sub toggle_landing_for_our_type{ 
+ say "CALL (core): toggle_landing_for_our_type";
     my $dbh = shift;
     my $type = shift;
 
@@ -542,7 +566,8 @@ sub toggle_landing_for_our_type{
     }
 }
 ################################################################################
-sub get_DB_description_for_our_type{
+sub get_DB_description_for_our_type{ 
+ say "CALL (core): get_DB_description_for_our_type";
     my $dbh = shift;
     my $type = shift;
 
@@ -557,14 +582,16 @@ sub get_DB_description_for_our_type{
     return $description;
 }
 ################################################################################
-sub get_all_existing_bibtex_types{
+sub get_all_existing_bibtex_types{ 
+ say "CALL (core): get_all_existing_bibtex_types";
 
     ## defined by bibtex and constant
 
     return ('article', 'book', 'booklet', 'conference', 'inbook', 'incollection', 'inproceedings', 'manual', 'mastersthesis', 'misc', 'phdthesis', 'proceedings', 'techreport', 'unpublished');
 }
 ################################################################################
-sub get_all_bibtex_types{
+sub get_all_bibtex_types{ 
+ say "CALL (core): get_all_bibtex_types";
     my $dbh = shift;
 
     my $qry = "SELECT DISTINCT bibtex_type, our_type
@@ -584,7 +611,8 @@ sub get_all_bibtex_types{
     return @btypes;
 }
 ################################################################################
-sub get_all_our_types{
+sub get_all_our_types{ 
+ say "CALL (core): get_all_our_types";
     my $dbh = shift;
 
     my $qry = "SELECT DISTINCT our_type
@@ -605,7 +633,8 @@ sub get_all_our_types{
 }
 
 ################################################################################
-sub get_type_description{
+sub get_type_description{ 
+ say "CALL (core): get_type_description";
     my $dbh = shift;
     my $type = shift;
 
@@ -617,7 +646,8 @@ sub get_type_description{
     return "Publications of type ".$type;
 }
 ################################################################################
-sub get_all_teams{
+sub get_all_teams{ 
+ say "CALL (core): get_all_teams";
    my $dbh = shift;
 
    # todo: optimize it!!!
@@ -637,7 +667,8 @@ sub get_all_teams{
    return (\@teams, \@ids);   
 }
 ################################################################################
-sub get_tags_for_entry{
+sub get_tags_for_entry{ 
+ say "CALL (core): get_tags_for_entry";
    my $dbh = shift;
    my $eid = shift;
 
@@ -667,7 +698,8 @@ sub get_tags_for_entry{
    return (\@tags, \@ids, \@parents);   
 }
 ##########################################################################
-sub get_year_for_entry_id{
+sub get_year_for_entry_id{ 
+ say "CALL (core): get_year_for_entry_id";
    my $dbh = shift;
    my $eid = shift;
 
@@ -680,7 +712,8 @@ sub get_year_for_entry_id{
 }
 
 ##########################################################################
-sub get_exceptions_for_entry_id{
+sub get_exceptions_for_entry_id{ 
+ say "CALL (core): get_exceptions_for_entry_id";
    my $dbh = shift;
    my $eid = shift;
 
@@ -698,7 +731,8 @@ sub get_exceptions_for_entry_id{
 }
 
 ##########################################################################
-sub get_entry_key{
+sub get_entry_key{ 
+ say "CALL (core): get_entry_key";
    my $dbh = shift;
    my $eid = shift;
 
@@ -710,22 +744,24 @@ sub get_entry_key{
    return $key;
 }
 ##########################################################################
-sub get_entry_title{
-    my $dbh = shift;
-    my $eid = shift;
+# sub get_entry_title{ 
+#  say "CALL (core): get_entry_title";
+#     my $dbh = shift;
+#     my $eid = shift;
 
-    my $sth = $dbh->prepare( "SELECT title FROM Entry WHERE id=?" ); 
-    $sth->execute($eid);
+#     my $sth = $dbh->prepare( "SELECT title FROM Entry WHERE id=?" ); 
+#     $sth->execute($eid);
 
-    my $row = $sth->fetchrow_hashref();
-    my $title = $row->{title} || "title undefined";
+#     my $row = $sth->fetchrow_hashref();
+#     my $title = $row->{title} || "title undefined";
 
-    $title =~ s/\{//g;
-    $title =~ s/\}//g;
-    return $title;
-}
+#     $title =~ s/\{//g;
+#     $title =~ s/\}//g;
+#     return $title;
+# }
 ##########################################################################
-sub get_entry_id{
+sub get_entry_id{ 
+ say "CALL (core): get_entry_id";
    my $dbh = shift;
    my $key = shift;
 
@@ -739,7 +775,8 @@ sub get_entry_id{
    return $id;
 }
 ##########################################################################
-sub get_master_id_for_uid{
+sub get_master_id_for_uid{ 
+ say "CALL (core): get_master_id_for_uid";
    my $dbh = shift;
    my $uid = shift;
 
@@ -752,7 +789,8 @@ sub get_master_id_for_uid{
    return $id;
 }
 ##########################################################################
-sub get_master_id_for_master{
+sub get_master_id_for_master{ 
+ say "CALL (core): get_master_id_for_master";
    my $dbh = shift;
    my $master = shift;
 
@@ -765,7 +803,8 @@ sub get_master_id_for_master{
    return $id;
 }
 ##########################################################################
-sub get_master_id_for_author_id{
+sub get_master_id_for_author_id{ 
+ say "CALL (core): get_master_id_for_author_id";
    my $dbh = shift;
    my $id = shift;
 
@@ -778,7 +817,8 @@ sub get_master_id_for_author_id{
    return $mid;
 }
 ##########################################################################
-sub get_author_id_for_uid{
+sub get_author_id_for_uid{ 
+ say "CALL (core): get_author_id_for_uid";
    my $dbh = shift;
    my $master = shift;
 
@@ -791,7 +831,8 @@ sub get_author_id_for_uid{
    return $id;
 }
 ##########################################################################
-sub get_author_id_for_master{
+sub get_author_id_for_master{ 
+ say "CALL (core): get_author_id_for_master";
    my $dbh = shift;
    my $master = shift;
 
@@ -804,7 +845,8 @@ sub get_author_id_for_master{
    return $id;
 }
 ##########################################################################
-sub get_master_for_id{
+sub get_master_for_id{ 
+ say "CALL (core): get_master_for_id";
    my $dbh = shift;
    my $id = shift;
 
@@ -817,7 +859,8 @@ sub get_master_for_id{
    return $master;
 }
 ##########################################################################
-sub get_team_id{
+sub get_team_id{ 
+ say "CALL (core): get_team_id";
    my $dbh = shift;
    my $team = shift;
 
@@ -830,7 +873,8 @@ sub get_team_id{
    return $id;
 }
 ##########################################################################
-sub get_team_for_id{
+sub get_team_for_id{ 
+ say "CALL (core): get_team_for_id";
    my $dbh = shift;
    my $id = shift;
 
@@ -843,7 +887,8 @@ sub get_team_for_id{
    return $name;
 }
 ##########################################################################
-sub get_tag_id{
+sub get_tag_id{ 
+ say "CALL (core): get_tag_id";
    my $dbh = shift;
    my $tag = shift;
 
@@ -856,7 +901,8 @@ sub get_tag_id{
    return $id;
 }
 ##########################################################################
-sub get_tag_name_for_id{
+sub get_tag_name_for_id{ 
+ say "CALL (core): get_tag_name_for_id";
    my $dbh = shift;
    my $id = shift;
 
@@ -869,7 +915,8 @@ sub get_tag_name_for_id{
    return $name;
 }
 # ##########################################################################
-# sub get_tag_name_for_permalink{
+# sub get_tag_name_for_permalink{ 
+ say "CALL (core): get_tag_name_for_permalink";
 #    my $dbh = shift;
 #    my $permalink = shift;
 
@@ -884,7 +931,8 @@ sub get_tag_name_for_id{
 
 
 ################################################################################
-sub remove_team_for_author {
+sub remove_team_for_author { 
+ say "CALL (core): remove_team_for_author ";
    my $self = shift;
    my $master_id = shift;
    my $teamid = shift;
@@ -899,7 +947,8 @@ sub remove_team_for_author {
 }
 
 ################################################################################
-sub get_team_members {
+sub get_team_members { 
+ say "CALL (core): get_team_members ";
    my $self = shift;
    my $teamid = shift;
    my $dbh = $self->app->db;
@@ -934,7 +983,8 @@ sub get_team_members {
 }
 
 ################################################################################
-sub get_teams_of_author {
+sub get_teams_of_author { 
+ say "CALL (core): get_teams_of_author ";
    my $self = shift;
    my $mid = shift;
    my $dbh = $self->app->db;
@@ -971,7 +1021,8 @@ sub get_teams_of_author {
    return (\@teams, \@start_arr, \@stop_arr, \@team_ids);   
 }
 ################################################################################
-sub get_author_ids_for_tag_id {
+sub get_author_ids_for_tag_id { 
+ say "CALL (core): get_author_ids_for_tag_id ";
    my $self = shift;
    my $tag_id = shift;
    my $dbh = $self->app->db;
@@ -999,7 +1050,8 @@ sub get_author_ids_for_tag_id {
    return @author_ids;
 }
 ################################################################################
-sub get_author_ids_for_tag_id_and_team {
+sub get_author_ids_for_tag_id_and_team { 
+ say "CALL (core): get_author_ids_for_tag_id_and_team ";
    my $self = shift;
    my $tag_id = shift;
    my $team_id = shift;
@@ -1039,7 +1091,8 @@ sub get_author_ids_for_tag_id_and_team {
    return @author_ids;
 }
 ################################################################################
-sub get_tags_for_author {
+sub get_tags_for_author { 
+ say "CALL (core): get_tags_for_author ";
     #todo: objectify!
    my $self = shift;
    my $master_id = shift;
@@ -1073,7 +1126,8 @@ sub get_tags_for_author {
    return (\@tag_ids, \@tags);
 }
 ################################################################################
-sub get_tags_for_team {
+sub get_tags_for_team { 
+ say "CALL (core): get_tags_for_team ";
     my $self = shift;
     my $teamid = shift;
     my $type = shift || 1;
@@ -1122,13 +1176,14 @@ sub get_tags_for_team {
    return (\@tag_ids, \@tags);
 }
 ####################################################################################
-sub add_field_to_bibtex_code {
+sub add_field_to_bibtex_code { 
+ say "CALL (core): add_field_to_bibtex_code ";
     my $dbh = shift;
     my $eid = shift;
     my $field = shift;
     my $value = shift;
 
-    say "call: add_field_to_bibtex_code eid $eid field $field value $value";
+    say "CALL (core): add_field_to_bibtex_code eid $eid field $field value $value";
 
     my @ary = $dbh->selectrow_array("SELECT bib FROM Entry WHERE id = ?", undef, $eid);  
     my $entry_str = $ary[0];
@@ -1147,7 +1202,8 @@ sub add_field_to_bibtex_code {
     $sth2->finish();
 };
 ####################################################################################
-sub has_bibtex_field {
+sub has_bibtex_field { 
+ say "CALL (core): has_bibtex_field ";
     my $dbh = shift;
     my $eid = shift;
     my $field = shift;

@@ -1,6 +1,6 @@
 use utf8;
 package Menry::Schema::Result::Entry;
-
+use Menry::Schema::Result::Tag;
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
@@ -314,7 +314,7 @@ __PACKAGE__->many_to_many("teams", "exceptions_entry_to_teams", "team");
 
 sub isHidden {
   my ($self) = @_;
-  return $self->hidden == 1;
+  return $self->hidden;
 }
 
 sub isTalk {
@@ -322,5 +322,14 @@ sub isTalk {
   return $self->entry_type eq 'talk';
 }
 
+sub getTags {
+  my ($self) = @_;
+  return $self->tags;
+}
+
+sub getAuthors {
+  my ($self) = @_;
+  return $self->authors;
+}
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

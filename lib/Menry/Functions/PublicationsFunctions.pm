@@ -20,6 +20,8 @@ our @EXPORT = qw(
     postprocess_updated_entry
     after_edit_process_month
     after_edit_process_authors
+    generate_html_for_all_need_regen
+    generate_html_for_all_force
     generate_html_for_key
     generate_html_for_id
     getPublicationsByFilter
@@ -213,8 +215,25 @@ sub after_edit_process_authors{
     # }
 }
 ################################################################################
+sub generate_html_for_all_force {
+    my $dbh = shift;
+
+    my @ids = $dbh->resultset('Entry')->get_column('id')->all;
+    for my $id (@ids){
+        generate_html_for_id($dbh, $id);
+    }
+}
 ################################################################################
-sub generate_html_for_key{
+sub generate_html_for_all_need_regen {
+    my $dbh = shift;
+
+    my @ids = $dbh->resultset('Entry')->search({need_html_regen => 1})->get_column('id')->all;
+    for my $id (@ids){
+        generate_html_for_id($dbh, $id);
+    }
+}
+################################################################################
+sub generate_html_for_key {
    my $dbh = shift;
    my $key = shift;
 
@@ -223,7 +242,7 @@ sub generate_html_for_key{
 };
 
 ################################################################################
-sub generate_html_for_id{
+sub generate_html_for_id {
    my $dbh = shift;
    my $eid = shift;
 
@@ -321,7 +340,7 @@ sub getPublicationsByFilter{
     #     ]
     # }) if defined $teamid;
 
-    $rs = $rs->search({'Entry_to_Tag.tag_id' => {'like', $tagid} }) if defined $tagid;
+    $rs = $rs->search({'entries_to_tag.tag_id' => {'like', $tagid} }) if defined $tagid;
     $rs = $rs->search({'Tag.permalink' => {'like', $permalink} }) if defined $permalink;
 
     my @arr = $rs->all;

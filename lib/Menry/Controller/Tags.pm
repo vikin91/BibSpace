@@ -13,9 +13,7 @@ use DBI;
 use Scalar::Util qw(looks_like_number);
 
 use Menry::Controller::Core;
-use TagCloudClass;
-use TagObj;
-use TagTypeObj;
+use Menry::Functions::TagCloudClass;
 use Menry::Controller::Set;
 
 use Mojo::Base 'Mojolicious::Controller';
@@ -26,34 +24,34 @@ use Mojo::Log;
 
 ####################################################################################
 ### NOT USED!
-sub prepare_db{
-    my $self = shift;
-    my $dbh = $self->app->db;
+# sub prepare_db{
+#     my $self = shift;
+#     my $dbh = $self->app->db;
 
-    $dbh->do("CREATE TABLE IF NOT EXISTS TagType(
-        name TEXT,
-        comment TEXT,
-        id INTEGER PRIMARY KEY
-        )");
+#     $dbh->do("CREATE TABLE IF NOT EXISTS TagType(
+#         name TEXT,
+#         comment TEXT,
+#         id INTEGER PRIMARY KEY
+#         )");
 
-    $dbh->do("ALTER TABLE Tag RENAME TO Tag2");
-    $dbh->do("ALTER TABLE Tag ADD COLUMN permalink TEXT");
+#     $dbh->do("ALTER TABLE Tag RENAME TO Tag2");
+#     $dbh->do("ALTER TABLE Tag ADD COLUMN permalink TEXT");
 
-    $dbh->do("CREATE TABLE Tag(
-            name TEXT NOT NULL,
-            id INTEGER PRIMARY KEY,
-            type INTEGER DEFAULT 1,
-            permalink TEXT,
-            FOREIGN KEY(type) REFERENCES TagType(id),
-            UNIQUE(name) ON CONFLICT IGNORE
-        );");
+#     $dbh->do("CREATE TABLE Tag(
+#             name TEXT NOT NULL,
+#             id INTEGER PRIMARY KEY,
+#             type INTEGER DEFAULT 1,
+#             permalink TEXT,
+#             FOREIGN KEY(type) REFERENCES TagType(id),
+#             UNIQUE(name) ON CONFLICT IGNORE
+#         );");
 
-    $dbh->do("INSERT INTO Tag (id, name)
-                SELECT id, name
-                FROM Tag2");
+#     $dbh->do("INSERT INTO Tag (id, name)
+#                 SELECT id, name
+#                 FROM Tag2");
 
-    $dbh->do("DROP TABLE Tag2");
-}
+#     $dbh->do("DROP TABLE Tag2");
+# }
 
 ####################################################################################
 
@@ -67,10 +65,20 @@ sub index {
         $letter.='%';
     }
 
-    my @objs = TagObj->getAllwLetter($dbh, $type, $letter);
-    my @letters_arr = get_first_letters($self, $type);
+    my @objs = $dbh->resultset('Tag')->search({ type => $type, 'name' => { like => $letter } }); 
 
-    $self->stash(otags => \@objs, type => $type, letters_arr => \@letters_arr);
+
+    my @letters_arr = $dbh->resultset('Tag')->search(
+        {type => $type},
+        {
+          columns => [{ 'd_letter' => { distinct => { SUBSTR => 'name, 1, 1' } } }],
+        }
+    )->get_column('d_letter')->all;
+
+    my $ttobj = $dbh->resultset('TagType')->search({id => $type})->first;
+
+
+    $self->stash(otags => \@objs, type => $ttobj, letters_arr => \@letters_arr);
 
     $self->render(template => 'tags/tags');
 }
@@ -118,28 +126,20 @@ sub add_tags_from_string {
                $self->write_log("Adding new tag ->".$tag."<-");
             }
         }
-
-        
-
         foreach my $tag (@tags_arr) {
-            my $qry = 'INSERT INTO Tag(name, type) VALUES (?,?)';
-            my $sth = $dbh->prepare( $qry );  
-            $sth->execute($tag, $type); 
-            $sth->finish();
+            say "pushing new tag to DB: $tag";
+            $dbh->resultset('Tag')->new({
+                name => $tag,
+                type => $type
+            })->insert();
         } 
-        
-    
-        foreach my $tag(@tags_arr){
-            my $sth2 = $dbh->prepare( "SELECT id FROM Tag WHERE name=? AND type=?" );  
-            $sth2->execute($tag, $type);
-            my $row = $sth2->fetchrow_hashref();
-            my $id = $row->{id} || -1;
-            push @tag_ids, $id if $id > -1;
-            $sth2->finish();
-        }
    }
 
-   return @tag_ids;
+   return $dbh->resultset('Tag')->search({
+        name => {'in' => \@tags_arr}
+    })->all;
+
+   # return @tag_ids;
 
 }
 ####################################################################################
@@ -159,12 +159,12 @@ sub add_post {
     my $type = $self->param('type') || 1;
 
     my $tags_to_add = $self->param('new_tag');
-    my @tag_ids = add_tags_from_string($self, $tags_to_add, $type);
+    my @tags = add_tags_from_string($self, $tags_to_add, $type);
 
-    if(scalar @tag_ids >0 ){
-        $self->flash(msg  => "The following tags (of type $type) were added successfully: <i>$tags_to_add</i> , ids: <i>".join(", ",@tag_ids)."</i>");
+    if(scalar @tags >0 ){
+        $self->flash(msg  => "The following tags (of type $type) were added successfully: <i>$tags_to_add</i> , ids: <i>".join(", ",@tags)."</i>");
     }
-    $self->write_log("tags added: $tags_to_add, ids: ".join(", ",@tag_ids));
+    $self->write_log("tags added: $tags_to_add, ids: ".join(", ",@tags));
     $self->redirect_to("/tags/$type");
     # $self->render(template => 'tags/add');
 }

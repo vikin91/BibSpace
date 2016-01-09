@@ -6,6 +6,7 @@
                         <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu" role="menu">
+                            <li><a href="/publications/toggle_hide/<%=$obj->id%><%=$burl%>"><span class="glyphicon glyphicon-eye-close"></span> Toggle hidden</a></li>
                             <li><a href="/publications/edit/<%=$obj->id%><%=$burl%>"><span class="glyphicon glyphicon-pencil" style="color: #5CB85C;"></span> Edit BibTeX</a></li>
                             <li><a href="#modal-dialog-<%=$obj->id%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span> Delete...</a></li>
                             <li><a href="/publications/show_authors/<%=$obj->id%><%=$burl%>"><span class="glyphicon glyphicon-user"></span> Show authors</a></li>

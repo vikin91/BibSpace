@@ -13,6 +13,7 @@ use File::Copy qw(copy);
 use Menry::Controller::Core;
 use Menry::Controller::Set;
 use Menry::Controller::Publications;
+use Menry::Functions::PublicationsFunctions;
 use Menry::Functions::BackupFunctions;
 
 use base 'Mojolicious::Plugin';
@@ -33,20 +34,7 @@ sub register {
     $app->helper(helper_regenerate_html_for_all => sub {
         my $self = shift;
         my $dbh = $self->app->db;
-
-        my $sth = $dbh->prepare( "SELECT DISTINCT id FROM Entry WHERE need_html_regen = 1" );  
-        $sth->execute(); 
-
-        my @ids;
-
-        while(my $row = $sth->fetchrow_hashref()) {
-            my $eid = $row->{id};
-            push @ids, $eid if defined $eid;
-        }
-        for my $id (@ids){
-           generate_html_for_id($dbh, $id);
-           # $self->write_log("HTML regen from helper  for eid $id");
-        }
+        generate_html_for_all_need_regen($dbh);
     });
 
     $app->helper(helper_do_delete_broken_or_old_backup => sub {

@@ -48,10 +48,10 @@ sub fixMonths {
 
     my @objs = EntryObj->getAll($self->app->db);
     for my $o (@objs){
-            my $entry = new Text::BibTeX::Entry();
-            $entry->parse_s($o->{bib});
+        my $entry = new Text::BibTeX::Entry();
+        $entry->parse_s($o->{bib});
 
-            after_edit_process_month($self->app->db, $entry);
+        after_edit_process_month($self->app->db, $entry);
     }
     $self->redirect_to($back_url);
 }
@@ -61,8 +61,8 @@ sub fixEntryType {
     my $self = shift;
     my $back_url = $self->param('back_url');
     $back_url = $self->get_back_url($back_url);
-
-    my @objs = EntryObj->getAll($self->app->db);
+    my $dbh = $self->app->db;
+    my @objs = $dbh->resultset('Entry')->all;
     for my $o (@objs){
         $o->fixEntryTypeBasedOnTag($self->app->db);
     }
@@ -78,12 +78,13 @@ sub unhide {
     my $id = $self->param('id');
     my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
-
     $back_url = $self->get_back_url($back_url);
 
-    my $obj = EntryObj->new({id => $id});
-    $obj->initFromDB($dbh);
-    $obj->unhide($dbh);
+    $dbh->resultset('Entry')->search({id => $id})->update({hidden => 0});
+
+    # my $obj = EntryObj->new({id => $id});
+    # $obj->initFromDB($dbh);
+    # $obj->unhide($dbh);
 
     $self->redirect_to($back_url);
 };
@@ -94,12 +95,13 @@ sub hide {
     my $id = $self->param('id');
     my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
-
     $back_url = $self->get_back_url($back_url);
 
-    my $obj = EntryObj->new({id => $id});
-    $obj->initFromDB($dbh);
-    $obj->hide($dbh);
+    $dbh->resultset('Entry')->search({id => $id})->update({hidden => 1});
+
+    # my $obj = EntryObj->new({id => $id});
+    # $obj->initFromDB($dbh);
+    # $obj->hide($dbh);
 
     $self->redirect_to($back_url);
 };
@@ -107,14 +109,22 @@ sub hide {
 sub toggle_hide {
     my $self = shift;
     my $id = $self->param('id');
+    say "CALL: toggle_hide id $id";
+
     my $back_url = $self->param('back_url');
+    $self->get_back_url($back_url);
     my $dbh = $self->app->db;
 
-    $back_url = $self->get_back_url($back_url);
+    my $obj = $dbh->resultset('Entry')->search({id => $id})->first;
 
-    my $obj = EntryObj->new({id => $id});
-    $obj->initFromDB($dbh);
-    $obj->toggle_hide($dbh);
+    if($obj->hidden == 1){
+        say "object is hidden. unhiding";
+        $dbh->resultset('Entry')->search({id => $id})->update({hidden => 0});
+    }
+    else{
+        say "object is not hidden. hiding";
+        $dbh->resultset('Entry')->search({id => $id})->update({hidden => 1});
+    }
 
     $self->redirect_to($back_url);
 };
@@ -124,12 +134,9 @@ sub make_paper {
     my $id = $self->param('id');
     my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
-
     $back_url = $self->get_back_url($back_url);
 
-    my $obj = EntryObj->new({id => $id});
-    $obj->initFromDB($dbh);
-    $obj->makePaper($dbh);
+    $dbh->resultset('Entry')->search({id => $id})->update({entry_type => 'paper'});
 
     $self->redirect_to($back_url);
 };
@@ -139,12 +146,9 @@ sub make_talk {
     my $id = $self->param('id');
     my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
-
     $back_url = $self->get_back_url($back_url);
 
-    my $obj = EntryObj->new({id => $id});
-    $obj->initFromDB($dbh);
-    $obj->makeTalk($dbh);
+    $dbh->resultset('Entry')->search({id => $id})->update({entry_type => 'talk'});
 
     $self->redirect_to($back_url);
 };
@@ -153,8 +157,12 @@ sub metalist {
 	say "CALL: metalist ";
     my $self = shift;
 
-    my @ids_arr = get_all_non_hidden_entry_ids($self->app->db);
-    $self->stash(ids => \@ids_arr);
+    my $rs = $self->app->db->resultset('Entry')->search({'hidden' => 0},{order_by => { '-desc' => [qw/id/] }});
+    my @entries = $rs->all;
+
+    # my @ids_arr = get_all_non_hidden_entry_ids($self->app->db);
+
+    $self->stash(entries => \@entries);
 
     $self->render(template => 'publications/metalist'); 
 }
@@ -165,20 +173,11 @@ sub meta {
 	say "CALL: meta ";
     my $self = shift;
     my $id = $self->param('id');
-
-
-
     # FETCHING DATA FROM DB
     my $dbh = $self->app->db;
-    my $sth = $dbh->prepare( "SELECT DISTINCT id, hidden, bibtex_key, bib, html
-        FROM Entry 
-        WHERE id = ? AND hidden=0" );  
-    $sth->execute($id);
 
-    my $bib = "";
-    while(my $row = $sth->fetchrow_hashref()) {
-        $bib = $row->{bib};
-    }
+    my $obj = $self->app->db->resultset('Entry')->search({'hidden' => 0, id => $id})->first;
+    my $bib = $obj->bib || "";
 
     $self->render(text => 'Cannot find entry id: '.$id) if $bib eq "";
     return if $bib eq "";
@@ -357,17 +356,15 @@ sub all_recently_added {
 
     $self->write_log("Displaying recently added entries num $num");
 
-    my $qry = "SELECT DISTINCT id, bibtex_key, creation_time FROM Entry ORDER BY creation_time DESC LIMIT ?";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($num); 
+    my @entries = $self->app->db->resultset('Entry')->search({}, {page => 1, rows => 10, order_by => { '-desc' => [qw/creation_time/] }})->all;
 
-    my @array;
-    while(my $row = $sth->fetchrow_hashref()) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
+    # my @array;
+    # while(my $row = $sth->fetchrow_hashref()) {
+    #     my $eid = $row->{id};
+    #     push @array, $eid;
+    # }
 
-    my @objs = get_publications_core_from_array($self, \@array, 0);
+    my @objs = @entries; #get_publications_core_from_array($self, \@array, 0);
 
     $self->stash(objs => \@objs);
     $self->render(template => 'publications/all');  
@@ -382,49 +379,34 @@ sub all_recently_modified {
 
     $self->write_log("Displaying recently modified entries num $num");
 
-    my $qry = "SELECT DISTINCT id, bibtex_key, modified_time FROM Entry ORDER BY modified_time DESC LIMIT ?";
+    
+    my @entries = $self->app->db->resultset('Entry')->search({}, {page => 1, rows => 10, order_by => { '-desc' => [qw/modified_time/] }})->all;
 
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($num); 
+    # my @array;
+    # while(my $row = $sth->fetchrow_hashref()) {
+    #     my $eid = $row->{id};
+    #     push @array, $eid;
+    # }
 
-    my @array;
-    while(my $row = $sth->fetchrow_hashref()) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-
-    my @objs = get_publications_core_from_array($self, \@array, 0);
+    my @objs = @entries; #get_publications_core_from_array($self, \@array, 0);
     $self->stash(objs => \@objs);
     $self->render(template => 'publications/all');  
 }
-####################################################################################
-sub all_with_pdf_on_sdq{
-    say "CALL: all_with_pdf_on_sdq ";
-    my $self = shift;
-    my $num = $self->param('num') || 10;
-    my $dbh = $self->app->db;
+# ####################################################################################
+# sub all_with_pdf_on_sdq{
+#     say "CALL: all_with_pdf_on_sdq ";
+#     my $self = shift;
+#     my $num = $self->param('num') || 10;
+#     my $dbh = $self->app->db;
 
-    $self->write_log("Displaying papers with pdfs on sdq server");
+#     $self->write_log("Displaying papers with pdfs on sdq server");
 
+#     my @entries = $self->app->db->resultset('Entry')->search({html_bib => {'LIKE', '%sdqweb%'}}, {order_by => { '-desc' => [qw/year/] }})->all;
 
-    my $qry = "SELECT id from Entry WHERE html_bib LIKE ?";
-
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute("%sdqweb%"); 
-
-    my @array;
-    while(my $row = $sth->fetchrow_hashref()) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-    my $msg = "This list contains papers that have pdfs on the sdqweb server. Please use this list to move pdfs to our server - this improves the performance.";
-
-    my @objs = get_publications_core_from_array($self, \@array);
-    $self->stash(objs => \@objs, msg => $msg);
-    $self->render(template => 'publications/all');  
-}
+#     my $msg = "This list contains papers that have pdfs on the sdqweb server. Please use this list to move pdfs to our server - this improves the performance.";
+#     $self->stash(objs => \@entries, msg => $msg);
+#     $self->render(template => 'publications/all');  
+# }
 ####################################################################################
 sub all_without_tag {
 	say "CALL: all_without_tag ";
@@ -434,31 +416,50 @@ sub all_without_tag {
 
     $self->write_log("Displaying papers without any tag of type $tagtype");
 
-    my $qry = "SELECT DISTINCT id, bibtex_key 
-                FROM Entry 
-                WHERE entry_type = 'paper' 
-                AND id NOT IN (
-                    SELECT DISTINCT entry_id 
-                    FROM Entry_to_Tag
-                    LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
-                    WHERE Tag.type = ?)
-                    ORDER BY year DESC";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($tagtype); 
+    my @eids_with_tag = $self->app->db->resultset('EntryToTag')->search(
+        {type => $tagtype},
+        {
+            join => 'tag'
+        }
+    )->all;
 
-    my @array;
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{id};
-      push @array, $eid;
-    }
+    print Dumper(\@eids_with_tag);
+
+    my @entries = $self->app->db->resultset('Entry')->search(
+    {
+        id => {'not in' => \@eids_with_tag}
+    }, 
+    {
+        order_by => { '-desc' => [qw/year/] }
+    })->all;
+
+    # my $qry = "SELECT DISTINCT id, bibtex_key 
+    #             FROM Entry 
+    #             WHERE entry_type = 'paper' 
+    #             AND id NOT IN (
+    #                 SELECT DISTINCT entry_id 
+    #                 FROM Entry_to_Tag
+    #                 LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
+    #                 WHERE Tag.type = ?)
+    #                 ORDER BY year DESC";
+    # my $sth = $dbh->prepare( $qry );  
+    # $sth->execute($tagtype); 
+
+    # my @array;
+    # while(my $row = $sth->fetchrow_hashref()) {
+    #   my $eid = $row->{id};
+    #   push @array, $eid;
+    # }
 
     my $msg = "This list contains papers with no tags (of type $tagtype) assigned. Use this list to tag the untagged papers! ";
 
 
-    my @objs = get_publications_core_from_array($self, \@array);
+    my @objs = @entries; #get_publications_core_from_array($self, \@array);
     $self->stash(objs => \@objs, msg => $msg);
     $self->render(template => 'publications/all');  
 }
+
+# regular update to ORM sotpped here!
 ####################################################################################
 sub all_without_tag_for_author {
 	say "CALL: all_without_tag_for_author ";
@@ -466,14 +467,34 @@ sub all_without_tag_for_author {
     my $dbh = $self->app->db;
     my $author = $self->param('author');
     my $tagtype = $self->param('tagtype');
-    my $aid = -1;
 
-    my $mid = get_master_id_for_master($dbh, $author) || -1;
-    if($mid == -1){ #no such master. Assume, that author id was given
-        $aid = $author;
+    my $author_obj;
+    my $rs = $dbh->resultset('Author')->search({master_id => $author});
+    if($rs->count == 0){
+        $rs = $dbh->resultset('Author')->search({master => $author});
     }
-    else{
-        $aid = $mid;
+    $author_obj = $rs->first;
+    my $aid = $author_obj->master_id;
+    
+    my @entries = $author_obj->entries;
+    my @e_without_t_for_author;
+
+    # @e_without_t_for_author = $author_obj->entries->tags->search(
+    #     {
+    #         type => $tagtype,
+    #         tags_count => 0,
+    #     },
+    #     {
+    #         columns => [{tags_count => {count => 'tags.id'}}]
+    #     }
+    # )->all;
+
+
+    for my $e (@entries){
+        my $rs_tags = $e->tags->search({type => $tagtype});
+        if($rs_tags->count == 0){
+            push @e_without_t_for_author, $e;    
+        }
     }
     
     
@@ -481,30 +502,30 @@ sub all_without_tag_for_author {
     $self->write_log($str);
     say $str;
 
-    my $qry = "SELECT DISTINCT id, bibtex_key, year, sort_month
-                FROM Entry 
-                LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
-                WHERE Entry_to_Author.author_id = ?
-                AND entry_type='paper'
-                AND id NOT IN (
-                    SELECT DISTINCT entry_id 
-                    FROM Entry_to_Tag
-                    LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
-                    WHERE Tag.type = ?)
-                ORDER BY year, sort_month DESC";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($aid, $tagtype); 
+    # my $qry = "SELECT DISTINCT id, bibtex_key, year, sort_month
+    #             FROM Entry 
+    #             LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
+    #             WHERE Entry_to_Author.author_id = ?
+    #             AND entry_type='paper'
+    #             AND id NOT IN (
+    #                 SELECT DISTINCT entry_id 
+    #                 FROM Entry_to_Tag
+    #                 LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
+    #                 WHERE Tag.type = ?)
+    #             ORDER BY year, sort_month DESC";
+    # my $sth = $dbh->prepare( $qry );  
+    # $sth->execute($aid, $tagtype); 
 
-    my @array;
-    while(my $row = $sth->fetchrow_hashref()) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
+    
+    # while(my $row = $sth->fetchrow_hashref()) {
+    #     my $eid = $row->{id};
+    #     push @array, $eid;
+    # }
 
     my $msg = "This list contains papers with no tags (of type $tagtype) assigned. Use this list to tag the untagged papers! ";
 
 
-    my @objs = get_publications_core_from_array($self, \@array);
+    my @objs = @e_without_t_for_author; #get_publications_core_from_array($self, \@array);
     $self->stash(objs => \@objs, msg => $msg);
 
     $self->render(template => 'publications/all');  
@@ -686,12 +707,6 @@ sub all {
 
 	if ($self->session('user')){
         my @objs = publications_get_publications_core($self, {});
-
-        for my $o (@objs){
-
-            say $o->id;
-            say $o->bibtex_key;
-        }
         $self->stash(objs => \@objs);
 		$self->render(template => 'publications/all');  
 	}
@@ -1311,9 +1326,7 @@ sub regenerate_html_for_all {
   $back_url = $self->get_back_url($back_url);
 
   $self->write_log("regenerate_html_for_all is running");
-
-  $self->helper_regenerate_html_for_all();
-
+  generate_html_for_all_need_regen($dbh);
   $self->write_log("regenerate_html_for_all has finished");
 
   $self->redirect_to($back_url);
@@ -1323,19 +1336,13 @@ sub regenerate_html_for_all_force {
 	say "CALL: regenerate_html_for_all_force ";
     my $self = shift;
     my $back_url = $self->param('back_url');
-
     my $dbh = $self->app->db;    
     $back_url = $self->get_back_url($back_url);
+
     $self->write_log("regenerate_html_for_all FORCE is running");
-
-    my @ids = $self->app->db->resultset('Entry')->get_column('id')->all;
-
-    # my @ids = get_all_entry_ids($dbh);
-    for my $id (@ids){
-      generate_html_for_id($dbh, $id);
-    }
-
+    generate_html_for_all_force($dbh);
     $self->write_log("regenerate_html_for_all FORCE has finished");
+
     $self->redirect_to($back_url);
 };
 ####################################################################################
@@ -1344,41 +1351,12 @@ sub regenerate_html {
     my $self = shift;
     my $id = $self->param('id');
     my $back_url = $self->param('back_url');
-
     my $dbh = $self->app->db;
-
-$back_url = $self->get_back_url($back_url);
+    $back_url = $self->get_back_url($back_url);
 
     generate_html_for_id($dbh, $id);
     $self->redirect_to($back_url);
 };
-
-####################################################################################
-
-# sub delete {
-# 	say "CALL: delete ";
-#     my $self = shift;
-#     my $id = $self->param('id');
-#     my $back_url = $self->param('back_url');
-
-#     $self->write_log("Delete entry eid $id. (delete_sure should follow) ");
-
-#    #  my $dbh = $self->app->db;
-#    #  my $sth = $dbh->prepare( "SELECT DISTINCT key, html, bibtex_type
-#    #    FROM Entry 
-#    #    WHERE id = ?" );  
-#    # $sth->execute($id);
-
-#    # my $row = $sth->fetchrow_hashref();
-#    my $html_preview = 'www'; #$row->{html} || nohtml($row->{bibtex_key}, $row->{bibtex_type});
-#    my $bibtex_key = 'aaa';#$row->{bibtex_key};
-  
-
-
-#   $self->stash(key => $bibtex_key, id => $id, preview => $html_preview, back_url => $back_url);
-#   $self->render(template => 'publications/sure_delete');
-# };
-
 ####################################################################################
 
 sub delete_sure {
@@ -1390,17 +1368,15 @@ sub delete_sure {
     if( !defined $back_url or $back_url =~ /get\/$eid/){
         $back_url = "/publications";
     }
-
     my $dbh = $self->app->db;
 
     # delete_entry_by_id($dbh, $eid);
-    $dbh->resultset('Entry')->search({ id => $eid })->delete_all;  
-    $dbh->resultset('EntryToTag')->search({ entry_id => $eid })->delete_all;  
     $dbh->resultset('EntryToAuthor')->search({ entry_id => $eid })->delete_all;  
-   
-   $self->write_log("delete_sure entry eid $eid. Entry deleted.");
-
-   $self->redirect_to($back_url);
+    $dbh->resultset('EntryToTag')->search({ entry_id => $eid })->delete_all;  
+    $dbh->resultset('Entry')->search({ id => $eid })->delete_all;  
+    
+    $self->write_log("delete_sure entry eid $eid. Entry deleted.");
+    $self->redirect_to($back_url);
 };
 ####################################################################################
 sub show_authors_of_entry{
@@ -1461,27 +1437,43 @@ sub manage_tags{
 
     $self->write_log("Manage tags of entry eid $eid");
 
-    my ($all_tags_arrref, $all_ids_arrref, $all_parents_arrref) = get_all_tags($dbh);
-    my ($tags_arrref, $ids_arrref, $parents_arrref) = get_tags_for_entry($dbh, $eid);
+    my $entry = $self->app->db->resultset('Entry')->search({ id => $eid})->first;
 
-    # my @unassigned_tags_ids = get_ids_arr_of_unassigned_tags($self, $eid);  #problem with sorting!
+    my @all_tags = $self->app->db->resultset('Tag')->all;
 
-    my @unassigned_tags_ids;
+    my @tags_for_entry = $entry->tags;
+    for my $t (@tags_for_entry){
+        say "Tag of entry: ".$t->name;
+    }
 
-    for my $t (@$all_ids_arrref){
-        if (!grep( /^$t$/, @$ids_arrref)){
-            push @unassigned_tags_ids, $t;
+    for my $t (@all_tags){
+        say "Tag of all tags: ".$t->name ." grep: ". grep( /^$t$/, @tags_for_entry);
+    }
+
+    my @a = $entry->authors;
+    for my $a (@a){
+        say "Author of entry: ".$a->master;
+    }
+    
+    my @unassigned_tags;
+    for my $t (@all_tags){
+        if (grep( /^$t$/, @tags_for_entry) == 0){
+            push @unassigned_tags, $t;
         }
     }
 
-  my $html_preview = get_html_for_entry_id($dbh, $eid);
-  my $key = get_entry_key($dbh, $eid);
+    for my $u (@unassigned_tags){
+        say "unassigned tag: ".$u->name;
+    }
+
+    my $html_preview = get_html_for_entry_id($dbh, $eid);
+    my $key = $entry->bibtex_key;
 
     
   $self->stash(eid => $eid, key => $key, back_url => $back_url, preview => $html_preview, 
-        tags  => $tags_arrref, ids => $ids_arrref, parents => $parents_arrref, 
-        all_tags  => $all_tags_arrref, unassigned_tag_ids => \@unassigned_tags_ids, 
-        all_ids => $all_ids_arrref, all_parents => $all_parents_arrref);
+        entry_tags  => \@tags_for_entry,
+        all_tags  => \@all_tags, 
+        unassigned_tags => \@unassigned_tags);
   $self->render(template => 'publications/manage_tags');
 }
 ####################################################################################
@@ -1496,8 +1488,10 @@ sub remove_tag{
 
   $self->write_log("Removing tag id $tid from entry eid $eid");
 
-  my $sth = $dbh->prepare( "DELETE FROM Entry_to_Tag WHERE entry_id=? AND tag_id=?");
-  $sth->execute($eid, $tid);
+  $dbh->resultset('EntryToTag')->search({entry_id => $eid, tag_id => $tid})->delete();
+
+  # my $sth = $dbh->prepare( "DELETE FROM Entry_to_Tag WHERE entry_id=? AND tag_id=?");
+  # $sth->execute($eid, $tid);
 
 
   $self->redirect_to($back_url);
@@ -1515,8 +1509,9 @@ sub add_tag{
 
     $self->write_log("Adding tag id $tid to entry eid $eid");
 
-    my $sth = $dbh->prepare( "INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
-    $sth->execute($eid, $tid);
+    $dbh->resultset('EntryToTag')->find_or_create({entry_id => $eid, tag_id => $tid})->insert();
+
+    
     $self->redirect_to($back_url);
 
 }
@@ -1532,8 +1527,10 @@ sub add_exception{
 
     $self->write_log("Adding exception id $tid to entry eid $eid");
 
-    my $sth = $dbh->prepare( "INSERT INTO Exceptions_Entry_to_Team(entry_id, team_id) VALUES (?,?)");
-    $sth->execute($eid, $tid);
+    $dbh->resultset('ExceptionsEntryToTeam')->new({entry_id => $eid, team_id => $tid})->insert();
+
+    # my $sth = $dbh->prepare( "INSERT INTO Exceptions_Entry_to_Team(entry_id, team_id) VALUES (?,?)");
+    # $sth->execute($eid, $tid);
 
     $self->redirect_to($back_url);
 
