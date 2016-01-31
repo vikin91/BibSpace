@@ -43,6 +43,7 @@
     <ul class="dropdown-menu" role="menu">
         <li>
             <a href='/publications/add<%=backurl%>'><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add</span></a>
+            <a href='/publications/add_many<%=backurl%>'><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add multiple</span></a>
         </li>
         <li>
             <a href='/publications'>

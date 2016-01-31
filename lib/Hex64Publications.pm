@@ -345,6 +345,8 @@ sub startup {
     
 
     $logged_user->get('/publications/add')->to('publications#get_add');
+    $logged_user->get('/publications/add_many')->to('publications#get_add_many');
+    $logged_user->post('/publications/add_many/store')->to('publications#post_add_many_store');
     $logged_user->post('/publications/add/store')->to('publications#post_add_store');
 
     # $logged_user->post('/publications/store/:id')->to('publications#post_store');
