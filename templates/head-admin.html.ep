@@ -14,11 +14,8 @@
     % my $burl = config 'base_url';
     
     %= stylesheet $burl.'styles.css'
-    %= stylesheet $burl.'test1.css'
     %= stylesheet '/styles.css'
-    %= stylesheet '/test1.css'
     %= stylesheet 'http://se2.informatik.uni-wuerzburg.de/pa/styles.css'
-    %= stylesheet 'http://se2.informatik.uni-wuerzburg.de/pa/test1.css'
     
 
     <script type="text/javascript">
