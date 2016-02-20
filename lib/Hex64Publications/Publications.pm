@@ -1548,7 +1548,7 @@ sub get_add_many {
     my $self = shift;
     my %mons = (1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9 =>'September',10=>'October',11=>'November',12=>'December');
 
-    my $bib = 'Pate your bibtex here (and remove this text!)';
+    my $bib = '';
 
     my $msg ="Adding multiple publications at once is <strong>experimental!</strong> <br/> <strong>Adding mode</strong> You operate on an unsaved entry!";
 
