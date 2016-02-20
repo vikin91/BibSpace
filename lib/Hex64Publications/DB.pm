@@ -112,6 +112,7 @@ sub create_main_db{
           )");
     } catch {
         warn "caught error: $_";
+        warn "Applying workaround.";
            # version for old Mysql
         $dbh->do("CREATE TABLE IF NOT EXISTS `Entry`(
           id INTEGER(8) PRIMARY KEY AUTO_INCREMENT,
@@ -220,22 +221,43 @@ sub prepare_user_table_mysql{
     my $self = shift;
     my $user_dbh = shift;
 
-
-   $user_dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
-        id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
-        registration_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        login VARCHAR(250) NOT NULL,
-        real_name VARCHAR(250) DEFAULT 'unnamed',
-        email VARCHAR(250) NOT NULL,
-        pass VARCHAR(250) NOT NULL,
-        pass2 VARCHAR(250) NOT NULL,
-        pass3 VARCHAR(250),
-        rank INTEGER(3) DEFAULT 0,
-        master_id INTEGER(8) DEFAULT 0,
-        tennant_id INTEGER(8) DEFAULT 0,
-        CONSTRAINT login_unique UNIQUE(login)
-      )");
+    try{
+        $user_dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
+            id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
+            registration_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            login VARCHAR(250) NOT NULL,
+            real_name VARCHAR(250) DEFAULT 'unnamed',
+            email VARCHAR(250) NOT NULL,
+            pass VARCHAR(250) NOT NULL,
+            pass2 VARCHAR(250) NOT NULL,
+            pass3 VARCHAR(250),
+            rank INTEGER(3) DEFAULT 0,
+            master_id INTEGER(8) DEFAULT 0,
+            tennant_id INTEGER(8) DEFAULT 0,
+            CONSTRAINT login_unique UNIQUE(login)
+          )");
+    } catch {
+        warn "caught error: $_";
+        warn "Applying workaround.";
+           # version for old Mysql
+        $user_dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
+            id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
+            registration_time TIMESTAMP DEFAULT '0000-00-00 00:00:00',
+            last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            login VARCHAR(250) NOT NULL,
+            real_name VARCHAR(250) DEFAULT 'unnamed',
+            email VARCHAR(250) NOT NULL,
+            pass VARCHAR(250) NOT NULL,
+            pass2 VARCHAR(250) NOT NULL,
+            pass3 VARCHAR(250),
+            rank INTEGER(3) DEFAULT 0,
+            master_id INTEGER(8) DEFAULT 0,
+            tennant_id INTEGER(8) DEFAULT 0,
+            CONSTRAINT login_unique UNIQUE(login)
+          )");
+    };
+   
 
    $self->prepare_token_table_mysql($user_dbh);
 
