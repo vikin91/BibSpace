@@ -1581,7 +1581,7 @@ sub post_add_many_store {
     my @key_arr = ();
 
     for my $bibtex_code (@bibtex_codes){
-        $debug_str.="<br>Found code!";
+        # $debug_str.="<br>Found code!";
 
         my $bibtex_key = get_key_from_bibtex_code($bibtex_code);
         $debug_str.="<br>Found key: $bibtex_key";
@@ -2103,16 +2103,16 @@ sub postprocess_edited_entry{
     }
 
     if(!$preview){
-        after_edit_process_authors($dbh, $entry);
         after_edit_process_tags($dbh, $entry); 
+        after_edit_process_authors($dbh, $entry);
         generate_html_for_key($dbh, $key);
         after_edit_process_month($dbh, $entry);
 
         # $exit_code = "Your entry has been added, but please note: TODO: adjust those methods: after_edit_process_authors and after_edit_process_tags!";
     }
     else{
-      my ($html, $htmlbib) = get_html_for_bib($content, $key);
-      $preview_html = $html;
+        my ($html, $htmlbib) = get_html_for_bib($content, $key);
+        $preview_html = $html;
     }
 
   
@@ -2188,7 +2188,7 @@ sub after_edit_process_tags{
          my $tt_id = $tt_obj->{id};
 
          if(!defined $tt_obj->{id}){
-            my $sth4 = $dbh->prepare( "INSERT IGNORE INTO Tagtype(name, comment) VALUES(?,?)" );  
+            my $sth4 = $dbh->prepare( "INSERT IGNORE INTO TagType(name, comment) VALUES(?,?)" );  
             $sth4->execute("Imported", "Tags Imported from Bibtex");   
             $tt_obj = TagTypeObj->getByName($dbh, "Imported");
             $tt_id = $tt_obj->{id};
