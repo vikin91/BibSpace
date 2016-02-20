@@ -62,7 +62,6 @@ has backup_db => sub {
 
 sub startup {
     my $self = shift;
-    $self->app->plugin('InstallablePaths');
     $self->app->plugin('RenderFile');
     my $address = Net::Address::IP::Local->public;
     # print $address;

@@ -47,7 +47,7 @@ mkdir backups
 curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
 
 ### Install Perl libraries
-sudo cpanm -n Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd
+sudo cpanm -n Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd Try::Tiny
 sudo cpanm -n  File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI
 sudo cpanm -n Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local 
 sudo cpanm -n Text::BibTeX HTML::TagCloud::Sortable DBD::mysql
