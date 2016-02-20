@@ -1,9 +1,0 @@
-% layout 'default';
-% use HTML::TagCloud::Sortable;
-% use Mojo::ByteStream 'b';
-
-
-%foreach my $obj (@$tcarr){
-    <%= b($obj->getHTML()) %> &nbsp; 
-%}
-

@@ -58,9 +58,9 @@ sub cron_day {
     log_cron_usage($self->app->db, $level);
     $self->write_log("Cron day started");
     
-    ############ CRON ACTIONS
+    ############ Cron ACTIONS
     $self->helper_do_mysql_backup_current_state("cron");
-    ############ CRON ACTIONS STOP
+    ############ Cron ACTIONS STOP
 
     $self->write_log("Cron day finished");
     $self->render(text => "Cron day here\n");
@@ -80,9 +80,9 @@ sub cron_night {
     log_cron_usage($self->app->db, $level);
     $self->write_log("Cron night started");
 
-    ############ CRON ACTIONS
+    ############ Cron ACTIONS
     $self->helper_regenerate_html_for_all();
-    ############ CRON ACTIONS STOP
+    ############ Cron ACTIONS STOP
 
     $self->write_log("Cron night finished");
     $self->render(text => "Cron night here\n");
@@ -101,11 +101,11 @@ sub cron_week {
     log_cron_usage($self->app->db, $level);
     $self->write_log("Cron week started");
 
-    ############ CRON ACTIONS 
+    ############ Cron ACTIONS 
     # $self->helper_reassign_papers_to_authors();  #can be anbled later
     # $self->helper_clean_ugly_bibtex_fileds_for_all_entries(); #can be enabled later
     $self->helper_do_delete_broken_or_old_backup();
-    ############ CRON ACTIONS STOP
+    ############ Cron ACTIONS STOP
     
     $self->write_log("Cron week finished");
     $self->render(text => "Cron week here\n");
@@ -124,9 +124,9 @@ sub cron_month {
     log_cron_usage($self->app->db, $level);
     $self->write_log("Cron month started");
 
-    ############ CRON ACTIONS
+    ############ Cron ACTIONS
     $self->helper_do_delete_broken_or_old_backup();
-    ############ CRON ACTIONS STOP
+    ############ Cron ACTIONS STOP
 
     $self->write_log("Cron month finished");
     $self->render(text => "Cron month here\n");
@@ -141,7 +141,7 @@ sub log_cron_usage{
     my $level = shift;
 
     prepare_cron_table($dbh);
-    my $sth = $dbh->prepare( "REPLACE INTO CRON (type) VALUES (?)" );  
+    my $sth = $dbh->prepare( "REPLACE INTO Cron (type) VALUES (?)" );  
     $sth->execute($level);
 };
 ##########################################################################################

@@ -34,10 +34,10 @@ sub prepare_cron_table{
       last_run_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )");
 
-    $dbh->do("REPLACE INTO CRON (type) VALUES (0)");
-    $dbh->do("REPLACE INTO CRON (type) VALUES (1)");
-    $dbh->do("REPLACE INTO CRON (type) VALUES (2)");
-    $dbh->do("REPLACE INTO CRON (type) VALUES (3)");
+    $dbh->do("REPLACE INTO Cron (type) VALUES (0)");
+    $dbh->do("REPLACE INTO Cron (type) VALUES (1)");
+    $dbh->do("REPLACE INTO Cron (type) VALUES (2)");
+    $dbh->do("REPLACE INTO Cron (type) VALUES (3)");
 };
 ####################################################################################
 sub create_backup_table{
