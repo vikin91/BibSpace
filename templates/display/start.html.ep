@@ -34,6 +34,10 @@
                 <li>
                     <a href="/read/tags-for-author/author">/read/tags-for-author/author</a>  (alias <a href="/r/t4a/author_id">/r/t4a/author</a>)
                 </li>
+                <li>
+                    <a href="/read/tags-for-team/1">/read/tags-for-team/team</a>  (alias <a href="/r/t4t/team_id">/r/t4t/team_id</a>)
+                </li>
+                
 			</ul>
 
 			<br>
