@@ -426,7 +426,7 @@ sub startup {
     $anyone->get('/r/t4a/:aid')->to('tags#get_tags_for_author_read'); #ALIAS
 
     $anyone->get('/read/tags-for-team/:tid')->to('tags#get_tags_for_team_read');
-    $anyone->get('/r/t4a/:tid')->to('tags#get_tags_for_team_read'); #ALIAS
+    $anyone->get('/r/t4t/:tid')->to('tags#get_tags_for_team_read'); #ALIAS
 
 
 
