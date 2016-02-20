@@ -1135,7 +1135,7 @@ sub get_team_members {
    my @stop_arr;
 
    
-   my $qry = "SELECT DISTINCT (author_id), start, stop
+   my $qry = "SELECT DISTINCT (author_id), start, stop, Author.display
             FROM Author_to_Team 
             JOIN Author 
             ON Author.master_id = Author_to_Team.author_id

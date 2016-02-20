@@ -1548,23 +1548,7 @@ sub get_add_many {
     my $self = shift;
     my %mons = (1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9 =>'September',10=>'October',11=>'November',12=>'December');
 
-    my $bib = '
-    @article{key_1-'.get_current_year().',
-        author = {Johny Example},
-        title = {{Selected aspects of some methods 1}},
-        year = {'.get_current_year().'},
-        month = {'.$mons{get_current_month()}.'},
-        day = {1--31},
-    }
-
-    @article{key_2-'.get_current_year().',
-        author = {Johny Example},
-        title = {{Selected aspects of some methods 2}},
-        year = {'.get_current_year().'},
-        month = {'.$mons{get_current_month()}.'},
-        day = {1--31},
-    }
-    ';
+    my $bib = 'Pate your bibtex here (and remove this text!)';
 
     my $msg ="Adding multiple publications at once is <strong>experimental!</strong> <br/> <strong>Adding mode</strong> You operate on an unsaved entry!";
 
@@ -1586,35 +1570,23 @@ sub post_add_many_store {
 
     $self->write_log("post_add_many_store add publication with bib $new_bib");
 
+    my $debug_str = "";
+
 
     my $dbh = $self->app->db;
     my $html_preview = "";
     my $code = -2;
 
-    my @bibtex_codes = ();
-    $new_bib =~ s/^\s+|\s+$//g;
-    $new_bib =~ s/^\t//g;
-
-
-    ### TODO: this loop is broken and array @bibtex_codes stays empty
-    for my $b_code (split /@/, $code){
-
-        my $entry_code = "@".$b_code; 
-
-        my $entry = new Text::BibTeX::Entry;
-        $entry->parse_s($entry_code);
-        if($entry->parse_ok){
-            push @bibtex_codes, $entry_code;    
-        }
-    }
-
-    say "bibtex_codes :".join(" ",@bibtex_codes);
-
+    my @bibtex_codes = split_bibtex_entries($new_bib);
     my @key_arr = ();
-    @key_arr = get_keys_array_from_bibtex_code($new_bib) if defined $new_bib;
 
-    for my $key (@key_arr){
-        say "Found key: $key";
+    for my $bibtex_code (@bibtex_codes){
+        $debug_str.="<br>Found code!";
+
+        my $bibtex_key = get_key_from_bibtex_code($bibtex_code);
+        $debug_str.="<br>Found key: $bibtex_key";
+
+        push @key_arr, $bibtex_key;
     }
 
     my @existing_ids = ();
@@ -1624,31 +1596,60 @@ sub post_add_many_store {
          my $single_id = get_entry_id($dbh, $key);
          if($single_id ne -1){
             push @existing_ids, $single_id;
-            push @existing_keys, $key;   
+            push @existing_keys, $key;
+            $debug_str.="<br>ID exists: $single_id";
+            $debug_str.="<br>KEY exists: $key";
          }
          
     }
+
+    $debug_str.="<br>==== Processing done. Existing keys: ".@existing_ids." join: ".join(' ', @existing_keys).".";
+
+
+
+    my %seen;
+    my $are_unique = 0;
+    # if size of arr is equal to size of uniq arr
+    $are_unique = 1 if uniq(@key_arr)==@key_arr;
+    # count how many times a given key appears
+    foreach my $value (@key_arr) {
+        $seen{$value}++;
+    }
+
+    $debug_str.="<br>Checking if input keys are unique: ";
+    $debug_str.="Yes!" if $are_unique;
+    $debug_str.="No! " unless $are_unique;
+
 
     # say "key $key";
     # say "existing_id $existing_id";
     my $param_prev = $self->param('preview') || "";
     my $param_save = $self->param('save') || "";
 
-    say "exisitng keys: ".@existing_ids." join: ".join('', @existing_keys);
 
-    ### TODO: make sure that keys included in the @key_arr are unique!!!
 
     if (@existing_ids) {  # if the array is not empty
-        $msg = "The following keys exist already: ".join('', @existing_keys);
-        say $msg;
+        $msg = $debug_str."<br/>"."<strong>The following keys exist already in the system: ".join(', ', @existing_keys)."</strong>";
 
         $self->stash(bib  => $new_bib, existing_id => 0, key => '', msg =>$msg, exit_code => $code, preview => $html_preview);
         $self->render(template => 'publications/add_multiple_entries');
         return;
     }
 
+    if ($are_unique == 0) {  # if the array is not empty
+        $debug_str.="<br/>"."Some bibtex keys in the input are not unique. Please correct the input.";
+        foreach my $key ( keys %seen ){
+            $debug_str.="<br/>"."Bibtex key: $key exists ".$seen{$key}." times!" if $seen{$key} > 1;
+        }
+        
+        $msg = $debug_str;
 
-    say "before bibtex codes loop";
+        $self->stash(bib  => $new_bib, existing_id => 0, key => '', msg =>$msg, exit_code => $code, preview => $html_preview);
+        $self->render(template => 'publications/add_multiple_entries');
+        return;
+    }
+
+    $debug_str.="<br>Entries ready to add! Starting.";
 
     $msg = "";
     # here assume that the codes in array @bibtex_codes are ready to add
@@ -1656,44 +1657,54 @@ sub post_add_many_store {
         my $entry = new Text::BibTeX::Entry;
         $entry->parse_s($single_code);
 
-        say "single_code $single_code";
-        say $entry->parse_ok;
-        say defined $self->param('save');
+        $debug_str.="<br>====== Entry ";
+        $debug_str.="<br>"."Parse ok? ".$entry->parse_ok;
+        $debug_str.="<br>"."Do you wanted to save? ";
+        $debug_str.="YES" if defined $self->param('save');
+        $debug_str.="NO, just checking" unless defined $self->param('save');
+
+        $debug_str.="<br>"."Entry has key: ".$entry->key;
 
         if($entry->parse_ok and defined $self->param('save')){
+            $debug_str.="<br>"."Adding!";
+
             my $single_key = $entry->key;
-            ($code, $html_preview) = postprocess_edited_entry($dbh, $single_code, 0);
+            ($code, $html_preview) = postprocess_edited_entry($dbh, $single_code, 0);  #FIXME: added entry is strange!
             my $added_id = get_entry_id($dbh, $single_key);
+
+            $debug_str.="<br>"."Added key $single_key as id $added_id sucessfully!<br/>";
             $msg .= "Added key $single_key as id $added_id sucessfully!<br/>";
         }
     }
 
     say "after bibtex codes loop";
 
-    $self->stash(bib  => $new_bib, existing_id => 0, key => '', msg =>$msg, exit_code => $code, preview => $html_preview);
+    $self->stash(bib  => $new_bib, existing_id => 0, key => '', msg =>$msg.$debug_str, exit_code => $code, preview => $html_preview);
     $self->render(template => 'publications/add_multiple_entries');
 };
-##########################################
-sub get_keys_array_from_bibtex_code{
-    say "CALL: get_keys_array_from_bibtex_code";
-    my $code = shift;
-    my @arr = ();
+####################################################################################
+sub split_bibtex_entries{
+    say "CALL: split_bibtex_entries";
+    my $input = shift;
 
-    my @bibtex_codes = split /@/, $code;
+    my @bibtex_codes = ();
+    $input =~ s/^\s+|\s+$//g;
+    $input =~ s/^\t//g;
 
-    for my $b_code (@bibtex_codes){
+    for my $b_code (split /@/, $input){
+        next unless length($b_code) > 10;
+        my $entry_code = "@".$b_code; 
 
         my $entry = new Text::BibTeX::Entry;
-
-        $entry->parse_s("@".$b_code);
-        next unless $entry->parse_ok;
-        my $key = $entry->key;
-        push @arr, $entry->key;
+        $entry->parse_s($entry_code);
+        if($entry->parse_ok){
+            push @bibtex_codes, $entry_code;    
+        }
     }
 
-    return @arr;
+    return @bibtex_codes;
 }
-##########################################
+####################################################################################
 ############################################################################################################
 
 ## Called after every preview or store command issued by EDIT or ADD form
@@ -2162,6 +2173,7 @@ sub after_edit_process_tags{
 
   if($entry->exists('tags')){
       my $tags_str = $entry->get('tags');
+      say "tags_str: $tags_str";
       $tags_str =~ s/\,/;/g if defined $tags_str;
       $tags_str =~ s/^\s+|\s+$//g if defined $tags_str;
 
@@ -2172,11 +2184,21 @@ sub after_edit_process_tags{
          $tag =~ s/^\s+|\s+$//g;
          $tag =~ s/\ /_/g if defined $tag;
 
-         
+         my $tt_obj = TagTypeObj->getByName($dbh,"Imported");
+         my $tt_id = $tt_obj->{id};
+
+         if(!defined $tt_obj->{id}){
+            my $sth4 = $dbh->prepare( "INSERT IGNORE INTO Tagtype(name, comment) VALUES(?,?)" );  
+            $sth4->execute("Imported", "Tags Imported from Bibtex");   
+            $tt_obj = TagTypeObj->getByName($dbh, "Imported");
+            $tt_id = $tt_obj->{id};
+         }
+
+        
 
          # $dbh->do("REPLACE INTO Tags VALUES($tag)");
-         my $sth3 = $dbh->prepare( "INSERT IGNORE INTO Tag(name) VALUES(?)" );  
-         $sth3->execute($tag);
+         my $sth3 = $dbh->prepare( "INSERT IGNORE INTO Tag(name, type) VALUES(?,?)" );  
+         $sth3->execute($tag, $tt_obj->{id});
          my $tagid2 = get_tag_id($dbh, $tag);
 
          # $dbh->do("INSERT INTO Entry_to_Tag(entry, tag) VALUES($entry_key, $tag)");

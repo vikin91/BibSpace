@@ -33,7 +33,8 @@ sub prepare_db{
     $dbh->do("CREATE TABLE IF NOT EXISTS TagType(
         name TEXT,
         comment TEXT,
-        id INTEGER PRIMARY KEY
+        id INTEGER PRIMARY KEY,
+        UNIQUE(name) ON CONFLICT IGNORE
         )");
 
     $dbh->do("ALTER TABLE Tag RENAME TO Tag2");
@@ -122,7 +123,7 @@ sub add_tags_from_string {
         
 
         foreach my $tag (@tags_arr) {
-            my $qry = 'INSERT INTO Tag(name, type) VALUES (?,?)';
+            my $qry = 'INSERT IGNORE INTO Tag(name, type) VALUES (?,?)';
             my $sth = $dbh->prepare( $qry );  
             $sth->execute($tag, $type); 
             $sth->finish();

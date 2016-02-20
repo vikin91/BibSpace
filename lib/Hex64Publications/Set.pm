@@ -108,7 +108,7 @@ sub get_set_of_all_papers {
 
     my @params;
 
-    my $qry = "SELECT DISTINCT id
+    my $qry = "SELECT DISTINCT id, year, bibtex_key
                 FROM Entry
                 WHERE bibtex_key IS NOT NULL ";
     $qry .= "ORDER BY year DESC, bibtex_key ASC";
