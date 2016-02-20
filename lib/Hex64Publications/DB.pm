@@ -111,8 +111,7 @@ sub create_main_db{
           KEY idx_bibtex_key (bibtex_key)
           )");
     } catch {
-        warn "caught error: $_";
-        warn "Applying workaround.";
+        warn "Caught table creation error. Probably there is MySQL older than 5.6. Applying workaround!";
            # version for old Mysql
         $dbh->do("CREATE TABLE IF NOT EXISTS `Entry`(
           id INTEGER(8) PRIMARY KEY AUTO_INCREMENT,
@@ -238,8 +237,7 @@ sub prepare_user_table_mysql{
             CONSTRAINT login_unique UNIQUE(login)
           )");
     } catch {
-        warn "caught error: $_";
-        warn "Applying workaround.";
+        warn "Caught table creation error. Probably there is MySQL older than 5.6. Applying workaround!";
            # version for old Mysql
         $user_dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
             id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
