@@ -1,34 +1,25 @@
 package Hex64Publications;
 
-use Hex64Publications::DB;
-require Hex64Publications::Core;
-require Hex64Publications::Search;
-require Hex64Publications::BackupFunctions;
-require Hex64Publications::Publications;
-require Hex64Publications::Helpers;
-
-use Mojo::Base 'Mojolicious';
-use Mojo::Base 'Mojolicious::Plugin::Config';
 use Hex64Publications::Schema;
-use Net::Address::IP::Local;
-
 use Hex64Publications::Controller::DB;
 use Hex64Publications::Controller::Core;
 use Hex64Publications::Controller::Search;
 use Hex64Publications::Controller::BackupFunctions;
 use Hex64Publications::Controller::Publications;
 use Hex64Publications::Controller::Helpers;
-use Hex64Publications::Functions::MyUsers;
 
+use Hex64Publications::Functions::MyUsers;
 use Hex64Publications::Functions::BackupFunctions;
 use Hex64Publications::Functions::LoginFunctions;
+
 use Net::Address::IP::Local;
-
-
 use Time::Piece;
 use Data::Dumper;
 use POSIX qw/strftime/;
 use Try::Tiny;
+
+use Mojo::Base 'Mojolicious';
+use Mojo::Base 'Mojolicious::Plugin::Config';
 
 # 0 4,12,20 * * * curl http://localhost:8081/cron/day
 # 0 2 * * * curl http://localhost:8081/cron/night
@@ -36,43 +27,15 @@ use Try::Tiny;
 # 10 2 1 * * curl http://localhost:8081/cron/month
 
 
-has db_connect_string => sub {
-    my $self = shift;
-    
-    return 'dbi:SQLite:dbname='.$self->config->{normal_db};
-    
 
 has db => sub {
     my $self = shift;
-    # DBI->connect($self->app->db_connect_string, '', '') or die $DBI::errstr .". File is: ".$self->config->{normal_db};
-
-    my $db_host = $self->config->{db_host};
-    my $db_user = $self->config->{db_user};
-    my $db_database = $self->config->{db_database};
-    my $db_pass = $self->config->{db_pass};
-
-
-    my $dbh = DBI->connect("DBI:mysql:database=$db_database;host=$db_host",
-                         "$db_user", "$db_pass",
-                         {'RaiseError' => 1});
-    $dbh->{mysql_auto_reconnect} = 1;
-    return $dbh;
-};
-
-has backup_db => sub {
-    my $self = shift;
-    # my $s = Hex64Publications::Schema->connect('dbi:SQLite:my2.db');
+    # my $s = Menry::Schema->connect('dbi:SQLite:my2.db');
     my $s = Hex64Publications::Schema->connect('dbi:mysql:database=hex64publicationlistmanager;host=localhost', 'root', 's3kr1t');
-
     # $s->deploy();
     $s->storage->debug(0);
     $s;
 };
-
-# has log => sub {
-#     my $self = shift;
-#     Mojo::Log->new( path => $self->config->{log_file}, level => 'debug' ) or print "opening log (in has Function) failed.";
-# };
 
 
 sub startup {
@@ -81,9 +44,6 @@ sub startup {
     $self->app->plugin('RenderFile');
     my $address = Net::Address::IP::Local->public;
     # print $address;
-
-    # my $config = $self->plugin('Config');
-    my $config = $self->app->config;
     
     # load default
     my $config = $self->plugin('Config' => {file => 'config/default.conf'});
@@ -159,7 +119,6 @@ sub startup {
     $self->helper(is_manager => sub {
         my $self = shift; 
         my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
-        my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
         return 1 if $u->is_manager();
         return undef;
     });
@@ -167,7 +126,6 @@ sub startup {
     $self->helper(is_admin => sub {
         my $self = shift; 
         my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
-        my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
         return 1 if $u->is_admin();
         return undef;
     });
@@ -254,12 +212,6 @@ sub startup {
     $anyone->get('/register_dummy')->to('login#dummy')->name('dummy');
     $anyone->post('/register')->to('login#post_do_register')->name('post_do_register');
     $anyone->any('/noregister')->to('login#register_disabled');
-
-  
-    my $logged_user = $anyone->under->to('login#check_is_logged_in');
-    my $manager = $logged_user->under->to('login#under_check_is_manager');
-    my $superadmin = $logged_user->under->to('login#under_check_is_admin');
-
 
     
 
@@ -507,7 +459,4 @@ sub startup {
         
 
 }
-
-
-
 1;

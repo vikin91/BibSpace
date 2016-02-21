@@ -67,7 +67,7 @@ our @EXPORT = qw(
     
     postprocess_all_entries_after_author_uids_change_w_creating_authors
     
-    get_html_for_entry_id
+    
     get_exceptions_for_entry_id
     get_year_for_entry_id
     clean_ugly_bibtex_fileds
@@ -188,7 +188,7 @@ sub get_publications_core{
     my $master_id = $dbh->resultset('Author')->search({'master' => $author})->get_column('master_id')->first || $author; # it means that author was given as master_id and not as master name
 
     my $tagid = $dbh->resultset('Tag')->search({'name' => $tag})->get_column('id')->first || $tag; # it means that tag was given as tag_id and not as tag name;
-    }
+    
     
     $teamid = undef unless defined $team;
     $master_id = undef unless defined $author;
@@ -288,66 +288,66 @@ sub nohtml{
    return "<span class=\"label label-danger\">NO HTML </span><span class=\"label label-default\">($type) $key</span>" . "<BR>";
 }
 ##################################################################
-sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their authors ONLY. No tags, no regeneration.
-    my $self = shift;
+# sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their authors ONLY. No tags, no regeneration.
+#     my $self = shift;
 
-    $self->write_log("reassing papers to authors started");
+#     $self->write_log("reassing papers to authors started");
 
-    my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
-    my $sth = $self->app->db->prepare( $qry );  
-    $sth->execute(); 
+#     my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
+#     my $sth = $self->app->db->prepare( $qry );  
+#     $sth->execute(); 
 
-    my @bibs;
-    while(my $row = $sth->fetchrow_hashref()) {
-        my $bib = $row->{bib};
-        my $key = $row->{bibtex_key};
-        my $id = $row->{id};
+#     my @bibs;
+#     while(my $row = $sth->fetchrow_hashref()) {
+#         my $bib = $row->{bib};
+#         my $key = $row->{bibtex_key};
+#         my $id = $row->{id};
 
-        push @bibs, $bib;
-    }
-    $sth->finish();
+#         push @bibs, $bib;
+#     }
+#     $sth->finish();
 
-    foreach my $entry_str(@bibs){
-        my $entry_obj = new Text::BibTeX::Entry();
-        $entry_obj->parse_s($entry_str);
+#     foreach my $entry_str(@bibs){
+#         my $entry_obj = new Text::BibTeX::Entry();
+#         $entry_obj->parse_s($entry_str);
     
-        assign_entry_to_existing_authors_no_add($self, $entry_obj);
-    }
+#         assign_entry_to_existing_authors_no_add($self, $entry_obj);
+#     }
 
-    $self->write_log("reassing papers to authors finished");
-};
+#     $self->write_log("reassing papers to authors finished");
+# };
 
-##################################################################
-sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assigns papers to their authors ONLY. No tags, no regeneration. Not existing authors will be created
-   my $extra = shift || "";
+# ##################################################################
+# sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assigns papers to their authors ONLY. No tags, no regeneration. Not existing authors will be created
+#    my $extra = shift || "";
 
-    $self->write_log("reassigning papers to authors (with authors creation) started");
+#     $self->write_log("reassigning papers to authors (with authors creation) started");
 
-    my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
-    my $sth = $self->app->db->prepare( $qry );  
-    $sth->execute(); 
+#     my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
+#     my $sth = $self->app->db->prepare( $qry );  
+#     $sth->execute(); 
 
-    my @bibs;
-    while(my $row = $sth->fetchrow_hashref()) {
-        my $bib = $row->{bib};
-   my $str = "<span class=\"label label-danger\">NO HTML </span><span class=\"label label-default\">($type) $key</span>$extra" . "<BR>";
-   return $str;
-}
+#     my @bibs;
+#     while(my $row = $sth->fetchrow_hashref()) {
+#         my $bib = $row->{bib};
+#    my $str = "<span class=\"label label-danger\">NO HTML </span><span class=\"label label-default\">($type) $key</span>$extra" . "<BR>";
+#    return $str;
+# }
 
-        push @bibs, $bib;
-    }
-    $sth->finish();
+#         push @bibs, $bib;
+#     }
+#     $sth->finish();
 
-    foreach my $entry_str(@bibs){
-        my $entry_obj = new Text::BibTeX::Entry();
-        $entry_obj->parse_s($entry_str);
+#     foreach my $entry_str(@bibs){
+#         my $entry_obj = new Text::BibTeX::Entry();
+#         $entry_obj->parse_s($entry_str);
     
-        after_edit_process_authors($self->app->db, $entry_obj);
-        assign_entry_to_existing_authors_no_add($self, $entry_obj);
-    }
+#         after_edit_process_authors($self->app->db, $entry_obj);
+#         assign_entry_to_existing_authors_no_add($self, $entry_obj);
+#     }
 
-    $self->write_log("reassigning papers to authors (with authors creation) finished");
-};
+#     $self->write_log("reassigning papers to authors (with authors creation) finished");
+# };
 
 ####################################################################################
 sub clean_ugly_bibtex_fileds_for_all_entries {
@@ -805,10 +805,6 @@ sub get_type_description{
 ################################################################################
 sub get_all_teams{
    my $dbh = shift;
-   
-   my $qry = "SELECT DISTINCT id, name FROM Team";
-   my $sth = $dbh->prepare( $qry );  
-   $sth->execute(); 
 
    # todo: optimize it!!!
 
@@ -868,23 +864,7 @@ sub get_year_for_entry_id{
    my $year = $row->{year};
    return $year;
 }
-##########################################################################
-sub get_html_for_entry_id{
-   my $dbh = shift;
-   my $eid = shift;
 
-   my $sth = $dbh->prepare( "SELECT html, bibtex_key FROM Entry WHERE id=?" );     
-   $sth->execute($eid);
-
-   my $row = $sth->fetchrow_hashref();
-   my $html = $row->{html};
-   my $key = $row->{bibtex_key};
-   my $type = $row->{type};
-
-
-   return nohtml($key, $type) unless defined $html;
-   return $html;
-}
 ##########################################################################
 sub get_exceptions_for_entry_id{
    my $dbh = shift;

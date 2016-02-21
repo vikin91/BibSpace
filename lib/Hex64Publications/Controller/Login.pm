@@ -94,9 +94,7 @@ sub make_admin {
     my $dbh = $self->app->db;
     my $u = $dbh->resultset('Login')->search({ id => $id })->first;
 
-    my $usr_obj = Hex64Publications::Functions::UserObj->new({id => $profile_id});
-    $usr_obj->initFromDB($dbh);
-    if( $usr_obj->make_admin($dbh)==0 ){
+
     $self->flash(msg => "User \`".$u->login."\` is now admin.");
     $u->update({rank => 2});
     
@@ -337,8 +335,9 @@ sub logout {
 sub register{
     my $self = shift;
     my $can_register = $self->app->config->{registration_enabled} || 0;
-
-    my $is_admin = check_is_admin($self->session('user'), $self->app->db);
+    my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
+    
+    my $is_admin = $u->is_admin();
     if($can_register == 1 or (defined $is_admin and $is_admin==1)){
 
 
