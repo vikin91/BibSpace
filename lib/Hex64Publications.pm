@@ -1,20 +1,22 @@
 package Hex64Publications;
 
-use Hex64Publications::DB;
-require Hex64Publications::Core;
-require Hex64Publications::Search;
-require Hex64Publications::BackupFunctions;
-require Hex64Publications::Publications;
-require Hex64Publications::Helpers;
+use Hex64Publications::Controller::DB;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Controller::Search;
+use Hex64Publications::Controller::BackupFunctions;
+use Hex64Publications::Controller::Publications;
+use Hex64Publications::Controller::Helpers;
+use Hex64Publications::Functions::MyUsers;
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
-use Net::Address::IP::Local;
 
+
+use Net::Address::IP::Local;
 use Time::Piece;
-use MyUsers;
 use Data::Dumper;
 use POSIX qw/strftime/;
+use Try::Tiny;
 
 # 0 4,12,20 * * * curl http://localhost:8081/cron/day
 # 0 2 * * * curl http://localhost:8081/cron/night
@@ -62,6 +64,7 @@ has backup_db => sub {
 
 sub startup {
     my $self = shift;
+    $self->app->plugin('InstallablePaths');
     $self->app->plugin('RenderFile');
     my $address = Net::Address::IP::Local->public;
     # print $address;
@@ -77,10 +80,20 @@ sub startup {
         $config = $self->plugin('Config' => {file => 'config/demo.conf'});
     }
     elsif($address =~ m/146\.185\.144\.116/){  # TEST SERVER
-        $config = $self->plugin('Config' => {file => 'config/test.conf'});
+        try{
+            $config = $self->plugin('Config' => {file => 'config/test.conf'});    
+        }
+        catch{
+            $config = $self->plugin('Config' => {file => 'config/default.conf'});
+        };
     }
     elsif($address =~ m/132\.187\.10\.5/){  # PRODUCTION SERVER
-        $config = $self->plugin('Config' => {file => 'config/production.conf'});
+        try{
+            $config = $self->plugin('Config' => {file => 'config/production.conf'});
+        }
+        catch{
+            $config = $self->plugin('Config' => {file => 'config/default.conf'});
+        };
     }
     else{   # DEFAULT
         # $config = $self->plugin('Config' => {file => 'lib/Hex64Publications/files/config/default.conf'});
@@ -91,12 +104,12 @@ sub startup {
     create_backup_table($self->app->db);
 
 
-    $self->plugin('Hex64Publications::Helpers');
-    $self->plugin('Hex64Publications::CronHelpers');
+    $self->plugin('Hex64Publications::Controller::Helpers');
+    $self->plugin('Hex64Publications::Controller::CronHelpers');
 
     $self->secrets( [$config->{key_cookie}] );
 
-    $self->helper(users => sub { state $users = MyUsers->new });
+    $self->helper(users => sub { state $users = Hex64Publications::Functions::MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
 
 
@@ -161,18 +174,26 @@ sub startup {
         my $filename = $config->{log_file};
         my $msg_to_log = "[".$datetime_string."] ".$usr_str.$msg."\n";
 
-        if(open(my $fh, '>>', $filename)){
-            print $fh $msg_to_log;
-            close $fh;
+        try{
+            if(open(my $fh, '>>', $filename)){
+                print $fh $msg_to_log;
+                close $fh;
+            }    
         }
-        else{
-            print " opening log failed. (this line may cause shit happening!) Msg was: ".$msg_to_log." error: $!";
-        }
-        
-        # this code is instable - crashes once a month
-
-        # my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug') or print "opening log failed. (this line may cause shit happening!) Msg was: ".$usr_str.$msg;
-        # $log->info($usr_str.$msg) or print "writing to log failed. Msg was: ".$usr_str.$msg;
+        catch{
+            say "Opening log failed! Msg was: ".$msg_to_log;
+            say "Trying to create directory";
+            try{
+                mkdir "log";
+                if(open(my $fh, '>>', $filename)){
+                    print $fh $msg_to_log;
+                    close $fh;
+                }
+            }
+            catch{
+                say "Creating dir and ppening log failed again! Ingoring.";
+            }    
+        };
     });
 
     # $self->app->db->do("PRAGMA foreign_keys = ON");
