@@ -1339,8 +1339,15 @@ sub get_tags_for_team {
       my $tag_id = $row->{tagid};
       my $tag = $row->{tagname};
 
-      push @tag_ids, $tag_id if defined $tag_id;
-      push @tags, $tag if defined $tag;
+      if ( grep( /^$tag_id$/, @tag_ids ) ) {
+          # already exists!
+      }
+      else{
+        push @tag_ids, $tag_id if defined $tag_id;
+        push @tags, $tag if defined $tag;  
+      }
+
+      
 
    }
 
