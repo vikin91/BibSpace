@@ -25,14 +25,6 @@ our @ISA= qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw( 
-    create_user_id
-    generate_html_for_key
-    generate_html_for_id
-    tune_html
-    get_author_id_for_uid
-    get_author_id_for_master
-    get_master_for_id
-    get_html_for_bib
     get_teams_of_author
     get_team_members
     add_team_for_author
@@ -72,9 +64,9 @@ our @EXPORT = qw(
     has_bibtex_field
     clean_tag_name
     get_visibility_for_id
-    postprocess_all_entries_after_author_uids_change
+    
     postprocess_all_entries_after_author_uids_change_w_creating_authors
-    after_edit_process_authors
+    
     get_html_for_entry_id
     get_exceptions_for_entry_id
     get_year_for_entry_id
@@ -111,17 +103,18 @@ sub get_number_of_publications_in_year{
 sub get_publications_main_hashed_args{
     my ($self, $args) = @_;
 
-    return get_publications_core($self, 
-                                 $args->{author} || $self->param('author') || undef, 
-                                 $args->{year} || $self->param('year') || undef,
-                                 $args->{bibtex_type} || $self->param('bibtex_type') || undef,
-                                 $args->{entry_type} || $self->param('entry_type') || undef,
-                                 $args->{tag} || $self->param('tag') || undef,
-                                 $args->{team} || $self->param('team') || undef,
-                                 $args->{visible} || 0,
-                                 $args->{permalink} || $self->param('permalink') || undef,
-                                 $args->{hidden},
-                                 );
+    return get_publications_core($self, $args);
+
+                                 # $args->{author} || $self->param('author') || undef, 
+                                 # $args->{year} || $self->param('year') || undef,
+                                 # $args->{bibtex_type} || $self->param('bibtex_type') || undef,
+                                 # $args->{entry_type} || $self->param('entry_type') || undef,
+                                 # $args->{tag} || $self->param('tag') || undef,
+                                 # $args->{team} || $self->param('team') || undef,
+                                 # $args->{visible} || 0,
+                                 # $args->{permalink} || $self->param('permalink') || undef,
+                                 # $args->{hidden},
+                                 # );
 }
 ####################################################################################
 sub get_publications_main{
@@ -175,30 +168,26 @@ sub get_publications_core_from_set{
 ####################################################################################
 
 sub get_publications_core{
-  # say "CALL: get_publications_core";
-    my $self = shift;
-    my $author = shift;
-    my $year = shift;
-    my $bibtex_type = shift;
-    my $entry_type = shift;
-    my $tag = shift;
-    my $team = shift;
-    my $visible = shift || 0;
-    my $permalink = shift;
-    my $hidden = shift;
+
+    my ($self, $args) = @_;
+    my $author = $args->{author} || $self->param('author') || undef, 
+    my $year = $args->{year} || $self->param('year') || undef,
+    my $bibtex_type = $args->{bibtex_type} || $self->param('bibtex_type') || undef,
+    my $entry_type = $args->{entry_type} || $self->param('entry_type') || undef,
+    my $tag = $args->{tag} || $self->param('tag') || undef,
+    my $team = $args->{team} || $self->param('team') || undef,
+    my $visible = $args->{visible} || 0,
+    my $permalink = $args->{permalink} || $self->param('permalink') || undef,
+    my $hidden = $args->{hidden},
 
     my $dbh = $self->app->db;
 
-    my $teamid = get_team_id($dbh, $team) || undef;
-    my $master_id = get_master_id_for_master($dbh, $author) || undef;
-    if($master_id == -1){
-      $master_id = $author; # it means that author was given as master_id and not as master name
-    }
+    ######  
 
+    my $teamid = $dbh->resultset('Team')->search({'name' => $team})->get_column('id')->first || undef;
+    my $master_id = $dbh->resultset('Author')->search({'master' => $author})->get_column('master_id')->first || $author; # it means that author was given as master_id and not as master name
 
-    my $tagid = get_tag_id($dbh, $tag) || undef;
-    if($tagid == -1){
-      $tagid = $tag; # it means that tag was given as tag_id and not as tag name
+    my $tagid = $dbh->resultset('Tag')->search({'name' => $tag})->get_column('id')->first || $tag; # it means that tag was given as tag_id and not as tag name;
     }
     
     $teamid = undef unless defined $team;
@@ -206,7 +195,7 @@ sub get_publications_core{
     $tagid = undef unless defined $tag;
     
 
-    my @objs = Hex64Publications::Functions::EntryObj->getByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
+    my @objs = getPublicationsByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
     return @objs;
 }
 ####################################################################################
@@ -220,8 +209,8 @@ sub get_single_publication {
 
 
     my @objs;
-    my $obj = Hex64Publications::Functions::EntryObj->new({id => $eid});
-    $obj->initFromDB($dbh);
+    my $obj = $dbh->resultset('Entry')->search({id => $eid})->first;
+    
     if(defined $hidden and $obj->isHidden()==$hidden){
         push @objs, $obj; 
     }
@@ -330,7 +319,7 @@ sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their
 
 ##################################################################
 sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assigns papers to their authors ONLY. No tags, no regeneration. Not existing authors will be created
-    my $self = shift;
+   my $extra = shift || "";
 
     $self->write_log("reassigning papers to authors (with authors creation) started");
 
@@ -341,8 +330,9 @@ sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assi
     my @bibs;
     while(my $row = $sth->fetchrow_hashref()) {
         my $bib = $row->{bib};
-        my $key = $row->{bibtex_key};
-        my $id = $row->{id};
+   my $str = "<span class=\"label label-danger\">NO HTML </span><span class=\"label label-default\">($type) $key</span>$extra" . "<BR>";
+   return $str;
+}
 
         push @bibs, $bib;
     }
@@ -820,12 +810,15 @@ sub get_all_teams{
    my $sth = $dbh->prepare( $qry );  
    $sth->execute(); 
 
+   # todo: optimize it!!!
+
+   my @all_teams = $dbh->resultset('Team')->all;
    my @teams;
    my @ids;
    
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $tid = $row->{id};
-      my $team = $row->{name};
+   for my $t(@all_teams){
+      my $tid = $t->id;
+      my $team = $t->name;
 
       push @teams, $team if defined $team;
       push @ids, $tid if defined $tid;

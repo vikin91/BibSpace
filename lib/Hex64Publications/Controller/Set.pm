@@ -108,7 +108,7 @@ sub get_set_of_all_papers {
 
     my @params;
 
-    my $qry = "SELECT DISTINCT id, year, bibtex_key
+    my $qry = "SELECT DISTINCT id
                 FROM Entry
                 WHERE bibtex_key IS NOT NULL ";
     $qry .= "ORDER BY year DESC, bibtex_key ASC";
@@ -134,34 +134,33 @@ sub get_set_of_papers_for_team {
 
     my $set = new Set::Scalar;
 
+    my $rs = $dbh->resultset('Entry')->search(
+    {},
+    { 
+        join => {   'exceptions_entry_to_teams' => 'team',
+                    'entry_to_authors' => {'author' => 'author_to_teams'}, 
+                    }, 
+        columns => [{ 'bibtex_key' => { distinct => 'me.bibtex_key' } }, 
+        'id', 'entry_type', 'bibtex_type', 'bib', 'html', 'html_bib', 'abstract', 'title', 'hidden', 'year', 'month', 'sort_month', 'teams_str', 'people_str', 'tags_str', 'creation_time', 'modified_time', 'need_html_regen'],
+        order_by => { '-desc' => [qw/year sort_month creation_time modified_time/] }
+    });
+    $rs = $rs->search({
+        '-or' => [
+            'exceptions_entry_to_teams.team_id' => $tid,
+            '-and' => [
+                'author_to_teams.team_id' => $tid,
+                'author_to_teams.start' => {'<=', \'me.year'},
+                '-or' => [
+                    'author_to_teams.stop' => 0,
+                    'author_to_teams.stop' => {'>=', \'me.year'},
+                ]
+            ]
+        ]
+    });
+    my @arr = $rs->all;
 
-    my @params;
-
-    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, Entry.bib, Entry.year, Entry.html, Entry.bibtex_type
-                FROM Entry
-                LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
-                LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
-                LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
-                LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
-                LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.bibtex_type 
-                LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
-                WHERE Entry.bibtex_key IS NOT NULL ";
-
-    push @params, $tid;
-    push @params, $tid;
-    # push @params, $tid;
-    # $qry .= "AND ((Exceptions_Entry_to_Team.team_id=? ) OR Author.display = 1) ";
-    $qry .= "AND ((Exceptions_Entry_to_Team.team_id=? ) OR (Author_to_Team.team_id=? AND start <= Entry.year  AND (stop >= Entry.year OR stop = 0))) ";
-    
-    $qry .= "ORDER BY Entry.year DESC, Entry.bibtex_key ASC";
-
-    my $sth = $dbh->prepare_cached( $qry );  
-    $sth->execute(@params); 
-
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{id};
-
-      $set->insert($eid);
+    for my $e (@arr){
+        $set->insert($e->id);
     }
 
     return $set;
@@ -261,19 +260,10 @@ sub get_set_of_authors_for_team {
 
     my $set = new Set::Scalar;
 
-
-    my $qry = "SELECT author_id, team_id 
-            FROM Author_to_Team 
-            WHERE team_id=?";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($tid); 
-
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{author_id};
-
-      $set->insert($eid);
+    my $rs = $dbh->resultset('AuthorToTeam')->search({'team_id' => $tid})->get_column('author_id');
+    for my $aid ($rs->all){
+        $set->insert($aid);  
     }
-    # print "Authors for team: ", $set, "\n";
     return $set;
  }
 ####################################################################################
@@ -285,19 +275,11 @@ sub get_set_of_papers_for_author_id {
 
     my $set = new Set::Scalar;
 
+    my $rs = $dbh->resultset('EntryToAuthor')->search({'author_id' => $aid})->get_column('entry_id');
 
-    my $qry = "SELECT author_id, entry_id 
-            FROM Entry_to_Author 
-            WHERE author_id=?";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($aid); 
-
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{entry_id};
-
+    for my $eid ($rs->all){
       $set->insert($eid);
     }
-    # print "Papers for author $aid: ", $set, "\n";
     return $set;
  }
 
@@ -378,7 +360,6 @@ sub get_set_of_teams_for_author_id_w_year {
 
     my $set = new Set::Scalar;
 
-
     my $qry = "SELECT author_id, team_id 
             FROM Author_to_Team 
             WHERE author_id=?
@@ -386,11 +367,23 @@ sub get_set_of_teams_for_author_id_w_year {
     my $sth = $dbh->prepare( $qry );  
     $sth->execute($aid, $year, $year); 
 
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $tid = $row->{team_id};
+    my $rs = $dbh->resultset('AuthorToTeam')->search(
+    {
+        '-and' => [
+            'author_id' => $aid,
+            'start' => {'<=', $year},
+            '-or' => [
+                'stop' => 0,
+                'stop' => {'>=', $year},
+            ]
+        ]
+    })->get_column('team_id');
 
+    for my $tid ($rs->all) {
       $set->insert($tid);
     }
+
+    
     print "Teams for author $aid: ", $set, "\n";
     return $set;
  }
@@ -404,15 +397,9 @@ sub get_set_of_teams_for_author_id {
     my $set = new Set::Scalar;
 
 
-    my $qry = "SELECT author_id, team_id 
-            FROM Author_to_Team 
-            WHERE author_id=?";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($aid); 
+    my $rs = $self->app->db->resultset('AuthorToTeam')->search({author_id => $aid})->get_column('team_id');
 
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $tid = $row->{team_id};
-
+    for my $tid ($rs->all) {
       $set->insert($tid);
     }
     print "Teams for author $aid: ", $set, "\n";
@@ -428,13 +415,10 @@ sub get_set_of_authors_for_entry_id {
     my $set = new Set::Scalar;
 
 
-    my $qry = "SELECT author_id FROM Entry_to_Author WHERE entry_id=?";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($eid); 
+    my $rs = $self->app->db->resultset('EntryToAuthor')->search({entry_id => $eid})->get_column('author_id');
 
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $aid = $row->{author_id};
 
+    for my $aid ($rs->all) {
       $set->insert($aid);
     }
     print "Authors of entry $eid: ", $set, "\n";
@@ -446,7 +430,8 @@ sub get_set_of_teams_for_entry_id {
     my $eid = shift;
     my $dbh = $self->app->db;
 
-    my $entry_year = get_year_for_entry_id($dbh, $eid);
+    my $rs = $self->app->db->resultset('Entry')->search({id => $eid})->get_column('year');
+    my $entry_year = $rs->first;
 
     my $teams_for_paper = new Set::Scalar;
 

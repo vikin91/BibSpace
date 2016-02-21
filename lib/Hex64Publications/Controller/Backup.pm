@@ -13,7 +13,7 @@ use DBI;
 use File::Copy qw(copy);
 
 use Hex64Publications::Controller::Core;
-use Hex64Publications::Controller::BackupFunctions;
+use Hex64Publications::Functions::BackupFunctions;
 use Hex64Publications::Controller::DB;
 
 use Mojo::Base 'Mojolicious::Controller';

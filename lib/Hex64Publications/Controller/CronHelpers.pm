@@ -13,7 +13,7 @@ use File::Copy qw(copy);
 use Hex64Publications::Controller::Core;
 use Hex64Publications::Controller::Set;
 use Hex64Publications::Controller::Publications;
-use Hex64Publications::Controller::BackupFunctions;
+use Hex64Publications::Functions::BackupFunctions;
 
 use base 'Mojolicious::Plugin';
 sub register {

@@ -36,12 +36,6 @@
           <i class="fa  fa-exclamation-circle "></i> <strong>Read this friendly information</strong> 
           <p>Type just the proposed MasterUserID of the author. The Author will be set as visible. In the next step, you will be redirected to a page where you can set more details for this author.</p>
         </div>
-        
-        <div class="alert alert-warning">
-          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-          <i class="fa  fa-exclamation-circle "></i> <strong>Warning</strong> 
-          <p>Changing <strong>MasterUserID</strong> is still experimental! Pick a good one on this screen.</p>
-        </div>
 
       </div>
   </div>

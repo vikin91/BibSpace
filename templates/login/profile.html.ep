@@ -6,28 +6,12 @@
 
 <div class="container" style="margin-top:30px">
 
-    % if (my $msg = stash 'msg') {
-    <div class="row">
-        <div class="col-lg-1"></div>
-        <div class="col-lg-6 col-md-6 col-xs-6">
-            <div class="alert alert-warning">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <i class="fa  fa-exclamation-circle "></i> <strong>Message</strong> <%=$msg%>
-            </div>
-        </div>
-    </div>
-
-    <br/>
-    %}
-
-    <hr>
-
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
             <span class="btn btn-default pull-right" >Login</span>
         </div>
         <div class="col-lg-4 col-md-4 col-xs-4">
-            <button type="button" class="btn btn-default"><%=$login%></button>
+            <button type="button" class="btn btn-default"><%=$user->login%></button>
         </div>
     </div>
     <div class="row">
@@ -35,7 +19,7 @@
             <span class="btn btn-default pull-right" >E-mail</span>
         </div>
         <div class="col-lg-4 col-md-4 col-xs-4">
-            <button type="button" class="btn btn-default"><%=$email%></button>
+            <button type="button" class="btn btn-default"><%=$user->email%></button>
         </div>
     </div>
     <div class="row">
@@ -43,14 +27,14 @@
             <span class="btn btn-default pull-right" >Ranks</span>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            <button type="button" class="btn btn-info"> Rank = <%=$rank%> </button>
-            % if($rank >= 0){
+            <button type="button" class="btn btn-info"> Rank = <%=$user->rank%> </button>
+            % if($user->rank >= 0){
                 <button type="button" class="btn btn-default">User </button>
             % }
-            % if($rank >= 1){
+            % if($user->rank >= 1){
                 <button type="button" class="btn btn-default">Manager </button>
             % }
-            % if($rank >= 2){
+            % if($user->rank >= 2){
                 <button type="button" class="btn btn-default">Admin </button>
             % }
         </div>
@@ -60,7 +44,7 @@
             <span class="btn btn-default pull-right" >Registration time</span>
         </div>
         <div class="col-lg-4 col-md-4 col-xs-4">
-            <button type="button" class="btn btn-default"><%=$reg_time%></button>
+            <button type="button" class="btn btn-default"><%=$user->registration_time%></button>
         </div>
     </div>
     <div class="row">
@@ -68,7 +52,7 @@
             <span class="btn btn-default pull-right" >Last login</span>
         </div>
         <div class="col-lg-4 col-md-4 col-xs-4">
-            <button type="button" class="btn btn-default"><%=$last_login_time%></button>
+            <button type="button" class="btn btn-default"><%=$user->last_login%></button>
         </div>
     </div>
 

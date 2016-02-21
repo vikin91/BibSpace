@@ -3,10 +3,10 @@ use Test::More;
 use Test::Mojo;
 
 use Hex64Publications;
-use Hex64Publications::Core;
-use Hex64Publications::Backup;
-use Hex64Publications::BackupFunctions;
-use EntryObj;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Controller::Backup;
+use Hex64Publications::Functions::BackupFunctions;
+use Hex64Publications::Functions::EntryObj;
 
 
 my $t_anyone = Test::Mojo->new('Hex64Publications');
@@ -18,7 +18,6 @@ $t_logged_in->post_ok(
 
 my $dbh = $t_logged_in->app->db;
 my $self = $t_logged_in->app;
-
 
 # ok($t_logged_in->get_ok("/backup/do")->status_isnt(404)->status_isnt(500) => "404 or 500 for $_");
 my $db_backup_file = do_mysql_db_backup($t_logged_in->app, "testing");

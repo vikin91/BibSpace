@@ -1,5 +1,17 @@
 package Hex64Publications;
 
+use Hex64Publications::DB;
+require Hex64Publications::Core;
+require Hex64Publications::Search;
+require Hex64Publications::BackupFunctions;
+require Hex64Publications::Publications;
+require Hex64Publications::Helpers;
+
+use Mojo::Base 'Mojolicious';
+use Mojo::Base 'Mojolicious::Plugin::Config';
+use Hex64Publications::Schema;
+use Net::Address::IP::Local;
+
 use Hex64Publications::Controller::DB;
 use Hex64Publications::Controller::Core;
 use Hex64Publications::Controller::Search;
@@ -8,11 +20,11 @@ use Hex64Publications::Controller::Publications;
 use Hex64Publications::Controller::Helpers;
 use Hex64Publications::Functions::MyUsers;
 
-use Mojo::Base 'Mojolicious';
-use Mojo::Base 'Mojolicious::Plugin::Config';
-
-
+use Hex64Publications::Functions::BackupFunctions;
+use Hex64Publications::Functions::LoginFunctions;
 use Net::Address::IP::Local;
+
+
 use Time::Piece;
 use Data::Dumper;
 use POSIX qw/strftime/;
@@ -29,7 +41,6 @@ has db_connect_string => sub {
     
     return 'dbi:SQLite:dbname='.$self->config->{normal_db};
     
-};
 
 has db => sub {
     my $self = shift;
@@ -50,10 +61,12 @@ has db => sub {
 
 has backup_db => sub {
     my $self = shift;
-    say "call: app->backup_db. DEPRECATED!!";
-    return $self->app->db;
+    # my $s = Hex64Publications::Schema->connect('dbi:SQLite:my2.db');
+    my $s = Hex64Publications::Schema->connect('dbi:mysql:database=hex64publicationlistmanager;host=localhost', 'root', 's3kr1t');
 
-    # DBI->connect('dbi:SQLite:dbname='.$self->config->{backup_db}, '', '') or die $DBI::errstr;
+    # $s->deploy();
+    $s->storage->debug(0);
+    $s;
 };
 
 # has log => sub {
@@ -73,7 +86,7 @@ sub startup {
     my $config = $self->app->config;
     
     # load default
-    $config = $self->plugin('Config' => {file => 'config/default.conf'});
+    my $config = $self->plugin('Config' => {file => 'config/default.conf'});
 
     if($self->app->home =~ /demo/){
         say "Loading demo config version";
@@ -100,6 +113,7 @@ sub startup {
         $config = $self->plugin('Config' => {file => 'config/default.conf'});
     }
 
+
     $self->create_main_db($self->app->db);
     create_backup_table($self->app->db);
 
@@ -109,7 +123,7 @@ sub startup {
 
     $self->secrets( [$config->{key_cookie}] );
 
-    $self->helper(users => sub { state $users = Hex64Publications::Functions::MyUsers->new });
+    # $self->helper(users => sub { state $users = Hex64Publications::Functions::MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
 
 
@@ -123,7 +137,7 @@ sub startup {
         # my $burl = "?back_url=".$s->req->url->to_abs;
         my $short_url = $s->req->url;
         if ($short_url eq '/'){
-            $short_url = '/pa';
+            $short_url = $config->{proxy_prefix};
         }
         my $burl = "?back_url=".$short_url;
         $burl =~ s/&/%26/g;
@@ -137,24 +151,24 @@ sub startup {
         # return $s->req->url->to_abs;
         my $short_url = $s->req->url;
         if ($short_url eq '/'){
-            $short_url = '/pa';
+            $short_url = $config->{proxy_prefix};
         }
         return $short_url;
     });
 
     $self->helper(is_manager => sub {
         my $self = shift; 
-        my $usr = $self->session('user');
+        my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
         my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
-        return 1 if $rank > 0;
+        return 1 if $u->is_manager();
         return undef;
     });
 
     $self->helper(is_admin => sub {
         my $self = shift; 
-        my $usr = $self->session('user');
+        my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
         my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
-        return 1 if $rank > 1;
+        return 1 if $u->is_admin();
         return undef;
     });
 
@@ -203,11 +217,22 @@ sub startup {
     # my $r0 = $self->routes;
     my $pa = $self->routes;#->under('/pa');
 
+    ######### AUTH
     my $anyone = $self->routes;
-    $anyone->get('/pa')->to('display#index')->name('startpa');           #### THIS DEPENDS ON APACHE PROXY CONFIGURATION! SHAME, I KNOW.
+    my $logged_user = $anyone->under->to('login#under_check_is_logged_in');
+    my $manager = $logged_user->under->to('login#under_check_is_manager');
+    my $superadmin = $logged_user->under->to('login#under_check_is_admin');
+
+    ######### DISPLAY CONTROLLER
+    $anyone->get($config->{proxy_prefix})->to('display#index')->name('startpa');           #### THIS DEPENDS ON APACHE PROXY CONFIGURATION! SHAME, I KNOW.
     $anyone->get('/')->to('display#index')->name('start');
     $anyone->get('/start')->to('display#index');
+    $anyone->any('/test/500')->to('display#test500');
+    $anyone->any('/test/404')->to('display#test404');
+    $manager->get('/log')->to('display#show_log');
 
+
+    ######### LOGIN CONTROLLER
 
     $anyone->get('/forgot')->to('login#forgot');
     $anyone->post('/forgot/gen')->to('login#post_gen_forgot_token');
@@ -217,7 +242,7 @@ sub startup {
 
     $anyone->get('/login_form')->to('login#login_form')->name('login_form');
     $anyone->post('/do_login')->to('login#login')->name('do_login');
-    $anyone->get('/youneedtologin')->to('login#not_logged_in')->name('youneedtologin');
+    $anyone->get('/youneedtologin')->to('login#youneedtologin')->name('youneedtologin');
     $anyone->get('/badpassword')->to('login#bad_password')->name('badpassword');
 
     $anyone->get('/logout')->to('login#logout')->name('logout');
@@ -247,8 +272,13 @@ sub startup {
     $superadmin->get('/profile/make_user/:id')->to('login#make_user');
     $superadmin->get('/profile/make_manager/:id')->to('login#make_manager');
     $superadmin->get('/profile/make_admin/:id')->to('login#make_admin');
-    
     $manager->get('/log')->to('display#show_log');
+    
+
+    ################ SETTINGS ################
+    
+    
+    
     $superadmin->get('/settings/fix_entry_types')->to('publications#fixEntryType');
     $superadmin->get('/settings/fix_months')->to('publications#fixMonths');
     
@@ -259,7 +289,7 @@ sub startup {
     
     $anyone->get('/backup/do')->to('backup#save');
     $logged_user->get('/backup')->to('backup#index');
-    $logged_user->get('/backup/download/:file')->to('backup#backup_download');    
+    $manager->get('/backup/download/:file')->to('backup#backup_download');    
     $superadmin->get('/restore/delete/:id')->to('backup#delete_backup');
     $manager->get('/restore/do/:id')->to('backup#restore_backup');
     $manager->get('/backup/cleanup')->to('backup#cleanup');
@@ -379,7 +409,7 @@ sub startup {
     $logged_user->get('/publications/edit/store/:id')->to('publications#get_edit');
 
     $logged_user->get('/publications/regenerate/:id')->to('publications#regenerate_html');
-    $logged_user->get('/publications/delete/:id')->to('publications#delete');
+    # $logged_user->get('/publications/delete/:id')->to('publications#delete');
     $logged_user->get('/publications/delete_sure/:id')->to('publications#delete_sure');
 
     $logged_user->get('/publications/add_pdf/:id')->to('publications#add_pdf');

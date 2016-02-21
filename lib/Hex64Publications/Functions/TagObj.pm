@@ -9,8 +9,6 @@ use Time::Piece;
 use 5.010; #because of ~~
 use strict;
 use warnings;
-use DBI;
-
 
 
 sub new

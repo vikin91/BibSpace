@@ -75,7 +75,7 @@
         % my @ttobjs = get_all_tag_types($self);
         % foreach my $ttobj (@ttobjs){
             <li>
-                <a href='/publications/untagged/<%=$ttobj->{id}%>' data-toggle="tooltip" data-placement="right" title="Show papers having no tags of type <%=$ttobj->{name}%>"><i class="fa fa-question"></i> Papers with missing <%=$ttobj->{name}%></a>
+                <a href='/publications/untagged/<%=$ttobj->id%>' data-toggle="tooltip" data-placement="right" title="Show papers having no tags of type <%=$ttobj->{name}%>"><i class="fa fa-question"></i> Papers with missing <%=$ttobj->name%></a>
             </li>
         % }
         <li class="divider"></li>
@@ -197,9 +197,9 @@
         <li class="divider"></li>
         % foreach my $ttobj (@ttobjs){
             <li>
-                <a href='/tags/<%= $ttobj->{id}%>'><span class="glyphicon glyphicon-search"></span> 
-                    <span>Show <%= $ttobj->{name}%></span>
-                    <span class="badge"><%= num_tags($ttobj->{id})%></span>
+                <a href='/tags/<%= $ttobj->id%>'><span class="glyphicon glyphicon-search"></span> 
+                    <span>Show <%= $ttobj->name%></span>
+                    <span class="badge"><%= num_tags($ttobj->id)%></span>
                 </a>
             </li>
         % }
@@ -290,16 +290,18 @@
         <li>
             <a href='/backup<%=backurl($self)%>'><i class="fa fa-hdd-o"></i><span> Manage backups</span></a>
         </li>
+        % if(is_admin()){
         <li>
-            <a href='/cron'>
+            <a href=<%=url_for('/cron')%>>
                 <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Show cron tasks 
             </a>
         </li>
         <li>
-            <a href='/log?num=100&back_url=<%=backurl_short%>'>
+            <a href=<%=url_for('/log')->query(num => '100', back_url => backurl_short)%> >
                 <i class="fa fa-list-ol"></i> Show log
             </a>
         </li>
+        % }
   </ul>
 </div>
 

@@ -1,6 +1,6 @@
 package Hex64Publications::Functions::EntryObj;
 
-use Hex64Publications::Controller::Core;
+# use Hex64Publications::Controller::Core;
 
 use Data::Dumper;
 use utf8;
@@ -11,7 +11,6 @@ use Time::Piece;
 use 5.010; #because of ~~
 use strict;
 use warnings;
-use DBI;
 
 
 
@@ -398,6 +397,21 @@ sub getByFilter{
     #         permalink $permalink
     #         hidden $hidden
     # ";
+
+    # search({ 
+    #     'hidden' => $hidden,
+    #     'display' => 1
+    # })
+
+    my @arr = $dbh->resultset('Entry')->search(
+    { 
+        join => {'entry_to_authors' => 'author'}, 
+        columns => [{ 'd_year' => { distinct => 'me.bibtex_key' } }, 'hidden', 'id', 'bibtex_type', 'entry_type', 'year', 'month', 'sort_month', 'modified_time', 'creation_time'],
+        order_by => { '-desc' => ['year', 'sort_month', 'creation_time', 'modified_time'], '-asc' => 'bibtex_key' },
+    }
+    )->all;
+
+    # ORDER BY Entry.year DESC, Entry.sort_month DESC, Entry.creation_time DESC, Entry.modified_time DESC, Entry.bibtex_key ASC
 
     my @params;
 

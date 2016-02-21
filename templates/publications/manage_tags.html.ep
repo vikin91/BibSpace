@@ -2,13 +2,10 @@
 % layout 'admin';
 
 % my @all_tags = @{$all_tags};
-% my @all_ids = @{$all_ids};
-% my @all_parents = @{$all_parents};
+% my @entry_tags = @{$entry_tags};
+% my @unassigned_tags = @{$unassigned_tags};
 
-% my @tags = @{$tags};
-% my @ids = @{$ids};
-% my @parents = @{$parents};
-% my $size = scalar @ids;
+% my $size = scalar @entry_tags;
 
 <div class="container">
 
@@ -16,7 +13,7 @@
         <div class="col-lg-1"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
             <a class="btn btn-default" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
-            <a class="btn btn-default" href="/publications/regenerate/<%=$id%><%=backurl()%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
+            <a class="btn btn-default" href="/publications/regenerate/<%=$eid%><%=backurl()%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
         </div>
     </div>
 
@@ -40,15 +37,15 @@
             <div class="col-lg-1"></div>
             <div class="col-lg-2 col-md-2 col-xs-2">
                 <button type="button" class="btn btn-success">
-                    <span class="glyphicon glyphicon-tags"></span> Assigned <%= $ttobj->{name} %>
+                    <span class="glyphicon glyphicon-tags"></span> Assigned <%= $ttobj->name %>
                 </button>
             </div>
             <div class="col-lg-8 col-md-8 col-xs-8">
-                % foreach my $tobj (get_tags_of_type_for_paper($eid, $ttobj->{id})){
+                % foreach my $tobj (get_tags_of_type_for_paper($eid, $ttobj->id)){
                     <div class="btn-group">
 
-                        <a type="button" class="btn btn-default" href="/publications?tag=<%= $tobj->{name} %>"><span class="glyphicon glyphicon-tag"></span> <%= $tobj->{name} %> <i class="fa fa-external-link"></i></a>
-                        <a class="btn btn-default" href='/publications/<%= $eid %>/remove_tag/<%= $tobj->{id} %><%=backurl%>'><span class="glyphicon glyphicon-remove" style="color: red;"></span><span style="color: #FFFFFF;">-</span></a>
+                        <a type="button" class="btn btn-default" href="/publications?tag=<%= $tobj->name %>"><span class="glyphicon glyphicon-tag"></span> <%= $tobj->name %> <i class="fa fa-external-link"></i></a>
+                        <a class="btn btn-default" href='/publications/<%= $eid %>/remove_tag/<%= $tobj->id %><%=backurl%>'><span class="glyphicon glyphicon-remove" style="color: red;"></span><span style="color: #FFFFFF;">-</span></a>
                     </div>
                 % }
             </div>
@@ -62,13 +59,13 @@
         <div class="row">
             <div class="col-lg-1"></div>
             <div class="col-lg-2 col-md-2 col-xs-2">
-                <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-tags"></span> Unassigned <%= $ttobj->{name} %> </button>
+                <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-tags"></span> Unassigned <%= $ttobj->name %> </button>
             </div>
             <div class="col-lg-8 col-md-8 col-xs-8">
-                % foreach my $tobj (get_unassigned_tags_of_type_for_paper($eid, $ttobj->{id})){
+                % foreach my $tobj (get_unassigned_tags_of_type_for_paper($eid, $ttobj->id)){
                     <div class="btn-group">
-                        <button type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-tag" style="color: #5CB85C;"></span> <%= $tobj->{name} %></button>
-                        <a class="btn btn-default btn-xs" href='/publications/<%= $eid %>/add_tag/<%= $tobj->{id} %><%=backurl($self)%>'><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span> <span style="color: #FFFFFF;">+</span></a>
+                        <button type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-tag" style="color: #5CB85C;"></span> <%= $tobj->name %></button>
+                        <a class="btn btn-default btn-xs" href='/publications/<%= $eid %>/add_tag/<%= $tobj->id %><%=backurl($self)%>'><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span> <span style="color: #FFFFFF;">+</span></a>
                     </div>
                 % }
             </div>

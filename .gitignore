@@ -4,3 +4,7 @@ config/test.conf
 config/demo.conf
 config/production.conf
 admin_api_demo.conf
+log/my.log
+log/development.log
+log/test.log
+*.orig

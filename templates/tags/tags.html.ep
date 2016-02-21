@@ -1,12 +1,11 @@
 % layout 'admin';
 
 % my @letters_arr = @{$letters_arr};
-% my $ttobj = get_tag_type_obj($type);
 
 <div class="container">
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
-            <h2>Tags of type <%= $ttobj->{name}  %> (ID=<%= $ttobj->{id} %>)</h2>
+            <h2>Tags of type <%= $type->name  %> (ID=<%= $type->id %>)</h2>
         </div>
     </div>
 
@@ -14,7 +13,7 @@
 
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
-            <a class="btn btn-success" href="/tags/add/<%=$type%>"><span class="glyphicon glyphicon-plus"></span> Add new tag</a>
+            <a class="btn btn-success" href="/tags/add/<%=$type->id%>"><span class="glyphicon glyphicon-plus"></span> Add new tag</a>
         </div>
     </div>
 
@@ -22,10 +21,10 @@
 
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
-            <a class="btn btn-default btn-sm" href="/tags/<%=($ttobj->{id}) %>">All</a>
+            <a class="btn btn-default btn-sm" href="/tags/<%=($type->id) %>">All</a>
             <div class="btn-group">
             % foreach my $letter (@letters_arr){
-                <a class="btn btn-default btn-sm" href="/tags/<%=($ttobj->{id}) %>?letter=<%= $letter %>"><%= $letter %></a>
+                <a class="btn btn-default btn-sm" href="/tags/<%=($type->id) %>?letter=<%= $letter %>"><%= $letter %></a>
             %}
             </div>
         </div>
@@ -38,8 +37,8 @@
             <table class="table table-hover table-condensed">
             <tbody>
             % foreach my $otag (@{$otags}){
-              % my $id = $otag->{id};
-              % my $tag = $otag->{name};
+              % my $id = $otag->id;
+              % my $tag = $otag->name;
               
               <tr>
                 <td>
@@ -85,7 +84,7 @@
                     </a>
                 </td>
                 <td>
-                    % if(defined $otag->{permalink} and $otag->{permalink} ne ""){
+                    % if(defined $otag->permalink and $otag->permalink ne ""){
                         <a class="btn btn-default btn-sm" href="/read/publications?permalink=<%= $otag->{permalink} %>" data-toggle="tooltip" data-placement="right" title="Permalink. Use this url to reference this list of papers (it is shorter than the general link).">
                             <span class="glyphicon glyphicon-link"></span>
                         </a>

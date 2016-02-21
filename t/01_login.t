@@ -3,8 +3,12 @@ use Test::More;
 use Test::Mojo;
 
 use Hex64Publications;
-use Hex64Publications::Core;
-use EntryObj;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Controller::Backup;
+use Hex64Publications::Functions::BackupFunctions;
+use Hex64Publications::Functions::EntryObj;
+
+todo:{
 
 
 my $t_anyone = Test::Mojo->new('Hex64Publications');
@@ -36,7 +40,7 @@ $t_logged_in->get_ok('/')
     ->content_like(qr/Nice to see you here <em>Admin<\/em>/i);
 
 
-
+}
 
 done_testing();
 

@@ -30,7 +30,7 @@ cd ~
 aptitude update
 aptitude upgrade
 aptitude install sudo # as root
-sudo aptitude install git curl cpanminus build-essential unzip nano bibtex2html libbtparse-dev libdbd-mysql-perl 
+sudo aptitude install git curl cpanminus build-essential unzip nano bibtex2html libbtparse-dev libdbd-mysql-perl
 
 ### Install mysql database and establish root password
 sudo aptitude install mysql-server libmysqlclient-dev
@@ -66,6 +66,9 @@ chmod 555 ./log
 chmod 555 ./backups
 
 
+### Install mysql database and establish root password
+aptitude install mysql-server 
+# remeber the root password!
 
 ### Create mysql database and tables
 mysql -u root -p

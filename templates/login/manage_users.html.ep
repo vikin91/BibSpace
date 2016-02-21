@@ -6,16 +6,6 @@
 
 <div class="container" style="margin-top:30px">
 
-    % if (my $msg = stash 'msg') {
-    <div class="row">
-        <div class="col-lg-1"></div>
-        <div class="col-lg-6 col-md-6 col-xs-6">
-            <div class="alert alert-warning">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <i class="fa  fa-exclamation-circle "></i> <strong>Message</strong> <%=$msg%>
-            </div>
-        </div>
-    </div>
 
     <br/>
     %}
@@ -47,21 +37,21 @@
          % foreach my $obj (@user_objs){
          %    if (defined $obj) {
                 <tr valign="top">  
-                <td><a class="btn btn-success" href='/profile/<%= $obj->{id} %>'><span class="glyphicon glyphicon-search"></span></a></td>
+                <td><a class="btn btn-success" href='/profile/<%= $obj->id %>'><span class="glyphicon glyphicon-search"></span></a></td>
                 <td>
-                    <a class="btn btn-danger" href="#modal-dialog-<%=$obj->{id}%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span></a>
+                    <a class="btn btn-danger" href="#modal-dialog-<%=$obj->id%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span></a>
                     <!-- MODAL DIALOG FOR DELETE -->
-                    <div id="modal-dialog-<%=$obj->{id}%>" class="modal">
+                    <div id="modal-dialog-<%=$obj->id%>" class="modal">
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
                                     <h3>Are you sure?</h3>
-                                    <p>Are you sure you want to delete user <span class="btn btn-default btn-sm"><%= $obj->{login} %></span> (<span class="badge"><%=$obj->{real_name} %></span>) ?</p>
+                                    <p>Are you sure you want to delete user <span class="btn btn-default btn-sm"><%= $obj->login %></span> (<span class="badge"><%=$obj->real_name %></span>) ?</p>
                                 </div>
                                 <div class="modal-body">
                                     <div class="modal-footer">
-                                        <a href='/profile/delete/<%= $obj->{id} %>' class="btn btn-danger"> Yes, delete that user <span class="glyphicon glyphicon-trash"></span></a>
+                                        <a href='/profile/delete/<%= $obj->id %>' class="btn btn-danger"> Yes, delete that user <span class="glyphicon glyphicon-trash"></span></a>
                                         <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, keep him <span class="glyphicon glyphicon-heart"></span> </button></a>
                                     </div>
                                 </div>
@@ -70,31 +60,31 @@
                     </div>
                   <!-- END OF MODAL DIALOG FOR DELETE -->
                 </td>
-                <td><a href='/profile/make_user/<%= $obj->{id} %>' class="btn btn-info">U</a></td>
-                % if ($obj->is_manager()) {
-                    <td><a href='/profile/make_manager/<%= $obj->{id} %>' class="btn btn-warning">M</a></td>
+                <td><a href='/profile/make_user/<%= $obj->id %>' class="btn btn-info">U</a></td>
+                % if ($obj->rank>0) {
+                    <td><a href='/profile/make_manager/<%= $obj->id %>' class="btn btn-warning">M</a></td>
                 % }
                 % else{
-                    <td><a href='/profile/make_manager/<%= $obj->{id} %>' class="btn btn-default">M</a></td>
+                    <td><a href='/profile/make_manager/<%= $obj->id %>' class="btn btn-default">M</a></td>
                 %}
-                % if ($obj->is_admin()) {
-                    <td><a href='/profile/make_admin/<%= $obj->{id} %>' class="btn btn-danger">A</a></td>
+                % if ($obj->rank>1) {
+                    <td><a href='/profile/make_admin/<%= $obj->id %>' class="btn btn-danger">A</a></td>
                 % }
                 % else{
-                    <td><a href='/profile/make_admin/<%= $obj->{id} %>' class="btn btn-default">A</a></td>
+                    <td><a href='/profile/make_admin/<%= $obj->id %>' class="btn btn-default">A</a></td>
                 %}
                 
 
 
-                <td><button class="btn btn-default btn-sm"> <%= $obj->{real_name} %></button></td>
+                <td><button class="btn btn-default btn-sm"> <%= $obj->real_name %></button></td>
                 <td>
-                  <button class="btn btn-default btn-sm" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> <%= $obj->{id} %></button>
+                  <button class="btn btn-default btn-sm" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> <%= $obj->id %></button>
                 </td>
-                <td><button class="btn btn-default btn-sm"> <%= $obj->{login} %></button></td>
-                <td><button class="btn btn-default btn-sm"> <%= $obj->{email} %></button></td>
-                <td><button class="btn btn-default btn-sm"> <%= $obj->{registration_time} %></button></td>
-                <td><button class="btn btn-default btn-sm"> <%= $obj->{last_login} %></button></td>
-                <td><button class="btn btn-default btn-sm"> <%= $obj->{rank} %></button></td>
+                <td><button class="btn btn-default btn-sm"> <%= $obj->login %></button></td>
+                <td><button class="btn btn-default btn-sm"> <%= $obj->email %></button></td>
+                <td><button class="btn btn-default btn-sm"> <%= $obj->registration_time %></button></td>
+                <td><button class="btn btn-default btn-sm"> <%= $obj->last_login %></button></td>
+                <td><button class="btn btn-default btn-sm"> <%= $obj->rank %></button></td>
                 <!-- <td><button class="btn btn-default btn-sm"> <%= $obj->{master_id} %></button></td> -->
                 <!-- <td><button class="btn btn-default btn-sm"> <%= $obj->{tennant_id} %></button></td> -->
                 </tr>
