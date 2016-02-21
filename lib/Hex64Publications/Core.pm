@@ -1306,7 +1306,7 @@ sub get_tags_for_team {
 
     my @params;
 
-    my $qry = "SELECT DISTINCT Tag.id as tagid, Tag.name as tagname, Entry.year
+    my $qry = "SELECT DISTINCT Tag.name as tagname, Tag.id as tagid, Entry.year
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
