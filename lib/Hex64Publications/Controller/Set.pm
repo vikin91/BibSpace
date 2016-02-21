@@ -45,6 +45,7 @@ our @EXPORT = qw(
 ####################################################################################
 
 sub get_ids_arr_of_unassigned_tags {
+    say "CALL: get_ids_arr_of_unassigned_tags";
     my $self = shift;
     my $eid = shift;
     my $dbh = $self->app->db;
@@ -74,25 +75,16 @@ sub get_ids_arr_of_unassigned_tags {
 ####################################################################################
 
 sub get_set_of_all_teams {
+    say "CALL: get_set_of_all_teams";
     my $self = shift;
     my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
+    my @objs = $dbh->resultset('Team')->all;
 
-
-    my @params;
-
-    my $qry = "SELECT DISTINCT id
-                FROM Team
-                WHERE name IS NOT NULL ";
-
-    my $sth = $dbh->prepare_cached( $qry );  
-    $sth->execute(@params); 
-
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $team_id = $row->{id};
-
-      $set->insert($team_id);
+    for my $t (@objs) {
+        my $tid = $t->{id};
+        $set->insert($tid);
     }
 
     return $set;
@@ -100,26 +92,17 @@ sub get_set_of_all_teams {
 ####################################################################################
 
 sub get_set_of_all_papers {
+    say "CALL: get_set_of_all_papers";
     my $self = shift;
     my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
+    my @objs = $dbh->resultset('Entry')->all;
 
-    my @params;
-
-    my $qry = "SELECT DISTINCT id
-                FROM Entry
-                WHERE bibtex_key IS NOT NULL ";
-    $qry .= "ORDER BY year DESC, bibtex_key ASC";
-
-    my $sth = $dbh->prepare_cached( $qry );  
-    $sth->execute(@params); 
-
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{id};
-
-      $set->insert($eid);
+    for my $e(@objs) {
+        my $eid = $e->{id};
+        $set->insert($eid);
     }
 
     return $set;
@@ -128,6 +111,7 @@ sub get_set_of_all_papers {
 ####################################################################################
 
 sub get_set_of_papers_for_team {
+    say "CALL: get_set_of_papers_for_team";
     my $self = shift;
     my $tid = shift;
     my $dbh = $self->app->db;
@@ -170,21 +154,21 @@ sub get_set_of_papers_for_team {
 ####################################################################################
 
 sub get_set_of_papers_with_exceptions {
+    say "CALL: get_set_of_papers_with_exceptions.";
     my $self = shift;
     my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
 
+    # my $qry = "SELECT DISTINCT entry_id FROM Exceptions_Entry_to_Team WHERE team_id>-1";
 
-    my @params;
+    
+    my $rs = $dbh->resultset('ExceptionsEntryToTeam')->search({'me.team_id' => -1});
+    my @objs = $rs->all;
 
-    my $qry = "SELECT DISTINCT entry_id FROM Exceptions_Entry_to_Team WHERE team_id>-1";
-    my $sth = $dbh->prepare_cached( $qry );  
-    $sth->execute(); 
-
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{entry_id};
-      $set->insert($eid);
+    for my $e (@objs) {
+        my $eid = $e->{entry_id};
+        $set->insert($eid);
     }
 
     return $set;
@@ -193,22 +177,19 @@ sub get_set_of_papers_with_exceptions {
 ####################################################################################
 
 sub get_set_of_tagged_papers {
+    say "CALL: get_set_of_tagged_papers.";
     my $self = shift;
     my $dbh = $self->app->db;
 
     my $set = new Set::Scalar;
+    # my $qry = "SELECT DISTINCT entry_id FROM Entry_to_Tag";
+    my $rs = $dbh->resultset('EntryToTag');
+    my @objs = $rs->all;
 
-
-    my $qry = "SELECT DISTINCT entry_id FROM Entry_to_Tag";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute(); 
-
-    my @array;
-    while(my $row = $sth->fetchrow_hashref()) {
-        my $eid = $row->{entry_id};
+    for my $e (@objs) {
+        my $eid = $e->{entry_id};
         $set->insert($eid);
-    } 
-
+    }
     return $set;
 } 
 ####################################################################################

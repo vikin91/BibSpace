@@ -12,7 +12,7 @@ use File::Slurp;
 use File::Find;
 use Time::Piece;
 use 5.010; #because of ~~
-use Cwd;
+
 use strict;
 use warnings;
 
@@ -65,7 +65,6 @@ our @EXPORT = qw(
     clean_tag_name
     get_visibility_for_id
     
-    postprocess_all_entries_after_author_uids_change_w_creating_authors
     
     
     get_exceptions_for_entry_id
@@ -77,7 +76,7 @@ our @EXPORT = qw(
     get_current_year
     get_current_month
     get_number_of_publications_in_year
-    get_publications_main_hashed_args
+    
     get_publications_main
     get_publications_core_from_array
     get_publications_core_from_set
@@ -99,23 +98,7 @@ sub get_number_of_publications_in_year{
     my @objs = get_publications_main($self, undef, $year, undef, undef, undef, undef, 0, undef);
     return scalar @objs;
 }
-####################################################################################
-sub get_publications_main_hashed_args{
-    my ($self, $args) = @_;
 
-    return get_publications_core($self, $args);
-
-                                 # $args->{author} || $self->param('author') || undef, 
-                                 # $args->{year} || $self->param('year') || undef,
-                                 # $args->{bibtex_type} || $self->param('bibtex_type') || undef,
-                                 # $args->{entry_type} || $self->param('entry_type') || undef,
-                                 # $args->{tag} || $self->param('tag') || undef,
-                                 # $args->{team} || $self->param('team') || undef,
-                                 # $args->{visible} || 0,
-                                 # $args->{permalink} || $self->param('permalink') || undef,
-                                 # $args->{hidden},
-                                 # );
-}
 ####################################################################################
 sub get_publications_main{
   say "CALL: get_publications_main - calling this function without arguments hash is deprecated! Call get_publications_main_hashed_args instead!";
@@ -165,39 +148,7 @@ sub get_publications_core_from_set{
 
     return get_publications_core_from_array($self, \@array);
 }
-####################################################################################
 
-sub get_publications_core{
-
-    my ($self, $args) = @_;
-    my $author = $args->{author} || $self->param('author') || undef, 
-    my $year = $args->{year} || $self->param('year') || undef,
-    my $bibtex_type = $args->{bibtex_type} || $self->param('bibtex_type') || undef,
-    my $entry_type = $args->{entry_type} || $self->param('entry_type') || undef,
-    my $tag = $args->{tag} || $self->param('tag') || undef,
-    my $team = $args->{team} || $self->param('team') || undef,
-    my $visible = $args->{visible} || 0,
-    my $permalink = $args->{permalink} || $self->param('permalink') || undef,
-    my $hidden = $args->{hidden},
-
-    my $dbh = $self->app->db;
-
-    ######  
-
-    my $teamid = $dbh->resultset('Team')->search({'name' => $team})->get_column('id')->first || undef;
-    my $master_id = $dbh->resultset('Author')->search({'master' => $author})->get_column('master_id')->first || $author; # it means that author was given as master_id and not as master name
-
-    my $tagid = $dbh->resultset('Tag')->search({'name' => $tag})->get_column('id')->first || $tag; # it means that tag was given as tag_id and not as tag name;
-    
-    
-    $teamid = undef unless defined $team;
-    $master_id = undef unless defined $author;
-    $tagid = undef unless defined $tag;
-    
-
-    my @objs = getPublicationsByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
-    return @objs;
-}
 ####################################################################################
 sub get_single_publication {
     my $self = shift;
@@ -1467,69 +1418,6 @@ sub generate_html_for_key{
 };
 
 ################################################################################
-
-sub get_html_for_bib{
-   my $bib_str = shift;
-   my $key = shift || 'no-bibtex-key';
-
-    # fix for the coding problems with mysql
-    $bib_str =~ s/J''urgen/J\\''urgen/g;
-    $bib_str =~ s/''a/\\''a/g;
-    $bib_str =~ s/''o/\\''o/g;
-    $bib_str =~ s/''e/\\''e/g;
-
-   my $out_file = $bibtex2html_tmp_dir."/out";
-   my $outhtml = $out_file.".html";
-
-   my $out_bibhtml = $out_file."_bib.html";
-   my $databib = $bibtex2html_tmp_dir."/data.bib";
-
-   open (MYFILE, '>'.$databib);
-   print MYFILE $bib_str;
-   close (MYFILE); 
-
-   open (my $fh, '>'.$outhtml) or die "cannot touch $outhtml";
-   close($fh);
-   open ($fh, '>'.$out_bibhtml) or die "cannot touch $out_bibhtml";
-   close($fh);
-
-    my $cwd = getcwd();
-
-   mkdir($bibtex2html_tmp_dir, 0777);
-
-   # -nokeys  --- no number in brackets by entry
-   # -nodoc   --- dont generate document but a part of it - to omit html head body headers
-   # -single  --- does not provide links to pdf, html and bib but merges bib with html output
-   my $bibtex2html_command = "bibtex2html -s ".$cwd."/descartes2 -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o ".$out_file." $databib >/dev/null";
-   # my $tune_html_command = "./tuneSingleHtmlFile.sh out.html";
-
-   # print "COMMAND: $bibtex2html_command\n";
-   my $syscommand = "export TMPDIR=".$bibtex2html_tmp_dir." && ".$bibtex2html_command;
-   # say "=====\n";
-   # say "cwd: ".$cwd."\n";
-   # say $syscommand;
-   # say "=====\n";
-   system($syscommand);
-   
-
-
-
-   my $html =     read_file($outhtml);
-   my $htmlbib =  read_file($out_bibhtml);
-
-   $htmlbib =~ s/<h1>data.bib<\/h1>//g;
-
-   $htmlbib =~ s/<a href="$outhtml#(.*)">(.*)<\/a>/$1/g;
-   $htmlbib =~ s/<a href=/<a target="blank" href=/g;
-
-   $html = tune_html($html, $key, $htmlbib);
-   
-
-   
-   # now the output jest w out.html i out_bib.html
-
-   return $html, $htmlbib;
-};
 
 ################################################################################
 

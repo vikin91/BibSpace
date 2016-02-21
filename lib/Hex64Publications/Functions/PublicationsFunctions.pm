@@ -11,6 +11,7 @@ use Time::Piece;
 use 5.010; #because of ~~
 use strict;
 use warnings;
+use Cwd;
 
 use Exporter;
 our @ISA= qw( Exporter );
@@ -22,6 +23,8 @@ our @EXPORT = qw(
     after_edit_process_authors
     generate_html_for_key
     generate_html_for_id
+    get_publications_core
+    get_publications_main_hashed_args
     getPublicationsByFilter
     get_html_for_bib
     tune_html
@@ -241,6 +244,45 @@ sub generate_html_for_id{
             need_html_regen => 0
             });
 };
+####################################################################################
+sub get_publications_main_hashed_args{
+    my ($self, $args) = @_;
+
+    return get_publications_core($self, $args);
+}
+####################################################################################
+
+sub get_publications_core{
+
+    my ($self, $args) = @_;
+    my $author = $args->{author} || $self->param('author') || undef, 
+    my $year = $args->{year} || $self->param('year') || undef,
+    my $bibtex_type = $args->{bibtex_type} || $self->param('bibtex_type') || undef,
+    my $entry_type = $args->{entry_type} || $self->param('entry_type') || undef,
+    my $tag = $args->{tag} || $self->param('tag') || undef,
+    my $team = $args->{team} || $self->param('team') || undef,
+    my $visible = $args->{visible} || 0,
+    my $permalink = $args->{permalink} || $self->param('permalink') || undef,
+    my $hidden = $args->{hidden},
+
+    my $dbh = $self->app->db;
+
+    ######  
+
+    my $teamid = $dbh->resultset('Team')->search({'name' => $team})->get_column('id')->first || undef;
+    my $master_id = $dbh->resultset('Author')->search({'master' => $author})->get_column('master_id')->first || $author; # it means that author was given as master_id and not as master name
+
+    my $tagid = $dbh->resultset('Tag')->search({'name' => $tag})->get_column('id')->first || $tag; # it means that tag was given as tag_id and not as tag name;
+    
+    
+    $teamid = undef unless defined $team;
+    $master_id = undef unless defined $author;
+    $tagid = undef unless defined $tag;
+    
+
+    my @objs = getPublicationsByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
+    return @objs;
+}
 ########################################################################################################################
 
 sub getPublicationsByFilter{
@@ -359,68 +401,58 @@ sub getPublicationsByFilter{
 ################################################################################
 
 sub get_html_for_bib{
-   my $bib_str = shift;
-   my $key = shift || 'no-bibtex-key';
+    my $bib_str = shift;
+    my $key = shift || 'no-bibtex-key';
 
-   # fix for the coding problems with mysql
-   $bib_str =~ s/J''urgen/J\\''urgen/g;
-   $bib_str =~ s/''a/\\''a/g;
-   $bib_str =~ s/''o/\\''o/g;
-   $bib_str =~ s/''e/\\''e/g;
+    # fix for the coding problems with mysql
+    $bib_str =~ s/J''urgen/J\\''urgen/g;
+    $bib_str =~ s/''a/\\''a/g;
+    $bib_str =~ s/''o/\\''o/g;
+    $bib_str =~ s/''e/\\''e/g;
 
-   mkdir($bibtex2html_tmp_dir, 0777);
+    mkdir($bibtex2html_tmp_dir, 0777);
 
-   my $out_file = $bibtex2html_tmp_dir."/out";
-   my $outhtml = $out_file.".html";
+    my $out_file = $bibtex2html_tmp_dir."/out";
+    my $outhtml = $out_file.".html";
 
-   my $out_bibhtml = $out_file."_bib.html";
-   my $databib = $bibtex2html_tmp_dir."/data.bib";
+    my $out_bibhtml = $out_file."_bib.html";
+    my $databib = $bibtex2html_tmp_dir."/data.bib";
 
-   open (MYFILE, '>'.$databib);
-   print MYFILE $bib_str;
-   close (MYFILE); 
+    open (MYFILE, '>'.$databib);
+    print MYFILE $bib_str;
+    close (MYFILE); 
 
-   open (my $fh, '>'.$outhtml) or return nohtml($key, '?', $bib_str), $bib_str; #die "cannot touch $outhtml";
-   close($fh);
-   open ($fh, '>'.$out_bibhtml) or return $bib_str, $bib_str; #die "cannot touch $out_bibhtml";
-   close($fh);
+    open (my $fh, '>'.$outhtml) or return nohtml($key, '?', $bib_str), $bib_str; #die "cannot touch $outhtml";
+    close($fh);
+    open ($fh, '>'.$out_bibhtml) or return $bib_str, $bib_str; #die "cannot touch $out_bibhtml";
+    close($fh);
 
     my $cwd = getcwd();
 
+    # -nokeys  --- no number in brackets by entry
+    # -nodoc   --- dont generate document but a part of it - to omit html head body headers
+    # -single  --- does not provide links to pdf, html and bib but merges bib with html output
+    my $bibtex2html_command = "bibtex2html -s ".$cwd."/descartes2 -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o ".$out_file." $databib >/dev/null";
+    # my $tune_html_command = "./tuneSingleHtmlFile.sh out.html";
+
+    # print "COMMAND: $bibtex2html_command\n";
+    my $syscommand = "export TMPDIR=".$bibtex2html_tmp_dir." && ".$bibtex2html_command;
+    system($syscommand);
+
+    my $html =     read_file($outhtml);
+    my $htmlbib =  read_file($out_bibhtml);
+
+    $htmlbib =~ s/<h1>data.bib<\/h1>//g;
+
+    $htmlbib =~ s/<a href="$outhtml#(.*)">(.*)<\/a>/$1/g;
+    $htmlbib =~ s/<a href=/<a target="blank" href=/g;
+
+    $html = tune_html($html, $key, $htmlbib);
+
+    $html = nohtml($key,'no-type') if $html eq '';
    
-
-   # -nokeys  --- no number in brackets by entry
-   # -nodoc   --- dont generate document but a part of it - to omit html head body headers
-   # -single  --- does not provide links to pdf, html and bib but merges bib with html output
-   my $bibtex2html_command = "bibtex2html -s ".$cwd."/descartes2 -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o ".$out_file." $databib >/dev/null";
-   # my $tune_html_command = "./tuneSingleHtmlFile.sh out.html";
-
-   # print "COMMAND: $bibtex2html_command\n";
-   my $syscommand = "export TMPDIR=".$bibtex2html_tmp_dir." && ".$bibtex2html_command;
-   # say "=====\n";
-   # say "cwd: ".$cwd."\n";
-   # say $syscommand;
-   # say "=====\n";
-   system($syscommand);
-   
-
-
-
-   my $html =     read_file($outhtml);
-   my $htmlbib =  read_file($out_bibhtml);
-
-   $htmlbib =~ s/<h1>data.bib<\/h1>//g;
-
-   $htmlbib =~ s/<a href="$outhtml#(.*)">(.*)<\/a>/$1/g;
-   $htmlbib =~ s/<a href=/<a target="blank" href=/g;
-
-   $html = tune_html($html, $key, $htmlbib);
-   
-
-   
-   # now the output jest w out.html i out_bib.html
-
-   return $html, $htmlbib;
+    # now the output jest w out.html i out_bib.html
+    return $html, $htmlbib;
 };
 
 ################################################################################
