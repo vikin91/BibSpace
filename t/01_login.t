@@ -2,16 +2,16 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 
-use Menry;
-use Menry::Controller::Core;
-use Menry::Controller::Backup;
-use Menry::Functions::BackupFunctions;
-use Menry::Functions::EntryObj;
+use Hex64Publications;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Controller::Backup;
+use Hex64Publications::Functions::BackupFunctions;
+use Hex64Publications::Functions::EntryObj;
 
 todo:{
 
 
-my $t_anyone = Test::Mojo->new('Menry');
+my $t_anyone = Test::Mojo->new('Hex64Publications');
 $t_anyone->get_ok('/')->status_is(200)->content_like(qr/Please login or register/i);
 
 note "============ Testing bad password ============";
@@ -28,7 +28,7 @@ $t_anyone->get_ok('/')
 
 
 note "============ Loggin in ============";
-my $t_logged_in = Test::Mojo->new('Menry');
+my $t_logged_in = Test::Mojo->new('Hex64Publications');
 $t_logged_in->ua->max_redirects(10);
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
