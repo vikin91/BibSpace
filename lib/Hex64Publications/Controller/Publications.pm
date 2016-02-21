@@ -1633,7 +1633,7 @@ sub post_add_many_store {
     if (@existing_ids) {  # if the array is not empty
         $msg = $debug_str."<br/>"."<strong>The following keys exist already in the system: ".join(', ', @existing_keys)."</strong>";
 
-   $self->stash(bib  => $bib, key => '', existing_id => '', exit_code => '', msg => '', preview => '');
+        $self->stash(bib  => $new_bib, key => '', existing_id => '', exit_code => '', msg => '', preview => '');
         $self->render(template => 'publications/add_multiple_entries');
         return;
     }
@@ -1738,10 +1738,10 @@ sub post_add_store {
   $new_bib =~ s/^\t//g;
 
 
-  my $exisitng_id = $self->app->db->resultset('Entry')->search({ bibtex_key => $key })->get_column('id')->first || 0;
+  my $existing_id = $self->app->db->resultset('Entry')->search({ bibtex_key => $key })->get_column('id')->first || 0;
 
   say "key from code $key";
-  say "exisitng_id $exisitng_id";
+  say "existing_id $existing_id";
 
   my $param_prev = $self->param('preview') || "";
   my $param_save = $self->param('save') || "";
@@ -1997,52 +1997,52 @@ sub after_edit_check_entry{
    return $exit_code;
 };
 
-##################################################################
-sub postprocess_updated_entry{
-	say "CALL: postprocess_updated_entry";  # procesing an entry that was edited - allows to change bibtex key - eid remains untouched
-    ### TODO: cannot use log because there is no $self-object!
-    my $dbh = shift;
-    my $entry_str = shift;
-    my $eid = shift; # remains unchanged
-    my $preview_html = "";
+# ##################################################################
+# sub postprocess_updated_entry{
+# 	say "CALL: postprocess_updated_entry";  # procesing an entry that was edited - allows to change bibtex key - eid remains untouched
+#     ### TODO: cannot use log because there is no $self-object!
+#     my $dbh = shift;
+#     my $entry_str = shift;
+#     my $eid = shift; # remains unchanged
+#     my $preview_html = "";
 
 
-    # $self->write_log("Postprocessing updated entry with id $eid");
+#     # $self->write_log("Postprocessing updated entry with id $eid");
 
-    my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s($entry_str);
+#     my $entry = new Text::BibTeX::Entry();
+#     $entry->parse_s($entry_str);
 
-    return -1 unless $entry->parse_ok;
+#     return -1 unless $entry->parse_ok;
 
-    my $exit_code = -2;
-    # -1 parse error
-    # 1 updating ok
+#     my $exit_code = -2;
+#     # -1 parse error
+#     # 1 updating ok
 
-    ######### AUTHORS
+#     ######### AUTHORS
 
-    my $key = $entry->key;
+#     my $key = $entry->key;
 
 
-    my $year = $entry->get('year');
-    my $title = $entry->get('title') || '';
-    my $abstract = $entry->get('abstract') || undef;
-    my $content = $entry->print_s;
-    my $type = $entry->type;
+#     my $year = $entry->get('year');
+#     my $title = $entry->get('title') || '';
+#     my $abstract = $entry->get('abstract') || undef;
+#     my $content = $entry->print_s;
+#     my $type = $entry->type;
 
-    my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, bibtex_type=?, abstract=?, need_html_regen = 1, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
-    $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
-    $sth2->finish();
-    $exit_code = 1;
-    after_edit_process_authors($dbh, $entry);
-    # after_edit_process_tags($dbh, $entry); 
-    generate_html_for_key($dbh, $key);
-    after_edit_process_month($dbh, $entry);
+#     my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, bibtex_type=?, abstract=?, need_html_regen = 1, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
+#     $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
+#     $sth2->finish();
+#     $exit_code = 1;
+#     after_edit_process_authors($dbh, $entry);
+#     # after_edit_process_tags($dbh, $entry); 
+#     generate_html_for_key($dbh, $key);
+#     after_edit_process_month($dbh, $entry);
 
-    my ($html, $htmlbib) = get_html_for_bib($content, $key);
-    $preview_html = $html;
+#     my ($html, $htmlbib) = get_html_for_bib($content, $key);
+#     $preview_html = $html;
 
-    return $exit_code, $preview_html;
-};
+#     return $exit_code, $preview_html;
+# };
 ##################################################################
 
 sub postprocess_edited_entry{  # 

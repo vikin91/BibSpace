@@ -14,8 +14,6 @@ our @ISA= qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw( 
-    check_is_admin
-    check_is_manager
     check
     add_new_user
     insert_admin
@@ -28,21 +26,6 @@ our @EXPORT = qw(
     );
 
 # ####################################################################################
-# sub check_is_admin {
-#     my $user = shift;
-#     my $dbh = shift;
-#     my $u = $dbh->resultset('Login')->search({ login => $user })->first;
-#     return $u->rank > 1 if defined $u;
-#     return undef;
-# }
-# ####################################################################################
-# sub check_is_manager {
-#     my $user = shift;
-#     my $dbh = shift;
-#     my $u = $dbh->resultset('Login')->search({ login => $user })->first;
-#     return $u->rank > 0 if defined $u;
-#     return undef;
-# }
 ####################################################################################################
 sub check {
     print "call Hex64Publications::Controller::Login check \n";

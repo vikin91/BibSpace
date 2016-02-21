@@ -94,9 +94,6 @@ sub register {
     $app->helper(num_pubs => sub {
         my $self = shift;
         my $num = $self->app->db->resultset('Entry')->count;
-        $sth->execute(); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
         return $num; 
       });
 
