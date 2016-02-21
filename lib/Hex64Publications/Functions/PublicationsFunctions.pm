@@ -21,6 +21,8 @@ our @EXPORT = qw(
     postprocess_updated_entry
     after_edit_process_month
     after_edit_process_authors
+    generate_html_for_all_need_regen
+    generate_html_for_all_force
     generate_html_for_key
     generate_html_for_id
     get_publications_core
@@ -89,35 +91,68 @@ sub assign_entry_to_existing_authors_no_add{
 sub postprocess_updated_entry{
     say "CALL: PublicationsFunctions::postprocess_updated_entry";  # procesing an entry that was edited - allows to change bibtex key - eid remains untouched
     ### TODO: cannot use log because there is no $self-object!
+
     my $dbh = shift;
     my $entry_str = shift;
-    my $eid = shift; # remains unchanged
-
+    my $preview = shift;
+    my $eid = shift || -1; # remains unchanged
     my $preview_html = "";
 
-    # $self->write_log("Postprocessing updated entry with id $eid");
+    # first, decide if we are adding or editing an entry
+    my $adding = 1;
+    $adding = 0 if $eid > 0;
 
+    
     my $entry = new Text::BibTeX::Entry();
     $entry->parse_s($entry_str);
-
     return -1 unless $entry->parse_ok;
-
     my $exit_code = -2;
     # -1 parse error
     # 1 updating ok
-
-    ######### AUTHORS
-
     my $key = $entry->key;
-
-
     my $year = $entry->get('year');
     my $title = $entry->get('title') || '';
     my $abstract = $entry->get('abstract') || undef;
     my $content = $entry->print_s;
     my $type = $entry->type;
 
-    $dbh->resultset('Entry')->search({ id => $eid })->update({
+    my $eid_from_key = $dbh->resultset('Entry')->search({ bibtex_key => $key })->get_column('id')->first || -1;
+    $adding = 0 if $eid_from_key > 0;
+
+    if($preview){
+        say "Showing preview!";
+        my ($html, $htmlbib) = get_html_for_bib($content, $key);
+        $exit_code = -2; #preview
+        return $exit_code, $html;
+    }
+
+    if($adding){
+        say "creating Entry!";
+        say "key $key";
+        say "content $content";
+        say "abstract $abstract";
+
+        $dbh->resultset('Entry')->find_or_create({
+            title => $title, 
+            bibtex_key => $key, 
+            bib => $content,
+            year => $year,
+            bibtex_type => $type,
+            abstract => $abstract,
+            creation_time => \"current_timestamp",
+            modified_time => \"current_timestamp"
+            });
+        $exit_code = 0; # adding ok
+    }
+    else{ # updating
+
+        if(undef $eid and $eid_from_key != $eid){
+            warn "Fatal! $eid_from_key <> $eid";
+        }
+
+        say "updating Entry!";
+
+        $dbh->resultset('Entry')->search({ id => $eid })->update({
             title => $title, 
             bibtex_key => $key, 
             bib => $content,
@@ -129,16 +164,20 @@ sub postprocess_updated_entry{
             modified_time => \"current_timestamp"
             });
 
-    $exit_code = 1;
+        $exit_code = 1;
+    }
+
     after_edit_process_authors($dbh, $entry);
+    say "TODO: after_edit_process_tags";
     # after_edit_process_tags($dbh, $entry); 
-    generate_html_for_key($dbh, $key);
+    say "TODO: generate_html_for_key";
+    # generate_html_for_key($dbh, $key);
+    say "TODO: after_edit_process_month";
     after_edit_process_month($dbh, $entry);
 
+    generate_html_for_key($dbh, $key);
     my ($html, $htmlbib) = get_html_for_bib($content, $key);
-    $preview_html = $html;
-
-    return $exit_code, $preview_html;
+    return $exit_code, $html;
 };
 
 ##########################################################################################
@@ -216,6 +255,24 @@ sub after_edit_process_authors{
     # }
 }
 ################################################################################
+################################################################################
+sub generate_html_for_all_force {
+    my $dbh = shift;
+
+    my @ids = $dbh->resultset('Entry')->get_column('id')->all;
+    for my $id (@ids){
+        generate_html_for_id($dbh, $id);
+    }
+}
+################################################################################
+sub generate_html_for_all_need_regen {
+    my $dbh = shift;
+
+    my @ids = $dbh->resultset('Entry')->search({need_html_regen => 1})->get_column('id')->all;
+    for my $id (@ids){
+        generate_html_for_id($dbh, $id);
+    }
+}
 ################################################################################
 sub generate_html_for_key{
    my $dbh = shift;

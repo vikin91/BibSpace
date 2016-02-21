@@ -306,8 +306,8 @@ sub clean_ugly_bibtex_fileds_for_all_entries {
     my $dbh = $self->app->db;
     $self->write_log("clean_ugly_bibtex_fileds_for_all_entries started");
     
+    my @ids = $dbh->resultset('Entry')->get_column('id')->all;
     
-    my @ids = get_all_entry_ids($dbh);
     for my $id (@ids){
       clean_ugly_bibtex_fileds($dbh, $id);
     }
@@ -315,14 +315,18 @@ sub clean_ugly_bibtex_fileds_for_all_entries {
 };
 ####################################################################################
 sub clean_ugly_bibtex_fileds {
+    say "CALL: clean_ugly_bibtex_fileds";
     my $dbh = shift;
     my $eid = shift;
 
     # TODO: move this into config
     our @bib_fields_to_delete = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
 
-    my @ary = $dbh->selectrow_array("SELECT bib FROM Entry WHERE id = ?", undef, $eid);  
-    my $entry_str = $ary[0];
+    my $entry_obj = $dbh->resultset('Entry')->search({ id => $eid })->first;
+    my $entry_str = $entry_obj->{bib};
+    # my @ary = $dbh->selectrow_array("SELECT bib FROM Entry WHERE id = ?", undef, $eid);  
+
+    say "entry_str: $entry_str";
 
     my $entry = new Text::BibTeX::Entry();
     $entry->parse_s($entry_str);
@@ -348,12 +352,9 @@ sub clean_ugly_bibtex_fileds {
         $new_bib =~ s/\\\\/\\/g;
         $new_bib =~ s/\\\\/\\/g;
 
+        $dbh->resultset('Entry')->search({id => $eid})->update({bib => 0, need_html_regen => 1 });
 
-        my $sth2 = $dbh->prepare( "UPDATE Entry SET bib=?, need_html_regen = 1 WHERE id =?" );  
-        $sth2->execute($new_bib, $eid);
-        $sth2->finish();
-
-        # generate_html_for_id($dbh, $eid);
+        # my $sth2 = $dbh->prepare( "UPDATE Entry SET bib=?, need_html_regen = 1 WHERE id =?" );  
     }
 };
 
@@ -536,22 +537,7 @@ sub get_all_non_hidden_entry_ids{
    return @ids;   
 }
 ################################################################################
-sub get_all_entry_ids{
-   my $dbh = shift;
-   
-   my $qry = "SELECT DISTINCT id FROM Entry";
-   my $sth = $dbh->prepare( $qry );  
-   $sth->execute(); 
 
-   my @ids;
-   
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{id};
-      push @ids, $eid if defined $eid;
-   }
-
-   return @ids;   
-}
 ################################################################################
 sub get_all_tags{
    my $dbh = shift;

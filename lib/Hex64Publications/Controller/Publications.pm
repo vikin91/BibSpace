@@ -982,7 +982,9 @@ sub display_landing{
 
     my $permalink = $self->param('permalink');
     my $tag_name = $self->param('tag') || "";
-    my $tag_name_for_permalink = Hex64Publications::Functions::TagObj->get_tag_name_for_permalink($self->app->db, $permalink);
+    my $tag_name_for_permalink = $self->app->db->resultset('Tag')->search({'permalink' => $permalink})->get_column('name');
+    
+
     $tag_name = $tag_name_for_permalink unless $tag_name_for_permalink eq -1;
     $tag_name = $permalink if !defined $self->param('tag') and $tag_name_for_permalink eq -1;
     $tag_name =~ s/_+/_/g if defined $tag_name and defined $show_title and $show_title == 1;
@@ -1000,19 +1002,6 @@ sub display_landing{
     $title .= " of type ".$self->param('bibtex_type') if defined $self->param('bibtex_type');
     $title .= " published in year ".$self->param('year') if defined $self->param('year');
 
-    # my $url = $self->req->url;
-    # say "scheme ".$url->scheme;
-    # say "userinfo ".$url->userinfo;
-    # say "host ".$url->host;
-    # say "port ".$url->port;
-    # say "path ".$url->path;
-    # say "query ".$url->query;
-    # say "fragment ".$url->fragment;
-
-
-    # keys = years
-    # my @objs = @{ $hash_values{$year} };
-    # foreach my $obj (@objs){
     $self->stash(hash_values =>$hash_values_ref, hash_dict => $hash_dict_ref, keys => $keys_ref, 
                  navbar => $navbar_html, show_title => $show_title, title => $title, switch_link => $switchlink);
     $self->render(template => 'publications/landing_obj');
@@ -1221,20 +1210,18 @@ sub add_pdf_post{
 ####################################################################################
 ####################################################################################
 sub regenerate_html_for_all {
-	say "CALL: regenerate_html_for_all ";
-  my $self = shift;
-  my $back_url = $self->param('back_url');
+    say "CALL: regenerate_html_for_all ";
+    my $self = shift;
+    my $back_url = $self->param('back_url');
 
-  my $dbh = $self->app->db;
-  $back_url = $self->get_back_url($back_url);
+    my $dbh = $self->app->db;
+    $back_url = $self->get_back_url($back_url);
 
-  $self->write_log("regenerate_html_for_all is running");
+    $self->write_log("regenerate_html_for_all is running");
+    generate_html_for_all_need_regen($dbh);
+    $self->write_log("regenerate_html_for_all has finished");
 
-  $self->helper_regenerate_html_for_all();
-
-  $self->write_log("regenerate_html_for_all has finished");
-
-  $self->redirect_to($back_url);
+    $self->redirect_to($back_url);
 };
 ####################################################################################
 sub regenerate_html_for_all_force {
@@ -1633,7 +1620,7 @@ sub post_add_many_store {
             $debug_str.="<br>"."Adding!";
 
             my $single_key = $entry->key;
-            ($code, $html_preview) = postprocess_edited_entry($dbh, $single_code, 0);  #FIXME: added entry is strange!
+            ($code, $html_preview) = postprocess_updated_entry($dbh, $single_code, 0, -1);  #FIXME: added entry is strange!
             my $added_id = get_entry_id($dbh, $single_key);
 
             $debug_str.="<br>"."Added key $single_key as id $added_id sucessfully!<br/>";
@@ -1735,9 +1722,9 @@ sub post_add_store {
         return;
     }
     if(defined $self->param('save')){
-
+        say "Saving. exists = $exists";
         if(!$exists){
-            ($code, $html_preview) = postprocess_edited_entry($dbh, $new_bib, 0);
+            ($code, $html_preview) = postprocess_updated_entry($dbh, $new_bib, 0, -1);
             
             # the entry is added and now it has some id. We need to get it
             my $entry_id = $self->app->db->resultset('Entry')->search({ bibtex_key => $key })->get_column('id')->first || 0;
@@ -1753,6 +1740,7 @@ sub post_add_store {
     $code = 3; #assume key taken  # beause once the kay is bad, it is bad as long as $existing_id is -1
 
   if(defined $self->param('check_key')){
+      say "checking key. exists = $exists";
       if(!$exists){
           $code = 2; #key ok
       }
@@ -1821,7 +1809,9 @@ sub get_edit {
 
    my $obj = $dbh->resultset('Entry')->search({ id => $id })->first;
    my $bib = $obj->bib;
+   say "bib $bib";
    my $key = $obj->bibtex_key;
+   say "key $key";
 
 
    $self->stash(bib  => $bib, entry_obj => $obj, id => $id, key => $key, existing_id => '', exit_code => '', msg => undef, preview => '', back_url => $back_url);
@@ -1888,7 +1878,7 @@ sub post_edit_store {
   if(defined $self->param('save')){
 
 
-      ($code, $html_preview) = postprocess_updated_entry($dbh, $new_bib, $id);
+      ($code, $html_preview) = postprocess_updated_entry($dbh, $new_bib, undef, $id);
 
       $id = $dbh->resultset('Entry')->search({ bibtex_key => $key })->get_column('id')->first;
       # $id = get_entry_id($dbh, $key);  
@@ -1961,146 +1951,106 @@ sub after_edit_check_entry{
    return $exit_code;
 };
 
-# ##################################################################
-# sub postprocess_updated_entry{
-# 	say "CALL: postprocess_updated_entry";  # procesing an entry that was edited - allows to change bibtex key - eid remains untouched
+##################################################################
+
+# sub postprocess_edited_entry{  # 
+# 	say "CALL: postprocess_edited_entry. candidate to be replaced with PublicationsFunctions::postprocess_updated_entry";
 #     ### TODO: cannot use log because there is no $self-object!
 #     my $dbh = shift;
 #     my $entry_str = shift;
-#     my $eid = shift; # remains unchanged
-#     my $preview_html = "";
+#     my $preview = shift;
 
 
-#     # $self->write_log("Postprocessing updated entry with id $eid");
+#     return postprocess_updated_entry($dbh, $entry_str, $preview, -1);
 
-#     my $entry = new Text::BibTeX::Entry();
-#     $entry->parse_s($entry_str);
+   #  # $self->write_log("Postprocessing edited entry with id $eid");
 
-#     return -1 unless $entry->parse_ok;
+   #  my $entry = new Text::BibTeX::Entry();
+   #  $entry->parse_s($entry_str);
 
-#     my $exit_code = -2;
-#     # -1 parse error
-#     # 1 updating ok
+   #  return -1 unless $entry->parse_ok;
 
-#     ######### AUTHORS
+   #  my $exit_code = -2;
+   #  # 0 adding ok
+   #  # -1 parse error
+   #  # 1 updating ok
 
-#     my $key = $entry->key;
+   #  ######### AUTHORS
 
+   #  my $key = $entry->key;
 
-#     my $year = $entry->get('year');
-#     my $title = $entry->get('title') || '';
-#     my $abstract = $entry->get('abstract') || undef;
-#     my $content = $entry->print_s;
-#     my $type = $entry->type;
+   #  my $eid = $dbh->resultset('Entry')->search({ bibtex_key => $key })->first || 0;
 
-#     my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, bibtex_type=?, abstract=?, need_html_regen = 1, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
-#     $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
-#     $sth2->finish();
-#     $exit_code = 1;
-#     after_edit_process_authors($dbh, $entry);
-#     # after_edit_process_tags($dbh, $entry); 
-#     generate_html_for_key($dbh, $key);
-#     after_edit_process_month($dbh, $entry);
-
-#     my ($html, $htmlbib) = get_html_for_bib($content, $key);
-#     $preview_html = $html;
-
-#     return $exit_code, $preview_html;
-# };
-##################################################################
-
-sub postprocess_edited_entry{  # 
-	say "CALL: postprocess_edited_entry. candidate to be replaced with PublicationsFunctions::postprocess_updated_entry";
-    ### TODO: cannot use log because there is no $self-object!
-    my $dbh = shift;
-    my $entry_str = shift;
-    my $preview = shift;
-
-    my $preview_html = "";
-
-    # $self->write_log("Postprocessing edited entry with id $eid");
-
-    my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s($entry_str);
-
-    return -1 unless $entry->parse_ok;
-
-    my $exit_code = -2;
-    # 0 adding ok
-    # -1 parse error
-    # 1 updating ok
-
-    ######### AUTHORS
-
-    my $key = $entry->key;
-
-    my $eid = $dbh->resultset('Entry')->search({ bibtex_key => $key })->first || 0;
-
-    my $year = $entry->get('year');
-    my $title = $entry->get('title') || '';
-    my $abstract = $entry->get('abstract') || undef;
-    my $content = $entry->print_s;
-    my $type = $entry->type;
+   #  my $year = $entry->get('year');
+   #  my $title = $entry->get('title') || '';
+   #  my $abstract = $entry->get('abstract') || undef;
+   #  my $content = $entry->print_s;
+   #  my $type = $entry->type;
     
 
-    my $key_exists = $eid;
-    say "key_exists $key_exists";
-    say "preview $preview";
+   #  my $key_exists = $eid;
+   #  say "key_exists $key_exists";
+   #  say "preview $preview";
 
-    if(!$preview and $key_exists==0){
+   #  if(!$preview and $key_exists==0){
 
-        $dbh->resultset('Entry')->find_or_create({
-            title => $title, 
-            bibtex_key => $key, 
-            bib => $content,
-            year => $year,
-            bibtex_type => $type,
-            abstract => $abstract,
-            creation_time => \"current_timestamp",
-            modified_time => \"current_timestamp"
-            });
-        $exit_code = 0;
+   #      say "creating Entry!";
+   #      say "key $key";
+   #      say "content $content";
+   #      say "abstract $abstract";
 
-    }
-    elsif(!$preview and $key_exists > 0){ 
-        $dbh->resultset('Entry')->search({ id => $eid })->update({
-            title => $title, 
-            bibtex_key => $key, 
-            bib => $content,
-            year => $year,
-            bibtex_type => $type,
-            abstract => $abstract,
-            modified_time => \"current_timestamp"
-            });
+   #      $dbh->resultset('Entry')->find_or_create({
+   #          title => $title, 
+   #          bibtex_key => $key, 
+   #          bib => $content,
+   #          year => $year,
+   #          bibtex_type => $type,
+   #          abstract => $abstract,
+   #          creation_time => \"current_timestamp",
+   #          modified_time => \"current_timestamp"
+   #          });
+   #      $exit_code = 0;
 
-         # my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, bibtex_type=?, abstract=?, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
-         # $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
-         # $sth2->finish();
-         $exit_code = 1;
-    }
+   #  }
+   #  elsif(!$preview and $key_exists > 0){ 
+   #      $dbh->resultset('Entry')->search({ id => $eid })->update({
+   #          title => $title, 
+   #          bibtex_key => $key, 
+   #          bib => $content,
+   #          year => $year,
+   #          bibtex_type => $type,
+   #          abstract => $abstract,
+   #          modified_time => \"current_timestamp"
+   #          });
 
-    if(!$preview){
+   #       # my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, bibtex_type=?, abstract=?, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
+   #       # $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
+   #       # $sth2->finish();
+   #       $exit_code = 1;
+   #  }
+
+   #  if(!$preview){
         
-        after_edit_process_authors($dbh, $entry);
-        say "TODO: after_edit_process_tags";
-        # after_edit_process_tags($dbh, $entry); 
-        say "TODO: generate_html_for_key";
-        # generate_html_for_key($dbh, $key);
-        say "TODO: after_edit_process_month";
-        # after_edit_process_month($dbh, $entry);
+   #      after_edit_process_authors($dbh, $entry);
+   #      say "TODO: after_edit_process_tags";
+   #      # after_edit_process_tags($dbh, $entry); 
+   #      say "TODO: generate_html_for_key";
+   #      # generate_html_for_key($dbh, $key);
+   #      say "TODO: after_edit_process_month";
+   #      # after_edit_process_month($dbh, $entry);
 
 
-        # $exit_code = "Your entry has been added, but please note: TODO: adjust those methods: after_edit_process_authors and after_edit_process_tags!";
-    }
-    else{
-        my ($html, $htmlbib) = get_html_for_bib($content, $key);
-        $preview_html = $html;
-    }
+   #      # $exit_code = "Your entry has been added, but please note: TODO: adjust those methods: after_edit_process_authors and after_edit_process_tags!";
+   #  }
+   #  else{
+   #      my ($html, $htmlbib) = get_html_for_bib($content, $key);
+   #      $preview_html = $html;
+   #  }
 
   
 
-   return $exit_code, $preview_html;
-};
+   # return $exit_code, $preview_html;
+# };
 
 
 

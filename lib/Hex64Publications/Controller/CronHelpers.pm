@@ -33,16 +33,7 @@ sub register {
     $app->helper(helper_regenerate_html_for_all => sub {
         my $self = shift;
         my $dbh = $self->app->db;
-
-        my $sth = $dbh->prepare( "SELECT DISTINCT id FROM Entry WHERE need_html_regen = 1" );  
-        $sth->execute(); 
-
-        my @ids;
-
-        while(my $row = $sth->fetchrow_hashref()) {
-            my $eid = $row->{id};
-            push @ids, $eid if defined $eid;
-        }
+        my @ids = $dbh->resultset('Entry')->search({ need_html_regen => 1 })->get_column('id')->all;
         for my $id (@ids){
            generate_html_for_id($dbh, $id);
            # $self->write_log("HTML regen from helper  for eid $id");
