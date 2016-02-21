@@ -24,6 +24,7 @@ our @ISA= qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw( 
+    do_mysql_db_backup_silent
     do_mysql_db_backup
     do_delete_backup
     do_delete_broken_or_old_backup
@@ -41,12 +42,11 @@ our @EXPORT = qw(
 ####################################################################################
 # TODO: This function should be moved to a separate file, e.g. BackupFunctions.pm
 # The same for the other functions related to a given corntroller ..
-
-sub do_mysql_db_backup{
+sub do_mysql_db_backup_silent{
     my $self = shift;
     my $fname_prefix = shift || "normal";
 
-    say "call: core::do_mysql_db_backup";
+    say "call: core::do_mysql_db_backup_silent";
 
     # my $backup_dbh = $self->app->backup_db;  
     my $dbh = $self->app->db;  
@@ -71,16 +71,29 @@ sub do_mysql_db_backup{
 
     `mysqldump -u $db_user -p$db_pass $db_database $ignored_tables_string > $dbfname`;
     if ($? == 0){
+        return $dbfname;
+    }
+    return undef;
+
+}
+####################################################################################
+sub do_mysql_db_backup{
+    my $self = shift;
+    my $fname_prefix = shift || "normal";
+
+    say "call: core::do_mysql_db_backup";
+
+    my $dbh = $self->app->db;
+    my $dbfname = $self->do_mysql_db_backup_silent($fname_prefix);
+    if(!defined $dbfname){
+        return undef;
+    }
+    else{
         my $sth = $dbh->prepare("REPLACE INTO Backup(creation_time, filename) VALUES (NULL, ?)");
         $sth->execute($dbfname);
         $sth->finish();
-        
         return $dbfname;
     }
-    else{
-        return undef;
-    }
-
 
 }
 

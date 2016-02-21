@@ -208,6 +208,8 @@ sub startup {
     $anyone->get('/')->to('display#index')->name('start');
     $anyone->get('/start')->to('display#index');
 
+    $anyone->get('/test')->to('display#test');
+
 
     $anyone->get('/forgot')->to('login#forgot');
     $anyone->post('/forgot/gen')->to('login#post_gen_forgot_token');
