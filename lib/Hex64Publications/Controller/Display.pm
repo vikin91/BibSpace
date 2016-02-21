@@ -48,7 +48,7 @@ sub test {
     ###################
     $msg .= "<br/>"."Connecting to DB: ";
     try{
-        get_all_entry_ids($self->app->db);
+        $self->app->db;
         $msg .= "OK ";
     }
     catch{

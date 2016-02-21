@@ -30,9 +30,12 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 
 has db => sub {
     my $self = shift;
-    # my $s = Menry::Schema->connect('dbi:SQLite:my2.db');
-    my $s = Hex64Publications::Schema->connect('dbi:mysql:database=hex64publicationlistmanager;host=localhost', 'root', 's3kr1t');
-    # $s->deploy();
+    my $db_host = $self->config->{db_host};
+    my $db_user = $self->config->{db_user};
+    my $db_database = $self->config->{db_database};
+    my $db_pass = $self->config->{db_pass};
+    my $s = Hex64Publications::Schema->connect("dbi:mysql:database=$db_database;host=$db_host", 
+        "$db_user", "$db_pass");
     $s->storage->debug(0);
     $s;
 };
