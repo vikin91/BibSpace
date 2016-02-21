@@ -30,30 +30,30 @@ sub prepare_db{
     my $self = shift;
     my $dbh = $self->app->db;
 
-    $dbh->do("CREATE TABLE IF NOT EXISTS TagType(
-        name TEXT,
-        comment TEXT,
-        id INTEGER PRIMARY KEY,
-        UNIQUE(name) ON CONFLICT IGNORE
-        )");
+    # $dbh->do("CREATE TABLE IF NOT EXISTS TagType(
+    #     name TEXT,
+    #     comment TEXT,
+    #     id INTEGER PRIMARY KEY,
+    #     UNIQUE(name) ON CONFLICT IGNORE
+    #     )");
 
-    $dbh->do("ALTER TABLE Tag RENAME TO Tag2");
-    $dbh->do("ALTER TABLE Tag ADD COLUMN permalink TEXT");
+    # $dbh->do("ALTER TABLE Tag RENAME TO Tag2");
+    # $dbh->do("ALTER TABLE Tag ADD COLUMN permalink TEXT");
 
-    $dbh->do("CREATE TABLE Tag(
-            name TEXT NOT NULL,
-            id INTEGER PRIMARY KEY,
-            type INTEGER DEFAULT 1,
-            permalink TEXT,
-            FOREIGN KEY(type) REFERENCES TagType(id),
-            UNIQUE(name) ON CONFLICT IGNORE
-        );");
+    # $dbh->do("CREATE TABLE Tag(
+    #         name TEXT NOT NULL,
+    #         id INTEGER PRIMARY KEY,
+    #         type INTEGER DEFAULT 1,
+    #         permalink TEXT,
+    #         FOREIGN KEY(type) REFERENCES TagType(id),
+    #         UNIQUE(name) ON CONFLICT IGNORE
+    #     );");
 
-    $dbh->do("INSERT INTO Tag (id, name)
-                SELECT id, name
-                FROM Tag2");
+    # $dbh->do("INSERT INTO Tag (id, name)
+    #             SELECT id, name
+    #             FROM Tag2");
 
-    $dbh->do("DROP TABLE Tag2");
+    # $dbh->do("DROP TABLE Tag2");
 }
 
 ####################################################################################
@@ -358,7 +358,7 @@ sub get_tags_for_team_read{
 
         my $url = "/ly/p?team=".get_team_for_id($self->app->db, $tid)."&tag=".$tag."&title=1&navbar=1";
         
-        my $obj = new TagCloudClass($tag);
+        my $obj = new Hex64Publications::Functions::TagCloudClass($tag);
         $obj->setURL($url);
         $obj->setCount($count);
         $obj->setName($name);
