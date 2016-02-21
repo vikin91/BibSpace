@@ -1,4 +1,4 @@
-package Hex64Publications::Backup;
+package Hex64Publications::Controller::Backup;
 
 use Data::Dumper;
 use utf8;
@@ -12,9 +12,9 @@ use warnings;
 use DBI;
 use File::Copy qw(copy);
 
-use Hex64Publications::Core;
-use Hex64Publications::BackupFunctions;
-use Hex64Publications::DB;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Controller::BackupFunctions;
+use Hex64Publications::Controller::DB;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

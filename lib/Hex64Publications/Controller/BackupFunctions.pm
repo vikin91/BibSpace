@@ -1,7 +1,7 @@
-package Hex64Publications::BackupFunctions;
+package Hex64Publications::Controller::BackupFunctions;
 
-use Hex64Publications::DB;
-use Hex64Publications::Core;
+use Hex64Publications::Controller::DB;
+use Hex64Publications::Controller::Core;
 
 use Data::Dumper;
 use utf8;

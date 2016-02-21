@@ -1,4 +1,4 @@
-package Hex64Publications::Tags;
+package Hex64Publications::Controller::Tags;
 
 use Data::Dumper;
 use utf8;
@@ -12,11 +12,11 @@ use warnings;
 use DBI;
 use Scalar::Util qw(looks_like_number);
 
-use Hex64Publications::Core;
-use TagCloudClass;
-use TagObj;
-use TagTypeObj;
-use Hex64Publications::Set;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Functions::TagCloudClass;
+use Hex64Publications::Functions::TagObj;
+use Hex64Publications::Functions::TagTypeObj;
+use Hex64Publications::Controller::Set;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -68,7 +68,7 @@ sub index {
         $letter.='%';
     }
 
-    my @objs = TagObj->getAllwLetter($dbh, $type, $letter);
+    my @objs = Hex64Publications::Functions::TagObj->getAllwLetter($dbh, $type, $letter);
     my @letters_arr = get_first_letters($self, $type);
 
     $self->stash(otags => \@objs, type => $type, letters_arr => \@letters_arr);
@@ -199,7 +199,7 @@ sub edit {
     my $tagid = $self->param('id');
 
     # the tag as it is stored in the db
-    my $tobj = TagObj->new({id => $tagid});
+    my $tobj = Hex64Publications::Functions::TagObj->new({id => $tagid});
     $tobj->initFromDB($dbh);
 
     

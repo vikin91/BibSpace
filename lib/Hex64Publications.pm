@@ -1,18 +1,19 @@
 package Hex64Publications;
 
-use Hex64Publications::DB;
-require Hex64Publications::Core;
-require Hex64Publications::Search;
-require Hex64Publications::BackupFunctions;
-require Hex64Publications::Publications;
-require Hex64Publications::Helpers;
+use Hex64Publications::Controller::DB;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Controller::Search;
+use Hex64Publications::Controller::BackupFunctions;
+use Hex64Publications::Controller::Publications;
+use Hex64Publications::Controller::Helpers;
+
+use Hex64Publications::Functions::MyUsers;
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Net::Address::IP::Local;
 
 use Time::Piece;
-use MyUsers;
 use Data::Dumper;
 use POSIX qw/strftime/;
 
@@ -62,6 +63,7 @@ has backup_db => sub {
 
 sub startup {
     my $self = shift;
+    $self->app->plugin('InstallablePaths');
     $self->app->plugin('RenderFile');
     my $address = Net::Address::IP::Local->public;
     # print $address;
@@ -91,12 +93,12 @@ sub startup {
     create_backup_table($self->app->db);
 
 
-    $self->plugin('Hex64Publications::Helpers');
-    $self->plugin('Hex64Publications::CronHelpers');
+    $self->plugin('Hex64Publications::Controller::Helpers');
+    $self->plugin('Hex64Publications::Controller::CronHelpers');
 
     $self->secrets( [$config->{key_cookie}] );
 
-    $self->helper(users => sub { state $users = MyUsers->new });
+    $self->helper(users => sub { state $users = Hex64Publications::Functions::MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
 
 

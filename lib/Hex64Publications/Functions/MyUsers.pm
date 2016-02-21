@@ -1,8 +1,9 @@
-package MyUsers;
+package Hex64Publications::Functions::MyUsers;
+
+use Hex64Publications::Controller::DB;
 
 use strict;
 use warnings;
-use Hex64Publications::DB;
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64); # sudo cpanm Crypt::Eksblowfish::Bcrypt
 use Crypt::Random; # sudo cpanm Crypt::Random
 use LWP::UserAgent;

@@ -1,4 +1,4 @@
-package Hex64Publications::Set;
+package Hex64Publications::Controller::Set;
 
 use Data::Dumper;
 use utf8;
@@ -11,7 +11,7 @@ use strict;
 use warnings;
 use DBI;
 
-use Hex64Publications::Core;
+use Hex64Publications::Controller::Core;
 
 use Set::Scalar;
 
@@ -137,7 +137,7 @@ sub get_set_of_papers_for_team {
 
     my @params;
 
-    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, bib, html, Entry.bibtex_type
+    my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.id, Entry.bib, Entry.year, Entry.html, Entry.bibtex_type
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 

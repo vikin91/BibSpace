@@ -1,4 +1,4 @@
-package Hex64Publications::Display;
+package Hex64Publications::Controller::Display;
 
 use Data::Dumper;
 use utf8;

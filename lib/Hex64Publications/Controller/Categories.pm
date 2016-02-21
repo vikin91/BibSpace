@@ -1,4 +1,4 @@
-package Hex64Publications::Categories;
+package Hex64Publications::Controller::Categories;
 
 use Data::Dumper;
 use utf8;
@@ -11,8 +11,8 @@ use strict;
 use warnings;
 use DBI;
 
-use Hex64Publications::Core;
-use Hex64Publications::Set;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Controller::Set;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

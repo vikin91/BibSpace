@@ -1,7 +1,8 @@
-package Hex64Publications::Core;
+package Hex64Publications::Controller::Core;
 
-require Hex64Publications::DB;
-# use Hex64Publications::BackupFunctions;
+use Hex64Publications::Controller::DB;
+#require Hex64Publications::Functions::EntryObj;
+
 
 use Data::Dumper;
 use utf8;
@@ -150,7 +151,7 @@ sub get_publications_core_from_array{
 
     my $dbh = $self->app->db;
 
-    my @objs = EntryObj->getFromArray($dbh, $array, $sort);
+    my @objs = Hex64Publications::Functions::EntryObj->getFromArray($dbh, $array, $sort);
     return @objs;
 
 }
@@ -205,7 +206,7 @@ sub get_publications_core{
     $tagid = undef unless defined $tag;
     
 
-    my @objs = EntryObj->getByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
+    my @objs = Hex64Publications::Functions::EntryObj->getByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
     return @objs;
 }
 ####################################################################################
@@ -219,7 +220,7 @@ sub get_single_publication {
 
 
     my @objs;
-    my $obj = EntryObj->new({id => $eid});
+    my $obj = Hex64Publications::Functions::EntryObj->new({id => $eid});
     $obj->initFromDB($dbh);
     if(defined $hidden and $obj->isHidden()==$hidden){
         push @objs, $obj; 

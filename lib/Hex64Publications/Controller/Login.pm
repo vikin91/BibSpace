@@ -1,8 +1,8 @@
-package Hex64Publications::Login;
+package Hex64Publications::Controller::Login;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
-use Hex64Publications::DB;
-use UserObj;
+use Hex64Publications::Controller::DB;
+use Hex64Publications::Functions::UserObj;
 
 use Data::Dumper;
 
@@ -63,7 +63,7 @@ sub manage_users {
     my $self = shift;
     my $dbh = $self->app->db;
 
-    my @user_objs = UserObj->getAll($dbh);
+    my @user_objs = Hex64Publications::Functions::UserObj->getAll($dbh);
 
     $self->stash(user_objs => \@user_objs);
     $self->render(template => 'login/manage_users');
@@ -74,7 +74,7 @@ sub make_user {
     my $profile_id = $self->param('id');
     my $dbh = $self->app->db;
 
-    my $usr_obj = UserObj->new({id => $profile_id});
+    my $usr_obj = Hex64Publications::Functions::UserObj->new({id => $profile_id});
     $usr_obj->initFromDB($dbh);
     if($usr_obj->make_user($dbh)==0){
         $self->write_log("Setting user \`$usr_obj->{login}\` to rank user.");
@@ -90,7 +90,7 @@ sub make_manager {
     my $profile_id = $self->param('id');
     my $dbh = $self->app->db;
 
-    my $usr_obj = UserObj->new({id => $profile_id});
+    my $usr_obj = Hex64Publications::Functions::UserObj->new({id => $profile_id});
     $usr_obj->initFromDB($dbh);
     if($usr_obj->make_manager($dbh)==0){
         $self->write_log("Setting user \`$usr_obj->{login}\` to rank manager.");
@@ -106,7 +106,7 @@ sub make_admin {
     my $profile_id = $self->param('id');
     my $dbh = $self->app->db;
 
-    my $usr_obj = UserObj->new({id => $profile_id});
+    my $usr_obj = Hex64Publications::Functions::UserObj->new({id => $profile_id});
     $usr_obj->initFromDB($dbh);
     if( $usr_obj->make_admin($dbh)==0 ){
         $self->write_log("Setting user \`$usr_obj->{login}\` to rank admin.");
@@ -122,7 +122,7 @@ sub delete_user {
     my $profile_id = $self->param('id');
     my $dbh = $self->app->db;
 
-    my $usr_obj = UserObj->new({id => $profile_id});
+    my $usr_obj = Hex64Publications::Functions::UserObj->new({id => $profile_id});
     $usr_obj->initFromDB($dbh);
 
     if($self->users->login_exists($usr_obj->{login}, $dbh) and $usr_obj->is_admin()){
@@ -137,7 +137,7 @@ sub delete_user {
     
     # $self->redirect_to('manage_users');
 
-    my @user_objs = UserObj->getAll($dbh);
+    my @user_objs = Hex64Publications::Functions::UserObj->getAll($dbh);
 
     $self->stash(user_objs => \@user_objs);
     $self->render(template => 'login/manage_users');

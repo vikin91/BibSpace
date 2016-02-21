@@ -1,4 +1,4 @@
-package TagCloudClass;
+package Hex64Publications::Functions::TagCloudClass;
 
 use Data::Dumper;
 use utf8;

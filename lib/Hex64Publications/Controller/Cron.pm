@@ -1,5 +1,5 @@
-package Hex64Publications::Cron;
-use Hex64Publications::DB;
+package Hex64Publications::Controller::Cron;
+use Hex64Publications::Controller::DB;
 
 
 use Data::Dumper;

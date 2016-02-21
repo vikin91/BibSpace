@@ -1,4 +1,4 @@
-package Hex64Publications::Helpers;
+package Hex64Publications::Controller::Helpers;
 
 use Data::Dumper;
 use utf8;
@@ -11,13 +11,14 @@ use strict;
 use warnings;
 use DBI;
 
-use Hex64Publications::Core;
-use Hex64Publications::Set;
-use Hex64Publications::Publications;
-use Hex64Publications::BackupFunctions;
-use TagObj;
-use EntryObj;
-use TagTypeObj;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Controller::Set;
+use Hex64Publications::Controller::Publications;
+use Hex64Publications::Controller::BackupFunctions;
+
+use Hex64Publications::Functions::TagObj;
+use Hex64Publications::Functions::EntryObj;
+use Hex64Publications::Functions::TagTypeObj;
 
 use base 'Mojolicious::Plugin';
 sub register {
@@ -29,7 +30,7 @@ sub register {
     $app->helper(get_rank_of_current_user => sub {
         my $self = shift;
         my $uname = shift || $app->session('user');
-        my $user_dbh = DBI->connect('dbi:SQLite:dbname='.$app->config->{user_db}, '', '') or die $DBI::errstr;
+        my $user_dbh = $app->db;#DBI->connect('dbi:SQLite:dbname='.$app->config->{user_db}, '', '') or die $DBI::errstr;
 
         my $sth = $user_dbh->prepare("SELECT rank FROM Login WHERE login=?");
         $sth->execute($uname);
@@ -99,7 +100,7 @@ sub register {
     $app->helper(get_all_tag_types => sub {
         my $self = shift;
         my $dbh = $self->app->db;
-        my @ttobjarr = TagTypeObj->getAll($dbh);
+        my @ttobjarr = Hex64Publications::Functions::TagTypeObj->getAll($dbh);
         return @ttobjarr;
         
         
@@ -111,7 +112,7 @@ sub register {
 
         say "get_tag_type_obj for type $type";
 
-        my $ttobj = TagTypeObj->getById($self->app->db, $type);
+        my $ttobj = Hex64Publications::Functions::TagTypeObj->getById($self->app->db, $type);
         return $ttobj;
 
         # return $ttobj->{name};
@@ -122,7 +123,7 @@ sub register {
         my $eid = shift;
         my $type = shift || 1;
 
-        my @tobjarr = TagObj->getTagsOfTypeForPaper($self->app->db, $eid, $type);
+        my @tobjarr = Hex64Publications::Functions::TagObj->getTagsOfTypeForPaper($self->app->db, $eid, $type);
         return @tobjarr;
     });
 
@@ -131,7 +132,7 @@ sub register {
         my $eid = shift;
         my $type = shift || 1;
 
-        my @tobjarr = TagObj->getUnassignedTagsOfTypeForPaper($self->app->db, $eid, $type);
+        my @tobjarr = Hex64Publications::Functions::TagObj->getUnassignedTagsOfTypeForPaper($self->app->db, $eid, $type);
         return @tobjarr;
     });
 

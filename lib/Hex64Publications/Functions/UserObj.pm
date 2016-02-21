@@ -1,4 +1,4 @@
-package UserObj;
+package Hex64Publications::Functions::UserObj;
 
 use Data::Dumper;
 use utf8;
@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use DBI;
 
-use Hex64Publications::Core;
+use Hex64Publications::Controller::Core;
 
 
 sub new
@@ -125,7 +125,7 @@ sub getAll{
     my @objs;
 
     while(my $row = $sth->fetchrow_hashref()) {
-        my $obj = UserObj->new({
+        my $obj = Hex64Publications::Functions::UserObj->new({
                                 id => $row->{id},
                                 login => $row->{login},
                                 registration_time => $row->{registration_time},

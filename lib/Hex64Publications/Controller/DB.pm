@@ -1,4 +1,4 @@
-package Hex64Publications::DB;
+package Hex64Publications::Controller::DB;
 
 use utf8;
 use DateTime;
@@ -260,34 +260,5 @@ sub prepare_user_table_mysql{
    $self->prepare_token_table_mysql($user_dbh);
 
 };
-# ####################################################################################################
-# sub prepare_backup_table_sqlite{
-#     my $self = shift;
-#     my $user_dbh = shift;
-
-
-#    $user_dbh->do("CREATE TABLE IF NOT EXISTS Login(
-#         id INTEGER PRIMARY KEY,
-#         registration_time DATE DEFAULT (datetime('now','localtime')),
-#         last_login DATE DEFAULT (datetime('now','localtime')),
-#         login TEXT NOT NULL,
-#         real_name TEXT DEFAULT 'unnamed',
-#         email TEXT NOT NULL,
-#         pass TEXT NOT NULL,
-#         pass2 TEXT DEFAULT NULL,
-#         pass3 TEXT DEFAULT NULL,
-#         rank INTEGER DEFAULT 0,
-#         master_id INTEGER DEFAULT 0,
-#         tennant_id INTEGER DEFAULT 0,
-#         UNIQUE(login) ON CONFLICT IGNORE
-#       )");
-
-#       $user_dbh->do("CREATE TABLE IF NOT EXISTS Token(
-#         id INTEGER PRIMARY KEY,
-#         token TEXT NOT NULL,
-#         email TEXT NOT NULL,
-#         UNIQUE(token) ON CONFLICT IGNORE
-#       )");
-# };
 
 1;

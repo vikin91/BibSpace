@@ -1,4 +1,4 @@
-package Hex64Publications::Tagtypes;
+package Hex64Publications::Controller::Tagtypes;
 
 use Data::Dumper;
 use utf8;
@@ -11,8 +11,8 @@ use strict;
 use warnings;
 use DBI;
 
-use Hex64Publications::Core;
-use TagTypeObj;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Functions::TagTypeObj;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -24,7 +24,7 @@ sub index{
     my $self = shift;
     my $dbh = $self->app->db;
 
-    my @objs = TagTypeObj->getAll($dbh);
+    my @objs = Hex64Publications::Functions::TagTypeObj->getAll($dbh);
 
     $self->render(template => 'tagtypes/tagtypes', tto => \@objs);
 }
@@ -93,7 +93,7 @@ sub edit{
         $saved = 1;
     }
 
-    my $obj = TagTypeObj->new();
+    my $obj = Hex64Publications::Functions::TagTypeObj->new();
     $obj = $obj->getById($dbh, $id);
 
 
