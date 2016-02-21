@@ -7,4 +7,4 @@ admin_api_demo.conf
 log/my.log
 log/development.log
 log/test.log
-
+*.orig
