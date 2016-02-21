@@ -685,57 +685,13 @@ sub all {
 
 
 	if ($self->session('user')){
-        my @objs = publications_get_publications_core($self, {});
-
-        for my $o (@objs){
-
-            say $o->id;
-            say $o->bibtex_key;
-        }
+        my @objs = get_publications_main_hashed_args($self, {});
         $self->stash(objs => \@objs);
 		$self->render(template => 'publications/all');  
 	}
 	else{
         return $self->all_read();
 	}
-}
-
-####################################################################################
-
-sub publications_get_publications_core{  ## TODO: Rename, move to proper module
-
-    my ($self, $args) = @_;
-    my $author = $args->{author} || $self->param('author') || undef, 
-    my $year = $args->{year} || $self->param('year') || undef,
-    my $bibtex_type = $args->{bibtex_type} || $self->param('bibtex_type') || undef,
-    my $entry_type = $args->{entry_type} || $self->param('entry_type') || undef,
-    my $tag = $args->{tag} || $self->param('tag') || undef,
-    my $team = $args->{team} || $self->param('team') || undef,
-    my $visible = $args->{visible} || 0,
-    my $permalink = $args->{permalink} || $self->param('permalink') || undef,
-    my $hidden = $args->{hidden},
-
-    my $dbh = $self->app->db;
-
-    ######  
-    
-    my $teamid = $dbh->resultset('Team')->search({'name' => $team})->get_column('id')->first || undef;
-    my $master_id = $dbh->resultset('Author')->search({'master' => $author})->get_column('master_id')->first || -1;
-    if($master_id == -1){
-      $master_id = $author; # it means that author was given as master_id and not as master name
-    }
-    my $tagid = $dbh->resultset('Tag')->search({'name' => $tag})->get_column('id')->first || -1;
-    if($tagid == -1){
-      $tagid = $tag; # it means that tag was given as tag_id and not as tag name
-    }
-    
-    $teamid = undef unless defined $team;
-    $master_id = undef unless defined $author;
-    $tagid = undef unless defined $tag;
-
-    say "getPublicationsByFilter($master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);";
-    my @objs = getPublicationsByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
-    return @objs;
 }
 
 ####################################################################################
@@ -1325,7 +1281,9 @@ sub regenerate_html_for_all_force {
     my $back_url = $self->param('back_url');
 
     my $dbh = $self->app->db;    
+    
     $back_url = $self->get_back_url($back_url);
+
     $self->write_log("regenerate_html_for_all FORCE is running");
 
     my @ids = $self->app->db->resultset('Entry')->get_column('id')->all;
@@ -1416,6 +1374,7 @@ sub show_authors_of_entry{
 
     my $teams_for_paper = get_set_of_teams_for_entry_id($self,$eid);
     my @teams = $teams_for_paper->members;
+
 
     my $html_preview = get_html_for_entry_id($dbh, $eid);
     my $key = $dbh->resultset('Entry')->search({ id => $eid })->get_column('bibtex_key')->first || 'no-key';
@@ -1578,11 +1537,176 @@ my $bib = '@article{key'.get_current_year().',
     day = {1--31},
 }';
 
+    my $msg ="Adding mode</strong> You operate on an unsaved entry!";
+    $self->stash(bib  => $bib, key => '', existing_id => '', exit_code => '', msg => $msg, preview => '');
+    $self->render(template => 'publications/add_entry');
+};
+
+####################################################################################
+
+## ADD form
+sub get_add_many {
+    say "CALL: get_add_many ";
+    my $self = shift;
+    my %mons = (1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9 =>'September',10=>'October',11=>'November',12=>'December');
+
+    my $bib = '';
+
+    my $msg ="Adding multiple publications at once is <strong>experimental!</strong> <br/> <strong>Adding mode</strong> You operate on an unsaved entry!";
+
+    $self->stash(bib  => $bib, key => '', existing_id => '', exit_code => '', msg => $msg, preview => '');
+    $self->render(template => 'publications/add_multiple_entries');
+};
+############################################################################################################
+
+## Called after every preview or store command issued by ADD_MULTIPLE form
+sub post_add_many_store {
+    say "CALL: post_add_many_store ";
+    my $self = shift;
+    my $id = $self->param('id') || undef;
+    my $new_bib = $self->param('new_bib');
+    my $preview_param = $self->param('preview') || undef;
+    # my $check_key =  || undef;
+    my $preview = 0;
+    my $msg ="<strong>Adding mode</strong> You operate on an unsaved entry!";
+
+    $self->write_log("post_add_many_store add publication with bib $new_bib");
+
+    my $debug_str = "";
+
+
+    my $dbh = $self->app->db;
+    my $html_preview = "";
+    my $code = -2;
+
+    my @bibtex_codes = split_bibtex_entries($new_bib);
+    my @key_arr = ();
+
+    for my $bibtex_code (@bibtex_codes){
+        # $debug_str.="<br>Found code!";
+
+        my $bibtex_key = get_key_from_bibtex_code($bibtex_code);
+        $debug_str.="<br>Found key: $bibtex_key";
+
+        push @key_arr, $bibtex_key;
+    }
+
+    my @existing_ids = ();
+    my @existing_keys = ();
+
+    for my $key (@key_arr){
+         my $single_id = get_entry_id($dbh, $key);
+         if($single_id ne -1){
+            push @existing_ids, $single_id;
+            push @existing_keys, $key;
+            $debug_str.="<br>ID exists: $single_id";
+            $debug_str.="<br>KEY exists: $key";
+         }
+         
+    }
+
+    $debug_str.="<br>==== Processing done. Existing keys: ".@existing_ids." join: ".join(' ', @existing_keys).".";
+
+
+
+    my %seen;
+    my $are_unique = 0;
+    # if size of arr is equal to size of uniq arr
+    $are_unique = 1 if uniq(@key_arr)==@key_arr;
+    # count how many times a given key appears
+    foreach my $value (@key_arr) {
+        $seen{$value}++;
+    }
+
+    $debug_str.="<br>Checking if input keys are unique: ";
+    $debug_str.="Yes!" if $are_unique;
+    $debug_str.="No! " unless $are_unique;
+
+
+    # say "key $key";
+    # say "existing_id $existing_id";
+    my $param_prev = $self->param('preview') || "";
+    my $param_save = $self->param('save') || "";
+
    
 
+    if (@existing_ids) {  # if the array is not empty
+        $msg = $debug_str."<br/>"."<strong>The following keys exist already in the system: ".join(', ', @existing_keys)."</strong>";
+
    $self->stash(bib  => $bib, key => '', existing_id => '', exit_code => '', msg => '', preview => '');
-   $self->render(template => 'publications/add_entry');
+        $self->render(template => 'publications/add_multiple_entries');
+        return;
+    }
+
+    if ($are_unique == 0) {  # if the array is not empty
+        $debug_str.="<br/>"."Some bibtex keys in the input are not unique. Please correct the input.";
+        foreach my $key ( keys %seen ){
+            $debug_str.="<br/>"."Bibtex key: $key exists ".$seen{$key}." times!" if $seen{$key} > 1;
+        }
+        
+        $msg = $debug_str;
+
+        $self->stash(bib  => $new_bib, existing_id => 0, key => '', msg =>$msg, exit_code => $code, preview => $html_preview);
+        $self->render(template => 'publications/add_multiple_entries');
+        return;
+    }
+
+    $debug_str.="<br>Entries ready to add! Starting.";
+
+    $msg = "";
+    # here assume that the codes in array @bibtex_codes are ready to add
+    for my $single_code (@bibtex_codes){
+        my $entry = new Text::BibTeX::Entry;
+        $entry->parse_s($single_code);
+
+        $debug_str.="<br>====== Entry ";
+        $debug_str.="<br>"."Parse ok? ".$entry->parse_ok;
+        $debug_str.="<br>"."Do you wanted to save? ";
+        $debug_str.="YES" if defined $self->param('save');
+        $debug_str.="NO, just checking" unless defined $self->param('save');
+
+        $debug_str.="<br>"."Entry has key: ".$entry->key;
+
+        if($entry->parse_ok and defined $self->param('save')){
+            $debug_str.="<br>"."Adding!";
+
+            my $single_key = $entry->key;
+            ($code, $html_preview) = postprocess_edited_entry($dbh, $single_code, 0);  #FIXME: added entry is strange!
+            my $added_id = get_entry_id($dbh, $single_key);
+
+            $debug_str.="<br>"."Added key $single_key as id $added_id sucessfully!<br/>";
+            $msg .= "Added key $single_key as id $added_id sucessfully!<br/>";
+        }
+    }
+
+    say "after bibtex codes loop";
+
+    $self->stash(bib  => $new_bib, existing_id => 0, key => '', msg =>$msg.$debug_str, exit_code => $code, preview => $html_preview);
+    $self->render(template => 'publications/add_multiple_entries');
 };
+####################################################################################
+sub split_bibtex_entries{
+    say "CALL: split_bibtex_entries";
+    my $input = shift;
+
+    my @bibtex_codes = ();
+    $input =~ s/^\s+|\s+$//g;
+    $input =~ s/^\t//g;
+
+    for my $b_code (split /@/, $input){
+        next unless length($b_code) > 10;
+        my $entry_code = "@".$b_code; 
+
+        my $entry = new Text::BibTeX::Entry;
+        $entry->parse_s($entry_code);
+        if($entry->parse_ok){
+            push @bibtex_codes, $entry_code;    
+        }
+    }
+
+    return @bibtex_codes;
+}
+####################################################################################
 ############################################################################################################
 
 ## Called after every preview or store command issued by EDIT or ADD form
@@ -1594,6 +1718,7 @@ sub post_add_store {
   my $preview_param = $self->param('preview') || undef;
   # my $check_key =  || undef;
   my $preview = 0;
+  my $msg ="Adding mode</strong> You operate on an unsaved entry!";
 
   $self->write_log("Post_add_store add publication with bib $new_bib");
 
@@ -1627,8 +1752,8 @@ sub post_add_store {
   if(defined $key and $key =~ /^[+-]?\d+$/ and $key == -1){   # generate bibtex errors
 
       $code = -1;
-
-      $self->stash(bib  => $new_bib, key => $key, existing_id => '', msg => '', exit_code => $code, preview => $html_preview);
+      $msg = get_adding_editing_message_for_error_code($code, $existing_id);
+      $self->stash(bib  => $new_bib, key => $key, existing_id => '', msg => $msg, exit_code => $code, preview => $html_preview);
       $self->render(template => 'publications/add_entry');
       return;
   }
@@ -1638,43 +1763,77 @@ sub post_add_store {
       my ($html, $htmlbib) = get_html_for_bib($new_bib, $key);
       $html_preview = $html;
 
-      if($exisitng_id > 0 ){
+      if($existing_id > 0 ){
           $code = 3; # generate key-exists msg
       }
-
-      $self->stash(bib  => $new_bib, key => $key, existing_id => $exisitng_id, msg => '', exit_code => $code, preview => $html_preview);
+      $msg = get_adding_editing_message_for_error_code($code, $existing_id);
+      $self->stash(bib  => $new_bib, key => $key, existing_id => $existing_id, msg => $msg, exit_code => $code, preview => $html_preview);
       $self->render(template => 'publications/add_entry');
       return;
   }
   if(defined $self->param('save')){
 
-      if($exisitng_id == 0){  ## this is a new, non-existing entry
+      if($existing_id == -1){
           ($code, $html_preview) = postprocess_edited_entry($dbh, $new_bib, 0);
-          say "code $code";
+          $id = get_entry_id($dbh, $key);  
           say "html_preview $html_preview";
 
           # the entry is added and now it has some id. We need to get it
           my $entry_id = $self->app->db->resultset('Entry')->search({ bibtex_key => $key })->get_column('id')->first || 0;
 
-          $self->redirect_to('/publications/edit/'.$entry_id);
+          $self->redirect_to('/publications/edit/'.$id);
           return;
       }
   }
 
-  $code = 3;  # beause once the kay is bad, it is bad as long as $exisitng_id is -1
+  $code = 3;  # beause once the kay is bad, it is bad as long as $existing_id is -1
 
   if(defined $self->param('check_key')){
-      if($exisitng_id == 0){
-          $code = 2; # proposed key is ok
+      if($existing_id == -1){
+          $code = 2;
       }
-      elsif($exisitng_id > 0){
-          $code = 3; # key exists
+      elsif($existing_id > 0){
+          $code = 3;
       }
   }
 
+  $msg = get_adding_editing_message_for_error_code($code, $existing_id);
   
-  $self->stash(bib  => $new_bib, existing_id => $exisitng_id, key => $key, msg => '', exit_code => $code, preview => $html_preview);
+  $self->stash(bib  => $new_bib, existing_id => $existing_id, key => $key, msg =>$msg, exit_code => $code, preview => $html_preview);
   $self->render(template => 'publications/add_entry');
+
+};
+
+####################################################################################
+sub get_adding_editing_message_for_error_code {
+    my $exit_code = shift;
+    my $existing_id = shift || -1;
+
+    if($exit_code eq '-1'){
+        return "You have bibtex errors! Not saving!";
+    }
+    elsif($exit_code eq '-2'){
+        return 'Displaying preview';
+    }
+    elsif($exit_code eq '0'){ 
+        return 'Entry added succesfully';
+    }
+    elsif($exit_code eq '1'){
+        return 'Entry updated succesfully';
+    }
+    elsif($exit_code eq '2'){
+        return 'The proposed key is OK.';
+    }
+    elsif($exit_code eq '3'){
+        return 'The proposed key exists already in DB under ID <button class="btn btn-danger btn-xs" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> '.$existing_id.'</button>. 
+                    <br>
+                    <a class="btn btn-info btn-xs" href="/publications/get/'.$existing_id.'" target="_blank"><span class="glyphicon glyphicon-search"></span>Show me the existing entry ID '.$existing_id.' in a new window</a>
+                    <br>
+                    Entry has not been saved. Please pick another BibTeX key.';
+    }
+    elsif(defined $exit_code and $exit_code ne ''){
+        return "Unknown exit code: $exit_code";
+    }
 
 };
 
@@ -1693,6 +1852,9 @@ sub get_edit {
    $self->write_log("Editing publication entry id $id");
    
    my $dbh = $self->app->db;
+
+
+
    my $obj = $dbh->resultset('Entry')->search({ id => $id })->first;
    my $bib = $obj->bib;
    my $key = $obj->bibtex_key;
@@ -1835,7 +1997,52 @@ sub after_edit_check_entry{
    return $exit_code;
 };
 
+##################################################################
+sub postprocess_updated_entry{
+	say "CALL: postprocess_updated_entry";  # procesing an entry that was edited - allows to change bibtex key - eid remains untouched
+    ### TODO: cannot use log because there is no $self-object!
+    my $dbh = shift;
+    my $entry_str = shift;
+    my $eid = shift; # remains unchanged
+    my $preview_html = "";
 
+
+    # $self->write_log("Postprocessing updated entry with id $eid");
+
+    my $entry = new Text::BibTeX::Entry();
+    $entry->parse_s($entry_str);
+
+    return -1 unless $entry->parse_ok;
+
+    my $exit_code = -2;
+    # -1 parse error
+    # 1 updating ok
+
+    ######### AUTHORS
+
+    my $key = $entry->key;
+
+
+    my $year = $entry->get('year');
+    my $title = $entry->get('title') || '';
+    my $abstract = $entry->get('abstract') || undef;
+    my $content = $entry->print_s;
+    my $type = $entry->type;
+
+    my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, bibtex_type=?, abstract=?, need_html_regen = 1, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
+    $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
+    $sth2->finish();
+    $exit_code = 1;
+    after_edit_process_authors($dbh, $entry);
+    # after_edit_process_tags($dbh, $entry); 
+    generate_html_for_key($dbh, $key);
+    after_edit_process_month($dbh, $entry);
+
+    my ($html, $htmlbib) = get_html_for_bib($content, $key);
+    $preview_html = $html;
+
+    return $exit_code, $preview_html;
+};
 ##################################################################
 
 sub postprocess_edited_entry{  # 
@@ -1972,11 +2179,21 @@ sub after_edit_process_tags{
          $tag =~ s/^\s+|\s+$//g;
          $tag =~ s/\ /_/g if defined $tag;
 
+         my $tt_obj = TagTypeObj->getByName($dbh,"Imported");
+         my $tt_id = $tt_obj->{id};
          
+         if(!defined $tt_obj->{id}){
+            my $sth4 = $dbh->prepare( "INSERT IGNORE INTO TagType(name, comment) VALUES(?,?)" );  
+            $sth4->execute("Imported", "Tags Imported from Bibtex");   
+            $tt_obj = TagTypeObj->getByName($dbh, "Imported");
+            $tt_id = $tt_obj->{id};
+         }
+
+        
 
          # $dbh->do("REPLACE INTO Tags VALUES($tag)");
-         my $sth3 = $dbh->prepare( "INSERT IGNORE INTO Tag(name) VALUES(?)" );  
-         $sth3->execute($tag);
+         my $sth3 = $dbh->prepare( "INSERT IGNORE INTO Tag(name, type) VALUES(?,?)" );  
+         $sth3->execute($tag, $tt_obj->{id});
          my $tagid2 = get_tag_id($dbh, $tag);
 
          # $dbh->do("INSERT INTO Entry_to_Tag(entry, tag) VALUES($entry_key, $tag)");

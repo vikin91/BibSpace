@@ -27,7 +27,7 @@ our @ISA= qw( Exporter );
 our @EXPORT = qw( 
     get_teams_of_author
     get_team_members
-    
+    add_team_for_author
     remove_team_for_author
     uniq
     get_entry_id
@@ -65,7 +65,9 @@ our @EXPORT = qw(
     clean_tag_name
     get_visibility_for_id
     
+    postprocess_all_entries_after_author_uids_change_w_creating_authors
     
+    get_html_for_entry_id
     get_exceptions_for_entry_id
     get_year_for_entry_id
     clean_ugly_bibtex_fileds
@@ -186,6 +188,7 @@ sub get_publications_core{
     my $master_id = $dbh->resultset('Author')->search({'master' => $author})->get_column('master_id')->first || $author; # it means that author was given as master_id and not as master name
         
     my $tagid = $dbh->resultset('Tag')->search({'name' => $tag})->get_column('id')->first || $tag; # it means that tag was given as tag_id and not as tag name;
+    }
     
     $teamid = undef unless defined $team;
     $master_id = undef unless defined $author;
@@ -282,14 +285,69 @@ sub uniq {
 sub nohtml{
    my $key = shift;
    my $type = shift;
+   return "<span class=\"label label-danger\">NO HTML </span><span class=\"label label-default\">($type) $key</span>" . "<BR>";
+}
+##################################################################
+sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their authors ONLY. No tags, no regeneration.
+    my $self = shift;
+
+    $self->write_log("reassing papers to authors started");
+
+    my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
+    my $sth = $self->app->db->prepare( $qry );  
+    $sth->execute(); 
+
+    my @bibs;
+    while(my $row = $sth->fetchrow_hashref()) {
+        my $bib = $row->{bib};
+        my $key = $row->{bibtex_key};
+        my $id = $row->{id};
+
+        push @bibs, $bib;
+    }
+    $sth->finish();
+
+    foreach my $entry_str(@bibs){
+        my $entry_obj = new Text::BibTeX::Entry();
+        $entry_obj->parse_s($entry_str);
+    
+        assign_entry_to_existing_authors_no_add($self, $entry_obj);
+    }
+
+    $self->write_log("reassing papers to authors finished");
+};
+
+##################################################################
+sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assigns papers to their authors ONLY. No tags, no regeneration. Not existing authors will be created
    my $extra = shift || "";
 
+    $self->write_log("reassigning papers to authors (with authors creation) started");
+
+    my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
+    my $sth = $self->app->db->prepare( $qry );  
+    $sth->execute(); 
+
+    my @bibs;
+    while(my $row = $sth->fetchrow_hashref()) {
+        my $bib = $row->{bib};
    my $str = "<span class=\"label label-danger\">NO HTML </span><span class=\"label label-default\">($type) $key</span>$extra" . "<BR>";
    return $str;
 }
 
+        push @bibs, $bib;
+    }
+    $sth->finish();
 
+    foreach my $entry_str(@bibs){
+        my $entry_obj = new Text::BibTeX::Entry();
+        $entry_obj->parse_s($entry_str);
+    
+        after_edit_process_authors($self->app->db, $entry_obj);
+        assign_entry_to_existing_authors_no_add($self, $entry_obj);
+    }
 
+    $self->write_log("reassigning papers to authors (with authors creation) finished");
+};
 
 ####################################################################################
 sub clean_ugly_bibtex_fileds_for_all_entries {
@@ -350,8 +408,136 @@ sub clean_ugly_bibtex_fileds {
 
 ##################################################################
 
+sub assign_entry_to_existing_authors_no_add{
+    my $self = shift;
+    my $entry = shift;
+    my $dbh = $self->app->db;
+
+    my $entry_key = $entry->key;
+    my $key = $entry->key;
+    my $eid = get_entry_id($dbh, $entry_key);
+
+    
+
+    # $dbh->begin_work; #transaction
+
+    
+    my $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
+    if(defined $sth){
+      $sth->execute($eid);
+    }
+    else{
+      print 'cannot execute DELETE FROM Entry_to_Author WHERE entry_id = ?. FIXME Core.pm.';
+    }
+    
+
+    my @names;
+    if($entry->exists('author')){
+      my @authors = $entry->split('author');
+      my (@n) = $entry->names('author');
+      @names = @n;
+    }
+    elsif($entry->exists('editor')){
+      my @authors = $entry->split('editor');
+      my (@n) = $entry->names('editor');
+      @names = @n;
+    }
+
+    for my $name (@names){
+        my $uid = create_user_id($name);
+        my $aid = get_author_id_for_uid($dbh, $uid);
+        my $mid = get_master_id_for_author_id($dbh, $aid);    
+
+        if(defined $mid and $mid != -1){
+            # my $sth3 = $dbh->prepare('INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
+            my $sth3 = $dbh->prepare('INSERT IGNORE Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
+            if(defined $sth3){
+              $sth3->execute($mid, $eid); 
+              $sth3->finish();
+            }
+            else{
+              print 'INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?). FIXME Core.pm';
+            }
+        }
+    }
+    # $dbh->commit; #end transaction
+}
+##################################################################
+
+sub after_edit_process_authors{
+    my $dbh = shift;
+    my $entry = shift;
+
+    my $entry_key = $entry->key;
+    my $key = $entry->key;
+    my $eid = get_entry_id($dbh, $entry_key);
+
+    my $sth = undef;
+    $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
+    $sth->execute($eid) if $eid > 0; 
 
 
+    my @names;
+
+    if($entry->exists('author')){
+      my @authors = $entry->split('author');
+      my (@n) = $entry->names('author');
+      @names = @n;
+    }
+    elsif($entry->exists('editor')){
+      my @authors = $entry->split('editor');
+      my (@n) = $entry->names('editor');
+      @names = @n;
+    }
+
+    # authors need to be added to have their ids!!
+    for my $name (@names){
+      my $uid = create_user_id($name);
+
+      my $aid = get_author_id_for_uid($dbh, $uid);
+
+      # say "\t pre! entry $eid -> uid $uid, aid $aid";
+
+
+      my $sth0 = $dbh->prepare('INSERT INTO Author(uid, master) VALUES(?, ?)');
+      $sth0->execute($uid, $uid) if $aid eq '-1';
+
+      $aid = get_author_id_for_uid($dbh, $uid);
+      my $mid = get_master_id_for_author_id($dbh, $aid);
+
+      # if author was not in the uid2muid config, then mid = aid
+      if($mid eq -1){
+         $mid = $aid;
+      }
+      
+      # say "\t pre2! entry $eid -> uid $uid, aid $aid, mid $mid";
+
+      my $sth2 = $dbh->prepare('UPDATE Author SET master_id=? WHERE id=?');
+      $sth2->execute($mid, $aid);
+
+
+    }
+
+    for my $name (@names){
+      my $uid = create_user_id($name);
+      my $aid = get_author_id_for_uid($dbh, $uid);
+      my $mid = get_master_id_for_author_id($dbh, $aid);       #there tables are not filled yet!!
+
+      # say "\t !!! entry $eid -> uid $uid, aid $aid, mid $mid";
+
+      if(defined $mid and $mid != -1){ #added 5.05.2015 - may skip some authors!
+        my $sth3 = $dbh->prepare('INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
+        # my $sth3 = $dbh->prepare('UPDATE Entry_to_Author SET author_id = ? WHERE entry_id = ?');
+        $sth3->execute($mid, $eid);
+      }
+
+      
+      # my $tid = get_team_id($dbh, "NOTEAM");
+      # my $sth2 = $dbh->prepare("INSERT OR IGNORE INTO Author_to_Team(author_id, team_id, start, stop) Values (?, ?, ?, ?)");
+      # $sth2->execute($aid, $tid, 0, 0);
+    }
+}
+################################################################################
 sub get_visibility_for_id {
    my $self = shift;
    my $id = shift;
@@ -619,6 +805,10 @@ sub get_type_description{
 ################################################################################
 sub get_all_teams{
    my $dbh = shift;
+   
+   my $qry = "SELECT DISTINCT id, name FROM Team";
+   my $sth = $dbh->prepare( $qry );  
+   $sth->execute(); 
 
    # todo: optimize it!!!
    
@@ -678,7 +868,23 @@ sub get_year_for_entry_id{
    my $year = $row->{year};
    return $year;
 }
+##########################################################################
+sub get_html_for_entry_id{
+   my $dbh = shift;
+   my $eid = shift;
 
+   my $sth = $dbh->prepare( "SELECT html, bibtex_key FROM Entry WHERE id=?" );     
+   $sth->execute($eid);
+
+   my $row = $sth->fetchrow_hashref();
+   my $html = $row->{html};
+   my $key = $row->{bibtex_key};
+   my $type = $row->{type};
+
+
+   return nohtml($key, $type) unless defined $html;
+   return $html;
+}
 ##########################################################################
 sub get_exceptions_for_entry_id{
    my $dbh = shift;
@@ -882,7 +1088,20 @@ sub get_tag_name_for_id{
 #    return $name;
 # }
 
+################################################################################
+sub add_team_for_author {
+   my $self = shift;
+   my $master_id = shift;
+   my $teamid = shift;
 
+   my $dbh = $self->app->db;
+
+   my $qry = "INSERT IGNORE INTO Author_to_Team(author_id, team_id) VALUES (?,?)";
+   my $sth = $dbh->prepare( $qry );  
+   $sth->execute($master_id, $teamid); 
+
+   $self->write_log("Author with master id $master_id becomes a member of team with id $teamid.");
+}
 ################################################################################
 sub remove_team_for_author {
    my $self = shift;
@@ -910,7 +1129,7 @@ sub get_team_members {
    my @stop_arr;
 
    
-   my $qry = "SELECT DISTINCT (author_id), start, stop
+   my $qry = "SELECT DISTINCT (author_id), start, stop, Author.display
             FROM Author_to_Team 
             JOIN Author 
             ON Author.master_id = Author_to_Team.author_id
@@ -1081,7 +1300,7 @@ sub get_tags_for_team {
 
     my @params;
 
-    my $qry = "SELECT DISTINCT Entry.year, Tag.id as tagid, Tag.name as tagname
+    my $qry = "SELECT DISTINCT Tag.name as tagname, Tag.id as tagid, Entry.year
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
@@ -1114,8 +1333,15 @@ sub get_tags_for_team {
       my $tag_id = $row->{tagid};
       my $tag = $row->{tagname};
 
-      push @tag_ids, $tag_id if defined $tag_id;
-      push @tags, $tag if defined $tag;
+      if ( grep( /^$tag_id$/, @tag_ids ) ) {
+          # already exists!
+      }
+      else{
+        push @tag_ids, $tag_id if defined $tag_id;
+        push @tags, $tag if defined $tag;  
+      }
+
+      
 
    }
 
@@ -1164,11 +1390,252 @@ sub has_bibtex_field {
 }
 ################################################################################
 
+sub create_user_id {
+   my ($name) = @_;
+
+   my @first_arr = $name->part('first');
+   my $first = join(' ', @first_arr);
+   #print "$first\n";
+
+   my @von_arr = $name->part ('von');
+   my $von = $von_arr[0];
+   #print "$von\n" if defined $von;
+
+   my @last_arr = $name->part ('last');
+   my $last = $last_arr[0];
+   #print "$last\n";
+
+   my @jr_arr = $name->part ('jr');
+   my $jr = $jr_arr[0];
+   #print "$jr\n";
+   
+   my $userID;
+   $userID.=$von if defined $von;
+   $userID.=$last;
+   $userID.=$first if defined $first;
+   $userID.=$jr if defined $jr;
+
+   $userID =~ s/\\k\{a\}/a/g;   # makes \k{a} -> a
+   $userID =~ s/\\l/l/g;   # makes \l -> l
+   $userID =~ s/\\r\{u\}/u/g;   # makes \r{u} -> u # FIXME: make sure that the letter is caught
+   # $userID =~ s/\\r{u}/u/g;   # makes \r{u} -> u # the same but not escaped 
+
+   $userID =~ s/\{(.)\}/$1/g;   # makes {x} -> x
+   $userID =~ s/\{\\\"(.)\}/$1e/g;   # makes {\"x} -> xe
+   $userID =~ s/\{\"(.)\}/$1e/g;   # makes {"x} -> xe
+   $userID =~ s/\\\"(.)/$1e/g;   # makes \"{x} -> xe
+   $userID =~ s/\{\\\'(.)\}/$1/g;   # makes {\'x} -> x
+   $userID =~ s/\\\'(.)/$1/g;   # makes \'x -> x
+   $userID =~ s/\'\'(.)/$1/g;   # makes ''x -> x
+   $userID =~ s/\"(.)/$1e/g;   # makes "x -> xe
+   $userID =~ s/\{\\ss\}/ss/g;   # makes {\ss}-> ss
+   $userID =~ s/\{(.*)\}/$1/g;   # makes {abc..def}-> abc..def
+   $userID =~ s/\\\^(.)(.)/$1$2/g;   # makes \^xx-> xx
+   # I am not sure if the next one is necessary
+   $userID =~ s/\\\^(.)/$1/g;   # makes \^x-> x 
+   $userID =~ s/\\\~(.)/$1/g;   # makes \~x-> x
+   $userID =~ s/\\//g;   # removes \ 
+
+   $userID =~ s/\{//g;   # removes {
+   $userID =~ s/\}//g;   # removes }
+
+   $userID =~ s/\(.*\)//g;   # removes everything between the brackets and the brackets also
+   
+   # print "$userID \n";
+   return $userID;
+}
+
+################################################################################
+sub generate_html_for_id{
+   my $dbh = shift;
+   my $eid = shift;
+
+   my $sth = $dbh->prepare( "SELECT need_html_regen, bibtex_key, bib, html 
+         FROM Entry 
+         WHERE id = ?" );  
+   $sth->execute($eid); 
+
+   
+   my $bib = undef;
+   my $key = undef;
+   my $old_html = undef;
+   my $entry_needs_html_regeration = undef;
+   
+   while(my $row = $sth->fetchrow_hashref()) {
+      $bib = $row->{bib};
+      $old_html = $row->{html};
+      $key = $row->{bibtex_key};
+      $entry_needs_html_regeration = $row->{need_html_regen};
+   }
+    
+   my ($html, $htmlbib) = get_html_for_bib($bib, $key);
+
+   # this triggers: modified_time=CURRENT_TIMESTAMP  # minor severity
+
+   my $sth2 = $dbh->prepare( "UPDATE Entry
+      SET html = ? , html_bib = ?, need_html_regen = 0
+      WHERE id = ?" );  
+   $sth2->execute($html, $htmlbib, $eid); 
+};
+################################################################################
+sub generate_html_for_key{
+   my $dbh = shift;
+   my $key = shift;
+
+   my $eid = get_entry_id($dbh, $key);
+   return generate_html_for_id($dbh, $eid);
+};
+
+################################################################################
+
+sub get_html_for_bib{
+   my $bib_str = shift;
+   my $key = shift || 'no-bibtex-key';
+
+    # fix for the coding problems with mysql
+    $bib_str =~ s/J''urgen/J\\''urgen/g;
+    $bib_str =~ s/''a/\\''a/g;
+    $bib_str =~ s/''o/\\''o/g;
+    $bib_str =~ s/''e/\\''e/g;
+
+   my $out_file = $bibtex2html_tmp_dir."/out";
+   my $outhtml = $out_file.".html";
+
+   my $out_bibhtml = $out_file."_bib.html";
+   my $databib = $bibtex2html_tmp_dir."/data.bib";
+
+   open (MYFILE, '>'.$databib);
+   print MYFILE $bib_str;
+   close (MYFILE); 
+
+   open (my $fh, '>'.$outhtml) or die "cannot touch $outhtml";
+   close($fh);
+   open ($fh, '>'.$out_bibhtml) or die "cannot touch $out_bibhtml";
+   close($fh);
+
+    my $cwd = getcwd();
+
+   mkdir($bibtex2html_tmp_dir, 0777);
+
+   # -nokeys  --- no number in brackets by entry
+   # -nodoc   --- dont generate document but a part of it - to omit html head body headers
+   # -single  --- does not provide links to pdf, html and bib but merges bib with html output
+   my $bibtex2html_command = "bibtex2html -s ".$cwd."/descartes2 -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o ".$out_file." $databib >/dev/null";
+   # my $tune_html_command = "./tuneSingleHtmlFile.sh out.html";
+
+   # print "COMMAND: $bibtex2html_command\n";
+   my $syscommand = "export TMPDIR=".$bibtex2html_tmp_dir." && ".$bibtex2html_command;
+   # say "=====\n";
+   # say "cwd: ".$cwd."\n";
+   # say $syscommand;
+   # say "=====\n";
+   system($syscommand);
+   
 
 
 
+   my $html =     read_file($outhtml);
+   my $htmlbib =  read_file($out_bibhtml);
+
+   $htmlbib =~ s/<h1>data.bib<\/h1>//g;
+
+   $htmlbib =~ s/<a href="$outhtml#(.*)">(.*)<\/a>/$1/g;
+   $htmlbib =~ s/<a href=/<a target="blank" href=/g;
+
+   $html = tune_html($html, $key, $htmlbib);
+   
+
+   
+   # now the output jest w out.html i out_bib.html
+
+   return $html, $htmlbib;
+};
+
+################################################################################
+
+sub tune_html{
+   my $s = shift;
+   my $key = shift;
+   my $htmlbib = shift || "";
+
+   # my $DIR="/var/www/html/publications-new";
+   # my $DIRBASE="/var/www/html/";
+   # #edit those two above always together!
+   # my $WEBPAGEPREFIX="http://sdqweb.ipd.kit.edu/";
+   # my $WEBPAGEPREFIXLONG="http://sdqweb.ipd.kit.edu/publications";
+
+   # BASH CODE:
+   # # replace links
+   # sed -e s_"$DIR"_"$WEBPAGEPREFIXLONG"_g $FILE > $TMP && mv -f $TMP $FILE
+   # # changes /var/www/html/publications-new to http://sdqweb.ipd.kit.edu/publications_new
+   # $s =~ s/"$DIR"/"$WEBPAGEPREFIXLONG"/g;
+
+   $s =~ s/out_bib.html#(.*)/\/publications\/get\/bibtex\/$1/g;
+   
+   # FROM .pdf">.pdf</a>&nbsp;]
+   # TO   .pdf" target="blank">.pdf</a>&nbsp;]
+   # $s =~ s/.pdf">/.pdf" target="blank">/g;
 
 
+   $s =~ s/>.pdf<\/a>/ target="blank">.pdf<\/a>/g;
+   $s =~ s/>slides<\/a>/ target="blank">slides<\/a>/g;
+   $s =~ s/>http<\/a>/ target="blank">http<\/a>/g;
+   $s =~ s/>.http<\/a>/ target="blank">http<\/a>/g;
+   $s =~ s/>DOI<\/a>/ target="blank">DOI<\/a>/g;
+
+   $s =~ s/<a (.*)>bib<\/a>/BIB_LINK_ID/g;
+   
+   
+
+   # # for old system use:
+   # #for x in `find $DIR -name "*.html"`;do sed 's_\[\&nbsp;<a href=\"_\[\&nbsp;<a href=\"http:\/\/sdqweb.ipd.kit.edu\/publications\/_g' $x > $TMP; mv $TMP $x; done
+
+   # # replace &lt; and &gt; b< '<' and '>' in Samuel's files.
+   # sed 's_\&lt;_<_g' $FILE > $TMP && mv -f $TMP $FILE
+   # sed 's_\&gt;_>_g' $FILE > $TMP && mv -f $TMP $FILE
+   $s =~ s/\&lt;/</g;
+   $s =~ s/\&gt;/>/g;
+
+
+   # ### insert JavaScript hrefs to show/hide abstracts on click ###
+   # #replaces every newline command with <NeueZeile> to insert the Abstract link in the next step properly 
+   # perl -p -i -e "s/\n/<NeueZeile>/g" $FILE
+   $s =~ s/\n/<NeueZeile>/g;
+
+   # #inserts the link to javascript
+   # sed 's_\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">_\&nbsp;\|\&nbsp;<a href=\"javascript:showAbstract(this);\" onclick=\"showAbstract(this)\">Abstract</a><noscript> (JavaScript required!)</noscript>\&nbsp;\]<div style=\"display:none;\"><blockquote id=\"abstractBQ\">_g' $FILE > $TMP && mv -f $TMP $FILE
+   # sed 's_</font></blockquote><NeueZeile><p>_</blockquote></div>_g' $FILE > $TMP && mv -f $TMP $FILE
+   # $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a href=\"javascript:showAbstract(this);\" onclick=\"showAbstract(this)\">Abstract<\/a><noscript> (JavaScript required!)<\/noscript>\&nbsp;\]<div style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
+
+   
+   #$s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \]<div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
+   $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\" style=\"text-align: justify;\">/g;
+   $s =~ s/<\/font><\/blockquote><NeueZeile><p>/<\/blockquote><\/div>/g;
+
+   #inserting bib DIV marker
+   $s =~ s/\]/\] BIB_DIV_ID/g;
+
+   $key =~ s/\./_/g;   
+
+   # handling BIB_DIV_ID marker
+   $s =~ s/BIB_DIV_ID/<div id="bib-of-$key" class="inline-bib" style=\"display:none;\">$htmlbib<\/div>/g;
+   # handling BIB_LINK_ID marker
+   $s =~ s/BIB_LINK_ID/<a class="abstract-a" onclick=\"showAbstract(\'bib-of-$key\')\">bib<\/a>/g;
+
+   # #undo the <NeueZeile> insertions
+   # perl -p -i -e "s/<NeueZeile>/\n/g" $FILE
+   $s =~ s/<NeueZeile>/\n/g;
+   
+   $s =~ s/(\s)\s+/$1/g;  # !!! TEST
+
+   $s =~ s/<p>//g;
+   $s =~ s/<\/p>//g;
+
+
+   $s;
+}
+
+################################################################################
 
 
 1;

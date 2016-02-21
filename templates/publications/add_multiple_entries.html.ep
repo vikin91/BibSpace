@@ -1,0 +1,61 @@
+% use Mojo::ByteStream 'b';
+% layout 'admin';
+
+% my $back_url = param 'back_url'  || "/publications";
+  
+<div class="container">
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+            <a class="btn btn-default" href="<%= $back_url %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+        </div>
+    </div>
+
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-xs-12">
+        % if($preview ne ''){
+          <div class="panel panel-default">
+            <div class="panel-body">
+              %= b($preview)
+            </div>
+          </div>
+        %}
+    </div>
+  </div>
+
+    <div class="row">
+        <form class="form-horizontal" role="form" action="/publications/add_many/store" method="post">
+            <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+                <div class="form-group">
+                    <label for="bibtex">BibTeX code</label>
+                    <textarea class="form-control" rows="12" id="description" placeholder="Paste your bibtex here" name="new_bib"><%= $bib%></textarea>
+                </div>
+                <div class="form-group">
+                    <button name="check_key" value="check_key" type="submit" class="btn btn-default"><i class="fa fa-exclamation-triangle" style="color: red;"></i> Check if BibTeX key exists</button>
+                    % if($exit_code eq '3'){
+                        <button class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> <del>Push to DB</del></button>
+                    % }
+                    % else{
+                        <button name="save" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Push to DB</button>
+                    % }
+                    <button name="preview" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Preview</button>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
+                <div class="alert alert-info">
+                    %=b(bibtex_help())
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+
+
+</div>
+
+
+
+
+
+

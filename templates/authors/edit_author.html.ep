@@ -1,6 +1,14 @@
 % layout 'admin';
 % use Mojo::ByteStream 'b';
+% my @start_a = @$start_arr;
+% my @stop_a = @$stop_arr;
+% my @author_ids = @$aids;
+% my @tag_ids = @$tag_ids;
+% my @tags = @$tags;
 
+% my @team_ids = @$team_ids;
+% my @all_teams = @$all_teams;
+% my @all_teams_ids = @$all_teams_ids;
 
 % my $master = $author->master;
 

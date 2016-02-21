@@ -26,6 +26,7 @@ ok(1);
 # # ############################ READY FOR TESTING
 
 # # # GET ROUTES
+# #   +/settings/regenerate_all                  GET   settingsregenerate_all
 
 # # #   +/settings/regenerate_all                  GET   settingsregenerate_all
 # # #   +/backup                                   GET   backup
@@ -165,6 +166,12 @@ ok(1);
 #     form        => { master => 'ExampleJohn', id => 1,  new_user_id   => 'ExampleJoe' }
 # );
 
+$t_logged_in->post_ok(
+    '/publications/add/store' => { Accept => '*/*' },
+    form        => { save => 1, new_bib => '@article{'.$key1.',
+    author = {John Example},
+    title = {{Selected aspects of some methods}},
+    year = {2015},
 # note '============ Adding publication 1 ============';
 # my $key1="key2015_0011";
 
@@ -212,6 +219,9 @@ ok(1);
 #     ->status_is(200)
 #     ->text_is( h2 => "Tags of type test (ID=$tag_type_id)" );
 
+note "============ Adding tag ============";
+$t_logged_in->post_ok("/tags/add/$tag_type_id" => form => {new_tag => 'test'});
+my $tag_id = TagObj->getByName($dbh, 'test')->{id} || -1;
 
 # note "============ Adding tag ============";
 # $t_logged_in->post_ok("/tags/add/$tag_type_id" => form => {new_tag => 'test'});

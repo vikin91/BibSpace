@@ -32,6 +32,11 @@ aptitude upgrade
 aptitude install sudo # as root
 sudo aptitude install git curl cpanminus build-essential unzip nano bibtex2html libbtparse-dev libdbd-mysql-perl
 
+### Install mysql database and establish root password
+sudo aptitude install mysql-server libmysqlclient-dev
+# remeber the root password!
+
+
 
 ### Download code
 git clone https://git@bitbucket.org/vikin9/hex64publicationlistmanager.git
@@ -42,7 +47,7 @@ mkdir backups
 curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
 
 ### Install Perl libraries
-sudo cpanm -n Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd
+sudo cpanm -n Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd Try::Tiny
 sudo cpanm -n  File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI
 sudo cpanm -n Exporter Set::Scalar Session::Token LWP::UserAgent Net::Address::IP::Local 
 sudo cpanm -n Text::BibTeX HTML::TagCloud::Sortable DBD::mysql
@@ -59,6 +64,7 @@ sudo cpanm DBD::SQLite # will be obsolete soon, but still needed for backup func
 chmod 777 ./tmp
 chmod 555 ./log
 chmod 555 ./backups
+
 
 ### Install mysql database and establish root password
 aptitude install mysql-server 

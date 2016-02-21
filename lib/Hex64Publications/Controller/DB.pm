@@ -5,7 +5,7 @@ use DateTime;
 use strict;
 use warnings;
 use v5.10;
-
+use Try::Tiny;
 
 use Exporter;
 our @ISA= qw( Exporter );

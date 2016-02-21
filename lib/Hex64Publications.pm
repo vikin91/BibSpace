@@ -1,12 +1,25 @@
 package Hex64Publications;
+
+use Hex64Publications::DB;
+require Hex64Publications::Core;
+require Hex64Publications::Search;
+require Hex64Publications::BackupFunctions;
+require Hex64Publications::Publications;
+require Hex64Publications::Helpers;
+
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Hex64Publications::Schema;
+use Net::Address::IP::Local;
 
 use Hex64Publications::Controller::DB;
 use Hex64Publications::Controller::Core;
 use Hex64Publications::Controller::Search;
 use Hex64Publications::Controller::Publications;
+use Time::Piece;
+use MyUsers;
+use Data::Dumper;
+use POSIX qw/strftime/;
 use Hex64Publications::Controller::Helpers;
 
 use Hex64Publications::Functions::BackupFunctions;
@@ -22,20 +35,47 @@ use POSIX qw/strftime/;
 
 has db => sub {
     my $self = shift;
+    # DBI->connect($self->app->db_connect_string, '', '') or die $DBI::errstr .". File is: ".$self->config->{normal_db};
+
+    my $db_host = $self->config->{db_host};
+    my $db_user = $self->config->{db_user};
+    my $db_database = $self->config->{db_database};
+    my $db_pass = $self->config->{db_pass};
+
+
+    my $dbh = DBI->connect("DBI:mysql:database=$db_database;host=$db_host",
+                         "$db_user", "$db_pass",
+                         {'RaiseError' => 1});
+    $dbh->{mysql_auto_reconnect} = 1;
+    return $dbh;
+};
+
+has backup_db => sub {
+    my $self = shift;
     # my $s = Hex64Publications::Schema->connect('dbi:SQLite:my2.db');
     my $s = Hex64Publications::Schema->connect('dbi:mysql:database=hex64publicationlistmanager;host=localhost', 'root', 's3kr1t');
+
     # $s->deploy();
     $s->storage->debug(0);
     $s;
 };
 
+# has log => sub {
+#     my $self = shift;
+#     Mojo::Log->new( path => $self->config->{log_file}, level => 'debug' ) or print "opening log (in has Function) failed.";
+# };
+
+
 sub startup {
     my $self = shift;
-    $self->app->plugin('InstallablePaths');
     $self->app->plugin('RenderFile');
     my $address = Net::Address::IP::Local->public;
     # print $address;
 
+    # my $config = $self->plugin('Config');
+    my $config = $self->app->config;
+    
+    # load default
     my $config = $self->plugin('Config' => {file => 'config/default.conf'});
 
     if($self->app->home =~ /demo/){
@@ -99,13 +139,17 @@ sub startup {
     $self->helper(is_manager => sub {
         my $self = shift; 
         my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
+        my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
         return 1 if $u->is_manager();
+        return undef;
     });
 
     $self->helper(is_admin => sub {
         my $self = shift; 
         my $u = $self->app->db->resultset('Login')->search({ login => $self->session('user') })->first;
+        my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
         return 1 if $u->is_admin();
+        return undef;
     });
 
 
@@ -177,16 +221,23 @@ sub startup {
 
     $anyone->get('/logout')->to('login#logout')->name('logout');
 
-
+    $anyone->any('/test/500')->to('display#test500');
+    $anyone->any('/test/404')->to('display#test404');
 
     $anyone->get('/register')->to('login#register')->name('register');
     $anyone->get('/register_dummy')->to('login#dummy')->name('dummy');
     $anyone->post('/register')->to('login#post_do_register')->name('post_do_register');
     $anyone->any('/noregister')->to('login#register_disabled');
 
+
+    my $logged_user = $anyone->under->to('login#check_is_logged_in');
+    my $manager = $logged_user->under->to('login#under_check_is_manager');
+    my $superadmin = $logged_user->under->to('login#under_check_is_admin');
   
 
 
+
+    ################ SETTINGS ################
     $logged_user->get('/profile')->to('login#profile');
     $superadmin->get('/manage_users')->to('login#manage_users')->name('manage_users');
     $superadmin->get('/profile/:id')->to('login#foreign_profile');
@@ -195,6 +246,7 @@ sub startup {
     $superadmin->get('/profile/make_user/:id')->to('login#make_user');
     $superadmin->get('/profile/make_manager/:id')->to('login#make_manager');
     $superadmin->get('/profile/make_admin/:id')->to('login#make_admin');
+    $manager->get('/log')->to('display#show_log');
     
 
     ################ SETTINGS ################
@@ -317,6 +369,8 @@ sub startup {
     
 
     $logged_user->get('/publications/add')->to('publications#get_add');
+    $logged_user->get('/publications/add_many')->to('publications#get_add_many');
+    $logged_user->post('/publications/add_many/store')->to('publications#post_add_many_store');
     $logged_user->post('/publications/add/store')->to('publications#post_add_store');
 
     # $logged_user->post('/publications/store/:id')->to('publications#post_store');
@@ -397,7 +451,7 @@ sub startup {
     $anyone->get('/r/t4a/:aid')->to('tags#get_tags_for_author_read'); #ALIAS
 
     $anyone->get('/read/tags-for-team/:tid')->to('tags#get_tags_for_team_read');
-    $anyone->get('/r/t4a/:tid')->to('tags#get_tags_for_team_read'); #ALIAS
+    $anyone->get('/r/t4t/:tid')->to('tags#get_tags_for_team_read'); #ALIAS
 
 
 
@@ -427,6 +481,7 @@ sub startup {
         
 
 }
+
 
 
 1;

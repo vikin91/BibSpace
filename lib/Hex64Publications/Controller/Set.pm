@@ -360,6 +360,12 @@ sub get_set_of_teams_for_author_id_w_year {
 
     my $set = new Set::Scalar;
 
+    my $qry = "SELECT author_id, team_id 
+            FROM Author_to_Team 
+            WHERE author_id=?
+            AND start <= ?  AND (stop >= ? OR stop = 0)";
+    my $sth = $dbh->prepare( $qry );  
+    $sth->execute($aid, $year, $year); 
 
     my $rs = $dbh->resultset('AuthorToTeam')->search(
     {
