@@ -6,16 +6,17 @@ use Hex64Publications::Controller::Search;
 use Hex64Publications::Controller::BackupFunctions;
 use Hex64Publications::Controller::Publications;
 use Hex64Publications::Controller::Helpers;
-
 use Hex64Publications::Functions::MyUsers;
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
-use Net::Address::IP::Local;
 
+
+use Net::Address::IP::Local;
 use Time::Piece;
 use Data::Dumper;
 use POSIX qw/strftime/;
+use Try::Tiny;
 
 # 0 4,12,20 * * * curl http://localhost:8081/cron/day
 # 0 2 * * * curl http://localhost:8081/cron/night
@@ -79,10 +80,20 @@ sub startup {
         $config = $self->plugin('Config' => {file => 'config/demo.conf'});
     }
     elsif($address =~ m/146\.185\.144\.116/){  # TEST SERVER
-        $config = $self->plugin('Config' => {file => 'config/test.conf'});
+        try{
+            $config = $self->plugin('Config' => {file => 'config/test.conf'});    
+        }
+        catch{
+            $config = $self->plugin('Config' => {file => 'config/default.conf'});
+        };
     }
     elsif($address =~ m/132\.187\.10\.5/){  # PRODUCTION SERVER
-        $config = $self->plugin('Config' => {file => 'config/production.conf'});
+        try{
+            $config = $self->plugin('Config' => {file => 'config/production.conf'});
+        }
+        catch{
+            $config = $self->plugin('Config' => {file => 'config/default.conf'});
+        };
     }
     else{   # DEFAULT
         # $config = $self->plugin('Config' => {file => 'lib/Hex64Publications/files/config/default.conf'});
