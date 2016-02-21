@@ -1,13 +1,19 @@
 package Hex64Publications::Controller::Display;
 
+use Hex64Publications::Controller::Core qw(get_all_entry_ids);
+use Hex64Publications::Controller::BackupFunctions;
+
+
 use Data::Dumper;
 use utf8;
 use Text::BibTeX; # parsing bib files
 use DateTime;
 use File::Slurp;
 use Time::Piece;
+use 5.010; #because of ~~
 use strict;
 use warnings;
+use DBI;
 use Try::Tiny;
 
 use Mojo::Base 'Mojolicious::Controller';
@@ -19,6 +25,72 @@ sub index {
 
    $self->render(template => 'display/start');
  }
+ #################################################################################
+sub test {
+    my $self = shift;
+
+    my $msg = "";
+    my $filename = $self->app->config->{log_file};
+
+    my $errored = 0;
+
+    ###################
+    $msg .= "<br/>"."Opening log: ";
+    try{
+        read_file($filename);
+        $msg .= "OK ";
+    }
+    catch{
+        $msg .= "ERROR ";
+        $errored = 1;
+    };
+
+    ###################
+    $msg .= "<br/>"."Connecting to DB: ";
+    try{
+        get_all_entry_ids($self->app->db);
+        $msg .= "OK ";
+    }
+    catch{
+        $msg .= "ERROR ";
+        $errored = 1;
+    };
+    ###################
+    $msg .= "<br/>"."Reading backup dir: ";
+    try{
+        get_dir_size("backups");
+        $msg .= "OK ";
+    }
+    catch{
+        $msg .= "ERROR ";
+        $errored = 1;
+    };
+    ###################
+    $msg .= "<br/>"."Writing backup dir: ";
+    try{
+        my $bfname = $self->do_mysql_db_backup_silent("test");
+        say "Creating: $bfname ";
+        unlink $bfname;
+        $msg .= "OK ";
+    }
+    catch{
+        $msg .= "ERROR ";
+        $errored = 1;
+    };
+    ###################
+    
+
+    $msg .= "<br/>"."End.";
+
+
+    if($errored){
+        $self->render(text => $msg, status => 500);
+        return;
+    }
+    else{
+        $self->render(text => $msg, status => 200);
+    }
+}
 #################################################################################
 sub test500 {
     my $self = shift;

@@ -80,7 +80,6 @@ our @EXPORT = qw(
     get_publications_main
     get_publications_core_from_array
     get_publications_core_from_set
-    get_publications_core
     get_single_publication
     );
 

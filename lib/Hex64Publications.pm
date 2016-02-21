@@ -89,12 +89,6 @@ sub startup {
 
     $self->helper(backurl => sub {
         my $s = shift; 
-        # say "url: ".$s->req->url;
-        # say "path: ".$s->req->url->path;
-        # say "base: ".$s->req->url->base;
-        
-        # my $burl = "?back_url=".$s->req->url->base."".$self->proxy_prefix."".$s->req->url->path;
-        # my $burl = "?back_url=".$s->req->url->to_abs;
         my $short_url = $s->req->url;
         if ($short_url eq '/'){
             $short_url = $config->{proxy_prefix};
@@ -187,6 +181,7 @@ sub startup {
     $anyone->get('/start')->to('display#index');
     $anyone->any('/test/500')->to('display#test500');
     $anyone->any('/test/404')->to('display#test404');
+    $anyone->any('/test')->to('display#test');
     $manager->get('/log')->to('display#show_log');
 
 
