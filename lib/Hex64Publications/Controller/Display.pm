@@ -10,6 +10,7 @@ use 5.010; #because of ~~
 use strict;
 use warnings;
 use DBI;
+use Try::Tiny;
 
 use Mojo::Base 'Mojolicious::Controller';
 
@@ -38,7 +39,22 @@ sub show_log {
 
     $num = 100 unless $num;
 
-    my @lines = read_file('log/my.log');
+    my $filename = $self->app->config->{log_file};
+
+    my @lines = ();
+
+    try{
+        @lines = read_file($filename);
+        if($num > $#lines){
+            $num = $#lines + 1;
+        }
+    }
+    catch{
+        say "Opening log failed!"; 
+        $num = 5;   
+    };
+
+    
     # @lines = reverse(@lines);
     @lines = @lines[ $#lines-$num .. $#lines ];
     chomp(@lines);

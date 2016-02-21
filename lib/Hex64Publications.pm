@@ -174,18 +174,26 @@ sub startup {
         my $filename = $config->{log_file};
         my $msg_to_log = "[".$datetime_string."] ".$usr_str.$msg."\n";
 
-        if(open(my $fh, '>>', $filename)){
-            print $fh $msg_to_log;
-            close $fh;
+        try{
+            if(open(my $fh, '>>', $filename)){
+                print $fh $msg_to_log;
+                close $fh;
+            }    
         }
-        else{
-            print " opening log failed. (this line may cause shit happening!) Msg was: ".$msg_to_log." error: $!";
-        }
-        
-        # this code is instable - crashes once a month
-
-        # my $log = Mojo::Log->new(path => $config->{log_file}, level => 'debug') or print "opening log failed. (this line may cause shit happening!) Msg was: ".$usr_str.$msg;
-        # $log->info($usr_str.$msg) or print "writing to log failed. Msg was: ".$usr_str.$msg;
+        catch{
+            say "Opening log failed! Msg was: ".$msg_to_log;
+            say "Trying to create directory";
+            try{
+                mkdir "log";
+                if(open(my $fh, '>>', $filename)){
+                    print $fh $msg_to_log;
+                    close $fh;
+                }
+            }
+            catch{
+                say "Creating dir and ppening log failed again! Ingoring.";
+            }    
+        };
     });
 
     # $self->app->db->do("PRAGMA foreign_keys = ON");
