@@ -48,7 +48,7 @@ before_script:
 sudo: true
 
 notifications:
-    email: true
+    email: false
 
 after_script:
     - mv config/default.conf.bak config/default.conf
