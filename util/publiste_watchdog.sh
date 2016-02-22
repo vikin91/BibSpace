@@ -1,6 +1,5 @@
 #!/bin/bash
 
-echo `date`
 STATUS=`/home/piotr/perl/publiste3/util/test_server_alive.sh`
 STATUS_OK=`/home/piotr/perl/publiste3/util/test_server_OK.sh`
 
@@ -18,4 +17,5 @@ if [ "$RESTART" = true ]; then
     /usr/bin/hypnotoad /home/piotr/perl/publiste3/script/hex64-publications
 fi
 
-echo "Server status RUNNING/FUNCTIONING was: $STATUS / $STATUS_OK" 
+_timestamp=`date`
+echo "$_timestamp Status RUNNING/FUNCTIONING was: $STATUS / $STATUS_OK" 
