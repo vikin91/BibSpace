@@ -84,7 +84,7 @@ sub do_mysql_db_backup{
     say "call: core::do_mysql_db_backup";
 
     my $dbh = $self->app->db;
-    my $dbfname = $self->do_mysql_db_backup_silent($fname_prefix);
+    my $dbfname = do_mysql_db_backup_silent($self, $fname_prefix);
     if(!defined $dbfname){
         return undef;
     }

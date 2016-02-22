@@ -27,17 +27,33 @@ our @EXPORT = qw(
 our $bibtex2html_tmp_dir = "./tmp";
 ##########################################################################################
 sub prepare_cron_table{
-   my $dbh = shift;
+    my $dbh = shift;
+    try {
+        $dbh->do("CREATE TABLE IF NOT EXISTS Cron(
+            type INTEGER PRIMARY KEY,
+            last_run_time TIMESTAMP DEFAULT '0000-00-00 00:00:00'
+            )");
+    }
+    catch{
+        $dbh->do("CREATE TABLE IF NOT EXISTS Cron(
+            type INTEGER PRIMARY KEY,
+            last_run_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )");
+    };
 
-    $dbh->do("CREATE TABLE IF NOT EXISTS Cron(
-      type INTEGER PRIMARY KEY,
-      last_run_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )");
-
-    $dbh->do("REPLACE INTO Cron (type) VALUES (0)");
-    $dbh->do("REPLACE INTO Cron (type) VALUES (1)");
-    $dbh->do("REPLACE INTO Cron (type) VALUES (2)");
-    $dbh->do("REPLACE INTO Cron (type) VALUES (3)");
+    try {
+      $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (0)");
+      $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (1)");
+      $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (2)");
+      $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (3)");  
+    }
+    catch{
+      $dbh->do("REPLACE INTO Cron (type) VALUES (0)");
+      $dbh->do("REPLACE INTO Cron (type) VALUES (1)");
+      $dbh->do("REPLACE INTO Cron (type) VALUES (2)");
+      $dbh->do("REPLACE INTO Cron (type) VALUES (3)");  
+    };
+    
 };
 ####################################################################################
 sub create_backup_table{
