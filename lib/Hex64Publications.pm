@@ -15,6 +15,7 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 use Net::Address::IP::Local;
 use Time::Piece;
 use Data::Dumper;
+use File::Slurp;
 use POSIX qw/strftime/;
 use Try::Tiny;
 
@@ -55,11 +56,6 @@ has backup_db => sub {
 
     # DBI->connect('dbi:SQLite:dbname='.$self->config->{backup_db}, '', '') or die $DBI::errstr;
 };
-
-# has log => sub {
-#     my $self = shift;
-#     Mojo::Log->new( path => $self->config->{log_file}, level => 'debug' ) or print "opening log (in has Function) failed.";
-# };
 
 
 sub startup {
@@ -114,16 +110,18 @@ sub startup {
 
     $self->helper(version => sub {
 
-        my $syscommand = "bash git-getrevision.sh > version";
+        my $version = "uknown";
+        my $cmd_out = 0;
         try{
-            system($syscommand);
+            $cmd_out=`bash git-getrevision.sh`;
         }
         catch{
-            warn "Exception by cacluating version $_ . Ignoring";
+            warn "Exception by cacluating version $_ Ignoring";
         };
-        my $version = "uknown";
+        
         try{
             $version = read_file('version');
+            $version .="/".$cmd_out;
         }
         catch{
             warn "Exception by reading version $_ . Ignoring";
