@@ -4,3 +4,5 @@ config/test.conf
 config/demo.conf
 config/production.conf
 admin_api_demo.conf
+deploy-test-cloud.sh
+deploy-production-win2005.sh
