@@ -15,6 +15,7 @@ use Hex64Publications::Functions::LoginFunctions;
 use Net::Address::IP::Local;
 use Time::Piece;
 use Data::Dumper;
+use File::Slurp;
 use POSIX qw/strftime/;
 use Try::Tiny;
 
@@ -91,16 +92,18 @@ sub startup {
 
     $self->helper(version => sub {
 
-        my $syscommand = "bash git-getrevision.sh > version";
+        my $version = "uknown";
+        my $cmd_out = 0;
         try{
-            system($syscommand);
+            $cmd_out=`bash git-getrevision.sh`;
         }
         catch{
-            warn "Exception by cacluating version $_ . Ignoring";
+            warn "Exception by cacluating version $_ Ignoring";
         };
-        my $version = "uknown";
+        
         try{
             $version = read_file('version');
+            $version .="/".$cmd_out;
         }
         catch{
             warn "Exception by reading version $_ . Ignoring";
