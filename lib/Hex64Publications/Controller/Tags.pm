@@ -310,7 +310,7 @@ sub get_tags_for_author_read{
 
         my $url = "/ly/p?author=".get_master_for_id($self->app->db, $maid)."&tag=".$tag."&title=1&navbar=1";
         
-        my $obj = new TagCloudClass($tag);
+        my $obj = new Hex64Publications::Functions::TagCloudClass($tag);
         $obj->setURL($url);
         $obj->setCount($count);
         $obj->setName($name);
