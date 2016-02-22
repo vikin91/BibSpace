@@ -89,6 +89,24 @@ sub startup {
     # $self->helper(users => sub { state $users = Hex64Publications::Functions::MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
 
+    $self->helper(version => sub {
+
+        my $syscommand = "bash git-getrevision.sh > version";
+        try{
+            system($syscommand);
+        }
+        catch{
+            warn "Exception by cacluating version $_ . Ignoring";
+        };
+        my $version = "uknown";
+        try{
+            $version = read_file('version');
+        }
+        catch{
+            warn "Exception by reading version $_ . Ignoring";
+        };
+        $version;
+    });
 
     $self->helper(backurl => sub {
         my $s = shift; 

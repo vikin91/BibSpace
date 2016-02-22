@@ -1,5 +1,7 @@
 #!/bin/bash
-revisioncount=`git log --oneline | wc -l | tr -d ' ' `
+
+GIT_DIR="/home/piotr/perl/git_publiste/.git"
+revisioncount=`git --git-dir=$GIT_DIR log --oneline | wc -l | tr -d ' ' `
 projectversion=`git describe --tags --long --always`
 cleanversion=${projectversion%%-*}
 
