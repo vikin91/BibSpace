@@ -1508,6 +1508,7 @@ sub get_html_for_bib{
    my $out_file = $bibtex2html_tmp_dir."/out";
    my $outhtml = $out_file.".html";
 
+
    my $out_bibhtml = $out_file."_bib.html";
    my $databib = $bibtex2html_tmp_dir."/data.bib";
 
@@ -1521,13 +1522,14 @@ sub get_html_for_bib{
    close($fh);
 
     my $cwd = getcwd();
+    my $bst_file = $cwd."/lib/descartes2";
 
    mkdir($bibtex2html_tmp_dir, 0777);
 
    # -nokeys  --- no number in brackets by entry
    # -nodoc   --- dont generate document but a part of it - to omit html head body headers
    # -single  --- does not provide links to pdf, html and bib but merges bib with html output
-   my $bibtex2html_command = "bibtex2html -s ".$cwd."/descartes2 -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o ".$out_file." $databib >/dev/null";
+   my $bibtex2html_command = "bibtex2html -s ".$bst_file." -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o ".$out_file." $databib >/dev/null";
    # my $tune_html_command = "./tuneSingleHtmlFile.sh out.html";
 
    # print "COMMAND: $bibtex2html_command\n";
