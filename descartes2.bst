@@ -221,6 +221,18 @@ FUNCTION {format.authors}
   if$
 }
 
+FUNCTION {format.authors.with_author_mark}
+{ author empty$
+    { "" }
+    { author format.names 
+      author num.names$ #1 >
+        { ", authors" * }
+        { ", author" * }
+      if$
+    }
+  if$
+}
+
 FUNCTION {format.editors}
 { editor empty$
     { "" }
@@ -718,10 +730,48 @@ FUNCTION {inbook}
 { output.bibitem
   author empty$
     { format.editors "author and editor" output.check }
+    { format.authors "author" output.check }
+  if$
+  new.block
+  format.btitle "title" output.check
+  format.chapter.pages "chapter and pages" output.check
+  author empty$
+    'skip$
+    { editor empty$
+      'skip$
+      { format.editors "editor" output.check }
+      if$
+    }
+  if$
+  crossref missing$
+    { format.bvolume output
+      % format.chapter.pages "chapter and pages" output.check
+      new.block
+      format.number.series output
+      new.sentence
+      publisher "publisher" output.check
+      address output
+    }
+    { 
+      new.block
+      format.book.crossref output.nonnull
+    }
+  if$
+  format.edition output
+  format.date "year" output.check
+  new.block
+  note output
+  fin.entry
+}
+
+FUNCTION {inbookorig}
+{ output.bibitem
+  author empty$
+    { format.editors "author and editor" output.check }
     { format.authors output.nonnull
       crossref missing$
-        { "author and editor" editor either.or.check }
-        'skip$
+      { "author and editor" editor either.or.check }
+      'skip$
       if$
     }
   if$
