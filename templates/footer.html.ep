@@ -9,4 +9,3 @@
 
 
 
-<small>Version: <%= version()%> </small>
