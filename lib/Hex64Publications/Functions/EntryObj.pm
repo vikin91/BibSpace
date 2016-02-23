@@ -49,7 +49,7 @@ sub initFromDB{
     $self->{bibtex_key} = $row->{bibtex_key};
     $self->{year} = $row->{year};
     $self->{month} = $row->{month} || 0;
-    $self->{hidden}  = $row->{hidden} || 0,
+    $self->{hidden}  = $row->{hidden} || 0;
     $self->{sort_month} = $row->{sort_month} || 0;
     $self->{bibtex_type} = $row->{bibtex_type} || "";
     $self->{entry_type} = $row->{entry_type} || "paper";
@@ -89,21 +89,23 @@ sub isHidden{
     return $self->{hidden};
 }
 ########################################################################################################################
-sub toggle_hide{
+sub do_toggle_hide{
+    say "CALL: EntryObj: do_toggle_hide";
     my $self = shift;
     my $dbh = shift;
 
     $self->initFromDB($dbh);
-
+    
     # say "toggling hide of id $self->{id}";
     my $h = $self->isHidden();
+    # say "h $h";
 
     if($h == 1){
-        # say "unhiding ($h)";
+        # say "unhiding (h $h)";
         $self->unhide($dbh);
     }
     else{
-        # say "hiding ($h)";
+        # say "hiding (h $h)";
         $self->hide($dbh);   
     }
 }

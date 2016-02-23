@@ -31,7 +31,17 @@ use Mojo::Log;
 sub get_back_url {
     my $self = shift;
     my $back_url = shift;
-    return '/publications' if !defined $back_url or $back_url eq '' or $back_url eq $self->req->url->to_abs;
+    my $ref = $self->req->headers->referrer;
+    
+    my $to_return = $back_url; # default
+
+    $to_return = $ref if !defined $back_url;
+    $to_return = $ref if $back_url eq '';
+    $to_return = $ref if $back_url eq $self->req->url->to_abs;
+    $to_return = $ref if $to_return eq "";
+
+    say "get_back_url returns:".$to_return."; for input: $back_url";
+    return $to_return;
 }
 ####################################################################################
 sub isTalk {  # stupid code repetition!
@@ -70,6 +80,7 @@ sub fixEntryType {
 }
 ####################################################################################
 sub unhide {
+    say "CALL: Publications::unhide";
     my $self = shift;
     my $id = $self->param('id');
     my $back_url = $self->param('back_url');
@@ -81,6 +92,7 @@ sub unhide {
 
 ####################################################################################
 sub hide {
+    say "CALL: Publications::hide";
     my $self = shift;
     my $id = $self->param('id');
     my $back_url = $self->param('back_url');
@@ -93,6 +105,7 @@ sub hide {
 };
 ####################################################################################
 sub toggle_hide {
+    say "CALL: Publications::toggle_hide";
     my $self = shift;
     my $id = $self->param('id');
     say "CALL: toggle_hide id $id";
