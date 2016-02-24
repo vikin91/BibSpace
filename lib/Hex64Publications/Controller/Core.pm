@@ -506,17 +506,20 @@ sub get_visibility_for_id {
 }
 ################################################################################
 sub delete_entry_by_id{
-  my $dbh = shift;
-  my $id = shift;
+    say "CALL: delete_entry_by_id"; 
+    my $dbh = shift;
+    my $id = shift;
 
-  my $sth = $dbh->prepare( "DELETE FROM Entry WHERE id = ?" );  
-  $sth->execute($id);
+    my $sth = $dbh->prepare( "DELETE FROM Entry WHERE id = ?" );  
+    $sth->execute($id);
 
-  my $sth2 = $dbh->prepare( "DELETE FROM Entry_to_Tag WHERE entry_id = ?" );  
-  $sth2->execute($id);
+    my $sth2 = $dbh->prepare( "DELETE FROM Entry_to_Tag WHERE entry_id = ?" );  
+    $sth2->execute($id);
 
-  my $sth3 = $dbh->prepare( "DELETE FROM Entry_to_Author WHERE entry_id = ?" );  
-  $sth3->execute($id);
+    my $sth3 = $dbh->prepare( "DELETE FROM Entry_to_Author WHERE entry_id = ?" );  
+    $sth3->execute($id);
+
+    warn "FIXME: delete_entry_by_id. Pdf file should be deleted from file system as well"; 
 };
 ################################################################################
 sub get_all_non_hidden_entry_ids{
