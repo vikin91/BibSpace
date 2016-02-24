@@ -1,3 +1,9 @@
+    %   if ($obj->isHidden() == 1) {
+            <tr valign="top" class="hiddenrow"> 
+    %   }
+    %   else{
+            <tr valign="top">
+    %   }    
                 <td style="width: 120px;">
                     <div class="btn-group">
                         <a class="btn btn-warning" href="/publications/manage_tags/<%= $obj->{id} %><%=$burl%>"><span class="glyphicon glyphicon-tags"></span> T</a>
@@ -122,3 +128,4 @@
                 <td class="bibtexitem">
                   %== $obj->{html}
                 </td>
+            </tr>
