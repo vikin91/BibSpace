@@ -1254,9 +1254,14 @@ sub add_pdf_post{
         ### TODO Feb 2015: move $self->req->url->base to a parameter!!
         
         my $base_url = $self->config->{base_url};
-        $base_url = "" if $self->config->{base_url} eq '/';
+        $base_url = "/" if $self->config->{base_url} eq '/';
+
+        # $base_url = "/pa";
+        say "base_url $base_url";
         
         my $file_url = $self->req->url->base.$base_url.$file_path;
+
+        say "file_url $file_url";
 
         $self->write_log("Saving attachment for paper id $id under: $file_url");
 
