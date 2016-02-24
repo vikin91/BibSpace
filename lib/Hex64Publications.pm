@@ -114,6 +114,7 @@ sub startup {
     $self->helper(backurl => sub {
         my $s = shift; 
         my $short_url = $s->req->url;
+        # say "helper(backurl: short_url: $short_url";
         if ($short_url eq '/'){
             $short_url = $config->{proxy_prefix};
         }
@@ -128,6 +129,7 @@ sub startup {
         # return $s->req->url->base."".$self->proxy_prefix."".$s->req->url->path;
         # return $s->req->url->to_abs;
         my $short_url = $s->req->url;
+        # say "helper(backurl_short: short_url: $short_url";
         if ($short_url eq '/'){
             $short_url = $config->{proxy_prefix};
         }
