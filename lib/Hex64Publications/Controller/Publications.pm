@@ -1254,9 +1254,33 @@ sub add_pdf_post{
         ### TODO Feb 2015: move $self->req->url->base to a parameter!!
         
         my $base_url = $self->config->{base_url};
-        $base_url = "" if $self->config->{base_url} eq '/';
+        $base_url = $self->config->{proxy_prefix} if $self->config->{base_url} eq '/';
+
+        # $base_url = "/pa";
+        # say "config->{proxy_prefix} ".$self->config->{proxy_prefix};
+        # say "config->{base_url} ".$self->config->{base_url};
+        # say "base_url $base_url";
+
+        # base_url http://se2.informatik.uni-wuerzburg.de/pa/
+        # file_url http://se2.informatik.uni-wuerzburg.dehttp://se2.informatik.uni-wuerzburg.de/pa/uploads/papers/paper-1078.pdf
+        # call: add_field_to_bibtex_code eid 1078 field pdf value http://se2.informatik.uni-wuerzburg.dehttp://se2.informatik.uni-wuerzburg.de/pa/uploads/papers/paper-1078.pdf
         
-        my $file_url = $self->req->url->base.$base_url.$file_path;
+        # $self->req->url->base = http://se2.informatik.uni-wuerzburg.de
+        # base_url = http://se2.informatik.uni-wuerzburg.de/pa/
+        # file_path = uploads/papers/paper-1078.pdf
+
+
+
+        # my $file_url = $self->req->url->base.$base_url.$file_path; 
+        my $file_url;
+        if($self->config->{proxy_prefix} eq '/'){
+            $file_url = $self->req->url->base.$self->config->{proxy_prefix}.$file_path;
+        }
+        else{
+            $file_url = $self->req->url->base.$self->config->{proxy_prefix}."/".$file_path;
+        }
+
+        say "file_url $file_url";
 
         $self->write_log("Saving attachment for paper id $id under: $file_url");
 

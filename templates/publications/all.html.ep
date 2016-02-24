@@ -33,15 +33,9 @@
          %
          % foreach my $obj (@objs){
          %    if (defined $obj) {
-         %      if ($obj->isHidden() == 1) {
-                <!-- <tr valign="top" class="hiddenrow"style="background-color: #BBB;"> -->
-                <tr valign="top" class="hiddenrow"> 
-         %      }
-         %      else{
-                <tr valign="top">
-         %      }
-                    %= include 'publications_table_row', burl => $burl, obj => $obj, j => $j, use_modal => 0;
-                </tr>
+         %      
+                %= include 'publications_table_row', burl => $burl, obj => $obj, j => $j, use_modal => 0;
+                
                 % $i++;
                 % $j--;
               %}
