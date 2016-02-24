@@ -1254,7 +1254,7 @@ sub add_pdf_post{
         ### TODO Feb 2015: move $self->req->url->base to a parameter!!
         
         my $base_url = $self->config->{base_url};
-        $base_url = "/" if $self->config->{base_url} eq '/';
+        $base_url = $self->config->{proxy_prefix} if $self->config->{base_url} eq '/';
 
         # $base_url = "/pa";
         say "base_url $base_url";
