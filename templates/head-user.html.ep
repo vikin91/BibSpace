@@ -6,16 +6,16 @@
     <meta charset="UTF-8" />
     <meta http-equiv="Pragma" content="no-cache" />
 
-    %= stylesheet 'http://netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css'
-    %= javascript 'http://code.jquery.com/jquery-latest.min.js'
-    %= javascript 'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'
-    %= stylesheet 'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css'
+    %= stylesheet '//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css'
+    %= javascript '//code.jquery.com/jquery-latest.min.js'
+    %= javascript '//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'
+    %= stylesheet '//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css'
 
     % my $burl = config 'base_url';
 
     %= stylesheet $burl.'styles.css'
     %= stylesheet '/styles.css'
-    %= stylesheet 'http://se2.informatik.uni-wuerzburg.de/pa/styles.css'
+    %= stylesheet '//se2.informatik.uni-wuerzburg.de/pa/styles.css'
 
     
     <script type="text/javascript">
