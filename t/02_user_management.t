@@ -8,6 +8,9 @@ use Hex64Publications::Controller::Core;
 use Hex64Publications::Functions::EntryObj;
 use Hex64Publications::Functions::MyUsers;
 
+ok(1);
+done_testing();
+# DO NOT RUN THE CODE BELOW - it is not ready
 
 
 ############################ PREPARATION
@@ -207,6 +210,7 @@ note "============ Registration admin ============";
 $t_logged_in->get_ok("/noregister")
     ->status_is(200)
     ->content_like(qr/Registration is disabled/i);
+
 
 
 my $token = MyUsers->generate_token();

@@ -9,6 +9,7 @@ use Hex64Publications::Functions::EntryObj;
 
 
 ok(1);
+done_testing();
 # DO NOT RUN THE CODE BELOW - it is not ready
 
 # ############################ PREPARATION
