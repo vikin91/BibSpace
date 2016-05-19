@@ -48,7 +48,7 @@ before_script:
 sudo: true
 
 notifications:
-    email: false
+    email: true
 
 script: 
     - prove -l t/
