@@ -4,7 +4,10 @@ use strict;
 use warnings;
 
 use lib 'lib';
-#use lib '/home/piotr/perl/publiste3/lib';
+# use FindBin;
+# BEGIN { unshift @INC, "$FindBin::Bin/../lib" }
+
+>>>>>>> 2debb2137aefafed774a78a7f92d856949b5d128
 
 # Start command line interface for application
 require Mojolicious::Commands;
