@@ -9,6 +9,8 @@ use Hex64Publications::Functions::EntryObj;
 
 my $t_anyone = Test::Mojo->new('Hex64Publications');
 note "============ Testing start page ============";
+$t_anyone->get_ok('/')->status_is(200);
+$t_anyone->get_ok('/logout')->status_is(200);
 $t_anyone->get_ok('/')->status_is(200)->content_like(qr/Please login or register/i);
 
 note "============ Testing bad password ============";
