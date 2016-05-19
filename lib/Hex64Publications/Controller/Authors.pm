@@ -88,7 +88,7 @@ sub show {
    }
 
    
-   my @letters = get_set_of_first_letters($self, $visible);
+   my @letters = $self->get_set_of_first_letters($visible);
    $self->stash(visible => $visible, names_arr  => \@autorzy_names_arr, disp => \%autorzy_display, letters => \@letters, ids_arr => \@autorzy_id_arr);
 
    $self->render(template => 'authors/authors');
@@ -96,12 +96,11 @@ sub show {
 ##############################################################################################################
 sub add_author {
    my $self = shift;
-   my $back_url = $self->param('back_url') || "/publications";
 
    my $dbh = $self->app->db;
 
 
-   $self->stash(master  => '', id => '', back_url => $back_url);
+   $self->stash(master  => '', id => '');
    $self->render(template => 'authors/add_author');
 }
 
@@ -128,30 +127,29 @@ sub add_post {
 
               if(!defined $aid){
                   $self->flash(msg => "Something went wrong. The Author has not beed added");
-                  $self->redirect_to('/authors/add');
+                  $self->redirect_to($self->url_for('/authors/add'));
                   return;
               }
 
               $self->write_log("add new author: Added new author with proposed master ($new_master). Author id is $aid.");
 
-              $self->redirect_to('/authors/edit/'.$aid); 
+              $self->redirect_to($self->url_for('/authors/edit/').$aid); 
               return;
           }
           else{
             $self->write_log("add new author: author with proposed master ($new_master) exists!");
             $self->flash(msg => "Author with such MasterID exists! Pick a different one.");
-            $self->redirect_to('/authors/add');
+            $self->redirect_to($self->url_for('/authors/add'));
             return;
           }
      }
      
-     $self->redirect_to('/authors/add');
+     $self->redirect_to($self->url_for('/authors/add'));
 }
 ##############################################################################################################
 sub edit_author {
    my $self = shift;
    my $id = $self->param('id');
-   my $back_url = $self->param('back_url') || "/publications";
 
    my $dbh = $self->app->db;
    my $master = get_master_for_id($dbh, $id);
@@ -176,18 +174,24 @@ sub edit_author {
       push @aids, $aid;
    }
 
-   my ($all_teams_arr, $all_teams_ids_arr) = get_all_teams($dbh);
+   if(scalar @aids == 0 or $aids[0] eq '-1'){
+        $self->flash(msg => "Author with id $id does not exist!");
+      $self->redirect_to($self->url_for('/authors'));
+   }
+   else{
+       my ($all_teams_arr, $all_teams_ids_arr) = get_all_teams($dbh);
 
-   my ($teams_arr, $start_arr, $stop_arr, $team_id_arr) = get_teams_of_author($self, $id);
+       my ($teams_arr, $start_arr, $stop_arr, $team_id_arr) = get_teams_of_author($self, $id);
 
-   my ($tag_ids_arr_ref, $tags_arr_ref) = get_tags_for_author($self, $id);
+       my ($tag_ids_arr_ref, $tags_arr_ref) = get_tags_for_author($self, $id);
 
 
-   $self->stash(master  => $master, id => $id, uids => \@uids, aids => \@aids, disp => $disp, 
-                teams => $teams_arr, team_ids => $team_id_arr, start_arr => $start_arr, stop_arr => $stop_arr, back_url => $back_url, exit_code => '',
-                tag_ids => $tag_ids_arr_ref, tags => $tags_arr_ref,
-                all_teams => $all_teams_arr, all_teams_ids => $all_teams_ids_arr);
-   $self->render(template => 'authors/edit_author');
+       $self->stash(master  => $master, id => $id, uids => \@uids, aids => \@aids, disp => $disp, 
+                    teams => $teams_arr, team_ids => $team_id_arr, start_arr => $start_arr, stop_arr => $stop_arr, exit_code => '',
+                    tag_ids => $tag_ids_arr_ref, tags => $tags_arr_ref,
+                    all_teams => $all_teams_arr, all_teams_ids => $all_teams_ids_arr);
+       $self->render(template => 'authors/edit_author');
+    }
 }
 ##############################################################################################################
 sub can_be_deleted{
@@ -213,8 +217,7 @@ sub add_to_team {
 
     add_team_for_author($self, $master_id, $team_id);
 
-    my $back_url = $self->param('back_url') || "/authors?visible=1";
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 };
 ##############################################################################################################
 sub remove_from_team {
@@ -225,8 +228,7 @@ sub remove_from_team {
 
     remove_team_for_author($self, $master_id, $team_id);
 
-    my $back_url = $self->param('back_url') || "/authors?visible=1";
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 };
 ##############################################################################################################
 sub remove_uid{
@@ -237,8 +239,7 @@ sub remove_uid{
 
     remove_user_id_from_master($self, $muid, $uid);
 
-    my $back_url = $self->param('back_url') || "/authors?visible=1";
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 
 }
 
@@ -264,11 +265,11 @@ sub edit_post {
                # >0 new master id
                if($status > 0){
                   $self->write_log("change master for master id $id and new master $new_master - status: $status. AUTHOR ID HAS CHANGED!");
-                  $self->redirect_to('/authors/edit/'.$status);
+                  $self->redirect_to($self->url_for('/authors/edit/').$status);
                }
                else{
                   $self->write_log("change master for master id $id and new master $new_master - status: $status. SUCH AUTHOR EXISTS ALREADY under id $status!");
-                  $self->redirect_to('/authors/edit/'.$id); 
+                  $self->redirect_to($self->url_for('/authors/edit/').$id); 
                }
                
          }
@@ -287,7 +288,7 @@ sub edit_post {
               }
          }
      }
-     $self->redirect_to('/authors/edit/'.$id);
+     $self->redirect_to($self->url_for('/authors/edit/').$id);
 }
 ##############################################################################################################
 sub post_edit_membership_dates{
@@ -319,7 +320,7 @@ sub post_edit_membership_dates{
      else{
         $self->write_log("post_edit_membership_dates: input INVALID. author_id or team_id invalid");
     }
-    $self->redirect_to('/authors/edit/'.$aid);
+    $self->redirect_to($self->url_for('/authors/edit/').$aid);
 }
 ##############################################################################################################
 sub do_edit_membership_dates{
@@ -349,8 +350,7 @@ sub delete_author {
         return;
      }
 
-    my $back_url = $self->param('back_url') || "/authors?visible=1";
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
      
 };
 ##############################################################################################################
@@ -361,13 +361,10 @@ sub delete_author_force {
 
      do_delete_author_force($self, $id);
     
-    my $back_url = "/authors?visible=1";
     $self->flash(msg => "Author with id $id removed successfully.");
     $self->write_log("Author with id $id removed successfully.");
 
-    # say "delete_author_force: going back to: $back_url";
-
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
      
 };
 ##############################################################################################################
@@ -426,13 +423,18 @@ sub add_new_user_id_to_master_force{
   # checking if such an uid already exists
   my $aid = get_author_id_for_uid($dbh, $new_user_id);  # SELECT id FROM Author WHERE uid=?
   my $master_str = get_master_for_id($dbh, $id); # SELECT master FROM Author WHERE id=?
+
+  # aid - user id to be merged with id
+  my $is_new_id_master_of_other = get_master_id_for_author_id($dbh, $aid) > 0;
+  say "aid $aid master_str $master_str";
   
   # my $sth = $dbh->prepare('INSERT IGNORE INTO Author(uid, master, master_id) VALUES(?, ?, ?)');
   # aid is <> than -1 if such author already exists
   if($aid ne '-1'){
       
-      # duplicate uid (user to be merged): $aid
+      say "duplicate uid (user to be merged): ADD $aid TO $id";
       # master id (user to be merged with): $id
+      # TODO: if you merge USER_2 Master ID wit USER_1 and USER_2 has other IDS, here you will get error
 
       my $sth3 = $dbh->prepare('UPDATE Entry_to_Author SET author_id=? WHERE author_id=?');
       $sth3->execute($id, $aid);
@@ -462,7 +464,10 @@ sub remove_user_id_from_master{
       $sth->execute($uid, $mid);  
   }
   else{
-    say "remove_user_id_from_master: cannot remove aid that is muid, because you would remove the user completly";
+    my $str = "Function remove_user_id_from_master: cannot remove this user id because it is the master id. Removing the master id would remove the user completly";
+    say $str;
+    $self->flash(msg  => $str);
+    $self->redirect_to($self->get_referrer);
   }
 }
 ##############################################################################################################
@@ -539,8 +544,8 @@ sub update_master_id{
 #    my $master = get_master_for_id($self->app->db, $id);
 #    delete_author_master($self, $master);
    
-#    my $back_url = $self->param('back_url') || "/authors?visible=1";
-#    $self->redirect_to($back_url);
+#    warn "Remove back_url!" if $self->param('back_url'); # || "/authors?visible=1";
+#    $self->redirect_to($self->get_referrer);
 # };
 ##############################################################################################################
 
@@ -592,8 +597,7 @@ sub reassign_authors_to_entries {
 
     postprocess_all_entries_after_author_uids_change($self);
 
-    my $back_url = $self->param('back_url') || "/authors?visible=1";
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 }
 ##############################################################################################################
 sub reassign_authors_to_entries_and_create_authors {
@@ -602,8 +606,7 @@ sub reassign_authors_to_entries_and_create_authors {
 
     postprocess_all_entries_after_author_uids_change_w_creating_authors($self);
 
-    my $back_url = $self->param('back_url') || "/authors?visible=1";
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 }
 
 ##############################################################################################################
@@ -625,15 +628,13 @@ sub reassign_authors_to_entries_and_create_authors {
    else{
       $sth2->execute(1, $id); 
    }
+    $sth2->finish() if defined $sth2;
+
 
    $self->write_log("Author with id $id has now visibility set to $disp");
    say "Author with id $id has now visibility set to $disp";
 
-   
-   $sth2->finish() if defined $sth2;
-
-   my $back_url = $self->param('back_url') || "/authors?visible=1";
-   $self->redirect_to($back_url);
+   $self->redirect_to($self->get_referrer);
 };
 
 ##############################################################################################################

@@ -7,7 +7,7 @@
         <div class="col-lg-1"></div>
         <div class="col-lg-8 col-md-8 col-xs-8">
             
-            <a class="btn btn-default" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+            <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
             <a class="btn btn-info" href="<%= url_for('/teams')%>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all teams</a>
 
             % if(team_can_be_deleted($teamid) and is_manager()){

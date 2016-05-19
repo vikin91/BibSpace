@@ -148,7 +148,11 @@ sub startup {
     $self->helper(get_referrer => sub {
         my $s = shift; 
         my $ref = $s->req->headers->referrer;
-        $ref = $s->url_for('/') if $ref eq '';
+        if($ref eq ''){
+            $ref = $s->url_for('/');
+            $self->flash(msg  => $self->flash."Could not find previous page to redirect to. Did you paste the url direclty or is it a bug??");
+        }
+        
         return $ref;
     });
 
@@ -312,15 +316,16 @@ sub startup {
     $logged_user->get('/authors/delete/:id/force')->to('authors#delete_author_force');
     $logged_user->post('/authors/edit_membership_dates')->to('authors#post_edit_membership_dates');
 
-    $logged_user->get('/authors/:id/add_to_team/:tid')->to('authors#add_to_team');
-    $logged_user->get('/authors/:id/remove_from_team/:tid')->to('authors#remove_from_team');
-    $logged_user->get('/authors/:id/remove_uid/:uid')->to('authors#remove_uid');
+    $logged_user->get('/authors/:id/add_to_team/:tid')->to('authors#add_to_team')->name('add_author_to_team');
+    $logged_user->get('/authors/:id/remove_from_team/:tid')->to('authors#remove_from_team')->name('remove_author_from_team');
+    $logged_user->get('/authors/:id/remove_uid/:uid')->to('authors#remove_uid')->name('remove_author_uid');
 
     $logged_user->get('/authors/reassign')->to('authors#reassign_authors_to_entries');
     $logged_user->get('/authors/reassign_and_create')->to('authors#reassign_authors_to_entries_and_create_authors');
     
     $logged_user->get('/authors/visible')->to('authors#show_visible');
     $logged_user->get('/authors/toggle_visibility/:id')->to('authors#toggle_visibility');  
+    $logged_user->get('/authors/toggle_visibility')->to('authors#toggle_visibility');  
 
     ################ SEARCH ################
     $anyone->get('/search/:type/:q')->to('search#search');

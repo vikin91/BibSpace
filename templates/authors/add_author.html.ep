@@ -6,25 +6,11 @@
   <div class="row">
     <div class="col-lg-1"></div>
     <div class="col-lg-2">
-      <a class="btn btn-info pull-right" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+      <a class="btn btn-info pull-right" href="<%= get_referrer%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
     </div>
   </div>
 
   <hr>
-
-  % if (my $msg = flash 'msg') {
-  <div class="row">
-      <div class="col-lg-1"></div>
-      <div class="col-lg-6 col-md-6 col-xs-6">
-        <div class="alert alert-warning">
-          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-          <i class="fa  fa-exclamation-circle "></i> <strong>Warning</strong> <%=$msg%>
-        </div>
-      </div>
-  </div>
-
-  <hr>
-  %}
         
 
   <!-- MUID -->

@@ -39,10 +39,10 @@
     <td><p class="btn btn-default btn-sm">[<%= $j %>]</p></td>
     <td>
         % if ($disp_hash{$id} == 1){
-          <a class="btn btn-info btn-sm" href="<%= url_for('/authors/toggle_visibility/')%><%=$id%><%=backurl($self)%>"><span class="glyphicon glyphicon-eye-open"></span></a>
+          <a class="btn btn-info btn-sm" href="<%= url_for('/authors/toggle_visibility/')%><%=$id%>"><span class="glyphicon glyphicon-eye-open"></span></a>
         %}
         %else{
-          <a class="btn btn-danger btn-sm" href="<%= url_for('/authors/toggle_visibility/')%><%=$id%><%=backurl($self)%>"><span class="glyphicon glyphicon-eye-close"></span></a>
+          <a class="btn btn-danger btn-sm" href="<%= url_for('/authors/toggle_visibility/')%><%=$id%>"><span class="glyphicon glyphicon-eye-close"></span></a>
           
         %}
         % if (author_can_be_deleted($id)==1){

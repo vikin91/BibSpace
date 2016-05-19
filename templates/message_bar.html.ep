@@ -8,6 +8,7 @@
 % my $msg = undef;
 % $msg = $msg_f if defined $msg_f;
 % $msg = $msg_s if defined $msg_s;
+% $msg = $msg_s."<br/>".$msg_f if defined $msg_s and defined $msg_s;
 
 % if (defined $msg) {
     <div class="container">

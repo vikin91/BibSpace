@@ -1,5 +1,5 @@
-Master: [![Build Status](https://travis-ci.org/vikin91/BibSpace.svg?branch=master)](https://travis-ci.org/vikin91/BibSpace)
-Dev: [![Build Status](https://travis-ci.org/vikin91/BibSpace.svg?branch=dev)](https://travis-ci.org/vikin91/BibSpace)
+* master: [![Build Status](https://travis-ci.org/vikin91/BibSpace.svg?branch=master)](https://travis-ci.org/vikin91/BibSpace)
+* dev: [![Build Status](https://travis-ci.org/vikin91/BibSpace.svg?branch=dev)](https://travis-ci.org/vikin91/BibSpace)
 
 # README #
 
@@ -26,9 +26,11 @@ sudo aptitude install mysql-server libmysqlclient-dev
 
 
 ### Download code
-git clone https://git@bitbucket.org/vikin9/hex64publicationlistmanager.git
-cd hex64publicationlistmanager
+git clone https://github.com/vikin91/BibSpace.git
+cd BibSpace
 mkdir backups
+mkdir log
+mkdir tmp
 
 ### Install Mojolicious
 curl -L https://cpanmin.us | perl - -M https://cpan.metacpan.org -n Mojolicious
@@ -57,42 +59,48 @@ chmod 555 ./backups
 ### Create mysql database and tables
 mysql -u root -p
 # Enter your mysql_root password and type then in mysql console
-    CREATE DATABASE hex64publicationlistmanager;
-    CREATE USER 'hex64plm'@'localhost' IDENTIFIED BY 'secret_password';
-    GRANT ALL PRIVILEGES ON hex64publicationlistmanager.* TO 'hex64plm'@'localhost';
+    CREATE DATABASE bibspace;
+    CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';
+    GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';
     FLUSH PRIVILEGES;
     quit;
-# Then again in linux shell
-mysql -u hex64plm -p hex64publicationlistmanager < mysql_schema_user.sql 
-mysql -u hex64plm -p hex64publicationlistmanager < mysql_schema.sql
-# enter your hex64plm mysql password (originally: secret_password)
 
 ### Edit config file
 nano ./config/default.conf
 # set: 
     db_host         => "localhost",
-    db_user         => "hex64plm",
-    db_database     => "hex64publicationlistmanager",
-    db_pass         => "secret_password", # or any other selected by you
+    db_user         => "bibspace_user",
+    db_database     => "bibspace",
+    db_pass         => "passw00rd", # or any other selected by you
 
 ### Run it!
-hypnotoad ./script/admin_api
+MOJO_MODE=production hypnotoad ./script/bibspace
 
 ### Stop it (if you need to)
-hypnotoad -s ./script/admin_api
+hypnotoad -s ./script/bibspace
 
 ### Run in developer mode
-morbo -l http://*:8080 ./script/admin_api
+MOJO_MODE=delevop morbo -l http://*:8080 ./script/bibspace
 
 ### See it in a browser
 http://YOUR_SERVER_IP:8080
 Admin login: pub_admin
 Admin password: asdf
 
+# TODO: Config Mailgun
+
 ```
 
 
 ### Changelog ###
+
+#### v1.4.3 19.05.2016 ####
+* Fixing multiple minor bugs
+* Improve redirects
+* Change name to BibSpace
+* Fix Travis CI script
+* Update installation and Readme
+* Add license
 
 #### v1.4.2 26.11.2015 ####
 
