@@ -37,12 +37,12 @@ my $t_logged_in = Test::Mojo->new('Hex64Publications');
 $t_logged_in->ua->max_redirects(10);
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
-    form        => { user   => 'pub_admin', pass => 'aaaa' }
+    form        => { user   => 'pub_admin', pass => 'asdf' }
 );
 
 $t_logged_in->get_ok('/')
     ->status_isnt(404)->status_isnt(500)
-    ->content_like(qr/Nice to see you here <em>Admin<\/em>/i);
+    ->content_like(qr/Nice to see you here Admin/i);
 
 
 
