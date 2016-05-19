@@ -4,9 +4,9 @@ use Test::More;
 use Test::Mojo;
 
 use Hex64Publications;
-use Hex64Publications::Core;
-use EntryObj;
-use MyUsers;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Functions::EntryObj;
+use Hex64Publications::Functions::MyUsers;
 
 
 
