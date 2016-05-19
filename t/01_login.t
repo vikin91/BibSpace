@@ -17,7 +17,7 @@ my $t_anyone = Test::Mojo->new('Hex64Publications');
 note "============ Testing start page ============";
 $t_anyone->get_ok('/')->status_is(200);
 $t_anyone->get_ok('/logout')->status_isnt(404)->status_isnt(500);
-$t_anyone->get_ok('/')->status_is(200)->text_like(qr/Please login or register/i);
+$t_anyone->get_ok('/')->status_is(200)->content_like(qr/Please login or register/i);
 
 note "============ Testing bad password ============";
 $t_anyone->post_ok(
@@ -28,7 +28,7 @@ $t_anyone->post_ok(
 $t_anyone->get_ok('/')
     ->status_isnt(404)
     ->status_isnt(500)
-    ->text_like(qr/Wrong username or password/i);
+    ->content_like(qr/Wrong username or password/i);
 
 
 
@@ -42,7 +42,7 @@ $t_logged_in->post_ok(
 
 $t_logged_in->get_ok('/')
     ->status_isnt(404)->status_isnt(500)
-    ->text_like(qr/Nice to see you here Admin/i);
+    ->content_like(qr/Nice to see you here <em>Admin<\/em>/i);
 
 
 
