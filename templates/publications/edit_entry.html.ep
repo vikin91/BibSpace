@@ -26,17 +26,15 @@
 
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
-           
+        
         <table class="table table-condensed table-hover">
-          <thead>
-          </thead>
-          <tbody>
-            %  if (defined $obj) {
-            <tr valign="top">  
+            <thead>
+            </thead>
+            <tbody>
+            %if (defined $obj) { 
                 <!-- BACK url for a row should be this page! -->
                 %= include 'publications_table_row', burl => $this_page_back_url, use_modal => 1, obj => $obj, j => '';
-            </tr>
-          %}
+            % }
         </tbody>
         </table>
         </div>
