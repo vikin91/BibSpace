@@ -67,32 +67,28 @@ sub startup {
 
     # my $config = $self->plugin('Config');
     my $config = $self->app->config;
+    my $mode = $self->app->mode;
+
     
+
+    say "Starting app in mode: $mode";    
+
     # load default
     $config = $self->plugin('Config' => {file => 'config/default.conf'});
 
-    if($self->app->home =~ /demo/){
-        say "Loading demo config version";
+    if($mode eq "demo"){
         $config = $self->plugin('Config' => {file => 'config/demo.conf'});
     }
-    elsif($address =~ m/146\.185\.144\.116/){  # TEST SERVER
-        try{
-            $config = $self->plugin('Config' => {file => 'config/test.conf'});    
-        }
-        catch{
-            $config = $self->plugin('Config' => {file => 'config/default.conf'});
-        };
+    elsif($mode eq "test-server"){
+        $config = $self->plugin('Config' => {file => 'config/test-server.conf'});    
     }
-    elsif($address =~ m/132\.187\.10\.5/){  # PRODUCTION SERVER
-        try{
-            $config = $self->plugin('Config' => {file => 'config/production.conf'});
-        }
-        catch{
-            $config = $self->plugin('Config' => {file => 'config/default.conf'});
-        };
+    elsif($mode eq "testing"){
+        $config = $self->plugin('Config' => {file => 'config/testing.conf'});    
+    }
+    elsif($mode eq "production"){
+        $config = $self->plugin('Config' => {file => 'config/production.conf'});
     }
     else{   # DEFAULT
-        # $config = $self->plugin('Config' => {file => 'lib/Hex64Publications/files/config/default.conf'});
         $config = $self->plugin('Config' => {file => 'config/default.conf'});
     }
 

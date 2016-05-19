@@ -46,7 +46,7 @@ sub do_mysql_db_backup_silent{
     my $self = shift;
     my $fname_prefix = shift || "normal";
 
-    say "call: core::do_mysql_db_backup_silent";
+    say "call: BackupFunctions::do_mysql_db_backup_silent";
 
     # my $backup_dbh = $self->app->backup_db;  
     my $dbh = $self->app->db;  
@@ -69,7 +69,12 @@ sub do_mysql_db_backup_silent{
 
     # say $ignored_tables_string;
 
-    `mysqldump -u $db_user -p$db_pass $db_database $ignored_tables_string > $dbfname`;
+    if ($db_pass =~ /^\s*$/) { # password empty
+        `mysqldump -u $db_user $db_database $ignored_tables_string > $dbfname`;
+    }
+    else{
+        `mysqldump -u $db_user -p$db_pass $db_database $ignored_tables_string > $dbfname`;
+    }
     if ($? == 0){
         return $dbfname;
     }
@@ -81,7 +86,7 @@ sub do_mysql_db_backup{
     my $self = shift;
     my $fname_prefix = shift || "normal";
 
-    say "call: core::do_mysql_db_backup";
+    say "call: BackupFunctions::do_mysql_db_backup";
 
     my $dbh = $self->app->db;
     my $dbfname = do_mysql_db_backup_silent($self, $fname_prefix);
@@ -209,6 +214,9 @@ sub do_restore_backup{
 
 
     my $cmd = "mysql -u $db_user -p$db_pass $db_database  < $fname";
+    if ($db_pass =~ /^\s*$/) { # password empty
+        $cmd = "mysql -u $db_user $db_database  < $fname";
+    }
     say "cmd: $cmd";
     `$cmd`;
 

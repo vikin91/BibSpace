@@ -1,4 +1,9 @@
 use Mojo::Base -strict;
+
+BEGIN {
+  $ENV{MOJO_MODE}    = 'testing';
+}
+
 use Test::More;
 use Test::Mojo;
 
@@ -32,7 +37,7 @@ my $t_logged_in = Test::Mojo->new('Hex64Publications');
 $t_logged_in->ua->max_redirects(10);
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
-    form        => { user   => 'pub_admin', pass => 'aaaa' }
+    form        => { user   => 'pub_admin', pass => 'asdf' }
 );
 
 $t_logged_in->get_ok('/')
