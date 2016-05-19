@@ -51,7 +51,7 @@ notifications:
     email: false
 
 script: 
-    - perl script/hex64-publications test
+    - perl script/bibspace -m testing test
 
 after_script:
     - mv config/default.conf.bak config/default.conf
