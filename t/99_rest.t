@@ -4,10 +4,12 @@ use Test::More;
 use Test::Mojo;
 
 use Hex64Publications;
-use Hex64Publications::Core;
-use EntryObj;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Functions::EntryObj;
+
 
 ok(1);
+# DO NOT RUN THE CODE BELOW - it is not ready
 
 # ############################ PREPARATION
 my $t_anyone = Test::Mojo->new('Hex64Publications');

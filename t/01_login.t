@@ -3,8 +3,8 @@ use Test::More;
 use Test::Mojo;
 
 use Hex64Publications;
-use Hex64Publications::Core;
-use EntryObj;
+use Hex64Publications::Controller::Core;
+use Hex64Publications::Functions::EntryObj;
 
 
 my $t_anyone = Test::Mojo->new('Hex64Publications');
