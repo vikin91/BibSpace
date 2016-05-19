@@ -54,7 +54,7 @@
       <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-user"></span> MasterUserID</span>
     </div>
     <div class="col-lg-4 col-md-4 col-xs-4">
-      <form class="form-horizontal" role="form" method="POST" action="/authors/add">
+      <form class="form-horizontal" role="form" method="POST" action="<%= url_for('/authors/add') %>">
           <div class="input-group">
             <input class="form-control" type="text" name="new_master" placeholder="vonSurnameFirstname Secondname"></input>
             <div class="input-group-btn">

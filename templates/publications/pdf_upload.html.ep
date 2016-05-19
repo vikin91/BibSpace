@@ -11,7 +11,7 @@
         <a class="btn btn-info pull-left" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
     </div>
     <div class="col-lg-6 col-md-6 col-xs-6">
-        <a class="btn btn-success pull-left" href="/publications/edit/<%=$id%>?back_url=<%=backurl_short($self)%>"><span class="glyphicon glyphicon-pencil"></span> Edit BibTeX of this entry</a>
+        <a class="btn btn-success pull-left" href="<%= url_for('/publications/edit/')%><%=$id%>?back_url=<%=backurl_short($self)%>"><span class="glyphicon glyphicon-pencil"></span> Edit BibTeX of this entry</a>
     </div>
   </div>
 
@@ -68,7 +68,7 @@
   <div class="col-lg-4 col-md-4 col-xs-4">
     <div class="panel panel-primary">
 
-      <form action="/publications/add_pdf/do/<%=$id%>" method="post"  enctype="multipart/form-data">
+      <form action="<%= url_for('/publications/add_pdf/do/')%><%=$id%>" method="post"  enctype="multipart/form-data">
         <div class="form-group">
           <label for="exampleInputFile">Paper file input</label>
           <input type="file" id="exampleInputFile" name="uploaded_file">
@@ -86,7 +86,7 @@
   <div class="col-lg-4 col-md-4 col-xs-4">
     <div class="panel panel-primary">
 
-      <form action="/publications/add_pdf/do/<%=$id%>" method="post"  enctype="multipart/form-data">
+      <form action="<%= url_for('/publications/add_pdf/do/')%><%=$id%>" method="post"  enctype="multipart/form-data">
         <div class="form-group">
           <label for="exampleInputFile">Slides file input</label>
           <input type="file" id="exampleInputFile" name="uploaded_file">

@@ -67,32 +67,40 @@ sub startup {
 
     # my $config = $self->plugin('Config');
     my $config = $self->app->config;
+    my $mode = $self->app->mode;
+
+    $self->hook(before_dispatch => sub {
+      my $c = shift;
+      $c->req->url->base->scheme('https') if $c->req->headers->header('X-Forwarded-HTTPS');
+
+      # TODO!!
+      # only for directory deployment!!
+      # push @{$c->req->url->base->path->trailing_slash(1)}, shift @{$c->req->url->path->leading_slash(0)};
+    });
+
     
+
+    say "Starting app in mode: $mode";    
+
     # load default
     $config = $self->plugin('Config' => {file => 'config/default.conf'});
 
-    if($self->app->home =~ /demo/){
-        say "Loading demo config version";
+    if($mode eq "demo"){
         $config = $self->plugin('Config' => {file => 'config/demo.conf'});
     }
-    elsif($address =~ m/146\.185\.144\.116/){  # TEST SERVER
-        try{
-            $config = $self->plugin('Config' => {file => 'config/test.conf'});    
-        }
-        catch{
-            $config = $self->plugin('Config' => {file => 'config/default.conf'});
-        };
+    elsif($mode eq "test-server"){
+        $config = $self->plugin('Config' => {file => 'config/test-server.conf'});    
     }
-    elsif($address =~ m/132\.187\.10\.5/){  # PRODUCTION SERVER
-        try{
-            $config = $self->plugin('Config' => {file => 'config/production.conf'});
-        }
-        catch{
-            $config = $self->plugin('Config' => {file => 'config/default.conf'});
-        };
+    elsif($mode eq "testing"){
+        $config = $self->plugin('Config' => {file => 'config/testing.conf'});    
+    }
+    elsif($mode eq "production"){
+        $config = $self->plugin('Config' => {file => 'config/production.conf'});
+    }
+    elsif($mode eq "development"){
+        $config = $self->plugin('Config' => {file => 'config/development.conf'});
     }
     else{   # DEFAULT
-        # $config = $self->plugin('Config' => {file => 'lib/Hex64Publications/files/config/default.conf'});
         $config = $self->plugin('Config' => {file => 'config/default.conf'});
     }
 
@@ -131,33 +139,27 @@ sub startup {
 
     $self->helper(backurl => sub {
         my $s = shift; 
-        # say "url: ".$s->req->url;
-        # say "path: ".$s->req->url->path;
-        # say "base: ".$s->req->url->base;
-        
-        # my $burl = "?back_url=".$s->req->url->base."".$self->proxy_prefix."".$s->req->url->path;
-        # my $burl = "?back_url=".$s->req->url->to_abs;
-        my $short_url = $s->req->url;
-        # say "helper(backurl: short_url: $short_url";
-        if ($short_url eq '/'){
-            $short_url = $config->{proxy_prefix};
-        }
+        my $short_url = $s->backurl_short;
         my $burl = "?back_url=".$short_url;
         $burl =~ s/&/%26/g;
         $burl;
     });
 
+    $self->helper(get_referrer => sub {
+        my $s = shift; 
+        my $ref = $s->req->headers->referrer;
+        $ref = $s->url_for('/') if $ref eq '';
+        return $ref;
+    });
+
 
     $self->helper(backurl_short => sub {
-        my $s = shift; 
-        # return $s->req->url->base."".$self->proxy_prefix."".$s->req->url->path;
-        # return $s->req->url->to_abs;
-        my $short_url = $s->req->url;
-        # say "helper(backurl_short: short_url: $short_url";
-        if ($short_url eq '/'){
-            $short_url = $config->{proxy_prefix};
-        }
-        return $short_url;
+        my $s = shift;         
+        # say "url: ".$s->req->url;
+        # say "path: ".$s->req->url->path;
+        # say "base: ".$s->req->url->base;
+        # say "url_with: ".$s->url_with;
+        return $s->url_with;
     });
 
     $self->helper(is_manager => sub {

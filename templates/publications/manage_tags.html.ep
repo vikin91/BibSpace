@@ -16,7 +16,7 @@
         <div class="col-lg-1"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
             <a class="btn btn-default" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
-            <a class="btn btn-default" href="/publications/regenerate/<%=$id%><%=backurl()%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
+            <a class="btn btn-default" href="<%= url_for('/publications/regenerate/')%><%=$id%><%=backurl()%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
         </div>
     </div>
 
@@ -47,7 +47,7 @@
                 % foreach my $tobj (get_tags_of_type_for_paper($eid, $ttobj->{id})){
                     <div class="btn-group">
 
-                        <a type="button" class="btn btn-default" href="/publications?tag=<%= $tobj->{name} %>"><span class="glyphicon glyphicon-tag"></span> <%= $tobj->{name} %> <i class="fa fa-external-link"></i></a>
+                        <a type="button" class="btn btn-default" href="<%= url_for('/publications?tag=')%><%= $tobj->{name} %>"><span class="glyphicon glyphicon-tag"></span> <%= $tobj->{name} %> <i class="fa fa-external-link"></i></a>
                         <a class="btn btn-default" href='/publications/<%= $eid %>/remove_tag/<%= $tobj->{id} %><%=backurl%>'><span class="glyphicon glyphicon-remove" style="color: red;"></span><span style="color: #FFFFFF;">-</span></a>
                     </div>
                 % }
@@ -93,7 +93,7 @@
                     <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" title="Already existing tags will be assigned. Not existing wil be added and assigned."></span></h3>
                 </div>
                 <div class="panel-body">
-                <form role="form" action="/tags/add_and_assign/<%=$eid%>">
+                <form role="form" action="<%= url_for('/tags/add_and_assign/')%><%=$eid%>">
                     <div class="form-group">
                         <label for="user">Tags</label>
                         <input type="text" class="form-control" style="border-radius:0px" name="new_tags" id="new_tags" placeholder="Separate tags using semicolon. Spaces will be changed to underscores.">

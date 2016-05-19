@@ -27,9 +27,9 @@
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <a class="btn btn-info" href="/backup/do"><i class="fa fa-hdd-o"></i> Do whole DB backup <i class="fa fa-hdd-o"></i></a>
+            <a class="btn btn-info" href="<%= url_for('/backup/do')%>"><i class="fa fa-hdd-o"></i> Do whole DB backup <i class="fa fa-hdd-o"></i></a>
             % if(is_admin()){
-                <a class="btn btn-danger" href="/backup/cleanup"><span class="glyphicon glyphicon-flash" style="color: white;"></span> Cleanup old and broken backups </a>
+                <a class="btn btn-danger" href="<%= url_for('/backup/cleanup')%>"><span class="glyphicon glyphicon-flash" style="color: white;"></span> Cleanup old and broken backups </a>
             % }
         </div>
     </div>
@@ -87,7 +87,7 @@
                                     </div>
                                     <div class="modal-body">
                                         <div class="modal-footer">
-                                          <a href="/restore/delete/<%=$id%>?back_url=<%= $self->req->url->to_abs %>" class="btn btn-danger"> Yes, delete it <span class="glyphicon glyphicon-fire"></span>
+                                          <a href="<%= url_for('/restore/delete/')%><%=$id%>?back_url=<%= $self->req->url->to_abs %>" class="btn btn-danger"> Yes, delete it <span class="glyphicon glyphicon-fire"></span>
                                           </a>
                                           <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, I want to keep it <span class="glyphicon glyphicon-heart"></span> </button></a>
                                         </div>
@@ -123,7 +123,7 @@
                                         </p>
 
                                     <div class="modal-footer">
-                                      <a href="/restore/do/<%=$id%>?back_url=<%= $self->req->url->to_abs %>" class="btn btn-warning"> Yes, restore <span class="glyphicon glyphicon-import"></span>
+                                      <a href="<%= url_for('/restore/do/')%><%=$id%>?back_url=<%= $self->req->url->to_abs %>" class="btn btn-warning"> Yes, restore <span class="glyphicon glyphicon-import"></span>
                                       </a>
                                       <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, maybe later <span class="glyphicon glyphicon-leaf"></span> </button></a>
                                     </div>
@@ -145,7 +145,7 @@
                     <td><p class="btn btn-default btn-sm" ><i class="fa fa-hdd-o fa-2x"></i> <%= $fname %></p></td>
                     % my $s_fname = $fname;
                     % $s_fname =~ s/\.\/backups\///g;
-                    <td><a class="btn btn-default btn-sm" href="/backup/download/<%= $s_fname %>"><span class="glyphicon glyphicon-save"></span> Download backup </a></td>
+                    <td><a class="btn btn-default btn-sm" href="<%= url_for('/backup/download/')%><%= $s_fname %>"><span class="glyphicon glyphicon-save"></span> Download backup </a></td>
                     % my @ct = split(/ /,$ctime);
                     <td><a class="btn btn-default btn-sm" ><i class="fa fa-calendar"></i> <%= $ct[0] %> <span class="glyphicon glyphicon-time"></span> <%= $ct[1] %></a>
                     </td>

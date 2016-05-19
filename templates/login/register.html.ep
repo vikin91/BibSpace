@@ -15,7 +15,7 @@
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            <form role="form" method="POST" action="/register">
+            <form role="form" method="POST" action="<%= url_for('/register') %>">
                 <div class="form-group">
                     <label for="login">Login</label>
                     <input type="text" class="form-control" name="login" id="login" placeholder="Enter your login" value="<%=$login%>">

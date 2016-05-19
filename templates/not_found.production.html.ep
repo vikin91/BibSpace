@@ -10,7 +10,7 @@
 
   <body>
   <h1>Error 404...</h1>
-  <p>The address of the resource is incorrect or the resource does not exist. Please return <a href="/">home</a> and use the correct link.</p>
+  <p>The address of the resource is incorrect or the resource does not exist. Please return <a href="<%= url_for('/')%>">home</a> and use the correct link.</p>
       %= include 'global_footer'
   
   </body>

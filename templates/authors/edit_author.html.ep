@@ -17,18 +17,18 @@
             <a class="btn btn-info pull-right" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            <a class="btn btn-success" href="/publications?author=<%= $master %>">
+            <a class="btn btn-success" href="<%= url_for('/publications?author=')%><%= $master %>">
                 <i class="fa fa-files-o"></i> Show all <span class="badge"><%= num_pubs_for_author($id)%></span> papers of this author
             </a>
-            <a class="btn btn-info" href="/publications?author=<%= $master %>&entry_type=talk">
+            <a class="btn btn-info" href="<%= url_for('/publications?author=')%><%= $master %>&entry_type=talk">
                 <i class="fa fa-microphone"></i> Show all talks of this author
             </a>
 
-            <a class="btn btn-default btn-sm" href="/landing/publications?author=<%= $master %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span></a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications?author=')%><%= $master %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span></a>
             
-            <a class="btn btn-default btn-sm" href="/landing-years/publications?author=<%= $master %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications?author=')%><%= $master %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
 
-            <a class="btn btn-default btn-sm" href="/read/bibtex?author=<%= $master %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> BibTeX
+            <a class="btn btn-default btn-sm" href="<%= url_for('/read/bibtex?author=')%><%= $master %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> BibTeX
             </a>
 
             
@@ -40,7 +40,7 @@
         <div class="col-lg-8 col-md-8 col-xs-8">
             % my @ttobjs = get_all_tag_types($self);
             % foreach my $ttobj (@ttobjs){
-                <a class="btn btn-default" href="/publications/untagged/<%= $id %>/<%=$ttobj->{id}%>">
+                <a class="btn btn-default" href="<%= url_for('/publications/untagged/')%><%= $id %>/<%=$ttobj->{id}%>">
                     <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without <%=$ttobj->{name}%>
                 </a>
             % }
@@ -57,7 +57,7 @@
           <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-user"></span> Master ID</span>
         </div>
         <div class="col-lg-4 col-md-4 col-xs-4">
-          <form class="form-horizontal" role="form" method="POST" action="/authors/edit">
+          <form class="form-horizontal" role="form" method="POST" action="<%= url_for('/authors/edit') %>">
               <div class="input-group">
                 <input type="hidden" name="master" value="<%= $master %>"></input>
                 <input type="hidden" name="id" value="<%= $id %>"></input>
@@ -97,7 +97,7 @@
             </div>
             % $i++;
         %}
-        <form class="form-horizontal" role="form" method="POST" action="/authors/edit">
+        <form class="form-horizontal" role="form" method="POST" action="<%= url_for('/authors/edit') %>">
           <div class="input-group">
             <input type="hidden" name="master" value="<%= $master %>"></input>
             <input type="hidden" name="id" value="<%= $id %>"></input>
@@ -119,7 +119,7 @@
           <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-eye-open"></span> Visibility</span>
         </div>
         <div class="col-lg-4 col-md-4 col-xs-4">
-            <a href="/authors/toggle_visibility/<%=$id%><%=backurl($self)%>">
+            <a href="<%= url_for('/authors/toggle_visibility/')%><%=$id%><%=backurl($self)%>">
             <div class="btn-group" data-toggle="tooltip" data-placement="bottom" title="Toggle visibility">
             % if ($disp eq '1'){
               <span class="btn btn-success active"><span class="glyphicon glyphicon-eye-open"></span></span>
@@ -151,7 +151,7 @@
             <tr>
                 <td>
                     <div class="btn-group pull-right">
-                        <a type="button" class="btn btn-default" href="/teams/edit/<%=$team_id%><%=backurl($self)%>">
+                        <a type="button" class="btn btn-default" href="<%= url_for('/teams/edit/')%><%=$team_id%><%=backurl($self)%>">
                             <i class="fa fa-users" style="color: #5CB85C;"></i> <%= $team %>  <i class="fa fa-external-link"></i>
                         </a>
                         <a class="btn btn-default" href='/authors/<%=$id%>/remove_from_team/<%= $team_id %><%=backurl($self)%>'  data-toggle="tooltip" data-placement="bottom" title="Remove from team"><span class="glyphicon glyphicon-minus" style="color: red;"></span> <span style="color: white">|</span></a>
@@ -182,7 +182,7 @@
                                 </div>
                                 <div class="modal-body">
 
-                                    <form class="form-inline" role="form" method="POST" action="/authors/edit_membership_dates">
+                                    <form class="form-inline" role="form" method="POST" action="<%= url_for('/authors/edit_membership_dates') %>">
                                         <div class="form-group">
                                             <input type="hidden" name="tid" value="<%= $team_id %>"></input>
                                             <input type="hidden" name="aid" value="<%= $id %>"></input>
@@ -208,7 +208,7 @@
                     <!-- END OF MODAL EDIT DATES OF MEMBERSHIP -->
                 </td>
                 <td>
-                    <a class="btn btn-default" href="/publications?author=<%= $master %>&team=<%= $team %>">
+                    <a class="btn btn-default" href="<%= url_for('/publications?author=')%><%= $master %>&team=<%= $team %>">
                         Show  <span class="badge"><%= num_pubs_for_author_and_team($id, $team_id)%> <i class="fa fa-files-o"></i></span> of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i> 
                     </a>
                 </td>
@@ -233,7 +233,7 @@
             % foreach my $team (@all_teams){
             %   my $team_id = $all_teams_ids[$jj];  
                 <div class="btn-group">
-                    <a type="button" class="btn btn-default btn-sm" href="/teams/edit/<%=$team_id%><%=backurl($self)%>">
+                    <a type="button" class="btn btn-default btn-sm" href="<%= url_for('/teams/edit/')%><%=$team_id%><%=backurl($self)%>">
                         <span style="color: gray">
                             <i class="fa fa-users"></i> <%= $team %>  <i class="fa fa-external-link"></i>
                         </span>
@@ -259,7 +259,7 @@
                     <span class="btn btn-default">
                       <span class="glyphicon glyphicon-tag"></span> <%= get_tag_name($tag_id) %> 
                     </span>
-                    <a class="btn btn-info" href="/publications?author=<%=$master%>&tag=<%= get_tag_name($tag_id) %>">
+                    <a class="btn btn-info" href="<%= url_for('/publications?author=')%><%=$master%>&tag=<%= get_tag_name($tag_id) %>">
                       <span class="glyphicon glyphicon-file"></span>
                       <span class="badge"><%=num_pubs_for_author_and_tag($id, $tag_id)%></span>
                     </a>
@@ -299,7 +299,7 @@
                   </pre>
                   
                   <div class="modal-footer">
-                    <a class="btn btn-warning" href="/authors/delete/<%=$id%>/force<%=backurl()%>"><span class="glyphicon glyphicon-trash"></span> Yes, delete this author!</a>
+                    <a class="btn btn-warning" href="<%= url_for('/authors/delete/')%><%=$id%>/force<%=backurl()%>"><span class="glyphicon glyphicon-trash"></span> Yes, delete this author!</a>
                     <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-info">No, leave him alone</a>
                   </div>
               </div>

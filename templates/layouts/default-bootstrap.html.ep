@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <!--default0boot-->
-    %= include 'head-admin'
+    %= include 'head'
     <%= content_for 'header' %>
 
     <body>

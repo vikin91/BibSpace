@@ -5,7 +5,7 @@
   <div class="row">
       <div class="col-lg-1 col-md-1 col-xs-1"></div>
       <div class="col-lg-6 col-md-6 col-xs-6">
-        <a class="btn btn-success" href="/tagtypes"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all tag types</a>
+        <a class="btn btn-success" href="<%= url_for('/tagtypes')%>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all tag types</a>
       </div>
   </div>
   <br>
@@ -18,7 +18,7 @@
 	  			</div>
 	  			<div class="panel-body">
 	  			<!-- FORM -->
-	   			<form role="form" method="post" action="/tagtypes/add">
+	   			<form role="form" method="post" action="<%= url_for('/tagtypes/add/')%>">
 	  				<div class="form-group">
 	    				<label for="user">New tag type</label>
 	    				<input type="text" class="form-control" style="border-radius:0px" name="new_name" id="new_name" placeholder="Porpose a compact name. Spaces will be changed to underscores.">

@@ -5,7 +5,7 @@
   <div class="row">
       <div class="col-lg-1 col-md-1 col-xs-1"></div>
       <div class="col-lg-6 col-md-6 col-xs-6">
-        <a class="btn btn-success" href="/types"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all types</a>
+        <a class="btn btn-success" href="<%= url_for('/types')%>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all types</a>
       </div>
   </div>
   <br>
@@ -18,7 +18,7 @@
 	  			</div>
 	  			<div class="panel-body">
 	  			<!-- FORM -->
-	   			<form role="form" method="POST" action="/types/add">
+	   			<form role="form" method="POST" action="<%= url_for('/types/add')%>">
 	  				<div class="form-group">
 	    				<label for="new_type">New Type</label>
 	    				<input type="text" class="form-control" style="border-radius:0px" name="new_type" id="new_type" placeholder="Name the new type. You will define the mapping to BibTeX types later.">

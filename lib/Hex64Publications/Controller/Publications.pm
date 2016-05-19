@@ -29,14 +29,16 @@ use Mojo::Log;
 sub get_back_url {
     my $self = shift;
     my $back_url = shift;
+
     my $ref = $self->req->headers->referrer;
+    say "get_back_url referrer:".$ref;
     
     my $to_return = $back_url; # default
 
-    $to_return = $ref if !defined $back_url;
-    $to_return = $ref if $back_url eq '';
-    $to_return = $ref if $back_url eq $self->req->url->to_abs;
-    $to_return = $ref if $to_return eq "";
+    # $to_return = $ref if !defined $back_url;
+    # $to_return = $ref if $back_url eq '';
+    # $to_return = $ref if $back_url eq $self->req->url->to_abs;
+    # $to_return = $ref if $to_return eq "";
 
     say "get_back_url returns:".$to_return."; for input: $back_url";
     return $to_return;
@@ -808,8 +810,10 @@ sub landing_years_obj{
 
     # WARNING, it depends on routing! anti-pattern! Correct it some day
     # todo: this code is duplicated! fix it!
+    # FIXME! TODO! Catastrophe! use here url_with to fix it!!
 
-    my $url = "/l/p?".$self->req->url->query;
+
+    my $url = $self->url_for('/l/p')."?".$self->req->url->query;
     my $url_msg = "Switch to grouping by types";
     my $switchlink = '<a class="bibtexitem" href="'.$url.'">'.$url_msg.'</a>';
 
@@ -974,7 +978,7 @@ sub landing_types_obj{
     
 
     # WARNING, it depends on routing! anti-pattern! Correct it some day
-    my $url = "/ly/p?".$self->req->url->query;
+    my $url = $self->url_for('/ly/p')."?".$self->req->url->query;
     my $url_msg = "Switch to grouping by years";
     my $switchlink = '<a class="bibtexitem" href="'.$url.'">'.$url_msg.'</a>';
 
@@ -1272,13 +1276,16 @@ sub add_pdf_post{
 
 
         # my $file_url = $self->req->url->base.$base_url.$file_path; 
-        my $file_url;
-        if($self->config->{proxy_prefix} eq '/'){
-            $file_url = $self->req->url->base.$self->config->{proxy_prefix}.$file_path;
-        }
-        else{
-            $file_url = $self->req->url->base.$self->config->{proxy_prefix}."/".$file_path;
-        }
+
+        # TODO: Check me for directory deployment!
+        my $file_url = $self->url_for('/')."/".$file_path;
+        
+        # if($self->config->{proxy_prefix} eq '/'){
+        #     $file_url = $self->req->url->base.$self->config->{proxy_prefix}.$file_path;
+        # }
+        # else{
+        #     $file_url = $self->req->url->base.$self->config->{proxy_prefix}."/".$file_path;
+        # }
 
         say "file_url $file_url";
 
@@ -1317,7 +1324,8 @@ sub regenerate_html_for_all {
 
   $self->write_log("regenerate_html_for_all has finished");
 
-  $self->redirect_to($back_url);
+  my $referrer = $self->get_referrer();
+    $self->redirect_to($referrer);
 };
 ####################################################################################
 sub regenerate_html_for_all_force {
@@ -1337,21 +1345,21 @@ sub regenerate_html_for_all_force {
     }
 
     $self->write_log("regenerate_html_for_all FORCE has finished");
-    $self->redirect_to($back_url);
+    my $referrer = $self->get_referrer();
+    $self->redirect_to($referrer);
 };
 ####################################################################################
 sub regenerate_html {
 	say "CALL: regenerate_html ";
     my $self = shift;
     my $id = $self->param('id');
-    my $back_url = $self->param('back_url');
 
+    
     my $dbh = $self->app->db;
-
-$back_url = $self->get_back_url($back_url);
-
     generate_html_for_id($dbh, $id);
-    $self->redirect_to($back_url);
+
+    my $referrer = $self->get_referrer();
+    $self->redirect_to($referrer);
 };
 
 ####################################################################################
@@ -1787,7 +1795,7 @@ sub post_add_store {
   if(defined $key and $key =~ /^[+-]?\d+$/ and $key == -1){   # generate bibtex errors
 
       $code = -1;
-      $msg = get_adding_editing_message_for_error_code($code, $existing_id);
+      $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
       $self->stash(bib  => $new_bib, key => $key, existing_id => '', msg => $msg, exit_code => $code, preview => $html_preview);
       $self->render(template => 'publications/add_entry');
       return;
@@ -1801,7 +1809,7 @@ sub post_add_store {
       if($existing_id > 0 ){
           $code = 3; # generate key-exists msg
       }
-      $msg = get_adding_editing_message_for_error_code($code, $existing_id);
+      $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
       $self->stash(bib  => $new_bib, key => $key, existing_id => $existing_id, msg => $msg, exit_code => $code, preview => $html_preview);
       $self->render(template => 'publications/add_entry');
       return;
@@ -1827,7 +1835,7 @@ sub post_add_store {
       }
   }
 
-  $msg = get_adding_editing_message_for_error_code($code, $existing_id);
+  $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
 
   $self->stash(bib  => $new_bib, existing_id => $existing_id, key => $key, msg =>$msg, exit_code => $code, preview => $html_preview);
   $self->render(template => 'publications/add_entry');
@@ -1836,6 +1844,7 @@ sub post_add_store {
 
 ####################################################################################
 sub get_adding_editing_message_for_error_code {
+    my $self = shift;
     my $exit_code = shift;
     my $existing_id = shift || -1;
 
@@ -1857,7 +1866,7 @@ sub get_adding_editing_message_for_error_code {
     elsif($exit_code eq '3'){
         return 'The proposed key exists already in DB under ID <button class="btn btn-danger btn-xs" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> '.$existing_id.'</button>. 
                     <br>
-                    <a class="btn btn-info btn-xs" href="/publications/get/'.$existing_id.'" target="_blank"><span class="glyphicon glyphicon-search"></span>Show me the existing entry ID '.$existing_id.' in a new window</a>
+                    <a class="btn btn-info btn-xs" href="'.$self->url_for('/publications/get/'.$existing_id.'').'" target="_blank"><span class="glyphicon glyphicon-search"></span>Show me the existing entry ID '.$existing_id.' in a new window</a>
                     <br>
                     Entry has not been saved. Please pick another BibTeX key.';
     }

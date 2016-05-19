@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <!--default-->
-    %= include 'head-user'
+    %= include 'head'
     <%= content_for 'header' %>
 
     <body>

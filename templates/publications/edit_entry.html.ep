@@ -74,7 +74,7 @@
                 <br>
                 You are editing ID <button class="btn btn-danger btn-xs" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> <%= $id %></button>.
                 <br>
-                <a class="btn btn-info btn-xs" href="/publications/get/<%=$existing_id%>" target="_blank"><span class="glyphicon glyphicon-search"></span>Show me the existing entry ID <%= $existing_id %> in a new window</a>
+                <a class="btn btn-info btn-xs" href="<%= url_for('/publications/get/')%><%=$existing_id%>" target="_blank"><span class="glyphicon glyphicon-search"></span>Show me the existing entry ID <%= $existing_id %> in a new window</a>
                 <br>
                 Entry has not been saved. Please pick another BibTeX key.
             </div>
@@ -99,7 +99,7 @@
 
 
     <div class="row">
-        <form class="form-horizontal" role="form" action="/publications/edit/store/<%=$id%>?back_url=<%=$back_url%>" method="post">
+        <form class="form-horizontal" role="form" action="<%= url_for('/publications/edit/store')%><%=$id%>?back_url=<%=$back_url%>" method="post">
             <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
                 <div class="form-group">
                     <label for="bibtex">BibTeX code</label>

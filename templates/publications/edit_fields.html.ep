@@ -5,11 +5,11 @@
   % my %h = %{$fields_hash};
 
 
-  <a href="/publications">[Go back]</a>
+  <a href="<%= url_for('/publications')%>">[Go back]</a>
   <p>Editing</p>
   <p><%= $msg %></p>
 
-  <form action="/store/publication/adv/<%= $key%>" method="post">
+  <form action="<%= url_for('/store/publication/adv/')%><%= $key%>" method="post">
   <table>
   % for my $k (keys %h){
     % my $v = $h{$k};

@@ -11,7 +11,7 @@
                 <div class="panel-heading"><h3 class="panel-title"><strong>Sign in </strong></h3></div>
                 <div class="panel-body">
 
-                    <form role="form" method="POST" action="/do_login">
+                    <form role="form" method="POST" action="<%= url_for('/do_login') %>">
                         <div class="form-group">
                             <label for="user">Username (not e-mail!)</label>
                             <input type="text" class="form-control" style="border-radius:0px" name="user" id="user" placeholder="Enter username">
@@ -24,7 +24,7 @@
                     </form>
                 </div>
             </div>
-            <a href="/forgot">I forgot my password</a>
+            <a href="<%= url_for('/forgot') %>">I forgot my password</a>
         </div> 
     </div> 
 </div>

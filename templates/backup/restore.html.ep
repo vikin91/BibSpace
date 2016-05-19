@@ -10,7 +10,7 @@
 
 <h1>Create backup</h1>
 
-<a class="btn btn-info" href="/backup?back_url=<%= $self->req->url->to_abs %>"><i class="fa fa-hdd-o"></i> Do whole DB backup <i class="fa fa-hdd-o"></i></a>
+<a class="btn btn-info" href="<%= url_for('/backup?back_url=')%><%= $self->req->url->to_abs %>"><i class="fa fa-hdd-o"></i> Do whole DB backup <i class="fa fa-hdd-o"></i></a>
 
 <h1>Restore DB backup</h1>
 
@@ -43,7 +43,7 @@
                   </div>
                   <div class="modal-body">
                       <div class="modal-footer">
-                        <a href="/restore/delete/<%=$id%>?back_url=<%= $self->req->url->to_abs %>" class="btn btn-danger"> Yes, delete it <span class="glyphicon glyphicon-fire"></span>
+                        <a href="<%= url_for('/restore/delete/')%><%=$id%>?back_url=<%= $self->req->url->to_abs %>" class="btn btn-danger"> Yes, delete it <span class="glyphicon glyphicon-fire"></span>
                         </a>
                         <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, I want to keep it <span class="glyphicon glyphicon-heart"></span> </button></a>
                       </div>
@@ -65,7 +65,7 @@
                        	<p><span class="glyphicon glyphicon-warning-sign"  style="color: orange;"></span> <span class="label label-warning">Warning</span> Current state of the DB will be lost forever <span class="glyphicon glyphicon-warning-sign"  style="color: orange;"></span></p>
 
                       <div class="modal-footer">
-                        <a href="/restore/do/<%=$id%>?back_url=<%= $self->req->url->to_abs %>" class="btn btn-warning"> Yes, restore <span class="glyphicon glyphicon-import"></span>
+                        <a href="<%= url_for('/restore/do/')%><%=$id%>?back_url=<%= $self->req->url->to_abs %>" class="btn btn-warning"> Yes, restore <span class="glyphicon glyphicon-import"></span>
                         </a>
                         <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, maybe later <span class="glyphicon glyphicon-leaf"></span> </button></a>
                       </div>

@@ -16,28 +16,28 @@
 
             <br>
 
-            <a class="btn btn-default" href="/cron/day" data-toggle="tooltip" data-placement="right" title="Run manually routines run during the day">
+            <a class="btn btn-default" href="<%= url_for('/cron/day')%>" data-toggle="tooltip" data-placement="right" title="Run manually routines run during the day">
                 <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Cron day 
                 (last <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> <%=$lr_0%> h)
             </a>
 
             <br>
 
-            <a class="btn btn-default" href="/cron/night" data-toggle="tooltip" data-placement="right" title="Run manually routines run during the night (once per 24h)">
+            <a class="btn btn-default" href="<%= url_for('/cron/night')%>" data-toggle="tooltip" data-placement="right" title="Run manually routines run during the night (once per 24h)">
                 <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Cron night 
                 (last <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> <%=$lr_1%> h)
             </a>
 
             <br>
 
-            <a class="btn btn-default" href="/cron/week" data-toggle="tooltip" data-placement="right" title="Run manually routines run once per week">
+            <a class="btn btn-default" href="<%= url_for('/cron/week')%>" data-toggle="tooltip" data-placement="right" title="Run manually routines run once per week">
                 <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Cron week 
                 (last <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> <%=$lr_2%> h)
             </a>
 
             <br>
 
-            <a class="btn btn-default" href="/cron/month" data-toggle="tooltip" data-placement="right" title="Run manually routines run once per month">
+            <a class="btn btn-default" href="<%= url_for('/cron/month')%>" data-toggle="tooltip" data-placement="right" title="Run manually routines run once per month">
                 <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> Cron month 
                 (last <span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> <%=$lr_3%> h)
             </a>

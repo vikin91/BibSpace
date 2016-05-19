@@ -23,19 +23,19 @@
 			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
 			Resources available without login
 			<ul>
-                <li><a href="/read/publications/get/ID">/read/publications/get/ID</a> (ID = integer_ (alias <a href="/r/p/get/ID">/p/get/ID</a>)</li>
-				<li><a href="/read/publications">/read/publications?[filter_expr]</a> (alias <a href="/r/p">/r/p</a>)</li>
-				<li><a href="/read/bibtex">/read/bibtex?[filter_expr]</a> (alias <a href="/r/b">/r/b</a>)</li>
-    			<li><a href="/landing/publications">/landing/publications?[filter_expr][modifiers]</a> (alias <a href="/l/p">/l/p</a>)</li>
-    			<li><a href="/landing-years/publications?navbar=1">/landing-years/publications?[filter_expr][&modifier]</a>  (alias <a href="/ly/p">/ly/p</a>)</li>
+                <li><a href="<%= url_for('/read/publications/get/ID')%>">/read/publications/get/ID</a> (ID = integer_ (alias <a href="<%= url_for('/r/p/get/ID')%>">/p/get/ID</a>)</li>
+				<li><a href="<%= url_for('/read/publications')%>">/read/publications?[filter_expr]</a> (alias <a href="<%= url_for('/r/p')%>">/r/p</a>)</li>
+				<li><a href="<%= url_for('/read/bibtex')%>">/read/bibtex?[filter_expr]</a> (alias <a href="<%= url_for('/r/b')%>">/r/b</a>)</li>
+    			<li><a href="<%= url_for('/landing/publications')%>">/landing/publications?[filter_expr][modifiers]</a> (alias <a href="<%= url_for('/l/p')%>">/l/p</a>)</li>
+    			<li><a href="<%= url_for('/landing-years/publications?navbar=1')%>">/landing-years/publications?[filter_expr][&modifier]</a>  (alias <a href="<%= url_for('/ly/p')%>">/ly/p</a>)</li>
                 <li>
-                    <a href="/read/authors-for-tag/tag/team">/read/authors-for-tag/tag/team</a>  (alias <a href="/r/a4t/tag/team">/r/a4t/tag/team</a>)
+                    <a href="<%= url_for('/read/authors-for-tag/tag/team')%>">/read/authors-for-tag/tag/team</a>  (alias <a href="<%= url_for('/r/a4t/tag/team')%>">/r/a4t/tag/team</a>)
                 </li>
                 <li>
-                    <a href="/read/tags-for-author/author">/read/tags-for-author/author</a>  (alias <a href="/r/t4a/author_id">/r/t4a/author</a>)
+                    <a href="<%= url_for('/read/tags-for-author/author')%>">/read/tags-for-author/author</a>  (alias <a href="<%= url_for('/r/t4a/author_id')%>">/r/t4a/author</a>)
                 </li>
                 <li>
-                    <a href="/read/tags-for-team/1">/read/tags-for-team/team</a>  (alias <a href="/r/t4t/team_id">/r/t4t/team_id</a>)
+                    <a href="<%= url_for('/read/tags-for-team/1')%>">/read/tags-for-team/team</a>  (alias <a href="<%= url_for('/r/t4t/team_id')%>">/r/t4t/team_id</a>)
                 </li>
                 
 			</ul>

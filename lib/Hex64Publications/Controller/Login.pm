@@ -10,6 +10,8 @@ use Data::Dumper;
 # for _under_ -checking if user is logged in to access other pages
 sub check_is_logged_in {
     my $self = shift;
+    return 1 if $self->app->mode eq 'demo';
+
     return 1 if $self->session('user');
     $self->redirect_to('badpassword');
     return undef;
@@ -19,7 +21,8 @@ sub check_is_logged_in {
 sub under_check_is_manager {
     my $self = shift;
     my $dbh = $self->app->db;
-
+    
+    return 1 if $self->app->mode eq 'demo';
     return 1 if $self->check_is_manager();
 
 
@@ -40,7 +43,8 @@ sub check_is_manager {
 sub under_check_is_admin {
     my $self = shift;
     my $dbh = $self->app->db;
-
+    
+    return 1 if $self->app->mode eq 'demo';
     return 1 if $self->check_is_admin();
 
     $self->render(text => 'Your need _admin_ rights to access this page.');

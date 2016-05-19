@@ -85,7 +85,7 @@
             </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            <form class="form-horizontal" role="form" method="POST" action="/types/store_description">
+            <form class="form-horizontal" role="form" method="POST" action="<%= url_for('/types/store_description')%>">
               <div class="input-group">
                 <input type="hidden" name="our_type" value="<%= $type %>"></input>
                 <input type="hidden" name="back_url" value="<%= $back_url %>"></input>
@@ -107,7 +107,7 @@
             </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            <a href="/types/toggle/<%= $type %>">
+            <a href="<%= url_for('/types/toggle/')%><%= $type %>">
             <div class="btn-group" data-toggle="tooltip" data-placement="bottom" title="Toggle appearing on landing page">
             % if(helper_get_landing_for_our_type($type) == 1){
                 <span class="btn btn-success active">Yes</span>

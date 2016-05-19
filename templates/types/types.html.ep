@@ -12,7 +12,7 @@
 
     <div class="row">
         <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
-            <a class="btn btn-success" href="/types/add"><span class="glyphicon glyphicon-plus"></span> Define new type</a>
+            <a class="btn btn-success" href="<%= url_for('/types/add')%>"><span class="glyphicon glyphicon-plus"></span> Define new type</a>
         </div>
     </div>
 
@@ -39,15 +39,15 @@
                 <tr>
                     <td>
                         <div class="btn-group">
-                            <a class="btn btn-success btn-sm" href="/types/manage/<%=$otype%><%=backurl()%>" data-toggle="tooltip" data-placement="top" title="Edit types aggregation"><span class="glyphicon glyphicon-pencil"></span>
+                            <a class="btn btn-success btn-sm" href="<%= url_for('/types/manage/')%><%=$otype%><%=backurl()%>" data-toggle="tooltip" data-placement="top" title="Edit types aggregation"><span class="glyphicon glyphicon-pencil"></span>
                             </a>
                             
                             <div class="btn-group" data-toggle="tooltip" data-placement="bottom" title="Toggle appearing on landing page">
                                 % if(helper_get_landing_for_our_type($otype) == 1){
-                                    <a href="/types/toggle/<%= $otype %><%=backurl%>" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-heart"></span></a>
+                                    <a href="<%= url_for('/types/toggle/')%><%= $otype %><%=backurl%>" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-heart"></span></a>
                                 %}
                                 %else{
-                                    <a href="/types/toggle/<%= $otype %><%=backurl%>" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-eye-close"></span></a>
+                                    <a href="<%= url_for('/types/toggle/')%><%= $otype %><%=backurl%>" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-eye-close"></span></a>
                                 %}
                             </div>
                             
@@ -81,7 +81,7 @@
                                           
                                         
                                           <div class="modal-footer">
-                                            <a class="btn btn-danger" href="/types/delete/<%=$otype%><%=backurl()%>"><i class="fa fa-trash"></i> Yes, delete this type</a>
+                                            <a class="btn btn-danger" href="<%= url_for('/types/delete/')%><%=$otype%><%=backurl()%>"><i class="fa fa-trash"></i> Yes, delete this type</a>
                                             <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, leave it alone</a>
                                           </div>
                                       </div>
@@ -105,22 +105,22 @@
                         <p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-book"></span> <%= $otype %></p>
                     </td>
                     <td>
-                        <a class="btn btn-default btn-sm" href="/publications?bibtex_type=<%= $otype %>">
+                        <a class="btn btn-default btn-sm" href="<%= url_for('/publications?bibtex_type=')%><%= $otype %>">
                         <span class="glyphicon glyphicon-list-alt"></span> Show papers 
                         </a>
                     </td>
                     <td>
-                        <a class="btn btn-default btn-sm" href="/landing/publications?bibtex_type=<%= $otype %>">
+                        <a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications?bibtex_type=')%><%= $otype %>">
                             <span class="glyphicon glyphicon-plane"></span> Landing page
                         </a>
                     </td>
                     <td>
-                      <a class="btn btn-default btn-sm" href="/landing-years/publications?bibtex_type=<%= $otype %>">
+                      <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications?bibtex_type=')%><%= $otype %>">
                             <span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing page
                       </a>
                     </td>
                     <td>
-                        <a class="btn btn-default btn-sm" href="/read/bibtex?bibtex_type=<%= $otype %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of type <%= $otype %>">
+                        <a class="btn btn-default btn-sm" href="<%= url_for('/read/bibtex?bibtex_type=')%><%= $otype %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of type <%= $otype %>">
                             <i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> BibTeX
                         </a>
                     </td>

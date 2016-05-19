@@ -5,7 +5,7 @@
   <div class="row">
       <div class="col-md-1"></div>
       <div class="col-md-6">
-        <a class="btn btn-success" href="/tags/<%= $tagobj->{type} %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all tags</a>
+        <a class="btn btn-success" href="<%= url_for('/tags/')%><%= $tagobj->{type} %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all tags</a>
       </div>
   </div>
   <br>
@@ -45,7 +45,7 @@
     			</div>
     			<div class="panel-body">
     			<!-- FORM -->
-     			<form role="form" action="/tags/edit/<%= $tagobj->{id} %>">
+     			<form role="form" action="<%= url_for('/tags/edit/')%><%= $tagobj->{id} %>">
     				<div class="form-group">
       				<label for="user">New Tag Name</label>
       				<input type="text" class="form-control" style="border-radius:0px" name="new_tag" id="new_tag" placeholder="Separate tags using semicolon. Spaces will be changed to underscores." value="<%= $tagobj->{name} %>">

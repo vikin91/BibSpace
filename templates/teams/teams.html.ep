@@ -30,14 +30,14 @@
                 <td><span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Team's ID"><span class="glyphicon glyphicon-barcode"></span> <%= $id %></span></td>
                 <td>
                     <div class="btn-group">
-                        <a class="btn btn-success btn-sm" href="/teams/edit/<%=$id%><%=backurl()%>" data-toggle="tooltip" data-placement="left" title="Edit team members"><span class="glyphicon glyphicon-pencil"></span></a>
+                        <a class="btn btn-success btn-sm" href="<%= url_for('/teams/edit/')%><%=$id%><%=backurl()%>" data-toggle="tooltip" data-placement="left" title="Edit team members"><span class="glyphicon glyphicon-pencil"></span></a>
                         <span class="btn btn-default btn-sm" ><i class="fa fa-users"></i> <%= $team %></span>
                     </div>
                 </td>
-                <td><a class="btn btn-default btn-sm" href="/publications?team=<%= $team %>"><i class="fa fa-files-o"></i> Show papers</a></td>
-                <td><a class="btn btn-default btn-sm" href="/landing/publications?team=<%= $team %>"><span class="glyphicon glyphicon-plane"></span> Landing page</a></td>
+                <td><a class="btn btn-default btn-sm" href="<%= url_for('/publications?team=')%><%= $team %>"><i class="fa fa-files-o"></i> Show papers</a></td>
+                <td><a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications?team=')%><%= $team %>"><span class="glyphicon glyphicon-plane"></span> Landing page</a></td>
                 <td>
-                <a class="btn btn-default btn-sm" href="/landing-years/publications?team=<%= $team %>"><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing page</a>
+                <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications?team=')%><%= $team %>"><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing page</a>
                 </td>
               </tr>
               % $i++;
