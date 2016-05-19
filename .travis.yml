@@ -10,7 +10,7 @@ perl:
     # - "5.10"
 
 dist: trusty
-sudo: required
+sudo: true
 addons:
   apt:
     packages:
@@ -54,5 +54,5 @@ notifications:
     email: true
 
 script: 
-    - prove -l t/
+    - prove -v -l t/
 
