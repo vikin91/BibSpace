@@ -1,9 +1,7 @@
 
 <!-- global footer -->
-
-% my $address = Net::Address::IP::Local->public;
-% if($address !~ m/146\.185\.144\.116/){
-    <!-- Piwik for production is disabled -->
+% if(app->mode eq 'production'){
+    <!-- Piwik for production is disabled. -->
 % }
 % else {
     <!-- Piwik for demo -->

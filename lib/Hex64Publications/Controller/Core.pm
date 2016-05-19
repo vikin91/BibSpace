@@ -584,7 +584,7 @@ sub delete_entry_by_id{
 sub get_all_non_hidden_entry_ids{
    my $dbh = shift;
    
-   my $qry = "SELECT DISTINCT id FROM Entry WHERE hidden=0";
+   my $qry = "SELECT DISTINCT id, creation_time FROM Entry WHERE hidden=0 ORDER BY creation_time DESC";
    my $sth = $dbh->prepare( $qry );  
    $sth->execute(); 
 

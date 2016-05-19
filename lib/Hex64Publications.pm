@@ -65,6 +65,8 @@ sub startup {
     my $address = Net::Address::IP::Local->public;
     # print $address;
 
+    push @{$self->app->static->paths}, $self->app->home->rel_dir('public');
+
     # my $config = $self->plugin('Config');
     my $config = $self->app->config;
     my $mode = $self->app->mode;

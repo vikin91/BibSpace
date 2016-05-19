@@ -1,6 +1,7 @@
 <head>
     <!-- this is head -->    
     <meta name="comment" content="head" />
+    <meta name="comment" content="mode <%= app->mode %>" />
     <meta http-equiv="Content-Type" />
     <meta content="text/html" />
     <meta charset="UTF-8" />
@@ -11,8 +12,7 @@
     %= javascript '//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'
     %= stylesheet '//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css'
 
-    % my $burl = config 'base_url';
-    %= stylesheet $burl.'styles.css'
+    %= stylesheet '/styles.css'
 
   <script type="text/javascript">
          function showAbstract(divid) {
