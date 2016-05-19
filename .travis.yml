@@ -47,8 +47,8 @@ before_script:
     - mysql --version
     - mysql -e "SELECT VERSION();"
     - sudo /etc/init.d/mysql.server start
-    - mysql -e "create database IF NOT EXISTS test;" -uroot
-    - echo "USE mysql;\nUPDATE user SET password=PASSWORD('password') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
+    - mysql -u root -e 'create database IF NOT EXISTS bibspacetest;'
+    # - echo "USE mysql;\nUPDATE user SET password=PASSWORD('password') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 
 
 notifications:
