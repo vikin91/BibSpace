@@ -26,10 +26,6 @@ before_install:
     - "sudo sed -i'' 's/log_slow_queries/slow_query_log/' /etc/mysql/my.cnf"
     - "sudo sed -i'' 's/basedir[^=]\\+=.*$/basedir = \\/opt\\/mysql\\/server-5.6/' /etc/mysql/my.cnf"
     - "sudo /etc/init.d/mysql.server start"
-    - mysql -e "create database IF NOT EXISTS test;" -uroot
-    - echo "USE mysql;\nUPDATE user SET password=PASSWORD('password') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
-    - mv config/default.conf config/default.conf.bak
-    - cp config/testing.conf config/default.conf
 
 
 install:
@@ -44,6 +40,8 @@ install:
 before_script:
     - mysql --version
     - mysql -e "SELECT VERSION();"
+    - mysql -e "create database IF NOT EXISTS test;" -uroot
+    - echo "USE mysql;\nUPDATE user SET password=PASSWORD('password') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 
 sudo: true
 
@@ -53,5 +51,3 @@ notifications:
 script: 
     - prove -l t/
 
-after_script:
-    - mv config/default.conf.bak config/default.conf
