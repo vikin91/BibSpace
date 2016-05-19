@@ -97,7 +97,7 @@ Admin password: asdf
 
 ### Changelog ###
 
-#### v1.4.3 19.05.2016 ####
+#### v0.3.3 19.05.2016 ####
 * Fixing multiple minor bugs
 * Improve redirects
 * Change name to BibSpace
@@ -105,17 +105,17 @@ Admin password: asdf
 * Update installation and Readme
 * Add license
 
-#### v1.4.2 26.11.2015 ####
+#### v0.3.2 26.11.2015 ####
 
 * Publications can now be hidden and unhidden without deleting them
 * get_publications_main was replaced by get_publications_main_hashed_args. Calls to get_publications_main return now undef.
 
-#### v1.4.1 28.10.2015 ####
+#### v0.3.1 28.10.2015 ####
 
 * Minor bugfixes
 * Installation procedure
 
-#### v1.4 19.10.2015 ####
+#### v0.3 19.10.2015 ####
 
 * Mojolicious updated to 6.24
 * Talks introduced. Every entry is now described with *entry_type*. Possible types are: paper, talk.
