@@ -50,5 +50,8 @@ sudo: true
 notifications:
     email: false
 
+script: 
+    - perl script/hex64-publications test
+
 after_script:
     - mv config/default.conf.bak config/default.conf
