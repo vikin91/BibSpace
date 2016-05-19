@@ -80,20 +80,20 @@ done_testing();
 # $t_anyone->post_ok('/forgot/gen' => { Accept => '*/*' }, form => { user   => 'pub_admin' })
 #     ->status_isnt(404)
 #     ->status_isnt(500)
-#     ->content_like(qr/Email with password reset instructions has been sent/i);
+#     ->text_like(qr/Email with password reset instructions has been sent/i);
 
 
 # $t_anyone->post_ok('/forgot/gen' => { Accept => '*/*' }, form => { user   => '', email => 'your_email@email.com' })
 #     ->status_isnt(404)
 #     ->status_isnt(500)
-#     ->content_like(qr/Email with password reset instructions has been sent/i);
+#     ->text_like(qr/Email with password reset instructions has been sent/i);
 
               
 
 # $t_anyone->post_ok('/forgot/gen' => form => { user   => 'qwerty1234', email => '' })
 #     ->status_isnt(404)
 #     ->status_isnt(500)
-#     ->content_like(qr/User or email does not exists. Try again./i);
+#     ->text_like(qr/User or email does not exists. Try again./i);
 # };
 
 # ########################################################
@@ -118,19 +118,19 @@ done_testing();
 #     $t_anyone->post_ok('/forgot/store' => form => { token  => $token2, pass1 => 'asdf', pass2 => 'qwerty' })
 #         ->status_isnt(404)
 #         ->status_isnt(500)
-#         ->content_like(qr/Passwords are not same. Try again./i, "Trying with non-matching passwords");
+#         ->text_like(qr/Passwords are not same. Try again./i, "Trying with non-matching passwords");
 
 #     # matching passwords
 #     $t_anyone->post_ok('/forgot/store' => form => { token  => $token2, pass1 => 'asdf', pass2 => 'asdf' })
 #             ->status_isnt(404)
 #             ->status_isnt(500)
-#             ->content_like(qr/Password change successful. All your password reset tokens have been removed. You may login now./i, "Trying with valid data");
+#             ->text_like(qr/Password change successful. All your password reset tokens have been removed. You may login now./i, "Trying with valid data");
 
 #     # wrong token    
 #     $t_anyone->post_ok('/forgot/store' => form => { token  => 'invalid_token', pass1 => 'asdf', pass2 => 'asdf' })
 #             ->status_isnt(404)
 #             ->status_isnt(500)
-#             ->content_like(qr/Reset password token is invalid! Abuse will be reported/i, "Trying invalid token");
+#             ->text_like(qr/Reset password token is invalid! Abuse will be reported/i, "Trying invalid token");
 # };
 
 # ########################################################
@@ -138,7 +138,7 @@ done_testing();
 
 # $t_anyone->get_ok("/noregister")
 #     ->status_is(200)
-#     ->content_like(qr/Registration is disabled/i);
+#     ->text_like(qr/Registration is disabled/i);
 
 
 
@@ -163,7 +163,7 @@ done_testing();
 #                                             password2 => 'qwerty' })
 #     ->status_isnt(404)
 #     ->status_isnt(500)
-#     ->content_like(qr/Passwords don't match!/i, "Trying to register with non-matching passwords");
+#     ->text_like(qr/Passwords don't match!/i, "Trying to register with non-matching passwords");
 
 #     $t_anyone->post_ok('/register' => form => { 
 #                                             login  => $token, 
@@ -173,7 +173,7 @@ done_testing();
 #                                             password2 => 'a' })
 #     ->status_isnt(404)
 #     ->status_isnt(500)
-#     ->content_like(qr/Password is too short, use minimum 4 symbols/i, "Trying to register with too short password");
+#     ->text_like(qr/Password is too short, use minimum 4 symbols/i, "Trying to register with too short password");
 
 #     $t_anyone->post_ok('/register' => form => { 
 #                                             login  => '', 
@@ -183,7 +183,7 @@ done_testing();
 #                                             password2 => 'a1234' })
 #     ->status_isnt(404)
 #     ->status_isnt(500)
-#     ->content_like(qr/Some input is missing!/i, "Trying to register with missing login and email");
+#     ->text_like(qr/Some input is missing!/i, "Trying to register with missing login and email");
 
 
 
@@ -195,7 +195,7 @@ done_testing();
 #                                             password2 => 'qwerty' })
 #     ->status_isnt(404)
 #     ->status_isnt(500)
-#     ->content_like(qr/User created successfully! You may now login using login: $token/i, "Trying to register with valid data");
+#     ->text_like(qr/User created successfully! You may now login using login: $token/i, "Trying to register with valid data");
 
 #     $t_anyone->post_ok('/register' => form => { 
 #                                             login  => 'pub_admin', 
@@ -205,7 +205,7 @@ done_testing();
 #                                             password2 => 'qwerty' })
 #     ->status_isnt(404)
 #     ->status_isnt(500)
-#     ->content_like(qr/This login is already taken/i, "Trying to register pub_admin");
+#     ->text_like(qr/This login is already taken/i, "Trying to register pub_admin");
 # }
 # ########################################################
 # note "============ Registration admin ============";
@@ -213,7 +213,7 @@ done_testing();
 
 # $t_logged_in->get_ok("/noregister")
 #     ->status_is(200)
-#     ->content_like(qr/Registration is disabled/i);
+#     ->text_like(qr/Registration is disabled/i);
 
 
 
@@ -234,7 +234,7 @@ done_testing();
 #                                         password2 => 'qwerty' })
 # ->status_isnt(404)
 # ->status_isnt(500)
-# ->content_like(qr/Passwords don't match!/i, "Trying to register with non-matching passwords");
+# ->text_like(qr/Passwords don't match!/i, "Trying to register with non-matching passwords");
 
 # $t_logged_in->post_ok('/register' => form => { 
 #                                         login  => $token, 
@@ -244,7 +244,7 @@ done_testing();
 #                                         password2 => 'a' })
 # ->status_isnt(404)
 # ->status_isnt(500)
-# ->content_like(qr/Password is too short, use minimum 4 symbols/i, "Trying to register with too short password");
+# ->text_like(qr/Password is too short, use minimum 4 symbols/i, "Trying to register with too short password");
 
 # $t_logged_in->post_ok('/register' => form => { 
 #                                         login  => '', 
@@ -254,7 +254,7 @@ done_testing();
 #                                         password2 => 'a1234' })
 # ->status_isnt(404)
 # ->status_isnt(500)
-# ->content_like(qr/Some input is missing!/i, "Trying to register with missing login and email");
+# ->text_like(qr/Some input is missing!/i, "Trying to register with missing login and email");
 
 
 
@@ -266,7 +266,7 @@ done_testing();
 #                                         password2 => 'qwerty' })
 # ->status_isnt(404)
 # ->status_isnt(500)
-# ->content_like(qr/User created successfully! You may now login using login: $token/i, "Trying to register with valid data");
+# ->text_like(qr/User created successfully! You may now login using login: $token/i, "Trying to register with valid data");
 
 # $t_logged_in->post_ok('/register' => form => { 
 #                                         login  => 'pub_admin', 
@@ -276,7 +276,7 @@ done_testing();
 #                                         password2 => 'qwerty' })
 # ->status_isnt(404)
 # ->status_isnt(500)
-# ->content_like(qr/This login is already taken/i, "Trying to register pub_admin");
+# ->text_like(qr/This login is already taken/i, "Trying to register pub_admin");
 
 
 
