@@ -5,15 +5,14 @@
 
 <div class="container">
 
-  <div class="row">
-    <div class="col-lg-1"></div>
-    <div class="col-lg-2 col-md-2 col-xs-2">
-        <a class="btn btn-info pull-left" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+    <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+            <a class="btn btn-default" href="<%= url_for('publicationsregenerateid', id=>$id)%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
+            <a class="btn btn-success" href="<%= url_for('publicationseditid', id=>$id) %>"><span class="glyphicon glyphicon-pencil"></span> Edit BibTeX of this entry</a>
+        </div>
     </div>
-    <div class="col-lg-6 col-md-6 col-xs-6">
-        <a class="btn btn-success pull-left" href="<%= url_for('/publications/edit/')%><%=$id%>?back_url=<%=backurl_short($self)%>"><span class="glyphicon glyphicon-pencil"></span> Edit BibTeX of this entry</a>
-    </div>
-  </div>
 
 <hr>
 
@@ -33,21 +32,9 @@
 </div>
 %}
 
-% if($preview ne ''){
-  <div class="row">
-    <div class="col-lg-1"></div>
-    <div class="col-lg-8 col-md-8 col-xs-8">
-      <div class="panel panel-default">
-        <div class="panel-body">
-          <h3>Preview</h3>
-          %= b($preview)
-        </div>
-      </div>
-    </div>
-  </div>
-%}
 
-<hr> 
+    %= include 'preview_row', preview => $preview, btype=> $btype, bkey =>$bkey;
+
 
   <div class="row">
     <div class="col-lg-1"></div>
@@ -68,12 +55,12 @@
   <div class="col-lg-4 col-md-4 col-xs-4">
     <div class="panel panel-primary">
 
-      <form action="<%= url_for('/publications/add_pdf/do/')%><%=$id%>" method="post"  enctype="multipart/form-data">
+      <form action="<%= url_for('publicationsadd_pdfdoid', id=>$id)%>" method="post"  enctype="multipart/form-data">
         <div class="form-group">
           <label for="exampleInputFile">Paper file input</label>
           <input type="file" id="exampleInputFile" name="uploaded_file">
           <input type="hidden" name="id" value="<%=$id%>">
-          <input type="hidden" name="back_url" value="<%=backurl_short($self)%>">
+          <input type="hidden" name="back_url" value="<%= get_referrer  %>">
           <input type="hidden" name="filetype" value="paper">
           <p class="help-block">Select the pdf file with your publication.</p>
         </div>
@@ -86,12 +73,12 @@
   <div class="col-lg-4 col-md-4 col-xs-4">
     <div class="panel panel-primary">
 
-      <form action="<%= url_for('/publications/add_pdf/do/')%><%=$id%>" method="post"  enctype="multipart/form-data">
+      <form action="<%= url_for('publicationsadd_pdfdoid', id=>$id)%>" method="post"  enctype="multipart/form-data">
         <div class="form-group">
           <label for="exampleInputFile">Slides file input</label>
           <input type="file" id="exampleInputFile" name="uploaded_file">
           <input type="hidden" name="id" value="<%=$id%>">
-          <input type="hidden" name="back_url" value="<%=backurl_short($self)%>">
+          <input type="hidden" name="back_url" value="<%= get_referrer %>">
           <input type="hidden" name="filetype" value="slides">
           <p class="help-block">Select the pdf file with your publication.</p>
         </div>

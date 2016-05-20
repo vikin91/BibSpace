@@ -60,9 +60,10 @@ has backup_db => sub {
 
 sub startup {
     my $self = shift;
+
     $self->app->plugin('InstallablePaths');
     $self->app->plugin('RenderFile');
-    my $address = Net::Address::IP::Local->public;
+    # my $address = Net::Address::IP::Local->public;
     # print $address;
 
     push @{$self->app->static->paths}, $self->app->home->rel_dir('public');
@@ -126,7 +127,7 @@ sub startup {
             $cmd_out=`bash git-getrevision.sh`;
         }
         catch{
-            warn "Exception by cacluating version $_ Ignoring";
+            warn "Exception by calculating version $_ Ignoring";
         };
         
         try{
@@ -158,6 +159,12 @@ sub startup {
         return $ref;
     });
 
+
+    $self->helper(nohtml => sub {
+        my $s = shift;  
+        return nohtml(shift, shift);
+
+    });
 
     $self->helper(backurl_short => sub {
         my $s = shift;         
@@ -416,12 +423,12 @@ sub startup {
     
 
     $logged_user->get('/publications/manage_tags/:id')->to('publications#manage_tags');
-    $logged_user->get('/publications/:eid/remove_tag/:tid')->to('publications#remove_tag');
-    $logged_user->get('/publications/:eid/add_tag/:tid')->to('publications#add_tag');
+    $logged_user->get('/publications/:eid/remove_tag/:tid')->to('publications#remove_tag')->name('remove_tag_from_publication');
+    $logged_user->get('/publications/:eid/add_tag/:tid')->to('publications#add_tag')->name('add_tag_to_publication');
 
     $logged_user->get('/publications/manage_exceptions/:id')->to('publications#manage_exceptions');
-    $logged_user->get('/publications/:eid/remove_exception/:tid')->to('publications#remove_exception');
-    $logged_user->get('/publications/:eid/add_exception/:tid')->to('publications#add_exception');
+    $logged_user->get('/publications/:eid/remove_exception/:tid')->to('publications#remove_exception')->name('remove_exception_from_publication');
+    $logged_user->get('/publications/:eid/add_exception/:tid')->to('publications#add_exception')->name('add_exception_to_publication');
 
     $logged_user->get('/publications/show_authors/:id')->to('publications#show_authors_of_entry');
 
@@ -463,7 +470,7 @@ sub startup {
 
     
     $anyone->get('/landing/publications')->to('publications#landing_types_obj');
-    $anyone->get('/l/p')->to('publications#landing_types_obj'); #ALIAS
+    $anyone->get('/l/p')->to('publications#landing_types_obj')->name('lp'); #ALIAS
 
     $anyone->get('/landing-years/publications')->to('publications#landing_years_obj');
     $anyone->get('/ly/p')->to('publications#landing_years_obj'); #ALIAS

@@ -6,9 +6,15 @@
 % my $msg_f = flash 'msg';
 % my $msg_s = stash 'msg';
 % my $msg = undef;
-% $msg = $msg_f if defined $msg_f;
-% $msg = $msg_s if defined $msg_s;
-% $msg = $msg_s."<br/>".$msg_f if defined $msg_s and defined $msg_s;
+% if(defined $msg_s and $msg_s ne '' and defined $msg_f and $msg_f ne ''){
+%    $msg = $msg_s."<br/>".$msg_f if defined $msg_s and defined $msg_f;
+% }
+% elsif(defined $msg_f and $msg_f ne ''){
+%    $msg = $msg_f;
+% }
+% if(defined $msg_s and $msg_s ne ''){
+%    $msg = $msg_s;
+% }
 
 % if (defined $msg) {
     <div class="container">

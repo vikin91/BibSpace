@@ -4,7 +4,9 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX; # parsing bib files
 use DateTime;
-use File::Slurp;
+use File::Slurp; # should be replaced in the future
+use Path::Tiny;  # for creating directories
+use Try::Tiny;
 use Time::Piece;
 use 5.010; #because of ~~
 use strict;
@@ -129,17 +131,14 @@ sub toggle_hide {
     say "CALL: Publications::toggle_hide";
     my $self = shift;
     my $id = $self->param('id');
-    my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
-
-    $back_url = $self->get_back_url($back_url);
 
     my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
     $obj->do_toggle_hide($dbh);
 
 
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 };
 ####################################################################################
 sub make_paper {
@@ -978,7 +977,7 @@ sub landing_types_obj{
     
 
     # WARNING, it depends on routing! anti-pattern! Correct it some day
-    my $url = $self->url_for('/ly/p')."?".$self->req->url->query;
+    my $url = $self->url_with('lyp');
     my $url_msg = "Switch to grouping by years";
     my $switchlink = '<a class="bibtexitem" href="'.$url.'">'.$url_msg.'</a>';
 
@@ -1028,6 +1027,8 @@ sub display_landing{
     my $keys_ref = shift;
     my $switchlink = shift || "";
     my $navbar_html = shift || "";
+
+    say Dumper $keys_ref;
 
     my $navbar = $self->param('navbar') || 0;
     my $show_title = $self->param('title') || 0;
@@ -1153,9 +1154,7 @@ sub add_pdf {
 	say "CALL: add_pdf ";
     my $self = shift;
     my $id = $self->param('id');
-    my $back_url = $self->param('back_url');
     my $dbh = $self->app->db;
-    $back_url = $self->get_back_url($back_url);
     
 
     $self->write_log("Page: add pdf for paper id $id");
@@ -1166,20 +1165,28 @@ sub add_pdf {
     my $row = $sth->fetchrow_hashref();
     my $html_preview = $row->{html} || nohtml($row->{bibtex_key}, $row->{bibtex_type});
     my $key = $row->{bibtex_key};
+    my $type = $row->{bibtex_type};
 
 
-    $self->stash(id => $id, preview => $html_preview, back_url => $back_url);
+    $self->stash(id => $id, bkey=> $key, btype=>$type, preview => $html_preview);
     $self->render(template => 'publications/pdf_upload');
 };
 ####################################################################################
 sub add_pdf_post{
 	say "CALL: add_pdf_post";
     my $self = shift;
-    my $id = $self->param('id') || "unknown";
-    my $back_url = $self->param('back_url') || '/publications';
-    my $filetype = $self->param('filetype') || undef;
+    my $id = $self->param('id') || "unknown";    my $filetype = $self->param('filetype') || undef;
+
+    my $uploads_directory = "public"; ## TODO: move this to config!
+    $uploads_directory =~ s!/*$!/!; # makes sure that there is exactly one / at the end
 
     my $extension;
+
+    my $base_url = $self->req->url->base;
+    my $absolute_path_base = $self->url_for('/')->base;
+
+    # base_url http://127.0.0.1:3000
+    # absolute_path_base http://127.0.0.1:3000
 
     $self->write_log("Saving attachment for paper id $id");
 
@@ -1187,8 +1194,8 @@ sub add_pdf_post{
     # Check file size
     if ($self->req->is_limit_exceeded){
         $self->write_log("Saving attachment for paper id $id: limit exceeded!");
-        $self->flash(back_url => $back_url, message => "The File is too big and cannot be saved!", msg_type => "danger");
-        $self->redirect_to($back_url);
+        $self->flash(message => "The File is too big and cannot be saved!", msg_type => "danger");
+        $self->redirect_to($self->get_referrer);
         return;
     }
 
@@ -1198,16 +1205,16 @@ sub add_pdf_post{
     my $uploaded_file = $self->param('uploaded_file');
 
     unless ($uploaded_file){
-      $self->flash(back_url => $back_url, message => "File upload unsuccessfull!", msg_type => "danger");
+      $self->flash(message => "File upload unsuccessful!", msg_type => "danger");
       $self->write_log("Saving attachment for paper id $id FAILED. Unknown reason");
-      $self->redirect_to($back_url);
+      $self->redirect_to($self->get_referrer);
     }
 
     my $size = $uploaded_file->size;
     if ($size == 0){
-        $self->flash(back_url => $back_url, message => "No file was selected or file has 0 bytes! Not saving!", msg_type => "danger");
-        $self->write_log("Saving attachment for paper id $id FAILED. Filesize is 0");
-        $self->redirect_to($back_url);   
+        $self->flash(message => "No file was selected or file has 0 bytes! Not saving!", msg_type => "danger");
+        $self->write_log("Saving attachment for paper id $id FAILED. File size is 0.");
+        $self->redirect_to($self->get_referrer);  
     }
     else{
         my $sizeKB = int($size / 1024);
@@ -1244,56 +1251,28 @@ sub add_pdf_post{
 
             $bibtex_field = "pdf2";
         }
+        try{
+            path($uploads_directory.$directory)->mkpath;
+        }
+        catch{
+            warn "Exception: cannot create directory $directory. Msg: $_";
+        };
+        
         $file_path = $directory.$fname;
 
-        # rm uploads/papers/paper-651.*
-        my $cmd = "rm public/$directory"."$fname_no_ext"."*";
-        # say $cmd;
-        # system($cmd);
+        $uploaded_file->move_to($uploads_directory.$file_path); ### WORKS!!!
 
-
-      
-        $uploaded_file->move_to("public/".$file_path); ### WORKS!!!
-
-        ### TODO Feb 2015: move $self->req->url->base to a parameter!!
-        
-        my $base_url = $self->config->{base_url};
-        $base_url = $self->config->{proxy_prefix} if $self->config->{base_url} eq '/';
-
-        # $base_url = "/pa";
-        # say "config->{proxy_prefix} ".$self->config->{proxy_prefix};
-        # say "config->{base_url} ".$self->config->{base_url};
-        # say "base_url $base_url";
-
-        # base_url http://se2.informatik.uni-wuerzburg.de/pa/
-        # file_url http://se2.informatik.uni-wuerzburg.dehttp://se2.informatik.uni-wuerzburg.de/pa/uploads/papers/paper-1078.pdf
-        # call: add_field_to_bibtex_code eid 1078 field pdf value http://se2.informatik.uni-wuerzburg.dehttp://se2.informatik.uni-wuerzburg.de/pa/uploads/papers/paper-1078.pdf
-        
-        # $self->req->url->base = http://se2.informatik.uni-wuerzburg.de
-        # base_url = http://se2.informatik.uni-wuerzburg.de/pa/
-        # file_path = uploads/papers/paper-1078.pdf
-
-
-
-        # my $file_url = $self->req->url->base.$base_url.$file_path; 
-
+    
         # TODO: Check me for directory deployment!
-        my $file_url = $self->url_for('/')."/".$file_path;
-        
-        # if($self->config->{proxy_prefix} eq '/'){
-        #     $file_url = $self->req->url->base.$self->config->{proxy_prefix}.$file_path;
-        # }
-        # else{
-        #     $file_url = $self->req->url->base.$self->config->{proxy_prefix}."/".$file_path;
-        # }
 
-        say "file_url $file_url";
+        $absolute_path_base =~ s!/*$!/!; # makes sure that there is exactly one / at the end of absolute path
+        my $file_url = $absolute_path_base.$file_path;
 
         $self->write_log("Saving attachment for paper id $id under: $file_url");
-
         add_field_to_bibtex_code($self->app->db, $id, $bibtex_field, $file_url);
 
-        my $msg = "Thanks for uploading $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>. The file was renamed to: <em>$fname</em>. URL <a href=\"".$file_url."\">$name</a>";
+        my $msg = "Successfully uploaded the $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>. 
+        The file was renamed to: <em>$fname</em>. URL <a href=\"".$file_url."\">$name</a>";
 
         # my $sth2 = $self->app->db->prepare( "UPDATE Entry SET modified_time=datetime('now', 'localtime') WHERE id =?" );  
         my $sth2 = $self->app->db->prepare( "UPDATE Entry SET modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
@@ -1303,8 +1282,8 @@ sub add_pdf_post{
 
         generate_html_for_id($self->app->db, $id);
 
-        $self->flash(back_url => $back_url, message => $msg);
-        $self->redirect_to($back_url);
+        $self->flash(message => $msg);
+        $self->redirect_to($self->get_referrer);
     }
 };
 
@@ -1354,7 +1333,7 @@ sub regenerate_html {
     my $self = shift;
     my $id = $self->param('id');
 
-    
+
     my $dbh = $self->app->db;
     generate_html_for_id($dbh, $id);
 
@@ -1436,25 +1415,26 @@ sub manage_exceptions{
 	say "CALL: manage_exceptions";
     my $self = shift;
     my $eid = $self->param('id');
-    my $back_url = $self->param('back_url') || "/publications";
     my $dbh = $self->app->db;
 
     $self->write_log("Manage exceptions of entry eid $eid");
 
-    my @authors = $self->get_authors_of_entry($eid);
+    my $html_preview = get_html_for_entry_id($dbh, $eid);
+    my $key = get_entry_key($dbh, $eid);
+    my $btype = get_entry_bibtex_type($dbh, $eid);
 
+    my @current_exceptions = get_exceptions_for_entry_id($dbh, $eid);
+    my $current_exceptions_set = Set::Scalar->new(@current_exceptions);
+
+    my @authors = $self->get_authors_of_entry($eid);
     my $teams_for_paper = get_set_of_teams_for_entry_id($self,$eid);
 
     my @teams = $teams_for_paper->members;
-    my @unassigned_teams = (get_set_of_all_teams($self) - $teams_for_paper)->members;
+    my @unassigned_teams = (get_set_of_all_teams($self) - $teams_for_paper - $current_exceptions_set)->members;
 
-    my $html_preview = get_html_for_entry_id($dbh, $eid);
-    my $key = get_entry_key($dbh, $eid);
-
-    my @exceptions = get_exceptions_for_entry_id($dbh, $eid);
    
-    $self->stash(eid => $eid, key => $key, back_url => $back_url, preview => $html_preview, 
-        author_ids => \@authors, exceptions => \@exceptions, team_ids => \@teams, unassigned_teams => \@unassigned_teams);
+    $self->stash(eid => $eid, key => $key, btype=>$btype, preview => $html_preview, 
+        author_ids => \@authors, exceptions => \@current_exceptions, team_ids => \@teams, unassigned_teams => \@unassigned_teams);
     $self->render(template => 'publications/manage_exceptions');
 }
 ####################################################################################
@@ -1497,7 +1477,6 @@ sub remove_tag{
   my $self = shift;
   my $eid = $self->param('eid');
   my $tid = $self->param('tid');
-  my $back_url = $self->param('back_url') || "/publications";
   my $dbh = $self->app->db;
 
   $self->write_log("Removing tag id $tid from entry eid $eid");
@@ -1506,7 +1485,7 @@ sub remove_tag{
   $sth->execute($eid, $tid);
 
 
-  $self->redirect_to($back_url);
+  $self->redirect_to($self->get_referrer);
 
 }
 ####################################################################################
@@ -1516,15 +1495,13 @@ sub add_tag{
     my $self = shift;
     my $eid = $self->param('eid');
     my $tid = $self->param('tid');
-    my $back_url = $self->param('back_url') || "/publications";
     my $dbh = $self->app->db;
 
     $self->write_log("Adding tag id $tid to entry eid $eid");
 
     my $sth = $dbh->prepare( "INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
     $sth->execute($eid, $tid);
-    $self->redirect_to($back_url);
-
+    $self->redirect_to($self->get_referrer);
 }
 ####################################################################################
 
@@ -1533,7 +1510,6 @@ sub add_exception{
     my $self = shift;
     my $eid = $self->param('eid');
     my $tid = $self->param('tid');
-    my $back_url = $self->param('back_url') || "/publications";
     my $dbh = $self->app->db;
 
     $self->write_log("Adding exception id $tid to entry eid $eid");
@@ -1541,7 +1517,7 @@ sub add_exception{
     my $sth = $dbh->prepare( "INSERT INTO Exceptions_Entry_to_Team(entry_id, team_id) VALUES (?,?)");
     $sth->execute($eid, $tid);
 
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 
 }
 ####################################################################################
@@ -1551,7 +1527,6 @@ sub remove_exception{
     my $self = shift;
     my $eid = $self->param('eid');
     my $tid = $self->param('tid');
-    my $back_url = $self->param('back_url') || "/publications";
     my $dbh = $self->app->db;
 
     $self->write_log("Removing exception id $tid to entry eid $eid");
@@ -1559,7 +1534,7 @@ sub remove_exception{
     my $sth = $dbh->prepare( "DELETE FROM Exceptions_Entry_to_Team WHERE entry_id=? AND team_id=?");
     $sth->execute($eid, $tid);
 
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 
 }
 
@@ -1886,24 +1861,9 @@ sub get_edit {
 	say "CALL: get_edit ";
    my $self = shift;
    my $id = $self->param('id');
-   my $back_url = $self->param('back_url') || "/publications";
-   
    $self->write_log("Editing publication entry id $id");
-   
    my $dbh = $self->app->db;
 
-
-
-   # my $sth = $dbh->prepare( "SELECT DISTINCT bibtex_key, bib 
-   #    FROM Entry 
-   #    WHERE id = ?" );  
-   # $sth->execute($id);
-
-   # my $row = $sth->fetchrow_hashref();
-
-   # # say "entry id $id has key $key";
-
-   # $sth->finish;
 
    my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
    $obj->initFromDB($dbh);
@@ -1911,7 +1871,8 @@ sub get_edit {
    my $key = $obj->{bibtex_key};
 
 
-   $self->stash(bib  => $bib, entry_obj => $obj, id => $id, key => $key, existing_id => '', exit_code => '', msg => '', preview => '', back_url => $back_url);
+   $self->stash(bib  => $bib, entry_obj => $obj, id => $id, key => $key, existing_id => '', exit_code => '', 
+                msg => '', preview => '');
    $self->render(template => 'publications/edit_entry');
 };
 ############################################################################################################

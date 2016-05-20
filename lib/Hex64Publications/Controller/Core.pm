@@ -40,6 +40,7 @@ our @EXPORT = qw(
     uniq
     get_entry_id
     get_entry_key
+    get_entry_bibtex_type
     get_entry_title
     get_team_for_id
     get_team_id
@@ -912,7 +913,18 @@ sub get_exceptions_for_entry_id{
 
    return @exceptions;
 }
+##########################################################################
+sub get_entry_bibtex_type{
+   my $dbh = shift;
+   my $eid = shift;
 
+   my $sth = $dbh->prepare( "SELECT bibtex_type FROM Entry WHERE id=?" ); 
+   $sth->execute($eid);
+
+   my $row = $sth->fetchrow_hashref();
+   my $key = $row->{bibtex_type};
+   return $key;
+}
 ##########################################################################
 sub get_entry_key{
    my $dbh = shift;

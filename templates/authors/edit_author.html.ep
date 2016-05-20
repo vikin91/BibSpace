@@ -20,15 +20,15 @@
             <a class="btn btn-success" href="<%= url_for('/publications?author=')%><%= $master %>">
                 <i class="fa fa-files-o"></i> Show all <span class="badge"><%= num_pubs_for_author($id)%></span> papers of this author
             </a>
-            <a class="btn btn-info" href="<%= url_for('/publications?author=')%><%= $master %>&entry_type=talk">
+            <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$master, entry_type=>'talk')%>">
                 <i class="fa fa-microphone"></i> Show all talks of this author
             </a>
 
-            <a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications?author=')%><%= $master %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span></a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('lp')->query(author=>$master) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span></a>
             
-            <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications?author=')%><%= $master %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('lyp')->query(author=>$master) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
 
-            <a class="btn btn-default btn-sm" href="<%= url_for('/read/bibtex?author=')%><%= $master %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> BibTeX
+            <a class="btn btn-default btn-sm" href="<%= url_for('readbibtex')->query(author=>$master)%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> BibTeX
             </a>
 
             

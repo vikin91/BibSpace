@@ -11,8 +11,9 @@
 
 
     <div class="row">
-        <div class="col-lg-2 col-md-2 col-xs-2">
-            <a class="btn btn-default" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+        <div class="col-lg-3 col-md-3 col-xs-3">
+            <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+            <a class="btn btn-default" href="<%= url_for('types') %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to all Types</a>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
             <span class="btn btn-info" ><span class="glyphicon glyphicon-book"></span> Managing type <strong><%= $type %></strong></span>
@@ -35,10 +36,8 @@
     % }   
 
 
-    
-
     <div class="row">
-        <div class="col-lg-2 col-md-2 col-xs-2">
+        <div class="col-lg-3 col-md-3 col-xs-3">
             <button type="button" class="btn btn-success">
                 <span class="glyphicon glyphicon-book"></span> Mapped types 
             </button>
@@ -50,7 +49,7 @@
                     <span type="button" class="btn btn-default">
                         <span class="glyphicon glyphicon-book"></span> <%= $a_type %>
                     </span>
-                    <a class="btn btn-default" href='/types/<%= $type %>/unmap/<%= $a_type %><%=backurl%>'><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
+                    <a class="btn btn-default" href="<%= url_for('typesour_typeunmapbibtex_type', our_type=>$type, bibtex_type=>$a_type)%>"><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
                 </div>
             % }
         </div>
@@ -59,17 +58,17 @@
     <hr>
 
     <div class="row">
-        <div class="col-lg-2 col-md-2 col-xs-2">
-            <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-book"></span> BibTeX types </button>
+        <div class="col-lg-3 col-md-3 col-xs-3">
+            <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-book"></span> Unassigned BibTeX types </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
             % 
-            % foreach my $b_type (@$all_btypes){
+            % foreach my $b_type (@$unassigned_btypes){
                 <div class="btn-group">
                     <button type="button" class="btn btn-default btn-sm">
                         <span class="glyphicon glyphicon-book" style="color: #5CB85C;"></span> <%= $b_type %>
                     </button>
-                    <a class="btn btn-default btn-sm" href='/types/<%= $type %>/map/<%= $b_type %><%=backurl%>'><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span></a>
+                    <a class="btn btn-default btn-sm" href="<%= url_for('typesour_typemapbibtex_type', our_type=>$type, bibtex_type=>$b_type)%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span></a>
                 </div>
             % }
         </div>
@@ -79,7 +78,7 @@
 
 
     <div class="row">
-        <div class="col-lg-2 col-md-2 col-xs-2">
+        <div class="col-lg-3 col-md-3 col-xs-3">
             <button type="button" class="btn btn-success" data-toggle="tooltip" data-placement="bottom" title="This description will appear on the landing pages as a header for papers with that type ">
                 Description for <br> Landing page
             </button>
@@ -88,7 +87,7 @@
             <form class="form-horizontal" role="form" method="POST" action="<%= url_for('/types/store_description')%>">
               <div class="input-group">
                 <input type="hidden" name="our_type" value="<%= $type %>"></input>
-                <input type="hidden" name="back_url" value="<%= $back_url %>"></input>
+                <input type="hidden" name="back_url" value="<%= get_referrer %>"></input>
                 <input class="form-control" type="text" name="new_description" placeholder="New description" value="<%= $description %>"></input>
                 <div class="input-group-btn">
                     <button class="btn btn-default" type="submit" data-toggle="tooltip" data-placement="bottom" title="Save"> <i class="glyphicon glyphicon-floppy-disk" style="color: red;"></i> </button>
@@ -101,13 +100,13 @@
     <hr>
 
     <div class="row">
-        <div class="col-lg-2 col-md-2 col-xs-2">
+        <div class="col-lg-3 col-md-3 col-xs-3">
             <button type="button" class="btn btn-success" data-toggle="tooltip" data-placement="bottom" title="todo">
                 Visible on <br> Landing page?
             </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            <a href="<%= url_for('/types/toggle/')%><%= $type %>">
+            <a href="<%= url_for('typestoggletype', type=>$type)%>">
             <div class="btn-group" data-toggle="tooltip" data-placement="bottom" title="Toggle appearing on landing page">
             % if(helper_get_landing_for_our_type($type) == 1){
                 <span class="btn btn-success active">Yes</span>

@@ -377,9 +377,8 @@
   <a type="button" class="btn btn-default"><small>Version: <%= version()%> </small></a>
 % }
 
-% my $address = Net::Address::IP::Local->public;
-% if($address =~ m/146\.185\.144\.116/){
-        <div class="container">
+% unless($config->{demo_msg} eq ''){
+    <div class="container">
         <div class="row">
             <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
               <div class="alert alert-danger">
@@ -391,6 +390,5 @@
     </div>
 
 % }
-
 <br/>
 

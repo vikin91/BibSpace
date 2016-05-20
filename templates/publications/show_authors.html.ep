@@ -9,24 +9,15 @@
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <a class="btn btn-default" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
-            <a class="btn btn-default" href="<%= url_for('/publications/regenerate/')%><%=$id%><%=backurl()%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
+            <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+            <a class="btn btn-default" href="<%= url_for('publicationseditid', id=>$id) %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the publication</a>
+            <a class="btn btn-default" href="<%= url_for('publicationsregenerateid', id=>$id)%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
         </div>
     </div>
 
     <hr>
 
-    <div class="row">
-        <div class="col-lg-1"></div>
-        <div class="col-lg-10 col-md-10 col-xs-10">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <h3>Preview of entry <%= $key %></h3>
-                    %= b($preview)
-                </div>
-            </div>
-        </div>
-    </div>
+    %= include 'preview_row', preview => $preview, btype=> '', bkey =>$key;
 
     <hr>
 
@@ -40,7 +31,7 @@
         <div class="col-lg-8 col-md-8 col-xs-8">
             % my $i = 0;
             % foreach my $aid (@author_ids){
-                <a class="btn btn-default" type="button" href="<%= url_for('/authors/edit/')%><%=$aid%><%=backurl($self)%>">
+                <a class="btn btn-default" type="button" href="<%= url_for('authorseditid', id=>$aid)%>">
                     <span class="glyphicon glyphicon-user"></span> 
                     <%= get_master_for_id($aid) %> 
                     <i class="fa fa-external-link"></i> 
@@ -61,7 +52,7 @@
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
             % foreach my $team_id (@team_ids){
-                <a class="btn btn-default" type="button" href="<%= url_for('/teams/edit/')%><%=$team_id%><%=backurl($self)%>">
+                <a class="btn btn-default" type="button" href="<%= url_for('teamseditteamid', teamid=>$team_id)%>">
                     <i class="fa fa-users"></i>
                     <%= get_team_name($team_id) %> 
                     <i class="fa fa-external-link"></i> 

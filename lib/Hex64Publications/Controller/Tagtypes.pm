@@ -51,7 +51,7 @@ sub add_post{
     my $sth = $dbh->prepare( $qry );  
     $sth->execute($name, $comment); 
     
-    $self->redirect_to("/tagtypes");
+    $self->redirect_to($self->get_referrer);
 }
 
 ####################################################################################
@@ -73,7 +73,7 @@ sub delete{
     my $sth2 = $dbh->prepare( $qry2 );  
     $sth2->execute($id); 
 
-    $self->redirect_to("/tagtypes");
+    $self->redirect_to($self->get_referrer);
 }
 
 ####################################################################################

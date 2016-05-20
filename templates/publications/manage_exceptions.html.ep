@@ -12,14 +12,15 @@
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <a class="btn btn-default" href="<%=$back_url%>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
-            <a class="btn btn-default" href="<%= url_for('/publications/regenerate/')%><%=$id%><%=backurl()%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
+            <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+            <a class="btn btn-default" href="<%= url_for('publicationseditid', id=>$id) %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the publication</a>
+            <a class="btn btn-default" href="<%= url_for('publicationsregenerateid', id=>$id)%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
 
-            <button class="btn btn-info" data-toggle="tooltip" data-placement="right" title="Some entries don't have authors so they cannot be automatically assigned to a team. In reality, there was usually a team involved in works on that entry. Exceptions allow you to assing such entry to a team and list it among other papers of that team."><i class="fa fa-question "></i> Help</button>
+            <button class="btn btn-info" data-toggle="tooltip" data-placement="right" title="Some publications do not have authors so the entries cannot be automatically assigned to a team. In reality, there was usually a team involved in the work on that publication. Exceptions allow you to assign such entry to a team and list it among other papers of that team."><i class="fa fa-question "></i> Help</button>
         </div>
     </div>
 
-    <hr>
+    %= include 'preview_row', preview => $preview, btype=> $btype, bkey =>$key;
 
     <div class="row">
         <div class="col-lg-1"></div>
@@ -42,7 +43,7 @@
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
             % foreach my $aid (@author_ids){
-                <a class="btn btn-default" type="button" href="<%= url_for('/authors/edit/')%><%=$aid%><%=backurl($self)%>">
+                <a class="btn btn-default" type="button" href="<%= url_for('authorseditid', id=>$aid)%>">
                     <span class="glyphicon glyphicon-user"></span> 
                     <%= get_master_for_id($aid) %> 
                     <i class="fa fa-external-link"></i> 
@@ -62,7 +63,7 @@
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
             % foreach my $team_id (@team_ids){
-                <a class="btn btn-default" type="button" href="<%= url_for('/teams/edit/')%><%=$team_id%><%=backurl($self)%>">
+                <a class="btn btn-default" type="button" href="<%= url_for('teamseditteamid', teamid=>$team_id)%>">
                     <i class="fa fa-users"></i>
                     <%= get_team_name($team_id) %> 
                     <i class="fa fa-external-link"></i> 
@@ -83,13 +84,13 @@
         <div class="col-lg-8 col-md-8 col-xs-8">
             % foreach my $exception_id (@exceptions){
                 <div class="btn-group">
-                    <a class="btn btn-default" type="button" href="<%= url_for('/teams/edit/')%><%=$exception_id%><%=backurl($self)%>">
+                    <a class="btn btn-default" type="button" href="<%= url_for('teamseditteamid', teamid=>$exception_id)%>">
                         <i class="fa fa-exclamation " style="color: red;"></i>
                         <i class="fa fa-users " style="color: #5CB85C;"></i> 
                         <%= get_team_name($exception_id) %>
                         <i class="fa fa-external-link"></i>
                     </a>
-                    <a class="btn btn-default" href='/publications/<%= $eid %>/remove_exception/<%= $exception_id %><%=backurl($self)%>'><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
+                    <a class="btn btn-default" href="<%= url_for('remove_exception_from_publication', eid=>$eid, tid=>$exception_id)%>"><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
                 </div>
             % }
             % if (scalar @exceptions == 0){
@@ -114,10 +115,10 @@
             % foreach my $team_id (@$unassigned_teams){
             %   my $team = get_team_name($team_id);
                 <div class="btn-group">
-                    <a class="btn btn-default" type="button" href="<%= url_for('/teams/edit/')%><%=$team_id%><%=backurl($self)%>">
+                    <a class="btn btn-default" type="button" href="<%= url_for('teamseditteamid', teamid=>$team_id)%>">
                         <i class="fa fa-users " style="color: #5CB85C;"></i> <%= $team %>
                     </a>
-                    <a class="btn btn-default" href='/publications/<%= $eid %>/add_exception/<%= $team_id %><%=backurl($self)%>'>
+                    <a class="btn btn-default" href="<%= url_for('add_exception_to_publication', eid=>$eid, tid=>$team_id )%>">
                         <span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><i class="fa fa-exclamation " style="color: #5CB85C;"></i>
                     </a>
                 </div>

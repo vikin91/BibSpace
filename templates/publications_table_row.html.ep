@@ -6,20 +6,20 @@
     %   }    
                 <td style="width: 120px;">
                     <div class="btn-group">
-                        <a class="btn btn-warning" href="<%= url_for('/publications/manage_tags/')%><%= $obj->{id} %><%=$burl%>"><span class="glyphicon glyphicon-tags"></span> T</a>
+                        <a class="btn btn-warning" href="<%= url_for('publicationsmanage_tagsid', id=>$obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> T</a>
                         <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                         <span class="glyphicon glyphicon-pencil"></span>
                         <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu" role="menu">
-                            <li><a href="<%= url_for('/publications/toggle_hide/')%><%=$obj->{id}%><%=$burl%>"><span class="glyphicon glyphicon-eye-close"></span> Toggle hidden</a></li>
-                            <li><a href="<%= url_for('/publications/edit/')%><%=$obj->{id}%><%=$burl%>"><span class="glyphicon glyphicon-pencil" style="color: #5CB85C;"></span> Edit BibTeX</a></li>
+                            <li><a href="<%= url_for('publicationstoggle_hideid', id=>$obj->{id})%>"><span class="glyphicon glyphicon-eye-close"></span> Toggle hidden</a></li>
+                            <li><a href="<%= url_for('publicationseditid', id=>$obj->{id})%>"><span class="glyphicon glyphicon-pencil" style="color: #5CB85C;"></span> Edit BibTeX</a></li>
                             <li><a href="#modal-dialog-<%=$obj->{id}%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span> Delete...</a></li>
-                            <li><a href="<%= url_for('/publications/show_authors/')%><%=$obj->{id}%><%=$burl%>"><span class="glyphicon glyphicon-user"></span> Show authors</a></li>
-                            <li><a href="<%= url_for('/publications/regenerate/')%><%=$obj->{id}%><%=$burl%>"><span class="glyphicon glyphicon-refresh" style="color: #5CB85C;"></span> Regenerate HTML</a></li>
-                            <li><a href="<%= url_for('/publications/add_pdf/')%><%=$obj->{id}%><%=$burl%>"><i class="fa fa-upload"></i><i class="fa fa-file-pdf-o"></i><i class="fa fa-file-powerpoint-o"></i> Upload pdf/slides</a></li>
-                            <li><a href="<%= url_for('/publications/manage_tags/')%><%=$obj->{id}%><%=$burl%>"><span class="glyphicon glyphicon-tags"></span> Manage tags</a></li>
-                            <li><a href="<%= url_for('/publications/manage_exceptions/')%><%=$obj->{id}%><%=$burl%>"><i class="fa fa-exclamation "></i> Manage exceptions</a></li>
+                            <li><a href="<%= url_for('publicationsshow_authorsid', id=>$obj->{id})%>"><span class="glyphicon glyphicon-user"></span> Show authors</a></li>
+                            <li><a href="<%= url_for('publicationsregenerateid', id=>$obj->{id})%>"><span class="glyphicon glyphicon-refresh" style="color: #5CB85C;"></span> Regenerate HTML</a></li>
+                            <li><a href="<%= url_for('publicationsadd_pdfid', id=>$obj->{id})%>"><i class="fa fa-upload"></i><i class="fa fa-file-pdf-o"></i><i class="fa fa-file-powerpoint-o"></i> Upload pdf/slides</a></li>
+                            <li><a href="<%= url_for('publicationsmanage_tagsid', id=>$obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> Manage tags</a></li>
+                            <li><a href="<%= url_for('publicationsmanage_exceptionsid', id=>$obj->{id})%>"><i class="fa fa-exclamation "></i> Manage exceptions</a></li>
                         </ul>
                     </div>
 

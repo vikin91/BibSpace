@@ -20,6 +20,7 @@ our @EXPORT = qw(
     prepare_token_table_mysql
     prepare_user_table_mysql
     prepare_cron_table
+    populate_tables
     );
 
 
@@ -215,6 +216,7 @@ sub create_main_db{
 
     $self->prepare_token_table_mysql($dbh);
     $self->prepare_user_table_mysql($dbh);
+    $self->populate_tables($dbh);
 
 };
 
@@ -276,5 +278,62 @@ sub prepare_user_table_mysql{
    $self->prepare_token_table_mysql($user_dbh);
 
 };
+
+
+sub populate_tables{
+    my $self = shift;
+    my $dbh = shift;
+    try {
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('incollection','inproceedings',NULL,1)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('incollection','bibtex-incollection',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('inproceedings','bibtex-inproceedings',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('inbook','book',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('mastersthesis','theses',NULL,1)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('phdthesis','theses',NULL,1)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('phdthesis','volumes',NULL,1)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('proceedings','volumes',NULL,1)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('article','article',NULL,1)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('book','book',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('inbook','inbook',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('incollection','incollection',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('inproceedings','inproceedings',NULL,1)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('manual','manual','Manuals',1)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('mastersthesis','mastersthesis',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('misc','misc',NULL,1)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('phdthesis','phdthesis',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('proceedings','proceedings',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('techreport','techreport',NULL,1)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('unpublished','unpublished',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('book','volumes',NULL,0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('mastersthesis','supervised_theses','Supervised Theses',0)");
+      $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('phdthesis','supervised_theses','Supervised Theses',0)"); 
+    }
+    catch{
+      warn "Data already exist. Doing nothing.";
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('incollection','inproceedings',NULL,1)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('incollection','bibtex-incollection',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('inproceedings','bibtex-inproceedings',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('inbook','book',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('mastersthesis','theses',NULL,1)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('phdthesis','theses',NULL,1)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('phdthesis','volumes',NULL,1)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('proceedings','volumes',NULL,1)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('article','article',NULL,1)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('book','book',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('inbook','inbook',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('incollection','incollection',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('inproceedings','inproceedings',NULL,1)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('manual','manual','Manuals',1)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('mastersthesis','mastersthesis',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('misc','misc',NULL,1)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('phdthesis','phdthesis',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('proceedings','proceedings',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('techreport','techreport',NULL,1)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('unpublished','unpublished',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('book','volumes',NULL,0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('mastersthesis','supervised_theses','Supervised Theses',0)");
+      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('phdthesis','supervised_theses','Supervised Theses',0)");  
+    };
+}
 
 1;
