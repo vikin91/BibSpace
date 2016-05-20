@@ -54,5 +54,5 @@ notifications:
     email: true
 
 script: 
-    - prove -v -l t/
+    - BIBSPACE_CONFIG=config/testing.conf prove -v -l t/
 
