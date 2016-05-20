@@ -7,6 +7,10 @@ body {
     background-color: #FFF;
 }
 
+.display-inline{
+    display: inline-block;    
+}
+
 .bibtexnumber, .bibtexitem{
     padding-right: 5px;
     font-size:1em;

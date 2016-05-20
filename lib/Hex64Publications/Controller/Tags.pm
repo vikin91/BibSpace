@@ -187,8 +187,7 @@ sub add_and_assign {
         $sth->execute($eid, $tag_id) if defined $eid and $eid > 0 and defined $tag_id and $tag_id > 0;
     }
 
-    my $back_url = $self->param('back_url') || "/publications/manage_tags/$eid";
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 }
 
 ####################################################################################
@@ -411,8 +410,7 @@ sub delete {
         $sth2->execute($tag_to_delete);
     }
 
-    my $back_url = $self->param('back_url') || "/tags";
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 }
 
 

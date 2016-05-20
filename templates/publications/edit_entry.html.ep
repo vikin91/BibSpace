@@ -2,7 +2,6 @@
 % layout 'admin';
 
 % my $obj = $entry_obj;
-% my $this_page_back_url = $c->url_with('current')->query(back_url=>$c->get_referrer);
 
 <div class="container">
 
@@ -68,8 +67,7 @@
             </thead>
             <tbody>
             %if (defined $obj) { 
-                <!-- BACK url for a row should be this page! -->
-                %= include 'publications_table_row', burl => get_referrer, use_modal => 1, obj => $obj, j => '';
+                %= include 'publications_table_row', use_modal => 1, obj => $obj, j => '';
             % }
         </tbody>
         </table>

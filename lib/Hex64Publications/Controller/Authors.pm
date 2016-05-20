@@ -519,35 +519,6 @@ sub update_master_id{
 };
 
 ##############################################################################################################
-# sub delete_author_master{
-#    my $self = shift;
-#    my $master = shift;
-   
-#    my $dbh = $self->app->db;
-
-#    $self->write_log("Deleting author: $master.");
-
-#    my $sth = $dbh->prepare( "DELETE FROM Authors WHERE master=?" );  
-#    $sth->execute($master); 
-
-#    my $sth2 = $dbh->prepare( "DELETE FROM Author_to_Team WHERE author=?" );  
-#    $sth2->execute($master); 
-
-#    my $sth3 = $dbh->prepare( "DELETE FROM Entry_to_Author WHERE author=?" );  
-#    $sth3->execute($master); 
-# };
-# ##############################################################################################################
-# sub delete_author_id{
-#    my $self = shift;
-#    my $id = $self->param('id') ;
-
-#    my $master = get_master_for_id($self->app->db, $id);
-#    delete_author_master($self, $master);
-   
-#    warn "Remove back_url!" if $self->param('back_url'); # || "/authors?visible=1";
-#    $self->redirect_to($self->get_referrer);
-# };
-##############################################################################################################
 
  sub get_set_of_first_letters {
    my $self = shift;

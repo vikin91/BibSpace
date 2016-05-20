@@ -42,8 +42,8 @@
     </button>
     <ul class="dropdown-menu" role="menu">
         <li>
-            <a href="<%= url_for('/publications/add')%><%=backurl%>""><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add</span></a>
-            <a href="<%= url_for('/publications/add_many')%><%=backurl%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add multiple</span></a>
+            <a href="<%= url_for('/publications/add')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add</span></a>
+            <a href="<%= url_for('/publications/add_many')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add multiple</span></a>
         </li>
         <li>
             <a href="<%= url_for('/publications')%>">
@@ -109,7 +109,7 @@
     <span class="caret"></span>
   </button>
   <ul class="dropdown-menu" role="menu">
-        <li><a href="<%= url_for('/authors/add')%><%=backurl($self)%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add</span></a></li>
+        <li><a href="<%= url_for('/authors/add')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add</span></a></li>
         <li>
           <a href="<%= url_for('/authors')%>">
             <span class="glyphicon glyphicon-search"></span> 
@@ -132,7 +132,7 @@
         % foreach my $mid (get_author_mids_arr){
         % my $master = get_master_for_id($mid);
             <li>
-                <a href="<%= url_for('/authors/edit/')%><%=$mid%><%=backurl($self)%>" >
+                <a href="<%= url_for('/authors/edit/')%><%=$mid%>" >
                     <span class="glyphicon glyphicon-user"></span> <%= $master %> 
                     <span class="badge">
                         <%= num_pubs_for_author($mid)%>
@@ -161,7 +161,7 @@
         % foreach my $team_id (get_teams_id_arr()){
         % my $team_name = get_team_name($team_id);
             <li>
-                <a href="<%= url_for('/teams/edit/')%><%=$team_id%><%=backurl($self)%>">
+                <a href="<%= url_for('/teams/edit/')%><%=$team_id%>">
                     <i class="fa fa-users"></i> <%= $team_name %> 
                     <span class="badge">
                         <%= get_num_members_for_team($team_id)%>
@@ -225,7 +225,7 @@
     </button>
     <ul class="dropdown-menu" role="menu">
         <li>
-            <a href="<%= url_for('/settings/regenerate_all')%><%=backurl($self)%>">
+            <a href="<%= url_for('/settings/regenerate_all')%>">
                 <span class="glyphicon glyphicon-refresh"></span> Regenrate HTML
                 <span class="glyphicon glyphicon-warning-sign"  style="color: orange;"></span>
                 <span class="glyphicon glyphicon-time"  style="color: red;"></span>
@@ -233,7 +233,7 @@
         </li>
         % if(is_admin()){
             <li>
-                <a href="<%= url_for('/settings/regenerate_all_force')%><%=backurl($self)%>">
+                <a href="<%= url_for('/settings/regenerate_all_force')%>">
                     <span class="glyphicon glyphicon-refresh"></span> Regenrate HTML 
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">force</span>
@@ -246,7 +246,7 @@
             <li class="divider"></li>
             <li role="presentation" class="dropdown-header">Removes ugly BibTeX fields form entries. After cleaning HTML regeneration is required.</li>
             <li>
-                <a href="<%= url_for('/settings/clean_all')%><%=backurl($self)%>">
+                <a href="<%= url_for('/settings/clean_all')%>">
                     <i class="fa fa-magic"></i> Clean BibTeX fields
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">for all</span>
@@ -255,7 +255,7 @@
             <li class="divider"></li>
             <li role="presentation" class="dropdown-header">Sets entry_type to talk if the entry has tag 'talk'.</li>
             <li>
-                <a href="<%= url_for('/settings/fix_entry_types')%><%=backurl($self)%>">
+                <a href="<%= url_for('/settings/fix_entry_types')%>">
                     <i class="fa fa-magic"></i> Fix entry_type <i class="fa fa-microphone"></i> <span class="glyphicon glyphicon-file"></span> based on Tag
                     <span class="badge">for all</span>
                 </a>
@@ -263,7 +263,7 @@
             <li class="divider"></li>
             <li role="presentation" class="dropdown-header">Calculates integer month field in DB based on bibtex field 'month' .</li>
             <li>
-                <a href="<%= url_for('/settings/fix_months')%><%=backurl($self)%>">
+                <a href="<%= url_for('/settings/fix_months')%>">
                     <i class="fa fa-magic"></i> Fix month numbers in DB
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">for all</span>
@@ -285,7 +285,7 @@
         % } 
         <li class="divider"></li>
         <li>
-            <a href="<%= url_for('/backup')%><%=backurl($self)%>"><i class="fa fa-hdd-o"></i><span> Manage backups</span></a>
+            <a href="<%= url_for('backup_index')%>"><i class="fa fa-hdd-o"></i><span> Manage backups</span></a>
         </li>
         <li>
             <a href="<%= url_for('/cron')%>">
@@ -293,7 +293,7 @@
             </a>
         </li>
         <li>
-            <a href="<%= url_for('/log')->query(num=>100, back_url => backurl_short)%>">
+            <a href="<%= url_for('/log')->query(num=>100)%>">
                 <i class="fa fa-list-ol"></i> Show log
             </a>
         </li>
@@ -325,7 +325,7 @@
               </ul>
             
               <div class="modal-footer">
-                <a class="btn btn-warning" href="<%= url_for('/authors/reassign_and_create')%><%=backurl($self)%>"><i class="fa fa-refresh"></i> Yes, Reassign papers to authors (this can take some time)</a>
+                <a class="btn btn-warning" href="<%= url_for('/authors/reassign_and_create')%>"><i class="fa fa-refresh"></i> Yes, Reassign papers to authors (this can take some time)</a>
                 <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-info">No, I don't want to do this</a>
               </div>
           </div>
@@ -358,7 +358,7 @@
               </ul>
             
               <div class="modal-footer">
-                <a class="btn btn-warning" href="<%= url_for('/authors/reassign')%><%=backurl($self)%>"><i class="fa fa-refresh"></i> Yes, Reassign papers to authors (this can take some time)</a>
+                <a class="btn btn-warning" href="<%= url_for('/authors/reassign')%>"><i class="fa fa-refresh"></i> Yes, Reassign papers to authors (this can take some time)</a>
                 <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-info">No, I don't want to do this</a>
               </div>
           </div>
@@ -374,7 +374,7 @@
 </a>
 
 % if(session 'user'){
-  <a type="button" class="btn btn-default"><small>Version: <%= version()%> </small></a>
+  <a type="button" class="btn btn-default"><small>Version: <%= $self->app->version %> </small></a>
 % }
 
 % unless($config->{demo_msg} eq ''){

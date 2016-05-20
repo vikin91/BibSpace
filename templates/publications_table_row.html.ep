@@ -36,7 +36,7 @@
                                 <div class="modal-body">
                                     %== $obj->{html}
                                     <div class="modal-footer">
-                                        <a href="<%= url_for('/publications/delete_sure/')%><%=$obj->{id}%><%=$burl%>" class="btn btn-danger"> Yes, delete it <span class="glyphicon glyphicon-trash"></span></a>
+                                        <a href="<%= url_for('/publications/delete_sure/')%><%=$obj->{id}%>" class="btn btn-danger"> Yes, delete it <span class="glyphicon glyphicon-trash"></span></a>
                                         <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, I want to keep it <span class="glyphicon glyphicon-heart"></span> </button></a>
                                     </div>
                                 </div>
@@ -82,8 +82,8 @@
                                             <p><button class="btn btn-danger"><span class="glyphicon glyphicon-warning-sign"></span> Unsaved changes will be lost! </button></p>
 
                                             <div class="modal-footer">
-                                                <a href="<%= url_for('/publications/make_paper/')%><%= $obj->{id} %><%=$burl%>" class="btn btn-warning"> Change type to Paper <span class="glyphicon glyphicon-file"></span></a>
-                                                <a href="<%= url_for('/publications/make_talk/')%><%= $obj->{id} %><%=$burl%>" class="btn btn-warning"> Change type to Talk <span class="glyphicon glyphicon-volume-up"></span></a>
+                                                <a href="<%= url_for('/publications/make_paper/')%><%= $obj->{id} %>" class="btn btn-warning"> Change type to Paper <span class="glyphicon glyphicon-file"></span></a>
+                                                <a href="<%= url_for('/publications/make_talk/')%><%= $obj->{id} %>" class="btn btn-warning"> Change type to Talk <span class="glyphicon glyphicon-volume-up"></span></a>
                                                 <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-default">Back to editing without changing anything <span class="glyphicon glyphicon-remove"></span> </button></a>
                                             </div>
                                         </div>
@@ -93,11 +93,11 @@
                           <!-- MODAL DIALOG FOR SWITCHIN PAPER/TALK -->
                         % }
                         % else{
-                             <a href="<%= url_for('/publications/make_paper/')%><%= $obj->{id} %><%=$burl%>" class="btn <%=$t1%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
+                             <a href="<%= url_for('/publications/make_paper/')%><%= $obj->{id} %>" class="btn <%=$t1%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
                                     <span class="glyphicon glyphicon-file"></span>
                                 </span>
                             </a>
-                            <a href="<%= url_for('/publications/make_talk/')%><%= $obj->{id} %><%=$burl%>" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
+                            <a href="<%= url_for('/publications/make_talk/')%><%= $obj->{id} %>" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
                                     <i class="fa fa-microphone"></i>
                                 </span>
                             </a>

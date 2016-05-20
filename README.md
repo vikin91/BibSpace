@@ -77,13 +77,13 @@ nano ./config/default.conf
     db_pass         => "passw00rd", # or any other selected by you
 
 ### Run it!
-MOJO_MODE=production hypnotoad ./script/bibspace
+BIBSPACE_CONFIG=config/your.conf hypnotoad ./script/bibspace
 
 ### Stop it (if you need to)
 hypnotoad -s ./script/bibspace
 
 ### Run in developer mode
-MOJO_MODE=delevop morbo -l http://*:8080 ./script/bibspace
+BIBSPACE_CONFIG=config/your.conf morbo -l http://*:8080 ./script/bibspace
 
 ### See it in a browser
 http://YOUR_SERVER_IP:8080

@@ -48,12 +48,20 @@ sub do_mysql_db_backup_silent{
 
     say "call: BackupFunctions::do_mysql_db_backup_silent";
 
-    # my $backup_dbh = $self->app->backup_db;  
+    # my $backup_dbh = $self->app->db;  
     my $dbh = $self->app->db;  
 
-    my $backup_dir = "./backups";
+    my $backup_dir_absolute = $self->config->{backups_dir};
+    $backup_dir_absolute =~ s!/*$!/!; # makes sure that there is exactly one / at the end
+
+    # say "backup_dir_absolute: $backup_dir_absolute";
+
     my $str = Time::Piece::localtime->strftime('%Y%m%d-%H%M%S');
-    my $dbfname = $backup_dir."/backup-".$fname_prefix."-full-db-".$str.".sql";
+    my $db_fname = "backup-".$fname_prefix."-full-db-".$str.".sql";
+    # say "db_fname: $db_fname";
+    my $db_fname_path = $backup_dir_absolute.$db_fname;
+    # say "db_fname_path: $db_fname_path";
+
 
     my $db_host = $self->config->{db_host};
     my $db_user = $self->config->{db_user};
@@ -70,13 +78,13 @@ sub do_mysql_db_backup_silent{
     # say $ignored_tables_string;
 
     if ($db_pass =~ /^\s*$/) { # password empty
-        `mysqldump -u $db_user $db_database $ignored_tables_string > $dbfname`;
+        `mysqldump -u $db_user $db_database $ignored_tables_string > $db_fname_path`;
     }
     else{
-        `mysqldump -u $db_user -p$db_pass $db_database $ignored_tables_string > $dbfname`;
+        `mysqldump -u $db_user -p$db_pass $db_database $ignored_tables_string > $db_fname_path`;
     }
     if ($? == 0){
-        return $dbfname;
+        return $db_fname;
     }
     return undef;
 
@@ -110,7 +118,7 @@ sub do_delete_backup{   # added 22.08.14
 
     say "call BackupFunctions::do_delete_backup";
 
-    create_backup_table($dbh);
+    
 
     my $sth = $dbh->prepare("SELECT filename FROM Backup WHERE id = ?");
     $sth->execute($id);
@@ -127,9 +135,9 @@ sub do_delete_backup{   # added 22.08.14
 ####################################################################################
 sub do_delete_broken_or_old_backup {   # added 22.08.14
     my $self = shift;
-    my $backup_dbh = $self->app->backup_db;
+    my $backup_dbh = $self->app->db;
 
-    create_backup_table($backup_dbh);
+    
 
     my $sth = $backup_dbh->prepare("SELECT id, creation_time, filename FROM Backup ORDER BY creation_time DESC");
     $sth->execute();
@@ -139,24 +147,28 @@ sub do_delete_broken_or_old_backup {   # added 22.08.14
 
 
     my @ids;
-    my @fnames;
-    # $exists = 1 if -e $fname;
+    my @backup_file_names;
+
+    my $backup_dir_absolute = $self->config->{backups_dir};
+    $backup_dir_absolute =~ s!/*$!/!; # makes sure that there is exactly one / at the end
 
     while(my $row = $sth->fetchrow_hashref()) {
         my $id = $row->{id};
-        my $fname = $row->{filename};
+        my $backup_file_name = $row->{filename};
 
         push @ids, $id;
-        push @fnames, $fname;
+        push @backup_file_names, $backup_file_name;
     }
 
     my $i = 0;
     my $num_deleted = 0;
     foreach my $id (@ids){
         my $b_age = get_backup_age_in_days($self, $id);
-        my $fname = $fnames[$i];
+        my $backup_file_name = $backup_file_names[$i];
         my $exists = 0;
-        $exists = 1 if -e $fname;
+
+        my $backup_file_path = $backup_dir_absolute.$backup_file_name;
+        $exists = 1 if -e $backup_file_path;
 
         if($exists == 0){
             # CAN DELETE
@@ -166,7 +178,7 @@ sub do_delete_broken_or_old_backup {   # added 22.08.14
         else{   # file exists
             if($b_age > $backup_age_in_days_to_delete_automatically){
                 # we delete only automatically-created backups
-                if($fname =~ /cron/){
+                if($backup_file_name =~ /cron/){
                     if($file_age_counter >0){   # we leave some untouched
                         $file_age_counter = $file_age_counter - 1;
                     }
@@ -179,9 +191,7 @@ sub do_delete_broken_or_old_backup {   # added 22.08.14
         }
         $i = $i+1;
     }
-
     say "do_delete_broken_or_old_backup: num_deleted $num_deleted";
-
     return $num_deleted;
 }
 
@@ -192,20 +202,24 @@ sub do_restore_backup{
     my $dbh = $self->app->db;
     
 
-    create_backup_table($dbh);
+    
 
     my $sth = $dbh->prepare("SELECT filename FROM Backup WHERE id = ?");
     $sth->execute($id);
     my $row = $sth->fetchrow_hashref();
-    my $fname = $row->{filename};
+    my $backup_file_name = $row->{filename};
     $sth->finish();
+
+    my $backup_dir_absolute = $self->config->{backups_dir};
+    $backup_dir_absolute =~ s!/*$!/!; # makes sure that there is exactly one / at the end
+    my $backup_file_path = $backup_dir_absolute.$backup_file_name;
 
     # saving current state with special prefix to provide the possibility to restore the pre-restore state 
     do_backup_current_state($self, "pre-restore");
     $dbh->disconnect();
     
     $self->write_log("Cleaning the whole DB before restoring.");
-    $self->write_log("restoring backup from file $fname");
+    $self->write_log("restoring backup from file $backup_file_name");
 
     my $db_host = $self->config->{db_host};
     my $db_user = $self->config->{db_user};
@@ -213,22 +227,26 @@ sub do_restore_backup{
     my $db_pass = $self->config->{db_pass};
 
 
-    my $cmd = "mysql -u $db_user -p$db_pass $db_database  < $fname";
+    my $cmd = "mysql -u $db_user -p$db_pass $db_database  < $backup_file_path";
     if ($db_pass =~ /^\s*$/) { # password empty
-        $cmd = "mysql -u $db_user $db_database  < $fname";
+        $cmd = "mysql -u $db_user $db_database  < $backup_file_path";
     }
-    say "cmd: $cmd";
-    `$cmd`;
+    # say "cmd: $cmd";
+    try{
+      `$cmd`;
+    }
+    catch{
+      say "Restoring DB failed from file $backup_file_name. Reason: $_";
+      return 0;
+    };
+    
 
     if ($? == 0){
-        say "Restoring backup succeded from file $fname";
-        `head -n 100 $fname`;
-        say "---";
-        say "---";
+        say "Restoring backup succeeded from file $backup_file_name";
         return 1;
     }
     else{
-        say "Restoring backup FAILED from file $fname";
+        say "Restoring backup FAILED from file $backup_file_name";
         return 0;
     }
 }
@@ -238,10 +256,7 @@ sub do_backup_current_state{
     my $fname_prefix = shift || "normal";
 
     say "call: Backup::do_backup_current_state";
-
-    # create_backup_table($self->app->backup_db);
-    create_backup_table($self->app->db);
-    dump_db_to_bib_team($self, "full");
+    say "creating backup with prefix $fname_prefix";
 
     $self->write_log("creating backup with prefix $fname_prefix");
     return do_mysql_db_backup($self, $fname_prefix);
@@ -285,7 +300,7 @@ sub get_backup_id{
 sub get_backup_creation_time{
     my $self = shift;
     my $bip = shift;
-    my $dbh = $self->app->backup_db;
+    my $dbh = $self->app->db;
 
     my $sth = $dbh->prepare("SELECT creation_time FROM Backup WHERE id=? LIMIT 1");
     $sth->execute($bip);
@@ -296,7 +311,7 @@ sub get_backup_creation_time{
 sub get_backup_age_in_days{
     my $self = shift;
     my $bid = shift;
-    my $backup_dbh = $self->app->backup_db;
+    my $backup_dbh = $self->app->db;
 
     # mysql: SELECT TIMESTAMPDIFF(SECOND, '2010-11-29 13:13:55', '2010-11-29 13:16:55')
     my $sth = $backup_dbh->prepare("SELECT id, ABS(TIMESTAMPDIFF(DAY, CURRENT_TIMESTAMP, creation_time)) as age FROM Backup WHERE id=? LIMIT 1");
@@ -317,12 +332,12 @@ sub get_backup_age_in_days{
 sub dump_db_to_bib_team{
   my $self = shift;
   my $team = shift;
-  # my $backup_dbh = $self->app->backup_db;
-    my $backup_dbh = $self->app->db; 
+  # my $backup_dbh = $self->app->db;
+my $backup_dbh = $self->app->db; 
   my $normal_dbh = $self->app->db;
   my $teamid = get_team_id($normal_dbh, $team);
 
-  create_backup_table($backup_dbh);
+  
 
   # my $config = $self->conf;
   # my $config = $self->app->plugin('Config');

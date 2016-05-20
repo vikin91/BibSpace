@@ -28,24 +28,6 @@ use Mojo::Log;
 
 
 ####################################################################################
-sub get_back_url {
-    my $self = shift;
-    my $back_url = shift;
-
-    my $ref = $self->req->headers->referrer;
-    say "get_back_url referrer:".$ref;
-    
-    my $to_return = $back_url; # default
-
-    # $to_return = $ref if !defined $back_url;
-    # $to_return = $ref if $back_url eq '';
-    # $to_return = $ref if $back_url eq $self->req->url->to_abs;
-    # $to_return = $ref if $to_return eq "";
-
-    say "get_back_url returns:".$to_return."; for input: $back_url";
-    return $to_return;
-}
-####################################################################################
 sub isTalk {  # stupid code repetition!
     my $self = shift;
     my $obj = shift;
@@ -55,8 +37,8 @@ sub isTalk {  # stupid code repetition!
 sub fixMonths {
     say "CALL: fixMonths ";
     my $self = shift;
-    my $back_url = $self->param('back_url');
-    $back_url = $self->get_back_url($back_url);
+    
+    
 
     my @objs = Hex64Publications::Functions::EntryObj->getAll($self->app->db);
     for my $o (@objs){
@@ -74,14 +56,14 @@ sub fixMonths {
             # }
 
     }
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 }
 ####################################################################################
 sub fixEntryType {
     say "CALL: fixEntryType ";
     my $self = shift;
-    my $back_url = $self->param('back_url');
-    $back_url = $self->get_back_url($back_url);
+    
+    
 
     my @objs = Hex64Publications::Functions::EntryObj->getAll($self->app->db);
     for my $o (@objs){
@@ -91,23 +73,23 @@ sub fixEntryType {
     # $self->write_log("Cleaning ugly bibtex fields for all entries");
     # $self->helper_clean_ugly_bibtex_fileds_for_all_entries();
     # $self->write_log("Cleaning ugly bibtex fields for all entries has finished");
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 }
 ####################################################################################
 sub unhide {
     say "CALL: Publications::unhide";
     my $self = shift;
     my $id = $self->param('id');
-    my $back_url = $self->param('back_url');
+    
     my $dbh = $self->app->db;
 
-    $back_url = $self->get_back_url($back_url);
+    
 
     my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
     $obj->unhide($dbh);
 
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 };
 
 ####################################################################################
@@ -115,16 +97,16 @@ sub hide {
     say "CALL: Publications::hide";
     my $self = shift;
     my $id = $self->param('id');
-    my $back_url = $self->param('back_url');
+    
     my $dbh = $self->app->db;
 
-    $back_url = $self->get_back_url($back_url);
+    
 
     my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
     $obj->hide($dbh);
 
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 };
 ####################################################################################
 sub toggle_hide {
@@ -144,31 +126,31 @@ sub toggle_hide {
 sub make_paper {
     my $self = shift;
     my $id = $self->param('id');
-    my $back_url = $self->param('back_url');
+    
     my $dbh = $self->app->db;
 
-    $back_url = $self->get_back_url($back_url);
+    
 
     my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
     $obj->makePaper($dbh);
 
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 };
 ####################################################################################
 sub make_talk {
     my $self = shift;
     my $id = $self->param('id');
-    my $back_url = $self->param('back_url');
+    
     my $dbh = $self->app->db;
 
-    $back_url = $self->get_back_url($back_url);
+    
 
     my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
     $obj->makeTalk($dbh);
 
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 };
 ####################################################################################
 sub metalist {
@@ -570,7 +552,7 @@ sub show_unrelated_to_team{
     $self->write_log("Displaying entries unrealted to team with it $team_id");
     
     my $dbh = $self->app->db;
-    my $back_url = $self->param('back_url') || '/types';
+
 
 
     my $set_all_papers = get_set_of_all_papers($self);
@@ -592,8 +574,8 @@ sub show_unrelated_to_team{
 ####################################################################################
 sub all_without_missing_month{
     my $self = shift;
-    my $back_url = $self->param('back_url');
-    $back_url = '/publications' if $back_url eq $self->req->url->to_abs or $back_url eq '';
+    
+
     $self->write_log("Displaying entries without month");
     
     my @objs = ();
@@ -1292,10 +1274,10 @@ sub add_pdf_post{
 sub regenerate_html_for_all {
 	say "CALL: regenerate_html_for_all ";
   my $self = shift;
-  my $back_url = $self->param('back_url');
+  
 
   my $dbh = $self->app->db;
-  $back_url = $self->get_back_url($back_url);
+  
 
   $self->write_log("regenerate_html_for_all is running");
 
@@ -1310,11 +1292,11 @@ sub regenerate_html_for_all {
 sub regenerate_html_for_all_force {
 	say "CALL: regenerate_html_for_all_force ";
     my $self = shift;
-    my $back_url = $self->param('back_url');
+    
 
     my $dbh = $self->app->db;
     
-    $back_url = $self->get_back_url($back_url);
+    
 
     $self->write_log("regenerate_html_for_all FORCE is running");
 
@@ -1344,27 +1326,10 @@ sub regenerate_html {
 ####################################################################################
 
 sub delete {
-	say "CALL: delete ";
     my $self = shift;
     my $id = $self->param('id');
-    my $back_url = $self->param('back_url');
-
-    $self->write_log("Delete entry eid $id. (delete_sure should follow) ");
-
-    my $dbh = $self->app->db;
-    my $sth = $dbh->prepare( "SELECT DISTINCT key, html, bibtex_type
-      FROM Entry 
-      WHERE id = ?" );  
-   $sth->execute($id);
-
-   my $row = $sth->fetchrow_hashref();
-   my $html_preview = $row->{html} || nohtml($row->{bibtex_key}, $row->{bibtex_type});
-   my $bibtex_key = $row->{bibtex_key};
-  
-
-
-  $self->stash(key => $bibtex_key, id => $id, preview => $html_preview, back_url => $back_url);
-  $self->render(template => 'publications/sure_delete');
+    warn "deleting this way is not implemented! TODO: remove";
+    $self->redirect_to($self->get_referrer);
 };
 
 ####################################################################################
@@ -1373,25 +1338,20 @@ sub delete_sure {
 	say "CALL: delete_sure ";
    my $self = shift;
    my $eid = $self->param('id');
-   my $back_url = $self->param('back_url');
-
-   if( !defined $back_url or $back_url =~ /get\/$eid/){
-      $back_url = "/publications";
-   }
-
+   
    my $dbh = $self->app->db;
 
    delete_entry_by_id($dbh, $eid);
    $self->write_log("delete_sure entry eid $eid. Entry deleted.");
 
-   $self->redirect_to($back_url);
+   $self->redirect_to($self->get_referrer);
 };
 ####################################################################################
 sub show_authors_of_entry{
 	say "CALL: show_authors_of_entry";
     my $self = shift;
     my $eid = $self->param('id');
-    my $back_url = $self->param('back_url') || "/publications";
+
     my $dbh = $self->app->db;
 
     $self->write_log("Showing authors of entry eid $eid");
@@ -1406,7 +1366,7 @@ sub show_authors_of_entry{
     my $key = get_entry_key($dbh, $eid);
 
 
-    $self->stash(eid => $eid, key => $key, back_url => $back_url, preview => $html_preview, 
+    $self->stash(eid => $eid, key => $key, preview => $html_preview, 
         author_ids => \@authors, team_ids => \@teams);
     $self->render(template => 'publications/show_authors');
 }
@@ -1442,7 +1402,7 @@ sub manage_tags{
 	say "CALL: manage_tags";
     my $self = shift;
     my $eid = $self->param('id');
-    my $back_url = $self->param('back_url') || "/publications";
+
     my $dbh = $self->app->db;
 
     $self->write_log("Manage tags of entry eid $eid");
@@ -1464,7 +1424,7 @@ sub manage_tags{
   my $key = get_entry_key($dbh, $eid);
 
     
-  $self->stash(eid => $eid, key => $key, back_url => $back_url, preview => $html_preview, 
+  $self->stash(eid => $eid, key => $key, preview => $html_preview, 
         tags  => $tags_arrref, ids => $ids_arrref, parents => $parents_arrref, 
         all_tags  => $all_tags_arrref, unassigned_tag_ids => \@unassigned_tags_ids, 
         all_ids => $all_ids_arrref, all_parents => $all_parents_arrref);
@@ -1841,7 +1801,7 @@ sub get_adding_editing_message_for_error_code {
     elsif($exit_code eq '3'){
         return 'The proposed key exists already in DB under ID <button class="btn btn-danger btn-xs" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> '.$existing_id.'</button>. 
                     <br>
-                    <a class="btn btn-info btn-xs" href="'.$self->url_for('/publications/get/'.$existing_id.'').'" target="_blank"><span class="glyphicon glyphicon-search"></span>Show me the existing entry ID '.$existing_id.' in a new window</a>
+                    <a class="btn btn-info btn-xs" href="'.$self->url_for('publicationsgetid', id=>$existing_id).'" target="_blank"><span class="glyphicon glyphicon-search"></span>Show me the existing entry ID '.$existing_id.' in a new window</a>
                     <br>
                     Entry has not been saved. Please pick another BibTeX key.';
     }
@@ -2223,9 +2183,9 @@ sub after_edit_process_tags{
 sub clean_ugly_bibtex {
 	say "CALL: clean_ugly_bibtex ";
     my $self = shift;
-    my $back_url = $self->param('back_url');
+    
     my $dbh = $self->app->db;
-    $back_url = $self->get_back_url($back_url);
+    
 
     $self->write_log("Cleaning ugly bibtex fields for all entries");
 
@@ -2233,7 +2193,7 @@ sub clean_ugly_bibtex {
 
     $self->write_log("Cleaning ugly bibtex fields for all entries has finished");
 
-    $self->redirect_to($back_url);
+    $self->redirect_to($self->get_referrer);
 };
 
 ####################################################################################

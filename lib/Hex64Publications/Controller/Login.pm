@@ -10,7 +10,7 @@ use Data::Dumper;
 # for _under_ -checking if user is logged in to access other pages
 sub check_is_logged_in {
     my $self = shift;
-    return 1 if $self->app->mode eq 'demo';
+    return 1 if $self->app->is_demo;
 
     return 1 if $self->session('user');
     $self->redirect_to('badpassword');
@@ -21,17 +21,14 @@ sub check_is_logged_in {
 sub under_check_is_manager {
     my $self = shift;
     my $dbh = $self->app->db;
-    
-    return 1 if $self->app->mode eq 'demo';
     return 1 if $self->check_is_manager();
-
-
     $self->render(text => 'Your need _manager_ rights to access this page.');
     return undef;
 }
 
 sub check_is_manager {
     my $self = shift;
+    return 1 if $self->app->is_demo;
     my $dbh = $self->app->db;
     my $rank = $self->users->get_rank($self->session('user'), $dbh);
     return 1 if $rank > 0;
@@ -43,8 +40,6 @@ sub check_is_manager {
 sub under_check_is_admin {
     my $self = shift;
     my $dbh = $self->app->db;
-    
-    return 1 if $self->app->mode eq 'demo';
     return 1 if $self->check_is_admin();
 
     $self->render(text => 'Your need _admin_ rights to access this page.');
@@ -54,6 +49,7 @@ sub under_check_is_admin {
 sub check_is_admin {
     my $self = shift;
     my $dbh = $self->app->db;
+    return 1 if $self->app->is_demo;
 
     my $rank = $self->users->get_rank($self->session('user'), $dbh);
     return 1 if $rank > 1;
@@ -376,7 +372,7 @@ sub logout {
     $self->write_log("User logs out");
 
     $self->session(expires => 1);
-    $self->redirect_to('startpa');
+    $self->redirect_to($self->url_for('start'));
 }
 
 ####################################################################################

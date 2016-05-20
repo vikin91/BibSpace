@@ -20,8 +20,12 @@ use Mojo::Base 'Mojolicious::Controller';
 
 
 sub index {
-  my $self = shift;
-   # create_view();
+    my $self = shift;
+    if($self->app->is_demo){
+        $self->session(user => 'demouser');
+        $self->session(user_name => 'demouser');
+        $self->users->record_logging_in('demouser', $self->app->db);
+    }
 
    $self->render(template => 'display/start');
  }
@@ -105,7 +109,6 @@ sub test404 {
 sub show_log {
     my $self = shift;
     my $num = $self->param('num');
-    my $back_url = $self->param('back_url') || '/';
 
     $num = 100 unless $num;
 
@@ -129,7 +132,7 @@ sub show_log {
     @lines = @lines[ $#lines-$num .. $#lines ];
     chomp(@lines);
 
-    $self->stash(lines => \@lines, back_url => $back_url);
+    $self->stash(lines => \@lines);
     $self->render(template => 'display/log');
 }
 
