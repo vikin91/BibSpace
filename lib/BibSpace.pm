@@ -223,10 +223,10 @@ sub startup {
   $logged_user->get('/settings/regenerate_all')->to('publications#regenerate_html_for_all');
     
   # RESTIfied begin
-  # PUT '/backups'
-  $anyone->put('/backups')->to('backup#save')->name('backup_do');
   # GET '/backups'
   $logged_user->get('/backups')->to('backup#index')->name('backup_index');
+  # PUT '/backups'
+  $anyone->put('/backups')->to('backup#save')->name('backup_do');
   # GET '/backups/id'
   $logged_user->get('/backups/:id')->to('backup#backup_download')->name('backup_download');
   # DELETE '/backups/id'

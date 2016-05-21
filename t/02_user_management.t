@@ -1,9 +1,5 @@
 use Mojo::Base -strict;
 
-BEGIN {
-  $ENV{MOJO_MODE}    = 'testing';
-}
-
 use Test::More;
 use Test::Mojo;
 

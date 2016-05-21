@@ -1,10 +1,5 @@
 use Mojo::Base -strict;
 
-BEGIN {
-  # $ENV{BIBSPACE_CONFIG}    = 'config/testing.conf';
-  $ENV{BIBSPACE_CONFIG}    = 'config/development.conf';
-}
-
 use Test::More;
 use Test::Mojo;
 
