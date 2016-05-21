@@ -15,6 +15,7 @@ my $builder = Module::Build::Mojolicious->new(
     'Mojolicious' => 0,
   },
 	requires => {
+		'Module::CPANfile' => 0,
 		'Mojolicious' => 0,
 		'FindBin' => 0,
 		'DBD::mysql' => 0,
