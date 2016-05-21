@@ -1,8 +1,6 @@
 .travis.yml
 bin/bibspace
 Build.PL
-config/default.conf
-config/testing.conf
 git-getrevision.sh
 install-bibtex2html.sh
 lib/BibSpace.pm
