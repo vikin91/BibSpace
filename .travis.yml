@@ -20,6 +20,7 @@ addons:
 
 before_install:
     - sudo apt-get update -qq
+    - sudo apt-get install -y tree
     - sudo apt-get install -y ocaml libbtparse-dev libdbd-mysql-perl
     - bash install-bibtex2html.sh
     - eval $(curl https://travis-perl.github.io/init) --auto
@@ -43,6 +44,7 @@ before_script:
     - mysql --version
     - mysql -u root -e "SELECT VERSION();"
     - mysql -u root -e 'create database IF NOT EXISTS bibspacetest;'
+    - tree . 
     - ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
     # - echo "USE mysql;\nUPDATE user SET password=PASSWORD('password') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 
@@ -52,7 +54,7 @@ notifications:
 
 script: 
     - BIBSPACE_CONFIG=config/testing.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrsv t/
-    - perl Build.PL && ./Build build && cover -test -report coveralls
+    - perl Build.PL && BIBSPACE_CONFIG=config/testing.conf  ./Build build && cover -test -report coveralls
     - cover
 
 

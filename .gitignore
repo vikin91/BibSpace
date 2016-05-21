@@ -1,5 +1,10 @@
 config/*.conf
 !config/default.conf
+!config/testing.conf
+lib/BibSpace/files/config/*.conf
+!lib/BibSpace/files/config/default.conf
+!lib/BibSpace/files/config/testing.conf
+
 util/.*
 MANIFEST.bak
 MANIFEST.SKIP.bak
