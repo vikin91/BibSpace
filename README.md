@@ -23,6 +23,10 @@ git clone https://github.com/vikin91/BibSpace.git
 cd BibSpace
 git checkout master # or any other version that you want to use
 # install prerequisites for package installation
+
+sudo cpanm -nq Module::Build::Mojolicious Module::CPANfile
+sudo cpanm -nq --no-interactive --installdeps .
+
 sudo cpanm -n Mojolicious Module::Build  Module::Build::Mojolicious Module::Build::CleanInstall
 sudo cpanm -n cpanm Crypt::Random # this will speedup the rest
 perl Build.PL 
