@@ -36,6 +36,7 @@ sudo cpanm -nq --no-interactive --installdeps .
 
 
 perl Build.PL 
+./Build installdeps
 ./Build
 
 
@@ -47,9 +48,38 @@ mysql -u root -p --execute="FLUSH PRIVILEGES;"
 
 # edit the default.config file and enter the credentials for database
 
+# Run tests
 ./Build test
+# You may ignore the warnings with Mysql version. The passed test means everything is okay
 
+# If all tests are passed then you may finally start BibSpace
+hypnotoad ./bin/bibspace
 
+### Stop it (if you need to)
+hypnotoad -s ./bin/bibspace
+
+### Run in developer mode
+morbo -l http://*:8080 ./script/bibspace
+
+### Use custom config file
+BIBSPACE_CONFIG=config/your_file.conf hypnotoad ./bin/bibspace
+
+### See it in a browser
+http://YOUR_SERVER_IP:8080
+Admin login: pub_admin
+Admin password: asdf
+
+# TODO: add rules to cron
+# TODO: configure reverse proxy in nginx
+
+# In case of any failure install the dependencies using cpanminus
+sudo cpanm -n Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd Try::Tiny
+sudo cpanm -n File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI
+sudo cpanm -n Exporter Set::Scalar Session::Token LWP::UserAgent 
+sudo cpanm -n Text::BibTeX HTML::TagCloud::Sortable DBD::mysql Path::Tiny
+sudo cpanm -n Crypt::Random Mojolicious::Plugin::RenderFile
+sudo cpanm -n Test::Differences Test::MockModule WWW::Mechanize 
+sudo cpanm -n Module::Build::CleanInstall Module::Build::Mojolicious
 
 ```
 
@@ -130,8 +160,6 @@ BIBSPACE_CONFIG=config/your.conf morbo -l http://*:8080 ./script/bibspace
 http://YOUR_SERVER_IP:8080
 Admin login: pub_admin
 Admin password: asdf
-
-# TODO: Config Mailgun
 
 ```
 
