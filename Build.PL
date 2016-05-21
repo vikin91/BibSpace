@@ -9,8 +9,8 @@ my $builder = Module::Build::Mojolicious->new(
   dist_abstract       => 'BibSpace is a system to manage Bibtex references for authors and research groups.',
   dist_author         => 'Piotr Rygielski <piotr@linux.pl>',                                              
 	configure_requires => {
-  	'Module::Build::Mojolicious' => 0,
     'Module::Build' => 0.38,
+    'Module::Build::Mojolicious' => 0,
   },
 	requires => {
 		'Mojolicious' => 0,
