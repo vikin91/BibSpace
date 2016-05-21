@@ -85,9 +85,10 @@
 
 # Avoid private files
 ^__config\b
-\bconfig/development\.conf$
-\bconfig/demo\.conf$
-\bconfig/production\.conf$
+lib/BibSpace/files/config/production\.conf$
+lib/BibSpace/files/config/demo\.conf$
+lib/BibSpace/files/config/local\.conf$
+lib/BibSpace/files/config/development\.conf$
 
 # Avoid logs and utils
 ^backups\b

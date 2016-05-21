@@ -48,9 +48,9 @@ sub get_server_address {
 sub cron_day {
     my $self = shift;
     my $level = 0;
-    my $call_freq = $self->config->{cron_day_freq_lock};
+    my $call_freq = $self->config->{cron_day_freq_lock} // 0;
 
-    my $last_call = get_last_cron_run_in_hours($self->app->db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->db, $level) // 0;
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron day called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
@@ -70,9 +70,9 @@ sub cron_day {
 sub cron_night {
     my $self = shift;
     my $level = 1;
-    my $call_freq = $self->config->{cron_night_freq_lock};
+    my $call_freq = $self->config->{cron_night_freq_lock} // 0;
 
-    my $last_call = get_last_cron_run_in_hours($self->app->db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->db, $level) // 0;
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron night called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
@@ -91,9 +91,9 @@ sub cron_night {
 sub cron_week {
     my $self = shift;
     my $level = 2;
-    my $call_freq = $self->config->{cron_week_freq_lock};
+    my $call_freq = $self->config->{cron_week_freq_lock} // 0;
 
-    my $last_call = get_last_cron_run_in_hours($self->app->db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->db, $level) // 0;
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron week called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
@@ -114,9 +114,9 @@ sub cron_week {
 sub cron_month {
     my $self = shift;
     my $level = 3;
-    my $call_freq = $self->config->{cron_month_freq_lock};
+    my $call_freq = $self->config->{cron_month_freq_lock} // 0;
 
-    my $last_call = get_last_cron_run_in_hours($self->app->db, $level);
+    my $last_call = get_last_cron_run_in_hours($self->app->db, $level) // 0;
     my $left = $call_freq - $last_call;
     $self->render(text => "Cron month called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
     return if $last_call < $call_freq and $last_call > -1;
@@ -153,11 +153,9 @@ sub get_last_cron_run_in_hours{
     my $sth = $dbh->prepare("SELECT ABS(TIMESTAMPDIFF(HOUR, CURRENT_TIMESTAMP, last_run_time)) as age FROM Cron WHERE type=?");
     $sth->execute($level);
     my $row = $sth->fetchrow_hashref();
+    my $age = $row->{age};
 
-    my $ret = -1;
-    $ret = $row->{age} if $row->{age} >= 0;
-    return $ret;
-
+    return $age // 0; # returns 0 if age is undefined
 };
 
 ##########################################################################################

@@ -35,6 +35,7 @@ lib/BibSpace/files/templates/bibtex_help.html.ep
 lib/BibSpace/files/templates/display/cron.html.ep
 lib/BibSpace/files/templates/display/log.html.ep
 lib/BibSpace/files/templates/display/start.html.ep
+lib/BibSpace/files/templates/email_forgot_password.html.ep
 lib/BibSpace/files/templates/exception.production.html.ep
 lib/BibSpace/files/templates/footer.html.ep
 lib/BibSpace/files/templates/global_footer.html.ep

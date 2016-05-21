@@ -39,9 +39,9 @@ my $builder = Module::Build::Mojolicious->new(
 		'Crypt::Random' => 0,
 		'Test::Differences' => 0,
 		'Test::MockModule' => 0,
-		'WWW::Mailgun' => 0,
 		'Mojolicious::Plugin::RenderFile' => 0,
 		'Path::Tiny' => 0,
+		'WWW::Mechanize' => 0,
 	},
 	share_dir => 'lib/BibSpace/files',
   meta_merge => {

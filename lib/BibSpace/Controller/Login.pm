@@ -4,6 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 use BibSpace::Controller::DB;
 use BibSpace::Functions::UserObj;
 
+use WWW::Mechanize;
 use Data::Dumper;
 
 ####################################################################################
@@ -22,10 +23,16 @@ sub under_check_is_manager {
     my $self = shift;
     my $dbh = $self->app->db;
     return 1 if $self->check_is_manager();
-    $self->render(text => 'Your need _manager_ rights to access this page.');
+
+    $self->flash(msg => "You need to have at least manager rights to access this page! You have just tried to access: ".$self->url_for('current')->to_abs);
+    my $redirect_to = $self->get_referrer;
+    say "1 redirect_to $redirect_to current ".$self->url_for('current')->to_abs;
+    $redirect_to = $self->url_for('/') if $self->get_referrer eq $self->url_for('current')->to_abs or !defined $self->get_referrer;
+    say "2 redirect_to $redirect_to";
+    $self->redirect_to($redirect_to);
     return undef;
 }
-
+####################################################################################
 sub check_is_manager {
     my $self = shift;
     return 1 if $self->app->is_demo;
@@ -42,10 +49,15 @@ sub under_check_is_admin {
     my $dbh = $self->app->db;
     return 1 if $self->check_is_admin();
 
-    $self->render(text => 'Your need _admin_ rights to access this page.');
-    return 0;
+    $self->flash(msg => "You need to have admin rights to access this page! You have just tried to access: ".$self->url_for('current')->to_abs);
+    my $redirect_to = $self->get_referrer;
+    say "1 redirect_to $redirect_to current ".$self->url_for('current')->to_abs;
+    $redirect_to = $self->url_for('/') if $self->get_referrer eq $self->url_for('current')->to_abs or !defined $self->get_referrer;
+    say "2 redirect_to $redirect_to";
+    $self->redirect_to($redirect_to);
+    return undef;
 }
-
+####################################################################################
 sub check_is_admin {
     my $self = shift;
     my $dbh = $self->app->db;
@@ -64,9 +76,8 @@ sub manage_users {
     my $dbh = $self->app->db;
 
     my @user_objs = BibSpace::Functions::UserObj->getAll($dbh);
-
     $self->stash(user_objs => \@user_objs);
-    $self->render(template => 'login/manage_users');
+    $self->render(template => 'login/manage_users');        
 }
 ####################################################################################
 sub make_user {
@@ -208,27 +219,60 @@ sub post_gen_forgot_token {
     elsif($self->users->email_exists($email, $dbh)==1){
         $do_gen = 1;
         $final_email = $email;
+        $self->write_log("Forgot: requesting new password for email $email");
+    }
+    else{
+        $do_gen = 0;
     }
 
-    $self->write_log("Forgot: requesting new password for email $email");
+    $self->write_log("Forgot: requested new password for user $user or email $email but none of them found in the database.");
 
     if($do_gen == 1 and $final_email ne ""){
 
         my $token = $self->users->generate_token(); 
         $self->users->save_token_email($token, $final_email, $dbh);
-        $self->users->send_email($token, $final_email);
+
+        my $email_content = $self->render_to_string('email_forgot_password', token => $token); 
+        $self->send_email($token, $final_email, $email_content);
 
         $self->write_log("Forgot: reset token sent to $final_email");
-        $self->flash(msg => 'Email with password reset instructions has been sent. Expect an email from \'Mailgun Sandbox\'.');
-        $self->redirect_to('startpa');
+        $self->flash(msg => "Email with password reset instructions has been sent. Expect an email from ".$self->app->config->{mailgun_from});
+        $self->redirect_to('/');
 
     }
     else{
 
         $self->write_log("Forgot: user does not exist.");
-        $self->stash(msg => 'User or email does not exists. Try again.');
-        $self->render(template => 'login/forgot_request');
+        $self->flash(msg => 'User or email does not exists. Try again.');
+        $self->redirect_to('forgot');
     }
+}
+####################################################################################################
+sub send_email{ #NON_CONTROLLER FUNCTION, but it is usable here
+    my $self = shift;
+    my $token = shift;
+    my $email_address = shift;
+    my $email_content = shift;
+
+    my $subject = 'BibSpace password reset request';
+
+
+    my $uri = "https://api.mailgun.net/v3/".$self->app->config->{mailgun_domain}."/messages";
+    my $from = $self->app->config->{mailgun_from};
+    my $to = $email_address;
+
+  
+    my $mech = WWW::Mechanize->new(ssl_opts => { SSL_version => 'TLSv1'});
+    $mech->credentials( api => $self->app->config->{mailgun_key} );
+    $mech->ssl_opts( verify_hostname => 0 );
+    $mech->post( $uri,
+             [ from => $from,
+               to => $to,
+               subject => $subject,
+               html => $email_content ]);
+
+
+    #say "Mailgun response: ".$mech->response->as_string;
 }
 ####################################################################################
 sub token_clicked {
@@ -322,7 +366,7 @@ sub login {
             $self->users->record_logging_in($user, $dbh);
 
             $self->write_log("Login success");
-            $self->redirect_to('startpa');
+            $self->redirect_to('/');
             return;
         }
         else{
@@ -446,7 +490,7 @@ sub post_do_register{
                         $self->flash(msg => "User created successfully! You may now login using login: $login.");
                         $self->stash(msg => "User created successfully! You may now login using login: $login.");
                         $self->write_log("Login: registration successful for login: $login.");
-                        $self->redirect_to('startpa');
+                        $self->redirect_to('/');
                         # return;
                     }
                     else{
