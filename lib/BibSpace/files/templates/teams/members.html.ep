@@ -29,7 +29,7 @@
                     </li>
                     % if(is_admin()){
                         <li>
-                            <a href="<%= url_for('/teams/delete/')%><%=$teamid%>/force<%=backurl%>" data-toggle="tooltip" data-placement="left" title="Delete this team ignoring any memberships"><span class="glyphicon glyphicon-trash" style="color: red;"></span> Delete this team with force!</a>
+                            <a href="<%= url_for('teamsdeleteid_to_deleteforce', id_to_delete=>$teamid)%>" data-toggle="tooltip" data-placement="left" title="Delete this team ignoring any memberships"><span class="glyphicon glyphicon-trash" style="color: red;"></span> Delete this team with force!</a>
                         </li> 
                     % }
                 </ul>

@@ -11,6 +11,7 @@
     %= javascript '//code.jquery.com/jquery-latest.min.js'
     %= javascript '//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'
     %= stylesheet '//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css'
+    <!-- javascript '//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/highlight.min.js' -->
 
     %= stylesheet '/styles.css'
 

@@ -12,7 +12,6 @@ use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
 
-use Net::Address::IP::Local;
 use Time::Piece;
 use Data::Dumper;
 use File::Slurp;

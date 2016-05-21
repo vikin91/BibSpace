@@ -1,8 +1,9 @@
-admin_api_production.conf
-admin_api_test.conf
-config/test.conf
-config/demo.conf
-config/production.conf
-admin_api_demo.conf
-deploy-test-cloud.sh
-deploy-production-win2005.sh
+config/*.conf
+!config/default.conf
+util/.*
+MANIFEST.bak
+MANIFEST.SKIP.bak
+_build
+tmp/*
+log/*.log
+public/uploads/*

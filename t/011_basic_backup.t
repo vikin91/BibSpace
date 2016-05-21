@@ -1,14 +1,6 @@
 use Mojo::Base -strict;
-
-
 use Test::More;
 use Test::Mojo;
-
-use BibSpace;
-use BibSpace::Controller::Core;
-use BibSpace::Controller::Core;
-use BibSpace::Controller::Backup;
-use BibSpace::Controller::BackupFunctions;
 
 
 
@@ -22,8 +14,8 @@ my $self = $t_logged_in->app;
 
 
 
-my $db_backup_file = do_mysql_db_backup($t_logged_in->app, "basic_backup_testing");
-my $backup_id = get_backup_id($self, $db_backup_file);
+my $db_backup_file = BibSpace::Controller::BackupFunctions::do_mysql_db_backup($t_logged_in->app, "basic_backup_testing");
+my $backup_id = BibSpace::Controller::BackupFunctions::get_backup_id($self, $db_backup_file);
 
 my @pages;
 my $page = "";
@@ -55,8 +47,8 @@ $t_logged_in->delete_ok($page)->
 		status_isnt(404, "Checking: 404 $page")->
 		status_isnt(500, "Checking: 500 $page");
 
-$db_backup_file = do_mysql_db_backup($t_logged_in->app, "basic_backup_testing");
-$backup_id = get_backup_id($self, $db_backup_file);
+$db_backup_file = BibSpace::Controller::BackupFunctions::do_mysql_db_backup($t_logged_in->app, "basic_backup_testing");
+$backup_id = BibSpace::Controller::BackupFunctions::get_backup_id($self, $db_backup_file);
 
 $page = $t_logged_in->app->url_for('backup_restore');
 $t_logged_in->put_ok($page)->
