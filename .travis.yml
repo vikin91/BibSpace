@@ -36,7 +36,10 @@ before_install:
 
 install:
     - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
-    - cpanm --quiet --notest --instaldeps .
+    - perl Build.PL 
+    - cpanm -n -q --skip-satisfied --installdeps .
+    - ./Build
+    - ./Build install
     # - cpanm  Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper 
     # - cpanm --quiet --notest Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util 
     # - cpanm --quiet --notest utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent 
@@ -55,5 +58,7 @@ notifications:
     email: true
 
 script: 
-    - BIBSPACE_CONFIG=config/testing.conf prove -v -l t/
+    #- BIBSPACE_CONFIG=config/testing.conf prove -v -l t/
+    - ./Build test
+    - ./Build testcoverage
 
