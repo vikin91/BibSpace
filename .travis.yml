@@ -22,8 +22,7 @@ before_install:
     - sudo apt-get update -qq
     - sudo apt-get install -y ocaml libbtparse-dev libdbd-mysql-perl
     - bash install-bibtex2html.sh
-    - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
-    - source ~/travis-perl-helpers/init --auto
+    - eval $(curl https://travis-perl.github.io/init) --auto
 
 
 install:
