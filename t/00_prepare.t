@@ -1,6 +1,4 @@
 use Mojo::Base -strict;
-
-
 use Test::More;
 use Test::Mojo;
 
@@ -9,6 +7,10 @@ use BibSpace::Controller::Core;
 use BibSpace::Controller::Backup;
 use BibSpace::Controller::BackupFunctions;
 use BibSpace::Functions::EntryObj;
+
+# BEGIN{
+# 	$ENV{BIBSPACE_CONFIG}="lib/BibSpace/files/config/testing.conf";
+# }
 
 
 my $t_anyone = Test::Mojo->new('BibSpace');

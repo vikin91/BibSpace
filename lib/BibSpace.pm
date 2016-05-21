@@ -35,7 +35,8 @@ has is_demo => sub {
 has config_file => sub {
   my $self = shift;
   return $ENV{BIBSPACE_CONFIG} if $ENV{BIBSPACE_CONFIG};
-  return $self->app->home->rel_file('config/default.conf');
+  return $self->app->home->rel_file('lib/BibSpace/files/config/default.conf') if -e $self->app->home->rel_file('lib/BibSpace/files/config/default.conf');
+  return $self->app->home->rel_file('config/default.conf') if -e $self->app->home->rel_file('config/default.conf');
 };
 
 has db => sub {
