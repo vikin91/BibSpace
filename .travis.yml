@@ -36,8 +36,8 @@ before_install:
 
 install:
     - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
-    - perl Build.PL 
     - cpanm -n -q --skip-satisfied --installdeps .
+    - perl Build.PL 
     - ./Build
     - ./Build install
     # - cpanm  Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper 
@@ -58,7 +58,7 @@ notifications:
     email: true
 
 script: 
-    #- BIBSPACE_CONFIG=config/testing.conf prove -v -l t/
-    - ./Build test
-    - ./Build testcoverage
+    - BIBSPACE_CONFIG=config/testing.conf prove -v -l t/
+    # - ./Build test
+    # - ./Build testcoverage
 
