@@ -25,6 +25,7 @@ WriteMakefile(
     'Mojolicious' => 0,
 	},
 	BUILD_REQUIRES => {
+		'Module::CPANfile' => 0,
 		'Mojolicious' => 0,
 		'FindBin' => 0,
 		'DBD::mysql' => 0,
