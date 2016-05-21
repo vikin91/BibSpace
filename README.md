@@ -22,20 +22,22 @@ aptitude install sudo git curl vim cpanminus
 git clone https://github.com/vikin91/BibSpace.git
 cd BibSpace
 git checkout master # or any other version that you want to use
-# install prerequisites for package installation
 
-sudo cpanm -nq Module::Build::Mojolicious Module::CPANfile
+#### Install prerequisites for package installation
+# Install mysql  as prerequisite
+sudo aptitude install mysql-server mysql-client
+# SSL is required for perl modules to communicate with Mailgun API
+sudo aptitude install libssl-dev 
+# Required to run installdeps
+sudo cpanm -nq Module::Build::Mojolicious Module::CPANfile DateTime
+# The rest of prerequisites
 sudo cpanm -nq --no-interactive --installdeps .
 
-sudo cpanm -n Mojolicious Module::Build  Module::Build::Mojolicious Module::Build::CleanInstall
-sudo cpanm -n cpanm Crypt::Random # this will speedup the rest
+
 perl Build.PL 
-./Build installdeps
-# this may take long time (due to Crypt Random tests) - answer yes to all questions that appear
 ./Build
 
-# install mysql
-sudo aptitude install mysql-server mysql-client
+
 # configure database
 mysql -u root -p --execute="CREATE DATABASE IF NOT EXISTS bibspace;"
 mysql -u root -p --execute="CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';"

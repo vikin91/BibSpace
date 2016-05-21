@@ -13,7 +13,6 @@ my $builder = Module::Build::Mojolicious->new(
     'Module::Build::Mojolicious' => 0,
     'Module::Build::CleanInstall' => 0,
     'Mojolicious' => 0,
-    'Module::CPANfile' => 0,
   },
 	requires => {
 		'Module::CPANfile' => 0,

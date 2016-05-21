@@ -23,7 +23,7 @@ before_install:
     - sudo apt-get install -y tree
     - sudo apt-get install -y ocaml libbtparse-dev libdbd-mysql-perl
     - bash install-bibtex2html.sh
-    # - eval $(curl https://travis-perl.github.io/init) --auto
+    - eval $(curl https://travis-perl.github.io/init) --auto
 
 
 install:
@@ -34,12 +34,12 @@ install:
     # - perl Build.PL 
     # - ./Build
     # - ./Build install
-    # - cpanm  Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper 
-    # - cpanm --quiet --notest Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util 
-    # - cpanm --quiet --notest utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent 
-    # - cpanm --quiet --notest Text::BibTeX HTML::TagCloud::Sortable Crypt::Random 
-    # - cpanm --quiet --notest Test::Differences Test::MockModule WWW::Mailgun Mojolicious::Plugin::RenderFile Path::Tiny
-    # - cpanm --quiet --notest --installdeps .
+    # - cpanm -nq Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper 
+    # - cpanm -nq Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util 
+    # - cpanm -nq utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent 
+    # - cpanm -nq Text::BibTeX HTML::TagCloud::Sortable Crypt::Random WWW::Mechanize
+    # - cpanm -nq Test::Differences Test::MockModule Mojolicious::Plugin::RenderFile Path::Tiny
+    # - cpanm -nq --installdeps .
 
 before_script:
     - mysql --version
