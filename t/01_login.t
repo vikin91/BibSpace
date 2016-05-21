@@ -38,7 +38,7 @@ $t_logged_in->post_ok(
 
 $t_logged_in->get_ok('/')
     ->status_isnt(404)->status_isnt(500)
-    ->content_like(qr/Nice to see you here <em>Admin<\/em>/i);
+    ->content_like(qr/Nice to see you here/i);
 
 
 

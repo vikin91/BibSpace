@@ -92,8 +92,9 @@ sub startup {
 
     say "Creating directories.";
 
-    for my $dir ($self->config->{backups_dir}, $self->config->{upload_dir}){
+    for my $dir ( ($self->config->{backups_dir}, $self->config->{upload_dir}, $self->config->{log_dir})){
       $dir =~ s!/*$!/!;
+      say "Creating directory: $dir";
       try{
         path($dir)->mkpath;
       }
@@ -165,22 +166,11 @@ sub startup {
             }    
         }
         catch{
-            say "Opening log failed! Msg was: ".$msg_to_log;
-            say "Trying to create directory";
-            try{
-                mkdir "log";
-                if(open(my $fh, '>>', $filename)){
-                    print $fh $msg_to_log;
-                    close $fh;
-                }
-            }
-            catch{
-                say "Creating dir and opening log failed again! Ingoring.";
-            }    
+            warn "Opening log failed! Message to log: $msg_to_log . Reason: $_ "; 
         };
     });
 
-  create_backup_table($self->app->db);
+  
 
 
   my $anyone = $self->routes;
