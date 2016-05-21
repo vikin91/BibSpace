@@ -84,6 +84,7 @@
 
 
 # Avoid private files
+^__config\b
 \bconfig/development\.conf$
 \bconfig/demo\.conf$
 \bconfig/production\.conf$

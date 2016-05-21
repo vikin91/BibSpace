@@ -17,6 +17,7 @@ use Data::Dumper;
 use File::Slurp;
 use POSIX qw/strftime/;
 use Try::Tiny;
+use Path::Tiny;  # for creating directories
 
 
 our $VERSION = '0.4';
@@ -54,11 +55,11 @@ has db => sub {
 
 has version => sub {
   my $self = shift;
-  my $version = "unknown";
+  my $version = $VERSION;
   my $cmd_out = 0;
   try{
-    $cmd_out=`bash git-getrevision.sh`;
-    $version = $cmd_out;
+    $cmd_out =`bash git-getrevision.sh`;
+    $version .= $cmd_out;
   }
   catch{}; # ignore
   $version;
@@ -86,9 +87,20 @@ sub startup {
     });
 
     say "Using config: ".$self->app->config_file;
-    say "Version: ".$self->app->version;
+    say "App version: ".$self->app->version;
     $config = $self->plugin('Config' => {file => $self->app->config_file});
 
+    say "Creating directories.";
+
+    for my $dir ($self->config->{backups_dir}, $self->config->{upload_dir}){
+      $dir =~ s!/*$!/!;
+      try{
+        path($dir)->mkpath;
+      }
+      catch{
+        warn "Exception: cannot create directory $dir. Msg: $_";
+      };
+    }
 
 
     $self->create_main_db($self->app->db);
