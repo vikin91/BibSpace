@@ -1,7 +1,5 @@
-.travis.yml
 bin/bibspace
 Build.PL
-git-getrevision.sh
 install-bibtex2html.sh
 lib/BibSpace.pm
 lib/BibSpace/Controller/Authors.pm

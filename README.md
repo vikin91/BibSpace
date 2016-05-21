@@ -14,6 +14,41 @@ Visit [hex64.com](http://www.hex64.com/) and click backend/frontend demo to have
 ### Installation ###
 
 ```
+cd ~
+aptitude update
+aptitude upgrade
+aptitude install sudo git curl vim cpanminus 
+
+git clone https://github.com/vikin91/BibSpace.git
+cd BibSpace
+git checkout master # or any other version that you want to use
+# install prerequisites for package installation
+sudo cpanm -n Mojolicious Module::Build  Module::Build::Mojolicious Module::Build::CleanInstall
+sudo cpanm -n cpanm Crypt::Random # this will speedup the rest
+perl Build.PL 
+./Build installdeps
+# this may take long time (due to Crypt Random tests) - answer yes to all questions that appear
+./Build
+
+# install mysql
+sudo aptitude install mysql-server mysql-client
+# configure database
+mysql -u root -p --execute="CREATE DATABASE IF NOT EXISTS bibspace;"
+mysql -u root -p --execute="CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';"
+mysql -u root -p --execute="GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';"
+mysql -u root -p --execute="FLUSH PRIVILEGES;"
+
+# edit the default.config file and enter the credentials for database
+
+./Build test
+
+
+
+```
+
+### Installation OLD###
+
+```
 
 ### Prepare your system (tested on Debian 8.1 x64)
 cd ~
@@ -62,11 +97,10 @@ chmod 555 ./backups
 ### Create mysql database and tables
 mysql -u root -p
 # Enter your mysql_root password and type then in mysql console
-    CREATE DATABASE bibspace;
-    CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';
-    GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';
-    FLUSH PRIVILEGES;
-    quit;
+mysql -u root -p --execute="CREATE DATABASE IF NOT EXISTS bibspace;"
+mysql -u root -p --execute="CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';"
+mysql -u root -p --execute="GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';"
+mysql -u root -p --execute="FLUSH PRIVILEGES;"
 
 ### Edit config file
 nano ./config/default.conf

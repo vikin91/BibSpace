@@ -91,6 +91,9 @@ lib/BibSpace/files/config/local\.conf$
 lib/BibSpace/files/config/development\.conf$
 
 # Avoid logs and utils
+^git-getrevision\.sh
+^.gitignore
+^.travis\.yml
 ^backups\b
 ^log\b
 ^util\b

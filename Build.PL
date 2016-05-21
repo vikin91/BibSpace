@@ -16,6 +16,7 @@ my $builder = Module::Build::Mojolicious->new(
   },
 	requires => {
 		'Mojolicious' => 0,
+		'FindBin' => 0,
 		'DBD::mysql' => 0,
 		'Module::Build::Mojolicious' => 0,
 		'Time::Piece' => 0,
@@ -41,6 +42,8 @@ my $builder = Module::Build::Mojolicious->new(
 		'Test::MockModule' => 0,
 		'Mojolicious::Plugin::RenderFile' => 0,
 		'Path::Tiny' => 0,
+		'IO::Socket::IP' => 0,
+		'IO::Socket::SSL' => 0,
 		'WWW::Mechanize' => 0,
 	},
 	share_dir => 'lib/BibSpace/files',
