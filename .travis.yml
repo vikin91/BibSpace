@@ -10,7 +10,7 @@ perl:
     # - "5.10"
 
 dist: trusty
-sudo: true
+sudo: required
 addons:
   apt:
     packages:
