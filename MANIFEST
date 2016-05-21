@@ -1,5 +1,6 @@
 bin/bibspace
 Build.PL
+Makefile.PL
 install-bibtex2html.sh
 lib/BibSpace.pm
 lib/BibSpace/Controller/Authors.pm
