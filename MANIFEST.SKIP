@@ -82,12 +82,11 @@
 # Avoid README intended for github
 \bREADME\.md$
 
+
 # Avoid private files
 \bconfig/development\.conf$
 \bconfig/demo\.conf$
 \bconfig/production\.conf$
-\bconfig/testing\.conf$
-
 
 # Avoid logs and utils
 ^backups\b

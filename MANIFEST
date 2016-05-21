@@ -2,6 +2,7 @@
 bin/bibspace
 Build.PL
 config/default.conf
+config/testing.conf
 git-getrevision.sh
 install-bibtex2html.sh
 lib/BibSpace.pm
@@ -25,6 +26,7 @@ lib/BibSpace/Controller/Tagtypes.pm
 lib/BibSpace/Controller/Teams.pm
 lib/BibSpace/Controller/Types.pm
 lib/BibSpace/files/config/default.conf
+lib/BibSpace/files/config/testing.conf
 lib/BibSpace/files/public/index.html
 lib/BibSpace/files/public/styles.css
 lib/BibSpace/files/templates/authors/add_author.html.ep
