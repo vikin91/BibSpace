@@ -53,6 +53,8 @@ notifications:
     email:
         recpients:
             - piotr@linux.pl
+        on_success: always
+        on_failure: always
 
 script: 
     # works! # - BIBSPACE_CONFIG=lib/BibSpace/files/config/testing.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrsv t/
