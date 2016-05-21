@@ -18,6 +18,9 @@ use File::Slurp;
 use POSIX qw/strftime/;
 use Try::Tiny;
 
+
+our $VERSION = '0.4';
+
 # 0 4,12,20 * * * curl http://localhost:8081/cron/day
 # 0 2 * * * curl http://localhost:8081/cron/night
 # 5 2 * * 0 curl http://localhost:8081/cron/week
