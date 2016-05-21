@@ -90,6 +90,7 @@
 
 
 # Avoid logs and utils
+^backups\b
 ^log\b
 ^util\b
 ^tmp\b

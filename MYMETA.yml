@@ -4,33 +4,8 @@ author:
   - 'Piotr Rygielski <piotr@linux.pl>'
 build_requires: {}
 configure_requires:
-  Crypt::Eksblowfish::Bcrypt: '0'
-  Crypt::Random: '0'
-  Cwd: '0'
-  DBD::mysql: '0'
-  DBI: '0'
-  Data::Dumper: '0'
-  DateTime: '0'
-  Exporter: '0'
-  File::Copy: '0'
-  File::Find: '0'
-  File::Slurp: '0'
-  HTML::TagCloud::Sortable: '0'
-  LWP::UserAgent: '0'
   Module::Build: '0.38'
   Module::Build::Mojolicious: '0'
-  Mojolicious: '0'
-  Mojolicious::Plugin::RenderFile: '0'
-  Path::Tiny: '0'
-  Scalar::Util: '0'
-  Session::Token: '0'
-  Set::Scalar: '0'
-  Test::Differences: '0'
-  Test::MockModule: '0'
-  Text::BibTeX: '0'
-  Time::Piece: '0'
-  WWW::Mailgun: '0'
-  utf8: '0'
 dynamic_config: 0
 generated_by: 'Module::Build version 0.4214, CPAN::Meta::Converter version 2.150005'
 license: perl
@@ -92,6 +67,34 @@ provides:
     file: lib/BibSpace/Functions/TagTypeObj.pm
   BibSpace::Functions::UserObj:
     file: lib/BibSpace/Functions/UserObj.pm
+requires:
+  Crypt::Eksblowfish::Bcrypt: '0'
+  Crypt::Random: '0'
+  Cwd: '0'
+  DBD::mysql: '0'
+  DBI: '0'
+  Data::Dumper: '0'
+  DateTime: '0'
+  Exporter: '0'
+  File::Copy: '0'
+  File::Find: '0'
+  File::ShareDir: '1.00'
+  File::Slurp: '0'
+  HTML::TagCloud::Sortable: '0'
+  LWP::UserAgent: '0'
+  Module::Build::Mojolicious: '0'
+  Mojolicious: '0'
+  Mojolicious::Plugin::RenderFile: '0'
+  Path::Tiny: '0'
+  Scalar::Util: '0'
+  Session::Token: '0'
+  Set::Scalar: '0'
+  Test::Differences: '0'
+  Test::MockModule: '0'
+  Text::BibTeX: '0'
+  Time::Piece: '0'
+  WWW::Mailgun: '0'
+  utf8: '0'
 resources:
   bugtracker: https://github.com/vikin91/BibSpace/issues
   license: http://dev.perl.org/licenses/

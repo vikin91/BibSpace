@@ -21,6 +21,12 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
+            "Module::Build" : "0.38",
+            "Module::Build::Mojolicious" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
             "Crypt::Eksblowfish::Bcrypt" : "0",
             "Crypt::Random" : "0",
             "Cwd" : "0",
@@ -31,10 +37,10 @@
             "Exporter" : "0",
             "File::Copy" : "0",
             "File::Find" : "0",
+            "File::ShareDir" : "1.00",
             "File::Slurp" : "0",
             "HTML::TagCloud::Sortable" : "0",
             "LWP::UserAgent" : "0",
-            "Module::Build" : "0.38",
             "Module::Build::Mojolicious" : "0",
             "Mojolicious" : "0",
             "Mojolicious::Plugin::RenderFile" : "0",
