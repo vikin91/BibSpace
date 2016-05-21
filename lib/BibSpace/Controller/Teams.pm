@@ -1,4 +1,4 @@
-package Hex64Publications::Controller::Teams;
+package BibSpace::Controller::Teams;
 
 use utf8;
 use DateTime;
@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use DBI;
 
-use Hex64Publications::Controller::Core;
+use BibSpace::Controller::Core;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

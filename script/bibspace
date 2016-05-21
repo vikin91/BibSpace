@@ -8,5 +8,5 @@ BEGIN { unshift @INC, "$FindBin::Bin/../lib" }
 
 # Start command line interface for application
 require Mojolicious::Commands;
-# Mojolicious::Commands->start_app('Hex64Publications');
-Mojolicious::Commands->start_app(Hex64Publications => @ARGV );
+# Mojolicious::Commands->start_app('BibSpace');
+Mojolicious::Commands->start_app(BibSpace => @ARGV );

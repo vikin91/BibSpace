@@ -8,16 +8,16 @@ BEGIN {
 use Test::More;
 use Test::Mojo;
 
-use Hex64Publications;
-use Hex64Publications::Controller::Core;
-use Hex64Publications::Controller::Backup;
-use Hex64Publications::Controller::BackupFunctions;
+use BibSpace;
+use BibSpace::Controller::Core;
+use BibSpace::Controller::Backup;
+use BibSpace::Controller::BackupFunctions;
 
-use Hex64Publications::Functions::EntryObj;
+use BibSpace::Functions::EntryObj;
 
 
-my $t_anyone = Test::Mojo->new('Hex64Publications');
-my $t_logged_in = Test::Mojo->new('Hex64Publications');
+my $t_anyone = Test::Mojo->new('BibSpace');
+my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
     form        => { user   => 'pub_admin', pass => 'asdf' }

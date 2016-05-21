@@ -1,4 +1,4 @@
-package Hex64Publications::Controller::CronHelpers;
+package BibSpace::Controller::CronHelpers;
 
 use utf8;
 use DateTime;
@@ -10,10 +10,10 @@ use warnings;
 use DBI;
 use File::Copy qw(copy);
 
-use Hex64Publications::Controller::Core;
-use Hex64Publications::Controller::Set;
-use Hex64Publications::Controller::Publications;
-use Hex64Publications::Controller::BackupFunctions;
+use BibSpace::Controller::Core;
+use BibSpace::Controller::Set;
+use BibSpace::Controller::Publications;
+use BibSpace::Controller::BackupFunctions;
 
 use base 'Mojolicious::Plugin';
 sub register {

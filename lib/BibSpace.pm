@@ -1,12 +1,12 @@
-package Hex64Publications;
+package BibSpace;
 
-use Hex64Publications::Controller::DB;
-use Hex64Publications::Controller::Core;
-use Hex64Publications::Controller::Search;
-use Hex64Publications::Controller::BackupFunctions;
-use Hex64Publications::Controller::Publications;
-use Hex64Publications::Controller::Helpers;
-use Hex64Publications::Functions::MyUsers;
+use BibSpace::Controller::DB;
+use BibSpace::Controller::Core;
+use BibSpace::Controller::Search;
+use BibSpace::Controller::BackupFunctions;
+use BibSpace::Controller::Publications;
+use BibSpace::Controller::Helpers;
+use BibSpace::Functions::MyUsers;
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -93,12 +93,12 @@ sub startup {
     create_backup_table($self->app->db);
 
 
-    $self->plugin('Hex64Publications::Controller::Helpers');
-    $self->plugin('Hex64Publications::Controller::CronHelpers');
+    $self->plugin('BibSpace::Controller::Helpers');
+    $self->plugin('BibSpace::Controller::CronHelpers');
 
     $self->secrets( [$config->{key_cookie}] );
 
-    $self->helper(users => sub { state $users = Hex64Publications::Functions::MyUsers->new });
+    $self->helper(users => sub { state $users = BibSpace::Functions::MyUsers->new });
     $self->helper(proxy_prefix => sub { $config->{proxy_prefix} });
 
 
@@ -192,7 +192,6 @@ sub startup {
   $anyone->any('/test/404')->to('display#test404');
 
   $anyone->get('/register')->to('login#register')->name('register');
-  $anyone->get('/register_dummy')->to('login#dummy')->name('dummy');
   $anyone->post('/register')->to('login#post_do_register')->name('post_do_register');
   $anyone->any('/noregister')->to('login#register_disabled');
 
@@ -272,7 +271,6 @@ sub startup {
   $logged_user->get('/authors/reassign')->to('authors#reassign_authors_to_entries');
   $logged_user->get('/authors/reassign_and_create')->to('authors#reassign_authors_to_entries_and_create_authors');
   
-  $logged_user->get('/authors/visible')->to('authors#show_visible');
   $logged_user->get('/authors/toggle_visibility/:id')->to('authors#toggle_visibility');  
   $logged_user->get('/authors/toggle_visibility')->to('authors#toggle_visibility');  
 

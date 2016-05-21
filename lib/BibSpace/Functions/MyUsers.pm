@@ -1,6 +1,6 @@
-package Hex64Publications::Functions::MyUsers;
+package BibSpace::Functions::MyUsers;
 
-use Hex64Publications::Controller::DB;
+use BibSpace::Controller::DB;
 
 use strict;
 use warnings;

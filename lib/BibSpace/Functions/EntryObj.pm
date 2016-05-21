@@ -1,6 +1,6 @@
-package Hex64Publications::Functions::EntryObj;
+package BibSpace::Functions::EntryObj;
 
-use Hex64Publications::Controller::Core;
+use BibSpace::Controller::Core;
 
 use Data::Dumper;
 use utf8;
@@ -77,7 +77,7 @@ sub getByBibtexKey{
 
   
     my $row = $sth->fetchrow_hashref();
-    my $obj = Hex64Publications::Functions::EntryObj->new({id => $row->{id}});
+    my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id}});
     $obj->initFromDB($dbh);
 
     return $obj;
@@ -260,7 +260,7 @@ sub getAll{
     my @objs;
 
     while(my $row = $sth->fetchrow_hashref()) {
-        my $obj = Hex64Publications::Functions::EntryObj->new({id => $row->{id},
+        my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id},
                                 bibtex_key => $row->{bibtex_key},
                                 year => $row->{year},
                                 month => $row->{month},
@@ -318,7 +318,7 @@ sub getFromArray{
         my $sth = $dbh->prepare_cached( $qry );  
         $sth->execute(@arr);  
         while(my $row = $sth->fetchrow_hashref()) {
-            my $obj = Hex64Publications::Functions::EntryObj->new({id => $row->{id},
+            my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id},
                                 bibtex_key => $row->{bibtex_key},
                                 year => $row->{year},
                                 month => $row->{month},
@@ -353,7 +353,7 @@ sub getFromArray{
         $sth->execute(@arr); 
 
         while(my $row = $sth->fetchrow_hashref()) {
-            my $obj = Hex64Publications::Functions::EntryObj->new({id => $row->{id},
+            my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id},
                                 bibtex_key => $row->{bibtex_key},
                                 year => $row->{year},
                                 month => $row->{month},
@@ -461,7 +461,7 @@ sub getByFilter{
     my @objs;
 
     while(my $row = $sth->fetchrow_hashref()) {
-        my $obj = Hex64Publications::Functions::EntryObj->new({id => $row->{id},
+        my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id},
                             bibtex_key => $row->{bibtex_key},
                             year => $row->{year},
                             month => $row->{month},
@@ -553,7 +553,7 @@ sub getByFilterNoTalks{
     my @objs;
 
     while(my $row = $sth->fetchrow_hashref()) {
-        my $obj = Hex64Publications::Functions::EntryObj->new({id => $row->{id},
+        my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id},
                             bibtex_key => $row->{bibtex_key},
                             year => $row->{year},
                             month => $row->{month},

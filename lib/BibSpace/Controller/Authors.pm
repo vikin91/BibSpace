@@ -1,4 +1,4 @@
-package Hex64Publications::Controller::Authors;
+package BibSpace::Controller::Authors;
 
 use Data::Dumper;
 use utf8;
@@ -11,8 +11,8 @@ use strict;
 use warnings;
 use DBI;
 
-use Hex64Publications::Controller::Core;
-use Hex64Publications::Controller::Publications;
+use BibSpace::Controller::Core;
+use BibSpace::Controller::Publications;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

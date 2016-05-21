@@ -1,4 +1,4 @@
-package Hex64Publications::Functions::TagTypeObj;
+package BibSpace::Functions::TagTypeObj;
 
 use Data::Dumper;
 use utf8;
@@ -38,7 +38,7 @@ sub getByName{
 
   
     my $row = $sth->fetchrow_hashref();
-    my $obj = Hex64Publications::Functions::TagTypeObj->new({id => $row->{id},
+    my $obj = BibSpace::Functions::TagTypeObj->new({id => $row->{id},
                                 name => $row->{name},
                                 comment => $row->{comment},
                             });
@@ -60,7 +60,7 @@ sub getById{
 
   
     my $row = $sth->fetchrow_hashref();
-    my $obj = Hex64Publications::Functions::TagTypeObj->new({id => $row->{id},
+    my $obj = BibSpace::Functions::TagTypeObj->new({id => $row->{id},
                                 name => $row->{name},
                                 comment => $row->{comment},
                             });
@@ -79,7 +79,7 @@ sub getAll{
     my @objs;
 
     while(my $row = $sth->fetchrow_hashref()) {
-        my $obj = Hex64Publications::Functions::TagTypeObj->new({id => $row->{id},
+        my $obj = BibSpace::Functions::TagTypeObj->new({id => $row->{id},
                                 name => $row->{name},
                                 comment => $row->{comment},
                             });

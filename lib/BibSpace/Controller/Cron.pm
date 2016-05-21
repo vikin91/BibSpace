@@ -1,5 +1,5 @@
-package Hex64Publications::Controller::Cron;
-use Hex64Publications::Controller::DB;
+package BibSpace::Controller::Cron;
+use BibSpace::Controller::DB;
 
 
 use Data::Dumper;

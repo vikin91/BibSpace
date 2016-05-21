@@ -30,7 +30,7 @@
                 <td><span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Team's ID"><span class="glyphicon glyphicon-barcode"></span> <%= $id %></span></td>
                 <td>
                     <div class="btn-group">
-                        <a class="btn btn-success btn-sm" href="<%= url_for('/teams/edit/')%><%=$id%><%=backurl()%>" data-toggle="tooltip" data-placement="left" title="Edit team members"><span class="glyphicon glyphicon-pencil"></span></a>
+                        <a class="btn btn-success btn-sm" href="<%= url_for('/teams/edit/')%><%=$id%>" data-toggle="tooltip" data-placement="left" title="Edit team members"><span class="glyphicon glyphicon-pencil"></span></a>
                         <span class="btn btn-default btn-sm" ><i class="fa fa-users"></i> <%= $team %></span>
                     </div>
                 </td>

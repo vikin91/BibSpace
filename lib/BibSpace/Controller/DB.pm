@@ -1,4 +1,4 @@
-package Hex64Publications::Controller::DB;
+package BibSpace::Controller::DB;
 
 use utf8;
 use DateTime;

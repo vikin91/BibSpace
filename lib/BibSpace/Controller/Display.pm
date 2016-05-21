@@ -1,7 +1,7 @@
-package Hex64Publications::Controller::Display;
+package BibSpace::Controller::Display;
 
-use Hex64Publications::Controller::Core qw(get_all_entry_ids);
-use Hex64Publications::Controller::BackupFunctions;
+use BibSpace::Controller::Core qw(get_all_entry_ids);
+use BibSpace::Controller::BackupFunctions;
 
 
 use Data::Dumper;

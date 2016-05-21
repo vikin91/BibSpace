@@ -1,4 +1,4 @@
-package Hex64Publications::Functions::TagObj;
+package BibSpace::Functions::TagObj;
 
 use Data::Dumper;
 use utf8;
@@ -69,7 +69,7 @@ sub getByName{
     my $row = $sth->fetchrow_hashref();
     my $id = $row->{id} || -1;
 
-    my $obj = Hex64Publications::Functions::TagObj->new({id => $row->{id}});
+    my $obj = BibSpace::Functions::TagObj->new({id => $row->{id}});
     $obj->initFromDB($dbh);
 
     return $obj;
@@ -88,7 +88,7 @@ sub getAll{
     my @objs;
 
     while(my $row = $sth->fetchrow_hashref()) {
-        my $obj = Hex64Publications::Functions::TagObj->new({id => $row->{id},
+        my $obj = BibSpace::Functions::TagObj->new({id => $row->{id},
                                 name => $row->{name},
                                 type => $row->{type},
                                 permalink => $row->{permalink},
@@ -121,7 +121,7 @@ sub getAllwLetter{
     my @objs;
 
     while(my $row = $sth->fetchrow_hashref()) {
-        push @objs, Hex64Publications::Functions::TagObj->new({id => $row->{id},
+        push @objs, BibSpace::Functions::TagObj->new({id => $row->{id},
                                 name => $row->{name},
                                 type => $row->{type},
                                 permalink => $row->{permalink},
@@ -149,7 +149,7 @@ sub getTagsOfTypeForPaper{
 
     my @objs;
     while(my $row = $sth->fetchrow_hashref()) {
-        push @objs, Hex64Publications::Functions::TagObj->new({id => $row->{id},
+        push @objs, BibSpace::Functions::TagObj->new({id => $row->{id},
                                 name => $row->{name},
                                 type => $row->{type},
                                 permalink => $row->{permalink},
@@ -179,7 +179,7 @@ sub getUnassignedTagsOfTypeForPaper{
 
     my @objs;
     while(my $row = $sth->fetchrow_hashref()) {
-        push @objs, Hex64Publications::Functions::TagObj->new({id => $row->{id},
+        push @objs, BibSpace::Functions::TagObj->new({id => $row->{id},
                                 name => $row->{name},
                                 type => $row->{type},
                                 permalink => $row->{permalink},

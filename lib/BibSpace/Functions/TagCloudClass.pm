@@ -1,4 +1,4 @@
-package Hex64Publications::Functions::TagCloudClass;
+package BibSpace::Functions::TagCloudClass;
 
 use Data::Dumper;
 use utf8;

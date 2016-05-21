@@ -1,4 +1,4 @@
-package Hex64Publications::Controller::Set;
+package BibSpace::Controller::Set;
 
 use Data::Dumper;
 use utf8;
@@ -11,7 +11,7 @@ use strict;
 use warnings;
 use DBI;
 
-use Hex64Publications::Controller::Core;
+use BibSpace::Controller::Core;
 
 use Set::Scalar;
 

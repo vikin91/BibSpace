@@ -1,4 +1,4 @@
-package Hex64Publications::Controller::Helpers;
+package BibSpace::Controller::Helpers;
 
 use Data::Dumper;
 use utf8;
@@ -11,14 +11,14 @@ use strict;
 use warnings;
 use DBI;
 
-use Hex64Publications::Controller::Core;
-use Hex64Publications::Controller::Set;
-use Hex64Publications::Controller::Publications;
-use Hex64Publications::Controller::BackupFunctions;
+use BibSpace::Controller::Core;
+use BibSpace::Controller::Set;
+use BibSpace::Controller::Publications;
+use BibSpace::Controller::BackupFunctions;
 
-use Hex64Publications::Functions::TagObj;
-use Hex64Publications::Functions::EntryObj;
-use Hex64Publications::Functions::TagTypeObj;
+use BibSpace::Functions::TagObj;
+use BibSpace::Functions::EntryObj;
+use BibSpace::Functions::TagTypeObj;
 
 use base 'Mojolicious::Plugin';
 sub register {
@@ -100,7 +100,7 @@ sub register {
     $app->helper(get_all_tag_types => sub {
         my $self = shift;
         my $dbh = $self->app->db;
-        my @ttobjarr = Hex64Publications::Functions::TagTypeObj->getAll($dbh);
+        my @ttobjarr = BibSpace::Functions::TagTypeObj->getAll($dbh);
         return @ttobjarr;
         
         
@@ -112,7 +112,7 @@ sub register {
 
         say "get_tag_type_obj for type $type";
 
-        my $ttobj = Hex64Publications::Functions::TagTypeObj->getById($self->app->db, $type);
+        my $ttobj = BibSpace::Functions::TagTypeObj->getById($self->app->db, $type);
         return $ttobj;
 
         # return $ttobj->{name};
@@ -123,7 +123,7 @@ sub register {
         my $eid = shift;
         my $type = shift || 1;
 
-        my @tobjarr = Hex64Publications::Functions::TagObj->getTagsOfTypeForPaper($self->app->db, $eid, $type);
+        my @tobjarr = BibSpace::Functions::TagObj->getTagsOfTypeForPaper($self->app->db, $eid, $type);
         return @tobjarr;
     });
 
@@ -132,7 +132,7 @@ sub register {
         my $eid = shift;
         my $type = shift || 1;
 
-        my @tobjarr = Hex64Publications::Functions::TagObj->getUnassignedTagsOfTypeForPaper($self->app->db, $eid, $type);
+        my @tobjarr = BibSpace::Functions::TagObj->getUnassignedTagsOfTypeForPaper($self->app->db, $eid, $type);
         return @tobjarr;
     });
 

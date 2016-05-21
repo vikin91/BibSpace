@@ -1,4 +1,4 @@
-package Hex64Publications::Controller::Tags;
+package BibSpace::Controller::Tags;
 
 use Data::Dumper;
 use utf8;
@@ -12,11 +12,11 @@ use warnings;
 use DBI;
 use Scalar::Util qw(looks_like_number);
 
-use Hex64Publications::Controller::Core;
-use Hex64Publications::Functions::TagCloudClass;
-use Hex64Publications::Functions::TagObj;
-use Hex64Publications::Functions::TagTypeObj;
-use Hex64Publications::Controller::Set;
+use BibSpace::Controller::Core;
+use BibSpace::Functions::TagCloudClass;
+use BibSpace::Functions::TagObj;
+use BibSpace::Functions::TagTypeObj;
+use BibSpace::Controller::Set;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -68,7 +68,7 @@ sub index {
         $letter.='%';
     }
 
-    my @objs = Hex64Publications::Functions::TagObj->getAllwLetter($dbh, $type, $letter);
+    my @objs = BibSpace::Functions::TagObj->getAllwLetter($dbh, $type, $letter);
     my @letters_arr = get_first_letters($self, $type);
 
     $self->stash(otags => \@objs, type => $type, letters_arr => \@letters_arr);
@@ -198,7 +198,7 @@ sub edit {
     my $tagid = $self->param('id');
 
     # the tag as it is stored in the db
-    my $tobj = Hex64Publications::Functions::TagObj->new({id => $tagid});
+    my $tobj = BibSpace::Functions::TagObj->new({id => $tagid});
     $tobj->initFromDB($dbh);
 
     
@@ -309,7 +309,7 @@ sub get_tags_for_author_read{
 
         my $url = "/ly/p?author=".get_master_for_id($self->app->db, $maid)."&tag=".$tag."&title=1&navbar=1";
         
-        my $obj = new Hex64Publications::Functions::TagCloudClass($tag);
+        my $obj = new BibSpace::Functions::TagCloudClass($tag);
         $obj->setURL($url);
         $obj->setCount($count);
         $obj->setName($name);
@@ -357,7 +357,7 @@ sub get_tags_for_team_read{
 
         my $url = "/ly/p?team=".get_team_for_id($self->app->db, $tid)."&tag=".$tag."&title=1&navbar=1";
         
-        my $obj = new Hex64Publications::Functions::TagCloudClass($tag);
+        my $obj = new BibSpace::Functions::TagCloudClass($tag);
         $obj->setURL($url);
         $obj->setCount($count);
         $obj->setName($name);

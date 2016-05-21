@@ -1,7 +1,7 @@
-package Hex64Publications::Controller::BackupFunctions;
+package BibSpace::Controller::BackupFunctions;
 
-use Hex64Publications::Controller::DB;
-use Hex64Publications::Controller::Core;
+use BibSpace::Controller::DB;
+use BibSpace::Controller::Core;
 
 use Data::Dumper;
 use utf8;

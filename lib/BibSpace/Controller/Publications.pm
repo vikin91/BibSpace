@@ -1,4 +1,4 @@
-package Hex64Publications::Controller::Publications;
+package BibSpace::Controller::Publications;
 
 use Data::Dumper;
 use utf8;
@@ -13,10 +13,10 @@ use strict;
 use warnings;
 use DBI;
 
-use Hex64Publications::Controller::Core;
-use Hex64Publications::Controller::Set;
-use Hex64Publications::Functions::EntryObj;
-use Hex64Publications::Functions::TagObj;
+use BibSpace::Controller::Core;
+use BibSpace::Controller::Set;
+use BibSpace::Functions::EntryObj;
+use BibSpace::Functions::TagObj;
 
 use Set::Scalar;
 
@@ -40,7 +40,7 @@ sub fixMonths {
     
     
 
-    my @objs = Hex64Publications::Functions::EntryObj->getAll($self->app->db);
+    my @objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
     for my $o (@objs){
             my $entry = new Text::BibTeX::Entry();
             $entry->parse_s($o->{bib});
@@ -65,7 +65,7 @@ sub fixEntryType {
     
     
 
-    my @objs = Hex64Publications::Functions::EntryObj->getAll($self->app->db);
+    my @objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
     for my $o (@objs){
         $o->fixEntryTypeBasedOnTag($self->app->db);
     }
@@ -85,7 +85,7 @@ sub unhide {
 
     
 
-    my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
+    my $obj = BibSpace::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
     $obj->unhide($dbh);
 
@@ -102,7 +102,7 @@ sub hide {
 
     
 
-    my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
+    my $obj = BibSpace::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
     $obj->hide($dbh);
 
@@ -115,7 +115,7 @@ sub toggle_hide {
     my $id = $self->param('id');
     my $dbh = $self->app->db;
 
-    my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
+    my $obj = BibSpace::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
     $obj->do_toggle_hide($dbh);
 
@@ -131,7 +131,7 @@ sub make_paper {
 
     
 
-    my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
+    my $obj = BibSpace::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
     $obj->makePaper($dbh);
 
@@ -146,7 +146,7 @@ sub make_talk {
 
     
 
-    my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
+    my $obj = BibSpace::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
     $obj->makeTalk($dbh);
 
@@ -579,7 +579,7 @@ sub all_without_missing_month{
     $self->write_log("Displaying entries without month");
     
     my @objs = ();
-    my @all_objs = Hex64Publications::Functions::EntryObj->getAll($self->app->db);
+    my @all_objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
     for my $o (@all_objs){
         if($o->{month} < 1 or $o->{month} > 12){
             push @objs, $o;
@@ -1028,7 +1028,7 @@ sub display_landing{
 
     my $permalink = $self->param('permalink');
     my $tag_name = $self->param('tag') || "";
-    my $tag_name_for_permalink = Hex64Publications::Functions::TagObj->get_tag_name_for_permalink($self->app->db, $permalink);
+    my $tag_name_for_permalink = BibSpace::Functions::TagObj->get_tag_name_for_permalink($self->app->db, $permalink);
     $tag_name = $tag_name_for_permalink unless $tag_name_for_permalink eq -1;
     $tag_name = $permalink if !defined $self->param('tag') and $tag_name_for_permalink eq -1;
     $tag_name =~ s/_+/_/g if defined $tag_name and defined $show_title and $show_title == 1;
@@ -1825,7 +1825,7 @@ sub get_edit {
    my $dbh = $self->app->db;
 
 
-   my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
+   my $obj = BibSpace::Functions::EntryObj->new({id => $id});
    $obj->initFromDB($dbh);
    my $bib = $obj->{bib};
    my $key = $obj->{bibtex_key};
@@ -1862,7 +1862,7 @@ sub post_edit_store {
   my $param_prev = $self->param('preview') || "";
   my $param_save = $self->param('save') || "";
 
-  my $obj = Hex64Publications::Functions::EntryObj->new({id => $id});
+  my $obj = BibSpace::Functions::EntryObj->new({id => $id});
   $obj->initFromDB($dbh) if defined $id;
   $obj->{bib} = $new_bib;
   $obj->{key} = $key;
@@ -2111,7 +2111,7 @@ sub after_edit_process_month{
         my $month_numeric = get_month_numeric($month_str);
 
         
-        my $obj = Hex64Publications::Functions::EntryObj->new({id => $eid});
+        my $obj = BibSpace::Functions::EntryObj->new({id => $eid});
         $obj->initFromDB($dbh);
         $obj->setMonth($month_numeric, $dbh);
         $obj->setSortMonth($month_numeric, $dbh);
@@ -2217,7 +2217,7 @@ sub replace_urls_to_file_serving_function{
     $base_url = "" if $self->config->{base_url} eq '/';
 
 
-    my @all_entries = Hex64Publications::Functions::EntryObj->getAll($dbh);
+    my @all_entries = BibSpace::Functions::EntryObj->getAll($dbh);
     
     for my $e (@all_entries){
         my $relative_url = $self->url_for('download_publication', filetype => 'paper', id => $e->{id});

@@ -86,18 +86,18 @@
                 % my $stop = ${$stop_arr}[$i];
                 <tr>
                     <td>    
-                        <a class="btn btn-danger btn-sm" href="<%= url_for('/authors/')%><%=$author_id%>/remove_from_team/<%=$teamid%><%=backurl()%>" data-toggle="tooltip" data-placement="right" title="Remove author <%= get_master_for_id($author_id) %> from team <%= $teamname %>"><i class="fa fa-users"></i> <span class="glyphicon glyphicon-minus"></span></a>
+                        <a class="btn btn-danger btn-sm" href="<%= url_for('/authors/')%><%=$author_id%>/remove_from_team/<%=$teamid%>" data-toggle="tooltip" data-placement="right" title="Remove author <%= get_master_for_id($author_id) %> from team <%= $teamname %>"><i class="fa fa-users"></i> <span class="glyphicon glyphicon-minus"></span></a>
                     </td>
                     <td>
                         <div class="btn-group">
                             % my $visibility = author_is_visible($author_id) || 0;
                             % if ($visibility == 1){
-                                <a class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="left" title="Make author invisible" href="<%= url_for('/authors/toggle_visibility/')%><%=$author_id%><%=backurl($self)%>"><span class="glyphicon glyphicon-eye-open"></span></a>
+                                <a class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="left" title="Make author invisible" href="<%= url_for('/authors/toggle_visibility/')%><%=$author_id%>"><span class="glyphicon glyphicon-eye-open"></span></a>
                             %}
                             %else{
-                                <a class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="left" title="Make author visible" href="<%= url_for('/authors/toggle_visibility/')%><%=$author_id%><%=backurl($self)%>"><span class="glyphicon glyphicon-eye-close"></span></a>
+                                <a class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="left" title="Make author visible" href="<%= url_for('/authors/toggle_visibility/')%><%=$author_id%>"><span class="glyphicon glyphicon-eye-close"></span></a>
                             %}
-                            <a class="btn btn-success btn-sm" data-toggle="tooltip" data-placement="left" title="Show author's edit page" href="<%= url_for('/authors/edit/')%><%=$author_id%><%=backurl($self)%>"><span class="glyphicon glyphicon-user"></span> <span class="glyphicon glyphicon-pencil"></span></a>
+                            <a class="btn btn-success btn-sm" data-toggle="tooltip" data-placement="left" title="Show author's edit page" href="<%= url_for('/authors/edit/')%><%=$author_id%>"><span class="glyphicon glyphicon-user"></span> <span class="glyphicon glyphicon-pencil"></span></a>
 
                             <span class="btn btn-default btn-sm"  data-toggle="tooltip" data-placement="left" title="Author's master name and ID"><span class="glyphicon glyphicon-user"></span> <%= get_master_for_id($author_id) %> ( <span class="glyphicon glyphicon-barcode"></span> <%= $author_id %> )</span>
                         </div>

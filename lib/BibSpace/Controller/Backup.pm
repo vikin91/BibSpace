@@ -1,4 +1,4 @@
-package Hex64Publications::Controller::Backup;
+package BibSpace::Controller::Backup;
 
 use Data::Dumper;
 use utf8;
@@ -12,9 +12,9 @@ use warnings;
 use DBI;
 use File::Copy qw(copy);
 
-use Hex64Publications::Controller::Core;
-use Hex64Publications::Controller::BackupFunctions;
-use Hex64Publications::Controller::DB;
+use BibSpace::Controller::Core;
+use BibSpace::Controller::BackupFunctions;
+use BibSpace::Controller::DB;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

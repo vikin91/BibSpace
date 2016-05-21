@@ -1,7 +1,7 @@
-package Hex64Publications::Controller::Core;
+package BibSpace::Controller::Core;
 
-use Hex64Publications::Controller::DB;
-#require Hex64Publications::Functions::EntryObj;
+use BibSpace::Controller::DB;
+#require BibSpace::Functions::EntryObj;
 
 
 use Data::Dumper;
@@ -152,7 +152,7 @@ sub get_publications_core_from_array{
 
     my $dbh = $self->app->db;
 
-    my @objs = Hex64Publications::Functions::EntryObj->getFromArray($dbh, $array, $sort);
+    my @objs = BibSpace::Functions::EntryObj->getFromArray($dbh, $array, $sort);
     return @objs;
 
 }
@@ -207,7 +207,7 @@ sub get_publications_core{
     $tagid = undef unless defined $tag;
     
 
-    my @objs = Hex64Publications::Functions::EntryObj->getByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
+    my @objs = BibSpace::Functions::EntryObj->getByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
     return @objs;
 }
 ####################################################################################
@@ -221,7 +221,7 @@ sub get_single_publication {
 
 
     my @objs;
-    my $obj = Hex64Publications::Functions::EntryObj->new({id => $eid});
+    my $obj = BibSpace::Functions::EntryObj->new({id => $eid});
     $obj->initFromDB($dbh);
     if(defined $hidden and $obj->isHidden()==$hidden){
         push @objs, $obj; 
