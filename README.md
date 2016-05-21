@@ -28,6 +28,7 @@ git checkout master # or any other version that you want to use
 sudo aptitude install mysql-server mysql-client
 # SSL is required for perl modules to communicate with Mailgun API
 sudo aptitude install libssl-dev 
+sudo aptitude install bibtex2html libbtparse-dev libdbd-mysql-perl
 # Required to run installdeps
 sudo cpanm -nq Module::Build::Mojolicious Module::CPANfile DateTime
 # The rest of prerequisites
