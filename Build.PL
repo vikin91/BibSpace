@@ -11,6 +11,8 @@ my $builder = Module::Build::Mojolicious->new(
 	configure_requires => {
     'Module::Build' => 0.38,
     'Module::Build::Mojolicious' => 0,
+    'Module::Build::CleanInstall' => 0,
+    'Mojolicious' => 0,
   },
 	requires => {
 		'Mojolicious' => 0,
