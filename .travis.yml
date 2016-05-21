@@ -43,9 +43,10 @@ install:
 before_script:
     - mysql --version
     - mysql -u root -e "SELECT VERSION();"
-    - mysql -u root -e 'create database IF NOT EXISTS bibspacetest;'
-    - tree . 
-    # - echo "USE mysql;\nUPDATE user SET password=PASSWORD('password') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
+    - mysql -u root -e 'create database IF NOT EXISTS bibspace;'
+    - mysql -u root -e "CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';"
+    - mysql -u root -e "GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';"
+    - mysql -u root -e "FLUSH PRIVILEGES;"
 
 
 notifications:
