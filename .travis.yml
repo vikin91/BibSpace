@@ -53,6 +53,9 @@ script:
     - perl Build.PL && ./Build build && cover -test -report coveralls
     - cover
 
+after_failure: 
+    - cat /home/travis/.cpanm/build.log 
+
 after_success:
     - cover -report coveralls
 
