@@ -29,8 +29,10 @@ sub register {
 
     $app->helper(get_rank_of_current_user => sub {
         my $self = shift;
+        return 99 if $self->app->is_demo();
+
         my $uname = shift || $app->session('user');
-        my $user_dbh = $app->db;#DBI->connect('dbi:SQLite:dbname='.$app->config->{user_db}, '', '') or die $DBI::errstr;
+        my $user_dbh = $app->db;
 
         my $sth = $user_dbh->prepare("SELECT rank FROM Login WHERE login=?");
         $sth->execute($uname);
@@ -420,32 +422,8 @@ sub register {
               push @letters, uc($letter);
            }
            # @letters = uniq(@letters);
-           return sort(@letters);
-    });
-
-    $app->helper(bibtex_help => sub {
-        my $hlp = '
-            <strong>Remember!</strong><br><br>
-            <i class="fa fa-asterisk"></i> DE <i class="fa fa-asterisk"></i><br>
-            &auml; <i class="fa fa-hand-o-right"></i> \"{a} <br>
-            &uuml; <i class="fa fa-hand-o-right"></i> \"{u} <br>
-            &ouml; <i class="fa fa-hand-o-right"></i> \"{o} <br>
-            &szlig; <i class="fa fa-hand-o-right"></i> \ss <br>
-            <br>
-            <i class="fa fa-asterisk"></i> PL <i class="fa fa-asterisk"></i><br>
-            &oacute; <i class="fa fa-hand-o-right"></i> \\\'{o} <br>
-            &#347; <i class="fa fa-hand-o-right"></i> \\\'{s} <br>
-            &#322; <i class="fa fa-hand-o-right"></i> {\l} <br>
-            &#261; <i class="fa fa-hand-o-right"></i> \k{a} <br>
-            <br>
-            <i class="fa fa-asterisk"></i>
-            Help
-            <i class="fa fa-asterisk"></i>
-            <br>
-            <a href="http://www.bibtex.org/SpecialSymbols/">Help 1 <i class="fa fa-external-link"></i></a> <br>
-            <a href="http://leptokurtosis.com/main/node/42">Help 2 <i class="fa fa-external-link"></i></a> <br>
-        ';  
-        return $hlp; 
+           my @sorted_letters = sort(@letters);
+           return @sorted_letters;
     });
 }
 

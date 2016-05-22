@@ -66,14 +66,14 @@ sub initFromDB{
 sub is_manager {
     my $self = shift;
     return 1 if $self->{rank} > 0;
-    return undef;
+    return 0;
 }
 ####################################################################################
 # for _under_ -checking
 sub is_admin {
     my $self = shift;
     return 1 if $self->{rank} > 1;
-    return undef;
+    return 0;
 }
 ####################################################################################
 sub make_admin {

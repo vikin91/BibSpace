@@ -1,5 +1,7 @@
 package BibSpace::Controller::Tags;
 
+use strict;
+use warnings;
 use Data::Dumper;
 use utf8;
 use Text::BibTeX; # parsing bib files
@@ -7,8 +9,6 @@ use DateTime;
 use File::Slurp;
 use Time::Piece;
 use 5.010; #because of ~~
-use strict;
-use warnings;
 use DBI;
 use Scalar::Util qw(looks_like_number);
 
@@ -23,38 +23,6 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::Log;
 
 
-
-####################################################################################
-### NOT USED!
-sub prepare_db{
-    my $self = shift;
-    my $dbh = $self->app->db;
-
-    # $dbh->do("CREATE TABLE IF NOT EXISTS TagType(
-    #     name TEXT,
-    #     comment TEXT,
-    #     id INTEGER PRIMARY KEY,
-    #     UNIQUE(name) ON CONFLICT IGNORE
-    #     )");
-
-    # $dbh->do("ALTER TABLE Tag RENAME TO Tag2");
-    # $dbh->do("ALTER TABLE Tag ADD COLUMN permalink TEXT");
-
-    # $dbh->do("CREATE TABLE Tag(
-    #         name TEXT NOT NULL,
-    #         id INTEGER PRIMARY KEY,
-    #         type INTEGER DEFAULT 1,
-    #         permalink TEXT,
-    #         FOREIGN KEY(type) REFERENCES TagType(id),
-    #         UNIQUE(name) ON CONFLICT IGNORE
-    #     );");
-
-    # $dbh->do("INSERT INTO Tag (id, name)
-    #             SELECT id, name
-    #             FROM Tag2");
-
-    # $dbh->do("DROP TABLE Tag2");
-}
 
 ####################################################################################
 

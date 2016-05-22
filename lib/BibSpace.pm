@@ -1,4 +1,5 @@
 package BibSpace;
+# ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
 use BibSpace::Controller::DB;
 use BibSpace::Controller::Core;
@@ -12,12 +13,15 @@ use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
 
-use Net::Address::IP::Local;
 use Time::Piece;
 use Data::Dumper;
 use File::Slurp;
 use POSIX qw/strftime/;
 use Try::Tiny;
+use Path::Tiny;  # for creating directories
+
+# for Makemake. Needs to be removed for Dist::Zilla
+# our $VERSION = '0.4';
 
 # 0 4,12,20 * * * curl http://localhost:8081/cron/day
 # 0 2 * * * curl http://localhost:8081/cron/night
@@ -32,7 +36,8 @@ has is_demo => sub {
 has config_file => sub {
   my $self = shift;
   return $ENV{BIBSPACE_CONFIG} if $ENV{BIBSPACE_CONFIG};
-  return $self->app->home->rel_file('config/default.conf');
+  return $self->app->home->rel_file('lib/BibSpace/files/config/default.conf') if -e $self->app->home->rel_file('lib/BibSpace/files/config/default.conf');
+  return $self->app->home->rel_file('config/default.conf') if -e $self->app->home->rel_file('config/default.conf');
 };
 
 has db => sub {
@@ -52,14 +57,7 @@ has db => sub {
 
 has version => sub {
   my $self = shift;
-  my $version = "unknown";
-  my $cmd_out = 0;
-  try{
-    $cmd_out=`bash git-getrevision.sh`;
-    $version = $cmd_out;
-  }
-  catch{}; # ignore
-  $version;
+  return $BibSpace::VERSION // "0.4";
 };
 
 
@@ -84,9 +82,21 @@ sub startup {
     });
 
     say "Using config: ".$self->app->config_file;
-    say "Version: ".$self->app->version;
+    say "App version: ".$self->app->version;
     $config = $self->plugin('Config' => {file => $self->app->config_file});
 
+    say "Creating directories.";
+
+    for my $dir ( ($self->config->{backups_dir}, $self->config->{upload_dir}, $self->config->{log_dir})){
+      $dir =~ s!/*$!/!;
+      say "Creating directory: $dir";
+      try{
+        path($dir)->mkpath;
+      }
+      catch{
+        warn "Exception: cannot create directory $dir. Msg: $_";
+      };
+    }
 
 
     $self->create_main_db($self->app->db);
@@ -120,7 +130,7 @@ sub startup {
         my $usr = $self->session('user');
         my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
         return 1 if $rank > 0;
-        return undef;
+        return 0;
     });
 
     $self->helper(is_admin => sub {
@@ -129,7 +139,7 @@ sub startup {
         my $usr = $self->session('user');
         my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
         return 1 if $rank > 1;
-        return undef;
+        return 0;
     });
 
 
@@ -151,22 +161,11 @@ sub startup {
             }    
         }
         catch{
-            say "Opening log failed! Msg was: ".$msg_to_log;
-            say "Trying to create directory";
-            try{
-                mkdir "log";
-                if(open(my $fh, '>>', $filename)){
-                    print $fh $msg_to_log;
-                    close $fh;
-                }
-            }
-            catch{
-                say "Creating dir and opening log failed again! Ingoring.";
-            }    
+            warn "Opening log failed! Message to log: $msg_to_log . Reason: $_ "; 
         };
     });
 
-  create_backup_table($self->app->db);
+  
 
 
   my $anyone = $self->routes;
@@ -206,12 +205,12 @@ sub startup {
   ################ SETTINGS ################
   $logged_user->get('/profile')->to('login#profile');
   $superadmin->get('/manage_users')->to('login#manage_users')->name('manage_users');
-  $superadmin->get('/profile/:id')->to('login#foreign_profile');
-  $superadmin->get('/profile/delete/:id')->to('login#delete_user');
+  $superadmin->get('/profile/:id')->to('login#foreign_profile')->name('show_user_profile');
+  $superadmin->get('/profile/delete/:id')->to('login#delete_user')->name('delete_user');
 
-  $superadmin->get('/profile/make_user/:id')->to('login#make_user');
-  $superadmin->get('/profile/make_manager/:id')->to('login#make_manager');
-  $superadmin->get('/profile/make_admin/:id')->to('login#make_admin');
+  $superadmin->get('/profile/make_user/:id')->to('login#make_user')->name('make_user');
+  $superadmin->get('/profile/make_manager/:id')->to('login#make_manager')->name('make_manager');
+  $superadmin->get('/profile/make_admin/:id')->to('login#make_admin')->name('make_admin');
   
   $manager->get('/log')->to('display#show_log');
   $superadmin->get('/settings/fix_entry_types')->to('publications#fixEntryType');
@@ -275,6 +274,7 @@ sub startup {
   $logged_user->get('/authors/toggle_visibility')->to('authors#toggle_visibility');  
 
   ################ SEARCH ################
+  # what is this?? # TODO: test it!
   $anyone->get('/search/:type/:q')->to('search#search');
 
   ################ TAG TYPES ################

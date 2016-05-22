@@ -1,9 +1,11 @@
 package BibSpace::Controller::Login;
+
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use BibSpace::Controller::DB;
 use BibSpace::Functions::UserObj;
 
+use WWW::Mechanize;
 use Data::Dumper;
 
 ####################################################################################
@@ -14,7 +16,7 @@ sub check_is_logged_in {
 
     return 1 if $self->session('user');
     $self->redirect_to('badpassword');
-    return undef;
+    return 0;
 }
 ####################################################################################
 # for _under_ -checking
@@ -22,10 +24,14 @@ sub under_check_is_manager {
     my $self = shift;
     my $dbh = $self->app->db;
     return 1 if $self->check_is_manager();
-    $self->render(text => 'Your need _manager_ rights to access this page.');
-    return undef;
-}
 
+    $self->flash(msg => "You need to have at least manager rights to access this page! You have just tried to access: ".$self->url_for('current')->to_abs);
+    my $redirect_to = $self->get_referrer;
+    $redirect_to = $self->url_for('/') if $self->get_referrer eq $self->url_for('current')->to_abs or !defined $self->get_referrer;
+    $self->redirect_to($redirect_to);
+    return 0;
+}
+####################################################################################
 sub check_is_manager {
     my $self = shift;
     return 1 if $self->app->is_demo;
@@ -42,10 +48,13 @@ sub under_check_is_admin {
     my $dbh = $self->app->db;
     return 1 if $self->check_is_admin();
 
-    $self->render(text => 'Your need _admin_ rights to access this page.');
+    $self->flash(msg => "You need to have admin rights to access this page! You have just tried to access: ".$self->url_for('current')->to_abs);
+    my $redirect_to = $self->get_referrer;
+    $redirect_to = $self->url_for('/') if $self->get_referrer eq $self->url_for('current')->to_abs or !defined $self->get_referrer;
+    $self->redirect_to($redirect_to);
     return 0;
 }
-
+####################################################################################
 sub check_is_admin {
     my $self = shift;
     my $dbh = $self->app->db;
@@ -64,9 +73,8 @@ sub manage_users {
     my $dbh = $self->app->db;
 
     my @user_objs = BibSpace::Functions::UserObj->getAll($dbh);
-
     $self->stash(user_objs => \@user_objs);
-    $self->render(template => 'login/manage_users');
+    $self->render(template => 'login/manage_users');        
 }
 ####################################################################################
 sub make_user {
@@ -125,22 +133,31 @@ sub delete_user {
     my $usr_obj = BibSpace::Functions::UserObj->new({id => $profile_id});
     $usr_obj->initFromDB($dbh);
 
-    if($self->users->login_exists($usr_obj->{login}, $dbh) and $usr_obj->is_admin()){
-        $self->write_log("User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.");
-        $self->stash(msg => "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.");
+    my $message = "";
+
+    if($self->users->login_exists($usr_obj->{login}, $dbh) and $usr_obj->is_admin() == 1){
+        $message = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.";
     }
     else{
-        $self->write_log("User \`$usr_obj->{login}\` ($usr_obj->{real_name}) has been deleted.");
-        $self->stash(msg => "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) has been deleted.");
-        $self->users->do_delete_user($profile_id, $dbh);    
+        
+        if($self->users->do_delete_user($profile_id, $dbh)){
+            $message = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) has been deleted.";
+        }
+        else{
+            $message = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) could not been deleted.";
+        }
+            
     }
+    $self->write_log($message);
+    $self->flash(msg => $message);
     
     # $self->redirect_to('manage_users');
 
     my @user_objs = BibSpace::Functions::UserObj->getAll($dbh);
 
     $self->stash(user_objs => \@user_objs);
-    $self->render(template => 'login/manage_users');
+    $self->redirect_to('manage_users');
+    # $self->render(template => 'login/manage_users');
 }
 ####################################################################################
 sub foreign_profile {
@@ -208,27 +225,60 @@ sub post_gen_forgot_token {
     elsif($self->users->email_exists($email, $dbh)==1){
         $do_gen = 1;
         $final_email = $email;
+        $self->write_log("Forgot: requesting new password for email $email");
+    }
+    else{
+        $do_gen = 0;
     }
 
-    $self->write_log("Forgot: requesting new password for email $email");
+    $self->write_log("Forgot: requested new password for user $user or email $email but none of them found in the database.");
 
     if($do_gen == 1 and $final_email ne ""){
 
         my $token = $self->users->generate_token(); 
         $self->users->save_token_email($token, $final_email, $dbh);
-        $self->users->send_email($token, $final_email);
+
+        my $email_content = $self->render_to_string('email_forgot_password', token => $token); 
+        $self->send_email($token, $final_email, $email_content);
 
         $self->write_log("Forgot: reset token sent to $final_email");
-        $self->flash(msg => 'Email with password reset instructions has been sent. Expect an email from \'Mailgun Sandbox\'.');
-        $self->redirect_to('startpa');
+        $self->flash(msg => "Email with password reset instructions has been sent. Expect an email from ".$self->app->config->{mailgun_from});
+        $self->redirect_to('/');
 
     }
     else{
 
         $self->write_log("Forgot: user does not exist.");
-        $self->stash(msg => 'User or email does not exists. Try again.');
-        $self->render(template => 'login/forgot_request');
+        $self->flash(msg => 'User or email does not exists. Try again.');
+        $self->redirect_to('forgot');
     }
+}
+####################################################################################################
+sub send_email{ #NON_CONTROLLER FUNCTION, but it is usable here
+    my $self = shift;
+    my $token = shift;
+    my $email_address = shift;
+    my $email_content = shift;
+
+    my $subject = 'BibSpace password reset request';
+
+
+    my $uri = "https://api.mailgun.net/v3/".$self->app->config->{mailgun_domain}."/messages";
+    my $from = $self->app->config->{mailgun_from};
+    my $to = $email_address;
+
+  
+    my $mech = WWW::Mechanize->new(ssl_opts => { SSL_version => 'TLSv1'});
+    $mech->credentials( api => $self->app->config->{mailgun_key} );
+    $mech->ssl_opts( verify_hostname => 0 );
+    $mech->post( $uri,
+             [ from => $from,
+               to => $to,
+               subject => $subject,
+               html => $email_content ]);
+
+
+    #say "Mailgun response: ".$mech->response->as_string;
 }
 ####################################################################################
 sub token_clicked {
@@ -322,7 +372,7 @@ sub login {
             $self->users->record_logging_in($user, $dbh);
 
             $self->write_log("Login success");
-            $self->redirect_to('startpa');
+            $self->redirect_to('/');
             return;
         }
         else{
@@ -378,21 +428,17 @@ sub logout {
 ####################################################################################
 sub register{
     my $self = shift;
-    my $can_register = $self->app->config->{registration_enabled};
+    my $registration_enabled = $self->app->config->{registration_enabled};
 
-    # my $dbh = $self->app->db;
-
-    # say "call: register check_is_admin: ".$self->check_is_admin();
-    # say "call: register can_register : ".$can_register;
-
-    
-    if( (defined $self->check_is_admin() and $self->check_is_admin() == 1) or (defined $can_register and $can_register == 1) ){
-
-        $self->write_log("Login: displaying registration form.");
-        $self->write_log("Login: displaying registration form for super admin!") if $self->check_is_admin() == 1;
-        
-        $self->stash(name => '', email => 'test@example.com', login => '', password1 => '', password2 => '');
+    if(defined $self->check_is_admin() and $self->check_is_admin() == 1){
+        $self->stash(name => 'Jonh New', email => 'test@example.com', login => 'new_user_000', password1 => 'password1', password2 => 'password1');        
         $self->render(template => 'login/register');
+        return 0;
+    }
+    elsif(defined $registration_enabled and $registration_enabled == 1){
+        $self->stash(name => 'James Bond', email => 'test@example.com', login => 'james', password1 => '', password2 => '');
+        $self->render(template => 'login/register');
+        return 0;
     }
     else{
         $self->redirect_to('/noregister');
@@ -411,10 +457,10 @@ sub post_do_register{
     my $dbh = $self->app->db;
 
     my $config = $self->app->config;
-    my $can_register = $config->{registration_enabled};
+    my $registration_enabled = $config->{registration_enabled};
 
 
-    if( (!defined $self->check_is_admin() or $self->check_is_admin() == 0) and (!defined $can_register or $can_register == 0) ){
+    if( $self->check_is_admin() == 0 and (!defined $registration_enabled or $registration_enabled == 0) ){
         $self->redirect_to('/noregister');
         return;
     }
@@ -446,7 +492,7 @@ sub post_do_register{
                         $self->flash(msg => "User created successfully! You may now login using login: $login.");
                         $self->stash(msg => "User created successfully! You may now login using login: $login.");
                         $self->write_log("Login: registration successful for login: $login.");
-                        $self->redirect_to('startpa');
+                        $self->redirect_to('/');
                         # return;
                     }
                     else{

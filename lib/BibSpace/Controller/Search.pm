@@ -1,10 +1,9 @@
 package BibSpace::Controller::Search;
 
-use Data::Dumper;
-use utf8;
-use 5.010; #because of ~~
 use strict;
 use warnings;
+use utf8;
+use 5.010; #because of ~~
 use DBI;
 
 use BibSpace::Controller::Core;

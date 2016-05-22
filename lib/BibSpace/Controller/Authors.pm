@@ -542,7 +542,8 @@ sub update_master_id{
       push @letters, uc($letter);
    }
    @letters = uniq(@letters);
-   return sort(@letters);
+   my @sorted_letters = sort(@letters);
+   return @sorted_letters;
  }
 ##############################################################################################################
 sub get_visibility_by_name {
@@ -568,6 +569,7 @@ sub reassign_authors_to_entries {
 
     postprocess_all_entries_after_author_uids_change($self);
 
+    $self->flash(msg => 'Reassignment has finished.');
     $self->redirect_to($self->get_referrer);
 }
 ##############################################################################################################
@@ -575,8 +577,8 @@ sub reassign_authors_to_entries_and_create_authors {
     my $self = shift;
     my $dbh = $self->app->db;
 
-    postprocess_all_entries_after_author_uids_change_w_creating_authors($self);
-
+    my $num_authors_created = postprocess_all_entries_after_author_uids_change_w_creating_authors($self);
+    $self->flash(msg => 'Reassignment with author creation has finished. Num created authors: '.$num_authors_created);
     $self->redirect_to($self->get_referrer);
 }
 
