@@ -487,55 +487,41 @@ sub post_do_register{
                     if($self->users->login_exists($login, $dbh) == 0){
                         $self->users->add_new_user($login,$email,$name,$password1,0,$dbh);
 
-                        # $self->stash(msg => "User created successfully! You may now login using login: $login.");
-
                         $self->flash(msg => "User created successfully! You may now login using login: $login.");
-                        $self->stash(msg => "User created successfully! You may now login using login: $login.");
                         $self->write_log("Login: registration successful for login: $login.");
                         $self->redirect_to('/');
-                        # return;
                     }
                     else{
                         # $self->stash(msg => "This login is already taken");
 
-                        $self->flash(msg => "This login is already taken", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
-                        $self->stash(msg => "This login is already taken", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
+                        $self->flash(msg => "This login is already taken");
+                        $self->stash(name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
                         $self->write_log("Login: registration unsuccessful for login: $login. Login taken.");
                         $self->redirect_to('register');
-                        # $self->render(template => 'login/register');
-                        # return;
                     }
                 }
                 else{
                     # $self->stash(msg => "Password is too short");
-
                     
-                    $self->flash(msg => "Password is too short, use minimum 4 symbols", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
-                    $self->stash(msg => "Password is too short, use minimum 4 symbols", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
+                    $self->flash(msg => "Password is too short, use minimum 4 symbols");
+                    $self->stash(name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
                     $self->write_log("Login: registration unsuccessful for login: $login. Password too short.");
                     $self->redirect_to('register');
-                    # $self->render(template => 'login/register');
-                    # return;
                 }
             }
             else{
                 # $self->stash(msg => "Passwords don't match!");
                 $self->flash(msg => "Passwords don't match!", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
-                $self->stash(msg => "Passwords don't match!", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
                 $self->write_log("Login: registration unsuccessful for login: $login. Passwords don't match");
                 $self->redirect_to('register');
-                # $self->render(template => 'login/register');
-                # return;
             }
         }
         else{
             # $self->stash(msg => "Some input is missing!");
             $self->flash(msg => "Some input is missing!", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
-            $self->stash(msg => "Some input is missing!", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
+            $self->stash(name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
             $self->write_log("Login: registration unsuccessful for login: $login. Input missing.");
             $self->redirect_to('register', msg => "Some input is missing!", name => $name, email => $email, login => $login, password1 => $password1, password2 => $password2);
-            # $self->render(template => 'login/register');
-            # return;
         }
 
     }
