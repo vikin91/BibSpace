@@ -41,21 +41,14 @@ sub fixMonths {
     
 
     my @objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
+    my $num_checks = 0;
     for my $o (@objs){
-            my $entry = new Text::BibTeX::Entry();
-            $entry->parse_s($o->{bib});
+        my $entry = new Text::BibTeX::Entry();
+        $entry->parse_s($o->{bib});
 
-            after_edit_process_month($self->app->db, $entry);
-
-            #check
-            # if($entry->exists('month')){
-            #     my $month_str = $entry->get('month');
-            #     my $month_numeric = get_month_numeric($month_str);
-
-            #     say "ENTRY $o->{id}  MONTH_STR $month_str MONTH_INT $month_numeric" if $month_numeric > 12 or $month_numeric == 0;
-            # }
-
+         $num_checks = $num_checks + after_edit_process_month($self->app->db, $entry);
     }
+    $self->flash(msg => 'Fixing entries month field finished. Num entries checked: '.$num_checks);
     $self->redirect_to($self->get_referrer);
 }
 ####################################################################################
@@ -66,13 +59,12 @@ sub fixEntryType {
     
 
     my @objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
+    my $num_fixes = 0;
     for my $o (@objs){
-        $o->fixEntryTypeBasedOnTag($self->app->db);
+        $num_fixes = $num_fixes + $o->fixEntryTypeBasedOnTag($self->app->db);
     }
 
-    # $self->write_log("Cleaning ugly bibtex fields for all entries");
-    # $self->helper_clean_ugly_bibtex_fileds_for_all_entries();
-    # $self->write_log("Cleaning ugly bibtex fields for all entries has finished");
+    $self->flash(msg => 'All entries have now their paper/talk type fixed. Number of fixes: '.$num_fixes);
     $self->redirect_to($self->get_referrer);
 }
 ####################################################################################
@@ -240,13 +232,15 @@ sub meta {
     # PUBLICATION DATE
     my $year = $entry->get('year');
     
-    my $month = undef;
+    my $month = 0;
     $month = $entry->get('month') if $entry->exists('month');
     
-    my $days = undef;
+    my $days = 0;
     $days = $entry->get('day') if $entry->exists('day');
-    my @day = split("--", $days) if defined $days;
-    my $first_day = $day[0] if defined $days;
+    my @day = ();
+    @day = split("--", $days) if defined $days;
+    my $first_day = 0;
+    $first_day = $day[0] if defined $days;
 
     my $citation_publication_date = $year;
     # $citation_publication_date .= "/".$month if defined $month;
@@ -322,7 +316,8 @@ sub meta {
 
 
     # PDF URL 
-    my $citation_pdf_url = $entry->get('pdf') if $entry->exists('pdf');
+    my $citation_pdf_url = "";
+    $citation_pdf_url = $entry->get('pdf') if $entry->exists('pdf');
     $citation_pdf_url = $entry->get('url') if $entry->exists('url') and $entry->get('url') =~ /.*\.pdf^/;
 
 
@@ -1285,6 +1280,7 @@ sub regenerate_html_for_all {
 
   $self->write_log("regenerate_html_for_all has finished");
 
+  $self->flash(msg => 'Regeneration of HTML code finished.');
   my $referrer = $self->get_referrer();
     $self->redirect_to($referrer);
 };
@@ -1306,6 +1302,8 @@ sub regenerate_html_for_all_force {
     }
 
     $self->write_log("regenerate_html_for_all FORCE has finished");
+
+    $self->flash(msg => 'Regeneration of HTML code finished.');
     my $referrer = $self->get_referrer();
     $self->redirect_to($referrer);
 };
@@ -2105,17 +2103,19 @@ sub after_edit_process_month{
     my $key = $entry_key;
     my $eid = get_entry_id($dbh, $entry_key);
 
+    my $num_checks = 0;
 
     if($entry->exists('month')){
         my $month_str = $entry->get('month');
         my $month_numeric = get_month_numeric($month_str);
-
-        
         my $obj = BibSpace::Functions::EntryObj->new({id => $eid});
         $obj->initFromDB($dbh);
         $obj->setMonth($month_numeric, $dbh);
         $obj->setSortMonth($month_numeric, $dbh);
+        $num_checks = $num_checks + 1;
     }
+
+    return $num_checks;
 };
 
 ##########################################################################################
@@ -2147,7 +2147,8 @@ sub after_edit_process_tags{
       $tags_str =~ s/^\s+|\s+$//g if defined $tags_str;
 
       
-      my @tags = split(';', $tags_str) if defined $tags_str;
+      my @tags = ();
+      @tags = split(';', $tags_str) if defined $tags_str;
 
       for my $tag (@tags){
          $tag =~ s/^\s+|\s+$//g;
@@ -2193,6 +2194,9 @@ sub clean_ugly_bibtex {
 
     $self->write_log("Cleaning ugly bibtex fields for all entries has finished");
 
+    $self->flash(msg => 'All entries have now their Bibtex cleaned.');
+
+
     $self->redirect_to($self->get_referrer);
 };
 
@@ -2205,78 +2209,78 @@ sub clean_ugly_bibtex {
 
 ####################################################################################
 
-## SPECIAL FUNCTION
-# replaces all bibtex entries to serve the /publications/donwload/type/id instaed of the file path
+# ## SPECIAL FUNCTION
+# # replaces all bibtex entries to serve the /publications/donwload/type/id instaed of the file path
 
-sub replace_urls_to_file_serving_function{
-    say "CALL: replace_urls_to_file_serving_function";
-    my $self = shift;
-    my $dbh = $self->app->db;
+# sub replace_urls_to_file_serving_function{
+#     say "CALL: replace_urls_to_file_serving_function";
+#     my $self = shift;
+#     my $dbh = $self->app->db;
     
-    my $base_url = $self->config->{base_url};
-    $base_url = "" if $self->config->{base_url} eq '/';
+#     my $base_url = $self->config->{base_url};
+#     $base_url = "" if $self->config->{base_url} eq '/';
 
 
-    my @all_entries = BibSpace::Functions::EntryObj->getAll($dbh);
+#     my @all_entries = BibSpace::Functions::EntryObj->getAll($dbh);
     
-    for my $e (@all_entries){
-        my $relative_url = $self->url_for('download_publication', filetype => 'paper', id => $e->{id});
-        my $url = $self->req->url->base.$base_url.$relative_url;
+#     for my $e (@all_entries){
+#         my $relative_url = $self->url_for('download_publication', filetype => 'paper', id => $e->{id});
+#         my $url = $self->req->url->base.$base_url.$relative_url;
 
-        # check if the entry has pdf
-        if(has_bibtex_field($dbh, $e->{id}, "pdf")){
-            say "id $e->{id}, url: $url";
-            add_field_to_bibtex_code($dbh, $e->{id}, "pdf_test", $url);        
-        }
+#         # check if the entry has pdf
+#         if(has_bibtex_field($dbh, $e->{id}, "pdf")){
+#             say "id $e->{id}, url: $url";
+#             add_field_to_bibtex_code($dbh, $e->{id}, "pdf_test", $url);        
+#         }
 
         
-        # generate_html_for_id($dbh, $e->{id});
-    }
+#         # generate_html_for_id($dbh, $e->{id});
+#     }
 
-    $self->render(text => 'ok');
-};
+#     $self->render(text => 'ok');
+# };
 
 ####################################################################################
 
-## SPECIAL FUNCTION
-# if pdf exists locally, change the bibtex code to point to the local file
+# ## SPECIAL FUNCTION
+# # if pdf exists locally, change the bibtex code to point to the local file
 
-sub special_map_pdf_to_local_file{
-    say "CALL: special_map_pdf_to_local_file";
-    my $self = shift;
-    my $id = $self->param('id');
+# sub special_map_pdf_to_local_file{
+#     say "CALL: special_map_pdf_to_local_file";
+#     my $self = shift;
+#     my $id = $self->param('id');
     
-    my $fname = "paper-".$id.".pdf";
-    my $directory = "uploads/papers/";
-    my $bibtex_field = "pdf";
+#     my $fname = "paper-".$id.".pdf";
+#     my $directory = "uploads/papers/";
+#     my $bibtex_field = "pdf";
 
-    # $fname_no_ext = "slides-paper-".$id.".";
-    # $fname = $fname_no_ext.$extension;
-    # $directory = "uploads/slides/";
-    # $bibtex_field = "slides";
+#     # $fname_no_ext = "slides-paper-".$id.".";
+#     # $fname = $fname_no_ext.$extension;
+#     # $directory = "uploads/slides/";
+#     # $bibtex_field = "slides";
 
-    my $file_path = $directory.$fname;
+#     my $file_path = $directory.$fname;
 
-    say $file_path;
+#     say $file_path;
 
-    my $exists = 0;
-    $exists = 1 if -e "public/".$file_path;
+#     my $exists = 0;
+#     $exists = 1 if -e "public/".$file_path;
 
-    say "exists $exists";
+#     say "exists $exists";
 
-    my $file_url = $self->req->url->base."".$file_path;
-    say $file_url;
+#     my $file_url = $self->req->url->base."".$file_path;
+#     say $file_url;
 
-    if($exists == 1){
-        add_field_to_bibtex_code($self->app->db, $id, $bibtex_field, $file_url);    
-        generate_html_for_id($self->app->db, $id);
-    }
+#     if($exists == 1){
+#         add_field_to_bibtex_code($self->app->db, $id, $bibtex_field, $file_url);    
+#         generate_html_for_id($self->app->db, $id);
+#     }
     
 
-    my $msg = "Processing id $id. EXISTS $exists. bibtex_filed $bibtex_field. file_url $file_url, FILE_PATH $file_path.";
+#     my $msg = "Processing id $id. EXISTS $exists. bibtex_filed $bibtex_field. file_url $file_url, FILE_PATH $file_path.";
 
-    $self->render(text => $msg);
-};
+#     $self->render(text => $msg);
+# };
 
 ####################################################################################
 

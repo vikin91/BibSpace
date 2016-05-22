@@ -85,9 +85,7 @@ our @EXPORT = qw(
     get_month_numeric
     get_current_year
     get_current_month
-    get_number_of_publications_in_year
     get_publications_main_hashed_args
-    get_publications_main
     get_publications_core_from_array
     get_publications_core_from_set
     get_publications_core
@@ -99,15 +97,6 @@ our @EXPORT = qw(
 our $bibtex2html_tmp_dir = "./tmp";
 ####################################################################################
 
-####################################################################################
-sub get_number_of_publications_in_year{
-  say "CALL: get_number_of_publications_in_year";
-    my $self = shift;
-    my $year = shift;
-
-    my @objs = get_publications_main($self, undef, $year, undef, undef, undef, undef, 0, undef);
-    return scalar @objs;
-}
 ####################################################################################
 sub get_publications_main_hashed_args{
     my ($self, $args) = @_;
@@ -124,23 +113,7 @@ sub get_publications_main_hashed_args{
                                  $args->{hidden},
                                  );
 }
-####################################################################################
-sub get_publications_main{
-  say "CALL: get_publications_main - calling this function without arguments hash is deprecated! Call get_publications_main_hashed_args instead!";
-    my $self = shift;
 
-    return undef;
-
-    my $author = shift || $self->param('author') || undef;
-    my $year = shift || $self->param('year') || undef;
-    my $bibtex_type = shift || $self->param('bibtex_type') || undef;
-    my $entry_type = shift || $self->param('entry_type') || undef;
-    my $tag = shift || $self->param('tag') || undef;
-    my $team = shift || $self->param('team') || undef;
-    my $permalink = shift || $self->param('permalink') || undef;
-    my $hidden = shift || undef;
-    return get_publications_core($self, $author, $year, $bibtex_type, $entry_type, $tag, $team, 0, $permalink, $hidden);
-}
 ####################################################################################
 sub get_publications_core_from_array{
   say "CALL: get_publications_core_from_array";
@@ -349,15 +322,19 @@ sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assi
     }
     $sth->finish();
 
+    my $num_authors_created = 0;
+
     foreach my $entry_str(@bibs){
         my $entry_obj = new Text::BibTeX::Entry();
         $entry_obj->parse_s($entry_str);
     
-        after_edit_process_authors($self->app->db, $entry_obj);
+        my $num_a_cre = after_edit_process_authors($self->app->db, $entry_obj);
+        $num_authors_created =  $num_authors_created + $num_a_cre;
         assign_entry_to_existing_authors_no_add($self, $entry_obj);
     }
 
     $self->write_log("reassigning papers to authors (with authors creation) finished");
+    return $num_authors_created;
 };
 
 ####################################################################################
@@ -435,10 +412,10 @@ sub assign_entry_to_existing_authors_no_add{
     
     my $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
     if(defined $sth){
-      $sth->execute($eid);
+        $sth->execute($eid);
     }
     else{
-      print 'cannot execute DELETE FROM Entry_to_Author WHERE entry_id = ?. FIXME Core.pm.';
+        warn 'cannot execute DELETE FROM Entry_to_Author WHERE entry_id = ?. FIXME Core.pm.';
     }
     
 
@@ -467,7 +444,7 @@ sub assign_entry_to_existing_authors_no_add{
               $sth3->finish();
             }
             else{
-              print 'INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?). FIXME Core.pm';
+              warn 'INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?). FIXME Core.pm';
             }
         }
     }
@@ -482,6 +459,8 @@ sub after_edit_process_authors{
     my $entry_key = $entry->key;
     my $key = $entry->key;
     my $eid = get_entry_id($dbh, $entry_key);
+
+    my $num_authors_created = 0;
 
     my $sth = undef;
     $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
@@ -509,9 +488,13 @@ sub after_edit_process_authors{
 
       # say "\t pre! entry $eid -> uid $uid, aid $aid";
 
+      if($aid eq '-1'){ # there is no such author
+        $num_authors_created = $num_authors_created + 1;
 
-      my $sth0 = $dbh->prepare('INSERT INTO Author(uid, master) VALUES(?, ?)');
-      $sth0->execute($uid, $uid) if $aid eq '-1';
+        my $sth0 = $dbh->prepare('INSERT INTO Author(uid, master) VALUES(?, ?)');
+        $sth0->execute($uid, $uid) if $aid eq '-1';
+      }
+      
 
       $aid = get_author_id_for_uid($dbh, $uid);
       my $mid = get_master_id_for_author_id($dbh, $aid);
@@ -547,6 +530,7 @@ sub after_edit_process_authors{
       # my $sth2 = $dbh->prepare("INSERT OR IGNORE INTO Author_to_Team(author_id, team_id, start, stop) Values (?, ?, ?, ?)");
       # $sth2->execute($aid, $tid, 0, 0);
     }
+    return $num_authors_created;
 }
 ################################################################################
 sub get_visibility_for_id {
@@ -1527,13 +1511,14 @@ sub get_html_for_bib{
    my $out_bibhtml = $out_file."_bib.html";
    my $databib = $bibtex2html_tmp_dir."/data.bib";
 
-   open (MYFILE, '>'.$databib);
-   print MYFILE $bib_str;
-   close (MYFILE); 
+   
+   open (my $MYFILE, q{>}, $databib);
+   print $MYFILE $bib_str;
+   close ($MYFILE); 
 
-   open (my $fh, '>'.$outhtml) or die "cannot touch $outhtml";
+   open (my $fh, q{>}, $outhtml) or die "cannot touch $outhtml";
    close($fh);
-   open ($fh, '>'.$out_bibhtml) or die "cannot touch $out_bibhtml";
+   open ($fh, q{>}, $out_bibhtml) or die "cannot touch $out_bibhtml";
    close($fh);
 
     my $cwd = getcwd();

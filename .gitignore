@@ -11,4 +11,9 @@ MANIFEST.SKIP.bak
 _build
 tmp/*
 log/*.log
-public/uploads/*
+public/uploads/*BibSpace*tar.gz
+/BibSpace-*tar.gz
+/BibSpace-*
+/__config
+/backups
+/.build.

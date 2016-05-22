@@ -1,22 +1,15 @@
 package BibSpace::Controller::Display;
 
-use BibSpace::Controller::Core qw(get_all_entry_ids);
-use BibSpace::Controller::BackupFunctions;
-
-
-use Data::Dumper;
-use utf8;
-use Text::BibTeX; # parsing bib files
-use DateTime;
-use File::Slurp;
-use Time::Piece;
-use 5.010; #because of ~~
 use strict;
 use warnings;
-use DBI;
+use utf8;
+use 5.010; #because of ~~
+use File::Slurp;
 use Try::Tiny;
 
 use Mojo::Base 'Mojolicious::Controller';
+use BibSpace::Controller::Core qw(get_all_entry_ids);
+use BibSpace::Controller::BackupFunctions;
 
 
 sub index {

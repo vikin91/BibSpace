@@ -422,7 +422,8 @@ sub register {
               push @letters, uc($letter);
            }
            # @letters = uniq(@letters);
-           return sort(@letters);
+           my @sorted_letters = sort(@letters);
+           return @sorted_letters;
     });
 }
 

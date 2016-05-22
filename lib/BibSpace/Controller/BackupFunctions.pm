@@ -86,7 +86,7 @@ sub do_mysql_db_backup_silent{
     if ($? == 0){
         return $db_fname;
     }
-    return undef;
+    return "";
 
 }
 ####################################################################################
@@ -98,8 +98,8 @@ sub do_mysql_db_backup{
 
     my $dbh = $self->app->db;
     my $dbfname = do_mysql_db_backup_silent($self, $fname_prefix);
-    if(!defined $dbfname){
-        return undef;
+    if(!defined $dbfname or $dbfname eq ""){
+        return "";
     }
     else{
         my $sth = $dbh->prepare("REPLACE INTO Backup(creation_time, filename) VALUES (NULL, ?)");
@@ -260,7 +260,6 @@ sub do_backup_current_state{
 
     $self->write_log("creating backup with prefix $fname_prefix");
     return do_mysql_db_backup($self, $fname_prefix);
-    # return  $self->helper_do_mysql_backup_current_state($fname_prefix); # mysql
 
 }
 ################################################################################
@@ -283,7 +282,7 @@ sub get_backup_filename{
     my $sth = $dbh->prepare("SELECT id, filename FROM Backup WHERE id=? LIMIT 1");
     $sth->execute($bip);
     my $row = $sth->fetchrow_hashref();
-    return $row->{filename} || undef;
+    return $row->{filename} || "";
 }
 ####################################################################################
 sub get_backup_id{
@@ -294,7 +293,7 @@ sub get_backup_id{
     my $sth = $dbh->prepare("SELECT id, filename FROM Backup WHERE filename=? LIMIT 1");
     $sth->execute($filename);
     my $row = $sth->fetchrow_hashref();
-    return $row->{id} || undef;
+    return $row->{id} || 0;
 }
 ####################################################################################
 sub get_backup_creation_time{
@@ -305,7 +304,7 @@ sub get_backup_creation_time{
     my $sth = $dbh->prepare("SELECT creation_time FROM Backup WHERE id=? LIMIT 1");
     $sth->execute($bip);
     my $row = $sth->fetchrow_hashref();
-    return $row->{creation_time} || undef;
+    return $row->{creation_time} || 0;
 }
 ####################################################################################
 sub get_backup_age_in_days{

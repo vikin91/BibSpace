@@ -1,4 +1,5 @@
 package BibSpace::Controller::Login;
+
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use BibSpace::Controller::DB;
@@ -15,7 +16,7 @@ sub check_is_logged_in {
 
     return 1 if $self->session('user');
     $self->redirect_to('badpassword');
-    return undef;
+    return 0;
 }
 ####################################################################################
 # for _under_ -checking
@@ -26,11 +27,9 @@ sub under_check_is_manager {
 
     $self->flash(msg => "You need to have at least manager rights to access this page! You have just tried to access: ".$self->url_for('current')->to_abs);
     my $redirect_to = $self->get_referrer;
-    say "1 redirect_to $redirect_to current ".$self->url_for('current')->to_abs;
     $redirect_to = $self->url_for('/') if $self->get_referrer eq $self->url_for('current')->to_abs or !defined $self->get_referrer;
-    say "2 redirect_to $redirect_to";
     $self->redirect_to($redirect_to);
-    return undef;
+    return 0;
 }
 ####################################################################################
 sub check_is_manager {
@@ -51,11 +50,9 @@ sub under_check_is_admin {
 
     $self->flash(msg => "You need to have admin rights to access this page! You have just tried to access: ".$self->url_for('current')->to_abs);
     my $redirect_to = $self->get_referrer;
-    say "1 redirect_to $redirect_to current ".$self->url_for('current')->to_abs;
     $redirect_to = $self->url_for('/') if $self->get_referrer eq $self->url_for('current')->to_abs or !defined $self->get_referrer;
-    say "2 redirect_to $redirect_to";
     $self->redirect_to($redirect_to);
-    return undef;
+    return 0;
 }
 ####################################################################################
 sub check_is_admin {
@@ -136,22 +133,31 @@ sub delete_user {
     my $usr_obj = BibSpace::Functions::UserObj->new({id => $profile_id});
     $usr_obj->initFromDB($dbh);
 
-    if($self->users->login_exists($usr_obj->{login}, $dbh) and $usr_obj->is_admin()){
-        $self->write_log("User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.");
-        $self->stash(msg => "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.");
+    my $message = "";
+
+    if($self->users->login_exists($usr_obj->{login}, $dbh) and $usr_obj->is_admin() == 1){
+        $message = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.";
     }
     else{
-        $self->write_log("User \`$usr_obj->{login}\` ($usr_obj->{real_name}) has been deleted.");
-        $self->stash(msg => "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) has been deleted.");
-        $self->users->do_delete_user($profile_id, $dbh);    
+        
+        if($self->users->do_delete_user($profile_id, $dbh)){
+            $message = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) has been deleted.";
+        }
+        else{
+            $message = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) could not been deleted.";
+        }
+            
     }
+    $self->write_log($message);
+    $self->flash(msg => $message);
     
     # $self->redirect_to('manage_users');
 
     my @user_objs = BibSpace::Functions::UserObj->getAll($dbh);
 
     $self->stash(user_objs => \@user_objs);
-    $self->render(template => 'login/manage_users');
+    $self->redirect_to('manage_users');
+    # $self->render(template => 'login/manage_users');
 }
 ####################################################################################
 sub foreign_profile {
@@ -422,21 +428,17 @@ sub logout {
 ####################################################################################
 sub register{
     my $self = shift;
-    my $can_register = $self->app->config->{registration_enabled};
+    my $registration_enabled = $self->app->config->{registration_enabled};
 
-    # my $dbh = $self->app->db;
-
-    # say "call: register check_is_admin: ".$self->check_is_admin();
-    # say "call: register can_register : ".$can_register;
-
-    
-    if( (defined $self->check_is_admin() and $self->check_is_admin() == 1) or (defined $can_register and $can_register == 1) ){
-
-        $self->write_log("Login: displaying registration form.");
-        $self->write_log("Login: displaying registration form for super admin!") if $self->check_is_admin() == 1;
-        
-        $self->stash(name => '', email => 'test@example.com', login => '', password1 => '', password2 => '');
+    if(defined $self->check_is_admin() and $self->check_is_admin() == 1){
+        $self->stash(name => 'Jonh New', email => 'test@example.com', login => 'new_user_000', password1 => 'password1', password2 => 'password1');        
         $self->render(template => 'login/register');
+        return 0;
+    }
+    elsif(defined $registration_enabled and $registration_enabled == 1){
+        $self->stash(name => 'James Bond', email => 'test@example.com', login => 'james', password1 => '', password2 => '');
+        $self->render(template => 'login/register');
+        return 0;
     }
     else{
         $self->redirect_to('/noregister');
@@ -455,10 +457,10 @@ sub post_do_register{
     my $dbh = $self->app->db;
 
     my $config = $self->app->config;
-    my $can_register = $config->{registration_enabled};
+    my $registration_enabled = $config->{registration_enabled};
 
 
-    if( (!defined $self->check_is_admin() or $self->check_is_admin() == 0) and (!defined $can_register or $can_register == 0) ){
+    if( $self->check_is_admin() == 0 and (!defined $registration_enabled or $registration_enabled == 0) ){
         $self->redirect_to('/noregister');
         return;
     }

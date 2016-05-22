@@ -1,11 +1,11 @@
 % layout 'admin';
 % use Mojo::ByteStream 'b';
 
-% my $login = flash 'login';
-% my $name = flash 'name' || '';
-% my $email = flash 'email' || '';
-% my $password1 = flash 'password1' || '';
-% my $password2 = flash 'password2' || '';
+% my $login = stash 'login';
+% my $name = stash 'name' || '';
+% my $email = stash 'email' || '';
+% my $password1 = stash 'password1' || '';
+% my $password2 = stash 'password2' || '';
 
 
 

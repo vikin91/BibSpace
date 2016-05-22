@@ -29,7 +29,7 @@ sub check {
     $self->insert_admin($dbh);
 
     my $hash_from_db = $self->get_user_hash($user, $dbh);
-    return undef if !defined $hash_from_db;
+    return 0 if !defined $hash_from_db;
 
     if(defined $hash_from_db and defined $pass and $self->check_password($pass, $hash_from_db)==1){
         $self->record_logging_in($user, $dbh);
@@ -37,7 +37,7 @@ sub check {
     }
 
     # Fail
-    return undef;
+    return 0;
 }
 
 ####################################################################################################
@@ -222,10 +222,12 @@ sub do_delete_user{
     my $usr_obj = BibSpace::Functions::UserObj->new({id => $id});
     $usr_obj->initFromDB($dbh);
     
-    if($self->login_exists($usr_obj->{login}, $dbh) and !defined $usr_obj->is_admin()){
+    if($self->login_exists($usr_obj->{login}, $dbh) and $usr_obj->is_admin() == 0){
         my $sth = $dbh->prepare("DELETE FROM Login WHERE id=?");
-        $sth->execute($id);    
+        $sth->execute($id);   
+        return 1; 
     }
+    return 0;
 };
 
 ####################################################################################################
@@ -237,7 +239,7 @@ sub promote_to_manager{
     my $usr_obj = UserObj->new({id => $id});
     $usr_obj->initFromDB($dbh);
     
-    if($self->login_exists($usr_obj->{login}, $dbh) and !defined $usr_obj->is_admin()){
+    if($self->login_exists($usr_obj->{login}, $dbh) and $usr_obj->is_admin() == 0){
         my $sth = $dbh->prepare("DELETE FROM Login WHERE id=?");
         $sth->execute($id);    
     }
@@ -273,9 +275,7 @@ sub get_user_hash{
     my $login = shift;
     my $user_dbh = shift;
 
-    
-
-    return undef if !defined $login;
+    return 0 if !defined $login or $login eq '';
 
     
 
@@ -291,9 +291,9 @@ sub get_user_real_name{
     my $self = shift;
     my $login = shift;
     my $user_dbh = shift;
-    return undef if !defined $login;
 
-    
+    return 0 if !defined $login or $login eq '';
+
 
     my $sth = $user_dbh->prepare("SELECT real_name FROM Login WHERE login=?");
     $sth->execute($login);
@@ -307,9 +307,8 @@ sub record_logging_in{
     my $self = shift;
     my $login = shift;
     my $user_dbh = shift;
-    return undef if !defined $login;
-    
-    
+
+    return 0 if !defined $login or $login eq '';
 
     my $sth = $user_dbh->prepare("UPDATE Login SET last_login=CURRENT_TIMESTAMP WHERE login=?");
     $sth->execute($login);
