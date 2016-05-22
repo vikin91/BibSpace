@@ -1,0 +1,323 @@
+% layout 'admin';
+% use Mojo::ByteStream 'b';
+% my @start_a = @$start_arr;
+% my @stop_a = @$stop_arr;
+% my @author_ids = @$aids;
+% my @tag_ids = @$tag_ids;
+% my @tags = @$tags;
+
+% my @team_ids = @$team_ids;
+% my @all_teams = @$all_teams;
+% my @all_teams_ids = @$all_teams_ids;
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <a class="btn btn-info pull-right" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+        </div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+            <a class="btn btn-success" href="<%= url_for('/publications?author=')%><%= $master %>">
+                <i class="fa fa-files-o"></i> Show all <span class="badge"><%= num_pubs_for_author($id)%></span> papers of this author
+            </a>
+            <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$master, entry_type=>'talk')%>">
+                <i class="fa fa-microphone"></i> Show all talks of this author
+            </a>
+
+            <a class="btn btn-default btn-sm" href="<%= url_for('lp')->query(author=>$master) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span></a>
+            
+            <a class="btn btn-default btn-sm" href="<%= url_for('lyp')->query(author=>$master) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
+
+            <a class="btn btn-default btn-sm" href="<%= url_for('readbibtex')->query(author=>$master)%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> BibTeX
+            </a>
+
+            
+        </div>
+    </div>
+    <br/>
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2"></div>
+        <div class="col-lg-8 col-md-8 col-xs-8">
+            % my @ttobjs = get_all_tag_types($self);
+            % foreach my $ttobj (@ttobjs){
+                <a class="btn btn-default" href="<%= url_for('/publications/untagged/')%><%= $id %>/<%=$ttobj->{id}%>">
+                    <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without <%=$ttobj->{name}%>
+                </a>
+            % }
+        </div>
+    </div>
+
+
+  <hr>
+
+  <!-- MUID -->
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+          <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-user"></span> Master ID</span>
+        </div>
+        <div class="col-lg-4 col-md-4 col-xs-4">
+          <form class="form-horizontal" role="form" method="POST" action="<%= url_for('/authors/edit') %>">
+              <div class="input-group">
+                <input type="hidden" name="master" value="<%= $master %>"></input>
+                <input type="hidden" name="id" value="<%= $id %>"></input>
+                <input class="form-control" type="text" name="new_master" placeholder="master_id" value="<%= $master %>"></input>
+                <div class="input-group-btn">
+                    <button class="btn btn-default" type="submit" data-toggle="tooltip" data-placement="bottom" title="This will change the Master author ID! Current master id will be lost. You may want to add '<%= $master %>' as user id."><span style="color: white">|</span><i class="glyphicon glyphicon-floppy-disk" style="color: red;"></i> </button>
+                </div>
+              </div>
+          </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+          <span href ="#" class="btn btn-default pull-right"  data-toggle="tooltip" data-placement="bottom" title="Unique Master User ID"><span class="glyphicon glyphicon-barcode"></span> UMUID</span>
+        </div>
+        <div class="col-lg-4 col-md-4 col-xs-4">
+          <span class="btn btn-default" ><span class="glyphicon glyphicon-barcode"></span> <%=$id%></span>
+        </div>
+    </div>  
+
+  <!-- UIDs -->
+
+  <div class="row">
+    <div class="col-lg-2 col-md-2 col-xs-2">
+      <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-user"></span> User IDs</span>
+    </div>
+    <div class="col-lg-4 col-md-4 col-xs-4">
+        % my $i = 0;
+        % for my $uid (@$uids){
+            % my $aid = $author_ids[$i];
+            <div class="btn-group">
+              <button type="button" class="btn btn-default"><%= $uid %> <span class="glyphicon glyphicon-barcode"></span> <%=$aid%></button>
+              %if($aid != $id){
+                  <a class="btn btn-default" href="<%= url_for('remove_author_uid', id=>$id, uid=>$aid) %>"><span style="color: white">|</span><span class="glyphicon glyphicon-minus" style="color: red;"></span></a>
+              %}
+            </div>
+            % $i++;
+        %}
+        <form class="form-horizontal" role="form" method="POST" action="<%= url_for('/authors/edit') %>">
+          <div class="input-group">
+            <input type="hidden" name="master" value="<%= $master %>"></input>
+            <input type="hidden" name="id" value="<%= $id %>"></input>
+            <input class="form-control" type="text" name="new_user_id" placeholder="UserID. Example: vonMustermanMax Juergen"></input>
+            <div class="input-group-btn">
+                <button class="btn btn-default" type="submit" data-toggle="tooltip" data-placement="bottom" title="Add User ID. If the ID exists, the authors will be merged!" ><span style="color: white">|</span><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span style="color: white">|</span></button>
+            </div>
+          </div>
+      </form>
+    </div>
+  </div>
+
+
+    <!-- Visibility -->
+
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+          <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-eye-open"></span> Visibility</span>
+        </div>
+        <div class="col-lg-4 col-md-4 col-xs-4">
+            <a href="<%= url_for('authorstoggle_visibilityid', id=>$id) %>">
+            <div class="btn-group" data-toggle="tooltip" data-placement="bottom" title="Toggle visibility">
+            % if ($disp eq '1'){
+              <span class="btn btn-success active"><span class="glyphicon glyphicon-eye-open"></span></span>
+              <span class="btn btn-success"><span class="glyphicon glyphicon-eye-close"></span></span>
+            %}
+            %else{
+              <span class="btn btn-danger"><span class="glyphicon glyphicon-eye-open"></span></span>
+              <span class="btn btn-danger active"><span class="glyphicon glyphicon-eye-close"></span></span>
+            %}
+            </div>
+            </a>
+        </div>
+    </div>
+
+    <hr>
+  
+
+    
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+          <span href ="#" class="btn btn-default pull-right" title=""><i class="fa fa-users"></i> Teams membership</span>
+        </div>
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            % my $j=0;
+            <table class="table-condensed">
+
+            %foreach my $team (@$teams){
+            %   my $team_id = $team_ids[$j];  
+            <tr>
+                <td>
+                    <div class="btn-group pull-right">
+                        <a type="button" class="btn btn-default" href="<%= url_for('/teams/edit/')%><%=$team_id%>">
+                            <i class="fa fa-users" style="color: #5CB85C;"></i> <%= $team %>  <i class="fa fa-external-link"></i>
+                        </a>
+                        <a class="btn btn-default" href="<%= url_for('remove_author_from_team', id=>$id, tid=>$team_id ) %>" data-toggle="tooltip" data-placement="bottom" title="Remove from team"><span class="glyphicon glyphicon-minus" style="color: red;"></span> <span style="color: white">|</span></a>
+                    </div>
+                </td>
+                <td>
+                    
+                    <a href="#modal-dialog-dates-team-<%=$team_id%>-author-<%=$id%>" data-toggle="modal">
+                        <div data-toggle="tooltip" data-placement="right" title="Click to edit">
+                            <div class="btn-group pull-right">
+                                <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Joined the group in year">
+                                    <i class="fa fa-sun-o"></i> <%= $start_a[$j] %>
+                                </span>
+                                <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Left the group in year">
+                                    <i class="fa fa-moon-o"></i> <%= $stop_a[$j] || b('&#8734;') %>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- MODAL DIALOG FOR EDIT DATES OF MEMBERSHIP -->
+                    <div id="modal-dialog-dates-team-<%=$team_id%>-author-<%=$id%>" class="modal">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+                                    <h4>Edit membership dates of <strong><%= $master %></strong> in team <strong><%= $team %></strong>.</h4>
+                                </div>
+                                <div class="modal-body">
+
+                                    <form class="form-inline" role="form" method="POST" action="<%= url_for('/authors/edit_membership_dates') %>">
+                                        <div class="form-group">
+                                            <input type="hidden" name="tid" value="<%= $team_id %>"></input>
+                                            <input type="hidden" name="aid" value="<%= $id %>"></input>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-addon"><i class="fa fa-sun-o"></i></span>
+                                                <input class="form-control" type="text" name="new_start" placeholder="new_start" value="<%= $start_a[$j] %>"></input>
+                                            </div>
+                                            <div class="input-group input-group-lg">
+                                                <input class="form-control" type="text" name="new_stop" placeholder="New stop. Type 0 for infinity" value="<%= $stop_a[$j] %>"></input>
+                                                <span class="input-group-addon"><i class="fa fa-moon-o"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button class="btn btn-success" type="submit"> 
+                                                <span class="glyphicon glyphicon-save"></span> Save
+                                            </button>
+                                            <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-danger">Cancel</a>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- END OF MODAL EDIT DATES OF MEMBERSHIP -->
+                </td>
+                <td>
+                    <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$master, team=>$team) %>">
+                        Show  <span class="badge"><%= num_pubs_for_author_and_team($id, $team_id)%> <i class="fa fa-files-o"></i></span> of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i> 
+                    </a>
+                </td>
+            </tr>
+              % $j++;
+            %}
+            </table>
+        </div>
+    </div>     
+
+  
+  
+
+    <hr>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+          <span href ="#" class="btn btn-default pull-right" title=""><i class="fa fa-users"></i> Add Author to a Team</span>
+        </div>
+        <div class="col-lg-6 col-md-6 col-xs-6">
+            % my $jj = 0;
+            % foreach my $team (@all_teams){
+            %   my $team_id = $all_teams_ids[$jj];  
+                <div class="btn-group">
+                    <a type="button" class="btn btn-default btn-sm" href="<%= url_for('/teams/edit/')%><%=$team_id%>">
+                        <span style="color: gray">
+                            <i class="fa fa-users"></i> <%= $team %>  <i class="fa fa-external-link"></i>
+                        </span>
+                    </a>
+                  <a class="btn btn-default btn-sm" href="<%= url_for('add_author_to_team', id=>$id, tid=>$team_id) %>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span style="color: white">|</span></a>
+              </div>
+                % $jj++;
+            % }
+        </div>
+    </div> 
+
+    <hr>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+          <span href ="#" class="btn btn-default pull-right" title=""><i class="fa fa-tags"></i> Has papers with tags</span>
+        </div>
+        <div class="col-lg-6 col-md-6 col-xs-6">
+            % my $k=0;
+
+            %foreach my $tag_id (@$tag_ids){
+                <div class="btn-group">
+                    <span class="btn btn-default">
+                      <span class="glyphicon glyphicon-tag"></span> <%= get_tag_name($tag_id) %> 
+                    </span>
+                    <a class="btn btn-info" href="<%= url_for('/publications?author=')%><%=$master%>&tag=<%= get_tag_name($tag_id) %>">
+                      <span class="glyphicon glyphicon-file"></span>
+                      <span class="badge"><%=num_pubs_for_author_and_tag($id, $tag_id)%></span>
+                    </a>
+                </div>
+              % $k++;
+            %}
+        </div>
+    </div> 
+
+    <hr>
+
+    % if(is_admin()){
+        <div class="row">
+            <div class="col-lg-2 col-md-2 col-xs-2"></div>
+            <div class="col-lg-4 col-md-4 col-xs-4">
+                <a class="btn btn-danger" href="#modal-dialog-delete" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span> Remove author ... (<i class="fa fa-flash"></i> force <i class="fa fa-flash"></i>) </a>
+            </div>
+        </div>
+
+
+        <!-- MODAL DIALOG FOR DELETE -->
+        <div id="modal-dialog-delete" class="modal">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                  <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+                  <h3>Are you sure?</h3>
+              </div>
+              <div class="modal-body">
+
+                  <p>Are you sure you want to delete this author from DB? His papers remain untouched.</p>
+                  <pre>
+                      DELETE FROM Author WHERE master_id=?
+                      DELETE FROM Author WHERE id=?
+                      DELETE FROM Entry_to_Author WHERE author_id=?
+                      DELETE FROM Author_to_Team WHERE author_id=?
+                  </pre>
+                  
+                  <div class="modal-footer">
+                    <a class="btn btn-warning" href="<%= url_for('authorsdeleteidforce', id=>$id)%>"><span class="glyphicon glyphicon-trash"></span> Yes, delete this author!</a>
+                    <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-info">No, leave him alone</a>
+                  </div>
+              </div>
+            </div>
+          </div>
+      </div>
+      <!-- END OF MODAL DIALOG FOR DELETE -->
+    % }
+
+
+</div>       
+          
+
+
+
+
+
+
+
+

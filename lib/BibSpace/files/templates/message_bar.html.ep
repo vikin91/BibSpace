@@ -1,0 +1,37 @@
+% my $str = Time::Piece::localtime->strftime('%Y%m%d-%H%M%S');
+% my $thisY = Time::Piece::localtime->strftime('%Y');
+% use Mojo::ByteStream 'b';
+
+<!-- Message bar -->
+% my $msg_f = flash 'msg';
+% my $msg_s = stash 'msg';
+% my $msg = undef;
+% if(defined $msg_s and $msg_s ne '' and defined $msg_f and $msg_f ne ''){
+%    $msg = $msg_s."<br/>".$msg_f if defined $msg_s and defined $msg_f;
+% }
+% elsif(defined $msg_f and $msg_f ne ''){
+%    $msg = $msg_f;
+% }
+% if(defined $msg_s and $msg_s ne ''){
+%    $msg = $msg_s;
+% }
+
+% if (defined $msg) {
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+          <div class="alert alert-warning">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <i class="fa  fa-exclamation-circle "></i> <strong>Message: </strong> <%=b($msg)%>
+          </div>
+        </div>
+    </div>
+</div>
+%}
+%else{
+    <div class="row spacer">
+    <!-- Space here is defined in <%= url_for('styles.css')->to_abs %> in section ".spacer" -->
+    </div>
+%}
+
+<!-- End of Message bar -->

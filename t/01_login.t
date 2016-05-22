@@ -1,19 +1,15 @@
 use Mojo::Base -strict;
 
-BEGIN {
-  $ENV{MOJO_MODE}    = 'testing';
-}
-
 use Test::More;
 use Test::Mojo;
 
-use Hex64Publications;
-use Hex64Publications::Controller::Core;
-use Hex64Publications::Functions::EntryObj;
+use BibSpace;
+use BibSpace::Controller::Core;
+use BibSpace::Functions::EntryObj;
 
 
 
-my $t_anyone = Test::Mojo->new('Hex64Publications');
+my $t_anyone = Test::Mojo->new('BibSpace');
 note "============ Testing start page ============";
 $t_anyone->get_ok('/')->status_is(200);
 $t_anyone->get_ok('/logout')->status_isnt(404)->status_isnt(500);
@@ -33,7 +29,7 @@ $t_anyone->get_ok('/')
 
 
 note "============ Loggin in ============";
-my $t_logged_in = Test::Mojo->new('Hex64Publications');
+my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->ua->max_redirects(10);
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
@@ -42,7 +38,7 @@ $t_logged_in->post_ok(
 
 $t_logged_in->get_ok('/')
     ->status_isnt(404)->status_isnt(500)
-    ->content_like(qr/Nice to see you here <em>Admin<\/em>/i);
+    ->content_like(qr/Nice to see you here/i);
 
 
 

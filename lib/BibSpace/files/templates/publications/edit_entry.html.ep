@@ -1,0 +1,117 @@
+% use Mojo::ByteStream 'b';
+% layout 'admin';
+
+% my $obj = $entry_obj;
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+            <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+            <div class="alert alert-warning">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <i class="fa  fa-check-circle "></i> <strong>This is editing mode</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+             
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+            % if($exit_code eq '-1'){
+                <div class="alert alert-danger">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa  fa-exclamation-circle "></i> You have bibtex errors! Not saving!
+                </div>
+            %}elsif($exit_code eq '-2'){
+                <div class="alert alert-info">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa fa-info-circle"></i> Displaying preview
+                </div>
+            %}elsif($exit_code eq '0'){ 
+                <div class="alert alert-success">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa fa-check-circle"></i> Entry added ok _ SHOULD NEVER BE DISPLAYED
+                </div>
+            %}elsif($exit_code eq '1'){
+                <div class="alert alert-success">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <i class="fa fa-check-circle"></i> Entry updated ok
+                </div>
+            %}elsif($exit_code eq '3'){
+            <div class="alert alert-danger">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <i class="fa  fa-exclamation-circle "></i> The proposed key exists already in DB under has ID <button class="btn btn-danger btn-xs" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> <%= $existing_id %></button>. 
+                <br>
+                You are editing ID <button class="btn btn-danger btn-xs" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> <%= $id %></button>.
+                <br>
+                <a class="btn btn-info btn-xs" href="<%= url_for('publicationsgetid', id=>$existing_id)%>" target="_blank"><span class="glyphicon glyphicon-search"></span>Show me the existing entry ID <%= $existing_id %> in a new window</a>
+                <br>
+                Entry has not been saved. Please pick another BibTeX key.
+            </div>
+            %}elsif(defined $exit_code and $exit_code ne ''){
+            <div class="alert alert-warning"><i class="fa fa-question-circle"></i> Unknown exit code: <%= $exit_code %></div>
+            %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 col-md-12 col-xs-12">
+        
+        <table class="table table-condensed table-hover">
+            <thead>
+            </thead>
+            <tbody>
+            %if (defined $obj) { 
+                %= include 'publications_table_row', use_modal => 1, obj => $obj, j => '';
+            % }
+        </tbody>
+        </table>
+        </div>
+    </div> 
+
+
+    %= include 'preview_row', preview => $preview, btype=> $obj->{bibtex_type}, bkey =>$obj->{key};
+
+
+    <div class="row">
+        <form class="form-horizontal" role="form" action="<%= url_for('publicationseditstoreid', id=>$id) %>" method="post">
+            <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+                <div class="form-group">
+                    <label for="bibtex">BibTeX code</label>
+                    <textarea class="form-control" rows="12" id="description" name="new_bib"><%=$bib%></textarea>
+                </div>
+                <div class="form-group">
+                    <button name="save" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Push to DB</button>
+                    <button name="preview" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Preview</button>
+                </div>
+            </div>
+
+<!--             <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+              <pre><code class="bibtex"><%=$bib%></code></pre>
+            </div>  -->
+            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
+                <div class="alert alert-info">
+                    %= include 'bibtex_help';
+                </div>
+            </div>
+        </form>
+    </div>
+
+  <div class="row">
+ 
+  </div>
+
+
+</div>
+
+
+
+
+
+
+

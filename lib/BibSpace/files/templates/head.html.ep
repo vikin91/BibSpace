@@ -1,0 +1,36 @@
+<head>
+    <!-- this is head -->    
+    <meta name="comment" content="head" />
+    <meta name="comment" content="mode <%= app->mode %>" />
+    <meta http-equiv="Content-Type" />
+    <meta content="text/html" />
+    <meta charset="UTF-8" />
+    <meta http-equiv="Pragma" content="no-cache" />
+
+    %= stylesheet '//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css'
+    %= javascript '//code.jquery.com/jquery-latest.min.js'
+    %= javascript '//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'
+    %= stylesheet '//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css'
+    <!-- javascript '//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/highlight.min.js' -->
+
+    %= stylesheet '/styles.css'
+
+  <script type="text/javascript">
+         function showAbstract(divid) {
+            $('div#'+divid).toggle(); 
+         };
+  </script>
+
+  % if(app->mode eq 'test-server'){
+      <title>TEST BibSpace</title>
+  % }
+  % elsif(app->mode eq 'demo'){
+      <title>Demo BibSpace</title>
+  % }
+  % elsif(app->mode eq 'production'){
+      <title>BibSpace</title>
+  % }
+  % else {
+      <title>Dev BibSpace</title>
+  % }
+</head>

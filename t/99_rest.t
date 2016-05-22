@@ -1,15 +1,10 @@
 use Mojo::Base -strict;
-
-BEGIN {
-  $ENV{MOJO_MODE}    = 'testing';
-}
-
 use Test::More;
 use Test::Mojo;
 
-use Hex64Publications;
-use Hex64Publications::Controller::Core;
-use Hex64Publications::Functions::EntryObj;
+use BibSpace;
+use BibSpace::Controller::Core;
+use BibSpace::Functions::EntryObj;
 
 
 ok(1);
@@ -17,8 +12,8 @@ done_testing();
 # DO NOT RUN THE CODE BELOW - it is not ready
 
 # # ############################ PREPARATION
-# my $t_anyone = Test::Mojo->new('Hex64Publications');
-# my $t_logged_in = Test::Mojo->new('Hex64Publications');
+# my $t_anyone = Test::Mojo->new('BibSpace');
+# my $t_logged_in = Test::Mojo->new('BibSpace');
 # $t_logged_in->post_ok(
 #     '/do_login' => { Accept => '*/*' },
 #     form        => { user   => 'pub_admin', pass => 'asdf' }

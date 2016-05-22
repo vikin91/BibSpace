@@ -1,0 +1,16 @@
+% my $bibtex_key = $bkey || 'bibtex_key_uknown';
+% my $bibtex_type = $btype || 'bibtex_type_uknown';
+% my $html_preview = $preview || nohtml($bibtex_key, $bibtex_type);
+
+% if($html_preview ne ''){
+  <div class="row">
+    <div class="col-lg-12 col-md-12 col-xs-12">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <h3>Preview</h3>
+          %= b($html_preview)
+        </div>
+      </div>
+    </div>
+  </div>
+%}

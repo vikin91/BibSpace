@@ -1,0 +1,29 @@
+% layout 'admin';
+
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+            <div class="panel panel-default">
+                <div class="panel-heading"><h3 class="panel-title"><strong>Recovery of forgotten password</strong></h3></div>
+                <div class="panel-body">
+
+                    <form role="form" method="POST" action="<%= url_for('/forgot/gen') %>">
+                        <div class="form-group">
+                            <label for="user">Username (not e-mail!)</label>
+                            <input type="text" class="form-control" style="border-radius:0px" name="user" id="user" placeholder="Enter username">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">E-mail</label>
+                            <input type="email" class="form-control" style="border-radius:0px" name="email" id="email" placeholder="Enter email">
+                        </div>
+                        <p class="help-block">Fill at least one of the fields and click.</p>
+
+                        <button type="submit" class="btn btn-sm btn-default">Please, remind me my password!</button>
+                    </form>
+                </div>
+            </div>
+        </div> 
+    </div> 
+</div>

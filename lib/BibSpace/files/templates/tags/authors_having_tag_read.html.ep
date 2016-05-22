@@ -1,0 +1,12 @@
+% layout 'default';
+
+<div class="bibtexitem">
+<%= $tag %>: 
+%foreach my $author_id (@$author_ids){
+    <a href="<%= url_for('/read/publications?author=')%><%=get_master_for_id($author_id)%>&tag=<%= $tag %>"> <%= get_master_for_id($author_id) %> (<%=num_pubs_for_author_and_tag($author_id, $tag_id)%>)</a>,  
+%}
+</div>
+
+
+%################################################################################################################
+
