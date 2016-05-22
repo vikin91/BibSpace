@@ -77,7 +77,12 @@ sub do_mysql_db_backup_silent{
 
     # say $ignored_tables_string;
 
-    `mysqldump -u $db_user -p$db_pass $db_database $ignored_tables_string > $dbfname`;
+    if ($db_pass =~ /^\s*$/) { # password empty
+        `mysqldump -u $db_user $db_database $ignored_tables_string > $db_fname_path`;
+    }
+    else{
+        `mysqldump -u $db_user -p$db_pass $db_database $ignored_tables_string > $db_fname_path`;
+    }
     if ($? == 0){
         return $db_fname;
     }
@@ -222,9 +227,19 @@ sub do_restore_backup{
     my $db_pass = $self->config->{db_pass};
 
 
-    my $cmd = "mysql -u $db_user -p$db_pass $db_database  < $fname";
-    say "cmd: $cmd";
-    `$cmd`;
+    my $cmd = "mysql -u $db_user -p$db_pass $db_database  < $backup_file_path";
+    if ($db_pass =~ /^\s*$/) { # password empty
+        $cmd = "mysql -u $db_user $db_database  < $backup_file_path";
+    }
+    # say "cmd: $cmd";
+    try{
+      `$cmd`;
+    }
+    catch{
+      say "Restoring DB failed from file $backup_file_name. Reason: $_";
+      return 0;
+    };
+    
 
     if ($? == 0){
         say "Restoring backup succeeded from file $backup_file_name";
