@@ -189,18 +189,20 @@ sub fixEntryTypeBasedOnTag{
     #todo: could be otpimized to minimize db calls
 
     if($self->isTalkBasedOnTag($dbh) and $self->isTalkBasedOnDB($dbh)){ 
-        say "both true: OK";
+        # say "both true: OK";
+        return 0;
     }
     elsif($self->isTalkBasedOnTag($dbh) and $self->isTalkBasedOnDB($dbh) ==0 ){
-        say "tag true, DB false. Should write to DB";
+        # say "tag true, DB false. Should write to DB";
         $self->makeTalk($dbh); 
+        return 1;
     } 
     elsif($self->isTalkBasedOnTag($dbh)==0 and $self->isTalkBasedOnDB($dbh) ){
-        say "tag false, DB true. do nothing";
+        # say "tag false, DB true. do nothing";
+        return 0;
     }
-    else{
-        say "both false. Do nothing";
-    }
+    # say "both false. Do nothing";
+    return 0;
 }
 ########################################################################################################################
 sub setMonth{

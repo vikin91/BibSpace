@@ -2,43 +2,55 @@ language: perl
 perl:
     # - "5.22"
     - "5.20"
-    - "5.18"
-    - "5.16"
-    - "5.14"
-    - "5.12"
-    - "5.10"
+    # - "5.18"
+    # - "5.16"
+    # - "5.14"
+    # - "5.12"
+    # - "5.10"
 
 dist: trusty
-sudo: required
+sudo: require # let's try to run on docker
 addons:
   apt:
     packages:
     - mysql-server-5.6
     - mysql-client-core-5.6
     - mysql-client-5.6
+    - ocaml 
+    - libbtparse-dev # disallowed in travis # Text::BibTeX  requires it
+    - libdbd-mysql-perl
+    - tree # just for debugging dir structure
+
+git:
+  depth: 3
 
 before_install:
-    - sudo apt-get update -qq
-    - sudo apt-get install -y tree
-    - sudo apt-get install -y ocaml libbtparse-dev libdbd-mysql-perl
+    # - sudo apt-get update -qq
+    # - sudo apt-get install -y tree
+    # - sudo apt-get install -y ocaml libbtparse-dev libdbd-mysql-perl
     - bash install-bibtex2html.sh
-    - eval $(curl https://travis-perl.github.io/init) --auto
+    # - git config --global user.name "TravisCI"
+    # - eval $(curl https://travis-perl.github.io/init) --auto # hangs often!
+    - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
+    - source ~/travis-perl-helpers/init
+    - build-perl
+    - perl -V
+    - build-dist
+    - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
+    - pwd
 
 
 install:
     - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
-    - cpanm --quiet --notest Devel::Cover::Report::Coveralls
-    - cpanm -nq Module::Build::Mojolicious Module::CPANfile
-    - cpanm -nq --no-interactive --installdeps --with-develop --with-recommends --with-suggests .
-    # - perl Build.PL 
-    # - ./Build
-    # - ./Build install
-    # - cpanm -nq Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper 
-    # - cpanm -nq Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util 
-    # - cpanm -nq utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent 
-    # - cpanm -nq Text::BibTeX HTML::TagCloud::Sortable Crypt::Random WWW::Mechanize
-    # - cpanm -nq Test::Differences Test::MockModule Mojolicious::Plugin::RenderFile Path::Tiny
-    # - cpanm -nq --installdeps .
+    - cpan-install --deps # this works well!
+    - cpan-install --coverage
+    - cpanm --quiet --notest --skip-satisfied Dist::Zilla
+    - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
+    - cpanm --quiet --notest --skip-satisfied Module::Build::Mojolicious Module::CPANfile
+    # - dzil listdeps | grep -vP '[^\w:]' | cpanm --notest --skip-satisfied  --verbose # does almost nothing
+    - dzil authordeps --missing | cpanm --notest --skip-satisfied 
+    # - cpanm --nq --no-interactive --installdeps .
+    - cpanm -nq --no-interactive Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent Text::BibTeX HTML::TagCloud::Sortable Crypt::Random WWW::Mechanize Test::Differences Test::MockModule Mojolicious::Plugin::RenderFile Path::Tiny
 
 before_script:
     - mysql --version
@@ -47,23 +59,24 @@ before_script:
     - mysql -u root -e "CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';"
     - mysql -u root -e "GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';"
     - mysql -u root -e "FLUSH PRIVILEGES;"
+    - coverage-setup
 
 
 notifications:
     email:
-        recpients:
-            - piotr@linux.pl
         on_success: always
         on_failure: always
 
 script: 
-    # works! # - BIBSPACE_CONFIG=lib/BibSpace/files/config/testing.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrsv t/
-    - perl Build.PL
-    - ./Build build
-    - cover -test -report coveralls
-    - cover
+    # works! # 
+    - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrsv t/
+    # - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf cover -report coveralls # runs ./Build test that does not work
 
+# after_failure:
+    # - cover -report coveralls
+    # - coverage-report
 
 after_success:
     - cover -report coveralls
+    # - coverage-report
 
