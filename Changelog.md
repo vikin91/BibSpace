@@ -1,6 +1,6 @@
 ### Changelog ###
 
-#### v0.3.4 22.05.2016 ####
+#### v0.4 22.05.2016 ####
 * Fixing multiple minor bugs
 * Improving code quality with perlcritic
 * Packaging
