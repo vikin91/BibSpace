@@ -9,7 +9,8 @@ perl:
     # - "5.10"
 
 dist: trusty
-sudo: require # let's try to run on docker
+# sudo: require # ubuntu
+sudo: false # docker
 addons:
   apt:
     packages:
