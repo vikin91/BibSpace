@@ -165,7 +165,18 @@ sub startup {
         };
     });
 
+  # Try Moose Code!!
+  # use BibSpace::Model::Mentry;
+  # my $en = MEntry->new();
+  # say "get 1:   ".$en->get($self->app->db, 1);
+  # my @entries = $en->all($self->app->db);
+  # for my $en (@entries){
+  #   say Dumper $en;
+  #   say $en->{id};
+  #   say $en->{bibtex_key};
+  # }
   
+        
 
 
   my $anyone = $self->routes;
@@ -373,8 +384,8 @@ sub startup {
   ################ OPEN ACCESS ################
 
   # contains meta info for every paper. Optimization for google scholar
-  $anyone->get('/read/publications/meta/')->to('publications#metalist');
-  $anyone->get('/read/publications/meta/:id')->to('publications#meta');
+  $anyone->get('/read/publications/meta/')->to('publications#metalist')->name("metalist_all_entries");
+  $anyone->get('/read/publications/meta/:id')->to('publications#meta')->name("metalist_entry");
 
   $anyone->get('/read/publications')->to('publications#all_read');
   $anyone->get('/r/publications')->to('publications#all_read'); #ALIAS
