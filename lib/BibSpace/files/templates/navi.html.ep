@@ -378,7 +378,7 @@
 <!-- END OF BIG IF -->
 %} #END OF BIG IF
 
-<a type="button" class="btn btn-default" href="<%= url_for('/read/publications/meta') %>">
+<a type="button" class="btn btn-default" href="<%= url_for('metalist_all_entries') %>">
     Meta-info for Webcrawlers
 </a>
 

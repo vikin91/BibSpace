@@ -146,7 +146,7 @@ sub make_talk {
 };
 ####################################################################################
 sub metalist {
-	say "CALL: metalist ";
+    say "CALL: metalist ";
     my $self = shift;
 
     my @ids_arr = get_all_non_hidden_entry_ids($self->app->db);
