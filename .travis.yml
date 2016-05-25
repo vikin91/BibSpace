@@ -9,13 +9,13 @@ perl:
     # - "5.10"
 
 dist: trusty
-sudo: require # ubuntu
+# sudo: require # ubuntu
+sudo: false # docker
 addons:
   apt:
     packages:
-    - mysql-server-5.6
-    - mysql-client-core-5.6
-    - mysql-client-5.6
+    - mysql-server
+    - mysql-client
     - ocaml 
     - libbtparse-dev # disallowed in travis # Text::BibTeX  requires it
     - libdbd-mysql-perl
