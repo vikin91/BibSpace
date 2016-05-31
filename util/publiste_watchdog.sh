@@ -13,7 +13,7 @@ fi
 
 if [ "$RESTART" = true ]; then
     pkill -9 -f /home/piotr/perl/git_bibspace/bin/bibspace
-    export BIBSPACE_CONFIG=/home/piotr/perl/publiste3/lib/BibSpace/files/config/production.conf
+    export BIBSPACE_CONFIG=/home/piotr/perl/publiste3/production.conf
     /usr/bin/hypnotoad /home/piotr/perl/git_bibspace/bin/bibspace
 fi
 

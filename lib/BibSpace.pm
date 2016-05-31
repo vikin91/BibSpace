@@ -21,7 +21,7 @@ use Try::Tiny;
 use Path::Tiny;  # for creating directories
 
 # for Makemake. Needs to be removed for Dist::Zilla
-# our $VERSION = '0.4';
+# our $VERSION = '0.4.1';
 
 # 0 4,12,20 * * * curl http://localhost:8081/cron/day
 # 0 2 * * * curl http://localhost:8081/cron/night
