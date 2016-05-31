@@ -12,6 +12,7 @@ ps aux | grep "bin/bibspace"
 echo "waiting again"
 sleep 5
 echo "Starting Hypnotoad"
+export BIBSPACE_CONFIG=/home/piotr/perl/publiste3/production.conf
 /usr/bin/hypnotoad /home/piotr/perl/publiste3/bin/bibspace
 echo "Done. Verificartion: "
 ps aux | grep "bin/bibspace"
