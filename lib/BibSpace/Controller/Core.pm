@@ -1625,7 +1625,7 @@ sub tune_html{
    $s =~ s/<p>//g;
    $s =~ s/<\/p>//g;
 
-   $s =~ s/<a name="/<a id="/g;
+   $s =~ s/<a name=/<a id=/g;
 
 
    $s;
