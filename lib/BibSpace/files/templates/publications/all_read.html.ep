@@ -17,8 +17,8 @@
 % $j = $size;
 % foreach my $obj (@objs){
     % if (defined $obj) {
-        <tr valign="top">
-            <td align="right" class="bibtexnumber">
+        <tr>
+            <td class="bibtexnumber">
                 [<%= $j %>]
             </td>
             <td class="bibtexitem">

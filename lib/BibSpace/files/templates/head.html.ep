@@ -2,10 +2,7 @@
     <!-- this is head -->    
     <meta name="comment" content="head" />
     <meta name="comment" content="mode <%= app->mode %>" />
-    <meta http-equiv="Content-Type" />
-    <meta content="text/html" />
-    <meta charset="UTF-8" />
-    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 
     %= stylesheet '//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css'
     %= javascript '//code.jquery.com/jquery-latest.min.js'
