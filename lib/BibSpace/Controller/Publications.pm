@@ -2327,6 +2327,7 @@ sub get_paper_pdf_path{
     my $filequery = "";
     $filequery .= "paper-".$id."."  if $type eq "paper";
     $filequery .= "slides-paper-".$id."."  if $type eq "slides";
+
     my $directory = $upload_dir;
     $directory .= "papers/" if $type eq "paper";
     $directory .= "slides/" if $type eq "slides";
@@ -2335,7 +2336,7 @@ sub get_paper_pdf_path{
 
     
 
-    opendir(DIR, $directory) or die $!;
+    opendir(DIR, $directory) or die "Cano open directory $directory :".$!;
     while (my $file = readdir(DIR)) {
 
         # Use a regular expression to ignore files beginning with a period
