@@ -65,6 +65,14 @@ a.abstract-a {
     color: #00f;
 }
 
+tr.v-align-top {
+    vertical-align: text-top;
+}
+
+td.bibtexnumber {
+    text-align: right;
+}
+
 .bibtexnumber a{
     color:#000;
 }
