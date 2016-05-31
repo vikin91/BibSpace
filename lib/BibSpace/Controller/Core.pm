@@ -278,7 +278,7 @@ sub nohtml{
 sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their authors ONLY. No tags, no regeneration.
     my $self = shift;
 
-    $self->write_log("reassing papers to authors started");
+    $self->write_log("reassign papers to authors started");
 
     my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
     my $sth = $self->app->db->prepare( $qry );  
@@ -564,8 +564,6 @@ sub delete_entry_by_id{
 
     my $sth3 = $dbh->prepare( "DELETE FROM Entry_to_Author WHERE entry_id = ?" );  
     $sth3->execute($id);
-
-    warn "FIXME: delete_entry_by_id. Pdf file should be deleted from file system as well"; 
 };
 ################################################################################
 sub get_all_non_hidden_entry_ids{

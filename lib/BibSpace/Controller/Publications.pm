@@ -1068,10 +1068,10 @@ sub remove_attachment{
     my $filetype = $self->param('filetype') || 'paper';  # paper, slides
 
     $self->write_log("Removing attachment to download: filetype $filetype, id $id. ");
+    say "Removing attachment to download: filetype $filetype, id $id. ";
 
-    my $file_path = $self->get_paper_pdf_path($id, "$filetype");
-    say "Found paper type $filetype : $file_path";
-
+    my $file_path = get_paper_pdf_path($self, $id, "$filetype");
+    say "file_path $file_path";
     my $num_deleted_files = 0;
 
     if(!defined $file_path or $file_path eq 0){
@@ -1080,40 +1080,64 @@ sub remove_attachment{
         $self->redirect_to($self->get_referrer);
         return;
     }
-    else{
+    else{ # file exists
 
-        try{
-            unlink $file_path;
-            $num_deleted_files = $num_deleted_files +1;
-            say "Deleting attachment file: $file_path";
-        }
-        catch{};
+        $num_deleted_files = $self->remove_attachment_do($id, $filetype);
 
-        # make sure that there is no file
-        my $file_path_after_delete = $self->get_paper_pdf_path($id, "$filetype");
-        while($file_path_after_delete ne 0){
-            say "File deleted but something is left: $file_path_after_delete";
-            try{
-                unlink $file_path;
-                $num_deleted_files = $num_deleted_files +1;
-                say "Deleting attachment file: $file_path";
-            }
-            catch{};
-            $file_path_after_delete = $self->get_paper_pdf_path($id, "$filetype");
-        }
-        # deleted for sure!
-
-        if($filetype eq 'paper'){
-            clean_ugly_bibtex_fields($self->app->db, $id, qw(pdf));
-        }
-        if($filetype eq 'slides'){
-            clean_ugly_bibtex_fields($self->app->db, $id, qw(slides));
+        if($num_deleted_files > 0){
+            generate_html_for_id($self->app->db, $id);
         }
 
         $self->write_log("$num_deleted_files attachments removed for id $id.");
         $self->flash(msg => "There were $num_deleted_files attachments removed for id $id.");
         $self->redirect_to($self->get_referrer);
     }
+}
+####################################################################################
+sub remove_attachment_do{
+    say "CALL: remove_attachment_do";
+    my $self = shift;
+    my $id = shift;
+    my $filetype = shift;
+
+    my $file_path = get_paper_pdf_path($self, $id, "$filetype");
+    say "Found paper type $filetype : $file_path";
+
+    my $num_deleted_files = 0;
+
+    if(!defined $file_path or $file_path eq 0){
+        return 0;
+    }
+
+    try{
+        unlink $file_path;
+        $num_deleted_files = $num_deleted_files +1;
+        say "Deleting attachment file: $file_path";
+    }
+    catch{};
+
+    # make sure that there is no file
+    my $file_path_after_delete = get_paper_pdf_path($self, $id, "$filetype");
+    while($file_path_after_delete ne 0){
+        say "File deleted but something is left: $file_path_after_delete";
+        try{
+            unlink $file_path;
+            $num_deleted_files = $num_deleted_files +1;
+            say "Deleting attachment file: $file_path";
+        }
+        catch{};
+        $file_path_after_delete = get_paper_pdf_path($self, $id, "$filetype");
+    }
+    # deleted for sure!
+
+    if($filetype eq 'paper'){
+        clean_ugly_bibtex_fields($self->app->db, $id, qw(pdf));
+    }
+    if($filetype eq 'slides'){
+        clean_ugly_bibtex_fields($self->app->db, $id, qw(slides));
+    }
+
+    return $num_deleted_files;
 }
 ####################################################################################
 sub download {
@@ -1174,16 +1198,10 @@ sub add_pdf_post{
     my $id = $self->param('id') || "unknown";    
     my $filetype = $self->param('filetype') || undef;
 
-    my $uploads_directory = "public"; ## TODO: move this to config!
+    my $uploads_directory = $self->config->{upload_dir};
     $uploads_directory =~ s!/*$!/!; # makes sure that there is exactly one / at the end
 
     my $extension;
-
-    # my $base_url = $self->req->url->base;
-    # my $absolute_path_base = $self->url_for('/')->base;
-
-    # base_url http://127.0.0.1:3000
-    # absolute_path_base http://127.0.0.1:3000
 
     $self->write_log("Saving attachment for paper id $id");
 
@@ -1232,19 +1250,19 @@ sub add_pdf_post{
             $fname_no_ext = "paper-".$id.".";
             $fname = $fname_no_ext.$extension;
           
-            $directory = "uploads/papers/";
+            $directory = "papers/";
             $bibtex_field = "pdf";
         }
         elsif($filetype eq 'slides'){
             $fname_no_ext = "slides-paper-".$id.".";
             $fname = $fname_no_ext.$extension;
-            $directory = "uploads/slides/";
+            $directory = "slides/";
             $bibtex_field = "slides";
         }
         else{
             $fname_no_ext = "unknown-".$id.".";
             $fname = $fname_no_ext.$extension;
-            $directory = "uploads/unknown/";
+            $directory = "unknown/";
 
             $bibtex_field = "pdf2";
         }
@@ -1376,6 +1394,10 @@ sub delete_sure {
    my $dbh = $self->app->db;
 
    delete_entry_by_id($dbh, $eid);
+
+   remove_attachment_do($self, $eid, 'paper');
+   remove_attachment_do($self, $eid, 'slides');
+
    $self->write_log("delete_sure entry eid $eid. Entry deleted.");
 
    $self->redirect_to($self->get_referrer);
@@ -1688,8 +1710,8 @@ sub post_add_many_store {
             ($code, $html_preview) = postprocess_edited_entry($dbh, $single_code, 0);  #FIXME: added entry is strange!
             my $added_id = get_entry_id($dbh, $single_key);
 
-            $debug_str.="<br>"."Added key $single_key as id $added_id sucessfully!<br/>";
-            $msg .= "Added key $single_key as id $added_id sucessfully!<br/>";
+            $debug_str.="<br>"."Added key $single_key as id $added_id successfully!<br/>";
+            $msg .= "Added key $single_key as id $added_id successfully!<br/>";
         }
     }
 
@@ -1793,7 +1815,7 @@ sub post_add_store {
       }
   }
 
-  $code = 3;  # beause once the kay is bad, it is bad as long as $existing_id is -1
+  $code = 3;  # because once the key is bad, it is bad as long as $existing_id is -1
 
   if(defined $self->param('check_key')){
       if($existing_id == -1){
@@ -1824,10 +1846,10 @@ sub get_adding_editing_message_for_error_code {
         return 'Displaying preview';
     }
     elsif($exit_code eq '0'){ 
-        return 'Entry added succesfully';
+        return 'Entry added successfully';
     }
     elsif($exit_code eq '1'){
-        return 'Entry updated succesfully';
+        return 'Entry updated successfully';
     }
     elsif($exit_code eq '2'){
         return 'The proposed key is OK.';
@@ -2331,49 +2353,6 @@ sub get_paper_pdf_path{
     my $file_path = $directory.$filename;
     return $file_path;
 };
-####################################################################################
-
-# ## SPECIAL FUNCTION
-# # if pdf exists locally, change the bibtex code to point to the local file
-
-# sub special_map_pdf_to_local_file{
-#     say "CALL: special_map_pdf_to_local_file";
-#     my $self = shift;
-#     my $id = $self->param('id');
-    
-#     my $fname = "paper-".$id.".pdf";
-#     my $directory = "uploads/papers/";
-#     my $bibtex_field = "pdf";
-
-#     # $fname_no_ext = "slides-paper-".$id.".";
-#     # $fname = $fname_no_ext.$extension;
-#     # $directory = "uploads/slides/";
-#     # $bibtex_field = "slides";
-
-#     my $file_path = $directory.$fname;
-
-#     say $file_path;
-
-#     my $exists = 0;
-#     $exists = 1 if -e "public/".$file_path;
-
-#     say "exists $exists";
-
-#     my $file_url = $self->req->url->base."".$file_path;
-#     say $file_url;
-
-#     if($exists == 1){
-#         add_field_to_bibtex_code($self->app->db, $id, $bibtex_field, $file_url);    
-#         generate_html_for_id($self->app->db, $id);
-#     }
-    
-
-#     my $msg = "Processing id $id. EXISTS $exists. bibtex_filed $bibtex_field. file_url $file_url, FILE_PATH $file_path.";
-
-#     $self->render(text => $msg);
-# };
-
-####################################################################################
 
 
 1;
