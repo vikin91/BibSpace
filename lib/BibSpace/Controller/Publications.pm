@@ -2334,9 +2334,16 @@ sub get_paper_pdf_path{
     my $filename = undef;
 
 
+    # make sure that the directories exist
+    try{
+        path($directory)->mkpath;
+    }
+    catch{
+        warn "Exception: cannot create directory $directory. Msg: $_";
+    };
     
 
-    opendir(DIR, $directory) or die "Cano open directory $directory :".$!;
+    opendir(DIR, $directory) or die "Cannot open directory $directory :".$!;
     while (my $file = readdir(DIR)) {
 
         # Use a regular expression to ignore files beginning with a period
