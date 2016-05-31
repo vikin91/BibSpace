@@ -1628,6 +1628,8 @@ sub tune_html{
    $s =~ s/<a name="(.*)"><\/a>//g;
    # $s =~ s/<a name=/<a id=/g;
 
+  $s =~ s/\&amp /\&amp; /g;
+
 
    $s;
 }
