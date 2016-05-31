@@ -1607,7 +1607,8 @@ sub tune_html{
    $s =~ s/<\/font><\/blockquote><NeueZeile><p>/<\/blockquote><\/div>/g;
 
    #inserting bib DIV marker
-   $s =~ s/\]/\] BIB_DIV_ID/g;
+   $s =~ s/\&nbsp;\]/\&nbsp; \]/g;
+   $s =~ s/\&nbsp; \]/\&nbsp; \] BIB_DIV_ID/g;
 
    $key =~ s/\./_/g;   
 
