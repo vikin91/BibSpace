@@ -339,8 +339,10 @@ sub startup {
   $logged_user->get('/publications/missing_month')->to('publications#all_without_missing_month');
   
   $logged_user->get('/publications/get/:id')->to('publications#single'); 
-  $logged_user->get('/publications/download/:filetype/:id')->to('publications#download')->name('download_publication'); 
-  $logged_user->get('/publications/download/:filetype/(:id).pdf')->to('publications#download')->name('download_publication_pdf'); 
+  #
+  $anyone->get('/publications/download/:filetype/:id')->to('publications#download')->name('download_publication'); 
+  $anyone->get('/publications/download/:filetype/(:id).pdf')->to('publications#download')->name('download_publication_pdf'); 
+  #
   $logged_user->get('/publications/remove_attachment/:filetype/:id')->to('publications#remove_attachment')->name('publications_remove_attachment'); 
 
   $logged_user->get('/publications/hide/:id')->to('publications#hide'); 
