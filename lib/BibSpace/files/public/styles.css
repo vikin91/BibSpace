@@ -58,6 +58,10 @@ h1 {
     font-weight: bold;
 }
 
+blockquote.abstractBQ {
+    text-align: justify;
+}
+
 a.abstract-a {
     text-decoration:underline;
     cursor: pointer; 

@@ -1567,17 +1567,6 @@ sub tune_html{
    my $key = shift;
    my $htmlbib = shift || "";
 
-   # my $DIR="/var/www/html/publications-new";
-   # my $DIRBASE="/var/www/html/";
-   # #edit those two above always together!
-   # my $WEBPAGEPREFIX="http://sdqweb.ipd.kit.edu/";
-   # my $WEBPAGEPREFIXLONG="http://sdqweb.ipd.kit.edu/publications";
-
-   # BASH CODE:
-   # # replace links
-   # sed -e s_"$DIR"_"$WEBPAGEPREFIXLONG"_g $FILE > $TMP && mv -f $TMP $FILE
-   # # changes /var/www/html/publications-new to http://sdqweb.ipd.kit.edu/publications_new
-   # $s =~ s/"$DIR"/"$WEBPAGEPREFIXLONG"/g;
 
    $s =~ s/out_bib.html#(.*)/\/publications\/get\/bibtex\/$1/g;
    
@@ -1594,10 +1583,6 @@ sub tune_html{
 
    $s =~ s/<a (.*)>bib<\/a>/BIB_LINK_ID/g;
    
-   
-
-   # # for old system use:
-   # #for x in `find $DIR -name "*.html"`;do sed 's_\[\&nbsp;<a href=\"_\[\&nbsp;<a href=\"http:\/\/sdqweb.ipd.kit.edu\/publications\/_g' $x > $TMP; mv $TMP $x; done
 
    # # replace &lt; and &gt; b< '<' and '>' in Samuel's files.
    # sed 's_\&lt;_<_g' $FILE > $TMP && mv -f $TMP $FILE
@@ -1618,7 +1603,7 @@ sub tune_html{
 
    
    #$s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \]<div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
-   $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\" style=\"text-align: justify;\">/g;
+   $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote class=\"abstractBQ\">/g;
    $s =~ s/<\/font><\/blockquote><NeueZeile><p>/<\/blockquote><\/div>/g;
 
    #inserting bib DIV marker
@@ -1639,6 +1624,8 @@ sub tune_html{
 
    $s =~ s/<p>//g;
    $s =~ s/<\/p>//g;
+
+   $s =~ s/<a name="/<a id="/g;
 
 
    $s;
