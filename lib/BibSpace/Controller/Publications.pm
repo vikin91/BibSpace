@@ -316,8 +316,9 @@ sub meta {
 
 
     # PDF URL 
-    my $citation_pdf_url = "";
-    $citation_pdf_url = $entry->get('pdf') if $entry->exists('pdf');
+    my $citation_pdf_url = undef;
+    $citation_pdf_url = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$id) if $entry->exists('pdf');
+    $citation_pdf_url = $self->url_for('download_publication_pdf', filetype=>'slides', id=>$id) if $entry->exists('slides');
     $citation_pdf_url = $entry->get('url') if $entry->exists('url') and $entry->get('url') =~ /.*\.pdf^/;
 
 
