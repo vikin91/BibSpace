@@ -57,7 +57,7 @@ has db => sub {
 
 has version => sub {
   my $self = shift;
-  return $BibSpace::VERSION // "0.4";
+  return $BibSpace::VERSION // "0.4.1";
 };
 
 
