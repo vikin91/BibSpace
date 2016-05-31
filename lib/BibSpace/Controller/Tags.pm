@@ -276,8 +276,8 @@ sub get_tags_for_author_read{
         
 
         # my $url = "/ly/p?author=".get_master_for_id($self->app->db, $maid)."&tag=".$tag."&title=1&navbar=1";
-        my $author_master_id = get_master_for_id($self->app->db, $maid);
-        my $url = $self->url_for('lyp', author=>$author_master_id, tag=>$tag, title=>'1', navbar=>'1');
+        my $author_master = get_master_for_id($self->app->db, $maid);
+        my $url = $self->url_for('lyp')->query(author=>$author_master, tag=>$tag, title=>'1', navbar=>'1');
         
         my $obj = new BibSpace::Functions::TagCloudClass($tag);
         $obj->setURL($url);
@@ -327,7 +327,7 @@ sub get_tags_for_team_read{
 
         # my $url = "/ly/p?team=".get_team_for_id($self->app->db, $tid)."&tag=".$tag."&title=1&navbar=1";
         my $team_name = get_team_for_id($self->app->db, $tid);
-        my $url = $self->url_for('lyp', team=>$team_name, tag=>$tag, title=>'1', navbar=>'1');
+        my $url = $self->url_for('lyp')->query(team=>$team_name, tag=>$tag, title=>'1', navbar=>'1');
 
         my $obj = new BibSpace::Functions::TagCloudClass($tag);
         $obj->setURL($url);
