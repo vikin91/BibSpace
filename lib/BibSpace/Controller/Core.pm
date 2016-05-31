@@ -79,8 +79,8 @@ our @EXPORT = qw(
     get_html_for_entry_id
     get_exceptions_for_entry_id
     get_year_for_entry_id
-    clean_ugly_bibtex_fileds
-    clean_ugly_bibtex_fileds_for_all_entries
+    clean_ugly_bibtex_fields
+    clean_ugly_bibtex_fields_for_all_entries
     prepare_backup_table
     get_month_numeric
     get_current_year
@@ -149,7 +149,6 @@ sub get_publications_core_from_set{
 ####################################################################################
 
 sub get_publications_core{
-  # say "CALL: get_publications_core";
     my $self = shift;
     my $author = shift;
     my $year = shift;
@@ -161,9 +160,13 @@ sub get_publications_core{
     my $permalink = shift;
     my $hidden = shift;
 
+    # say "CALL: get_publications_core author $author tag $tag";
+
     my $dbh = $self->app->db;
 
-    my $teamid = get_team_id($dbh, $team) || undef;
+    my $teamid = get_team_id($dbh, $team) || undef; # gives -1 if $team contains id
+    $teamid = $team if defined $teamid and $teamid eq -1; # so team = teamid
+
     my $master_id = get_master_id_for_master($dbh, $author) || undef;
     if($master_id == -1){
       $master_id = $author; # it means that author was given as master_id and not as master name
@@ -177,8 +180,7 @@ sub get_publications_core{
     
     $teamid = undef unless defined $team;
     $master_id = undef unless defined $author;
-    $tagid = undef unless defined $tag;
-    
+    $tagid = undef unless defined $tag;    
 
     my @objs = BibSpace::Functions::EntryObj->getByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
     return @objs;
@@ -276,7 +278,7 @@ sub nohtml{
 sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their authors ONLY. No tags, no regeneration.
     my $self = shift;
 
-    $self->write_log("reassing papers to authors started");
+    $self->write_log("reassign papers to authors started");
 
     my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
     my $sth = $self->app->db->prepare( $qry );  
@@ -299,7 +301,7 @@ sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their
         assign_entry_to_existing_authors_no_add($self, $entry_obj);
     }
 
-    $self->write_log("reassing papers to authors finished");
+    $self->write_log("reassign papers to authors finished");
 };
 
 ##################################################################
@@ -338,25 +340,24 @@ sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assi
 };
 
 ####################################################################################
-sub clean_ugly_bibtex_fileds_for_all_entries {
+# clean_ugly_bibtex_fileds_for_all_entries
+sub clean_ugly_bibtex_fields_for_all_entries {
     my $self = shift;
     my $dbh = $self->app->db;
-    $self->write_log("clean_ugly_bibtex_fileds_for_all_entries started");
+    $self->write_log("clean_ugly_bibtex_fields_for_all_entries started");
     
     
     my @ids = get_all_entry_ids($dbh);
     for my $id (@ids){
-      clean_ugly_bibtex_fileds($dbh, $id);
+      clean_ugly_bibtex_fields($dbh, $id);
     }
-    $self->write_log("clean_ugly_bibtex_fileds_for_all_entries finished");
+    $self->write_log("clean_ugly_bibtex_fields_for_all_entries finished");
 };
 ####################################################################################
-sub clean_ugly_bibtex_fileds {
+sub clean_ugly_bibtex_fields {
     my $dbh = shift;
     my $eid = shift;
-
-    # TODO: move this into config
-    our @bib_fields_to_delete = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
+    my @bib_fields_to_delete = shift || qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
 
     my @ary = $dbh->selectrow_array("SELECT bib FROM Entry WHERE id = ?", undef, $eid);  
     my $entry_str = $ary[0];
@@ -377,7 +378,7 @@ sub clean_ugly_bibtex_fileds {
         my $new_bib = $entry->print_s;
 
 
-        # celaning errors caused by sqlite - mysql import
+        # cleaning errors caused by sqlite - mysql import
         
         $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
         $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
@@ -393,6 +394,7 @@ sub clean_ugly_bibtex_fileds {
         # generate_html_for_id($dbh, $eid);
     }
 };
+
 
 ##################################################################
 
@@ -562,8 +564,6 @@ sub delete_entry_by_id{
 
     my $sth3 = $dbh->prepare( "DELETE FROM Entry_to_Author WHERE entry_id = ?" );  
     $sth3->execute($id);
-
-    warn "FIXME: delete_entry_by_id. Pdf file should be deleted from file system as well"; 
 };
 ################################################################################
 sub get_all_non_hidden_entry_ids{

@@ -21,7 +21,7 @@ use Try::Tiny;
 use Path::Tiny;  # for creating directories
 
 # for Makemake. Needs to be removed for Dist::Zilla
-# our $VERSION = '0.4';
+# our $VERSION = '0.4.1';
 
 # 0 4,12,20 * * * curl http://localhost:8081/cron/day
 # 0 2 * * * curl http://localhost:8081/cron/night
@@ -57,7 +57,7 @@ has db => sub {
 
 has version => sub {
   my $self = shift;
-  return $BibSpace::VERSION // "0.4";
+  return $BibSpace::VERSION // "0.4.1";
 };
 
 
@@ -72,6 +72,10 @@ sub startup {
     push @{$self->app->static->paths}, $self->app->home->rel_dir('public');
     # push @{$self->app->static->paths}, $self->config->{backups_dir};
 
+    say "Using config: ".$self->app->config_file;
+    say "App version: ".$self->app->version;
+    $config = $self->plugin('Config' => {file => $self->app->config_file});
+
     $self->hook(before_dispatch => sub {
       my $c = shift;
       $c->req->url->base->scheme('https') if $c->req->headers->header('X-Forwarded-HTTPS');
@@ -79,11 +83,17 @@ sub startup {
       # TODO!!
       # only for directory deployment!!
       # push @{$c->req->url->base->path->trailing_slash(1)}, shift @{$c->req->url->path->leading_slash(0)};
+
+      # dirty fix for production deployment in a directory
+      my $proxy_prefix = $self->config->{proxy_prefix};
+      if($proxy_prefix ne ""){
+        # we remove the leading slash
+        $proxy_prefix =~ s|^/||;
+        push @{$c->req->url->base->path->trailing_slash(1)}, $proxy_prefix;  
+      }
     });
 
-    say "Using config: ".$self->app->config_file;
-    say "App version: ".$self->app->version;
-    $config = $self->plugin('Config' => {file => $self->app->config_file});
+    
 
     say "Creating directories.";
 
@@ -313,8 +323,9 @@ sub startup {
   # EXPERIMENTAL
   $logged_user->get('/publications-set')->to('publications#all_defined_by_set'); 
   # description of this function is included with the code
-  # $anyone->get('/publications/special/:id')->to('publications#special_map_pdf_to_local_file'); # use with extreeme caution!
-  $superadmin->get('/publications/fix_urls')->to('publications#replace_urls_to_file_serving_function');
+  # $anyone->get('/publications/special/:id')->to('publications#special_map_pdf_to_local_file'); # use with extreme caution!
+  $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq'); 
+  $superadmin->get('/publications/fix_urls')->to('publications#replace_urls_to_file_serving_function')->name('fix_attachment_urls');
   # EXPERIMENTAL END
 
   $logged_user->get('/publications')->to('publications#all'); # logged_user icons!
@@ -327,9 +338,12 @@ sub startup {
   $logged_user->get('/publications/candidates_to_delete')->to('publications#all_candidates_to_delete');
   $logged_user->get('/publications/missing_month')->to('publications#all_without_missing_month');
   
-  $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq'); 
   $logged_user->get('/publications/get/:id')->to('publications#single'); 
-  $logged_user->get('/publications/download/:filetype/:id')->to('publications#download')->name('download_publication'); 
+  #
+  $anyone->get('/publications/download/:filetype/:id')->to('publications#download')->name('download_publication'); 
+  $anyone->get('/publications/download/:filetype/(:id).pdf')->to('publications#download')->name('download_publication_pdf'); 
+  #
+  $logged_user->get('/publications/remove_attachment/:filetype/:id')->to('publications#remove_attachment')->name('publications_remove_attachment'); 
 
   $logged_user->get('/publications/hide/:id')->to('publications#hide'); 
   $logged_user->get('/publications/unhide/:id')->to('publications#unhide'); 

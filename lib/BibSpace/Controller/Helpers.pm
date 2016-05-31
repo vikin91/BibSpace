@@ -72,16 +72,19 @@ sub register {
         my $bid = shift;
         my $backup_dbh = $self->app->db;
 
+        my $backup_dir_absolute = $self->config->{backups_dir};
+        $backup_dir_absolute =~ s!/*$!/!;
+
         my $b_fname = get_backup_filename($self, $bid);
-        my $b_age = get_backup_age_in_days($self, $bid);
+        my $file_path = $backup_dir_absolute.$b_fname;
 
         my $file_exists = 0;
-        $file_exists = 1 if -e $b_fname;
-
+        $file_exists = 1 if -e $file_path;
+        my $b_age = get_backup_age_in_days($self, $bid);
 
         my $age_limit = $self->config->{allow_delete_backups_older_than};
 
-        # say "age limit is $age_limit, backup age: $b_age";
+        # say "helper(can_delete_backup: age limit is $age_limit, backup age: $b_age file_exists $file_exists file_path $file_path ";
 
         return 1 if $file_exists == 1 and $b_age >= $age_limit;
         return 1 if $file_exists == 0;
@@ -91,12 +94,10 @@ sub register {
 
     $app->helper(num_pubs => sub {
         my $self = shift;
-
-        my $sth = $self->app->db->prepare( "SELECT COUNT(id) as num FROM Entry" );  
-        $sth->execute(); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
-        return $num; 
+        
+        my @objs = get_publications_main_hashed_args($self, {hidden => undef});
+        my $count =  scalar @objs;
+        return $count; 
       });
 
     $app->helper(get_all_tag_types => sub {
@@ -111,9 +112,6 @@ sub register {
     $app->helper(get_tag_type_obj => sub {
         my $self = shift;
         my $type = shift || 1;
-
-        say "get_tag_type_obj for type $type";
-
         my $ttobj = BibSpace::Functions::TagTypeObj->getById($self->app->db, $type);
         return $ttobj;
 
@@ -244,11 +242,9 @@ sub register {
         my $self = shift;
         my $year = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(id) as num FROM Entry WHERE year=?" );  
-        $sth->execute($year); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
-        return $num; 
+        my @objs = get_publications_main_hashed_args($self, {hidden => 0, year => $year});
+        my $count =  scalar @objs;
+        return $count;
       });
 
     $app->helper(get_bibtex_types_aggregated_for_type => sub {
@@ -261,8 +257,6 @@ sub register {
     $app->helper(helper_get_description_for_our_type => sub {
         my $self = shift;
         my $type = shift;
-
-        
         return get_description_for_our_type($self->app->db, $type);
     });
 
@@ -293,15 +287,11 @@ sub register {
         my $mid = shift;
         my $tag_id = shift;
 
-        say "call HELPER num_pubs_for_author_and_tag";
-
-        my @objs = get_publications_main_hashed_args($self, {hidden => undef, author => $mid, tag=>$tag_id});
+        my @objs = get_publications_main_hashed_args($self, {hidden => 0, author => $mid, tag=>$tag_id});
         my $count =  scalar @objs;
-
         return $count;
 
         # my $set = get_set_of_papers_for_author_and_tag($self, $mid, $tag_id);
-        # return scalar $set->members;
       });
 
     $app->helper(num_pubs_for_author_and_team => sub {
@@ -311,8 +301,12 @@ sub register {
 
         say "call HELPER num_pubs_for_author_and_team";
 
-        my $set = get_set_of_papers_for_author_and_team($self, $mid, $team_id);
-        return scalar $set->members;
+        my @objs = get_publications_main_hashed_args($self, {hidden => 0, author => $mid, team=>$team_id});
+        my $count =  scalar @objs;
+
+        return $count;
+
+        # my $set = get_set_of_papers_for_author_and_team($self, $mid, $team_id);
       });
 
     $app->helper(get_years_arr => sub {
@@ -338,11 +332,15 @@ sub register {
         my $self = shift;
         my $mid = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(entry_id) as num FROM Entry_to_Author WHERE author_id=?" );  
-        $sth->execute($mid); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
-        return $num; 
+        my @objs = get_publications_main_hashed_args($self, {hidden => 0, author => $mid});
+        my $count =  scalar @objs;
+        return $count;
+
+        # my $sth = $self->app->db->prepare( "SELECT COUNT(entry_id) as num FROM Entry_to_Author WHERE author_id=?" );  
+        # $sth->execute($mid); 
+        # my $row = $sth->fetchrow_hashref();
+        # my $num = $row->{num};
+        # return $num; 
       });
 
     $app->helper(get_authors_of_entry => sub {
@@ -365,11 +363,9 @@ sub register {
         my $self = shift;
         my $tid = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(Entry_to_Tag.entry_id) as num FROM Entry_to_Tag LEFT JOIN Entry ON Entry.id = Entry_to_Tag.entry_id WHERE tag_id=? AND hidden=0" );  
-        $sth->execute($tid); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
-        return $num; 
+        my @objs = get_publications_main_hashed_args($self, {hidden => 0, tag => $tid});
+        my $count =  scalar @objs;
+        return $count;
       });
 
 
@@ -377,11 +373,9 @@ sub register {
         my $self = shift;
         my $tid = shift;
 
-        my $sth = $self->app->db->prepare( "SELECT COUNT(Entry_to_Tag.entry_id) as num FROM Entry_to_Tag LEFT JOIN Entry ON Entry.id = Entry_to_Tag.entry_id WHERE tag_id=?" );  
-        $sth->execute($tid); 
-        my $row = $sth->fetchrow_hashref();
-        my $num = $row->{num};
-        return $num; 
+        my @objs = get_publications_main_hashed_args($self, {hidden => undef, tag => $tid});
+        my $count =  scalar @objs;
+        return $count;
       });
 
     $app->helper(get_author_mids_arr => sub {
@@ -400,12 +394,9 @@ sub register {
     $app->helper(get_master_for_id => sub {
         my $self = shift;
         my $id = shift;
+        # navi uses it
 
-        my $sth = $self->app->db->prepare( "SELECT master FROM Author WHERE id=?" );  
-        $sth->execute($id); 
-        my $row = $sth->fetchrow_hashref();
-        my $master = $row->{master};
-        return $master; 
+        return get_master_for_id($self->app->db, $id);
       });
 
     $app->helper(get_first_letters => sub {

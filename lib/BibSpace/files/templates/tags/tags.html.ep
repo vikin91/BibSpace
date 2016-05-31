@@ -80,7 +80,7 @@
                     <p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-tag"></span> <%= $tag %></p>
                 </td>
                 <td>
-                    <a class="btn btn-default btn-sm" href="<%= url_for('/publications?tag=')%><%= $tag %>">
+                    <a class="btn btn-default btn-sm" href="<%= url_for('publications')->query(tag=>$tag) %>">
                         <span class="glyphicon glyphicon-list-alt"></span> Papers <span class="badge"> <%= num_pubs_for_tag($id) %></span>
                     </a>
                 </td>

@@ -118,19 +118,24 @@ sub do_delete_backup{   # added 22.08.14
 
     say "call BackupFunctions::do_delete_backup";
 
-    
+    my $backup_dir_absolute = $self->config->{backups_dir};
+    $backup_dir_absolute =~ s!/*$!/!;
+
 
     my $sth = $dbh->prepare("SELECT filename FROM Backup WHERE id = ?");
     $sth->execute($id);
     my $row = $sth->fetchrow_hashref();
     my $fname = $row->{filename};
 
-    my $sth2 = $dbh->prepare("DELETE FROM Backup WHERE id=?");
-    $sth2->execute($id);
+    my $file_path = $backup_dir_absolute.$fname;
+    my $exists = 1 if -e $file_path;
+    say "do_delete_backup deletes file: $file_path exists $exists";
 
     $self->write_log("destroying backup id $id");
 
-    unlink $fname; 
+    my $sth2 = $dbh->prepare("DELETE FROM Backup WHERE id=?");
+    $sth2->execute($id);
+    unlink $file_path; 
 }
 ####################################################################################
 sub do_delete_broken_or_old_backup {   # added 22.08.14

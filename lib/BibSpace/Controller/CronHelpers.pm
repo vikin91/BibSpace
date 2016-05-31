@@ -70,9 +70,9 @@ sub register {
 
     
 
-    $app->helper(helper_clean_ugly_bibtex_fileds_for_all_entries => sub {
+    $app->helper(helper_clean_ugly_bibtex_fields_for_all_entries => sub {
         my $self = shift;
-        clean_ugly_bibtex_fileds_for_all_entries($self);
+        clean_ugly_bibtex_fields_for_all_entries($self);
     });
 
     

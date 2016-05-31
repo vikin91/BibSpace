@@ -54,6 +54,7 @@ my @pages = (
 	"/publications/orphaned",
 	"/publications/candidates_to_delete",
 	"/publications/missing_month",
+	"/publications/fix_urls",
 	"/publications/sdqpdf",
 	"/publications/add",
 	"/publications/add_many",
@@ -72,7 +73,7 @@ my @pages = (
 	"/cron/day",
 	"/cron/night",
 	"/cron/week",
-	"/cron/month",
+	"/cron/month"
 );
 
 for my $page (@pages){

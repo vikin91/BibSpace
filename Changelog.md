@@ -1,5 +1,10 @@
 ### Changelog ###
 
+#### v0.4.1 31.05.2016 ####
+* Add function to change download urls from direct file paths to file serving function
+* Add function to remove attachments
+* Fixing multiple minor bugs
+
 #### v0.4 22.05.2016 ####
 * Fixing multiple minor bugs
 * Improving code quality with perlcritic
