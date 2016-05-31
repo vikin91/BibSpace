@@ -149,7 +149,6 @@ sub get_publications_core_from_set{
 ####################################################################################
 
 sub get_publications_core{
-  # say "CALL: get_publications_core";
     my $self = shift;
     my $author = shift;
     my $year = shift;
@@ -161,9 +160,13 @@ sub get_publications_core{
     my $permalink = shift;
     my $hidden = shift;
 
+    # say "CALL: get_publications_core author $author tag $tag";
+
     my $dbh = $self->app->db;
 
-    my $teamid = get_team_id($dbh, $team) || undef;
+    my $teamid = get_team_id($dbh, $team) || undef; # gives -1 if $team contains id
+    $teamid = $team if defined $teamid and $teamid eq -1; # so team = teamid
+
     my $master_id = get_master_id_for_master($dbh, $author) || undef;
     if($master_id == -1){
       $master_id = $author; # it means that author was given as master_id and not as master name
@@ -177,8 +180,7 @@ sub get_publications_core{
     
     $teamid = undef unless defined $team;
     $master_id = undef unless defined $author;
-    $tagid = undef unless defined $tag;
-    
+    $tagid = undef unless defined $tag;    
 
     my @objs = BibSpace::Functions::EntryObj->getByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
     return @objs;

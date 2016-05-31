@@ -293,15 +293,12 @@ sub register {
         my $mid = shift;
         my $tag_id = shift;
 
-        say "call HELPER num_pubs_for_author_and_tag";
-
-        my @objs = get_publications_main_hashed_args($self, {hidden => undef, author => $mid, tag=>$tag_id});
+        my @objs = get_publications_main_hashed_args($self, {hidden => 0, author => $mid, tag=>$tag_id});
         my $count =  scalar @objs;
 
         return $count;
 
         # my $set = get_set_of_papers_for_author_and_tag($self, $mid, $tag_id);
-        # return scalar $set->members;
       });
 
     $app->helper(num_pubs_for_author_and_team => sub {
@@ -311,8 +308,12 @@ sub register {
 
         say "call HELPER num_pubs_for_author_and_team";
 
-        my $set = get_set_of_papers_for_author_and_team($self, $mid, $team_id);
-        return scalar $set->members;
+        my @objs = get_publications_main_hashed_args($self, {hidden => 0, author => $mid, team=>$team_id});
+        my $count =  scalar @objs;
+
+        return $count;
+
+        # my $set = get_set_of_papers_for_author_and_team($self, $mid, $team_id);
       });
 
     $app->helper(get_years_arr => sub {
