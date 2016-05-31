@@ -1863,9 +1863,11 @@ sub get_edit {
    my $bib = $obj->{bib};
    my $key = $obj->{bibtex_key};
 
+   my ($html, $htmlbib) = get_html_for_bib($bib, $key);
+
 
    $self->stash(bib  => $bib, entry_obj => $obj, id => $id, key => $key, existing_id => '', exit_code => '', 
-                msg => '', preview => '');
+                msg => '', preview => $html);
    $self->render(template => 'publications/edit_entry');
 };
 ############################################################################################################
@@ -2270,7 +2272,7 @@ sub replace_urls_to_file_serving_function{
 
         # check if the entry has pdf
         my $pdf_path = $self->get_paper_pdf_path($e->{id}, "paper");
-        if($pdf_path ne 0){
+        if($pdf_path ne 0){ # this means that file exists locally
             if(has_bibtex_field($dbh, $e->{id}, "pdf")){
                 add_field_to_bibtex_code($dbh, $e->{id}, "pdf", "$url_pdf");
                 $str .= "id $e->{id}, PDF: ".$url_pdf;
@@ -2278,7 +2280,7 @@ sub replace_urls_to_file_serving_function{
             }
         }
         my $slides_path = $self->get_paper_pdf_path($e->{id}, "slides");
-        if($slides_path ne 0){
+        if($slides_path ne 0){ # this means that file exists locally
             if(has_bibtex_field($dbh, $e->{id}, "slides")){
                 add_field_to_bibtex_code($dbh, $e->{id}, "slides", "$url_slides");
                 $str .= "id $e->{id}, SLI: ".$url_slides;
