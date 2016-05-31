@@ -953,21 +953,22 @@ sub landing_types_obj{
 
     
 
-    # WARNING, it depends on routing! anti-pattern! Correct it some day
     my $url = $self->url_with('lyp');
     my $url_msg = "Switch to grouping by years";
     my $switchlink = '<a class="bibtexitem" href="'.$url.'">'.$url_msg.'</a>';
+
+
 
     # NAVBAR
     
     my $tmp_year = $self->req->url->query->param('year');
     $self->req->url->query->remove('year');
-    my $navbar_html = '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL years]</a> ';
+    my $navbar_html = '<a class="bibtexitem" href="'.$self->url_with('current').'">[show ALL years]</a> ';
     $self->req->url->query->param(year => $tmp_year) if defined $tmp_year and $tmp_year ne "";
 
     $self->req->url->query->remove('bibtex_type');
     $self->req->url->query->remove('entry_type');
-    $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL types]</a> ';
+    $navbar_html .= '<a class="bibtexitem" href="'.$self->url_with('current').'">[show ALL types]</a> ';
     $navbar_html .= '<br/>';
 
     foreach my $key (sort @keys_with_papers) {
@@ -976,12 +977,12 @@ sub landing_types_obj{
         if($key eq 'talk'){
             $self->req->url->query->remove('bibtex_type');
             $self->req->url->query->param(entry_type => 'talk');
-            $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">';
+            $navbar_html .= '<a class="bibtexitem" href="'.$self->url_with('current',entry_type=>'talk' ).'">';
         }
         else{
             $self->req->url->query->remove('entry_type');
             $self->req->url->query->param(bibtex_type => $key);
-            $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">';
+            $navbar_html .= '<a class="bibtexitem" href="'.$self->url_with('current',bibtex_type=>$key ).'">';
         }
         $navbar_html .= '['.$hash_dict{$key}.']';
         $navbar_html .= '</a> ';
