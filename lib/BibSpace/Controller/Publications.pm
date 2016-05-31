@@ -1069,29 +1069,31 @@ sub download {
     $self->write_log("Requesting download: filetype $filetype, id $id. ");
 
 
-
+    my $upload_dir = $self->config->{upload_dir};
+    $upload_dir =~ s!/*$!/!; # makes sure that there is exactly one / at the end
+    
     my $filequery = "";
-    my $directory = $self->app->static->paths->[0];
-
+    my $directory = $upload_dir;
     if($filetype eq 'paper'){
         $filequery = "paper-".$id.".";
-        $directory .= "/uploads/papers/";
+        $directory = $upload_dir."papers/";
     }
     elsif($filetype eq 'slides'){
         $filequery = "slides-paper-".$id.".";
-        $directory .= "uploads/slides/";
+        $directory = $upload_dir."slides/";
     }
     elsif($filetype eq 'other'){
         $filequery = "unknown-".$id.".";
-        $directory .= "uploads/unknown/";
+        $directory = $upload_dir."other/";
     }
     else{
         $self->write_log("Wrong filetype $filetype, id $id. ");
-        $self->render(text => "File not found");
+        $self->render(text => "Wrong filetype $filetype");
     }
 
+
     my $filename = undef;
-    # say "directory $directory";
+    say "directory $directory";
 
     opendir(DIR, $directory) or die $!;
     while (my $file = readdir(DIR)) {
@@ -1107,24 +1109,26 @@ sub download {
 
     }
     closedir(DIR);
-
-    
-
     if(!defined $filename){
-        $self->write_log("Unsuccesful download filetype $filetype, id $id. ");
-        $self->render(text => "File not found");
+        $self->write_log("Unsuccessful download filetype $filetype, id $id.");
+        $self->render(text => "File not found. Unsuccessful download filetype $filetype, id $id.");
         return;
     }
 
-    my $path_to_serve = $directory.$filename;
-    say "Serving $path_to_serve";
 
-    # $self->res->headers->content_disposition("attachment; filename=downld.pdf");
-    # $self->reply->static($path_to_serve);
+    my $file_path = $directory.$filename;
+    say "file_path $file_path";
 
-    $self->write_log("Serving file $filename");
-    $self->render_file('filepath' => $path_to_serve,  'filename' => $filename);
-    # $self->render_static($path_to_serve);
+    my $exists = 0;
+    $exists = 1 if -e $file_path;
+
+    if($exists == 1){
+        $self->write_log("Serving file $file_path"); 
+        $self->render_file('filepath' => $file_path, 'filename' => $filename);
+    }
+    else{
+        $self->redirect_to($self->get_referrer);
+    }
 }
 ####################################################################################
 
