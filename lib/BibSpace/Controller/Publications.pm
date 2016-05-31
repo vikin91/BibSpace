@@ -788,27 +788,27 @@ sub landing_years_obj{
     # todo: this code is duplicated! fix it!
     # FIXME! TODO! Catastrophe! use here url_with to fix it!!
 
-
-    my $url = $self->url_for('/l/p')."?".$self->req->url->query;
+    my $url = $self->url_with('lp');
     my $url_msg = "Switch to grouping by types";
     my $switchlink = '<a class="bibtexitem" href="'.$url.'">'.$url_msg.'</a>';
+
 
     # NAVBAR
     my $tmp_year = $self->req->url->query->param('year');
     $self->req->url->query->remove('year');
-    my $navbar_html = '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL years]</a> ';
+    my $navbar_html = '<a class="bibtexitem" href="'.$self->url_with('current').'">[show ALL years]</a> ';
     $self->req->url->query->param(year => $tmp_year) if defined $tmp_year and $tmp_year ne "";
 
     my $tmp_type = $self->req->url->query->param('bibtex_type');
     $self->req->url->query->remove('bibtex_type');
-    $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL types]</a> ';
+    $navbar_html .= '<a class="bibtexitem" href="'.$self->url_with('current').'">[show ALL types]</a> ';
     $navbar_html .= '<br/>';
     $self->req->url->query->param(bibtex_type => $tmp_type) if defined $tmp_type and $tmp_type ne "";
 
     foreach my $key (reverse sort @keys) {
 
         $self->req->url->query->param(year => $key);
-        $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">';
+        $navbar_html .= '<a class="bibtexitem" href="'.$self->url_with('current',bibtex_type=>$tmp_type ).'">';
         $navbar_html .= '['.$hash_dict{$key}.']';
         $navbar_html .= '</a> ';
     }
