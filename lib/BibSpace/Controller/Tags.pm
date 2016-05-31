@@ -275,7 +275,8 @@ sub get_tags_for_author_read{
         my $count =  scalar @objs;
         
 
-        my $url = "/ly/p?author=".get_master_for_id($self->app->db, $maid)."&tag=".$tag."&title=1&navbar=1";
+        # my $url = "/ly/p?author=".get_master_for_id($self->app->db, $maid)."&tag=".$tag."&title=1&navbar=1";
+        my $url = $self->url_with('lyp', author=>get_master_for_id($self->app->db, $maid), tag=>$tag, title=>'1', navbar=>'1');
         
         my $obj = new BibSpace::Functions::TagCloudClass($tag);
         $obj->setURL($url);
@@ -323,8 +324,10 @@ sub get_tags_for_team_read{
         my $set = get_set_of_papers_for_team_and_tag($self, $tid, $tag_id);
         my $count =  scalar $set->members;
 
-        my $url = "/ly/p?team=".get_team_for_id($self->app->db, $tid)."&tag=".$tag."&title=1&navbar=1";
+        # my $url = "/ly/p?team=".get_team_for_id($self->app->db, $tid)."&tag=".$tag."&title=1&navbar=1";
         
+        my $url = $self->url_with('lyp', team=>get_team_for_id($self->app->db, $tid), tag=>$tag, title=>'1', navbar=>'1');
+
         my $obj = new BibSpace::Functions::TagCloudClass($tag);
         $obj->setURL($url);
         $obj->setCount($count);
