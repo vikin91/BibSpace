@@ -59,8 +59,7 @@
 
                               <p>Are you sure you want to delete tag: <i><%= $name %></i>?</p>
                               <p>There are <span class="badge"> 
-                              % #<%= num_pubs_for_tag($id) %>
-                              ??
+                              <%= num_pubs_for_tag($id) %>
                               </span> papers tagged with this tag type. They will be untagged if you continue.</p>
                             
                               <div class="modal-footer">
