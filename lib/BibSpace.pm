@@ -323,8 +323,9 @@ sub startup {
   # EXPERIMENTAL
   $logged_user->get('/publications-set')->to('publications#all_defined_by_set'); 
   # description of this function is included with the code
-  # $anyone->get('/publications/special/:id')->to('publications#special_map_pdf_to_local_file'); # use with extreeme caution!
-  $superadmin->get('/publications/fix_urls')->to('publications#replace_urls_to_file_serving_function');
+  # $anyone->get('/publications/special/:id')->to('publications#special_map_pdf_to_local_file'); # use with extreme caution!
+  $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq'); 
+  $superadmin->get('/publications/fix_urls')->to('publications#replace_urls_to_file_serving_function')->name('fix_attachment_urls');
   # EXPERIMENTAL END
 
   $logged_user->get('/publications')->to('publications#all'); # logged_user icons!
@@ -337,7 +338,6 @@ sub startup {
   $logged_user->get('/publications/candidates_to_delete')->to('publications#all_candidates_to_delete');
   $logged_user->get('/publications/missing_month')->to('publications#all_without_missing_month');
   
-  $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq'); 
   $logged_user->get('/publications/get/:id')->to('publications#single'); 
   $logged_user->get('/publications/download/:filetype/:id')->to('publications#download')->name('download_publication'); 
   $logged_user->get('/publications/download/:filetype/(:id).pdf')->to('publications#download')->name('download_publication_pdf'); 

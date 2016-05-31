@@ -2263,32 +2263,32 @@ sub replace_urls_to_file_serving_function{
     
     for my $e (@all_entries){
         
-        my $url_pdf = $self->url_for('download_publication', filetype => 'paper', id => $e->{id})->to_abs;
+        my $url_pdf = $self->url_for('download_publication_pdf', filetype => 'paper', id => $e->{id})->to_abs;
         my $url_slides = $self->url_for('download_publication', filetype => 'slides', id => $e->{id})->to_abs;
-        
-        $url_pdf .= '.pdf';
+    
 
-        $str .= "id $e->{id}, PDF: ".$url_pdf;
-        $str .= '<br/>';
-        $str .= "id $e->{id}, SLI: ".$url_slides;
-        $str .= '<br/>';
 
         # check if the entry has pdf
         my $pdf_path = $self->get_paper_pdf_path($e->{id}, "paper");
         if($pdf_path ne 0){
             if(has_bibtex_field($dbh, $e->{id}, "pdf")){
                 add_field_to_bibtex_code($dbh, $e->{id}, "pdf", "$url_pdf");
+                $str .= "id $e->{id}, PDF: ".$url_pdf;
+                $str .= '<br/>';
             }
         }
         my $slides_path = $self->get_paper_pdf_path($e->{id}, "slides");
         if($slides_path ne 0){
             if(has_bibtex_field($dbh, $e->{id}, "slides")){
                 add_field_to_bibtex_code($dbh, $e->{id}, "slides", "$url_slides");
+                $str .= "id $e->{id}, SLI: ".$url_slides;
+                $str .= '<br/>';
             }
         }
     }
 
-    $self->render(text => $str);
+    $self->flash(msg => 'The following urls are now fixed: <br/>'.$str);
+    $self->redirect_to($self->get_referrer);
 };
 ####################################################################################
 sub get_paper_pdf_path{
