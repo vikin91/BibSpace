@@ -102,7 +102,7 @@ sub cron_week {
 
     ############ Cron ACTIONS 
     # $self->helper_reassign_papers_to_authors();  #can be anbled later
-    # $self->helper_clean_ugly_bibtex_fileds_for_all_entries(); #can be enabled later
+    # $self->helper_$self->helper_clean_ugly_bibtex_fields_for_all_entries(); #can be enabled later
     $self->helper_do_delete_broken_or_old_backup();
     ############ Cron ACTIONS STOP
     

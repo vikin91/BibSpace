@@ -79,8 +79,8 @@ our @EXPORT = qw(
     get_html_for_entry_id
     get_exceptions_for_entry_id
     get_year_for_entry_id
-    clean_ugly_bibtex_fileds
-    clean_ugly_bibtex_fileds_for_all_entries
+    clean_ugly_bibtex_fields
+    clean_ugly_bibtex_fields_for_all_entries
     prepare_backup_table
     get_month_numeric
     get_current_year
@@ -301,7 +301,7 @@ sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their
         assign_entry_to_existing_authors_no_add($self, $entry_obj);
     }
 
-    $self->write_log("reassing papers to authors finished");
+    $self->write_log("reassign papers to authors finished");
 };
 
 ##################################################################
@@ -340,25 +340,24 @@ sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assi
 };
 
 ####################################################################################
-sub clean_ugly_bibtex_fileds_for_all_entries {
+# clean_ugly_bibtex_fileds_for_all_entries
+sub clean_ugly_bibtex_fields_for_all_entries {
     my $self = shift;
     my $dbh = $self->app->db;
-    $self->write_log("clean_ugly_bibtex_fileds_for_all_entries started");
+    $self->write_log("clean_ugly_bibtex_fields_for_all_entries started");
     
     
     my @ids = get_all_entry_ids($dbh);
     for my $id (@ids){
-      clean_ugly_bibtex_fileds($dbh, $id);
+      clean_ugly_bibtex_fields($dbh, $id);
     }
-    $self->write_log("clean_ugly_bibtex_fileds_for_all_entries finished");
+    $self->write_log("clean_ugly_bibtex_fields_for_all_entries finished");
 };
 ####################################################################################
-sub clean_ugly_bibtex_fileds {
+sub clean_ugly_bibtex_fields {
     my $dbh = shift;
     my $eid = shift;
-
-    # TODO: move this into config
-    our @bib_fields_to_delete = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
+    my @bib_fields_to_delete = shift || qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
 
     my @ary = $dbh->selectrow_array("SELECT bib FROM Entry WHERE id = ?", undef, $eid);  
     my $entry_str = $ary[0];
@@ -379,7 +378,7 @@ sub clean_ugly_bibtex_fileds {
         my $new_bib = $entry->print_s;
 
 
-        # celaning errors caused by sqlite - mysql import
+        # cleaning errors caused by sqlite - mysql import
         
         $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
         $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
@@ -395,6 +394,7 @@ sub clean_ugly_bibtex_fileds {
         # generate_html_for_id($dbh, $eid);
     }
 };
+
 
 ##################################################################
 
