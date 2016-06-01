@@ -13,6 +13,9 @@ use strict;
 use warnings;
 use DBI;
 
+use TeX::Encode;
+use Encode;
+
 use BibSpace::Controller::Core;
 use BibSpace::Controller::Set;
 use BibSpace::Functions::EntryObj;
@@ -193,6 +196,7 @@ sub meta {
     my $title = $entry->get('title') || '';
     $title =~ s/\{//g;
     $title =~ s/\}//g;
+    $title = decode('latex', $title);
 
     my $citation_title = $title;
 
@@ -250,6 +254,7 @@ sub meta {
     my $abstract = $entry->get('abstract') || "This paper has no abstract. The title is: ".$citation_title;
     $abstract =~ s/\{//g;
     $abstract =~ s/\}//g;
+    $abstract = decode('latex', $abstract);
 
     # TYPE 
     my $type = $entry->type;
@@ -294,7 +299,7 @@ sub meta {
     }
 
     if($entry->exists('booktitle')){
-        $citation_conference_title = $entry->get('booktitle')
+        $citation_conference_title = $entry->get('booktitle');
     }
 
 

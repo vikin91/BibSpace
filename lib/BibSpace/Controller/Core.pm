@@ -15,6 +15,9 @@ use 5.010; #because of ~~
 use Cwd;
 use strict;
 use warnings;
+# for latex decode
+use TeX::Encode;
+use Encode;
 
 
 use Exporter;
@@ -584,7 +587,7 @@ sub delete_entry_by_id{
 sub get_all_non_hidden_entry_ids{
    my $dbh = shift;
    
-   my $qry = "SELECT DISTINCT id, creation_time FROM Entry WHERE hidden=0 ORDER BY creation_time DESC";
+   my $qry = "SELECT DISTINCT id, creation_time, year FROM Entry WHERE hidden=0 ORDER BY year DESC, creation_time DESC";
    my $sth = $dbh->prepare( $qry );  
    $sth->execute(); 
 
@@ -949,6 +952,8 @@ sub get_entry_title{
 
     $title =~ s/\{//g;
     $title =~ s/\}//g;
+    $title = decode('latex', $title);
+
     return $title;
 }
 ##########################################################################
