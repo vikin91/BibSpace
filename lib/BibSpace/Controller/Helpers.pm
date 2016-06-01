@@ -95,7 +95,7 @@ sub register {
     $app->helper(num_pubs => sub {
         my $self = shift;
         
-        my @objs = get_publications_main_hashed_args($self, {hidden => undef});
+        my @objs = get_publications_main_hashed_args_only($self, {hidden => undef});
         my $count =  scalar @objs;
         return $count; 
       });
@@ -242,7 +242,7 @@ sub register {
         my $self = shift;
         my $year = shift;
 
-        my @objs = get_publications_main_hashed_args($self, {hidden => 0, year => $year});
+        my @objs = get_publications_main_hashed_args_only($self, {hidden => 0, year => $year});
         my $count =  scalar @objs;
         return $count;
       });
@@ -287,7 +287,7 @@ sub register {
         my $mid = shift;
         my $tag_id = shift;
 
-        my @objs = get_publications_main_hashed_args($self, {hidden => 0, author => $mid, tag=>$tag_id});
+        my @objs = get_publications_main_hashed_args_only($self, {hidden => 0, author => $mid, tag=>$tag_id});
         my $count =  scalar @objs;
         return $count;
 
@@ -301,7 +301,7 @@ sub register {
 
         say "call HELPER num_pubs_for_author_and_team";
 
-        my @objs = get_publications_main_hashed_args($self, {hidden => 0, author => $mid, team=>$team_id});
+        my @objs = get_publications_main_hashed_args_only($self, {hidden => 0, author => $mid, team=>$team_id});
         my $count =  scalar @objs;
 
         return $count;
@@ -332,7 +332,7 @@ sub register {
         my $self = shift;
         my $mid = shift;
 
-        my @objs = get_publications_main_hashed_args($self, {hidden => 0, author => $mid});
+        my @objs = get_publications_main_hashed_args_only($self, {hidden => 0, author => $mid});
         my $count =  scalar @objs;
         return $count;
 
@@ -363,7 +363,7 @@ sub register {
         my $self = shift;
         my $tid = shift;
 
-        my @objs = get_publications_main_hashed_args($self, {hidden => 0, tag => $tid});
+        my @objs = get_publications_main_hashed_args_only($self, {hidden => 0, tag => $tid});
         my $count =  scalar @objs;
         return $count;
       });
@@ -373,7 +373,7 @@ sub register {
         my $self = shift;
         my $tid = shift;
 
-        my @objs = get_publications_main_hashed_args($self, {hidden => undef, tag => $tid});
+        my @objs = get_publications_main_hashed_args_only($self, {hidden => undef, tag => $tid});
         my $count =  scalar @objs;
         return $count;
       });

@@ -86,6 +86,7 @@ our @EXPORT = qw(
     get_current_year
     get_current_month
     get_publications_main_hashed_args
+    get_publications_main_hashed_args_only
     get_publications_core_from_array
     get_publications_core_from_set
     get_publications_core
@@ -96,9 +97,23 @@ our @EXPORT = qw(
 
 our $bibtex2html_tmp_dir = "./tmp";
 ####################################################################################
-
 ####################################################################################
-sub get_publications_main_hashed_args{
+sub get_publications_main_hashed_args_only {  # this function ignores the parameters given in the $self object
+    my ($self, $args) = @_;
+    return get_publications_core($self, 
+                                 $args->{author},
+                                 $args->{year},
+                                 $args->{bibtex_type},
+                                 $args->{entry_type},
+                                 $args->{tag},
+                                 $args->{team},
+                                 $args->{visible},
+                                 $args->{permalink},
+                                 $args->{hidden},
+                                 );
+}
+####################################################################################
+sub get_publications_main_hashed_args { #
     my ($self, $args) = @_;
 
     return get_publications_core($self, 
