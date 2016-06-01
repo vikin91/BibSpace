@@ -1007,8 +1007,6 @@ sub display_landing{
     my $switchlink = shift || "";
     my $navbar_html = shift || "";
 
-    say Dumper $keys_ref;
-
     my $navbar = $self->param('navbar') || 0;
     my $show_title = $self->param('title') || 0;
     my $show_switch = $self->param('switchlink');
