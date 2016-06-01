@@ -152,9 +152,16 @@ sub metalist {
 	say "CALL: metalist ";
     my $self = shift;
 
-    my @ids_arr = get_all_non_hidden_entry_ids($self->app->db);
-    $self->stash(ids => \@ids_arr);
+    my @ids_arr = ();
+    my @pubs = get_publications_main_hashed_args_only($self, {hidden => 0, entry_type=>'paper'});
+    for my $entry (@pubs){
+        my $eid = $entry->{id};
+        push @ids_arr, $eid if defined $eid;
+    }
 
+    # my @old_ids_arr = get_all_non_hidden_entry_ids($self->app->db);
+
+    $self->stash(ids => \@ids_arr);
     $self->render(template => 'publications/metalist'); 
 }
 
