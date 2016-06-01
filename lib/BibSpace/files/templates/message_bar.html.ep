@@ -27,4 +27,9 @@
     </div>
 </div>
 %}
+%else{
+    <div class="row spacer">
+    <!-- Space here is defined in <%= url_for('styles.css')->to_abs %> in section ".spacer" -->
+    </div>
+%}
 <!-- End of Message bar -->
