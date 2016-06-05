@@ -39,8 +39,11 @@ ok($num_entries > 0, "Got more than 0 entries");
 
 #### single entry
 
-my $en2 = MEntry->new();
-$en2->{bib} = '@mastersthesis{ma-199A,
+$dbh->do('DELETE FROM Entry;');
+
+### adding some entries for the next test
+my $en3 = MEntry->new();
+$en3->{bib} = '@mastersthesis{xxx1,
   address = {World},
   author = {James Bond},
   month = {August},
@@ -48,68 +51,22 @@ $en2->{bib} = '@mastersthesis{ma-199A,
   title = {{Selected aspects of some methods}},
   year = {1999},
 }';
+$en3->populate_from_bib($dbh);
+$en3->save($dbh);
 
-isnt($en2->{month}, 8 , "Month field empty");
-
-$en2->fix_month();
-
-is($en2->{month}, 8, "Month field OK");
-is($en2->{sort_month}, 8, "Sort month field OK");
-
-$en2->{bib} = '@misc{test, month = {January}}';
-$en2->fix_month();
-is($en2->{month}, 1, "Month field OK");
-$en2->{bib} = '@misc{test, month = {February}}';
-$en2->fix_month();
-is($en2->{month}, 2, "Month field OK");
-$en2->{bib} = '@misc{test, month = {March}}';
-$en2->fix_month();
-is($en2->{month}, 3, "Month field OK");
-$en2->{bib} = '@misc{test, month = {April}}';
-$en2->fix_month();
-is($en2->{month}, 4, "Month field OK");
-
-$en2->{bib} = '@misc{test, month = {May}}';
-$en2->fix_month();
-is($en2->{month}, 5, "Month field OK");
-
-$en2->{bib} = '@misc{test, month = {June}}';
-$en2->fix_month();
-is($en2->{month}, 6, "Month field OK");
-
-$en2->{bib} = '@misc{test, month = {July}}';
-$en2->fix_month();
-is($en2->{month}, 7, "Month field OK");
-
-$en2->{bib} = '@misc{test, month = {August}}';
-$en2->fix_month();
-is($en2->{month}, 8, "Month field OK");
-
-$en2->{bib} = '@misc{test, month = {September}}';
-$en2->fix_month();
-is($en2->{month}, 9, "Month field OK");
-
-$en2->{bib} = '@misc{test, month = {October}}';
-$en2->fix_month();
-is($en2->{month}, 10, "Month field OK");
-
-$en2->{bib} = '@misc{test, month = {November}}';
-$en2->fix_month();
-is($en2->{month}, 11, "Month field OK");
-
-$en2->{bib} = '@misc{test, month = {December}}';
-$en2->fix_month();
-is($en2->{month}, 12, "Month field OK");
-
-
-$dbh->do('DELETE FROM Tag;');
-# testing tags
-$en2->{bib} = '@misc{test, tags = {aa;bb}}';
-is($en2->process_tags($dbh), 2, "Adding 2 tags");
-$en2->{bib} = '@misc{test, tags = {}}';
-is($en2->process_tags($dbh), 0, "Adding 0 tags");
-$en2->{bib} = '@misc{test, tags = {aa;bb;cc}}';
-is($en2->process_tags($dbh), 1, "Adding 1 extra tag");
+my $en4 = MEntry->new();
+$en4->{bib} = '@mastersthesis{xxx2,
+  address = {World},
+  author = {James Bond},
+  month = {March},
+  school = {University of Bond},
+  title = {{Selected aspects of some methods}},
+  year = {1999},
+}';
+$en4->populate_from_bib($dbh);
+$en4->save($dbh);
+@entries = $en->all($dbh);
+$num_entries = scalar(@entries);
 
 
 #### all entries
