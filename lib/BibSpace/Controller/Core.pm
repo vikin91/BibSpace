@@ -15,6 +15,9 @@ use 5.010; #because of ~~
 use Cwd;
 use strict;
 use warnings;
+# for latex decode
+use TeX::Encode;
+use Encode;
 
 
 use Exporter;
@@ -62,7 +65,6 @@ our @EXPORT = qw(
     get_landing_for_our_type
     toggle_landing_for_our_type
     get_all_entry_ids
-    get_all_non_hidden_entry_ids
     nohtml
     delete_entry_by_id
     get_author_ids_for_tag_id
@@ -86,6 +88,7 @@ our @EXPORT = qw(
     get_current_year
     get_current_month
     get_publications_main_hashed_args
+    get_publications_main_hashed_args_only
     get_publications_core_from_array
     get_publications_core_from_set
     get_publications_core
@@ -96,9 +99,23 @@ our @EXPORT = qw(
 
 our $bibtex2html_tmp_dir = "./tmp";
 ####################################################################################
-
 ####################################################################################
-sub get_publications_main_hashed_args{
+sub get_publications_main_hashed_args_only {  # this function ignores the parameters given in the $self object
+    my ($self, $args) = @_;
+    return get_publications_core($self, 
+                                 $args->{author},
+                                 $args->{year},
+                                 $args->{bibtex_type},
+                                 $args->{entry_type},
+                                 $args->{tag},
+                                 $args->{team},
+                                 $args->{visible},
+                                 $args->{permalink},
+                                 $args->{hidden},
+                                 );
+}
+####################################################################################
+sub get_publications_main_hashed_args { #
     my ($self, $args) = @_;
 
     return get_publications_core($self, 
@@ -565,23 +582,23 @@ sub delete_entry_by_id{
     my $sth3 = $dbh->prepare( "DELETE FROM Entry_to_Author WHERE entry_id = ?" );  
     $sth3->execute($id);
 };
-################################################################################
-sub get_all_non_hidden_entry_ids{
-   my $dbh = shift;
+# ################################################################################
+# sub get_all_non_hidden_entry_ids{
+#    my $dbh = shift;
    
-   my $qry = "SELECT DISTINCT id, creation_time FROM Entry WHERE hidden=0 ORDER BY creation_time DESC";
-   my $sth = $dbh->prepare( $qry );  
-   $sth->execute(); 
+#    my $qry = "SELECT DISTINCT id, creation_time, year FROM Entry WHERE hidden=0 ORDER BY year DESC, creation_time DESC";
+#    my $sth = $dbh->prepare( $qry );  
+#    $sth->execute(); 
 
-   my @ids;
+#    my @ids;
    
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{id};
-      push @ids, $eid if defined $eid;
-   }
+#    while(my $row = $sth->fetchrow_hashref()) {
+#       my $eid = $row->{id};
+#       push @ids, $eid if defined $eid;
+#    }
 
-   return @ids;   
-}
+#    return @ids;   
+# }
 ################################################################################
 sub get_all_entry_ids{
    my $dbh = shift;
@@ -934,6 +951,8 @@ sub get_entry_title{
 
     $title =~ s/\{//g;
     $title =~ s/\}//g;
+    $title = decode('latex', $title);
+
     return $title;
 }
 ##########################################################################
@@ -1567,17 +1586,6 @@ sub tune_html{
    my $key = shift;
    my $htmlbib = shift || "";
 
-   # my $DIR="/var/www/html/publications-new";
-   # my $DIRBASE="/var/www/html/";
-   # #edit those two above always together!
-   # my $WEBPAGEPREFIX="http://sdqweb.ipd.kit.edu/";
-   # my $WEBPAGEPREFIXLONG="http://sdqweb.ipd.kit.edu/publications";
-
-   # BASH CODE:
-   # # replace links
-   # sed -e s_"$DIR"_"$WEBPAGEPREFIXLONG"_g $FILE > $TMP && mv -f $TMP $FILE
-   # # changes /var/www/html/publications-new to http://sdqweb.ipd.kit.edu/publications_new
-   # $s =~ s/"$DIR"/"$WEBPAGEPREFIXLONG"/g;
 
    $s =~ s/out_bib.html#(.*)/\/publications\/get\/bibtex\/$1/g;
    
@@ -1594,10 +1602,6 @@ sub tune_html{
 
    $s =~ s/<a (.*)>bib<\/a>/BIB_LINK_ID/g;
    
-   
-
-   # # for old system use:
-   # #for x in `find $DIR -name "*.html"`;do sed 's_\[\&nbsp;<a href=\"_\[\&nbsp;<a href=\"http:\/\/sdqweb.ipd.kit.edu\/publications\/_g' $x > $TMP; mv $TMP $x; done
 
    # # replace &lt; and &gt; b< '<' and '>' in Samuel's files.
    # sed 's_\&lt;_<_g' $FILE > $TMP && mv -f $TMP $FILE
@@ -1618,11 +1622,12 @@ sub tune_html{
 
    
    #$s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \]<div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
-   $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\" style=\"text-align: justify;\">/g;
+   $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote class=\"abstractBQ\">/g;
    $s =~ s/<\/font><\/blockquote><NeueZeile><p>/<\/blockquote><\/div>/g;
 
    #inserting bib DIV marker
-   $s =~ s/\]/\] BIB_DIV_ID/g;
+   $s =~ s/\&nbsp;\]/\&nbsp; \]/g;
+   $s =~ s/\&nbsp; \]/\&nbsp; \] BIB_DIV_ID/g;
 
    $key =~ s/\./_/g;   
 
@@ -1639,6 +1644,11 @@ sub tune_html{
 
    $s =~ s/<p>//g;
    $s =~ s/<\/p>//g;
+
+   $s =~ s/<a name="(.*)"><\/a>//g;
+   # $s =~ s/<a name=/<a id=/g;
+
+  $s =~ s/\&amp /\&amp; /g;
 
 
    $s;

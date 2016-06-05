@@ -13,6 +13,9 @@ use strict;
 use warnings;
 use DBI;
 
+use TeX::Encode;
+use Encode;
+
 use BibSpace::Controller::Core;
 use BibSpace::Controller::Set;
 use BibSpace::Functions::EntryObj;
@@ -149,9 +152,16 @@ sub metalist {
     say "CALL: metalist ";
     my $self = shift;
 
-    my @ids_arr = get_all_non_hidden_entry_ids($self->app->db);
-    $self->stash(ids => \@ids_arr);
+    my @ids_arr = ();
+    my @pubs = get_publications_main_hashed_args_only($self, {hidden => 0, entry_type=>'paper'});
+    for my $entry (@pubs){
+        my $eid = $entry->{id};
+        push @ids_arr, $eid if defined $eid;
+    }
 
+    # my @old_ids_arr = get_all_non_hidden_entry_ids($self->app->db);
+
+    $self->stash(ids => \@ids_arr);
     $self->render(template => 'publications/metalist'); 
 }
 
@@ -193,6 +203,7 @@ sub meta {
     my $title = $entry->get('title') || '';
     $title =~ s/\{//g;
     $title =~ s/\}//g;
+    $title = decode('latex', $title);
 
     my $citation_title = $title;
 
@@ -250,6 +261,7 @@ sub meta {
     my $abstract = $entry->get('abstract') || "This paper has no abstract. The title is: ".$citation_title;
     $abstract =~ s/\{//g;
     $abstract =~ s/\}//g;
+    $abstract = decode('latex', $abstract);
 
     # TYPE 
     my $type = $entry->type;
@@ -294,7 +306,7 @@ sub meta {
     }
 
     if($entry->exists('booktitle')){
-        $citation_conference_title = $entry->get('booktitle')
+        $citation_conference_title = $entry->get('booktitle');
     }
 
 
@@ -1006,8 +1018,6 @@ sub display_landing{
     my $keys_ref = shift;
     my $switchlink = shift || "";
     my $navbar_html = shift || "";
-
-    say Dumper $keys_ref;
 
     my $navbar = $self->param('navbar') || 0;
     my $show_title = $self->param('title') || 0;
@@ -2327,15 +2337,23 @@ sub get_paper_pdf_path{
     my $filequery = "";
     $filequery .= "paper-".$id."."  if $type eq "paper";
     $filequery .= "slides-paper-".$id."."  if $type eq "slides";
+
     my $directory = $upload_dir;
     $directory .= "papers/" if $type eq "paper";
     $directory .= "slides/" if $type eq "slides";
     my $filename = undef;
 
 
+    # make sure that the directories exist
+    try{
+        path($directory)->mkpath;
+    }
+    catch{
+        warn "Exception: cannot create directory $directory. Msg: $_";
+    };
     
 
-    opendir(DIR, $directory) or die $!;
+    opendir(DIR, $directory) or die "Cannot open directory $directory :".$!;
     while (my $file = readdir(DIR)) {
 
         # Use a regular expression to ignore files beginning with a period
