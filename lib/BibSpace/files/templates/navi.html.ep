@@ -253,6 +253,15 @@
                 </a>
             </li>
             <li class="divider"></li>
+            <li role="presentation" class="dropdown-header">Converts download links from direct file access to the file serving function.</li>
+            <li>
+                <a href="<%= url_for('fix_attachment_urls')%>">
+                    <i class="fa fa-magic"></i> Fix attachment urls
+                    <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
+                    <span class="badge">for all</span>
+                </a>
+            </li>
+            <li class="divider"></li>
             <li role="presentation" class="dropdown-header">Sets entry_type to talk if the entry has tag 'talk'.</li>
             <li>
                 <a href="<%= url_for('/settings/fix_entry_types')%>">
@@ -369,7 +378,7 @@
 <!-- END OF BIG IF -->
 %} #END OF BIG IF
 
-<a type="button" class="btn btn-default" href="<%= url_for('/read/publications/meta') %>">
+<a type="button" class="btn btn-default" href="<%= url_for('metalist_all_entries') %>">
     Meta-info for Webcrawlers
 </a>
 

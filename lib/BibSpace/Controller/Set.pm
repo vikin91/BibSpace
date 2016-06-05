@@ -35,8 +35,6 @@ our @EXPORT = qw(
     get_set_of_teams_for_author_id_w_year
     get_set_of_teams_for_entry_id
     get_set_of_all_teams
-    get_set_of_papers_for_author_and_tag
-    get_set_of_papers_for_author_and_team
     get_set_of_papers_for_team_and_tag
     get_set_of_papers_with_exceptions
    );
@@ -328,19 +326,19 @@ sub get_set_of_papers_for_tag {
  }
 ####################################################################################
 
-sub get_set_of_papers_for_author_and_tag {
-    my $self = shift;
-    my $aid = shift;
-    my $tid = shift;
-    my $dbh = $self->app->db;
+# sub get_set_of_papers_for_author_and_tag {
+#     my $self = shift;
+#     my $aid = shift;
+#     my $tid = shift;
+#     my $dbh = $self->app->db;
 
-    say "This function (get_set_of_papers_for_author_and_tag) may be deprecated! It does not take into account hidden!";
+#     say "This function (get_set_of_papers_for_author_and_tag) may be deprecated! It does not take into account hidden!";
 
-    my $set_author_papers = get_set_of_papers_for_author_id($self, $aid);
-    my $set_tag_papers = get_set_of_papers_for_tag($self, $tid);
+#     my $set_author_papers = get_set_of_papers_for_author_id($self, $aid);
+#     my $set_tag_papers = get_set_of_papers_for_tag($self, $tid);
     
-    return $set_tag_papers * $set_author_papers;
- }
+#     return $set_tag_papers * $set_author_papers;
+#  }
 
 ####################################################################################
 
@@ -356,18 +354,18 @@ sub get_set_of_papers_for_team_and_tag {
     return $set_tag_papers * $set_team_papers;
  }
 ####################################################################################
-sub get_set_of_papers_for_author_and_team{
-    my $self = shift;
-    my $aid = shift;
-    my $tid = shift;
-    my $dbh = $self->app->db;
+# sub get_set_of_papers_for_author_and_team{
+#     my $self = shift;
+#     my $aid = shift;
+#     my $tid = shift;
+#     my $dbh = $self->app->db;
 
-    my $set_author_papers = get_set_of_papers_for_author_id($self, $aid);
-    my $set_team_papers = get_set_of_papers_for_team($self, $tid);
+#     my $set_author_papers = get_set_of_papers_for_author_id($self, $aid);
+#     my $set_team_papers = get_set_of_papers_for_team($self, $tid);
 
-    return $set_team_papers * $set_author_papers;
+#     return $set_team_papers * $set_author_papers;
 
-}
+# }
 ####################################################################################
 
 sub get_set_of_teams_for_author_id_w_year {

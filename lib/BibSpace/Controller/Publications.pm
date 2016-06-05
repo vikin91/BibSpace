@@ -13,6 +13,9 @@ use strict;
 use warnings;
 use DBI;
 
+use TeX::Encode;
+use Encode;
+
 use BibSpace::Controller::Core;
 use BibSpace::Controller::Set;
 use BibSpace::Functions::EntryObj;
@@ -146,12 +149,19 @@ sub make_talk {
 };
 ####################################################################################
 sub metalist {
-	say "CALL: metalist ";
+    say "CALL: metalist ";
     my $self = shift;
 
-    my @ids_arr = get_all_non_hidden_entry_ids($self->app->db);
-    $self->stash(ids => \@ids_arr);
+    my @ids_arr = ();
+    my @pubs = get_publications_main_hashed_args_only($self, {hidden => 0, entry_type=>'paper'});
+    for my $entry (@pubs){
+        my $eid = $entry->{id};
+        push @ids_arr, $eid if defined $eid;
+    }
 
+    # my @old_ids_arr = get_all_non_hidden_entry_ids($self->app->db);
+
+    $self->stash(ids => \@ids_arr);
     $self->render(template => 'publications/metalist'); 
 }
 
@@ -193,6 +203,7 @@ sub meta {
     my $title = $entry->get('title') || '';
     $title =~ s/\{//g;
     $title =~ s/\}//g;
+    $title = decode('latex', $title);
 
     my $citation_title = $title;
 
@@ -250,6 +261,7 @@ sub meta {
     my $abstract = $entry->get('abstract') || "This paper has no abstract. The title is: ".$citation_title;
     $abstract =~ s/\{//g;
     $abstract =~ s/\}//g;
+    $abstract = decode('latex', $abstract);
 
     # TYPE 
     my $type = $entry->type;
@@ -294,7 +306,7 @@ sub meta {
     }
 
     if($entry->exists('booktitle')){
-        $citation_conference_title = $entry->get('booktitle')
+        $citation_conference_title = $entry->get('booktitle');
     }
 
 
@@ -316,8 +328,9 @@ sub meta {
 
 
     # PDF URL 
-    my $citation_pdf_url = "";
-    $citation_pdf_url = $entry->get('pdf') if $entry->exists('pdf');
+    my $citation_pdf_url = undef;
+    $citation_pdf_url = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$id) if $entry->exists('pdf');
+    $citation_pdf_url = $self->url_for('download_publication_pdf', filetype=>'slides', id=>$id) if $entry->exists('slides');
     $citation_pdf_url = $entry->get('url') if $entry->exists('url') and $entry->get('url') =~ /.*\.pdf^/;
 
 
@@ -788,27 +801,27 @@ sub landing_years_obj{
     # todo: this code is duplicated! fix it!
     # FIXME! TODO! Catastrophe! use here url_with to fix it!!
 
-
-    my $url = $self->url_for('/l/p')."?".$self->req->url->query;
+    my $url = $self->url_with('lp');
     my $url_msg = "Switch to grouping by types";
     my $switchlink = '<a class="bibtexitem" href="'.$url.'">'.$url_msg.'</a>';
+
 
     # NAVBAR
     my $tmp_year = $self->req->url->query->param('year');
     $self->req->url->query->remove('year');
-    my $navbar_html = '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL years]</a> ';
+    my $navbar_html = '<a class="bibtexitem" href="'.$self->url_with('current').'">[show ALL years]</a> ';
     $self->req->url->query->param(year => $tmp_year) if defined $tmp_year and $tmp_year ne "";
 
     my $tmp_type = $self->req->url->query->param('bibtex_type');
     $self->req->url->query->remove('bibtex_type');
-    $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL types]</a> ';
+    $navbar_html .= '<a class="bibtexitem" href="'.$self->url_with('current').'">[show ALL types]</a> ';
     $navbar_html .= '<br/>';
     $self->req->url->query->param(bibtex_type => $tmp_type) if defined $tmp_type and $tmp_type ne "";
 
     foreach my $key (reverse sort @keys) {
 
         $self->req->url->query->param(year => $key);
-        $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">';
+        $navbar_html .= '<a class="bibtexitem" href="'.$self->url_with('current',bibtex_type=>$tmp_type ).'">';
         $navbar_html .= '['.$hash_dict{$key}.']';
         $navbar_html .= '</a> ';
     }
@@ -953,21 +966,22 @@ sub landing_types_obj{
 
     
 
-    # WARNING, it depends on routing! anti-pattern! Correct it some day
     my $url = $self->url_with('lyp');
     my $url_msg = "Switch to grouping by years";
     my $switchlink = '<a class="bibtexitem" href="'.$url.'">'.$url_msg.'</a>';
+
+
 
     # NAVBAR
     
     my $tmp_year = $self->req->url->query->param('year');
     $self->req->url->query->remove('year');
-    my $navbar_html = '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL years]</a> ';
+    my $navbar_html = '<a class="bibtexitem" href="'.$self->url_with('current').'">[show ALL years]</a> ';
     $self->req->url->query->param(year => $tmp_year) if defined $tmp_year and $tmp_year ne "";
 
     $self->req->url->query->remove('bibtex_type');
     $self->req->url->query->remove('entry_type');
-    $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">[show ALL types]</a> ';
+    $navbar_html .= '<a class="bibtexitem" href="'.$self->url_with('current').'">[show ALL types]</a> ';
     $navbar_html .= '<br/>';
 
     foreach my $key (sort @keys_with_papers) {
@@ -976,12 +990,12 @@ sub landing_types_obj{
         if($key eq 'talk'){
             $self->req->url->query->remove('bibtex_type');
             $self->req->url->query->param(entry_type => 'talk');
-            $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">';
+            $navbar_html .= '<a class="bibtexitem" href="'.$self->url_with('current',entry_type=>'talk' ).'">';
         }
         else{
             $self->req->url->query->remove('entry_type');
             $self->req->url->query->param(bibtex_type => $key);
-            $navbar_html .= '<a class="bibtexitem" href="'.$self->req->url->path.'?'.$self->req->url->query.'">';
+            $navbar_html .= '<a class="bibtexitem" href="'.$self->url_with('current',bibtex_type=>$key ).'">';
         }
         $navbar_html .= '['.$hash_dict{$key}.']';
         $navbar_html .= '</a> ';
@@ -1004,8 +1018,6 @@ sub display_landing{
     my $keys_ref = shift;
     my $switchlink = shift || "";
     my $navbar_html = shift || "";
-
-    say Dumper $keys_ref;
 
     my $navbar = $self->param('navbar') || 0;
     my $show_title = $self->param('title') || 0;
@@ -1060,6 +1072,84 @@ sub display_landing{
 }
 
 ####################################################################################
+sub remove_attachment{
+    my $self = shift;
+    my $id = $self->param('id');      # entry ID
+    my $filetype = $self->param('filetype') || 'paper';  # paper, slides
+
+    $self->write_log("Removing attachment to download: filetype $filetype, id $id. ");
+    say "Removing attachment to download: filetype $filetype, id $id. ";
+
+    my $file_path = get_paper_pdf_path($self, $id, "$filetype");
+    say "file_path $file_path";
+    my $num_deleted_files = 0;
+
+    if(!defined $file_path or $file_path eq 0){
+        $self->write_log("Cannot remove attachment. File does not exist. Filetype $filetype, id $id.");
+        $self->flash(msg => "File not found. Cannot remove attachment. Filetype $filetype, id $id.");
+        $self->redirect_to($self->get_referrer);
+        return;
+    }
+    else{ # file exists
+
+        $num_deleted_files = $self->remove_attachment_do($id, $filetype);
+
+        if($num_deleted_files > 0){
+            generate_html_for_id($self->app->db, $id);
+        }
+
+        $self->write_log("$num_deleted_files attachments removed for id $id.");
+        $self->flash(msg => "There were $num_deleted_files attachments removed for id $id.");
+        $self->redirect_to($self->get_referrer);
+    }
+}
+####################################################################################
+sub remove_attachment_do{
+    say "CALL: remove_attachment_do";
+    my $self = shift;
+    my $id = shift;
+    my $filetype = shift;
+
+    my $file_path = get_paper_pdf_path($self, $id, "$filetype");
+    say "Found paper type $filetype : $file_path";
+
+    my $num_deleted_files = 0;
+
+    if(!defined $file_path or $file_path eq 0){
+        return 0;
+    }
+
+    try{
+        unlink $file_path;
+        $num_deleted_files = $num_deleted_files +1;
+        say "Deleting attachment file: $file_path";
+    }
+    catch{};
+
+    # make sure that there is no file
+    my $file_path_after_delete = get_paper_pdf_path($self, $id, "$filetype");
+    while($file_path_after_delete ne 0){
+        say "File deleted but something is left: $file_path_after_delete";
+        try{
+            unlink $file_path;
+            $num_deleted_files = $num_deleted_files +1;
+            say "Deleting attachment file: $file_path";
+        }
+        catch{};
+        $file_path_after_delete = get_paper_pdf_path($self, $id, "$filetype");
+    }
+    # deleted for sure!
+
+    if($filetype eq 'paper'){
+        clean_ugly_bibtex_fields($self->app->db, $id, qw(pdf));
+    }
+    if($filetype eq 'slides'){
+        clean_ugly_bibtex_fields($self->app->db, $id, qw(slides));
+    }
+
+    return $num_deleted_files;
+}
+####################################################################################
 sub download {
     my $self = shift;
     my $id = $self->param('id');      # entry ID
@@ -1068,62 +1158,25 @@ sub download {
     $self->write_log("Requesting download: filetype $filetype, id $id. ");
 
 
+    my $file_path = $self->get_paper_pdf_path($id, "$filetype");
+    say "Found paper type $filetype : $file_path";
 
-    my $filequery = "";
-    my $directory = $self->app->static->paths->[0];
-
-    if($filetype eq 'paper'){
-        $filequery = "paper-".$id.".";
-        $directory .= "/uploads/papers/";
-    }
-    elsif($filetype eq 'slides'){
-        $filequery = "slides-paper-".$id.".";
-        $directory .= "uploads/slides/";
-    }
-    elsif($filetype eq 'other'){
-        $filequery = "unknown-".$id.".";
-        $directory .= "uploads/unknown/";
-    }
-    else{
-        $self->write_log("Wrong filetype $filetype, id $id. ");
-        $self->render(text => "File not found");
-    }
-
-    my $filename = undef;
-    # say "directory $directory";
-
-    opendir(DIR, $directory) or die $!;
-    while (my $file = readdir(DIR)) {
-
-        # Use a regular expression to ignore files beginning with a period
-        next if ($file =~ m/^\./);
-        say "file $file";
-        say "filequery $filequery";
-        if($file eq $filequery."pdf"){
-            $filename = $file;    
-            say "MATCH! $file";
-        }
-
-    }
-    closedir(DIR);
-
-    
-
-    if(!defined $filename){
-        $self->write_log("Unsuccesful download filetype $filetype, id $id. ");
-        $self->render(text => "File not found");
+    if(!defined $file_path or $file_path eq 0){
+        $self->write_log("Unsuccessful download filetype $filetype, id $id.");
+        $self->render(text => "File not found. Unsuccessful download filetype $filetype, id $id.");
         return;
     }
 
-    my $path_to_serve = $directory.$filename;
-    say "Serving $path_to_serve";
+    my $exists = 0;
+    $exists = 1 if -e $file_path;
 
-    # $self->res->headers->content_disposition("attachment; filename=downld.pdf");
-    # $self->reply->static($path_to_serve);
-
-    $self->write_log("Serving file $filename");
-    $self->render_file('filepath' => $path_to_serve,  'filename' => $filename);
-    # $self->render_static($path_to_serve);
+    if($exists == 1){
+        $self->write_log("Serving file $file_path"); 
+        $self->render_file('filepath' => $file_path);
+    }
+    else{
+        $self->redirect_to($self->get_referrer);
+    }
 }
 ####################################################################################
 
@@ -1152,18 +1205,13 @@ sub add_pdf {
 sub add_pdf_post{
 	say "CALL: add_pdf_post";
     my $self = shift;
-    my $id = $self->param('id') || "unknown";    my $filetype = $self->param('filetype') || undef;
+    my $id = $self->param('id') || "unknown";    
+    my $filetype = $self->param('filetype') || undef;
 
-    my $uploads_directory = "public"; ## TODO: move this to config!
+    my $uploads_directory = $self->config->{upload_dir};
     $uploads_directory =~ s!/*$!/!; # makes sure that there is exactly one / at the end
 
     my $extension;
-
-    my $base_url = $self->req->url->base;
-    my $absolute_path_base = $self->url_for('/')->base;
-
-    # base_url http://127.0.0.1:3000
-    # absolute_path_base http://127.0.0.1:3000
 
     $self->write_log("Saving attachment for paper id $id");
 
@@ -1212,19 +1260,19 @@ sub add_pdf_post{
             $fname_no_ext = "paper-".$id.".";
             $fname = $fname_no_ext.$extension;
           
-            $directory = "uploads/papers/";
+            $directory = "papers/";
             $bibtex_field = "pdf";
         }
         elsif($filetype eq 'slides'){
             $fname_no_ext = "slides-paper-".$id.".";
             $fname = $fname_no_ext.$extension;
-            $directory = "uploads/slides/";
+            $directory = "slides/";
             $bibtex_field = "slides";
         }
         else{
             $fname_no_ext = "unknown-".$id.".";
             $fname = $fname_no_ext.$extension;
-            $directory = "uploads/unknown/";
+            $directory = "unknown/";
 
             $bibtex_field = "pdf2";
         }
@@ -1237,16 +1285,32 @@ sub add_pdf_post{
         
         $file_path = $directory.$fname;
 
+        # remove old file that would match the patterns
+        my $old_file = $self->get_paper_pdf_path($id, "$filetype");
+        say "old_file: $old_file";
+        if($old_file ne 0){
+            # old file exists and must be deleted!
+            try{
+                unlink $old_file;
+                say "Deleting $old_file";
+            }
+            catch{};
+        }
+
         $uploaded_file->move_to($uploads_directory.$file_path); ### WORKS!!!
-
+        my $new_file = $self->get_paper_pdf_path($id, "$filetype");
     
-        # TODO: Check me for directory deployment!
 
-        $absolute_path_base =~ s!/*$!/!; # makes sure that there is exactly one / at the end of absolute path
-        my $file_url = $absolute_path_base.$file_path;
+        my $file_url = $self->url_for('download_publication', filetype => "$filetype", id => $id)->to_abs;
+        if($filetype eq 'paper'){ # so that the link looks nicer
+            say "Nicing the url for paper";
+            say "old file_url $file_url";
+            $file_url = $self->url_for('download_publication_pdf', filetype => "paper", id => $id)->to_abs;
+            say "file_url $file_url";
+        }
 
         $self->write_log("Saving attachment for paper id $id under: $file_url");
-        add_field_to_bibtex_code($self->app->db, $id, $bibtex_field, $file_url);
+        add_field_to_bibtex_code($self->app->db, $id, $bibtex_field, "$file_url");
 
         my $msg = "Successfully uploaded the $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>. 
         The file was renamed to: <em>$fname</em>. URL <a href=\"".$file_url."\">$name</a>";
@@ -1340,6 +1404,10 @@ sub delete_sure {
    my $dbh = $self->app->db;
 
    delete_entry_by_id($dbh, $eid);
+
+   remove_attachment_do($self, $eid, 'paper');
+   remove_attachment_do($self, $eid, 'slides');
+
    $self->write_log("delete_sure entry eid $eid. Entry deleted.");
 
    $self->redirect_to($self->get_referrer);
@@ -1652,8 +1720,8 @@ sub post_add_many_store {
             ($code, $html_preview) = postprocess_edited_entry($dbh, $single_code, 0);  #FIXME: added entry is strange!
             my $added_id = get_entry_id($dbh, $single_key);
 
-            $debug_str.="<br>"."Added key $single_key as id $added_id sucessfully!<br/>";
-            $msg .= "Added key $single_key as id $added_id sucessfully!<br/>";
+            $debug_str.="<br>"."Added key $single_key as id $added_id successfully!<br/>";
+            $msg .= "Added key $single_key as id $added_id successfully!<br/>";
         }
     }
 
@@ -1757,7 +1825,7 @@ sub post_add_store {
       }
   }
 
-  $code = 3;  # beause once the kay is bad, it is bad as long as $existing_id is -1
+  $code = 3;  # because once the key is bad, it is bad as long as $existing_id is -1
 
   if(defined $self->param('check_key')){
       if($existing_id == -1){
@@ -1788,10 +1856,10 @@ sub get_adding_editing_message_for_error_code {
         return 'Displaying preview';
     }
     elsif($exit_code eq '0'){ 
-        return 'Entry added succesfully';
+        return 'Entry added successfully';
     }
     elsif($exit_code eq '1'){
-        return 'Entry updated succesfully';
+        return 'Entry updated successfully';
     }
     elsif($exit_code eq '2'){
         return 'The proposed key is OK.';
@@ -1828,9 +1896,11 @@ sub get_edit {
    my $bib = $obj->{bib};
    my $key = $obj->{bibtex_key};
 
+   my ($html, $htmlbib) = get_html_for_bib($bib, $key);
+
 
    $self->stash(bib  => $bib, entry_obj => $obj, id => $id, key => $key, existing_id => '', exit_code => '', 
-                msg => '', preview => '');
+                msg => '', preview => $html);
    $self->render(template => 'publications/edit_entry');
 };
 ############################################################################################################
@@ -2190,7 +2260,7 @@ sub clean_ugly_bibtex {
 
     $self->write_log("Cleaning ugly bibtex fields for all entries");
 
-    $self->helper_clean_ugly_bibtex_fileds_for_all_entries();
+    $self->helper_clean_ugly_bibtex_fields_for_all_entries();
 
     $self->write_log("Cleaning ugly bibtex fields for all entries has finished");
 
@@ -2212,77 +2282,95 @@ sub clean_ugly_bibtex {
 # ## SPECIAL FUNCTION
 # # replaces all bibtex entries to serve the /publications/donwload/type/id instaed of the file path
 
-# sub replace_urls_to_file_serving_function{
-#     say "CALL: replace_urls_to_file_serving_function";
-#     my $self = shift;
-#     my $dbh = $self->app->db;
+sub replace_urls_to_file_serving_function{
+    say "CALL: replace_urls_to_file_serving_function";
+
+    ##
+    # http://127.0.0.1:3000/publications/download/paper/4/pdf
+
+    my $self = shift;
+    my $dbh = $self->app->db;
+
+
+    my @all_entries = BibSpace::Functions::EntryObj->getAll($dbh);
+
+    my $str = "";
     
-#     my $base_url = $self->config->{base_url};
-#     $base_url = "" if $self->config->{base_url} eq '/';
-
-
-#     my @all_entries = BibSpace::Functions::EntryObj->getAll($dbh);
-    
-#     for my $e (@all_entries){
-#         my $relative_url = $self->url_for('download_publication', filetype => 'paper', id => $e->{id});
-#         my $url = $self->req->url->base.$base_url.$relative_url;
-
-#         # check if the entry has pdf
-#         if(has_bibtex_field($dbh, $e->{id}, "pdf")){
-#             say "id $e->{id}, url: $url";
-#             add_field_to_bibtex_code($dbh, $e->{id}, "pdf_test", $url);        
-#         }
-
+    for my $e (@all_entries){
         
-#         # generate_html_for_id($dbh, $e->{id});
-#     }
-
-#     $self->render(text => 'ok');
-# };
-
-####################################################################################
-
-# ## SPECIAL FUNCTION
-# # if pdf exists locally, change the bibtex code to point to the local file
-
-# sub special_map_pdf_to_local_file{
-#     say "CALL: special_map_pdf_to_local_file";
-#     my $self = shift;
-#     my $id = $self->param('id');
-    
-#     my $fname = "paper-".$id.".pdf";
-#     my $directory = "uploads/papers/";
-#     my $bibtex_field = "pdf";
-
-#     # $fname_no_ext = "slides-paper-".$id.".";
-#     # $fname = $fname_no_ext.$extension;
-#     # $directory = "uploads/slides/";
-#     # $bibtex_field = "slides";
-
-#     my $file_path = $directory.$fname;
-
-#     say $file_path;
-
-#     my $exists = 0;
-#     $exists = 1 if -e "public/".$file_path;
-
-#     say "exists $exists";
-
-#     my $file_url = $self->req->url->base."".$file_path;
-#     say $file_url;
-
-#     if($exists == 1){
-#         add_field_to_bibtex_code($self->app->db, $id, $bibtex_field, $file_url);    
-#         generate_html_for_id($self->app->db, $id);
-#     }
+        my $url_pdf = $self->url_for('download_publication_pdf', filetype => 'paper', id => $e->{id})->to_abs;
+        my $url_slides = $self->url_for('download_publication', filetype => 'slides', id => $e->{id})->to_abs;
     
 
-#     my $msg = "Processing id $id. EXISTS $exists. bibtex_filed $bibtex_field. file_url $file_url, FILE_PATH $file_path.";
 
-#     $self->render(text => $msg);
-# };
+        # check if the entry has pdf
+        my $pdf_path = $self->get_paper_pdf_path($e->{id}, "paper");
+        if($pdf_path ne 0){ # this means that file exists locally
+            if(has_bibtex_field($dbh, $e->{id}, "pdf")){
+                add_field_to_bibtex_code($dbh, $e->{id}, "pdf", "$url_pdf");
+                $str .= "id $e->{id}, PDF: ".$url_pdf;
+                $str .= '<br/>';
+            }
+        }
+        my $slides_path = $self->get_paper_pdf_path($e->{id}, "slides");
+        if($slides_path ne 0){ # this means that file exists locally
+            if(has_bibtex_field($dbh, $e->{id}, "slides")){
+                add_field_to_bibtex_code($dbh, $e->{id}, "slides", "$url_slides");
+                $str .= "id $e->{id}, SLI: ".$url_slides;
+                $str .= '<br/>';
+            }
+        }
+    }
 
+    $self->flash(msg => 'The following urls are now fixed: <br/>'.$str);
+    $self->redirect_to($self->get_referrer);
+};
 ####################################################################################
+sub get_paper_pdf_path{
+    my $self = shift;
+    my $id = shift;
+    my $type = shift || "paper";
+
+    my $upload_dir = $self->config->{upload_dir};
+    $upload_dir =~ s!/*$!/!; # makes sure that there is exactly one / at the end
+    
+    my $filequery = "";
+    $filequery .= "paper-".$id."."  if $type eq "paper";
+    $filequery .= "slides-paper-".$id."."  if $type eq "slides";
+
+    my $directory = $upload_dir;
+    $directory .= "papers/" if $type eq "paper";
+    $directory .= "slides/" if $type eq "slides";
+    my $filename = undef;
+
+
+    # make sure that the directories exist
+    try{
+        path($directory)->mkpath;
+    }
+    catch{
+        warn "Exception: cannot create directory $directory. Msg: $_";
+    };
+    
+
+    opendir(DIR, $directory) or die "Cannot open directory $directory :".$!;
+    while (my $file = readdir(DIR)) {
+
+        # Use a regular expression to ignore files beginning with a period
+        next if ($file =~ m/^\./);
+        if ($file =~ /^$filequery.*/){  # filequery contains the dot!
+            say "get_paper_pdf_path MATCH $file $filequery";
+            $filename = $file; 
+        }
+    }
+    closedir(DIR);
+    if(!defined $filename){
+        return 0;
+    }
+
+    my $file_path = $directory.$filename;
+    return $file_path;
+};
 
 
 1;

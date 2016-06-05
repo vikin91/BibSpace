@@ -15,6 +15,9 @@ use 5.010; #because of ~~
 use Cwd;
 use strict;
 use warnings;
+# for latex decode
+use TeX::Encode;
+use Encode;
 
 
 use Exporter;
@@ -62,7 +65,6 @@ our @EXPORT = qw(
     get_landing_for_our_type
     toggle_landing_for_our_type
     get_all_entry_ids
-    get_all_non_hidden_entry_ids
     nohtml
     delete_entry_by_id
     get_author_ids_for_tag_id
@@ -79,13 +81,14 @@ our @EXPORT = qw(
     get_html_for_entry_id
     get_exceptions_for_entry_id
     get_year_for_entry_id
-    clean_ugly_bibtex_fileds
-    clean_ugly_bibtex_fileds_for_all_entries
+    clean_ugly_bibtex_fields
+    clean_ugly_bibtex_fields_for_all_entries
     prepare_backup_table
     get_month_numeric
     get_current_year
     get_current_month
     get_publications_main_hashed_args
+    get_publications_main_hashed_args_only
     get_publications_core_from_array
     get_publications_core_from_set
     get_publications_core
@@ -96,9 +99,23 @@ our @EXPORT = qw(
 
 our $bibtex2html_tmp_dir = "./tmp";
 ####################################################################################
-
 ####################################################################################
-sub get_publications_main_hashed_args{
+sub get_publications_main_hashed_args_only {  # this function ignores the parameters given in the $self object
+    my ($self, $args) = @_;
+    return get_publications_core($self, 
+                                 $args->{author},
+                                 $args->{year},
+                                 $args->{bibtex_type},
+                                 $args->{entry_type},
+                                 $args->{tag},
+                                 $args->{team},
+                                 $args->{visible},
+                                 $args->{permalink},
+                                 $args->{hidden},
+                                 );
+}
+####################################################################################
+sub get_publications_main_hashed_args { #
     my ($self, $args) = @_;
 
     return get_publications_core($self, 
@@ -149,7 +166,6 @@ sub get_publications_core_from_set{
 ####################################################################################
 
 sub get_publications_core{
-  # say "CALL: get_publications_core";
     my $self = shift;
     my $author = shift;
     my $year = shift;
@@ -161,9 +177,13 @@ sub get_publications_core{
     my $permalink = shift;
     my $hidden = shift;
 
+    # say "CALL: get_publications_core author $author tag $tag";
+
     my $dbh = $self->app->db;
 
-    my $teamid = get_team_id($dbh, $team) || undef;
+    my $teamid = get_team_id($dbh, $team) || undef; # gives -1 if $team contains id
+    $teamid = $team if defined $teamid and $teamid eq -1; # so team = teamid
+
     my $master_id = get_master_id_for_master($dbh, $author) || undef;
     if($master_id == -1){
       $master_id = $author; # it means that author was given as master_id and not as master name
@@ -177,8 +197,7 @@ sub get_publications_core{
     
     $teamid = undef unless defined $team;
     $master_id = undef unless defined $author;
-    $tagid = undef unless defined $tag;
-    
+    $tagid = undef unless defined $tag;    
 
     my @objs = BibSpace::Functions::EntryObj->getByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
     return @objs;
@@ -276,7 +295,7 @@ sub nohtml{
 sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their authors ONLY. No tags, no regeneration.
     my $self = shift;
 
-    $self->write_log("reassing papers to authors started");
+    $self->write_log("reassign papers to authors started");
 
     my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
     my $sth = $self->app->db->prepare( $qry );  
@@ -299,7 +318,7 @@ sub postprocess_all_entries_after_author_uids_change{  # assigns papers to their
         assign_entry_to_existing_authors_no_add($self, $entry_obj);
     }
 
-    $self->write_log("reassing papers to authors finished");
+    $self->write_log("reassign papers to authors finished");
 };
 
 ##################################################################
@@ -338,25 +357,24 @@ sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assi
 };
 
 ####################################################################################
-sub clean_ugly_bibtex_fileds_for_all_entries {
+# clean_ugly_bibtex_fileds_for_all_entries
+sub clean_ugly_bibtex_fields_for_all_entries {
     my $self = shift;
     my $dbh = $self->app->db;
-    $self->write_log("clean_ugly_bibtex_fileds_for_all_entries started");
+    $self->write_log("clean_ugly_bibtex_fields_for_all_entries started");
     
     
     my @ids = get_all_entry_ids($dbh);
     for my $id (@ids){
-      clean_ugly_bibtex_fileds($dbh, $id);
+      clean_ugly_bibtex_fields($dbh, $id);
     }
-    $self->write_log("clean_ugly_bibtex_fileds_for_all_entries finished");
+    $self->write_log("clean_ugly_bibtex_fields_for_all_entries finished");
 };
 ####################################################################################
-sub clean_ugly_bibtex_fileds {
+sub clean_ugly_bibtex_fields {
     my $dbh = shift;
     my $eid = shift;
-
-    # TODO: move this into config
-    our @bib_fields_to_delete = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
+    my @bib_fields_to_delete = shift || qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
 
     my @ary = $dbh->selectrow_array("SELECT bib FROM Entry WHERE id = ?", undef, $eid);  
     my $entry_str = $ary[0];
@@ -377,7 +395,7 @@ sub clean_ugly_bibtex_fileds {
         my $new_bib = $entry->print_s;
 
 
-        # celaning errors caused by sqlite - mysql import
+        # cleaning errors caused by sqlite - mysql import
         
         $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
         $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
@@ -393,6 +411,7 @@ sub clean_ugly_bibtex_fileds {
         # generate_html_for_id($dbh, $eid);
     }
 };
+
 
 ##################################################################
 
@@ -562,26 +581,24 @@ sub delete_entry_by_id{
 
     my $sth3 = $dbh->prepare( "DELETE FROM Entry_to_Author WHERE entry_id = ?" );  
     $sth3->execute($id);
-
-    warn "FIXME: delete_entry_by_id. Pdf file should be deleted from file system as well"; 
 };
-################################################################################
-sub get_all_non_hidden_entry_ids{
-   my $dbh = shift;
+# ################################################################################
+# sub get_all_non_hidden_entry_ids{
+#    my $dbh = shift;
    
-   my $qry = "SELECT DISTINCT id, creation_time FROM Entry WHERE hidden=0 ORDER BY creation_time DESC";
-   my $sth = $dbh->prepare( $qry );  
-   $sth->execute(); 
+#    my $qry = "SELECT DISTINCT id, creation_time, year FROM Entry WHERE hidden=0 ORDER BY year DESC, creation_time DESC";
+#    my $sth = $dbh->prepare( $qry );  
+#    $sth->execute(); 
 
-   my @ids;
+#    my @ids;
    
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{id};
-      push @ids, $eid if defined $eid;
-   }
+#    while(my $row = $sth->fetchrow_hashref()) {
+#       my $eid = $row->{id};
+#       push @ids, $eid if defined $eid;
+#    }
 
-   return @ids;   
-}
+#    return @ids;   
+# }
 ################################################################################
 sub get_all_entry_ids{
    my $dbh = shift;
@@ -934,6 +951,8 @@ sub get_entry_title{
 
     $title =~ s/\{//g;
     $title =~ s/\}//g;
+    $title = decode('latex', $title);
+
     return $title;
 }
 ##########################################################################
@@ -1567,17 +1586,6 @@ sub tune_html{
    my $key = shift;
    my $htmlbib = shift || "";
 
-   # my $DIR="/var/www/html/publications-new";
-   # my $DIRBASE="/var/www/html/";
-   # #edit those two above always together!
-   # my $WEBPAGEPREFIX="http://sdqweb.ipd.kit.edu/";
-   # my $WEBPAGEPREFIXLONG="http://sdqweb.ipd.kit.edu/publications";
-
-   # BASH CODE:
-   # # replace links
-   # sed -e s_"$DIR"_"$WEBPAGEPREFIXLONG"_g $FILE > $TMP && mv -f $TMP $FILE
-   # # changes /var/www/html/publications-new to http://sdqweb.ipd.kit.edu/publications_new
-   # $s =~ s/"$DIR"/"$WEBPAGEPREFIXLONG"/g;
 
    $s =~ s/out_bib.html#(.*)/\/publications\/get\/bibtex\/$1/g;
    
@@ -1594,10 +1602,6 @@ sub tune_html{
 
    $s =~ s/<a (.*)>bib<\/a>/BIB_LINK_ID/g;
    
-   
-
-   # # for old system use:
-   # #for x in `find $DIR -name "*.html"`;do sed 's_\[\&nbsp;<a href=\"_\[\&nbsp;<a href=\"http:\/\/sdqweb.ipd.kit.edu\/publications\/_g' $x > $TMP; mv $TMP $x; done
 
    # # replace &lt; and &gt; b< '<' and '>' in Samuel's files.
    # sed 's_\&lt;_<_g' $FILE > $TMP && mv -f $TMP $FILE
@@ -1618,11 +1622,12 @@ sub tune_html{
 
    
    #$s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \]<div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
-   $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\" style=\"text-align: justify;\">/g;
+   $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote class=\"abstractBQ\">/g;
    $s =~ s/<\/font><\/blockquote><NeueZeile><p>/<\/blockquote><\/div>/g;
 
    #inserting bib DIV marker
-   $s =~ s/\]/\] BIB_DIV_ID/g;
+   $s =~ s/\&nbsp;\]/\&nbsp; \]/g;
+   $s =~ s/\&nbsp; \]/\&nbsp; \] BIB_DIV_ID/g;
 
    $key =~ s/\./_/g;   
 
@@ -1639,6 +1644,11 @@ sub tune_html{
 
    $s =~ s/<p>//g;
    $s =~ s/<\/p>//g;
+
+   $s =~ s/<a name="(.*)"><\/a>//g;
+   # $s =~ s/<a name=/<a id=/g;
+
+  $s =~ s/\&amp /\&amp; /g;
 
 
    $s;
