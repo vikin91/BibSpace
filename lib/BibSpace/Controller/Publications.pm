@@ -17,6 +17,9 @@ use TeX::Encode;
 use Encode;
 
 use BibSpace::Controller::Core;
+use BibSpace::Functions::FPublications;
+use BibSpace::Model::MEntry;
+
 use BibSpace::Controller::Set;
 use BibSpace::Functions::EntryObj;
 use BibSpace::Functions::TagObj;
@@ -36,30 +39,37 @@ sub isTalk {  # stupid code repetition!
     my $obj = shift;
     return $obj->isTalk();
 }
+# ####################################################################################
+# sub fixMonths {
+#     say "CALL: fixMonths ";
+#     my $self = shift;
+
+#     my @objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
+#     my $num_checks = 0;
+#     for my $o (@objs){
+#         my $entry = new Text::BibTeX::Entry();
+#         $entry->parse_s($o->{bib});
+
+#          $num_checks = $num_checks + after_edit_process_month($self->app->db, $entry);
+#     }
+#     $self->flash(msg => 'Fixing entries month field finished. Num entries checked: '.$num_checks);
+#     $self->redirect_to($self->get_referrer);
+# }
 ####################################################################################
 sub fixMonths {
     say "CALL: fixMonths ";
     my $self = shift;
-    
-    
 
-    my @objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
-    my $num_checks = 0;
-    for my $o (@objs){
-        my $entry = new Text::BibTeX::Entry();
-        $entry->parse_s($o->{bib});
-
-         $num_checks = $num_checks + after_edit_process_month($self->app->db, $entry);
-    }
-    $self->flash(msg => 'Fixing entries month field finished. Num entries checked: '.$num_checks);
+    my ($processed_entries, $fixed_entries) = Ffix_months($self->app->db);
+    $self->flash(msg => 'Fixing entries month field finished. Num entries checked/fixed: '.$processed_entries."/".$fixed_entries);
     $self->redirect_to($self->get_referrer);
 }
 ####################################################################################
 sub fixEntryType {
     say "CALL: fixEntryType ";
     my $self = shift;
-    
-    
+
+
 
     my @objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
     my $num_fixes = 0;
@@ -75,10 +85,10 @@ sub unhide {
     say "CALL: Publications::unhide";
     my $self = shift;
     my $id = $self->param('id');
-    
+
     my $dbh = $self->app->db;
 
-    
+
 
     my $obj = BibSpace::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
@@ -92,10 +102,10 @@ sub hide {
     say "CALL: Publications::hide";
     my $self = shift;
     my $id = $self->param('id');
-    
+
     my $dbh = $self->app->db;
 
-    
+
 
     my $obj = BibSpace::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
@@ -121,10 +131,10 @@ sub toggle_hide {
 sub make_paper {
     my $self = shift;
     my $id = $self->param('id');
-    
+
     my $dbh = $self->app->db;
 
-    
+
 
     my $obj = BibSpace::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
@@ -136,10 +146,10 @@ sub make_paper {
 sub make_talk {
     my $self = shift;
     my $id = $self->param('id');
-    
+
     my $dbh = $self->app->db;
 
-    
+
 
     my $obj = BibSpace::Functions::EntryObj->new({id => $id});
     $obj->initFromDB($dbh);
@@ -162,7 +172,7 @@ sub metalist {
     # my @old_ids_arr = get_all_non_hidden_entry_ids($self->app->db);
 
     $self->stash(ids => \@ids_arr);
-    $self->render(template => 'publications/metalist'); 
+    $self->render(template => 'publications/metalist');
 }
 
 ####################################################################################
@@ -177,8 +187,8 @@ sub meta {
     # FETCHING DATA FROM DB
     my $dbh = $self->app->db;
     my $sth = $dbh->prepare( "SELECT DISTINCT id, hidden, bibtex_key, bib, html
-        FROM Entry 
-        WHERE id = ? AND hidden=0" );  
+        FROM Entry
+        WHERE id = ? AND hidden=0" );
     $sth->execute($id);
 
     my $bib = "";
@@ -221,13 +231,13 @@ sub meta {
         @names = @n;
     }
     for my $name (@names){
-        
+
         my $name_clean = "";
         my $firstname = join (' ', $name->part('first'));
         my $von = join (' ', $name->part('von'));
         my $lastname = join (' ', $name->part('last'));
         my $jr = join (' ', $name->part('jr'));
-        
+
         $name_clean = $firstname;
         $name_clean .= " ".$von if defined $von;
         $name_clean .= " ".$lastname if defined $lastname;
@@ -242,10 +252,10 @@ sub meta {
 
     # PUBLICATION DATE
     my $year = $entry->get('year');
-    
+
     my $month = 0;
     $month = $entry->get('month') if $entry->exists('month');
-    
+
     my $days = 0;
     $days = $entry->get('day') if $entry->exists('day');
     my @day = ();
@@ -263,7 +273,7 @@ sub meta {
     $abstract =~ s/\}//g;
     $abstract = decode('latex', $abstract);
 
-    # TYPE 
+    # TYPE
     my $type = $entry->type;
 
     my $citation_journal_title; # OK
@@ -277,13 +287,13 @@ sub meta {
 
     if($type eq "article"){
         if($entry->exists('journal')){
-            $citation_journal_title = $entry->get('journal');    
+            $citation_journal_title = $entry->get('journal');
         }
         if($entry->exists('volume')){
-            $citation_volume = $entry->get('volume');    
+            $citation_volume = $entry->get('volume');
         }
         if($entry->exists('number')){
-            $citation_issue = $entry->get('number');    
+            $citation_issue = $entry->get('number');
         }
     }
 
@@ -327,7 +337,7 @@ sub meta {
     }
 
 
-    # PDF URL 
+    # PDF URL
     my $citation_pdf_url = undef;
     $citation_pdf_url = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$id) if $entry->exists('pdf');
     $citation_pdf_url = $self->url_for('download_publication_pdf', filetype=>'slides', id=>$id) if $entry->exists('slides');
@@ -335,7 +345,7 @@ sub meta {
 
 
 
-    
+
 
     # READY SET OF VARIABLES HOLDING METADATA. Some may be undef
     my $ca_ref = \@citation_authors;
@@ -357,12 +367,12 @@ sub meta {
      citation_technical_report_number => $citation_technical_report_number,
      citation_pdf_url => $citation_pdf_url);
 
-    $self->render(template => 'publications/meta');  
-    
+    $self->render(template => 'publications/meta');
+
  }
 ####################################################################################
 sub all_recently_added {
-    say "CALL: all_recently_added "; 
+    say "CALL: all_recently_added ";
     my $self = shift;
     my $num = $self->param('num') || 10;
     my $dbh = $self->app->db;
@@ -370,8 +380,8 @@ sub all_recently_added {
     $self->write_log("Displaying recently added entries num $num");
 
     my $qry = "SELECT DISTINCT id, bibtex_key, creation_time FROM Entry ORDER BY creation_time DESC LIMIT ?";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($num); 
+    my $sth = $dbh->prepare( $qry );
+    $sth->execute($num);
 
     my @array;
     while(my $row = $sth->fetchrow_hashref()) {
@@ -382,7 +392,7 @@ sub all_recently_added {
     my @objs = get_publications_core_from_array($self, \@array, 0);
 
     $self->stash(objs => \@objs);
-    $self->render(template => 'publications/all');  
+    $self->render(template => 'publications/all');
 }
 ####################################################################################
 
@@ -396,8 +406,8 @@ sub all_recently_modified {
 
     my $qry = "SELECT DISTINCT id, bibtex_key, modified_time FROM Entry ORDER BY modified_time DESC LIMIT ?";
 
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($num); 
+    my $sth = $dbh->prepare( $qry );
+    $sth->execute($num);
 
     my @array;
     while(my $row = $sth->fetchrow_hashref()) {
@@ -408,7 +418,7 @@ sub all_recently_modified {
 
     my @objs = get_publications_core_from_array($self, \@array, 0);
     $self->stash(objs => \@objs);
-    $self->render(template => 'publications/all');  
+    $self->render(template => 'publications/all');
 }
 ####################################################################################
 sub all_with_pdf_on_sdq{
@@ -422,8 +432,8 @@ sub all_with_pdf_on_sdq{
 
     my $qry = "SELECT id from Entry WHERE html_bib LIKE ?";
 
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute("%sdqweb%"); 
+    my $sth = $dbh->prepare( $qry );
+    $sth->execute("%sdqweb%");
 
     my @array;
     while(my $row = $sth->fetchrow_hashref()) {
@@ -435,7 +445,7 @@ sub all_with_pdf_on_sdq{
 
     my @objs = get_publications_core_from_array($self, \@array);
     $self->stash(objs => \@objs, msg => $msg);
-    $self->render(template => 'publications/all');  
+    $self->render(template => 'publications/all');
 }
 ####################################################################################
 sub all_without_tag {
@@ -446,17 +456,17 @@ sub all_without_tag {
 
     $self->write_log("Displaying papers without any tag of type $tagtype");
 
-    my $qry = "SELECT DISTINCT id, bibtex_key, year 
-                FROM Entry 
-                WHERE entry_type = 'paper' 
+    my $qry = "SELECT DISTINCT id, bibtex_key, year
+                FROM Entry
+                WHERE entry_type = 'paper'
                 AND id NOT IN (
-                    SELECT DISTINCT entry_id 
+                    SELECT DISTINCT entry_id
                     FROM Entry_to_Tag
                     LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
                     WHERE Tag.type = ?)
                     ORDER BY year DESC";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($tagtype); 
+    my $sth = $dbh->prepare( $qry );
+    $sth->execute($tagtype);
 
     my @array;
     while(my $row = $sth->fetchrow_hashref()) {
@@ -469,7 +479,7 @@ sub all_without_tag {
 
     my @objs = get_publications_core_from_array($self, \@array);
     $self->stash(objs => \@objs, msg => $msg);
-    $self->render(template => 'publications/all');  
+    $self->render(template => 'publications/all');
 }
 ####################################################################################
 sub all_without_tag_for_author {
@@ -487,25 +497,25 @@ sub all_without_tag_for_author {
     else{
         $aid = $mid;
     }
-    
-    
+
+
     my $str = "Displaying papers without any tag of type $tagtype for author id $aid";
     $self->write_log($str);
     say $str;
 
     my $qry = "SELECT DISTINCT id, bibtex_key, year, sort_month
-                FROM Entry 
-                LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
+                FROM Entry
+                LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id
                 WHERE Entry_to_Author.author_id = ?
                 AND entry_type='paper'
                 AND id NOT IN (
-                    SELECT DISTINCT entry_id 
+                    SELECT DISTINCT entry_id
                     FROM Entry_to_Tag
                     LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
                     WHERE Tag.type = ?)
                 ORDER BY year, sort_month DESC";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute($aid, $tagtype); 
+    my $sth = $dbh->prepare( $qry );
+    $sth->execute($aid, $tagtype);
 
     my @array;
     while(my $row = $sth->fetchrow_hashref()) {
@@ -519,11 +529,11 @@ sub all_without_tag_for_author {
     my @objs = get_publications_core_from_array($self, \@array);
     $self->stash(objs => \@objs, msg => $msg);
 
-    $self->render(template => 'publications/all');  
+    $self->render(template => 'publications/all');
 }
 ####################################################################################
 sub all_without_author {
-	say "CALL: all_without_author "; 
+	say "CALL: all_without_author ";
  say "all_without_author ";
     my $self = shift;
     my $dbh = $self->app->db;
@@ -531,8 +541,8 @@ sub all_without_author {
     $self->write_log("Displaying papers without any author");
 
     my $qry = "SELECT DISTINCT id, bibtex_key FROM Entry WHERE id NOT IN (SELECT DISTINCT entry_id FROM Entry_to_Author)";
-    my $sth = $dbh->prepare( $qry );  
-    $sth->execute(); 
+    my $sth = $dbh->prepare( $qry );
+    $sth->execute();
 
     my @array;
     while(my $row = $sth->fetchrow_hashref()) {
@@ -540,52 +550,52 @@ sub all_without_author {
         push @array, $eid;
     }
 
-    my $msg = "This list contains papers, that are currently not assigned to any of authors. 
-            This doesn't mean that they don't have authors. 
-            Maybe some authors of the papers need to have their user ids corrected? 
+    my $msg = "This list contains papers, that are currently not assigned to any of authors.
+            This doesn't mean that they don't have authors.
+            Maybe some authors of the papers need to have their user ids corrected?
             Even if this list is empty, some author might need have their user ids adjusted!";
 
 
     my @objs = get_publications_core_from_array($self, \@array);
     $self->stash(objs => \@objs, msg => $msg);
-    $self->render(template => 'publications/all');  
+    $self->render(template => 'publications/all');
 }
 
 ####################################################################################
 sub show_unrelated_to_team{
-	say "CALL: show_unrelated_to_team"; 
+	say "CALL: show_unrelated_to_team";
     my $self = shift;
     my $team_id = $self->param('teamid');
 
     $self->write_log("Displaying entries unrealted to team with it $team_id");
-    
+
     my $dbh = $self->app->db;
 
 
 
     my $set_all_papers = get_set_of_all_papers($self);
-    my $set_of_related_to_team = get_set_of_papers_for_all_authors_of_team_id($self, $team_id);    
+    my $set_of_related_to_team = get_set_of_papers_for_all_authors_of_team_id($self, $team_id);
     my $end_set = $set_all_papers - $set_of_related_to_team;
 
 
     my @objs = get_publications_core_from_set($self, $end_set);
 
-    my $msg = "This list contains papers, that are: 
+    my $msg = "This list contains papers, that are:
         <ul>
             <li>Not assigned to the team ".get_team_for_id($dbh,$team_id)."</li>
             <li>Not assigned to any author (former or actual) of the team ".get_team_for_id($dbh,$team_id)."</li>
         </ul>";
 
     $self->stash(objs => \@objs, msg => $msg);
-    $self->render(template => 'publications/all'); 
+    $self->render(template => 'publications/all');
 }
 ####################################################################################
 sub all_without_missing_month{
     my $self = shift;
-    
+
 
     $self->write_log("Displaying entries without month");
-    
+
     my @objs = ();
     my @all_objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
     for my $o (@all_objs){
@@ -597,7 +607,7 @@ sub all_without_missing_month{
     my $msg = "<p>This list contains entries with missing BibTeX field 'month'. Add this data to get the proper chronological sorting.</p> ";
 
     $self->stash(objs => \@objs, msg => $msg);
-    $self->render(template => 'publications/all'); 
+    $self->render(template => 'publications/all');
 }
 ####################################################################################
 sub all_candidates_to_delete{
@@ -627,7 +637,7 @@ sub all_candidates_to_delete{
 
     my @objs = get_publications_core_from_set($self, $end_set);
 
-    my $msg = "<p>This list contains papers, that are:</p> 
+    my $msg = "<p>This list contains papers, that are:</p>
         <ul>
             <li>Not assigned to any team AND</li>
             <li>have exactly 0 tags AND</li>
@@ -639,7 +649,7 @@ sub all_candidates_to_delete{
 
 
     $self->stash(objs => \@objs, msg => $msg);
-    $self->render(template => 'publications/all'); 
+    $self->render(template => 'publications/all');
 }
 ####################################################################################
 
@@ -657,7 +667,7 @@ sub all_defined_by_set {
 
     $set_of_entry_ids = $not_relevant_papers;
 
-    ### TODO!!! 
+    ### TODO!!!
     # not_relev = not_relev - tagged
     # not_relev = not_relev - exceptions
 
@@ -667,7 +677,7 @@ sub all_defined_by_set {
 
 
     $self->stash(objs => \@objs);
-    $self->render(template => 'publications/all');  
+    $self->render(template => 'publications/all');
 }
 ####################################################################################
 
@@ -686,8 +696,8 @@ sub all_bibtex {
 		$big_str .= "\n";
 	}
 	$big_str .= "\n</pre>";
-	$self->render(text => $big_str);  
-	
+	$self->render(text => $big_str);
+
 }
 ####################################################################################
 sub all {
@@ -699,7 +709,7 @@ sub all {
 	if ($self->session('user')){
         my @objs = get_publications_main_hashed_args($self, {});
         $self->stash(objs => \@objs);
-		$self->render(template => 'publications/all');  
+		$self->render(template => 'publications/all');
 	}
 	else{
         return $self->all_read();
@@ -729,8 +739,8 @@ sub single {
 
     my @objs = get_single_publication($self, $id, undef); # undef - hidden=undef - for admin interface
     $self->stash(objs => \@objs);
-    $self->render(template => 'publications/all');  
-    
+    $self->render(template => 'publications/all');
+
  }
 
 ####################################################################################
@@ -743,7 +753,7 @@ sub single_read {
     my @objs = get_single_publication($self, $id, 0); # 0 - hidden=0
     $self->stash(objs => \@objs);
     $self->render(template => 'publications/all_read');
-    
+
  }
 
 ############################################################################################################
@@ -752,7 +762,7 @@ sub landing_years_obj{
 	say "CALL: landing_years_obj";
     my $self = shift;
     my $year = $self->param('year') || undef;
-    
+
     # if you want to list talks+papers by default on the landing_years page, use the following line
     # my $entry_type = $self->param('entry_type') || undef;
 
@@ -781,10 +791,10 @@ sub landing_years_obj{
 
 
     foreach my $yr (@allkeys) {
-        
+
         # my @objs = get_publications_main($self, undef, $yr, undef, $entry_type, undef, undef, 0, undef);
-        my @objs = get_publications_main_hashed_args($self, {year => $yr, 
-                                                                entry_type => $entry_type, 
+        my @objs = get_publications_main_hashed_args($self, {year => $yr,
+                                                                entry_type => $entry_type,
                                                                 visible => 0,
                                                                 hidden => 0});
         # delete the year from the @keys array if the year has 0 papers
@@ -795,7 +805,7 @@ sub landing_years_obj{
         }
     }
 
-    
+
 
     # WARNING, it depends on routing! anti-pattern! Correct it some day
     # todo: this code is duplicated! fix it!
@@ -859,7 +869,7 @@ sub landing_types_obj{
 
     # include only one bibtex type when
     # 1 - bibtex_type defined and entry_type ne talk
-    
+
     # include all bibtex types but no talks
     #
 
@@ -884,9 +894,9 @@ sub landing_types_obj{
         # $args->{permalink}
         # $args->{hidden}
 
-        # my @paper_objs = get_publications_main($self, undef, undef, $bibtex_type, $entry_type, undef, undef, 0, undef);        
-        my @paper_objs = get_publications_main_hashed_args($self, {bibtex_type => $bibtex_type, 
-                                                                    entry_type => $entry_type, 
+        # my @paper_objs = get_publications_main($self, undef, undef, $bibtex_type, $entry_type, undef, undef, 0, undef);
+        my @paper_objs = get_publications_main_hashed_args($self, {bibtex_type => $bibtex_type,
+                                                                    entry_type => $entry_type,
                                                                     visible => 0,
                                                                     hidden => 0});
         if(scalar @paper_objs > 0){
@@ -897,12 +907,12 @@ sub landing_types_obj{
     }
     # only talks
     elsif(defined $entry_type and $entry_type eq 'talk'){
-        
+
         say "OPTION 2 - talks only";
         my $key = 'talk';
 
         # my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
-        my @talk_objs = get_publications_main_hashed_args($self, { entry_type => 'talk', 
+        my @talk_objs = get_publications_main_hashed_args($self, { entry_type => 'talk',
                                                                     visible => 0,
                                                                     hidden => 0});
         if(scalar @talk_objs > 0){
@@ -913,14 +923,14 @@ sub landing_types_obj{
     }
     # all but talks
     elsif(!defined $bibtex_type and defined $entry_type and $entry_type eq 'paper'){
-        
+
         say "OPTION 3 - all but talks";
         @keys = @all_keys;
 
         foreach my $key (@keys){
-            # my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);        
-            my @paper_objs = get_publications_main_hashed_args($self, {bibtex_type => $key, 
-                                                                    entry_type => 'paper', 
+            # my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);
+            my @paper_objs = get_publications_main_hashed_args($self, {bibtex_type => $key,
+                                                                    entry_type => 'paper',
                                                                     visible => 0,
                                                                     hidden => 0});
             if(scalar @paper_objs > 0){
@@ -937,9 +947,9 @@ sub landing_types_obj{
         @keys = @all_keys;
 
         foreach my $key (@keys){
-            # my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef); 
-            my @paper_objs = get_publications_main_hashed_args($self, {bibtex_type => $key, 
-                                                                    entry_type => 'paper', 
+            # my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);
+            my @paper_objs = get_publications_main_hashed_args($self, {bibtex_type => $key,
+                                                                    entry_type => 'paper',
                                                                     visible => 0,
                                                                     hidden => 0});
             if(scalar @paper_objs > 0){
@@ -951,7 +961,7 @@ sub landing_types_obj{
         my $key = 'talk';
 
         # my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
-        my @talk_objs = get_publications_main_hashed_args($self, { entry_type => 'talk', 
+        my @talk_objs = get_publications_main_hashed_args($self, { entry_type => 'talk',
                                                                     visible => 0,
                                                                     hidden => 0});
         if(scalar @talk_objs > 0){
@@ -964,7 +974,7 @@ sub landing_types_obj{
         say "OPTION 5 - else";
     }
 
-    
+
 
     my $url = $self->url_with('lyp');
     my $url_msg = "Switch to grouping by years";
@@ -973,7 +983,7 @@ sub landing_types_obj{
 
 
     # NAVBAR
-    
+
     my $tmp_year = $self->req->url->query->param('year');
     $self->req->url->query->remove('year');
     my $navbar_html = '<a class="bibtexitem" href="'.$self->url_with('current').'">[show ALL years]</a> ';
@@ -986,7 +996,7 @@ sub landing_types_obj{
 
     foreach my $key (sort @keys_with_papers) {
         # say "key in keys_with_papers: $key";
-        
+
         if($key eq 'talk'){
             $self->req->url->query->remove('bibtex_type');
             $self->req->url->query->param(entry_type => 'talk');
@@ -1066,7 +1076,7 @@ sub display_landing{
     # keys = years
     # my @objs = @{ $hash_values{$year} };
     # foreach my $obj (@objs){
-    $self->stash(hash_values =>$hash_values_ref, hash_dict => $hash_dict_ref, keys => $keys_ref, 
+    $self->stash(hash_values =>$hash_values_ref, hash_dict => $hash_dict_ref, keys => $keys_ref,
                  navbar => $navbar_html, show_title => $show_title, title => $title, switch_link => $switchlink);
     $self->render(template => 'publications/landing_obj');
 }
@@ -1171,7 +1181,7 @@ sub download {
     $exists = 1 if -e $file_path;
 
     if($exists == 1){
-        $self->write_log("Serving file $file_path"); 
+        $self->write_log("Serving file $file_path");
         $self->render_file('filepath' => $file_path);
     }
     else{
@@ -1185,12 +1195,12 @@ sub add_pdf {
     my $self = shift;
     my $id = $self->param('id');
     my $dbh = $self->app->db;
-    
+
 
     $self->write_log("Page: add pdf for paper id $id");
 
     # getting html preview
-    my $sth = $dbh->prepare( "SELECT DISTINCT bibtex_key, html, bibtex_type FROM Entry WHERE id = ?" );  
+    my $sth = $dbh->prepare( "SELECT DISTINCT bibtex_key, html, bibtex_type FROM Entry WHERE id = ?" );
     $sth->execute($id);
     my $row = $sth->fetchrow_hashref();
     my $html_preview = $row->{html} || nohtml($row->{bibtex_key}, $row->{bibtex_type});
@@ -1205,7 +1215,7 @@ sub add_pdf {
 sub add_pdf_post{
 	say "CALL: add_pdf_post";
     my $self = shift;
-    my $id = $self->param('id') || "unknown";    
+    my $id = $self->param('id') || "unknown";
     my $filetype = $self->param('filetype') || undef;
 
     my $uploads_directory = $self->config->{upload_dir};
@@ -1224,7 +1234,7 @@ sub add_pdf_post{
         return;
     }
 
-    
+
 
     # Process uploaded file
     my $uploaded_file = $self->param('uploaded_file');
@@ -1239,7 +1249,7 @@ sub add_pdf_post{
     if ($size == 0){
         $self->flash(message => "No file was selected or file has 0 bytes! Not saving!", msg_type => "danger");
         $self->write_log("Saving attachment for paper id $id FAILED. File size is 0.");
-        $self->redirect_to($self->get_referrer);  
+        $self->redirect_to($self->get_referrer);
     }
     else{
         my $sizeKB = int($size / 1024);
@@ -1259,7 +1269,7 @@ sub add_pdf_post{
         if($filetype eq 'paper'){
             $fname_no_ext = "paper-".$id.".";
             $fname = $fname_no_ext.$extension;
-          
+
             $directory = "papers/";
             $bibtex_field = "pdf";
         }
@@ -1282,7 +1292,7 @@ sub add_pdf_post{
         catch{
             warn "Exception: cannot create directory $directory. Msg: $_";
         };
-        
+
         $file_path = $directory.$fname;
 
         # remove old file that would match the patterns
@@ -1299,7 +1309,7 @@ sub add_pdf_post{
 
         $uploaded_file->move_to($uploads_directory.$file_path); ### WORKS!!!
         my $new_file = $self->get_paper_pdf_path($id, "$filetype");
-    
+
 
         my $file_url = $self->url_for('download_publication', filetype => "$filetype", id => $id)->to_abs;
         if($filetype eq 'paper'){ # so that the link looks nicer
@@ -1312,12 +1322,12 @@ sub add_pdf_post{
         $self->write_log("Saving attachment for paper id $id under: $file_url");
         add_field_to_bibtex_code($self->app->db, $id, $bibtex_field, "$file_url");
 
-        my $msg = "Successfully uploaded the $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>. 
+        my $msg = "Successfully uploaded the $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>.
         The file was renamed to: <em>$fname</em>. URL <a href=\"".$file_url."\">$name</a>";
 
-        # my $sth2 = $self->app->db->prepare( "UPDATE Entry SET modified_time=datetime('now', 'localtime') WHERE id =?" );  
-        my $sth2 = $self->app->db->prepare( "UPDATE Entry SET modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
-        
+        # my $sth2 = $self->app->db->prepare( "UPDATE Entry SET modified_time=datetime('now', 'localtime') WHERE id =?" );
+        my $sth2 = $self->app->db->prepare( "UPDATE Entry SET modified_time=CURRENT_TIMESTAMP WHERE id =?" );
+
         $sth2->execute($id);
         $sth2->finish();
 
@@ -1333,10 +1343,10 @@ sub add_pdf_post{
 sub regenerate_html_for_all {
 	say "CALL: regenerate_html_for_all ";
   my $self = shift;
-  
+
 
   my $dbh = $self->app->db;
-  
+
 
   $self->write_log("regenerate_html_for_all is running");
 
@@ -1352,11 +1362,11 @@ sub regenerate_html_for_all {
 sub regenerate_html_for_all_force {
 	say "CALL: regenerate_html_for_all_force ";
     my $self = shift;
-    
+
 
     my $dbh = $self->app->db;
-    
-    
+
+
 
     $self->write_log("regenerate_html_for_all FORCE is running");
 
@@ -1400,7 +1410,7 @@ sub delete_sure {
 	say "CALL: delete_sure ";
    my $self = shift;
    my $eid = $self->param('id');
-   
+
    my $dbh = $self->app->db;
 
    delete_entry_by_id($dbh, $eid);
@@ -1432,7 +1442,7 @@ sub show_authors_of_entry{
     my $key = get_entry_key($dbh, $eid);
 
 
-    $self->stash(eid => $eid, key => $key, preview => $html_preview, 
+    $self->stash(eid => $eid, key => $key, preview => $html_preview,
         author_ids => \@authors, team_ids => \@teams);
     $self->render(template => 'publications/show_authors');
 }
@@ -1458,8 +1468,8 @@ sub manage_exceptions{
     my @teams = $teams_for_paper->members;
     my @unassigned_teams = (get_set_of_all_teams($self) - $teams_for_paper - $current_exceptions_set)->members;
 
-   
-    $self->stash(eid => $eid, key => $key, btype=>$btype, preview => $html_preview, 
+
+    $self->stash(eid => $eid, key => $key, btype=>$btype, preview => $html_preview,
         author_ids => \@authors, exceptions => \@current_exceptions, team_ids => \@teams, unassigned_teams => \@unassigned_teams);
     $self->render(template => 'publications/manage_exceptions');
 }
@@ -1489,10 +1499,10 @@ sub manage_tags{
   my $html_preview = get_html_for_entry_id($dbh, $eid);
   my $key = get_entry_key($dbh, $eid);
 
-    
-  $self->stash(eid => $eid, key => $key, preview => $html_preview, 
-        tags  => $tags_arrref, ids => $ids_arrref, parents => $parents_arrref, 
-        all_tags  => $all_tags_arrref, unassigned_tag_ids => \@unassigned_tags_ids, 
+
+  $self->stash(eid => $eid, key => $key, preview => $html_preview,
+        tags  => $tags_arrref, ids => $ids_arrref, parents => $parents_arrref,
+        all_tags  => $all_tags_arrref, unassigned_tag_ids => \@unassigned_tags_ids,
         all_ids => $all_ids_arrref, all_parents => $all_parents_arrref);
   $self->render(template => 'publications/manage_tags');
 }
@@ -1570,29 +1580,31 @@ sub remove_exception{
 ####################################################################################
 
 ## ADD form
-sub get_add {
-    say "CALL: get_add ";
-    my $self = shift;
-    my %mons = (1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9 =>'September',10=>'October',11=>'November',12=>'December');
+# sub publications_add_get {
+#     say "CALL: publications_add_get ";
+#     my $self = shift;
+#     my %mons = (1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9 =>'September',10=>'October',11=>'November',12=>'December');
 
-    my $bib = '@article{key'.get_current_year().',
-        author = {Johny Example},
-        title = {{Selected aspects of some methods}},
-        year = {'.get_current_year().'},
-        month = {'.$mons{get_current_month()}.'},
-        day = {1--31},
-    }';
+#     my $bib = '@article{key'.get_current_year().',
+#         author = {Johny Example},
+#         title = {{Selected aspects of some methods}},
+#         year = {'.get_current_year().'},
+#         month = {'.$mons{get_current_month()}.'},
+#         day = {1--31},
+#     }';
 
-    my $msg ="Adding mode</strong> You operate on an unsaved entry!";
-    $self->stash(bib  => $bib, key => '', existing_id => '', exit_code => '', msg => $msg, preview => '');
-    $self->render(template => 'publications/add_entry');
-};
+#     my $msg ="Adding mode</strong> You operate on an unsaved entry!";
+#     $self->stash(bib  => $bib, key => '', id => -1, existing_id => '', exit_code => '', msg => $msg, preview => '');
+#     return $self->publications_edit_get();
+
+#     # $self->render(template => 'publications/edit_entry');
+# };
 
 ####################################################################################
 
 ## ADD form
-sub get_add_many {
-    say "CALL: get_add_many ";
+sub publications_add_many_get {
+    say "CALL: publications_add_many_get ";
     my $self = shift;
     my %mons = (1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9 =>'September',10=>'October',11=>'November',12=>'December');
 
@@ -1641,14 +1653,14 @@ sub post_add_many_store {
     my @existing_keys = ();
 
     for my $key (@key_arr){
-         my $single_id = get_entry_id($dbh, $key);
+         my $single_id = Fget_entry_id_for_bibtex_key($dbh, $key);
          if($single_id ne -1){
             push @existing_ids, $single_id;
             push @existing_keys, $key;
             $debug_str.="<br>ID exists: $single_id";
             $debug_str.="<br>KEY exists: $key";
          }
-         
+
     }
 
     $debug_str.="<br>==== Processing done. Existing keys: ".@existing_ids." join: ".join(' ', @existing_keys).".";
@@ -1689,7 +1701,7 @@ sub post_add_many_store {
         foreach my $key ( keys %seen ){
             $debug_str.="<br/>"."Bibtex key: $key exists ".$seen{$key}." times!" if $seen{$key} > 1;
         }
-        
+
         $msg = $debug_str;
 
         $self->stash(bib  => $new_bib, existing_id => 0, key => '', msg =>$msg, exit_code => $code, preview => $html_preview);
@@ -1717,8 +1729,13 @@ sub post_add_many_store {
             $debug_str.="<br>"."Adding!";
 
             my $single_key = $entry->key;
-            ($code, $html_preview) = postprocess_edited_entry($dbh, $single_code, 0);  #FIXME: added entry is strange!
-            my $added_id = get_entry_id($dbh, $single_key);
+            my $bib_html;
+            ($html_preview, $bib_html) = Fget_html_preview($single_code);
+
+            # ($code, $html_preview) = postprocess_edited_entry($dbh, $single_code, 0);  #FIXME: added entry is strange!
+            $code = postprocess_changed_entry($dbh, $single_code, -1);  #old FIXME: added entry is strange!
+
+            my $added_id = Fget_entry_id_for_bibtex_key($dbh, $single_key);
 
             $debug_str.="<br>"."Added key $single_key as id $added_id successfully!<br/>";
             $msg .= "Added key $single_key as id $added_id successfully!<br/>";
@@ -1741,12 +1758,12 @@ sub split_bibtex_entries{
 
     for my $b_code (split /@/, $input){
         next unless length($b_code) > 10;
-        my $entry_code = "@".$b_code; 
+        my $entry_code = "@".$b_code;
 
         my $entry = new Text::BibTeX::Entry;
         $entry->parse_s($entry_code);
         if($entry->parse_ok){
-            push @bibtex_codes, $entry_code;    
+            push @bibtex_codes, $entry_code;
         }
     }
 
@@ -1755,93 +1772,6 @@ sub split_bibtex_entries{
 ####################################################################################
 ############################################################################################################
 
-## Called after every preview or store command issued by EDIT or ADD form
-sub post_add_store {
-	say "CALL: post_add_store ";
-  my $self = shift;
-  my $id = $self->param('id') || undef;
-  my $new_bib = $self->param('new_bib');
-  my $preview_param = $self->param('preview') || undef;
-  # my $check_key =  || undef;
-  my $preview = 0;
-  my $msg ="Adding mode</strong> You operate on an unsaved entry!";
-
-  $self->write_log("Post_add_store add publication with bib $new_bib");
-
-
-  if(defined $id){
-      $self->redirect_to('/publications/edit/'.$id);
-      return;
-  }
-
-  my $dbh = $self->app->db;
-  my $html_preview = "";
-  my $code = -2;
-  my $key = -1;
-  $key = get_key_from_bibtex_code($new_bib) if defined $new_bib;
-
-  $new_bib =~ s/^\s+|\s+$//g;
-  $new_bib =~ s/^\t//g;
-
-  my $existing_id = get_entry_id($dbh, $key);
-
-  # say "key $key";
-  # say "existing_id $existing_id";
-  my $param_prev = $self->param('preview') || "";
-  my $param_save = $self->param('save') || "";
-
-  # say "preview $param_prev";
-  # say "save $param_save";
-
-  if(defined $key and $key =~ /^[+-]?\d+$/ and $key == -1){   # generate bibtex errors
-
-      $code = -1;
-      $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
-      $self->stash(bib  => $new_bib, key => $key, existing_id => '', msg => $msg, exit_code => $code, preview => $html_preview);
-      $self->render(template => 'publications/add_entry');
-      return;
-  }
-
-  if(defined $self->param('preview')){
-
-      my ($html, $htmlbib) = get_html_for_bib($new_bib, $key);
-      $html_preview = $html;
-
-      if($existing_id > 0 ){
-          $code = 3; # generate key-exists msg
-      }
-      $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
-      $self->stash(bib  => $new_bib, key => $key, existing_id => $existing_id, msg => $msg, exit_code => $code, preview => $html_preview);
-      $self->render(template => 'publications/add_entry');
-      return;
-  }
-  if(defined $self->param('save')){
-
-      if($existing_id == -1){
-          ($code, $html_preview) = postprocess_edited_entry($dbh, $new_bib, 0);
-          $id = get_entry_id($dbh, $key);  
-          $self->redirect_to('/publications/edit/'.$id);
-          return;
-      }
-  }
-
-  $code = 3;  # because once the key is bad, it is bad as long as $existing_id is -1
-
-  if(defined $self->param('check_key')){
-      if($existing_id == -1){
-          $code = 2;
-      }
-      elsif($existing_id > 0){
-          $code = 3;
-      }
-  }
-
-  $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
-
-  $self->stash(bib  => $new_bib, existing_id => $existing_id, key => $key, msg =>$msg, exit_code => $code, preview => $html_preview);
-  $self->render(template => 'publications/add_entry');
-
-};
 
 ####################################################################################
 sub get_adding_editing_message_for_error_code {
@@ -1855,7 +1785,7 @@ sub get_adding_editing_message_for_error_code {
     elsif($exit_code eq '-2'){
         return 'Displaying preview';
     }
-    elsif($exit_code eq '0'){ 
+    elsif($exit_code eq '0'){
         return 'Entry added successfully';
     }
     elsif($exit_code eq '1'){
@@ -1865,7 +1795,7 @@ sub get_adding_editing_message_for_error_code {
         return 'The proposed key is OK.';
     }
     elsif($exit_code eq '3'){
-        return 'The proposed key exists already in DB under ID <button class="btn btn-danger btn-xs" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> '.$existing_id.'</button>. 
+        return 'The proposed key exists already in DB under ID <button class="btn btn-danger btn-xs" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> '.$existing_id.'</button>.
                     <br>
                     <a class="btn btn-info btn-xs" href="'.$self->url_for('publicationsgetid', id=>$existing_id).'" target="_blank"><span class="glyphicon glyphicon-search"></span>Show me the existing entry ID '.$existing_id.' in a new window</a>
                     <br>
@@ -1880,117 +1810,204 @@ sub get_adding_editing_message_for_error_code {
 ####################################################################################
 ################################################################ EDITING ###########
 ####################################################################################
-
-
-## EDIT form
-sub get_edit {
-	say "CALL: get_edit ";
-   my $self = shift;
-   my $id = $self->param('id');
-   $self->write_log("Editing publication entry id $id");
-   my $dbh = $self->app->db;
-
-
-   my $obj = BibSpace::Functions::EntryObj->new({id => $id});
-   $obj->initFromDB($dbh);
-   my $bib = $obj->{bib};
-   my $key = $obj->{bibtex_key};
-
-   my ($html, $htmlbib) = get_html_for_bib($bib, $key);
-
-
-   $self->stash(bib  => $bib, entry_obj => $obj, id => $id, key => $key, existing_id => '', exit_code => '', 
-                msg => '', preview => $html);
-   $self->render(template => 'publications/edit_entry');
-};
-############################################################################################################
-
-## Called after every preview or store command issued by EDIT or ADD form
-sub post_edit_store {
-	say "CALL: post_edit_store ";
+sub publications_edit_get {
+  say "CALL: publications_edit_get ";
   my $self = shift;
-  my $id = $self->param('id') || undef;
-  my $new_bib = $self->param('new_bib');
-  my $preview_param = $self->param('preview') || undef;
-  # my $check_key =  || undef;
-  my $preview = 0;
-
-  $self->write_log("Post_edit_store: editing publication entry id $id");
-
+  my $id = $self->param('id') || -1;
+  $self->write_log("Editing publication entry id $id");
 
   my $dbh = $self->app->db;
-  my $html_preview = "";
-  my $code = -2;
-  my $key = -1;
-  $key = get_key_from_bibtex_code($new_bib) if defined $new_bib;
 
-  $new_bib =~ s/^\s+|\s+$//g;
-  $new_bib =~ s/^\t//g;
+  my $msg = "";
+  my $e_dummy = MEntry->new();
 
-  my $param_prev = $self->param('preview') || "";
-  my $param_save = $self->param('save') || "";
+  ######## adding new
+  if($id < 0){ 
+    my %mons = (1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',7=>'July',8=>'August',9 =>'September',10=>'October',11=>'November',12=>'December');
 
-  my $obj = BibSpace::Functions::EntryObj->new({id => $id});
-  $obj->initFromDB($dbh) if defined $id;
-  $obj->{bib} = $new_bib;
-  $obj->{key} = $key;
+    my $bib = '@article{key'.get_current_year().',
+        author = {Johny Example},
+        title = {{Selected aspects of some methods}},
+        year = {'.get_current_year().'},
+        month = {'.$mons{get_current_month()}.'},
+        day = {1--31},
+    }';
+    $e_dummy->{bib} = $bib;
 
-  # say "preview $param_prev";
-  # say "save $param_save";
-
-  if(defined $key and $key =~ /^[+-]?\d+$/ and $key == -1){   # generate bibtex errors
+    $msg ="Adding mode</strong> You operate on an unsaved entry!";
     
-      $code = -1;
-
-      $self->stash(bib  => $new_bib, entry_obj => $obj, key => $key, existing_id => '', msg => '', exit_code => $code, preview => $html_preview);
-      $self->render(template => 'publications/edit_entry');
-      return;
+    # $self->stash(bib  => $bib, key => '', id => -1, existing_id => '', exit_code => '', msg => $msg, preview => '');
+    # return $self->publications_edit_get();
+  }
+  ######## editing existing
+  else{ 
+    $e_dummy->get($dbh, $id);
   }
 
-  my $existing_id = get_entry_id($dbh, $key);
+  $e_dummy->populate_from_bib();
 
-  if($existing_id > 0 and $existing_id ne $id){   # there is another entry with this key
+  # compatibility with old code
+  my $obj = BibSpace::Functions::EntryObj->new();
+        
+  $obj->{bib} = $e_dummy->{bib};
+  $obj->{key} = $e_dummy->{bibtex_key};
+  my ($html, $htmlbib) = Fget_html_preview($e_dummy->{bib});  
+  $obj->{html} = $html;
+  $obj->{id} = $id;
+  say "CALL: publications_edit_get rendering!";
 
-      $code = 3; # generate key-exists msg
-      
-      $self->stash(bib  => $new_bib, entry_obj => $obj, key => $key, existing_id => $existing_id, msg => '', exit_code => $code, preview => $html_preview);
-      $self->render(template => 'publications/edit_entry');
-      return;
-  }
-
-  if(defined $self->param('preview')){
-
-      my ($html, $htmlbib) = get_html_for_bib($new_bib, $key);
-      $obj->{html} = $html;
-      $html_preview = $html;
-      $self->stash(bib  => $new_bib, entry_obj => $obj, key => $key, existing_id => '', msg => '', exit_code => $code, preview => $html_preview);
-      $self->render(template => 'publications/edit_entry');
-      return;
-  }
-  if(defined $self->param('save')){
-
-
-      ($code, $html_preview) = postprocess_updated_entry($dbh, $new_bib, $id);
-      $id = get_entry_id($dbh, $key);  
-      $obj->{html} = $html_preview;
-      $obj->{id} = $id;
-      $self->stash(bib  => $new_bib, entry_obj => $obj, key => $key, existing_id => '', msg => '', exit_code => $code, preview => $html_preview);
-      $self->render(template => 'publications/edit_entry');
-      return;
-  }
-
+  $self->stash(bib  => $obj->{bib}, entry_obj => $obj, id => $id, key => $obj->{key}, existing_id => '', exit_code => '',
+                msg => $msg, preview => $html);
+  $self->render(template => 'publications/edit_entry');
 };
-
-
-
-
-
-
-
 ############################################################################################################
+sub post_add_edit_store {
+  say "CALL: post_add_edit_store ";
+  my $self = shift;
+  my $id = $self->param('id') || -1;
+  my $new_bib = $self->param('new_bib');
+  my $param_prev = $self->param('preview');
+  my $param_save = $self->param('save');
+  my $param_check_key = $self->param('check_key');
+  my $dbh = $self->app->db;
 
+  ##################################################
+  my $method = $self->req->method;
+  say ">>>>>>> method: $method";
+  ##################################################
+  if($method eq 'GET'){
 
-##########################################
+    return $self->publications_edit_get();
+  }
+  ##################################################
+  elsif($method eq 'POST'){
+
+    $self->write_log("Post_add_edit_store: adding/editing publication entry id $id");
+
+    # option 1 $id undef ===> adding
+
+    # error codes
+    # -1 You have bibtex errors! Not saving!";
+    # -2 Displaying preview';
+    # 0 Entry added successfully';
+    # 1 Entry updated successfully';
+    # 2 The proposed key is OK.
+    # 3 Proposed key exists already - HTML message
+
+    my $key = -1;
+    $key = get_key_from_bibtex_code($new_bib) if defined $new_bib;
+    $new_bib =~ s/^\s+|\s+$//g;
+    $new_bib =~ s/^\t//g;
+
+    my $existing_id = Fget_entry_id_for_bibtex_key($dbh, $key);
+
+    my $code = -2;
+    if(defined $key and $key eq '-1'){   # generate bibtex errors
+        $code = -1;
+
+        my $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
+        say ">>> rendering bibtex errors";
+        $self->stash(bib  => $new_bib, key => $key, existing_id => '', id=>$id, msg => $msg, exit_code => $code, preview => '');
+        $self->render(template => 'publications/edit_entry');
+        return;
+    }
+    # code free from BibTeX errors
+
+    # watch out! $id >0 but $existing_id = -1 ==> change of bibtex key!!
+    # now check if the key exists
+    say "Checking for existing bibtex key";
+    if(defined $self->param('check_key') or
+       ($id > 0 and $existing_id != $id) or
+       ($id < 1 and $existing_id > 0))
+    {
+      say "Checking for existing bibtex key: inside id $id existing_id $existing_id";
+      if($existing_id == -1){
+            $code = 2;
+        }
+        elsif($existing_id > 0){
+            $code = 3;
+        }
+
+      my $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
+      my ($html, $htmlbib) = Fget_html_preview($new_bib);
+
+      if($existing_id > 0){ # we are not changing the bibtex key
+        say ">>> rendering check key";
+        $self->stash(bib  => $new_bib, id => $id, existing_id => $existing_id, key => $key, msg =>$msg, exit_code => $code, preview => $html);
+        $self->render(template => 'publications/edit_entry');
+        return;
+      }
+      
+    }
+    say "Checking for existing bibtex key: done";
+    # here you need to be sure that the key is okay and you can proceed
+
+    if(defined $param_prev){
+
+      my $obj = BibSpace::Functions::EntryObj->new({id => $id});
+      $obj->initFromDB($dbh) if defined $id;
+      $obj->{bib} = $new_bib;
+      $obj->{key} = $key;
+
+      $code = -2; # Dipslaying previev
+      $code = 3 if $existing_id > 0; # generate key-exists msg
+      $code = -2 if $existing_id > 0 and $id > 0; # displaying preview
+      
+      my ($html, $htmlbib) = Fget_html_preview($new_bib);  
+      $obj->{html} = $html;
+      my $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
+      say ">>> rendering param prev";
+      $self->stash(bib  => $new_bib, entry_obj => $obj, id=>$id, key => $key, existing_id => $existing_id, msg => $msg, exit_code => $code, preview => $html);
+      $self->render(template => 'publications/edit_entry');
+      return;
+    }
+    if(defined $param_save){
+
+      if(($id > 0 and $existing_id==$id) or ($id > 0 and $existing_id==-1)){ # this is editing
+
+        my $obj = BibSpace::Functions::EntryObj->new({id => $id});
+        $obj->initFromDB($dbh) if defined $id;
+        $obj->{bib} = $new_bib;
+        $obj->{key} = $key;
+
+        $code = postprocess_changed_entry($dbh, $new_bib, $id);
+        my ($html, $htmlbib) = Fget_html_preview($new_bib);  
+        $id = Fget_entry_id_for_bibtex_key($dbh, $key);
+        $obj->{html} = $html;
+        $obj->{id} = $id;
+
+        $code = 1;
+        my $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
+
+        say ">>> rendering param save edit";
+        $self->stash(bib  => $new_bib, entry_obj => $obj, id=>$id, key => $key, existing_id => '', msg => $msg, exit_code => $code, preview => $html);
+        $self->render(template => 'publications/edit_entry');
+        return;
+      }
+      else{ # this is adding
+
+        $code = postprocess_changed_entry($dbh, $new_bib, -1);
+        $id = Fget_entry_id_for_bibtex_key($dbh, $key);
+        my ($html, $htmlbib) = Fget_html_preview($new_bib);
+        $code = 0;
+        my $msg = get_adding_editing_message_for_error_code($self, $code, $existing_id);
+
+        my $obj = BibSpace::Functions::EntryObj->new({id => $id});
+        $obj->initFromDB($dbh) if defined $id;
+
+        say ">>> rendering param save add";
+        # $self->redirect_to($self->url_for('edit_publication', id=>$id));
+        $self->stash(bib  => $new_bib, entry_obj => $obj, id=>$id, key => $key, existing_id => '', msg => $msg, exit_code => $code, preview => $html);
+        $self->render(template => 'publications/edit_entry');
+        return;
+      }
+    }
+  } # elsif($method eq 'POST'){
+  else{
+    $self->render(text => "Such route does not exist", status => 404);
+  }
+};
+##################################################################
 sub get_key_from_bibtex_code{
 	say "CALL: get_key_from_bibtex_code";
   my $code = shift;
@@ -1999,264 +2016,61 @@ sub get_key_from_bibtex_code{
   return -1 unless $entry->parse_ok;
   return $entry->key;
 }
-
-
-sub after_edit_check_entry{
-	say "CALL: after_edit_check_entry";
-   my $dbh = shift;
-   my $entry_str = shift;
-
-   my $entry = new Text::BibTeX::Entry();
-   $entry->parse_s($entry_str);
-
-   # $self->write_log("Running after_edit_check_entry for bib: $entry_str");
-
-   return -1 unless $entry->parse_ok;
-
-   my $exit_code = -2;
-   # 0 adding ok
-   # -1 parse error
-   # 1 updating ok
-
-   ######### AUTHORS
-
-   my $key = $entry->key;
-     
-   my $year = $entry->get('year');
-   my $title = $entry->get('title') || '';
-   my $abstract = $entry->get('abstract') || undef;
-   my $content = $entry->print_s;
-   my $type = $entry->type;
-
-   my @ary = $dbh->selectrow_array("SELECT COUNT(*) FROM Entries WHERE bibtex_key = ?", undef, $entry->key);  
-   my $key_exists = $ary[0];
-
-    if($key_exists==0){
-        $exit_code = 0;
-    }
-    else{
-         $exit_code = 1;
-    }
-
-   return $exit_code;
-};
-
 ##################################################################
-sub postprocess_updated_entry{
-	say "CALL: postprocess_updated_entry";  # procesing an entry that was edited - allows to change bibtex key - eid remains untouched
-    ### TODO: cannot use log because there is no $self-object!
+sub postprocess_changed_entry{  # don't care if edited or updated
     my $dbh = shift;
     my $entry_str = shift;
     my $eid = shift; # remains unchanged
 
-    my $preview_html = "";
-
-    # $self->write_log("Postprocessing updated entry with id $eid");
+    say "@@@@@@@@@ CALL postprocess_changed_entry. eid $eid";
 
     my $entry = new Text::BibTeX::Entry();
     $entry->parse_s($entry_str);
-
-    return -1 unless $entry->parse_ok;
-
-    my $exit_code = -2;
-    # -1 parse error
-    # 1 updating ok
-
-    ######### AUTHORS
-
-    my $key = $entry->key;
-
-
-    my $year = $entry->get('year');
-    my $title = $entry->get('title') || '';
-    my $abstract = $entry->get('abstract') || undef;
-    my $content = $entry->print_s;
-    my $type = $entry->type;
-
-    my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, bibtex_type=?, abstract=?, need_html_regen = 1, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
-    $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
-    $sth2->finish();
-    $exit_code = 1;
-    after_edit_process_authors($dbh, $entry);
-    # after_edit_process_tags($dbh, $entry); 
-    generate_html_for_key($dbh, $key);
-    after_edit_process_month($dbh, $entry);
-
-    my ($html, $htmlbib) = get_html_for_bib($content, $key);
-    $preview_html = $html;
-
-    return $exit_code, $preview_html;
-};
-##################################################################
-
-sub postprocess_edited_entry{
-	say "CALL: postprocess_edited_entry";
-    ### TODO: cannot use log because there is no $self-object!
-    my $dbh = shift;
-    my $entry_str = shift;
-    my $preview = shift;
-
-    my $preview_html = "";
-
-    # $self->write_log("Postprocessing edited entry with id $eid");
-
-    my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s($entry_str);
-
-    return -1 unless $entry->parse_ok;
+    return -1 unless $entry->parse_ok;  # exit code -1 = bibtex errors
 
     my $exit_code = -2;
-    # 0 adding ok
-    # -1 parse error
-    # 1 updating ok
 
-    ######### AUTHORS
+    my $e = MEntry->new();
 
-    my $key = $entry->key;
+    if(defined $eid and $eid > 0){ # we update entry
 
-    my $eid = get_entry_id($dbh, $key);
+        $e->get($dbh, $eid);
+        $e->{bib} = $entry_str;
+        $e->populate_from_bib();
 
-    my $year = $entry->get('year');
-    my $title = $entry->get('title') || '';
-    my $abstract = $entry->get('abstract') || undef;
-    my $content = $entry->print_s;
-    my $type = $entry->type;
+        $e->save($dbh); # optional
 
-    my @ary = $dbh->selectrow_array("SELECT COUNT(*) FROM Entry WHERE bibtex_key = ?", undef, $entry->key);  
-    my $key_exists = $ary[0];
+        $exit_code = $e->postprocess_updated($dbh); # this saves
 
-    if(!$preview and $key_exists==0){
-        my $sth2 = $dbh->prepare( "INSERT INTO Entry(title, bibtex_key, bib, year, bibtex_type, abstract, creation_time, modified_time) VALUES(?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)" );  
-        $sth2->execute($title, $key, $content, $year, $type, $abstract);
-        $sth2->finish();
-        $exit_code = 0;
-
+        return 1; # updated OK
     }
-    elsif(!$preview){ 
-         my $sth2 = $dbh->prepare( "UPDATE Entry SET title=?, bibtex_key=?, bib=?, year=?, bibtex_type=?, abstract=?, modified_time=CURRENT_TIMESTAMP WHERE id =?" );  
-         $sth2->execute($title, $key, $content, $year, $type, $abstract, $eid);
-         $sth2->finish();
-         $exit_code = 1;
-    }
-
-    if(!$preview){
-        after_edit_process_tags($dbh, $entry); 
-        after_edit_process_authors($dbh, $entry);
-        generate_html_for_key($dbh, $key);
-        after_edit_process_month($dbh, $entry);
-
-        # $exit_code = "Your entry has been added, but please note: TODO: adjust those methods: after_edit_process_authors and after_edit_process_tags!";
-    }
-    else{
-        my ($html, $htmlbib) = get_html_for_bib($content, $key);
-        $preview_html = $html;
-    }
-
-  
-
-   return $exit_code, $preview_html;
-};
-
-
-
-
-
-
-##########################################################################################
-
-sub after_edit_process_month{
-
-    my $dbh = shift;
-    my $entry = shift;
-
-    my $entry_key = $entry->key;
-    my $key = $entry_key;
-    my $eid = get_entry_id($dbh, $entry_key);
-
-    my $num_checks = 0;
-
-    if($entry->exists('month')){
-        my $month_str = $entry->get('month');
-        my $month_numeric = get_month_numeric($month_str);
-        my $obj = BibSpace::Functions::EntryObj->new({id => $eid});
-        $obj->initFromDB($dbh);
-        $obj->setMonth($month_numeric, $dbh);
-        $obj->setSortMonth($month_numeric, $dbh);
-        $num_checks = $num_checks + 1;
-    }
-
-    return $num_checks;
-};
-
-##########################################################################################
-
-sub after_edit_process_tags{
-	say "CALL: after_edit_process_tags";
-    ### TODO: cannot use log because there is no $self-object!
-  my $dbh = shift;
-  my $entry = shift;
-
-  my $entry_key = $entry->key;
-  my $key = $entry_key;
-  my $eid = get_entry_id($dbh, $entry_key);
-
-  # $self->write_log("Postprocessing TAGS of updated entry with id $eid");
-  
-
-  # this would delete all tags by editing an entry!!
-  
-  # my $sth = $dbh->prepare('DELETE FROM Entry_to_Tag WHERE entry_id = ?');
-  # $sth->execute($eid);
-   
-   
-
-  if($entry->exists('tags')){
-      my $tags_str = $entry->get('tags');
-      say "tags_str: $tags_str";
-      $tags_str =~ s/\,/;/g if defined $tags_str;
-      $tags_str =~ s/^\s+|\s+$//g if defined $tags_str;
-
-      
-      my @tags = ();
-      @tags = split(';', $tags_str) if defined $tags_str;
-
-      for my $tag (@tags){
-         $tag =~ s/^\s+|\s+$//g;
-         $tag =~ s/\ /_/g if defined $tag;
-
-         my $tt_obj = TagTypeObj->getByName($dbh,"Imported");
-         my $tt_id = $tt_obj->{id};
-
-         if(!defined $tt_obj->{id}){
-            my $sth4 = $dbh->prepare( "INSERT IGNORE INTO TagType(name, comment) VALUES(?,?)" );  
-            $sth4->execute("Imported", "Tags Imported from Bibtex");   
-            $tt_obj = TagTypeObj->getByName($dbh, "Imported");
-            $tt_id = $tt_obj->{id};
-         }
-
+    else{ # we add entry
+        $e->{bib} = $entry_str;
+        $e->populate_from_bib();
+        
+        $e->save($dbh); # optional
+        
+        $exit_code = $e->postprocess_updated($dbh); # this saves
         
 
-         # $dbh->do("REPLACE INTO Tags VALUES($tag)");
-         my $sth3 = $dbh->prepare( "INSERT IGNORE INTO Tag(name, type) VALUES(?,?)" );  
-         $sth3->execute($tag, $tt_obj->{id});
-         my $tagid2 = get_tag_id($dbh, $tag);
+        $exit_code = 0; # added OK
 
-         # $dbh->do("INSERT INTO Entry_to_Tag(entry, tag) VALUES($entry_key, $tag)");
-         $sth3 = $dbh->prepare( "INSERT IGNORE INTO Entry_to_Tag(entry_id, tag_id) VALUES(?, ?)" );  
-         $sth3->execute($eid, $tagid2);
-      }
+        return $exit_code;
+    }
+};
 
-  }
-}
+##########################################################################################
+
+
 
 
 ####################################################################################
 sub clean_ugly_bibtex {
 	say "CALL: clean_ugly_bibtex ";
     my $self = shift;
-    
+
     my $dbh = $self->app->db;
-    
+
 
     $self->write_log("Cleaning ugly bibtex fields for all entries");
 
@@ -2295,12 +2109,12 @@ sub replace_urls_to_file_serving_function{
     my @all_entries = BibSpace::Functions::EntryObj->getAll($dbh);
 
     my $str = "";
-    
+
     for my $e (@all_entries){
-        
+
         my $url_pdf = $self->url_for('download_publication_pdf', filetype => 'paper', id => $e->{id})->to_abs;
         my $url_slides = $self->url_for('download_publication', filetype => 'slides', id => $e->{id})->to_abs;
-    
+
 
 
         # check if the entry has pdf
@@ -2333,7 +2147,7 @@ sub get_paper_pdf_path{
 
     my $upload_dir = $self->config->{upload_dir};
     $upload_dir =~ s!/*$!/!; # makes sure that there is exactly one / at the end
-    
+
     my $filequery = "";
     $filequery .= "paper-".$id."."  if $type eq "paper";
     $filequery .= "slides-paper-".$id."."  if $type eq "slides";
@@ -2351,7 +2165,7 @@ sub get_paper_pdf_path{
     catch{
         warn "Exception: cannot create directory $directory. Msg: $_";
     };
-    
+
 
     opendir(DIR, $directory) or die "Cannot open directory $directory :".$!;
     while (my $file = readdir(DIR)) {
@@ -2360,7 +2174,7 @@ sub get_paper_pdf_path{
         next if ($file =~ m/^\./);
         if ($file =~ /^$filequery.*/){  # filequery contains the dot!
             say "get_paper_pdf_path MATCH $file $filequery";
-            $filename = $file; 
+            $filename = $file;
         }
     }
     closedir(DIR);
