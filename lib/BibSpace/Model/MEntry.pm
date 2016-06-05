@@ -1,16 +1,19 @@
 #package BibSpace::Model::MEntry;
 
-# use strict;
-# use warnings;
-# use BibSpace::Controller::Core;
+use strict;
+use warnings;
 
-# use Data::Dumper;
+use BibSpace::Controller::Core;
+# use BibSpace::Functions::FPublications; # there should be really no call to this module. All calls should be moved to a new module
+use BibSpace::Functions::TagTypeObj;
+
+use Data::Dumper;
 # use utf8;
 # use Text::BibTeX; # parsing bib files
 # use DateTime;
 # use File::Slurp;
 # use Time::Piece;
-# use 5.010; #because of ~~
+use 5.010; #because of ~~ and say
 use DBI;
 # use Moose;
 
@@ -18,636 +21,550 @@ use DBI;
 package MEntry;
     use Moose;
 
-    has 'id' => (is => 'rw');
-    has 'bibtex_key' => (is => 'rw');
+   has 'id' => (is => 'rw'); 
+   has 'entry_type' => (is => 'rw', default => 'paper'); 
+   has 'bibtex_key' => (is => 'rw');
+   has 'bibtex_type' => (is => 'rw');
+   has 'bib' => (is => 'rw', isa => 'Str'); 
+   has 'html' => (is => 'rw'); 
+   has 'html_bib' => (is => 'rw'); 
+   has 'abstract' => (is => 'rw'); 
+   has 'title' => (is => 'rw'); 
+   has 'hidden' => (is => 'rw'); 
+   has 'year' => (is => 'rw'); 
+   has 'month' => (is => 'rw'); 
+   has 'sort_month' => (is => 'rw'); 
+   has 'teams_str' => (is => 'rw'); 
+   has 'people_str' => (is => 'rw'); 
+   has 'tags_str' => (is => 'rw'); 
+   has 'creation_time' => (is => 'rw'); 
+   has 'modified_time' => (is => 'rw'); 
+   has 'need_html_regen' => (is => 'rw', default => '1'); 
 
+####################################################################################
     sub all {
         my $self = shift;
         my $dbh = shift;
 
-        my $qry = "SELECT DISTINCT id, 
-                    hidden, 
-                    bibtex_key, 
-                    entry_type, 
-                    bibtex_type, 
-                    bib, 
-                    html, 
-                    modified_time, 
-                    creation_time, 
-                    month, 
-                    sort_month
+        my $qry = "SELECT DISTINCT id,
+                    entry_type,
+                    bibtex_key,
+                    bibtex_type,
+                    bib,
+                    html,
+                    html_bib,
+                    abstract,
+                    title,
+                    hidden,
+                    year,
+                    month,
+                    sort_month,
+                    teams_str,
+                    people_str,
+                    tags_str,
+                    creation_time,
+                    modified_time,
+                    need_html_regen
                 FROM Entry";
         my @objs;
-        my $sth = $dbh->prepare( $qry );  
-        $sth->execute(); 
+        my $sth = $dbh->prepare( $qry );
+        $sth->execute();
 
         while(my $row = $sth->fetchrow_hashref()) {
-            my $obj = MEntry->new(id => $row->{id}, bibtex_key => $row->{bibtex_key});
-                            #     year => $row->{year},
-                            #     month => $row->{month},
-                            #     hidden => $row->{hidden},
-                            #     sort_month => $row->{sort_month},
-                            #     bibtex_type => $row->{bibtex_type},
-                            #     entry_type => $row->{entry_type},
-                            #     bib => $row->{bib},
-                            #     html => $row->{html},
-                            #     ctime => $row->{creation_time},
-                            #     mtime => $row->{modified_time},
-                            # });
+            my $obj = MEntry->new(
+                                  id => $row->{id},
+                                  entry_type => $row->{entry_type},
+                                  bibtex_key => $row->{bibtex_key},
+                                  bibtex_type => $row->{bibtex_type},
+                                  bib => $row->{bib},
+                                  html => $row->{html},
+                                  html_bib => $row->{html_bib},
+                                  abstract => $row->{abstract},
+                                  title => $row->{title},
+                                  hidden => $row->{hidden},
+                                  year => $row->{year},
+                                  month => $row->{month},
+                                  sort_month => $row->{sort_month},
+                                  teams_str => $row->{teams_str},
+                                  people_str => $row->{people_str},
+                                  tags_str => $row->{tags_str},
+                                  creation_time => $row->{creation_time},
+                                  modified_time => $row->{modified_time},
+                                  need_html_regen => $row->{need_html_regen},
+                            );
             push @objs, $obj;
         }
         return @objs;
     }
-
+####################################################################################
     sub get {
         my $self = shift;
         my $dbh = shift;
         my $id = shift;
 
-        my $qry = "SELECT DISTINCT id, 
-                    hidden, 
-                    bibtex_key, 
-                    entry_type, 
-                    bibtex_type, 
-                    bib, 
-                    html, 
-                    modified_time, 
-                    creation_time, 
-                    month, 
-                    sort_month
+        my $qry = "SELECT DISTINCT id,
+                    entry_type,
+                    bibtex_key,
+                    bibtex_type,
+                    bib,
+                    html,
+                    html_bib,
+                    abstract,
+                    title,
+                    hidden,
+                    year,
+                    month,
+                    sort_month,
+                    teams_str,
+                    people_str,
+                    tags_str,
+                    creation_time,
+                    modified_time,
+                    need_html_regen
                 FROM Entry
                 WHERE id = ?";
 
-        my $sth = $dbh->prepare( $qry );  
-        $sth->execute($self->{id}); 
+        my $sth = $dbh->prepare( $qry );
+        $sth->execute($id);
         my $row = $sth->fetchrow_hashref();
 
         $self->id($id);
+        $self->entry_type($row->{entry_type});
         $self->bibtex_key($row->{bibtex_key});
+        $self->bibtex_type($row->{bibtex_type});
+        $self->bib($row->{bib});
+        $self->html($row->{html});
+        $self->html_bib($row->{html_bib});
+        $self->abstract($row->{abstract});
+        $self->title($row->{title});
+        $self->hidden($row->{hidden});
+        $self->year($row->{year});
+        $self->month($row->{month});
+        $self->sort_month($row->{sort_month});
+        $self->teams_str($row->{teams_str});
+        $self->people_str($row->{people_str});
+        $self->tags_str($row->{tags_str});
+        $self->creation_time($row->{creation_time});
+        $self->modified_time($row->{modified_time});
+        $self->need_html_regen($row->{need_html_regen});
+  }
+####################################################################################
+sub update {
+  my $self = shift;
+  my $dbh = shift;
+
+  my $result = "";
+
+  say "@@@@@@@@@ CALL MEntry update";
+
+  # say "MEntry update. filed id value: ".$self->{id};
+  # say "MEntry update. filed entry_type value: ".$self->{entry_type};
+  # say "MEntry update. filed bibtex_key value: ".$self->{bibtex_key};
+  # say "MEntry update. filed bibtex_type value: ".$self->{bibtex_type};
+  # say "MEntry update. filed bib value: ".$self->{bib};
+  # say "MEntry update. filed html value: ".$self->{html};
+  # say "MEntry update. filed html_bib value: ".$self->{html_bib};
+  # say "MEntry update. filed abstract value: ".$self->{abstract};
+  # say "MEntry update. filed title value: ".$self->{title};
+  # say "MEntry update. filed hidden value: ".$self->{hidden};
+  # say "MEntry update. filed year value: ".$self->{year};
+  # say "MEntry update. filed month value: ".$self->{month};
+  # say "MEntry update. filed sort_month value: ".$self->{sort_month};
+  # say "MEntry update. filed teams_str value: ".$self->{teams_str};
+  # say "MEntry update. filed people_str value: ".$self->{people_str};
+  # say "MEntry update. filed tags_str value: ".$self->{tags_str};
+  # say "MEntry update. filed creation_time value: ".$self->{creation_time};
+  # say "MEntry update. filed modified_time value: ".$self->{modified_time};
+  # say "MEntry update. filed need_html_regen value: ".$self->{need_html_regen};
+
+  if(!defined $self->{id}){
+      say "Cannot update. Entry id not set. The entry may not exist in the DB. Returning -1";
+      return -1;
   }
 
+  my $qry = "UPDATE Entry SET
+                entry_type=?,
+                bibtex_key=?,
+                bibtex_type=?,
+                bib=?,
+                html=?,
+                html_bib=?,
+                abstract=?,
+                title=?,
+                hidden=?,
+                year=?,
+                month=?,
+                sort_month=?,
+                teams_str=?,
+                people_str=?,
+                tags_str=?,
+                creation_time=?,
+                modified_time=CURRENT_TIMESTAMP,
+                need_html_regen=?
+            WHERE id = ?";
+  my $sth = $dbh->prepare( $qry );
+  $result = $sth->execute(
+            $self->{entry_type},
+            $self->{bibtex_key},
+            $self->{bibtex_type},
+            $self->{bib},
+            $self->{html},
+            $self->{html_bib},
+            $self->{abstract},
+            $self->{title},
+            $self->{hidden},
+            $self->{year},
+            $self->{month},
+            $self->{sort_month},
+            $self->{teams_str},
+            $self->{people_str},
+            $self->{tags_str},
+            $self->{creation_time},
+            # $self->{modified_time},
+            $self->{need_html_regen},
+            $self->{id}
+            );
+  $sth->finish();
+
+  say "@@@@@@@@@ END CALL MEntry update: ".$result;
+  return $result;
+}
+####################################################################################
+sub store {
+  my $self = shift;
+  my $dbh = shift;
+
+  my $result = "";
+
+  say "@@@@@@@@@ CALL MEntry store";
+
+  # say "MEntry store. filed id value: ".$self->{id};
+  # say "MEntry store. filed entry_type value: ".$self->{entry_type};
+  # say "MEntry store. filed bibtex_key value: ".$self->{bibtex_key};
+  # say "MEntry store. filed bibtex_type value: ".$self->{bibtex_type};
+  # say "MEntry store. filed bib value: ".$self->{bib};
+  # say "MEntry store. filed html value: ".$self->{html};
+  # say "MEntry store. filed html_bib value: ".$self->{html_bib};
+  # say "MEntry store. filed abstract value: ".$self->{abstract};
+  # say "MEntry store. filed title value: ".$self->{title};
+  # say "MEntry store. filed hidden value: ".$self->{hidden};
+  # say "MEntry store. filed year value: ".$self->{year};
+  # say "MEntry store. filed month value: ".$self->{month};
+  # say "MEntry store. filed sort_month value: ".$self->{sort_month};
+  # say "MEntry store. filed teams_str value: ".$self->{teams_str};
+  # say "MEntry store. filed people_str value: ".$self->{people_str};
+  # say "MEntry store. filed tags_str value: ".$self->{tags_str};
+  # say "MEntry store. filed creation_time value: ".$self->{creation_time};
+  # say "MEntry store. filed modified_time value: ".$self->{modified_time};
+  # say "MEntry store. filed need_html_regen value: ".$self->{need_html_regen};
+
+  my $qry = "
+    INSERT INTO Entry(
+    entry_type,
+    bibtex_key,
+    bibtex_type,
+    bib,
+    html,
+    html_bib,
+    abstract,
+    title,
+    hidden,
+    year,
+    month,
+    sort_month,
+    teams_str,
+    people_str,
+    tags_str,
+    creation_time,
+    modified_time,
+    need_html_regen
+    ) 
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,?);";
+    my $sth = $dbh->prepare( $qry );
+    $result = $sth->execute(
+            $self->{entry_type},
+            $self->{bibtex_key},
+            $self->{bibtex_type},
+            $self->{bib},
+            $self->{html},
+            $self->{html_bib},
+            $self->{abstract},
+            $self->{title},
+            $self->{hidden},
+            $self->{year},
+            $self->{month},
+            $self->{sort_month},
+            $self->{teams_str},
+            $self->{people_str},
+            $self->{tags_str},
+            # $self->{creation_time},
+            # $self->{modified_time},
+            $self->{need_html_regen},
+            );
+  my $inserted_id = $dbh->last_insert_id('', '', 'Entry', '');
+  $self->{id} = $inserted_id;
+  $sth->finish();
+  return $inserted_id or $result;
+}
+####################################################################################
+sub save {
+  my $self = shift;
+  my $dbh = shift;
+
+  my $result = "";
 
 
-
-# sub new
-# {
-#     my ($class, $args) = @_;
-#     my $self = {id    => $args->{id}+0,
-#         entry_type  => $args->{entry_type} || 'paper',
-#         bibtex_key  => $args->{bibtex_key},
-#         bibtex_type  => $args->{bibtex_type},
-#         hidden  => $args->{hidden} || 0,
-#         bib  => $args->{bib},
-#         html => $args->{html} || "no HTML",
-#         mtime  => $args->{mtime} || 0,
-#         ctime  => $args->{ctime} || 0,
-#         year  => $args->{year} || 0,
-#         month  => $args->{month} || 0,
-#         sort_month  => $args->{sort_month} || 0
-#     };
-#     return bless $self, $class;
-# }
-# ########################################################################################################################
-# sub initFromDB{
-#     my $self = shift;
-#     my $dbh = shift;
-
-#     my $qry = "SELECT DISTINCT id, hidden, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
-#                FROM Entry
-#                WHERE id = ?";
-
-#     my $sth = $dbh->prepare( $qry );  
-#     $sth->execute($self->{id});  
-
-  
-#     my $row = $sth->fetchrow_hashref();
-#     $self->{bibtex_key} = $row->{bibtex_key};
-#     $self->{year} = $row->{year};
-#     $self->{month} = $row->{month} || 0;
-#     $self->{hidden}  = $row->{hidden} || 0;
-#     $self->{sort_month} = $row->{sort_month} || 0;
-#     $self->{bibtex_type} = $row->{bibtex_type} || "";
-#     $self->{entry_type} = $row->{entry_type} || "paper";
-#     $self->{bib} = $row->{bib} || "";
-#     $self->{html} = $row->{html} || "nohtml";
-#     $self->{ctime} = $row->{creation_time} || 0;
-#     $self->{mtime} = $row->{modified_time} || 0;
+  if(!defined $self->{id}){
+    return $self->store($dbh);
+  }
+  else{
+    return $self->update($dbh);
+  }
+}
+####################################################################################
+sub delete {
+  my $self = shift;
+  my $dbh = shift;
 
 
+  my $qry = "DELETE FROM Entry WHERE id=?;";
+  my $sth = $dbh->prepare( $qry );
+  my $result = $sth->execute($self->{id});
 
-# }
-# ########################################################################################################################
-# sub getByBibtexKey{
-#     my $self = shift;
-#     my $dbh = shift;
-#     my $bibtex_key = shift;
+  return $result;
+}
+####################################################################################
+sub populate_from_bib {
+  my $self = shift;
 
-#     my $qry = "SELECT DISTINCT id, bibtex_key
-#                FROM Entry
-#                WHERE bibtex_key = ?";
+  my $this_bib = $self->{bib};
 
-#     my $sth = $dbh->prepare( $qry );  
-#     $sth->execute($bibtex_key);  
+  if(defined $this_bib and $this_bib ne ''){
+    my $bibtex_entry = new Text::BibTeX::Entry();
+    $bibtex_entry->parse_s($this_bib);
 
-  
-#     my $row = $sth->fetchrow_hashref();
-#     my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id}});
-#     $obj->initFromDB($dbh);
+    $self->{bibtex_key} = $bibtex_entry->key;
+    $self->{year} = $bibtex_entry->get('year');
+    $self->{title} = $bibtex_entry->get('title') || '';
+    $self->{abstract} = $bibtex_entry->get('abstract') || undef;
+    $self->{bibtex_type} = $bibtex_entry->type;
+    return 1;
+  }
+  return 0;
+};  
+####################################################################################
+sub bibtex_has {
+    # returns 1 if bibtex of this entry has filed
+    my $self = shift;
+    my $bibtex_field = shift;
+    my $this_bib = $self->{bib};
 
-#     return $obj;
+    my $bibtex_entry = new Text::BibTeX::Entry();
+    $bibtex_entry->parse_s($this_bib);
+    return $bibtex_entry->exists($bibtex_field);
+};
+####################################################################################
+sub get_bibtex_field_value {
+    # returns 1 if bibtex of this entry has filed
+    my $self = shift;
+    my $bibtex_field = shift;
+    my $this_bib = $self->{bib};
 
-# }
-# ########################################################################################################################
-# sub isHidden{
-#     my $self = shift;
-#     # say "id $self->{id} isHidden $self->{hidden}";
-#     return $self->{hidden};
-# }
-# ########################################################################################################################
-# sub do_toggle_hide{
-#     say "CALL: EntryObj: do_toggle_hide";
-#     my $self = shift;
-#     my $dbh = shift;
+    if($self->bibtex_has($bibtex_field)){
+        my $bibtex_entry = new Text::BibTeX::Entry();
+        $bibtex_entry->parse_s($this_bib);
+        return $bibtex_entry->get($bibtex_field);
+    }
+    return undef;
+};
+####################################################################################
+sub fix_month {
+    # returns 1 if has fixed an entry
+    my $self = shift;
+    # say "call Mentry->fix_month";
 
-#     $self->initFromDB($dbh);
+    my $this_bib = $self->{bib};
+    # say "call Mentry->fix_month: input bib: $this_bib";
+
+    my $bibtex_entry = new Text::BibTeX::Entry();
+    $bibtex_entry->parse_s($self->{bib});
+
+    my $num_fixes = 0;
+
+    if($self->bibtex_has('month')){
+        my $month_str = $bibtex_entry->get('month');
+        my $month_numeric = BibSpace::Controller::Core::get_month_numeric($month_str);
+
+        # say "call Mentry->fix_month: changing $month_str to $month_numeric";
+
+        $self->{month} = $month_numeric;
+        $self->{sort_month} = $month_numeric;
+        $num_fixes = 1;
+    }
+    return $num_fixes;
+}
+####################################################################################
+sub postprocess_updated {
+    my $self = shift;
+    my $dbh = shift;
+
+    say "@@@@@@@@@ CALL MEntry postprocess_updated";
+
+    # TODO: after_edit_process_tags($dbh, $entry);
+    $self->process_tags($dbh);
+    my $populated = $self->populate_from_bib();
     
-#     # say "toggling hide of id $self->{id}";
-#     my $h = $self->isHidden();
-#     # say "h $h";
 
-#     if($h == 1){
-#         # say "unhiding (h $h)";
-#         $self->unhide($dbh);
-#     }
-#     else{
-#         # say "hiding (h $h)";
-#         $self->hide($dbh);   
-#     }
-# }
-# ########################################################################################################################
-# sub hide{
-#     my $self = shift;
-#     my $dbh = shift;
+    $self->process_authors($dbh);
+    $self->fix_month($dbh);
+    my ($html, $htmlbib) = $self->generate_html();
 
-#     # say "hiding id $self->{id}";
-
-#     my $qry = "UPDATE Entry SET hidden=1 WHERE id = ?";
-#     my $sth = $dbh->prepare( $qry );  
-#     $sth->execute($self->{id});     
-#     $self->{hidden} = 1;
-# }
-# ########################################################################################################################
-# sub unhide{
-#     my $self = shift;
-#     my $dbh = shift;
-
-#     # say "unhiding id $self->{id}";
-
-#     my $qry = "UPDATE Entry SET hidden=0 WHERE id = ?";
-#     my $sth = $dbh->prepare( $qry );  
-#     $sth->execute($self->{id});     
-#     $self->{hidden} = 0;
-# }
-# ########################################################################################################################
-# sub isTalk{
-#     my $self = shift;
-#     if( $self->{entry_type} eq 'talk'){
-#         return 1;
-#     }
-#     return 0;
-# }
-# ########################################################################################################################
-# sub isTalkBasedOnDB{
-#     my $self = shift;
-#     my $dbh = shift;
-
-#     my $qry = "SELECT entry_type FROM Entry WHERE id = ?";
-#     my $sth = $dbh->prepare( $qry );  
-#     $sth->execute($self->{id});  
-
-#     my $row = $sth->fetchrow_hashref();
-#     if( $row->{entry_type} eq 'talk'){
-#         return 1;
-#     }
-#     return 0;
-# }
-# ########################################################################################################################
-# sub isTalkBasedOnTag{
-#     my $self = shift;
-#     my $dbh = shift;
-#     return $self->hasTag($dbh, "Talks");
-# }
-# ########################################################################################################################
-# sub makeTalk{
-#     my $self = shift;
-#     my $dbh = shift;
-
-#     my $qry = "UPDATE Entry SET entry_type='talk' WHERE id = ?";
-#     my $sth = $dbh->prepare( $qry );  
-#     $sth->execute($self->{id});     
-# }
-# ########################################################################################################################
-# sub makePaper{
-#     my $self = shift;
-#     my $dbh = shift;
-
-#     my $qry = "UPDATE Entry SET entry_type='paper' WHERE id = ?";
-#     my $sth = $dbh->prepare( $qry );  
-#     $sth->execute($self->{id});     
-# }
-# ########################################################################################################################
-# sub fixEntryTypeBasedOnTag{
-#     my $self = shift;
-#     my $dbh = shift;
-
-#     #todo: could be otpimized to minimize db calls
-
-#     if($self->isTalkBasedOnTag($dbh) and $self->isTalkBasedOnDB($dbh)){ 
-#         # say "both true: OK";
-#         return 0;
-#     }
-#     elsif($self->isTalkBasedOnTag($dbh) and $self->isTalkBasedOnDB($dbh) ==0 ){
-#         # say "tag true, DB false. Should write to DB";
-#         $self->makeTalk($dbh); 
-#         return 1;
-#     } 
-#     elsif($self->isTalkBasedOnTag($dbh)==0 and $self->isTalkBasedOnDB($dbh) ){
-#         # say "tag false, DB true. do nothing";
-#         return 0;
-#     }
-#     # say "both false. Do nothing";
-#     return 0;
-# }
-# ########################################################################################################################
-# sub setMonth{
-#     my $self = shift;
-#     my $month = shift;
-#     my $dbh = shift;
-
-#     my $qry = "UPDATE Entry SET month=? WHERE id = ?";
-#     my $sth = $dbh->prepare( $qry );  
-#     $sth->execute($month, $self->{id});     
-# }
-# ########################################################################################################################
-# sub setSortMonth{
-#     my $self = shift;
-#     my $sort_month = shift;
-#     my $dbh = shift;
-
-#     my $qry = "UPDATE Entry SET sort_month=? WHERE id = ?";
-#     my $sth = $dbh->prepare( $qry );  
-#     $sth->execute($sort_month, $self->{id});     
-# }
-# ########################################################################################################################
-# sub hasTag{
-#     my $self = shift;
-#     my $dbh = shift;
-#     my $tag_to_find = shift;
-
-#     my $tag_id = get_tag_id($dbh, $tag_to_find);
-#     if($tag_id == -1){
-#         $tag_id = $tag_to_find;
-#     }
-
-#     my $qry = "SELECT COUNT(*) FROM Entry_to_Tag WHERE entry_id = ? AND tag_id = ?";
-#     my @ary = $dbh->selectrow_array($qry, undef, $self->{id}, $tag_id);  
-#     my $key_exists = $ary[0];
-#     #my $sth = $dbh->prepare( $qry );  
-#     #$sth->execute($self->{id}, $tag_id); 
+    $self->save($dbh);
     
 
-#     return 1 if $key_exists==1;
-#     return 0;
+    my $exit_code = 1; # TODO: old code!
+    return $exit_code;
+}
+####################################################################################
+sub generate_html {
+  my $self = shift;
 
-# }
-# ########################################################################################################################
-# ########################################################################################################################
-# sub getAll{
-#     my $self = shift;
-#     my $dbh = shift;
+  $self->populate_from_bib();
+    
+  my ($html, $htmlbib) = BibSpace::Controller::Core::get_html_for_bib($self->{bib}, $self->{bibtex_key});
+  $self->{html} = $html;
+  $self->{html_bib} = $htmlbib;
 
-#     my $qry = "SELECT id, hidden, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
-#                 FROM Entry 
-#                 WHERE bibtex_key IS NOT NULL 
-#                 ORDER BY year DESC, sort_month DESC, modified_time ASC";
-#     my $sth = $dbh->prepare( $qry );  
-#     $sth->execute();  
+  return ($html, $htmlbib);
+}
+####################################################################################
+sub process_authors { #was Core::after_edit_process_authors
+  say "CALL MEntry process_authors";
+    my $self = shift;
+    my $dbh = shift;
 
-#     my @objs;
+    $self->populate_from_bib();
 
-#     while(my $row = $sth->fetchrow_hashref()) {
-#         my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id},
-#                                 bibtex_key => $row->{bibtex_key},
-#                                 year => $row->{year},
-#                                 month => $row->{month},
-#                                 hidden => $row->{hidden},
-#                                 sort_month => $row->{sort_month},
-#                                 bibtex_type => $row->{bibtex_type},
-#                                 entry_type => $row->{entry_type},
-#                                 bib => $row->{bib},
-#                                 html => $row->{html},
-#                                 ctime => $row->{creation_time},
-#                                 mtime => $row->{modified_time},
-#                             });
-#         push @objs, $obj;
-#     }
-#     return @objs;
-# }
-# ########################################################################################################################
-# ########################################################################################################################
-# sub getFromArray{
-#     my $self = shift;
-#     my $dbh = shift;
-#     my $arr_ref = shift; 
-#     my @arr = @{$arr_ref}; 
+    my $bibtex_entry = new Text::BibTeX::Entry();
+    $bibtex_entry->parse_s($self->{bib});
+  
+    my $entry_key = $self->{bibtex_key};
 
-#     my $sort = shift;
-#     $sort = 1 unless defined $sort;
+    my $num_authors_created = 0;
 
-#     my $placeholders = "";
-#     my $arr_size = scalar @arr;
-#     # say "arr size: $arr_size";
-#     # say "arr ".join(" ", @arr);
+    my $sth = undef;
+    $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
+    $sth->execute($self->{id}) if defined $self->{id} and $self->{id} > 0; 
 
-#     if($arr_size >= 1){
-#         $placeholders = "?";
-#     }
+    my @names;
 
-#     for (2..$arr_size){
-#         $placeholders .= ",?";
-#     }
+    if($bibtex_entry->exists('author')){
+      my @authors = $bibtex_entry->split('author');
+      my (@n) = $bibtex_entry->names('author');
+      @names = @n;
+    }
+    elsif($bibtex_entry->exists('editor')){
+      my @authors = $bibtex_entry->split('editor');
+      my (@n) = $bibtex_entry->names('editor');
+      @names = @n;
+    }
 
-#     my @objs;
+    # authors need to be added to have their ids!!
+    for my $name (@names){
+      my $uid = BibSpace::Controller::Core::create_user_id($name);
 
-#     if (scalar @arr == 0){ # if the array is empty, return also empty array of objects. The SQL query below doesnt work for empty arrays
-#         return @objs;
-#     }
+      my $aid = BibSpace::Controller::Core::get_author_id_for_uid($dbh, $uid);
 
-#     if(defined $sort and $sort==1){
-#         my $qry = "SELECT id, hidden, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
-#                 FROM Entry 
-#                 WHERE bibtex_key IS NOT NULL 
-#                 AND id IN (".$placeholders.")";
-#         if (defined $sort and $sort==1){
-#             $qry .= "ORDER BY year DESC, sort_month DESC, modified_time ASC";
-#         }
-#         my $sth = $dbh->prepare_cached( $qry );  
-#         $sth->execute(@arr);  
-#         while(my $row = $sth->fetchrow_hashref()) {
-#             my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id},
-#                                 bibtex_key => $row->{bibtex_key},
-#                                 year => $row->{year},
-#                                 month => $row->{month},
-#                                 hidden => $row->{hidden},
-#                                 sort_month => $row->{sort_month},
-#                                 bibtex_type => $row->{bibtex_type},
-#                                 entry_type => $row->{entry_type},
-#                                 bib => $row->{bib},
-#                                 html => $row->{html},
-#                                 ctime => $row->{creation_time},
-#                                 mtime => $row->{modified_time},
-#             });
-#             push @objs, $obj;
-#         }
-#     }
-#     else{ # TODO: pobieranie po jednym argumencie i dodawanie do tablicy objs krok po kroku aby utrzymac order!
+      # say "\t pre! entry $eid -> uid $uid, aid $aid";
+
+      if($aid eq '-1'){ # there is no such author
+        $num_authors_created = $num_authors_created + 1;
+
+        my $sth0 = $dbh->prepare('INSERT INTO Author(uid, master) VALUES(?, ?)');
+        $sth0->execute($uid, $uid) if $aid eq '-1';
+      }
+      
+
+      $aid = BibSpace::Controller::Core::get_author_id_for_uid($dbh, $uid);
+      my $mid = BibSpace::Controller::Core::get_master_id_for_author_id($dbh, $aid);
+
+      # if author was not in the uid2muid config, then mid = aid
+      if($mid eq -1){
+         $mid = $aid;
+      }
+      
+      # say "\t pre2! entry $eid -> uid $uid, aid $aid, mid $mid";
+
+      my $sth2 = $dbh->prepare('UPDATE Author SET master_id=? WHERE id=?');
+      $sth2->execute($mid, $aid);
 
 
-#         my $qry = "SELECT id, hidden, bibtex_key, entry_type, bibtex_type, bib, html, modified_time, creation_time, month, sort_month
-#                 FROM Entry 
-#                 WHERE bibtex_key IS NOT NULL 
-#                 AND id IN (".$placeholders.") ORDER BY CASE id ";
+    }
 
-#         my $i = 1;
-#         for my $eid (@arr){
-#             $qry .= "WHEN $eid THEN $i ";
-#             $i=$i+1;
-#         }
-#         $qry .= "END";
-        
-#         my $sth = $dbh->prepare_cached($qry);
-#         $sth->execute(@arr); 
+    for my $name (@names){
+      my $uid = BibSpace::Controller::Core::create_user_id($name);
+      my $aid = BibSpace::Controller::Core::get_author_id_for_uid($dbh, $uid);
+      my $mid = BibSpace::Controller::Core::get_master_id_for_author_id($dbh, $aid);       #there tables are not filled yet!!
 
-#         while(my $row = $sth->fetchrow_hashref()) {
-#             my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id},
-#                                 bibtex_key => $row->{bibtex_key},
-#                                 year => $row->{year},
-#                                 month => $row->{month},
-#                                 hidden => $row->{hidden},
-#                                 sort_month => $row->{sort_month},
-#                                 bibtex_type => $row->{bibtex_type},
-#                                 entry_type => $row->{entry_type},
-#                                 bib => $row->{bib},
-#                                 html => $row->{html},
-#                                 ctime => $row->{creation_time},
-#                                 mtime => $row->{modified_time},
-#             });
-#             push @objs, $obj;
-#         }
+      if(defined $mid and $mid != -1){ #added 5.05.2015 - may skip some authors!
+        my $sth3 = $dbh->prepare('INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
+        $sth3->execute($mid, $self->{id});
+      }
+    }
+    return $num_authors_created;
+}
+####################################################################################
+sub process_tags { #was Core::after_edit_process_tags
+  say "CALL MEntry process_tags";
+  my $self = shift;
+  my $dbh = shift;
 
-#     }
-#     return @objs;
-# }
-# ########################################################################################################################
-# ########################################################################################################################
+  $self->populate_from_bib();
+
+  my $bibtex_entry = new Text::BibTeX::Entry();
+  $bibtex_entry->parse_s($self->{bib});
+
+  my $entry_key = $self->{bibtex_key};
+  my $eid = BibSpace::Functions::FPublications::Fget_entry_id_for_bibtex_key($dbh, $entry_key);
+  my $num_tags_added = 0;
+
+  if($bibtex_entry->exists('tags')){
+    my $tags_str = $bibtex_entry->get('tags');
+    $tags_str =~ s/\,/;/g if defined $tags_str;
+    $tags_str =~ s/^\s+|\s+$//g if defined $tags_str;
 
 
-# sub getByFilter{
-#     my $self = shift;
-#     my $dbh = shift;
+    my @tags = ();
+    @tags = split(';', $tags_str) if defined $tags_str;
 
-#     my $mid = shift;
-#     my $year = shift;
-#     my $bibtex_type = shift;
-#     my $entry_type = shift;
-#     my $tagid = shift;
-#     my $teamid = shift;
-#     my $visible = shift || 0;
-#     my $permalink = shift;
-#     my $hidden = shift;
+    for my $tag (@tags){
+       $tag =~ s/^\s+|\s+$//g;
+       $tag =~ s/\ /_/g if defined $tag;
 
-#     # say "   mid $mid
-#     #         year $year
-#     #         bibtex_type $bibtex_type
-#     #         entry_type $entry_type
-#     #         tagid $tagid
-#     #         teamid $teamid
-#     #         visible $visible
-#     #         permalink $permalink
-#     #         hidden $hidden
-#     # ";
+       my $tt_obj = BibSpace::Functions::TagTypeObj->getByName($dbh,"Imported");
+       my $tt_id = $tt_obj->{id};
 
-#     my @params;
-
-#     my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.hidden, Entry.id, bib, html, Entry.bibtex_type, Entry.entry_type, Entry.year, Entry.month, Entry.sort_month, modified_time, creation_time
-#                 FROM Entry
-#                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
-#                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
-#                 LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
-#                 LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
-#                 LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.bibtex_type 
-#                 LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
-#                 LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id 
-#                 WHERE Entry.bibtex_key IS NOT NULL ";
-#     if(defined $hidden){
-#         push @params, $hidden;
-#         $qry .= "AND Entry.hidden=? ";
-#     }
-#     if(defined $visible and $visible eq '1'){
-#         $qry .= "AND Author.display=1 ";
-#     }
-#     if(defined $mid){
-#         push @params, $mid;
-#         $qry .= "AND Entry_to_Author.author_id=? ";
-#     }
-#     if(defined $year){
-#         push @params, $year;
-#         $qry .= "AND Entry.year=? ";
-#     }
-#     if(defined $bibtex_type){
-#         push @params, $bibtex_type;
-#         $qry .= "AND OurType_to_Type.our_type=? ";
-#     }
-#     if(defined $entry_type){
-#         push @params, $entry_type;
-#         $qry .= "AND Entry.entry_type=? ";
-#     }
-#     if(defined $teamid){
-#         push @params, $teamid;
-#         push @params, $teamid;
-#         # push @params, $teamid;
-#         # $qry .= "AND Exceptions_Entry_to_Team.team_id=?  ";
-#         $qry .= "AND ((Exceptions_Entry_to_Team.team_id=? ) OR (Author_to_Team.team_id=? AND start <= Entry.year  AND (stop >= Entry.year OR stop = 0))) ";
-#     }
-#     if(defined $tagid){
-#         push @params, $tagid;
-#         $qry .= "AND Entry_to_Tag.tag_id LIKE ?";
-#     }
-#     if(defined $permalink){
-#         push @params, $permalink;
-#         $qry .= "AND Tag.permalink LIKE ?";
-#     } 
-#     $qry .= "ORDER BY Entry.year DESC, Entry.sort_month DESC, Entry.creation_time DESC, Entry.modified_time DESC, Entry.bibtex_key ASC";
-
-#     # print $qry."\n";
-
-#     my $sth = $dbh->prepare_cached( $qry );  
-#     $sth->execute(@params); 
-
-#     my @objs;
-
-#     while(my $row = $sth->fetchrow_hashref()) {
-#         my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id},
-#                             bibtex_key => $row->{bibtex_key},
-#                             year => $row->{year},
-#                             month => $row->{month},
-#                             hidden => $row->{hidden},
-#                             sort_month => $row->{sort_month},
-#                             bibtex_type => $row->{bibtex_type},
-#                             entry_type => $row->{entry_type},
-#                             bib => $row->{bib},
-#                             html => $row->{html},
-#                             ctime => $row->{creation_time},
-#                             mtime => $row->{modified_time},
-#         });
-#         push @objs, $obj;
-#     }
-
-#     return @objs;
-# }
-# ########################################################################################################################
-# ########################################################################################################################
+       if(!defined $tt_obj->{id}){
+          my $sth4 = $dbh->prepare( "INSERT IGNORE INTO TagType(name, comment) VALUES(?,?)" );
+          $sth4->execute("Imported", "Tags Imported from Bibtex");
+          $tt_obj = BibSpace::Functions::TagTypeObj->getByName($dbh, "Imported");
+          $tt_id = $tt_obj->{id};
+       }
 
 
-# sub getByFilterNoTalks{
-#     my $self = shift;
-#     my $dbh = shift;
 
-#     my $mid = shift;
-#     my $year = shift;
-#     my $type = shift;
-#     my $tagid = shift;
-#     my $teamid = shift;
-#     my $visible = shift || 0;
-#     my $permalink = shift;
-#     my $hidden = shift;
+       # $dbh->do("REPLACE INTO Tags VALUES($tag)");
+       my $sth3 = $dbh->prepare( "INSERT IGNORE INTO Tag(name, type) VALUES(?,?)" );
+       $sth3->execute($tag, $tt_obj->{id});
+       $num_tags_added = $num_tags_added + $sth3->rows;
+       my $tagid2 = BibSpace::Controller::Core::get_tag_id($dbh, $tag);
 
-#     my @params;
-#     # AND Tag.name <> 'Talks' 
-#     my $qry = "SELECT DISTINCT Entry.bibtex_key, Entry.hidden, Entry.id, bib, html, Entry.bibtex_type, Entry.entry_type, Entry.year, Entry.month, Entry.sort_month, modified_time, creation_time
-#                 FROM Entry
-#                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
-#                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
-#                 LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
-#                 LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
-#                 LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.bibtex_type 
-#                 LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
-#                 LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id 
-#                 WHERE Entry.bibtex_key IS NOT NULL 
-#                 AND Entry.entry_type == 'paper' ";
-#     if(defined $hidden){
-#         push @params, $hidden;
-#         $qry .= "AND Entry.hidden=? ";
-#     }
-#     if(defined $visible and $visible eq '1'){
-#         $qry .= "AND Author.display=1 ";
-#     }
-#     if(defined $mid){
-#         push @params, $mid;
-#         $qry .= "AND Entry_to_Author.author_id=? ";
-#     }
-#     if(defined $year){
-#         push @params, $year;
-#         $qry .= "AND Entry.year=? ";
-#     }
-#     if(defined $type){
-#         push @params, $type;
-#         $qry .= "AND OurType_to_Type.our_type=? ";
-#     }
-#     if(defined $teamid){
-#         push @params, $teamid;
-#         push @params, $teamid;
-#         # push @params, $teamid;
-#         # $qry .= "AND Exceptions_Entry_to_Team.team_id=?  ";
-#         $qry .= "AND ((Exceptions_Entry_to_Team.team_id=? ) OR (Author_to_Team.team_id=? AND start <= Entry.year  AND (stop >= Entry.year OR stop = 0))) ";
-#     }
-#     if(defined $tagid){
-#         push @params, $tagid;
-#         $qry .= "AND Entry_to_Tag.tag_id LIKE ?";
-#     }
-#     if(defined $permalink){
-#         push @params, $permalink;
-#         $qry .= "AND Tag.permalink LIKE ?";
-#     } 
-#     $qry .= "ORDER BY Entry.year DESC, Entry.sort_month DESC, Entry.creation_time DESC, Entry.modified_time DESC, Entry.bibtex_key ASC";
-
-#     # print $qry."\n";
-
-#     my $sth = $dbh->prepare_cached( $qry );  
-#     $sth->execute(@params); 
-
-#     my @objs;
-
-#     while(my $row = $sth->fetchrow_hashref()) {
-#         my $obj = BibSpace::Functions::EntryObj->new({id => $row->{id},
-#                             bibtex_key => $row->{bibtex_key},
-#                             year => $row->{year},
-#                             month => $row->{month},
-#                             hidden => $row->{hidden},
-#                             sort_month => $row->{sort_month},
-#                             bibtex_type => $row->{bibtex_type},
-#                             entry_type => $row->{entry_type},
-#                             bib => $row->{bib},
-#                             html => $row->{html},
-#                             ctime => $row->{creation_time},
-#                             mtime => $row->{modified_time},
-#         });
-#         push @objs, $obj;
-#     }
-
-#     return @objs;
-# }
-
-########################################################################################################################
+       # $dbh->do("INSERT INTO Entry_to_Tag(entry, tag) VALUES($entry_key, $tag)");
+       $sth3 = $dbh->prepare( "INSERT IGNORE INTO Entry_to_Tag(entry_id, tag_id) VALUES(?, ?)" );
+       $sth3->execute($eid, $tagid2);
+    }
+  }
+  return $num_tags_added;
+};
 
 1;

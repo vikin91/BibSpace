@@ -18,7 +18,7 @@ use warnings;
 # for latex decode
 use TeX::Encode;
 use Encode;
-
+use BibSpace::Functions::FPublications;
 
 use Exporter;
 our @ISA= qw( Exporter );
@@ -41,7 +41,6 @@ our @EXPORT = qw(
     add_team_for_author
     remove_team_for_author
     uniq
-    get_entry_id
     get_entry_key
     get_entry_bibtex_type
     get_entry_title
@@ -422,7 +421,7 @@ sub assign_entry_to_existing_authors_no_add{
 
     my $entry_key = $entry->key;
     my $key = $entry->key;
-    my $eid = get_entry_id($dbh, $entry_key);
+    my $eid = Fget_entry_id_for_bibtex_key($dbh, $entry_key);
 
     
 
@@ -477,7 +476,7 @@ sub after_edit_process_authors{
 
     my $entry_key = $entry->key;
     my $key = $entry->key;
-    my $eid = get_entry_id($dbh, $entry_key);
+    my $eid = Fget_entry_id_for_bibtex_key($dbh, $entry_key);
 
     my $num_authors_created = 0;
 
@@ -955,20 +954,7 @@ sub get_entry_title{
 
     return $title;
 }
-##########################################################################
-sub get_entry_id{
-   my $dbh = shift;
-   my $key = shift;
 
-   my $sth = $dbh->prepare( "SELECT id FROM Entry WHERE bibtex_key=?" );     
-   $sth->execute($key);
-
-   my $row = $sth->fetchrow_hashref();
-   my $id = $row->{id};
-   return -1 unless defined $id;
-   print "ID = -1 for key $key\n" unless defined $id;
-   return $id;
-}
 ##########################################################################
 sub get_master_id_for_uid{
    my $dbh = shift;
@@ -1507,7 +1493,7 @@ sub generate_html_for_key{
    my $dbh = shift;
    my $key = shift;
 
-   my $eid = get_entry_id($dbh, $key);
+   my $eid = Fget_entry_id_for_bibtex_key($dbh, $key);
    return generate_html_for_id($dbh, $eid);
 };
 
