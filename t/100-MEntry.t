@@ -30,6 +30,35 @@ my $en = MEntry->new();
 my @entries = $en->all($dbh);
 my $num_entries = scalar(@entries);
 
+
+#### adding some fixtures. TODO: this needs to be done automatically at the beginning of the test suite
+my $en3 = MEntry->new();
+$en3->{bib} = '@mastersthesis{aaa1,
+  address = {World},
+  author = {James Bond},
+  month = {August},
+  school = {University of Bond},
+  title = {{Selected aspects of some methods}},
+  year = {1999},
+}';
+$en3->populate_from_bib($dbh);
+$en3->save($dbh);
+
+my $en4 = MEntry->new();
+$en4->{bib} = '@mastersthesis{aaa2,
+  address = {World},
+  author = {James Bond},
+  month = {March},
+  school = {University of Bond},
+  title = {{Selected aspects of some methods}},
+  year = {1999},
+}';
+$en4->populate_from_bib($dbh);
+$en4->save($dbh);
+
+@entries = $en->all($dbh);
+$num_entries = scalar(@entries);
+
 ok(defined $en, "Mentry initialized correctly");
 ok($num_entries > 0, "Got more than 0 entries");
 
