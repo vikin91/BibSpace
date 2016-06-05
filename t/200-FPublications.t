@@ -26,6 +26,32 @@ my $dbh = $t_logged_in->app->db;
 use BibSpace::Model::MEntry;
 use BibSpace::Functions::FPublications;
 
+#### adding some fixtures. TODO: this needs to be done automatically at the beginning of the test suite
+my $en3 = MEntry->new();
+$en3->{bib} = '@mastersthesis{zzzzz1,
+  address = {World},
+  author = {James Bond},
+  month = {August},
+  school = {University of Bond},
+  title = {{Selected aspects of some methods}},
+  year = {1999},
+}';
+$en3->populate_from_bib($dbh);
+$en3->save($dbh);
+
+my $en4 = MEntry->new();
+$en4->{bib} = '@mastersthesis{zzzzz2,
+  address = {World},
+  author = {James Bond},
+  month = {March},
+  school = {University of Bond},
+  title = {{Selected aspects of some methods}},
+  year = {1999},
+}';
+$en4->populate_from_bib($dbh);
+$en4->save($dbh);
+
+
 my $en = MEntry->new();
 my @entries = $en->all($dbh);
 my $num_entries = scalar(@entries);

@@ -304,7 +304,7 @@ sub store {
   my $inserted_id = $dbh->last_insert_id('', '', 'Entry', '');
   $self->{id} = $inserted_id;
   $sth->finish();
-  return $inserted_id or $result;
+  return $inserted_id; #or $result;
 }
 ####################################################################################
 sub save {
