@@ -12,10 +12,10 @@
 </head>
 
 <body>
-    <p>This list is intended fot Google Scholar crawler.</p>
+    <p>This list is intended for the Google Scholar crawler.</p>
     <ul>
     % foreach my $id (@ids){
-      <li>Paper with id <%=$id%>: <a href="<%= url_for('/read/publications/meta/')%><%=$id%>"> <%= helper_get_entry_title($id)%> </a></li>
+      <li>Paper with id <%=$id%>: <a href="<%= url_for('metalist_entry', id=>$id)%>"> <%= helper_get_entry_title($id)%> </a></li>
     % }
     </ul>
 

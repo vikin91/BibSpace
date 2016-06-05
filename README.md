@@ -25,7 +25,11 @@ Visit [hex64.com](http://www.hex64.com/) and click backend/frontend demo to have
 - [] Describe HTML embedding
 
 ### Developer TODO ###
-- [] Describe nginx and apache2 configuration
-- [] Describe cron setup
 - [] ``perlcritic -4 `find ./lib -iname *.pm```
 - [] Upload local list of known bugs
+
+### Redesign TODO ###
+- [] MVC-ize code. No DB code in the controller
+- [] RESTfull-ize routes
+- [] Complete tests for POST, PUT, and DELETE routes
+

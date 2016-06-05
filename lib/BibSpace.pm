@@ -53,7 +53,7 @@ has db => sub {
                        {'RaiseError' => 1});
   $dbh->{mysql_auto_reconnect} = 1;
   return $dbh;
-}; 
+};
 
 has version => sub {
   my $self = shift;
@@ -89,11 +89,11 @@ sub startup {
       if($proxy_prefix ne ""){
         # we remove the leading slash
         $proxy_prefix =~ s|^/||;
-        push @{$c->req->url->base->path->trailing_slash(1)}, $proxy_prefix;  
+        push @{$c->req->url->base->path->trailing_slash(1)}, $proxy_prefix;
       }
     });
 
-    
+
 
     say "Creating directories.";
 
@@ -123,19 +123,19 @@ sub startup {
 
 
     $self->helper(get_referrer => sub {
-        my $s = shift; 
+        my $s = shift;
         return $s->req->headers->referrer || $s->url_for('/');
     });
 
 
     $self->helper(nohtml => sub {
-        my $s = shift;  
+        my $s = shift;
         return nohtml(shift, shift);
 
     });
 
     $self->helper(is_manager => sub {
-        my $self = shift; 
+        my $self = shift;
         return 1 if $self->app->is_demo;
         my $usr = $self->session('user');
         my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
@@ -144,7 +144,7 @@ sub startup {
     });
 
     $self->helper(is_admin => sub {
-        my $self = shift; 
+        my $self = shift;
         return 1 if $self->app->is_demo;
         my $usr = $self->session('user');
         my $rank = $self->users->get_rank($usr, $self->app->db) || 0;
@@ -153,7 +153,7 @@ sub startup {
     });
 
 
-    $self->helper(write_log => sub {        
+    $self->helper(write_log => sub {
         my $c = shift;
         my $msg = shift;
         my $usr = $c->session('user') || "not_logged_in";
@@ -168,14 +168,14 @@ sub startup {
             if(open(my $fh, '>>', $filename)){
                 print $fh $msg_to_log;
                 close $fh;
-            }    
+            }
         }
         catch{
-            warn "Opening log failed! Message to log: $msg_to_log . Reason: $_ "; 
+            warn "Opening log failed! Message to log: $msg_to_log . Reason: $_ ";
         };
     });
 
-  
+        
 
 
   my $anyone = $self->routes;
@@ -210,7 +210,7 @@ sub startup {
   my $superadmin = $logged_user->under->to('login#under_check_is_admin');
 
 
-    
+
 
   ################ SETTINGS ################
   $logged_user->get('/profile')->to('login#profile');
@@ -221,16 +221,16 @@ sub startup {
   $superadmin->get('/profile/make_user/:id')->to('login#make_user')->name('make_user');
   $superadmin->get('/profile/make_manager/:id')->to('login#make_manager')->name('make_manager');
   $superadmin->get('/profile/make_admin/:id')->to('login#make_admin')->name('make_admin');
-  
+
   $manager->get('/log')->to('display#show_log');
   $superadmin->get('/settings/fix_entry_types')->to('publications#fixEntryType');
   $superadmin->get('/settings/fix_months')->to('publications#fixMonths');
-  
-  
+
+
   $manager->get('/settings/clean_all')->to('publications#clean_ugly_bibtex');
   $manager->get('/settings/regenerate_all_force')->to('publications#regenerate_html_for_all_force');
   $logged_user->get('/settings/regenerate_all')->to('publications#regenerate_html_for_all');
-    
+
   # RESTIfied begin
   # GET '/backups'
   $logged_user->get('/backups')->to('backup#index')->name('backup_index');
@@ -248,7 +248,7 @@ sub startup {
   # RESTIfied end
 
 
-  ################ TYPES ################    
+  ################ TYPES ################
   $logged_user->get('/types')->to('types#all_our');
   $logged_user->get('/types/add')->to('types#add_type');
   $logged_user->post('/types/add')->to('types#post_add_type');
@@ -257,7 +257,7 @@ sub startup {
 
   $logged_user->post('/types/store_description')->to('types#post_store_description');
   $logged_user->get('/types/toggle/:type')->to('types#toggle_landing');
-  
+
   $logged_user->get('/types/:our_type/map/:bibtex_type')->to('types#map_types');
   $logged_user->get('/types/:our_type/unmap/:bibtex_type')->to('types#unmap_types');
 
@@ -279,9 +279,9 @@ sub startup {
 
   $logged_user->get('/authors/reassign')->to('authors#reassign_authors_to_entries');
   $logged_user->get('/authors/reassign_and_create')->to('authors#reassign_authors_to_entries_and_create_authors');
-  
-  $logged_user->get('/authors/toggle_visibility/:id')->to('authors#toggle_visibility');  
-  $logged_user->get('/authors/toggle_visibility')->to('authors#toggle_visibility');  
+
+  $logged_user->get('/authors/toggle_visibility/:id')->to('authors#toggle_visibility');
+  $logged_user->get('/authors/toggle_visibility')->to('authors#toggle_visibility');
 
   ################ SEARCH ################
   # what is this?? # TODO: test it!
@@ -304,7 +304,7 @@ sub startup {
   $logged_user->get('/tags/delete/:id_to_delete')->to('tags#delete');
   $logged_user->get('/tags/edit/:id')->to('tags#edit');
 
-  
+
 
   ################ TEAMS ################
   $logged_user->get('/teams')->to('teams#show');
@@ -321,50 +321,46 @@ sub startup {
   ################ EDITING PUBLICATIONS ################
 
   # EXPERIMENTAL
-  $logged_user->get('/publications-set')->to('publications#all_defined_by_set'); 
+  $logged_user->get('/publications-set')->to('publications#all_defined_by_set');
   # description of this function is included with the code
   # $anyone->get('/publications/special/:id')->to('publications#special_map_pdf_to_local_file'); # use with extreme caution!
-  $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq'); 
+  $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq');
   $superadmin->get('/publications/fix_urls')->to('publications#replace_urls_to_file_serving_function')->name('fix_attachment_urls');
   # EXPERIMENTAL END
 
   $logged_user->get('/publications')->to('publications#all'); # logged_user icons!
   $logged_user->get('/publications/recently_added/:num')->to('publications#all_recently_added'); # logged_user icons!
-  $logged_user->get('/publications/recently_modified/:num')->to('publications#all_recently_modified'); 
-  $logged_user->get('/publications/orphaned')->to('publications#all_without_author'); 
+  $logged_user->get('/publications/recently_modified/:num')->to('publications#all_recently_modified');
+  $logged_user->get('/publications/orphaned')->to('publications#all_without_author');
   $logged_user->get('/publications/untagged/:tagtype')->to('publications#all_without_tag', tagtype => 1);
   $logged_user->get('/publications/untagged/:author/:tagtype')->to('publications#all_without_tag_for_author', tagtype => 1);
-  
+
   $logged_user->get('/publications/candidates_to_delete')->to('publications#all_candidates_to_delete');
   $logged_user->get('/publications/missing_month')->to('publications#all_without_missing_month');
-  
-  $logged_user->get('/publications/get/:id')->to('publications#single'); 
-  #
-  $anyone->get('/publications/download/:filetype/:id')->to('publications#download')->name('download_publication'); 
-  $anyone->get('/publications/download/:filetype/(:id).pdf')->to('publications#download')->name('download_publication_pdf'); 
-  #
-  $logged_user->get('/publications/remove_attachment/:filetype/:id')->to('publications#remove_attachment')->name('publications_remove_attachment'); 
 
-  $logged_user->get('/publications/hide/:id')->to('publications#hide'); 
-  $logged_user->get('/publications/unhide/:id')->to('publications#unhide'); 
-  $logged_user->get('/publications/toggle_hide/:id')->to('publications#toggle_hide'); 
-  
-  # $anyone->get('/publications/get/:id')->to('publications#single_read'); 
-  
+  $logged_user->get('/publications/get/:id')->to('publications#single');
+  #
+  $anyone->get('/publications/download/:filetype/:id')->to('publications#download')->name('download_publication');
+  $anyone->get('/publications/download/:filetype/(:id).pdf')->to('publications#download')->name('download_publication_pdf');
+  #
+  $logged_user->get('/publications/remove_attachment/:filetype/:id')->to('publications#remove_attachment')->name('publications_remove_attachment');
 
-  $logged_user->get('/publications/add')->to('publications#get_add');
-  $logged_user->get('/publications/add_many')->to('publications#get_add_many');
+  $logged_user->get('/publications/hide/:id')->to('publications#hide');
+  $logged_user->get('/publications/unhide/:id')->to('publications#unhide');
+  $logged_user->get('/publications/toggle_hide/:id')->to('publications#toggle_hide');
+
+  # $anyone->get('/publications/get/:id')->to('publications#single_read');
+
+
+  $logged_user->get('/publications/add')->to('publications#publications_edit_get');
+  $logged_user->get('/publications/add_many')->to('publications#publications_add_many_get');
   $logged_user->post('/publications/add_many/store')->to('publications#post_add_many_store');
-  $logged_user->post('/publications/add/store')->to('publications#post_add_store');
+  $logged_user->post('/publications/add/store')->to('publications#post_add_edit_store');
 
-  # $logged_user->post('/publications/store/:id')->to('publications#post_store');
+  $logged_user->any('/publications/edit/:id')->to('publications#post_add_edit_store')->name('edit_publication');
 
   $logged_user->get('/publications/make_paper/:id')->to('publications#make_paper');
   $logged_user->get('/publications/make_talk/:id')->to('publications#make_talk');
-
-  $logged_user->get('/publications/edit/:id')->to('publications#get_edit');
-  $logged_user->post('/publications/edit/store/:id')->to('publications#post_edit_store');
-  $logged_user->get('/publications/edit/store/:id')->to('publications#get_edit');
 
   $logged_user->get('/publications/regenerate/:id')->to('publications#regenerate_html');
   $logged_user->get('/publications/delete/:id')->to('publications#delete');
@@ -372,7 +368,7 @@ sub startup {
 
   $logged_user->get('/publications/add_pdf/:id')->to('publications#add_pdf');
   $logged_user->post('/publications/add_pdf/do/:id')->to('publications#add_pdf_post');
-  
+
 
   $logged_user->get('/publications/manage_tags/:id')->to('publications#manage_tags');
   $logged_user->get('/publications/:eid/remove_tag/:tid')->to('publications#remove_tag')->name('remove_tag_from_publication');
@@ -387,8 +383,8 @@ sub startup {
   ################ OPEN ACCESS ################
 
   # contains meta info for every paper. Optimization for google scholar
-  $anyone->get('/read/publications/meta/')->to('publications#metalist');
-  $anyone->get('/read/publications/meta/:id')->to('publications#meta');
+  $anyone->get('/read/publications/meta/')->to('publications#metalist')->name("metalist_all_entries");
+  $anyone->get('/read/publications/meta/:id')->to('publications#meta')->name("metalist_entry");
 
   $anyone->get('/read/publications')->to('publications#all_read');
   $anyone->get('/r/publications')->to('publications#all_read'); #ALIAS
@@ -402,13 +398,13 @@ sub startup {
   $anyone->get('/read/publications/get/:id')->to('publications#single_read');
   $anyone->get('/r/p/get/:id')->to('publications#single_read'); #ALIAS
 
-  
+
   $anyone->get('/landing/publications')->to('publications#landing_types_obj');
   $anyone->get('/l/p')->to('publications#landing_types_obj')->name('lp'); #ALIAS
 
   $anyone->get('/landing-years/publications')->to('publications#landing_years_obj');
   $anyone->get('/ly/p')->to('publications#landing_years_obj'); #ALIAS
-  
+
 
   $anyone->get('/read/authors-for-tag/:tid/:team')->to('tags#get_authors_for_tag_read');
   $anyone->get('/r/a4t/:tid/:team')->to('tags#get_authors_for_tag_read'); #ALIAS
