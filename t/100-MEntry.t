@@ -26,10 +26,12 @@ my $dbh = $t_logged_in->app->db;
 use BibSpace::Model::MEntry;
 use BibSpace::Functions::FPublications;
 
+$dbh->do('DELETE FROM Entry;');
+
 my $en = MEntry->new();
 my @entries = $en->all($dbh);
 my $num_entries = scalar(@entries);
-
+is($num_entries, 0, "Got 0 entries");
 
 #### adding some fixtures. TODO: this needs to be done automatically at the beginning of the test suite
 my $en3 = MEntry->new();
