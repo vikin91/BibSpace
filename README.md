@@ -27,3 +27,11 @@ Visit [hex64.com](http://www.hex64.com/) and click backend/frontend demo to have
 ### Developer TODO ###
 - [] ``perlcritic -4 `find ./lib -iname *.pm```
 - [] Upload local list of known bugs
+- [] try to get rid of bibtex2html or provide an alternative
+
+### Redesign TODO ###
+- [] MVC-ize code. No DB code in the controller
+- [] RESTfull-ize routes
+- [] Complete tests for POST, PUT, and DELETE routes
+- [] Replace old objects with moose (started)
+
