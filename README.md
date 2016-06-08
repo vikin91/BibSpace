@@ -31,7 +31,7 @@ Visit [hex64.com](http://www.hex64.com/) and click backend/frontend demo to have
 
 ### Redesign TODO ###
 - [] MVC-ize code. No DB code in the controller
-- [] RESTfull-ize routes
+- [] RESTful-ize routes
 - [] Complete tests for POST, PUT, and DELETE routes
 - [] Replace old objects with moose (started)
 
