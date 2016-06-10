@@ -1,7 +1,7 @@
 package BibSpace;
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
-use BibSpace::Controller::DB;
+use BibSpace::Functions::FDB;
 use BibSpace::Controller::Core;
 use BibSpace::Controller::Search;
 use BibSpace::Controller::BackupFunctions;
@@ -28,6 +28,9 @@ use Path::Tiny;  # for creating directories
 # 5 2 * * 0 curl http://localhost:8081/cron/week
 # 10 2 1 * * curl http://localhost:8081/cron/month
 
+# this is deprecated and should not be used
+our $bibtex2html_tmp_dir = "./tmp";
+
 has is_demo => sub {
   return 1 if shift->app->config->{demo_mode};
   return 0;
@@ -46,13 +49,7 @@ has db => sub {
   my $db_user = $self->config->{db_user};
   my $db_database = $self->config->{db_database};
   my $db_pass = $self->config->{db_pass};
-
-
-  my $dbh = DBI->connect("DBI:mysql:database=$db_database;host=$db_host",
-                       "$db_user", "$db_pass",
-                       {'RaiseError' => 1});
-  $dbh->{mysql_auto_reconnect} = 1;
-  return $dbh;
+  return db_connect($db_host, $db_user, $db_database, $db_pass);
 };
 
 has version => sub {
@@ -78,11 +75,21 @@ sub startup {
 
     $self->hook(before_dispatch => sub {
       my $c = shift;
-      $c->req->url->base->scheme('https') if $c->req->headers->header('X-Forwarded-HTTPS');
+      {
+        my $db_host = $self->config->{db_host};
+        my $db_user = $self->config->{db_user};
+        my $db_database = $self->config->{db_database};
+        my $db_pass = $self->config->{db_pass};
+        my $is_up = db_is_up($db_host, $db_user, $db_database, $db_pass);
+        unless ($is_up){
+          my $err_msg = "MySQL is not running! BibSpace cannot work without a database.";
+          say "\n$err_msg\n";
+          $c->render(text => $err_msg, status => 500);
+          return;
+        }
+      }
 
-      # TODO!!
-      # only for directory deployment!!
-      # push @{$c->req->url->base->path->trailing_slash(1)}, shift @{$c->req->url->path->leading_slash(0)};
+      $c->req->url->base->scheme('https') if $c->req->headers->header('X-Forwarded-HTTPS');
 
       # dirty fix for production deployment in a directory
       my $proxy_prefix = $self->config->{proxy_prefix};
@@ -108,9 +115,13 @@ sub startup {
       };
     }
 
+    $self->app->db;
 
-    $self->create_main_db($self->app->db);
-    create_backup_table($self->app->db);
+
+
+
+
+
 
 
     $self->plugin('BibSpace::Controller::Helpers');
@@ -197,7 +208,7 @@ sub startup {
 
   $anyone->get('/logout')->to('login#logout')->name('logout');
 
-  $anyone->any('/test/500')->to('display#test500');
+  $anyone->any('/test/500')->to('display#test500')->name('error500');
   $anyone->any('/test/404')->to('display#test404');
 
   $anyone->get('/register')->to('login#register')->name('register');
@@ -322,7 +333,7 @@ sub startup {
 
   # EXPERIMENTAL
   $logged_user->get('/publications-set')->to('publications#all_defined_by_set');
-  # description of this function is included with the code
+  # description of this function is included in the code
   # $anyone->get('/publications/special/:id')->to('publications#special_map_pdf_to_local_file'); # use with extreme caution!
   $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq');
   $superadmin->get('/publications/fix_urls')->to('publications#replace_urls_to_file_serving_function')->name('fix_attachment_urls');
@@ -357,7 +368,8 @@ sub startup {
   $logged_user->post('/publications/add_many/store')->to('publications#post_add_many_store');
   $logged_user->post('/publications/add/store')->to('publications#post_add_edit_store');
 
-  $logged_user->any('/publications/edit/:id')->to('publications#post_add_edit_store')->name('edit_publication');
+  $logged_user->get('/publications/edit/:id')->to('publications#publications_edit_get')->name('edit_publication');
+  $logged_user->post('/publications/edit/:id')->to('publications#post_add_edit_store')->name('edit_publication_post');
 
   $logged_user->get('/publications/make_paper/:id')->to('publications#make_paper');
   $logged_user->get('/publications/make_talk/:id')->to('publications#make_talk');
@@ -422,6 +434,7 @@ sub startup {
   $anyone->get('/cron/night')->to('cron#cron_night');
   $anyone->get('/cron/week')->to('cron#cron_week');
   $anyone->get('/cron/month')->to('cron#cron_month');
+
 
 }
 

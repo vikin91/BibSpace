@@ -25,6 +25,7 @@ my $dbh = $t_logged_in->app->db;
 
 use BibSpace::Model::MEntry;
 use BibSpace::Functions::FPublications;
+use BibSpace::Controller::Core;
 
 $dbh->do('DELETE FROM Entry;');
 
@@ -80,8 +81,9 @@ $en2->{bib} = '@mastersthesis{ma_199A,
   year = {1999},
 }';
 
-is($en2->bibtex_has('year'), 1, "MEntry has field year");
-isnt($en2->bibtex_has('journal'), 1, "MEntry hasn't field journal");
+is($en2->bibtex_has_field('year'), 1, "MEntry has field year");
+isnt($en2->bibtex_has_field('journal'), 1, "MEntry hasn't field journal");
+
 is($en2->get_bibtex_field_value('year'), 1999, "MEntry year has value 1999");
 is($en2->get_bibtex_field_value('year'), '1999', "MEntry year has value 1999");
 isnt($en2->get_bibtex_field_value('year'), 2000, "MEntry year hasn't value 2000");
@@ -104,7 +106,7 @@ is($en2->delete($dbh), 1, "Deleting entry");
 
 
 
-my $en2 = MEntry->new();
+$en2 = MEntry->new();
 $en2->{bib} = '@mastersthesis{ma-199A,
   address = {World},
   author = {James Bond},
@@ -113,6 +115,9 @@ $en2->{bib} = '@mastersthesis{ma-199A,
   title = {{Selected aspects of some methods}},
   year = {1999},
 }';
+
+is($en2->bibtex_has_field('month'), 1 , "Month field exists");
+is($en2->bibtex_has_field('dummy'), 0 , "Month dummy does not exists");
 
 isnt($en2->{month}, 8 , "Month field empty");
 
@@ -176,6 +181,84 @@ is($en2->process_tags($dbh), 0, "Adding 0 tags");
 $en2->{bib} = '@misc{test, tags = {aa;bb;cc}}';
 is($en2->process_tags($dbh), 1, "Adding 1 extra tag");
 
+
+###### testing hide unhide
+
+my $random1 = random_string(64);
+
+my $en5 = MEntry->new();
+$en5->{bib} = '@mastersthesis{zzz'.$random1.',
+  address = {World},
+  author = {James Bond},
+  month = {August},
+  school = {'.$random1.'},
+  title = {{Selected aspects of some methods}},
+  year = {1999},
+}';
+
+is($en5->get_bibtex_field_value('school'), $random1, "MEntry school has value $random1 (random1)");
+$en5->populate_from_bib($dbh);
+$en5->save($dbh);
+$en5->unhide($dbh);
+
+my $t_anyone = Test::Mojo->new('BibSpace');
+$t_anyone->get_ok('/r/b')
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_like(qr/$random1/i);
+
+$en5->hide($dbh);
+$t_anyone->get_ok('/r/b')
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_unlike(qr/$random1/i);
+
+$en5->toggle_hide($dbh);  # unhiding
+$t_anyone->get_ok('/r/b')
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_like(qr/$random1/i);
+
+$en5->toggle_hide($dbh);  # hiding again
+$t_anyone->get_ok('/r/b')
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_unlike(qr/$random1/i);
+$en5->unhide($dbh);  # hiding again
+
+# get new random
+my $random2 = random_string(64);
+$en5->{bib} = '@mastersthesis{zzz'.$random1.',
+  address = {World},
+  author = {James Bond},
+  month = {August},
+  school = {'.$random2.'},
+  title = {{Selected aspects of some methods}},
+  year = {1999},
+}';
+is($en5->get_bibtex_field_value('school'), $random2, "MEntry school has value $random2 (random2)");
+$en5->populate_from_bib($dbh);
+$en5->save($dbh);
+
+$en5->make_paper($dbh);
+$t_anyone->get_ok('/r/b?entry_type=talk')
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_unlike(qr/$random2/i);
+$t_anyone->get_ok('/r/b?entry_type=paper')
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_like(qr/$random2/i);
+
+$en5->make_talk($dbh);
+$t_anyone->get_ok('/r/b?entry_type=talk')
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_like(qr/$random2/i);
+$t_anyone->get_ok('/r/b?entry_type=paper')
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_unlike(qr/$random2/i);
 
 
 done_testing();

@@ -7,7 +7,7 @@ use Crypt::Random; # sudo cpanm Crypt::Random
 use LWP::UserAgent;
 use Session::Token;
 
-use BibSpace::Controller::DB;
+use BibSpace::Functions::FDB;
 use BibSpace::Functions::UserObj; 
 
 
@@ -24,8 +24,6 @@ sub new {
 ####################################################################################################
 sub check {
     my ($self, $user, $pass, $dbh) = @_;
-
-    $self->prepare_user_table_mysql($dbh);
     $self->insert_admin($dbh);
 
     my $hash_from_db = $self->get_user_hash($user, $dbh);

@@ -3,9 +3,8 @@
 use strict;
 use warnings;
 
-use BibSpace::Controller::Core;
 # use BibSpace::Functions::FPublications; # there should be really no call to this module. All calls should be moved to a new module
-use BibSpace::Functions::TagTypeObj;
+
 
 use Data::Dumper;
 # use utf8;
@@ -30,7 +29,7 @@ package MEntry;
    has 'html_bib' => (is => 'rw'); 
    has 'abstract' => (is => 'rw'); 
    has 'title' => (is => 'rw'); 
-   has 'hidden' => (is => 'rw'); 
+   has 'hidden' => (is => 'rw', default => 0); 
    has 'year' => (is => 'rw'); 
    has 'month' => (is => 'rw'); 
    has 'sort_month' => (is => 'rw'); 
@@ -155,27 +154,6 @@ sub update {
 
   my $result = "";
 
-  say "@@@@@@@@@ CALL MEntry update";
-
-  # say "MEntry update. filed id value: ".$self->{id};
-  # say "MEntry update. filed entry_type value: ".$self->{entry_type};
-  # say "MEntry update. filed bibtex_key value: ".$self->{bibtex_key};
-  # say "MEntry update. filed bibtex_type value: ".$self->{bibtex_type};
-  # say "MEntry update. filed bib value: ".$self->{bib};
-  # say "MEntry update. filed html value: ".$self->{html};
-  # say "MEntry update. filed html_bib value: ".$self->{html_bib};
-  # say "MEntry update. filed abstract value: ".$self->{abstract};
-  # say "MEntry update. filed title value: ".$self->{title};
-  # say "MEntry update. filed hidden value: ".$self->{hidden};
-  # say "MEntry update. filed year value: ".$self->{year};
-  # say "MEntry update. filed month value: ".$self->{month};
-  # say "MEntry update. filed sort_month value: ".$self->{sort_month};
-  # say "MEntry update. filed teams_str value: ".$self->{teams_str};
-  # say "MEntry update. filed people_str value: ".$self->{people_str};
-  # say "MEntry update. filed tags_str value: ".$self->{tags_str};
-  # say "MEntry update. filed creation_time value: ".$self->{creation_time};
-  # say "MEntry update. filed modified_time value: ".$self->{modified_time};
-  # say "MEntry update. filed need_html_regen value: ".$self->{need_html_regen};
 
   if(!defined $self->{id}){
       say "Cannot update. Entry id not set. The entry may not exist in the DB. Returning -1";
@@ -225,8 +203,6 @@ sub update {
             $self->{id}
             );
   $sth->finish();
-
-  say "@@@@@@@@@ END CALL MEntry update: ".$result;
   return $result;
 }
 ####################################################################################
@@ -236,27 +212,6 @@ sub store {
 
   my $result = "";
 
-  say "@@@@@@@@@ CALL MEntry store";
-
-  # say "MEntry store. filed id value: ".$self->{id};
-  # say "MEntry store. filed entry_type value: ".$self->{entry_type};
-  # say "MEntry store. filed bibtex_key value: ".$self->{bibtex_key};
-  # say "MEntry store. filed bibtex_type value: ".$self->{bibtex_type};
-  # say "MEntry store. filed bib value: ".$self->{bib};
-  # say "MEntry store. filed html value: ".$self->{html};
-  # say "MEntry store. filed html_bib value: ".$self->{html_bib};
-  # say "MEntry store. filed abstract value: ".$self->{abstract};
-  # say "MEntry store. filed title value: ".$self->{title};
-  # say "MEntry store. filed hidden value: ".$self->{hidden};
-  # say "MEntry store. filed year value: ".$self->{year};
-  # say "MEntry store. filed month value: ".$self->{month};
-  # say "MEntry store. filed sort_month value: ".$self->{sort_month};
-  # say "MEntry store. filed teams_str value: ".$self->{teams_str};
-  # say "MEntry store. filed people_str value: ".$self->{people_str};
-  # say "MEntry store. filed tags_str value: ".$self->{tags_str};
-  # say "MEntry store. filed creation_time value: ".$self->{creation_time};
-  # say "MEntry store. filed modified_time value: ".$self->{modified_time};
-  # say "MEntry store. filed need_html_regen value: ".$self->{need_html_regen};
 
   my $qry = "
     INSERT INTO Entry(
@@ -334,6 +289,50 @@ sub delete {
   return $result;
 }
 ####################################################################################
+sub hide {
+  my $self = shift;
+  my $dbh = shift;
+
+  $self->{hidden} = 1;
+  $self->save($dbh);
+}; 
+####################################################################################
+sub unhide {
+  my $self = shift;
+  my $dbh = shift;
+
+  $self->{hidden} = 0;
+  $self->save($dbh);
+}; 
+####################################################################################
+sub toggle_hide {
+  my $self = shift;
+  my $dbh = shift;
+
+  if($self->{hidden} == 1){
+    $self->unhide($dbh);
+  }
+  else{
+    $self->hide($dbh); 
+  }
+}; 
+####################################################################################
+sub make_paper {
+  my $self = shift;
+  my $dbh = shift;
+
+  $self->{entry_type} = 'paper';
+  $self->save($dbh);
+}; 
+####################################################################################
+sub make_talk {
+  my $self = shift;
+  my $dbh = shift;
+
+  $self->{entry_type} = 'talk';
+  $self->save($dbh);
+}; 
+####################################################################################
 sub populate_from_bib {
   my $self = shift;
 
@@ -353,7 +352,7 @@ sub populate_from_bib {
   return 0;
 };  
 ####################################################################################
-sub bibtex_has {
+sub bibtex_has_field {
     # returns 1 if bibtex of this entry has filed
     my $self = shift;
     my $bibtex_field = shift;
@@ -361,7 +360,8 @@ sub bibtex_has {
 
     my $bibtex_entry = new Text::BibTeX::Entry();
     $bibtex_entry->parse_s($this_bib);
-    return $bibtex_entry->exists($bibtex_field);
+    return 1 if $bibtex_entry->exists($bibtex_field);
+    return 0;
 };
 ####################################################################################
 sub get_bibtex_field_value {
@@ -370,7 +370,7 @@ sub get_bibtex_field_value {
     my $bibtex_field = shift;
     my $this_bib = $self->{bib};
 
-    if($self->bibtex_has($bibtex_field)){
+    if($self->bibtex_has_field($bibtex_field)){
         my $bibtex_entry = new Text::BibTeX::Entry();
         $bibtex_entry->parse_s($this_bib);
         return $bibtex_entry->get($bibtex_field);
@@ -391,7 +391,7 @@ sub fix_month {
 
     my $num_fixes = 0;
 
-    if($self->bibtex_has('month')){
+    if($self->bibtex_has_field('month')){
         my $month_str = $bibtex_entry->get('month');
         my $month_numeric = BibSpace::Controller::Core::get_month_numeric($month_str);
 

@@ -75,7 +75,7 @@ ok($num_entries > 0, "Got more than 0 entries");
 $dbh->do('DELETE FROM Entry;');
 
 ### adding some entries for the next test
-my $en3 = MEntry->new();
+$en3 = MEntry->new();
 $en3->{bib} = '@mastersthesis{xxx1,
   address = {World},
   author = {James Bond},
@@ -87,7 +87,7 @@ $en3->{bib} = '@mastersthesis{xxx1,
 $en3->populate_from_bib($dbh);
 $en3->save($dbh);
 
-my $en4 = MEntry->new();
+$en4 = MEntry->new();
 $en4->{bib} = '@mastersthesis{xxx2,
   address = {World},
   author = {James Bond},

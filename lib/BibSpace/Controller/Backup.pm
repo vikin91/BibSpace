@@ -14,7 +14,7 @@ use File::Copy qw(copy);
 
 use BibSpace::Controller::Core;
 use BibSpace::Controller::BackupFunctions;
-use BibSpace::Controller::DB;
+use BibSpace::Functions::FDB;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

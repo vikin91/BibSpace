@@ -34,26 +34,10 @@ use Mojo::Log;
 
 
 ####################################################################################
-sub isTalk {  # stupid code repetition!
-    my $self = shift;
-    my $obj = shift;
-    return $obj->isTalk();
-}
-# ####################################################################################
-# sub fixMonths {
-#     say "CALL: fixMonths ";
+# sub isTalk {  # stupid code repetition!
 #     my $self = shift;
-
-#     my @objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
-#     my $num_checks = 0;
-#     for my $o (@objs){
-#         my $entry = new Text::BibTeX::Entry();
-#         $entry->parse_s($o->{bib});
-
-#          $num_checks = $num_checks + after_edit_process_month($self->app->db, $entry);
-#     }
-#     $self->flash(msg => 'Fixing entries month field finished. Num entries checked: '.$num_checks);
-#     $self->redirect_to($self->get_referrer);
+#     my $obj = shift;
+#     return $obj->isTalk();
 # }
 ####################################################################################
 sub fixMonths {
@@ -69,8 +53,6 @@ sub fixEntryType {
     say "CALL: fixEntryType ";
     my $self = shift;
 
-
-
     my @objs = BibSpace::Functions::EntryObj->getAll($self->app->db);
     my $num_fixes = 0;
     for my $o (@objs){
@@ -85,14 +67,11 @@ sub unhide {
     say "CALL: Publications::unhide";
     my $self = shift;
     my $id = $self->param('id');
-
     my $dbh = $self->app->db;
 
-
-
-    my $obj = BibSpace::Functions::EntryObj->new({id => $id});
-    $obj->initFromDB($dbh);
-    $obj->unhide($dbh);
+    my $entry = MEntry->new();
+    $entry->get($dbh, $id);
+    $entry->unhide($dbh);
 
     $self->redirect_to($self->get_referrer);
 };
@@ -102,14 +81,11 @@ sub hide {
     say "CALL: Publications::hide";
     my $self = shift;
     my $id = $self->param('id');
-
     my $dbh = $self->app->db;
 
-
-
-    my $obj = BibSpace::Functions::EntryObj->new({id => $id});
-    $obj->initFromDB($dbh);
-    $obj->hide($dbh);
+    my $entry = MEntry->new();
+    $entry->get($dbh, $id);
+    $entry->hide($dbh);
 
     $self->redirect_to($self->get_referrer);
 };
@@ -120,10 +96,9 @@ sub toggle_hide {
     my $id = $self->param('id');
     my $dbh = $self->app->db;
 
-    my $obj = BibSpace::Functions::EntryObj->new({id => $id});
-    $obj->initFromDB($dbh);
-    $obj->do_toggle_hide($dbh);
-
+    my $entry = MEntry->new();
+    $entry->get($dbh, $id);
+    $entry->toggle_hide($dbh);
 
     $self->redirect_to($self->get_referrer);
 };
@@ -131,14 +106,11 @@ sub toggle_hide {
 sub make_paper {
     my $self = shift;
     my $id = $self->param('id');
-
     my $dbh = $self->app->db;
 
-
-
-    my $obj = BibSpace::Functions::EntryObj->new({id => $id});
-    $obj->initFromDB($dbh);
-    $obj->makePaper($dbh);
+    my $entry = MEntry->new();
+    $entry->get($dbh, $id);
+    $entry->make_paper($dbh);
 
     $self->redirect_to($self->get_referrer);
 };
@@ -146,14 +118,11 @@ sub make_paper {
 sub make_talk {
     my $self = shift;
     my $id = $self->param('id');
-
     my $dbh = $self->app->db;
 
-
-
-    my $obj = BibSpace::Functions::EntryObj->new({id => $id});
-    $obj->initFromDB($dbh);
-    $obj->makeTalk($dbh);
+    my $entry = MEntry->new();
+    $entry->get($dbh, $id);
+    $entry->make_talk($dbh);
 
     $self->redirect_to($self->get_referrer);
 };
@@ -1833,6 +1802,7 @@ sub publications_edit_get {
         day = {1--31},
     }';
     $e_dummy->{bib} = $bib;
+    $e_dummy->{hidden} = 0; # new papers are not hidden by default
 
     $msg ="Adding mode</strong> You operate on an unsaved entry!";
     
@@ -1851,6 +1821,7 @@ sub publications_edit_get {
         
   $obj->{bib} = $e_dummy->{bib};
   $obj->{key} = $e_dummy->{bibtex_key};
+  $obj->{hidden} = $e_dummy->{hidden};
   my ($html, $htmlbib) = Fget_html_preview($e_dummy->{bib});  
   $obj->{html} = $html;
   $obj->{id} = $id;

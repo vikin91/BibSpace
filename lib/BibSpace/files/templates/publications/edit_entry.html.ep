@@ -31,7 +31,7 @@
 
 
     <div class="row">
-        %= form_for 'edit_publication' => {id => $id} => (class=>'form-horizontal', role=>'form', method=>'POST') => begin
+        %= form_for 'edit_publication_post' => {id => $id} => (class=>'form-horizontal', role=>'form', method=>'POST') => begin
             <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
                 <div class="form-group">
                     <label for="bibtex">BibTeX code</label>

@@ -1,4 +1,6 @@
-package BibSpace::Controller::DB;
+package BibSpace::Functions::FDB;
+
+
 
 use utf8;
 use DateTime;
@@ -6,16 +8,14 @@ use strict;
 use warnings;
 use v5.10;
 use Try::Tiny;
-
+use Data::Dumper;
 use Exporter;
 our @ISA= qw( Exporter );
 
-# these CAN be exported.
-# our @EXPORT_OK = qw( export_me export_me_too );
 
-# these are exported by default.
 our @EXPORT = qw( 
-    create_backup_table
+    db_is_up
+    db_connect
     create_main_db
     prepare_token_table_mysql
     prepare_user_table_mysql
@@ -23,11 +23,35 @@ our @EXPORT = qw(
     populate_tables
     );
 
-
-
-our $bibtex2html_tmp_dir = "./tmp";
 ##########################################################################################
-sub prepare_cron_table{
+sub db_is_up {
+  my ($db_host, $db_user, $db_database, $db_pass) = @_;
+  my $dbh = DBI->connect("DBI:mysql:database=$db_database;host=$db_host",
+                       "$db_user", "$db_pass",
+                       {'RaiseError' => 0});
+  
+  return 0 unless defined $dbh;
+
+  $dbh->disconnect();
+  return 1;
+}
+##########################################################################################
+sub db_connect {
+  my ($db_host, $db_user, $db_database, $db_pass) = @_;
+  my $dbh = 0;
+  if( db_is_up($db_host, $db_user, $db_database, $db_pass) == 1){
+
+    $dbh = DBI->connect("DBI:mysql:database=$db_database;host=$db_host", "$db_user", "$db_pass", {'RaiseError' => 1});
+    $dbh->{mysql_auto_reconnect} = 1;
+
+    die "db_connect could not connect although it should... Will quit and cry." unless defined $dbh;
+
+    create_main_db($dbh);
+  }
+  return $dbh;
+}
+##########################################################################################
+sub prepare_cron_table {
     my $dbh = shift;
     try {
         $dbh->do("CREATE TABLE IF NOT EXISTS Cron(
@@ -48,18 +72,13 @@ sub prepare_cron_table{
       $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (2)");
       $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (3)");  
     }
-    catch{
-      $dbh->do("REPLACE INTO Cron (type) VALUES (0)");
-      $dbh->do("REPLACE INTO Cron (type) VALUES (1)");
-      $dbh->do("REPLACE INTO Cron (type) VALUES (2)");
-      $dbh->do("REPLACE INTO Cron (type) VALUES (3)");  
-    };
+    catch{};
     
 };
 ####################################################################################
-sub create_backup_table{
+sub create_main_db{
+    say "CALL: create_main_db";
     my $dbh = shift;
-    say "CALL: create_backup_table";
 
     $dbh->do("CREATE TABLE IF NOT EXISTS `Backup`(
             id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
@@ -67,13 +86,6 @@ sub create_backup_table{
             filename VARCHAR(250),
             CONSTRAINT backup_filename_unique UNIQUE(filename)
       )");
-}
-####################################################################################
-sub create_main_db{
-    say "CALL: create_main_db";
-    my $self = shift;
-    my $dbh = shift;
-
 
    $dbh->do("CREATE TABLE IF NOT EXISTS `Author`(
          id INTEGER(5) PRIMARY KEY AUTO_INCREMENT, 
@@ -128,8 +140,8 @@ sub create_main_db{
           KEY idx_bibtex_key (bibtex_key)
           )");
     } catch {
-        warn "Probably MySQL is older than 5.6. Applying workaround!";
-           # version for old Mysql
+        say "Probably MySQL is older than 5.6. Applying workaround!";
+
         $dbh->do("CREATE TABLE IF NOT EXISTS `Entry`(
           id INTEGER(8) PRIMARY KEY AUTO_INCREMENT,
           entry_type ENUM('paper', 'talk') NOT NULL,
@@ -208,21 +220,14 @@ sub create_main_db{
          PRIMARY KEY (bibtex_type, our_type)
          )");
 
-    # $dbh->do("ALTER TABLE Entry CHANGE type bibtex_type varchar(50) DEFAULT NULL");
-    # $dbh->do("ALTER TABLE Entry ADD entry_type ENUM('paper', 'talk') NOT NULL AFTER id");
-    # $dbh->do("ALTER TABLE Entry ADD hidden TINYINT UNSIGNED DEFAULT 0 AFTER title");
-    # $dbh->do("ALTER TABLE Entry ADD month TINYINT UNSIGNED DEFAULT 0 AFTER year");
-    # $dbh->do("ALTER TABLE Entry ADD sort_month SMALLINT UNSIGNED DEFAULT 0 AFTER year");
-
-    $self->prepare_token_table_mysql($dbh);
-    $self->prepare_user_table_mysql($dbh);
-    $self->populate_tables($dbh);
+    prepare_token_table_mysql($dbh);
+    prepare_user_table_mysql($dbh);
+    populate_tables($dbh);
 
 };
 
 ####################################################################################################
 sub prepare_token_table_mysql{ 
-    my $self = shift;
     my $user_dbh = shift;
 
       $user_dbh->do("CREATE TABLE IF NOT EXISTS `Token`(
@@ -235,7 +240,6 @@ sub prepare_token_table_mysql{
 };
 ####################################################################################################
 sub prepare_user_table_mysql{ 
-    my $self = shift;
     my $user_dbh = shift;
 
     try{
@@ -255,7 +259,7 @@ sub prepare_user_table_mysql{
             CONSTRAINT login_unique UNIQUE(login)
           )");
     } catch {
-        warn "Probably MySQL is older than 5.6. Applying workaround!";
+        say "Probably MySQL is older than 5.6. Applying workaround!";
            # version for old Mysql
         $user_dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
             id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
@@ -275,13 +279,12 @@ sub prepare_user_table_mysql{
     };
    
 
-   $self->prepare_token_table_mysql($user_dbh);
+   prepare_token_table_mysql($user_dbh);
 
 };
 
 
 sub populate_tables{
-    my $self = shift;
     my $dbh = shift;
     try {
       $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('incollection','inproceedings',NULL,1)");
@@ -309,30 +312,7 @@ sub populate_tables{
       $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('phdthesis','supervised_theses','Supervised Theses',0)"); 
     }
     catch{
-      warn "Data already exist. Doing nothing.";
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('incollection','inproceedings',NULL,1)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('incollection','bibtex-incollection',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('inproceedings','bibtex-inproceedings',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('inbook','book',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('mastersthesis','theses',NULL,1)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('phdthesis','theses',NULL,1)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('phdthesis','volumes',NULL,1)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('proceedings','volumes',NULL,1)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('article','article',NULL,1)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('book','book',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('inbook','inbook',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('incollection','incollection',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('inproceedings','inproceedings',NULL,1)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('manual','manual','Manuals',1)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('mastersthesis','mastersthesis',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('misc','misc',NULL,1)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('phdthesis','phdthesis',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('proceedings','proceedings',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('techreport','techreport',NULL,1)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('unpublished','unpublished',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('book','volumes',NULL,0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('mastersthesis','supervised_theses','Supervised Theses',0)");
-      # $dbh->do("REPLACE INTO OurType_to_Type VALUES('phdthesis','supervised_theses','Supervised Theses',0)");  
+      say "Data already exist. Doing nothing."; 
     };
 }
 

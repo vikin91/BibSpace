@@ -1,6 +1,6 @@
 package BibSpace::Controller::Core;
 
-use BibSpace::Controller::DB;
+use BibSpace::Functions::FDB;
 #require BibSpace::Functions::EntryObj;
 
 
@@ -27,7 +27,8 @@ our @ISA= qw( Exporter );
 # our @EXPORT_OK = qw( export_me export_me_too );
 
 # these are exported by default.
-our @EXPORT = qw( 
+our @EXPORT = qw(
+    random_string 
     create_user_id
     generate_html_for_key
     generate_html_for_id
@@ -98,6 +99,13 @@ our @EXPORT = qw(
 
 our $bibtex2html_tmp_dir = "./tmp";
 ####################################################################################
+sub random_string {
+  my $len = shift;
+
+  my @set = ('0' ..'9', 'A' .. 'F');
+  my $str = join '' => map $set[rand @set], 1 .. $len;
+  $str;
+}
 ####################################################################################
 sub get_publications_main_hashed_args_only {  # this function ignores the parameters given in the $self object
     my ($self, $args) = @_;

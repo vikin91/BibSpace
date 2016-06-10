@@ -1,6 +1,6 @@
 package BibSpace::Controller::BackupFunctions;
 
-use BibSpace::Controller::DB;
+use BibSpace::Functions::FDB;
 use BibSpace::Controller::Core;
 
 use Data::Dumper;
