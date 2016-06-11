@@ -6,7 +6,6 @@ use Test::Mojo;
 
 use BibSpace;
 use BibSpace::Controller::Core;
-use BibSpace::Functions::EntryObj;
 use BibSpace::Functions::MyUsers;
 
 ok(1);

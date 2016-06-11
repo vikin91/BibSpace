@@ -4,7 +4,6 @@ use Test::Mojo;
 
 use BibSpace;
 use BibSpace::Controller::Core;
-use BibSpace::Functions::EntryObj;
 
 
 ok(1);
@@ -177,8 +176,6 @@ done_testing();
 # }'}
 # );
 
-# my $entry_id_1 = EntryObj->getByBibtexKey($dbh, $key1)->{id} || -1;
-# ok($entry_id_1 > 0, "Entry 1 added OK with id $entry_id_1");
 
 # note '============ Adding publication 2 ============';
 # my $key2="key2015_0022";
@@ -193,9 +190,6 @@ done_testing();
 #     day = {1--31},
 # }'}
 # );
-
-# my $entry_id_2 = EntryObj->getByBibtexKey($dbh, $key2)->{id} || -1;
-# ok($entry_id_2 > 0, "Entry 2 added OK with id $entry_id_2");
 
 
 # my $tag_type_id = TagTypeObj->getByName($dbh, 'test')->{id} || -1;
