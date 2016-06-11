@@ -8,7 +8,6 @@ use BibSpace;
 use BibSpace::Controller::Core;
 use BibSpace::Controller::Backup;
 use BibSpace::Controller::BackupFunctions;
-use BibSpace::Functions::EntryObj;
 
 # BEGIN{
 # 	$ENV{BIBSPACE_CONFIG}="lib/BibSpace/files/config/testing.conf";
