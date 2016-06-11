@@ -15,22 +15,14 @@ my $self = $t_logged_in->app;
 my $dbh = $t_logged_in->app->db;
 
 
-  # say "get 1:   ".$en->get($self->app->db, 1);
-  # my @entries = $en->all($self->app->db);
-  # for my $en (@entries){
-  #   say Dumper $en;
-  #   say $en->{id};
-  #   say $en->{bibtex_key};
-  # }
-
 use BibSpace::Model::MEntry;
 use BibSpace::Functions::FPublications;
 use BibSpace::Controller::Core;
 
 $dbh->do('DELETE FROM Entry;');
 
-my $en = MEntry->new();
-my @entries = $en->all($dbh);
+# my $en = MEntry->new();
+my @entries = MEntry->static_all($dbh);
 my $num_entries = scalar(@entries);
 is($num_entries, 0, "Got 0 entries");
 
@@ -59,10 +51,8 @@ $en4->{bib} = '@mastersthesis{aaa2,
 $en4->populate_from_bib($dbh);
 $en4->save($dbh);
 
-@entries = $en->all($dbh);
+@entries = MEntry->static_all($dbh);
 $num_entries = scalar(@entries);
-
-ok(defined $en, "Mentry initialized correctly");
 ok($num_entries > 0, "Got more than 0 entries");
 
 
@@ -100,7 +90,7 @@ is($en2->{sort_month}, 8, "Sort month field OK");
 is($en2->delete($dbh), '0E0', "Deleting not-existing entry= cannot delete");
 
 is($en2->update($dbh), -1, "updating not existing entry");
-ok($en2->store($dbh) > 1, "adding new entry");
+ok($en2->insert($dbh) > 1, "adding new entry");
 is($en2->update($dbh), 1, "updating existing entry");
 is($en2->delete($dbh), 1, "Deleting entry");
 
@@ -201,7 +191,7 @@ $en5->populate_from_bib($dbh);
 $en5->save($dbh);
 $en5->unhide($dbh);
 
-my $t_anyone = Test::Mojo->new('BibSpace');
+$t_anyone = Test::Mojo->new('BibSpace');
 $t_anyone->get_ok('/r/b')
     ->status_isnt(404)
     ->status_isnt(500)
@@ -241,6 +231,8 @@ $en5->populate_from_bib($dbh);
 $en5->save($dbh);
 
 $en5->make_paper($dbh);
+is($en5->is_paper(), 1);
+is($en5->is_talk(), 0);
 $t_anyone->get_ok('/r/b?entry_type=talk')
     ->status_isnt(404)
     ->status_isnt(500)
@@ -251,6 +243,9 @@ $t_anyone->get_ok('/r/b?entry_type=paper')
     ->content_like(qr/$random2/i);
 
 $en5->make_talk($dbh);
+is($en5->is_talk(), 1);
+is($en5->is_paper(), 0);
+
 $t_anyone->get_ok('/r/b?entry_type=talk')
     ->status_isnt(404)
     ->status_isnt(500)
@@ -259,6 +254,43 @@ $t_anyone->get_ok('/r/b?entry_type=paper')
     ->status_isnt(404)
     ->status_isnt(500)
     ->content_unlike(qr/$random2/i);
+
+
+#############
+# my @arr = [];
+# my $arr_ref = \@arr;
+# the same as: my $arr_ref = [];
+my @en6 = MEntry->static_get_from_id_array($dbh, [], 1);
+is(scalar @en6, 0, "MEntry->static_get_from_id_array: Empty input array returns 0?");
+
+my @all_entries = MEntry->static_all($dbh);
+my $some_entry = shift( \@all_entries );
+@en6 = MEntry->static_get_from_id_array($dbh, [$some_entry->{id}], 1);
+is(scalar @en6, 1, "MEntry->static_get_from_id_array: input array with one object (entry id: ".$some_entry->{id}.") returns 1?");
+
+
+###### testing filter function - this will be difficult
+my $test_master_id = undef;
+my $test_year = undef;
+my $test_bibtex_type = undef;
+my $test_entry_type = undef;
+my $test_tagid = undef;
+my $test_teamid = undef;
+my $test_visible = undef;
+my $test_permalink = undef;
+my $test_hidden = undef;
+my @en_objs = MEntry->static_get_filter($dbh, 
+                                         $test_master_id, 
+                                         $test_year, 
+                                         $test_bibtex_type, 
+                                         $test_entry_type, 
+                                         $test_tagid, 
+                                         $test_teamid, 
+                                         $test_visible, 
+                                         $test_permalink, 
+                                         $test_hidden);
+@all_entries = MEntry->static_all($dbh);
+is(scalar @all_entries, scalar @en_objs, "MEntry->static_get_filter: no filter returns all?");
 
 
 done_testing();

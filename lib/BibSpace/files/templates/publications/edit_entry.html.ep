@@ -1,6 +1,11 @@
 % use Mojo::ByteStream 'b';
 % layout 'admin';
 
+
+% my $adding = -1;
+% $adding = 1 if $mentry->{id} < 0;
+% $adding = 0 if $mentry->{id} > 0;
+
 <div class="container">
 
     <div class="row">
@@ -17,29 +22,35 @@
             <thead>
             </thead>
             <tbody>
-            % if (defined $entry_obj and $id > 0) { 
-                %= include 'publications_table_row', use_modal => 1, obj => $entry_obj, j => '';
+            % if ($adding == 0) { 
+                %= include 'publications_table_row', use_modal => 1, entry_obj => $mentry, j => '';
             % }
         </tbody>
         </table>
         </div>
     </div> 
 
-    % if (defined $entry_obj) { 
-        %= include 'preview_row', preview => $preview, btype=> $entry_obj->{bibtex_type}, bkey =>$entry_obj->{key};
+    % if (defined $mentry) { 
+        %= include 'preview_row', preview => $mentry->{html}, btype=> $mentry->{bibtex_type}, bkey =>$mentry->{key};
     % }
 
 
     <div class="row">
-        %= form_for 'edit_publication_post' => {id => $id} => (class=>'form-horizontal', role=>'form', method=>'POST') => begin
+        % my $route_name = 'edit_publication_post';
+        % if($adding){
+        %    $route_name = 'add_publication_post';
+        % }
+        
+        %= form_for $route_name => {id => $mentry->{id}} => (class=>'form-horizontal', role=>'form', method=>'POST') => begin
             <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
                 <div class="form-group">
                     <label for="bibtex">BibTeX code</label>
-                    <textarea class="form-control" rows="12" id="description" name="new_bib"><%=$bib%></textarea>
+                    <textarea class="form-control" rows="12" id="description" name="new_bib"><%=$mentry->{bib}%></textarea>
                 </div>
                 <div class="form-group">
-                    <button name="save" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Push to DB</button>
-                    <button name="preview" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Preview</button>
+                    <button name="save" value="save" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Check & Save</button>
+                    <button name="preview" value="preview" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span>Check & Preview</button>
+                    <button name="check_key" value="check_key" type="submit" class="btn btn-default"><i class="fa fa-exclamation-triangle" style="color: red;"></i> Check if BibTeX key exists</button>
                 </div>
             </div>
             <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">

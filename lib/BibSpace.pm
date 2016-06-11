@@ -6,6 +6,8 @@ use BibSpace::Controller::Core;
 use BibSpace::Controller::Search;
 use BibSpace::Controller::BackupFunctions;
 use BibSpace::Controller::Publications;
+use BibSpace::Controller::PublicationsExperimental;
+use BibSpace::Controller::PublicationsSEO;
 use BibSpace::Controller::Helpers;
 use BibSpace::Functions::MyUsers;
 
@@ -332,12 +334,14 @@ sub startup {
   ################ EDITING PUBLICATIONS ################
 
   # EXPERIMENTAL
-  $logged_user->get('/publications-set')->to('publications#all_defined_by_set');
-  # description of this function is included in the code
-  # $anyone->get('/publications/special/:id')->to('publications#special_map_pdf_to_local_file'); # use with extreme caution!
-  $logged_user->get('/publications/sdqpdf')->to('publications#all_with_pdf_on_sdq');
-  $superadmin->get('/publications/fix_urls')->to('publications#replace_urls_to_file_serving_function')->name('fix_attachment_urls');
+  $logged_user->get('/publications-set')->to('publicationsexperimental#all_defined_by_set');
+  $logged_user->get('/publications/sdqpdf')->to('publicationsexperimental#all_with_pdf_on_sdq');
+
+  $logged_user->get('/publications/add_many')->to('publicationsexperimental#publications_add_many_get')->name('add_many_publications');
+  $logged_user->post('/publications/add_many')->to('publicationsexperimental#publications_add_many_post')->name('add_many_publications_post');
   # EXPERIMENTAL END
+
+
 
   $logged_user->get('/publications')->to('publications#all'); # logged_user icons!
   $logged_user->get('/publications/recently_added/:num')->to('publications#all_recently_added'); # logged_user icons!
@@ -345,9 +349,8 @@ sub startup {
   $logged_user->get('/publications/orphaned')->to('publications#all_without_author');
   $logged_user->get('/publications/untagged/:tagtype')->to('publications#all_without_tag', tagtype => 1);
   $logged_user->get('/publications/untagged/:author/:tagtype')->to('publications#all_without_tag_for_author', tagtype => 1);
-
   $logged_user->get('/publications/candidates_to_delete')->to('publications#all_candidates_to_delete');
-  $logged_user->get('/publications/missing_month')->to('publications#all_without_missing_month');
+  $logged_user->get('/publications/missing_month')->to('publications#all_with_missing_month');
 
   $logged_user->get('/publications/get/:id')->to('publications#single');
   #
@@ -360,16 +363,15 @@ sub startup {
   $logged_user->get('/publications/unhide/:id')->to('publications#unhide');
   $logged_user->get('/publications/toggle_hide/:id')->to('publications#toggle_hide');
 
+  $superadmin->get('/publications/fix_urls')->to('publications#replace_urls_to_file_serving_function')->name('fix_attachment_urls');
+
   # $anyone->get('/publications/get/:id')->to('publications#single_read');
 
-
-  $logged_user->get('/publications/add')->to('publications#publications_edit_get');
-  $logged_user->get('/publications/add_many')->to('publications#publications_add_many_get');
-  $logged_user->post('/publications/add_many/store')->to('publications#post_add_many_store');
-  $logged_user->post('/publications/add/store')->to('publications#post_add_edit_store');
+  $logged_user->get('/publications/add')->to('publications#publications_add_get')->name('add_publication');
+  $logged_user->post('/publications/add')->to('publications#publications_add_post')->name('add_publication_post');
 
   $logged_user->get('/publications/edit/:id')->to('publications#publications_edit_get')->name('edit_publication');
-  $logged_user->post('/publications/edit/:id')->to('publications#post_add_edit_store')->name('edit_publication_post');
+  $logged_user->post('/publications/edit/:id')->to('publications#publications_edit_post')->name('edit_publication_post');
 
   $logged_user->get('/publications/make_paper/:id')->to('publications#make_paper');
   $logged_user->get('/publications/make_talk/:id')->to('publications#make_talk');
@@ -395,8 +397,10 @@ sub startup {
   ################ OPEN ACCESS ################
 
   # contains meta info for every paper. Optimization for google scholar
-  $anyone->get('/read/publications/meta/')->to('publications#metalist')->name("metalist_all_entries");
-  $anyone->get('/read/publications/meta/:id')->to('publications#meta')->name("metalist_entry");
+  $anyone->get('/read/publications/meta')->to('publicationsSEO#metalist')->name("metalist_all_entries");
+  $anyone->get('/read/publications/meta/:id')->to('publicationsSEO#meta')->name("metalist_entry");
+
+  ################
 
   $anyone->get('/read/publications')->to('publications#all_read');
   $anyone->get('/r/publications')->to('publications#all_read'); #ALIAS

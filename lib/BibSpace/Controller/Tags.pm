@@ -271,7 +271,7 @@ sub get_tags_for_author_read{
         $name =~ s/_/\ /g;
 
         # my $set = get_set_of_papers_for_author_and_tag($self, $maid, $tag_id); # DEPRECATED!
-        my @objs = get_publications_main_hashed_args($self, {hidden => 0, author => $maid, tag=>$tag_id});
+        my @objs = Fget_publications_main_hashed_args($self, {hidden => 0, author => $maid, tag=>$tag_id});
         my $count =  scalar @objs;
         
 

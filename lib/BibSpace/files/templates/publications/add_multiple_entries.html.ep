@@ -23,21 +23,17 @@
   </div>
 
     <div class="row">
+        %= form_for 'add_many_publications_post' => (class=>'form-horizontal', role=>'form', method=>'POST') => begin
         <form class="form-horizontal" role="form" action="<%= url_for('/publications/add_many/store') %>" method="post">
             <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
                 <div class="form-group">
-                    <label for="bibtex">BibTeX code</label>
+                    <label for="bibtex">Paste your BibTeX entries in the area below</label>
                     <textarea class="form-control" rows="12" id="description" name="new_bib"><%=$bib%></textarea>
                 </div>
                 <div class="form-group">
+                    <button name="save" value="save" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Check & Save</button>
+                    <button name="preview" value="preview" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span>Check & Preview</button>
                     <button name="check_key" value="check_key" type="submit" class="btn btn-default"><i class="fa fa-exclamation-triangle" style="color: red;"></i> Check if BibTeX key exists</button>
-                    % if($exit_code eq '3'){
-                        <button class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> <del>Push to DB</del></button>
-                    % }
-                    % else{
-                        <button name="save" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Push to DB</button>
-                    % }
-                    <button name="preview" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Preview</button>
                 </div>
             </div>
             <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
@@ -45,7 +41,7 @@
                     %= include 'bibtex_help';
                 </div>
             </div>
-        </form>
+        % end
     </div>
 
 
