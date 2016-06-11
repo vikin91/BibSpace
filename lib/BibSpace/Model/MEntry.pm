@@ -262,7 +262,7 @@ sub insert {
             );
   my $inserted_id = $dbh->last_insert_id('', '', 'Entry', '');
   $self->{id} = $inserted_id;
-  say "Mentry insert. inserted_id = $inserted_id";
+  # say "Mentry insert. inserted_id = $inserted_id";
   $sth->finish();
   return $inserted_id; #or $result;
 }
@@ -277,11 +277,11 @@ sub save {
   if(!defined $self->{id} or $self->{id} <= 0){
     my $inserted_id = $self->insert($dbh);
     $self->{id} = $inserted_id;
-    say "Mentry save: inserting. inserted_id = ".$self->{id};
+    # say "Mentry save: inserting. inserted_id = ".$self->{id};
     return $inserted_id;
   }
   elsif(defined $self->{id} and $self->{id} > 0){
-    say "Mentry save: updating ID = ".$self->{id};
+    # say "Mentry save: updating ID = ".$self->{id};
     return $self->update($dbh);
   }
   else{
@@ -394,103 +394,105 @@ sub bibtex_has_field {
 };
 ####################################################################################
 sub get_bibtex_field_value {
-    # returns 1 if bibtex of this entry has filed
-    my $self = shift;
-    my $bibtex_field = shift;
-    my $this_bib = $self->{bib};
+  # returns 1 if bibtex of this entry has filed
+  my $self = shift;
+  my $bibtex_field = shift;
+  my $this_bib = $self->{bib};
 
-    if($self->bibtex_has_field($bibtex_field)){
-        my $bibtex_entry = new Text::BibTeX::Entry();
-        $bibtex_entry->parse_s($this_bib);
-        return $bibtex_entry->get($bibtex_field);
-    }
-    return undef;
+  if($self->bibtex_has_field($bibtex_field)){
+    my $bibtex_entry = new Text::BibTeX::Entry();
+    $bibtex_entry->parse_s($this_bib);
+    return $bibtex_entry->get($bibtex_field);
+  }
+  return undef;
 };
 ####################################################################################
 sub fix_month {
-    # returns 1 if has fixed an entry
-    my $self = shift;
-    # say "call Mentry->fix_month";
+  # returns 1 if has fixed an entry
+  my $self = shift;
+  # say "call Mentry->fix_month";
 
-    my $this_bib = $self->{bib};
-    # say "call Mentry->fix_month: input bib: $this_bib";
+  my $this_bib = $self->{bib};
+  # say "call Mentry->fix_month: input bib: $this_bib";
 
-    my $bibtex_entry = new Text::BibTeX::Entry();
-    $bibtex_entry->parse_s($self->{bib});
+  my $bibtex_entry = new Text::BibTeX::Entry();
+  $bibtex_entry->parse_s($self->{bib});
 
-    my $num_fixes = 0;
+  my $num_fixes = 0;
 
-    if($self->bibtex_has_field('month')){
-        my $month_str = $bibtex_entry->get('month');
-        my $month_numeric = BibSpace::Controller::Core::get_month_numeric($month_str);
+  if($self->bibtex_has_field('month')){
+    my $month_str = $bibtex_entry->get('month');
+    my $month_numeric = BibSpace::Controller::Core::get_month_numeric($month_str);
 
-        # say "call Mentry->fix_month: changing $month_str to $month_numeric";
+    # say "call Mentry->fix_month: changing $month_str to $month_numeric";
 
-        $self->{month} = $month_numeric;
-        $self->{sort_month} = $month_numeric;
-        $num_fixes = 1;
-    }
-    return $num_fixes;
+    $self->{month} = $month_numeric;
+    $self->{sort_month} = $month_numeric;
+    $num_fixes = 1;
+  }
+  return $num_fixes;
 }
 ########################################################################################################################
 sub is_talk_in_DB{
-    my $self = shift;
-    my $dbh = shift;
+  my $self = shift;
+  my $dbh = shift;
 
-    my $db_e = MEntry->static_get($dbh, $self->{id});
-    if( $db_e->{entry_type} eq 'talk'){
-      return 1;
-    }
-    return 0;
+  my $db_e = MEntry->static_get($dbh, $self->{id});
+  if( $db_e->{entry_type} eq 'talk'){
+    return 1;
+  }
+  return 0;
 }
 ########################################################################################################################
 sub is_talk_in_tag{
-    my $self = shift;
-    my $dbh = shift;
-    return $self->hasTag($dbh, "Talks");
+  my $self = shift;
+  my $dbh = shift;
+  my $sum = $self->hasTag($dbh, "Talks") + $self->hasTag($dbh, "Talk") + $self->hasTag($dbh, "talks") + $self->hasTag($dbh, "talk");
+  return 1 if $sum >0;
+  return 0;
 }
 ########################################################################################################################
 sub fix_entry_type_based_on_tag{
-    my $self = shift;
-    my $dbh = shift;
+  my $self = shift;
+  my $dbh = shift;
 
-    my $is_talk_db = $self->is_talk_in_DB($dbh);
-    my $is_talk_tag = $self->is_talk_in_tag($dbh);
+  my $is_talk_db = $self->is_talk_in_DB($dbh);
+  my $is_talk_tag = $self->is_talk_in_tag($dbh);
 
-    if($is_talk_tag and $is_talk_db){ 
-        # say "both true: OK";
-        return 0;
-    }
-    elsif($is_talk_tag and $is_talk_db ==0 ){
-        # say "tag true, DB false. Should write to DB";
-        $self->makeTalk($dbh); 
-        return 1;
-    } 
-    elsif($is_talk_tag==0 and $is_talk_db ){
-        # say "tag false, DB true. do nothing";
-        return 0;
-    }
-    # say "both false. Do nothing";
-    return 0;
+  if($is_talk_tag and $is_talk_db){ 
+      # say "both true: OK";
+      return 0;
+  }
+  elsif($is_talk_tag and $is_talk_db ==0 ){
+      # say "tag true, DB false. Should write to DB";
+      $self->make_talk($dbh); 
+      return 1;
+  } 
+  elsif($is_talk_tag==0 and $is_talk_db ){
+      # say "tag false, DB true. do nothing";
+      return 0;
+  }
+  # say "both false. Do nothing";
+  return 0;
 }
 ####################################################################################
 sub postprocess_updated {
-    my $self = shift;
-    my $dbh = shift;
+  my $self = shift;
+  my $dbh = shift;
 
-    $self->process_tags($dbh);
-    my $populated = $self->populate_from_bib();
-    
+  $self->process_tags($dbh);
+  my $populated = $self->populate_from_bib();
+  
 
-    $self->process_authors($dbh);
-    $self->fix_month($dbh);
-    my ($html, $htmlbib) = $self->generate_html();
+  $self->process_authors($dbh);
+  $self->fix_month($dbh);
+  my ($html, $htmlbib) = $self->generate_html();
 
-    $self->save($dbh);
-    
+  $self->save($dbh);
+  
 
-    my $exit_code = 1; # TODO: old code!
-    return $exit_code;
+  my $exit_code = 1; # TODO: old code!
+  return $exit_code;
 }
 ####################################################################################
 sub generate_html {
@@ -546,9 +548,8 @@ sub process_authors { #was Core::after_edit_process_authors
 
       if($aid eq '-1'){ # there is no such author
         $num_authors_created = $num_authors_created + 1;
-
         my $sth0 = $dbh->prepare('INSERT INTO Author(uid, master) VALUES(?, ?)');
-        $sth0->execute($uid, $uid) if $aid eq '-1';
+        $sth0->execute($uid, $uid);
       }
       
 
@@ -607,6 +608,8 @@ sub process_tags { #was Core::after_edit_process_tags
     for my $tag (@tags){
        $tag =~ s/^\s+|\s+$//g;
        $tag =~ s/\ /_/g if defined $tag;
+       # say "MEntry process_tags: processing $tag";
+
 
        my $tt_obj = BibSpace::Functions::TagTypeObj->getByName($dbh,"Imported");
        my $tt_id = $tt_obj->{id};
@@ -652,26 +655,12 @@ sub static_get_from_id_array {
 
   my @input_id_arr = @$input_id_arr_ref;
 
-  # say "static_get_from_id_array input: ".Dumper \@input_id_arr;
-
-  # if(ref($arr_ref) eq 'ARRAY'){ # if array_ref is really array
-  #   @input_id_arr = @{$arr_ref}; 
-  # }
-  # else{
-  #   warn "MEntry->static_get_from_id_array got a variable that is not array reference";
-  # }
-
   unless(grep {defined($_)} @input_id_arr){ # if array is empty
     say "MEntry->static_get_from_id_array array is empty";
     return ();
   }
 
   my $sort = 1 if $keep_order == 0 or !defined $keep_order;
-  # Sorting here meant this:
-  # if (defined $sort and $sort==1){
-  #   $qry .= "ORDER BY year DESC, sort_month DESC, modified_time ASC";
-  # }
-
   my @output_arr = ();
 
   # the performance here can be optimized 

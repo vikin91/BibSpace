@@ -106,6 +106,9 @@ $en2->{bib} = '@mastersthesis{ma-199A,
   year = {1999},
 }';
 
+$dbh->do('DELETE FROM Author;');
+is($en2->process_authors($dbh), 1 , "Processed 1 author");
+
 is($en2->bibtex_has_field('month'), 1 , "Month field exists");
 is($en2->bibtex_has_field('dummy'), 0 , "Month dummy does not exists");
 
@@ -170,6 +173,42 @@ $en2->{bib} = '@misc{test, tags = {}}';
 is($en2->process_tags($dbh), 0, "Adding 0 tags");
 $en2->{bib} = '@misc{test, tags = {aa;bb;cc}}';
 is($en2->process_tags($dbh), 1, "Adding 1 extra tag");
+
+
+foreach my $num_tags ((1,5,7,8,9,34,56,99,432)){
+  $dbh->do('DELETE FROM Tag;');
+  my $tstr = '@misc{test, tags = {';
+  $tstr .= join ';' => map random_string(25), 1 .. $num_tags;
+  $tstr .= '}}';  
+  $en2->{bib} = $tstr;
+
+  is($en2->process_tags($dbh), $num_tags, "Adding $num_tags tags"); # we assume, that some may repeat
+}
+
+
+# test adding many tags
+# map { int rand(100) } ( 1..30 ) -- array of length 30 filled with ints between 0 and 99
+foreach my $num_tags (map { int rand(100) } ( 1..30 )){
+  $dbh->do('DELETE FROM Tag;');
+  my $tstr = '@misc{test, tags = {';
+  $tstr .= join ';' => map random_string(25), 1 .. $num_tags;
+  $tstr .= '}}';  
+  $en2->{bib} = $tstr;
+
+  is($en2->process_tags($dbh), $num_tags, "Adding $num_tags tags"); # we assume, that some may repeat
+}
+
+# test adding many authors
+foreach my $num_authors (map { int rand(100) } ( 1..30 )){
+  $dbh->do('DELETE FROM Author;');
+  my $tstr = '@misc{test, author = {';
+  $tstr .= join ' and ' => map( (random_string(10)." ".random_string(10)), 1 .. $num_authors);
+  $tstr .= '}}';  
+  $en2->{bib} = $tstr;
+
+  is($en2->process_authors($dbh), $num_authors , "Adding $num_authors authors");
+}
+
 
 
 ###### testing hide unhide
@@ -269,7 +308,7 @@ my $some_entry = shift( \@all_entries );
 is(scalar @en6, 1, "MEntry->static_get_from_id_array: input array with one object (entry id: ".$some_entry->{id}.") returns 1?");
 
 
-###### testing filter function - this will be difficult
+###### testing filter function - this may be difficult
 my $test_master_id = undef;
 my $test_year = undef;
 my $test_bibtex_type = undef;
@@ -291,6 +330,92 @@ my @en_objs = MEntry->static_get_filter($dbh,
                                          $test_hidden);
 @all_entries = MEntry->static_all($dbh);
 is(scalar @all_entries, scalar @en_objs, "MEntry->static_get_filter: no filter returns all?");
+
+## todo: write more cases for static_get_filter
+
+$random1 = random_string(16);
+$random2 = random_string(8);
+my $random3 = random_string(8);
+my $random4 = random_string(8);
+
+my $en7 = MEntry->new();
+$en7->{bib} = '@mastersthesis{zzz'.$random1.',
+  address = {World},
+  author = {James Bond},
+  month = {August},
+  school = {'.$random2.'},
+  title = {{Selected aspects of some methods}},
+  tags = {'.$random3.','.$random4.'},
+  year = {1999},
+}';
+$en7->populate_from_bib($dbh);
+$en7->save($dbh);
+is($en7->hasTag($dbh, $random3), 0, "Entry has no tag $random3 yet");
+is($en7->hasTag($dbh, $random4), 0, "Entry has no tag $random4 yet");
+is($en7->process_tags($dbh), 2, "Should add 2 tags");
+is($en7->hasTag($dbh, $random3), 1, "Entry has no tag $random3 yet");
+is($en7->hasTag($dbh, $random4), 1, "Entry has no tag $random4 yet");
+
+
+$random1 = random_string(16);
+$random2 = random_string(8);
+$random3 = random_string(8);
+$random4 = random_string(8);
+
+$en7->{bib} = '@mastersthesis{zzz'.$random1.',
+  address = {World},
+  author = {James Bond},
+  month = {August},
+  school = {'.$random2.'},
+  title = {{Selected aspects of some methods}},
+  tags = {'.$random3.';'.$random4.'; talk},
+  year = {1999},
+}';
+$en7->populate_from_bib($dbh);
+is($en7->is_talk_in_DB($dbh), 0);
+$en7->{entry_type} = 'talk';
+is($en7->is_talk_in_DB($dbh), 0);
+is($en7->is_talk_in_tag($dbh), 0);
+$en7->{entry_type} = 'paper';
+$en7->make_talk($dbh);
+is($en7->is_talk_in_DB($dbh), 1);
+is($en7->is_talk_in_tag($dbh), 0);
+$en7->make_paper($dbh);
+is($en7->is_talk_in_DB($dbh), 0);
+is($en7->is_talk_in_tag($dbh), 0);
+is($en7->fix_entry_type_based_on_tag($dbh), 0, "Entry fix_entry_type_based_on_tag");
+is($en7->is_talk_in_DB($dbh), 0);
+is($en7->is_talk_in_tag($dbh), 0);
+
+# reset
+$en7->populate_from_bib($dbh);
+$en7->make_paper($dbh);
+$en7->save($dbh);
+is($en7->is_talk_in_DB($dbh), 0);
+is($en7->is_talk_in_tag($dbh), 0);
+
+is($en7->process_tags($dbh), 3, "Should add 3 tags");
+is($en7->is_talk_in_DB($dbh), 0);
+is($en7->is_talk_in_tag($dbh), 1);
+
+is($en7->fix_entry_type_based_on_tag($dbh), 1, "Entry fix_entry_type_based_on_tag");
+$en7->save($dbh);
+is($en7->is_talk_in_DB($dbh), 1);
+is($en7->is_talk_in_tag($dbh), 1);
+$en7->make_paper($dbh);
+is($en7->is_talk_in_DB($dbh), 0);
+is($en7->is_talk_in_tag($dbh), 1); # tag remains!
+is($en7->is_talk($dbh), 0); # tag remains, but this has no meaning
+$en7->make_talk($dbh);
+is($en7->is_talk_in_DB($dbh), 1);
+is($en7->is_talk_in_tag($dbh), 1);
+$en7->make_paper($dbh);
+
+
+
+### to test:
+# sort_by_year_month_modified_time
+
 
 
 done_testing();
