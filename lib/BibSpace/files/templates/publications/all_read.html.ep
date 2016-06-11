@@ -2,7 +2,7 @@
 % use Mojo::ByteStream 'b';
 
 
-% my @objs = @{$objs};
+% my @objs = @{$entries};
 % my $size = scalar @objs;
 % my $i = 0;
 % my $j = 0;

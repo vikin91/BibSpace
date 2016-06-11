@@ -2,7 +2,8 @@ package BibSpace::Controller::Login;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
-use BibSpace::Controller::DB;
+
+use BibSpace::Functions::FDB;
 use BibSpace::Functions::UserObj;
 
 use WWW::Mechanize;

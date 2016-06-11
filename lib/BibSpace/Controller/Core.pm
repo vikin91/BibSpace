@@ -1,7 +1,6 @@
 package BibSpace::Controller::Core;
 
-use BibSpace::Controller::DB;
-#require BibSpace::Functions::EntryObj;
+use BibSpace::Functions::FDB;
 
 
 use Data::Dumper;
@@ -27,7 +26,9 @@ our @ISA= qw( Exporter );
 # our @EXPORT_OK = qw( export_me export_me_too );
 
 # these are exported by default.
-our @EXPORT = qw( 
+our @EXPORT = qw(
+    get_key_from_bibtex_code
+    random_string 
     create_user_id
     generate_html_for_key
     generate_html_for_id
@@ -86,144 +87,29 @@ our @EXPORT = qw(
     get_month_numeric
     get_current_year
     get_current_month
-    get_publications_main_hashed_args
-    get_publications_main_hashed_args_only
-    get_publications_core_from_array
-    get_publications_core_from_set
-    get_publications_core
-    get_single_publication
     );
 
 
 
 our $bibtex2html_tmp_dir = "./tmp";
 ####################################################################################
-####################################################################################
-sub get_publications_main_hashed_args_only {  # this function ignores the parameters given in the $self object
-    my ($self, $args) = @_;
-    return get_publications_core($self, 
-                                 $args->{author},
-                                 $args->{year},
-                                 $args->{bibtex_type},
-                                 $args->{entry_type},
-                                 $args->{tag},
-                                 $args->{team},
-                                 $args->{visible},
-                                 $args->{permalink},
-                                 $args->{hidden},
-                                 );
+sub get_key_from_bibtex_code{
+  say "CALL: get_key_from_bibtex_code";
+  my $code = shift;
+  my $entry = new Text::BibTeX::Entry();
+  $entry->parse_s($code);
+  return -1 unless $entry->parse_ok;
+  return $entry->key;
 }
 ####################################################################################
-sub get_publications_main_hashed_args { #
-    my ($self, $args) = @_;
+sub random_string {
+  my $len = shift;
 
-    return get_publications_core($self, 
-                                 $args->{author} || $self->param('author') || undef, 
-                                 $args->{year} || $self->param('year') || undef,
-                                 $args->{bibtex_type} || $self->param('bibtex_type') || undef,
-                                 $args->{entry_type} || $self->param('entry_type') || undef,
-                                 $args->{tag} || $self->param('tag') || undef,
-                                 $args->{team} || $self->param('team') || undef,
-                                 $args->{visible} || 0,
-                                 $args->{permalink} || $self->param('permalink') || undef,
-                                 $args->{hidden},
-                                 );
+  my @set = ('0' ..'9', 'A' .. 'F');
+  my $str = join '' => map $set[rand @set], 1 .. $len;
+  $str;
 }
 
-####################################################################################
-sub get_publications_core_from_array{
-  say "CALL: get_publications_core_from_array";
-    my $self = shift;
-    my $array = shift;
-    my $sort = shift;
-
-    $sort = 1 unless defined $sort;
-
-    my $dbh = $self->app->db;
-
-    my @objs = BibSpace::Functions::EntryObj->getFromArray($dbh, $array, $sort);
-    return @objs;
-
-}
-########################################################################################################################################################################
-sub get_publications_core_from_set{
-  say "CALL: get_publications_core_from_set";
-    my $self = shift;
-    my $set = shift;
-    
-    my $dbh = $self->app->db;
-    my @array;
-
-    while (defined(my $e = $set->each)) {
-        push @array, $e;
-    }
-
-    # array may be empty here!
-
-    return get_publications_core_from_array($self, \@array);
-}
-####################################################################################
-
-sub get_publications_core{
-    my $self = shift;
-    my $author = shift;
-    my $year = shift;
-    my $bibtex_type = shift;
-    my $entry_type = shift;
-    my $tag = shift;
-    my $team = shift;
-    my $visible = shift || 0;
-    my $permalink = shift;
-    my $hidden = shift;
-
-    # say "CALL: get_publications_core author $author tag $tag";
-
-    my $dbh = $self->app->db;
-
-    my $teamid = get_team_id($dbh, $team) || undef; # gives -1 if $team contains id
-    $teamid = $team if defined $teamid and $teamid eq -1; # so team = teamid
-
-    my $master_id = get_master_id_for_master($dbh, $author) || undef;
-    if($master_id == -1){
-      $master_id = $author; # it means that author was given as master_id and not as master name
-    }
-
-
-    my $tagid = get_tag_id($dbh, $tag) || undef;
-    if($tagid == -1){
-      $tagid = $tag; # it means that tag was given as tag_id and not as tag name
-    }
-    
-    $teamid = undef unless defined $team;
-    $master_id = undef unless defined $author;
-    $tagid = undef unless defined $tag;    
-
-    my @objs = BibSpace::Functions::EntryObj->getByFilter($dbh, $master_id, $year, $bibtex_type, $entry_type, $tagid, $teamid, $visible, $permalink, $hidden);
-    return @objs;
-}
-####################################################################################
-sub get_single_publication {
-    my $self = shift;
-    my $eid = shift;
-    my $hidden = shift;
-    my $dbh = $self->app->db;
-
-    say "CALL: get_single_publication. Hidden=$hidden";
-
-
-    my @objs;
-    my $obj = BibSpace::Functions::EntryObj->new({id => $eid});
-    $obj->initFromDB($dbh);
-    if(defined $hidden and $obj->isHidden()==$hidden){
-        push @objs, $obj; 
-    }
-    elsif(!defined $hidden){
-        push @objs, $obj; 
-    }
-
-    return @objs;
-};
-####################################################################################
 # ################################################################################
 # sub getTagTypeName{
 #     my $self = shift;
@@ -1534,11 +1420,11 @@ sub get_html_for_bib{
    # -nokeys  --- no number in brackets by entry
    # -nodoc   --- dont generate document but a part of it - to omit html head body headers
    # -single  --- does not provide links to pdf, html and bib but merges bib with html output
-   my $bibtex2html_command = "bibtex2html -s ".$bst_file." -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o ".$out_file." $databib >/dev/null";
+   my $bibtex2html_command = "bibtex2html -s ".$bst_file." -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o ".$out_file." $databib ";
    # my $tune_html_command = "./tuneSingleHtmlFile.sh out.html";
 
    # print "COMMAND: $bibtex2html_command\n";
-   my $syscommand = "export TMPDIR=".$bibtex2html_tmp_dir." && ".$bibtex2html_command;
+   my $syscommand = "export TMPDIR=".$bibtex2html_tmp_dir." && ".$bibtex2html_command.' &> /dev/null';
    # say "=====\n";
    # say "cwd: ".$cwd."\n";
    # say $syscommand;
