@@ -898,8 +898,7 @@ sub remove_attachment{
         $num_deleted_files = $self->remove_attachment_do($id, $filetype);
 
         if($num_deleted_files > 0){
-          $mentry->generate_html($dbh);
-          $mentry->save($dbh);
+          $mentry->regenerate_html($dbh);
         }
 
         $self->write_log("$num_deleted_files attachments removed for id $id.");
@@ -1136,8 +1135,7 @@ sub add_pdf_post{
           $self->redirect_to($self->get_referrer);  
           return;
         }
-        $mentry->generate_html($dbh);
-        $mentry->save($dbh);
+        $mentry->regenerate_html($dbh);
 
         $self->flash(message => $msg);
         $self->redirect_to($self->get_referrer);
@@ -1158,8 +1156,7 @@ sub regenerate_html_for_all {
 
   my @entries = MEntry->static_all($dbh);
   for my $e (@entries){
-    $e->generate_html($dbh);
-    $e->save($dbh);
+    $e->regenerate_html($dbh);
   }
 
   $self->write_log("regenerate_html_for_all has finished");
@@ -1199,8 +1196,7 @@ sub regenerate_html {
       $self->redirect_to($self->get_referrer);  
       return;
     }
-    $mentry->generate_html($dbh);
-    $mentry->save($dbh);
+    $mentry->regenerate_html($dbh);
 
     $self->redirect_to($self->get_referrer);  
 };

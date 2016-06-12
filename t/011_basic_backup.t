@@ -17,6 +17,9 @@ my $self = $t_logged_in->app;
 my $db_backup_file = BibSpace::Controller::BackupFunctions::do_mysql_db_backup($t_logged_in->app, "basic_backup_testing");
 my $backup_id = BibSpace::Controller::BackupFunctions::get_backup_id($self, $db_backup_file);
 
+my $status = $t_logged_in->app->do_restore_backup_from_file("./fixture/thisdoesnotexist.txt");
+is($status, 0, "preparing DB for test");
+
 my @pages;
 my $page = "";
 

@@ -10,6 +10,7 @@ use DateTime;
 use File::Slurp;
 use File::Find;
 use Time::Piece;
+use Try::Tiny;
 use 5.010; #because of ~~
 use Cwd;
 use strict;
@@ -29,6 +30,7 @@ our @EXPORT = qw(
     do_delete_backup
     do_delete_broken_or_old_backup
     do_restore_backup
+    do_restore_backup_from_file
     do_backup_current_state
     get_dir_size 
     get_backup_filename
@@ -40,7 +42,7 @@ our @EXPORT = qw(
 
 ####################################################################################
 # TODO: This function should be moved to a separate file, e.g. BackupFunctions.pm
-# The same for the other functions related to a given corntroller ..
+# The same for the other functions related to a given controller ..
 sub do_mysql_db_backup_silent{
     my $self = shift;
     my $fname_prefix = shift || "normal";
@@ -127,8 +129,9 @@ sub do_delete_backup{   # added 22.08.14
     my $fname = $row->{filename};
 
     my $file_path = $backup_dir_absolute.$fname;
-    my $exists = 1 if -e $file_path;
-    say "do_delete_backup deletes file: $file_path exists $exists";
+    my $exists = 0;
+    $exists = 1 if -e $file_path;
+    # say "do_delete_backup deletes file: $file_path exists $exists";
 
     $self->write_log("destroying backup id $id");
 
@@ -221,9 +224,30 @@ sub do_restore_backup{
     # saving current state with special prefix to provide the possibility to restore the pre-restore state 
     do_backup_current_state($self, "pre-restore");
     $dbh->disconnect();
+
+    $self->write_log("Restoring backup from file $backup_file_name");
+    return $self->do_restore_backup_from_file($backup_file_path);
+
+}
+####################################################################################
+sub do_restore_backup_from_file {
+    my $self = shift;
+    my $file_path = shift;
+    my $dbh = $self->app->db;
     
-    $self->write_log("Cleaning the whole DB before restoring.");
-    $self->write_log("restoring backup from file $backup_file_name");
+    # I assume that $file_path is the SQL dump that I want to restore
+
+    my $file_exists = 0;
+    if(-e $file_path){
+        $file_exists = 1;
+    }
+    else{
+        warn "Cannot restore database from file $file_exists. I stop now.";
+        return 0;
+    }
+    
+    $dbh->disconnect();
+    
 
     my $db_host = $self->config->{db_host};
     my $db_user = $self->config->{db_user};
@@ -231,26 +255,27 @@ sub do_restore_backup{
     my $db_pass = $self->config->{db_pass};
 
 
-    my $cmd = "mysql -u $db_user -p$db_pass $db_database  < $backup_file_path";
+    my $cmd = "mysql -u $db_user -p$db_pass $db_database  < $file_path";
     if ($db_pass =~ /^\s*$/) { # password empty
-        $cmd = "mysql -u $db_user $db_database  < $backup_file_path";
+        $cmd = "mysql -u $db_user $db_database  < $file_path";
     }
-    # say "cmd: $cmd";
+    my $command_output = "";
     try{
-      `$cmd`;
+      $command_output = `$cmd`;
     }
     catch{
-      say "Restoring DB failed from file $backup_file_name. Reason: $_";
+      say "Restoring DB failed from file $file_path. Reason: $_. Status? $?. Command_output: $command_output.";
+      # say "Command was: $cmd";
       return 0;
     };
     
 
     if ($? == 0){
-        say "Restoring backup succeeded from file $backup_file_name";
+        say "Restoring backup succeeded from file $file_path";
         return 1;
     }
     else{
-        say "Restoring backup FAILED from file $backup_file_name";
+        say "Restoring backup FAILED from file $file_path";
         return 0;
     }
 }

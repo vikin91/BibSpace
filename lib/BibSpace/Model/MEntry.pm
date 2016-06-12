@@ -16,6 +16,7 @@ package MEntry;
     use Text::BibTeX; # parsing bib files
     use 5.010; #because of ~~ and say
     use DBI;
+    use Try::Tiny;
     use Moose;
 
    has 'id' => (is => 'rw'); 
@@ -158,10 +159,6 @@ sub update {
 
   my $result = "";
 
-  $self->{title} =~ s/\{//g if defined $self->{title};
-  $self->{title} =~ s/\}//g if defined $self->{title};
-  $self->{title} = BibSpace::Controller::Core::decode('latex', $self->{title}) if defined $self->{title};
-
   if(!defined $self->{id}){
       say "Cannot update. Entry id not set. The entry may not exist in the DB. Returning -1";
       return -1;
@@ -183,12 +180,17 @@ sub update {
                 teams_str=?,
                 people_str=?,
                 tags_str=?,
-                creation_time=?,
-                modified_time=CURRENT_TIMESTAMP,
+                modified_time=NOW(),
                 need_html_regen=?
             WHERE id = ?";
+  # po tags_str
+  # creation_time=?,
+  # modified_time=NOW(),            
+  # przed need_html_regen=?
+
   my $sth = $dbh->prepare( $qry );
-  $result = $sth->execute(
+  try{
+    $result = $sth->execute(
             $self->{entry_type},
             $self->{bibtex_key},
             $self->{bibtex_type},
@@ -204,12 +206,16 @@ sub update {
             $self->{teams_str},
             $self->{people_str},
             $self->{tags_str},
-            $self->{creation_time},
+            # $self->{creation_time},
             # $self->{modified_time},
-            $self->{need_html_regen},
+            1, #$self->{need_html_regen},
             $self->{id}
             );
-  $sth->finish();
+    $sth->finish();
+  }
+  catch{
+      say "MEntry update exception: $_";
+  };
   return $result;
 }
 ####################################################################################
@@ -218,10 +224,6 @@ sub insert {
   my $dbh = shift;
 
   my $result = "";
-
-  $self->{title} =~ s/\{//g;
-  $self->{title} =~ s/\}//g;
-  $self->{title} = BibSpace::Controller::Core::decode('latex', $self->{title});
 
 
   my $qry = "
@@ -245,7 +247,7 @@ sub insert {
     modified_time,
     need_html_regen
     ) 
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,?);";
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW(),?);";
     my $sth = $dbh->prepare( $qry );
     $result = $sth->execute(
             $self->{entry_type},
@@ -265,7 +267,7 @@ sub insert {
             $self->{tags_str},
             # $self->{creation_time},
             # $self->{modified_time},
-            $self->{need_html_regen},
+            1, #$self->{need_html_regen},
             );
   my $inserted_id = $dbh->last_insert_id('', '', 'Entry', '');
   $self->{id} = $inserted_id;
@@ -279,6 +281,11 @@ sub save {
   my $dbh = shift;
 
   my $result = "";
+
+  $self->{title} = BibSpace::Controller::Core::decode('latex', $self->{title});
+  $self->{creation_time} = '1970-01-01 00:00:00' if !defined $self->{creation_time} or 
+                                                    $self->{creation_time} eq '' or 
+                                                    $self->{creation_time} eq '0000-00-00 00:00:00';
 
 
   if(!defined $self->{id} or $self->{id} <= 0){
@@ -494,9 +501,9 @@ sub postprocess_updated {
 
   $self->process_authors($dbh);
   $self->fix_month($dbh);
-  my ($html, $htmlbib) = $self->generate_html();
 
-  $self->save($dbh);
+  $self->regenerate_html($dbh); # has save
+  # $self->save($dbh);
   
 
   my $exit_code = 1; # TODO: old code!
@@ -513,6 +520,18 @@ sub generate_html {
   $self->{html_bib} = $htmlbib;
 
   return ($html, $htmlbib);
+}
+####################################################################################
+sub regenerate_html {
+  my $self = shift;
+  my $dbh = shift;
+
+  if( $self->{need_html_regen} == 1){
+    $self->populate_from_bib();
+    $self->generate_html($dbh);
+    $self->{need_html_regen} = 0;
+    $self->save($dbh);
+  } 
 }
 ####################################################################################
 sub process_authors { #was Core::after_edit_process_authors
@@ -652,6 +671,22 @@ sub sort_by_year_month_modified_time {
   $a->{month} <=> $b->{month} or
   $a->{id} <=> $b->{id};
   # $a->{modified_time} <=> $b->{modified_time}; # needs an extra lib, so we just compare ids as approximation
+}
+####################################################################################
+sub static_get_unique_years_array {
+  my $self = shift;
+  my $dbh = shift;
+
+  #my @pubs = Fget_publications_main_hashed_args_only($self, {hidden => undef, visible => 1});
+  my @pubs = MEntry->static_get_filter($dbh, undef, undef, undef, undef, undef, undef, 1, undef, undef);
+  my @years = map {$_->{year}} @pubs;
+
+  my $set = Set::Scalar->new(@years);
+  $set->delete('');
+  my @sorted_years =  sort {$b <=> $a} $set->members;
+
+  
+  return @sorted_years;
 }
 ####################################################################################
 sub static_get_from_id_array {

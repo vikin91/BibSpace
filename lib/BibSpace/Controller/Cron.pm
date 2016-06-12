@@ -13,7 +13,7 @@ use warnings;
 use DBI;
 
 use Mojo::Base 'Mojolicious::Controller';
-use Mojo::UserAgent;
+# use Mojo::UserAgent;
 
 # crontab -e
 # 0 4,12,20 * * * curl http://146.185.144.116:8080/cron/day
@@ -44,96 +44,145 @@ sub get_server_address {
     $str1;
 }
 ##########################################################################################
-sub cron_day {
-    my $self = shift;
-    my $level = 0;
-    my $call_freq = $self->config->{cron_day_freq_lock} // 0;
+sub cron {
+  my $self = shift;
+  my $level_param = $self->param('level') or shift;
 
-    my $last_call = get_last_cron_run_in_hours($self->app->db, $level) // 0;
-    my $left = $call_freq - $last_call;
-    $self->render(text => "Cron day called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
-    return if $last_call < $call_freq and $last_call > -1;
-    
-    log_cron_usage($self->app->db, $level);
-    $self->write_log("Cron day started");
-    
-    ############ Cron ACTIONS
-    $self->helper_do_mysql_backup_current_state("cron");
-    ############ Cron ACTIONS STOP
+  my $num_level = -1; # just in case
 
-    $self->write_log("Cron day finished");
-    $self->render(text => "Cron day here\n");
-}
+  $num_level = 0 if $level_param eq 'day' or $level_param eq '0';
+  $num_level = 1 if $level_param eq 'night' or $level_param eq '1';
+  $num_level = 2 if $level_param eq 'week' or $level_param eq '2';
+  $num_level = 3 if $level_param eq 'month' or $level_param eq '3';
+  
+  # say "Cron level: $level_param (numeric: $num_level)";
 
-##########################################################################################
-sub cron_night {
-    my $self = shift;
-    my $level = 1;
-    my $call_freq = $self->config->{cron_night_freq_lock} // 0;
-
-    my $last_call = get_last_cron_run_in_hours($self->app->db, $level) // 0;
-    my $left = $call_freq - $last_call;
-    $self->render(text => "Cron night called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
-    return if $last_call < $call_freq and $last_call > -1;
-
-    log_cron_usage($self->app->db, $level);
-    $self->write_log("Cron night started");
-
-    ############ Cron ACTIONS
-    $self->helper_regenerate_html_for_all();
-    ############ Cron ACTIONS STOP
-
-    $self->write_log("Cron night finished");
-    $self->render(text => "Cron night here\n");
+  my $result = $self->cron_level($num_level);
+  if($result eq ""){
+    $self->render(text => "Incorrect cron job level: $level_param (numeric: $num_level)", status=>404);
+  }
+  else{
+    $self->render(text => $result, status=>200);
+  }
+  
 }
 ##########################################################################################
-sub cron_week {
-    my $self = shift;
-    my $level = 2;
-    my $call_freq = $self->config->{cron_week_freq_lock} // 0;
+sub cron_level {
+  my $self = shift;
+  my $level = shift;
 
-    my $last_call = get_last_cron_run_in_hours($self->app->db, $level) // 0;
-    my $left = $call_freq - $last_call;
-    $self->render(text => "Cron week called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
-    return if $last_call < $call_freq and $last_call > -1;
+  if(!defined $level or $level < 0 or $level > 3){
+    return "";
+  }
 
-    log_cron_usage($self->app->db, $level);
-    $self->write_log("Cron week started");
+  my $call_freq = 999; 
 
-    ############ Cron ACTIONS 
-    # $self->helper_reassign_papers_to_authors();  #can be anbled later
-    # $self->helper_$self->helper_clean_ugly_bibtex_fields_for_all_entries(); #can be enabled later
-    $self->helper_do_delete_broken_or_old_backup();
-    ############ Cron ACTIONS STOP
-    
-    $self->write_log("Cron week finished");
-    $self->render(text => "Cron week here\n");
+  if($level == 0){
+    $call_freq = $self->config->{cron_day_freq_lock};
+  }
+  elsif($level == 1){
+    $call_freq = $self->config->{cron_night_freq_lock};
+  }
+  elsif($level == 2){
+    $call_freq = $self->config->{cron_week_freq_lock};
+  }
+  elsif($level == 3){
+    $call_freq = $self->config->{cron_month_freq_lock};
+  }
+  else{
+    # should never happen
+  }
+
+  my $message_string = $self->cron_run($level, $call_freq);
+  # place to debug
+  return $message_string;
 }
 ##########################################################################################
-sub cron_month {
-    my $self = shift;
-    my $level = 3;
-    my $call_freq = $self->config->{cron_month_freq_lock} // 0;
+sub cron_run {
+  my $self = shift;
+  my $level = shift;
+  my $call_freq = shift;
+  
 
-    my $last_call = get_last_cron_run_in_hours($self->app->db, $level) // 0;
-    my $left = $call_freq - $last_call;
-    $self->render(text => "Cron month called too often. Last call $last_call hours ago. Come back in $left hours\n") if $last_call < $call_freq and $last_call > -1;
-    return if $last_call < $call_freq and $last_call > -1;
+  my $last_call = get_last_cron_run_in_hours($self->app->db, $level) // 3;
+  my $left = $call_freq - $last_call;
 
-    log_cron_usage($self->app->db, $level);
-    $self->write_log("Cron month started");
+  my $text_to_render = "";
 
-    ############ Cron ACTIONS
-    $self->helper_do_delete_broken_or_old_backup();
-    ############ Cron ACTIONS STOP
+  ############ Cron ACTIONS
+  if($last_call < $call_freq and $last_call > -1){
+    $text_to_render = "Cron level $level called too often. Last call $last_call hours ago. Come back in $left hours\n";
+    return $text_to_render;
+  }
+  else{
+    $text_to_render = "Cron level $level here\n";
+  }
+  
+  ############ Cron ACTIONS
+  log_cron_usage($self->app->db, $level);
+  $self->write_log("Cron level $level started");
 
-    $self->write_log("Cron month finished");
-    $self->render(text => "Cron month here\n");
+  if($level == 0){
+    $self->do_cron_day();
+  }
+  elsif($level == 1){
+    Mojo::IOLoop->stream($self->tx->connection)->timeout(3600);
+    $self->do_cron_night();
+  }
+  elsif($level == 2){
+    Mojo::IOLoop->stream($self->tx->connection)->timeout(3600);
+    $self->do_cron_week();
+  }
+  elsif($level == 3){
+    Mojo::IOLoop->stream($self->tx->connection)->timeout(3600);
+    $self->do_cron_month();
+  }
+  else{
+    # do nothing
+  }
+  $self->write_log("Cron level $level finished");
+
+
+  return $text_to_render;
 }
+##########################################################################################
+sub do_cron_day{
+  my $self = shift;
+  my $dbh = $self->app->db;
 
+  $self->helper_do_mysql_backup_current_state("cron");
+}
+##########################################################################################
+sub do_cron_night{
+  my $self = shift;
+  my $dbh = $self->app->db;
 
+  my @entries = MEntry->static_all($dbh);
+  for my $e (@entries){
+    $e->regenerate_html($dbh);
+  }
+}
+##########################################################################################
+sub do_cron_week{
+  my $self = shift;
+  my $dbh = $self->app->db;
 
+  # $self->helper_reassign_papers_to_authors();  #can be anbled later
+  # $self->helper_$self->helper_clean_ugly_bibtex_fields_for_all_entries(); #can be enabled later
+  $self->helper_do_delete_broken_or_old_backup();
+}
+##########################################################################################
+sub do_cron_month{
+  my $self = shift;
+  my $dbh = $self->app->db;
 
+  # $self->helper_reassign_papers_to_authors();  #can be enabled later
+  # $self->helper_$self->helper_clean_ugly_bibtex_fields_for_all_entries(); #can be enabled later
+}
+##########################################################################################
+##########################################################################################
+##########################################################################################
+##########################################################################################
 ##########################################################################################
 sub log_cron_usage{
     my $dbh = shift;

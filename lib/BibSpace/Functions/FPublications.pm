@@ -176,9 +176,10 @@ sub Fhandle_add_edit_publication {
     else{ #adding
       $status_code_str = 'ADD_OK';
     }
-    $e->generate_html();
+    
     $e->populate_from_bib();
-    $e->save($dbh); # optional
+    $e->regenerate_html($dbh);
+    
     $e->postprocess_updated($dbh); # this saves 
     $added_under_id = $e->{id};
   }
@@ -188,33 +189,6 @@ sub Fhandle_add_edit_publication {
   return ($e, $status_code_str, $existing_id, $added_under_id); 
 };
 ##################################################################
-# sub Fpostprocess_changed_entry_and_save{  # don't care if edited or updated
-#     my $dbh = shift;
-#     my $entry_str = shift;
-#     my $eid = shift; # remains unchanged
-
-#     my $entry = new Text::BibTeX::Entry();
-#     $entry->parse_s($entry_str);
-#     return 0 unless $entry->parse_ok;  # exit code -1 = bibtex errors
-
-#     my $e = MEntry->new();
-
-#     if(defined $eid and $eid > 0){ # we update entry
-
-#         $e = MEntry->static_get($dbh, $eid);
-#         $e->{bib} = $entry_str;
-#         $e->populate_from_bib();
-#         $e->save($dbh); # optional
-#         $e->postprocess_updated($dbh); # this saves
-#     }
-#     else{ # we add entry
-#         $e->{bib} = $entry_str;
-#         $e->populate_from_bib();
-#         $e->save($dbh); # optional
-#         $e->postprocess_updated($dbh); # this saves
-#     }
-#     return 1; # everything OK
-# };
 ####################################################################################
 ####################################################################################
 sub Fget_publications_main_hashed_args_only {  # this function ignores the parameters given in the $self object

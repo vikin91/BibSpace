@@ -317,15 +317,7 @@ sub register {
     $app->helper(get_years_arr => sub {
         my $self = shift;
 
-        my $set = new Set::Scalar;
-        my @pubs = Fget_publications_main_hashed_args_only($self, {hidden => undef, visible => 1});
-        for my $entry (@pubs){
-            my $year = $entry->{year};
-            $set->insert($year) if $year > 0;
-        }
-        my @arr = $set->members;
-        my @sorted_years =  sort {$b <=> $a} @arr;
-        return @sorted_years; 
+        return MEntry->static_get_unique_years_array($self->app->db);
       });
 
     $app->helper(num_pubs_for_author => sub {
@@ -335,12 +327,6 @@ sub register {
         my @objs = Fget_publications_main_hashed_args_only($self, {hidden => 0, author => $mid});
         my $count =  scalar @objs;
         return $count;
-
-        # my $sth = $self->app->db->prepare( "SELECT COUNT(entry_id) as num FROM Entry_to_Author WHERE author_id=?" );  
-        # $sth->execute($mid); 
-        # my $row = $sth->fetchrow_hashref();
-        # my $num = $row->{num};
-        # return $num; 
       });
 
     $app->helper(get_authors_of_entry => sub {

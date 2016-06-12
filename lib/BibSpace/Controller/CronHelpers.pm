@@ -23,9 +23,6 @@ sub register {
 
 	my ($self, $app) = @_;
 
-        # TODO: Move all implementations to a separate files to avoid code redundancy! Here only function calls should be present, not theirs implementation
-        # helper_do_mysql_backup_current_state is a positive example
-        # helper_regenerate_html_for_all is a negative example
 
     $app->helper(helper_do_mysql_backup_current_state => sub {
         my $self = shift;
@@ -33,16 +30,6 @@ sub register {
         return do_mysql_db_backup($self, $fname_prefix);
     });
 
-    $app->helper(helper_regenerate_html_for_all => sub {
-        my $self = shift;
-        my $dbh = $self->app->db;
-
-        my @entries = MEntry->static_all($dbh);
-        for my $e (@entries){
-          $e->generate_html($dbh);
-          $e->save($dbh);
-        }
-    });
 
     $app->helper(helper_do_delete_broken_or_old_backup => sub {
         my $self = shift;

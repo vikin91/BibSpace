@@ -434,7 +434,9 @@ sub startup {
   ################ CRON ################
 
   $anyone->get('/cron')->to('cron#index');
-  $anyone->get('/cron/day')->to('cron#cron_day');
+  $anyone->get('/cron/:level')->to('cron#cron');
+  
+  $anyone->get('/cron/night')->to('cron#cron_day');
   $anyone->get('/cron/night')->to('cron#cron_night');
   $anyone->get('/cron/week')->to('cron#cron_week');
   $anyone->get('/cron/month')->to('cron#cron_month');

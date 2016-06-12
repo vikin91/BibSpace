@@ -8,6 +8,7 @@ use BibSpace::Functions::UserObj;
 
 use WWW::Mechanize;
 use Data::Dumper;
+use Try::Tiny;
 
 ####################################################################################
 # for _under_ -checking if user is logged in to access other pages
@@ -200,7 +201,7 @@ sub index {
 ####################################################################################
 sub forgot {
     my $self = shift;
-    $self->write_log("Login: fogot password form opened");
+    $self->write_log("Login: forgot password form opened");
     $self->render(template => 'login/forgot_request');
 }
 ####################################################################################
@@ -272,14 +273,19 @@ sub send_email{ #NON_CONTROLLER FUNCTION, but it is usable here
     my $mech = WWW::Mechanize->new(ssl_opts => { SSL_version => 'TLSv1'});
     $mech->credentials( api => $self->app->config->{mailgun_key} );
     $mech->ssl_opts( verify_hostname => 0 );
-    $mech->post( $uri,
+    try{
+        $mech->post( $uri,
              [ from => $from,
                to => $to,
                subject => $subject,
                html => $email_content ]);
+    }
+    catch{
+        warn "Could not sent Email with Mailgun. This is okay for test, but not for production. Error: $_ .";
+    };
 
 
-    #say "Mailgun response: ".$mech->response->as_string;
+    # say "Mailgun response: ".$mech->response->as_string;
 }
 ####################################################################################
 sub token_clicked {
