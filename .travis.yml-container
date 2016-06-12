@@ -38,6 +38,11 @@ before_install:
     - build-dist
     - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
     - pwd
+    - mkdir tmp
+    - touch tmp/data.bib
+    - touch tmp/out.html
+    - touch tmp/out_bib.html
+    - chmod -R 777 tmp
 
 
 install:

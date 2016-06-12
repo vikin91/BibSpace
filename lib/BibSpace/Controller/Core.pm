@@ -1097,71 +1097,73 @@ sub create_user_id {
 
 
 ################################################################################
-
+# I wish there exist a good replacement for this legacy function that calls legacy external, non-Perl software...
 sub get_html_for_bib{
-   my $bib_str = shift;
-   my $key = shift || 'no-bibtex-key';
+  my $bib_str = shift;
+  my $key = shift || 'no-bibtex-key';
 
-    # fix for the coding problems with mysql
-    $bib_str =~ s/J''urgen/J\\''urgen/g;
-    $bib_str =~ s/''a/\\''a/g;
-    $bib_str =~ s/''o/\\''o/g;
-    $bib_str =~ s/''e/\\''e/g;
+  # fix for the coding problems with mysql
+  $bib_str =~ s/J''urgen/J\\''urgen/g;
+  $bib_str =~ s/''a/\\''a/g;
+  $bib_str =~ s/''o/\\''o/g;
+  $bib_str =~ s/''e/\\''e/g;
 
-   my $out_file = $bibtex2html_tmp_dir."/out";
-   my $outhtml = $out_file.".html";
+  say "USING GLOBAL TMP DIR (bibtex2html_tmp_dir): $bibtex2html_tmp_dir";
+
+  my $out_file = $bibtex2html_tmp_dir."/out";
+  my $outhtml = $out_file.".html";
 
 
-   my $out_bibhtml = $out_file."_bib.html";
-   my $databib = $bibtex2html_tmp_dir."/data.bib";
+  my $out_bibhtml = $out_file."_bib.html";
+  my $databib = $bibtex2html_tmp_dir."/data.bib";
+
+
+  open (my $MYFILE, q{>}, $databib);
+  print $MYFILE $bib_str;
+  close ($MYFILE); 
+
+  open (my $fh, q{>}, $outhtml) or die "Processing key $key. Cannot open file for writing (touch): $outhtml";
+  close($fh);
+  open ($fh, q{>}, $out_bibhtml) or die "Processing key $key. Cannot open file for writing (touch): $out_bibhtml";
+  close($fh);
+
+  my $cwd = getcwd();
+  my $bst_file = $cwd."/lib/descartes2";
+
+  mkdir($bibtex2html_tmp_dir, 0777);
+
+  # -nokeys  --- no number in brackets by entry
+  # -nodoc   --- dont generate document but a part of it - to omit html head body headers
+  # -single  --- does not provide links to pdf, html and bib but merges bib with html output
+  my $bibtex2html_command = "bibtex2html -s ".$bst_file." -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o ".$out_file." $databib ";
+  # my $tune_html_command = "./tuneSingleHtmlFile.sh out.html";
+
+  # print "COMMAND: $bibtex2html_command\n";
+  my $syscommand = "export TMPDIR=".$bibtex2html_tmp_dir." && ".$bibtex2html_command.' &> /dev/null';
+  # say "=====\n";
+  # say "cwd: ".$cwd."\n";
+  # say $syscommand;
+  # say "=====\n";
+  system($syscommand);
+
+
+
+
+  my $html =     read_file($outhtml);
+  my $htmlbib =  read_file($out_bibhtml);
+
+  $htmlbib =~ s/<h1>data.bib<\/h1>//g;
+
+  $htmlbib =~ s/<a href="$outhtml#(.*)">(.*)<\/a>/$1/g;
+  $htmlbib =~ s/<a href=/<a target="blank" href=/g;
+
+  $html = tune_html($html, $key, $htmlbib);
+   
 
    
-   open (my $MYFILE, q{>}, $databib);
-   print $MYFILE $bib_str;
-   close ($MYFILE); 
+  # now the output jest w out.html i out_bib.html
 
-   open (my $fh, q{>}, $outhtml) or die "cannot touch $outhtml";
-   close($fh);
-   open ($fh, q{>}, $out_bibhtml) or die "cannot touch $out_bibhtml";
-   close($fh);
-
-    my $cwd = getcwd();
-    my $bst_file = $cwd."/lib/descartes2";
-
-   mkdir($bibtex2html_tmp_dir, 0777);
-
-   # -nokeys  --- no number in brackets by entry
-   # -nodoc   --- dont generate document but a part of it - to omit html head body headers
-   # -single  --- does not provide links to pdf, html and bib but merges bib with html output
-   my $bibtex2html_command = "bibtex2html -s ".$bst_file." -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o ".$out_file." $databib ";
-   # my $tune_html_command = "./tuneSingleHtmlFile.sh out.html";
-
-   # print "COMMAND: $bibtex2html_command\n";
-   my $syscommand = "export TMPDIR=".$bibtex2html_tmp_dir." && ".$bibtex2html_command.' &> /dev/null';
-   # say "=====\n";
-   # say "cwd: ".$cwd."\n";
-   # say $syscommand;
-   # say "=====\n";
-   system($syscommand);
-   
-
-
-
-   my $html =     read_file($outhtml);
-   my $htmlbib =  read_file($out_bibhtml);
-
-   $htmlbib =~ s/<h1>data.bib<\/h1>//g;
-
-   $htmlbib =~ s/<a href="$outhtml#(.*)">(.*)<\/a>/$1/g;
-   $htmlbib =~ s/<a href=/<a target="blank" href=/g;
-
-   $html = tune_html($html, $key, $htmlbib);
-   
-
-   
-   # now the output jest w out.html i out_bib.html
-
-   return $html, $htmlbib;
+  return $html, $htmlbib;
 };
 
 ################################################################################
