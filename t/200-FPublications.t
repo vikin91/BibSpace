@@ -107,7 +107,10 @@ $num_entries = scalar(@entries);
 my ($processed_entries, $fixed_entries) = Ffix_months($dbh);
 is($processed_entries, $num_entries, "fix_months processed all entries");
 ok(($fixed_entries > 0), "fix_months fixed some entries");
-ok(($fixed_entries <= $num_entries), "fix_months fixed almost all entries - this is badly designed test");
+
+
+
+ok(Fclean_ugly_bibtex_fields_for_all_entries($dbh) >= 0, "Fclean_ugly_bibtex_fields_for_all_entries");
 
 ### this will fail if the user gives a month name with a typo = bad test
 # for my $entry (@entries){	

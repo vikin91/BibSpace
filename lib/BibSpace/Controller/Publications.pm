@@ -19,9 +19,10 @@ use Encode;
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
 use BibSpace::Model::MEntry;
+use BibSpace::Model::MTag;
 
 use BibSpace::Controller::Set;
-use BibSpace::Functions::TagObj;
+
 
 use Set::Scalar;
 
@@ -64,8 +65,13 @@ sub unhide {
     my $dbh = $self->app->db;
 
     
-    my $entry = MEntry->static_get($dbh, $id);
-    $entry->unhide($dbh);
+    my $mentry = MEntry->static_get($dbh, $id);
+    if(!defined $mentry){
+      $self->flash(msg => "There is no entry with id $id");
+      $self->redirect_to($self->get_referrer);  
+      return;
+    }
+    $mentry->unhide($dbh);
 
     $self->redirect_to($self->get_referrer);
 };
@@ -77,8 +83,13 @@ sub hide {
     my $id = $self->param('id');
     my $dbh = $self->app->db;
 
-    my $entry = MEntry->static_get($dbh, $id);
-    $entry->hide($dbh);
+    my $mentry = MEntry->static_get($dbh, $id);
+    if(!defined $mentry){
+      $self->flash(msg => "There is no entry with id $id");
+      $self->redirect_to($self->get_referrer);  
+      return;
+    }
+    $mentry->hide($dbh);
 
     $self->redirect_to($self->get_referrer);
 };
@@ -90,8 +101,13 @@ sub toggle_hide {
     my $dbh = $self->app->db;
 
     
-    my $entry = MEntry->static_get($dbh, $id);
-    $entry->toggle_hide($dbh);
+    my $mentry = MEntry->static_get($dbh, $id);
+    if(!defined $mentry){
+      $self->flash(msg => "There is no entry with id $id");
+      $self->redirect_to($self->get_referrer);  
+      return;
+    }
+    $mentry->toggle_hide($dbh);
 
     $self->redirect_to($self->get_referrer);
 };
@@ -101,8 +117,13 @@ sub make_paper {
     my $id = $self->param('id');
     my $dbh = $self->app->db;
 
-    my $entry = MEntry->static_get($dbh, $id);
-    $entry->make_paper($dbh);
+    my $mentry = MEntry->static_get($dbh, $id);
+    if(!defined $mentry){
+      $self->flash(msg => "There is no entry with id $id");
+      $self->redirect_to($self->get_referrer);  
+      return;
+    }
+    $mentry->make_paper($dbh);
 
     $self->redirect_to($self->get_referrer);
 };
@@ -112,8 +133,13 @@ sub make_talk {
     my $id = $self->param('id');
     my $dbh = $self->app->db;
 
-    my $entry = MEntry->static_get($dbh, $id);
-    $entry->make_talk($dbh);
+    my $mentry = MEntry->static_get($dbh, $id);
+    if(!defined $mentry){
+      $self->flash(msg => "There is no entry with id $id");
+      $self->redirect_to($self->get_referrer);  
+      return;
+    }
+    $mentry->make_talk($dbh);
 
     $self->redirect_to($self->get_referrer);
 };
@@ -298,7 +324,7 @@ sub show_unrelated_to_team{
 
 
 
-    my $set_all_papers = get_set_of_all_papers($self);
+    my $set_all_papers = get_set_of_all_paper_ids($dbh);
     my $set_of_related_to_team = get_set_of_papers_for_all_authors_of_team_id($self, $team_id);
     my $end_set = $set_all_papers - $set_of_related_to_team;
 
@@ -345,12 +371,12 @@ sub all_candidates_to_delete{
 
   $self->write_log("Displaying entries that are candidates_to_delete");
 
-  my $set_all_papers = get_set_of_all_papers($self);
+  my $set_all_papers = get_set_of_all_paper_ids($self->app->db);
   my $end_set = $set_all_papers;
 
   # print "A1 ", $end_set, "\n";
 
-  my $set_of_all_teams = get_set_of_all_teams($self);
+  my $set_of_all_teams = get_set_of_all_team_ids($self->app->db);
 
   foreach my $teamid($set_of_all_teams->members){
     my $set_of_papers_related_to_team = get_set_of_papers_for_all_authors_of_team_id($self, $teamid);
@@ -760,7 +786,11 @@ sub display_landing{
 
     my $permalink = $self->param('permalink');
     my $tag_name = $self->param('tag') || "";
-    my $tag_name_for_permalink = BibSpace::Functions::TagObj->get_tag_name_for_permalink($self->app->db, $permalink);
+    
+    my $tag_obj = MTag->static_get_by_permalink($self->app->db, $permalink);
+    my $tag_name_for_permalink = -1; 
+    $tag_name_for_permalink = $tag_obj->{name} if defined $tag_obj;
+
     $tag_name = $tag_name_for_permalink unless $tag_name_for_permalink eq -1;
     $tag_name = $permalink if !defined $self->param('tag') and $tag_name_for_permalink eq -1;
     $tag_name =~ s/_+/_/g if defined $tag_name and defined $show_title and $show_title == 1;
@@ -845,6 +875,10 @@ sub remove_attachment{
     my $self = shift;
     my $id = $self->param('id');      # entry ID
     my $filetype = $self->param('filetype') || 'paper';  # paper, slides
+    my $dbh = $self->app->db;
+
+    my $mentry = MEntry->static_get($dbh, $id);
+    # no check as we want to have the files deleted anyway!
 
     $self->write_log("Removing attachment to download: filetype $filetype, id $id. ");
     say "Removing attachment to download: filetype $filetype, id $id. ";
@@ -864,7 +898,8 @@ sub remove_attachment{
         $num_deleted_files = $self->remove_attachment_do($id, $filetype);
 
         if($num_deleted_files > 0){
-            generate_html_for_id($self->app->db, $id);
+          $mentry->generate_html($dbh);
+          $mentry->save($dbh);
         }
 
         $self->write_log("$num_deleted_files attachments removed for id $id.");
@@ -878,6 +913,9 @@ sub remove_attachment_do{
     my $self = shift;
     my $id = shift;
     my $filetype = shift;
+    my $dbh = $self->app->db;
+
+    my $mentry = MEntry->static_get($dbh, $id);
 
     my $file_path = get_paper_pdf_path($self, $id, "$filetype");
     say "Found paper type $filetype : $file_path";
@@ -909,11 +947,17 @@ sub remove_attachment_do{
     }
     # deleted for sure!
 
+    # for safety and privacy reasons, we DO LET to delete files event if the entry does not exist
+    if(!defined $mentry){
+      $self->flash(msg => "There is no entry with id $id");
+      $self->redirect_to($self->get_referrer);  
+      return;
+    }
     if($filetype eq 'paper'){
-        clean_ugly_bibtex_fields($self->app->db, $id, qw(pdf));
+        $mentry->remove_bibtex_fields($dbh, ['pdf']);
     }
     if($filetype eq 'slides'){
-        clean_ugly_bibtex_fields($self->app->db, $id, qw(slides));
+        $mentry->remove_bibtex_fields($dbh, ['slides']);
     }
 
     return $num_deleted_files;
@@ -976,6 +1020,7 @@ sub add_pdf_post{
     my $self = shift;
     my $id = $self->param('id') || "unknown";
     my $filetype = $self->param('filetype') || undef;
+    my $dbh = $self->app->db;
 
     my $uploads_directory = $self->config->{upload_dir};
     $uploads_directory =~ s!/*$!/!; # makes sure that there is exactly one / at the end
@@ -1084,13 +1129,15 @@ sub add_pdf_post{
         my $msg = "Successfully uploaded the $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>.
         The file was renamed to: <em>$fname</em>. URL <a href=\"".$file_url."\">$name</a>";
 
-        # my $sth2 = $self->app->db->prepare( "UPDATE Entry SET modified_time=datetime('now', 'localtime') WHERE id =?" );
-        my $sth2 = $self->app->db->prepare( "UPDATE Entry SET modified_time=CURRENT_TIMESTAMP WHERE id =?" );
 
-        $sth2->execute($id);
-        $sth2->finish();
-
-        generate_html_for_id($self->app->db, $id);
+        my $mentry = MEntry->static_get($dbh, $id);
+        if(!defined $mentry){
+          $self->flash(msg => "There is no entry with id $id");
+          $self->redirect_to($self->get_referrer);  
+          return;
+        }
+        $mentry->generate_html($dbh);
+        $mentry->save($dbh);
 
         $self->flash(message => $msg);
         $self->redirect_to($self->get_referrer);
@@ -1109,7 +1156,11 @@ sub regenerate_html_for_all {
 
   $self->write_log("regenerate_html_for_all is running");
 
-  $self->helper_regenerate_html_for_all();
+  my @entries = MEntry->static_all($dbh);
+  for my $e (@entries){
+    $e->generate_html($dbh);
+    $e->save($dbh);
+  }
 
   $self->write_log("regenerate_html_for_all has finished");
 
@@ -1119,144 +1170,177 @@ sub regenerate_html_for_all {
 };
 ####################################################################################
 sub regenerate_html_for_all_force {
-	say "CALL: regenerate_html_for_all_force ";
-    my $self = shift;
+  say "CALL: regenerate_html_for_all_force ";
+  my $self = shift;
+  my $dbh = $self->app->db;
+  $self->write_log("regenerate_html_for_all FORCE is running");
 
+  my @entries = MEntry->static_all($dbh);
 
-    my $dbh = $self->app->db;
-
-
-
-    $self->write_log("regenerate_html_for_all FORCE is running");
-
-    my @ids = get_all_entry_ids($dbh);
-    for my $id (@ids){
-      generate_html_for_id($dbh, $id);
-    }
-
-    $self->write_log("regenerate_html_for_all FORCE has finished");
-
-    $self->flash(msg => 'Regeneration of HTML code finished.');
-    my $referrer = $self->get_referrer();
-    $self->redirect_to($referrer);
+  for my $e (@entries){
+    $e->generate_html($dbh);
+    $e->save($dbh);
+  }
+  $self->write_log("regenerate_html_for_all FORCE has finished");
+  $self->flash(msg => 'Regeneration of HTML code finished.');
+  my $referrer = $self->get_referrer();
+  $self->redirect_to($referrer);
 };
 ####################################################################################
 sub regenerate_html {
 	say "CALL: regenerate_html ";
     my $self = shift;
+    my $dbh = $self->app->db;
     my $id = $self->param('id');
 
+    my $mentry = MEntry->static_get($dbh, $id);
+    if(!defined $mentry){
+      $self->flash(msg => "There is no entry with id $id");
+      $self->redirect_to($self->get_referrer);  
+      return;
+    }
+    $mentry->generate_html($dbh);
+    $mentry->save($dbh);
 
-    my $dbh = $self->app->db;
-    generate_html_for_id($dbh, $id);
-
-    my $referrer = $self->get_referrer();
-    $self->redirect_to($referrer);
+    $self->redirect_to($self->get_referrer);  
 };
 
 ####################################################################################
-
-sub delete {
-    my $self = shift;
-    my $id = $self->param('id');
-    warn "deleting this way is not implemented! TODO: remove";
-    $self->redirect_to($self->get_referrer);
-};
-
 ####################################################################################
 
 sub delete_sure {
 	say "CALL: delete_sure ";
-   my $self = shift;
-   my $eid = $self->param('id');
+  my $self = shift;
+  my $id = $self->param('id');
+  my $dbh = $self->app->db;
 
-   my $dbh = $self->app->db;
+  my $mentry = MEntry->static_get($dbh, $id);
+  if(!defined $mentry){
+    $self->flash(msg => "There is no entry with id $id");
+    $self->redirect_to($self->get_referrer);  
+    return;
+  }
+        
+ remove_attachment_do($self, $id, 'paper');
+ remove_attachment_do($self, $id, 'slides');
+ $mentry->delete($dbh);
 
-   delete_entry_by_id($dbh, $eid);
+  $self->write_log("delete_sure entry id $id. Entry deleted.");
 
-   remove_attachment_do($self, $eid, 'paper');
-   remove_attachment_do($self, $eid, 'slides');
-
-   $self->write_log("delete_sure entry eid $eid. Entry deleted.");
-
-   $self->redirect_to($self->get_referrer);
+  $self->redirect_to($self->get_referrer);
 };
 ####################################################################################
 sub show_authors_of_entry{
 	say "CALL: show_authors_of_entry";
-    my $self = shift;
-    my $eid = $self->param('id');
+  my $self = shift;
+  my $id = $self->param('id');
+  my $dbh = $self->app->db;
+  $self->write_log("Showing authors of entry id $id");
 
-    my $dbh = $self->app->db;
+  my $mentry = MEntry->static_get($dbh, $id);
+  if(!defined $mentry){
+    $self->flash(msg => "There is no entry with id $id");
+    $self->redirect_to($self->get_referrer);  
+    return;
+  }
+  my $html_preview = $mentry->{html};
+  my $key = $mentry->{bibtex_key};
 
-    $self->write_log("Showing authors of entry eid $eid");
+  my @authors = $self->get_authors_of_entry($id);
+  my $teams_for_paper = get_set_of_teams_for_entry_id($self,$id);
+  my @teams = $teams_for_paper->members;
+  
 
-    my @authors = $self->get_authors_of_entry($eid);
-
-    my $teams_for_paper = get_set_of_teams_for_entry_id($self,$eid);
-    my @teams = $teams_for_paper->members;
-
-
-    my $html_preview = get_html_for_entry_id($dbh, $eid);
-    my $key = get_entry_key($dbh, $eid);
-
-
-    $self->stash(eid => $eid, key => $key, preview => $html_preview,
-        author_ids => \@authors, team_ids => \@teams);
-    $self->render(template => 'publications/show_authors');
+  $self->stash(eid => $id, key => $key, preview => $html_preview,
+      author_ids => \@authors, team_ids => \@teams);
+  $self->render(template => 'publications/show_authors');
 }
 ####################################################################################
 sub manage_exceptions{
 	say "CALL: manage_exceptions";
-    my $self = shift;
-    my $eid = $self->param('id');
-    my $dbh = $self->app->db;
+  my $self = shift;
+  my $id = $self->param('id');
+  my $dbh = $self->app->db;
+  $self->write_log("Manage exceptions of entry id $id");
 
-    $self->write_log("Manage exceptions of entry eid $eid");
+  my $mentry = MEntry->static_get($dbh, $id);
+  if(!defined $mentry){
+    $self->flash(msg => "There is no entry with id $id");
+    $self->redirect_to($self->get_referrer);  
+    return;
+  }
+  my $html_preview = $mentry->{html};
+  my $key = $mentry->{bibtex_key};
+  my $btype = $mentry->{bibtex_type};
 
-    my $html_preview = get_html_for_entry_id($dbh, $eid);
-    my $key = get_entry_key($dbh, $eid);
-    my $btype = get_entry_bibtex_type($dbh, $eid);
+  my @current_exceptions = get_exceptions_for_entry_id($dbh, $id);
+  my $current_exceptions_set = Set::Scalar->new(@current_exceptions);
 
-    my @current_exceptions = get_exceptions_for_entry_id($dbh, $eid);
-    my $current_exceptions_set = Set::Scalar->new(@current_exceptions);
+  my @authors = $self->get_authors_of_entry($id);
+  my $teams_for_paper = get_set_of_teams_for_entry_id($self,$id);
 
-    my @authors = $self->get_authors_of_entry($eid);
-    my $teams_for_paper = get_set_of_teams_for_entry_id($self,$eid);
-
-    my @teams = $teams_for_paper->members;
-    my @unassigned_teams = (get_set_of_all_teams($self) - $teams_for_paper - $current_exceptions_set)->members;
+  my @teams = $teams_for_paper->members;
+  my @unassigned_teams = (get_set_of_all_team_ids($self->app->db) - $teams_for_paper - $current_exceptions_set)->members;
 
 
-    $self->stash(eid => $eid, key => $key, btype=>$btype, preview => $html_preview,
-        author_ids => \@authors, exceptions => \@current_exceptions, team_ids => \@teams, unassigned_teams => \@unassigned_teams);
-    $self->render(template => 'publications/manage_exceptions');
+  $self->stash(eid => $id, key => $key, btype=>$btype, preview => $html_preview,
+      author_ids => \@authors, exceptions => \@current_exceptions, team_ids => \@teams, unassigned_teams => \@unassigned_teams);
+  $self->render(template => 'publications/manage_exceptions');
 }
 ####################################################################################
 sub manage_tags{
 	say "CALL: manage_tags";
     my $self = shift;
     my $eid = $self->param('id');
-
     my $dbh = $self->app->db;
 
     $self->write_log("Manage tags of entry eid $eid");
 
-    my ($all_tags_arrref, $all_ids_arrref, $all_parents_arrref) = get_all_tags($dbh);
-    my ($tags_arrref, $ids_arrref, $parents_arrref) = get_tags_for_entry($dbh, $eid);
+    my $mentry = MEntry->static_get($dbh, $eid);
+    if(!defined $mentry){
+      $self->flash(msg => "There is no entry with id $eid");
+      $self->redirect_to($self->get_referrer);  
+      return;
+    }
+    
 
-    # my @unassigned_tags_ids = get_ids_arr_of_unassigned_tags($self, $eid);  #problem with sorting!
+    my $html_preview = $mentry->{html};
+    my $key = $mentry->{bibtex_key};
+
+    my @all_tags = MTag->static_all($dbh);
+    my @all_names = map {$_->{name}} @all_tags;
+    my @all_ids = map {$_->{id}} @all_tags;
+    my @all_parrents = map {$_->{parent}} @all_tags;
+
+    # FIXME for compatibility with obsolete code
+    my $all_tags_arrref = \@all_names; 
+    my $all_ids_arrref = \@all_ids; 
+    my $all_parents_arrref = \@all_parrents; 
+
+
+
+    my @tags_for_entry = $mentry->tags($dbh);
+
+    my @entry_tag_names = map {$_->{name}} @tags_for_entry;
+    my @entry_tag_ids = map {$_->{id}} @tags_for_entry;
+    my @entry_tag_parrents = map {$_->{parent}} @tags_for_entry;
+
+    # FIXME for compatibility with obsolete code
+    my $tags_arrref = \@entry_tag_names;
+    my $ids_arrref = \@entry_tag_ids;
+    my $parents_arrref =\@entry_tag_parrents;
+
+    
 
     my @unassigned_tags_ids;
 
-    for my $t (@$all_ids_arrref){
-        if (!grep( /^$t$/, @$ids_arrref)){
-            push @unassigned_tags_ids, $t;
+    for my $tid (@all_ids){
+        if (!grep( /^$tid$/, @$ids_arrref)){
+            push @unassigned_tags_ids, $tid;
         }
     }
 
-  my $html_preview = get_html_for_entry_id($dbh, $eid);
-  my $key = get_entry_key($dbh, $eid);
+  
 
 
   $self->stash(eid => $eid, key => $key, preview => $html_preview,
@@ -1458,12 +1542,18 @@ sub publications_edit_get {
   my $dbh = $self->app->db;
 
   my $msg = "";
-  my $e = MEntry->static_get($dbh, $id);
-  $e->populate_from_bib();
-  $e->generate_html();
+  
+  my $mentry = MEntry->static_get($dbh, $id);
+  if(!defined $mentry){
+    $self->flash(msg => "There is no entry with id $id");
+    $self->redirect_to($self->get_referrer);  
+    return;
+  }
+  $mentry->populate_from_bib();
+  $mentry->generate_html();
 
 
-  $self->stash(mentry => $e, msg => $msg);
+  $self->stash(mentry => $mentry, msg => $msg);
   $self->render(template => 'publications/edit_entry');
 };
 ############################################################################################################

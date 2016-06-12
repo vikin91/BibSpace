@@ -30,8 +30,6 @@ our @EXPORT = qw(
     get_key_from_bibtex_code
     random_string 
     create_user_id
-    generate_html_for_key
-    generate_html_for_id
     tune_html
     get_author_id_for_uid
     get_author_id_for_master
@@ -42,18 +40,12 @@ our @EXPORT = qw(
     add_team_for_author
     remove_team_for_author
     uniq
-    get_entry_key
-    get_entry_bibtex_type
-    get_entry_title
     get_team_for_id
     get_team_id
     get_tag_id
     get_master_id_for_uid
     get_master_id_for_master
     get_master_id_for_author_id
-    get_tags_for_entry
-    get_tag_name_for_id
-    get_all_tags
     get_all_teams
     get_all_our_types
     get_all_bibtex_types
@@ -64,9 +56,7 @@ our @EXPORT = qw(
     get_type_description
     get_landing_for_our_type
     toggle_landing_for_our_type
-    get_all_entry_ids
     nohtml
-    delete_entry_by_id
     get_author_ids_for_tag_id
     get_author_ids_for_tag_id_and_team
     get_tags_for_author
@@ -74,15 +64,13 @@ our @EXPORT = qw(
     add_field_to_bibtex_code
     has_bibtex_field
     clean_tag_name
-    get_visibility_for_id
+    get_author_visibility_for_id
     postprocess_all_entries_after_author_uids_change
     postprocess_all_entries_after_author_uids_change_w_creating_authors
     after_edit_process_authors
     get_html_for_entry_id
     get_exceptions_for_entry_id
     get_year_for_entry_id
-    clean_ugly_bibtex_fields
-    clean_ugly_bibtex_fields_for_all_entries
     prepare_backup_table
     get_month_numeric
     get_current_year
@@ -92,6 +80,13 @@ our @EXPORT = qw(
 
 
 our $bibtex2html_tmp_dir = "./tmp";
+################################################################################
+sub get_all_existing_bibtex_types{
+
+    ## defined by bibtex and constant
+
+    return ('article', 'book', 'booklet', 'conference', 'inbook', 'incollection', 'inproceedings', 'manual', 'mastersthesis', 'misc', 'phdthesis', 'proceedings', 'techreport', 'unpublished');
+}
 ####################################################################################
 sub get_key_from_bibtex_code{
   say "CALL: get_key_from_bibtex_code";
@@ -105,23 +100,10 @@ sub get_key_from_bibtex_code{
 sub random_string {
   my $len = shift;
 
-  my @set = ('0' ..'9', 'A' .. 'F');
+  my @set = ('0' ..'9', 'A' .. 'Y');
   my $str = join '' => map $set[rand @set], 1 .. $len;
   $str;
 }
-
-# ################################################################################
-# sub getTagTypeName{
-#     my $self = shift;
-#     my $type = shift || 1;
-
-#     my $dbh = $self->app->db;
-
-#     my $sth = $dbh->prepare("SELECT name FROM TagType WHERE id = ?");
-#     $sth->execute($type);
-#     my $row = $sth->fetchrow_hashref();
-#     return $row->{name};# || "not found";
-# }
 ################################################################################
 sub get_current_month {
   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
@@ -243,62 +225,7 @@ sub postprocess_all_entries_after_author_uids_change_w_creating_authors{  # assi
 
 ####################################################################################
 # clean_ugly_bibtex_fileds_for_all_entries
-sub clean_ugly_bibtex_fields_for_all_entries {
-    my $self = shift;
-    my $dbh = $self->app->db;
-    $self->write_log("clean_ugly_bibtex_fields_for_all_entries started");
-    
-    
-    my @ids = get_all_entry_ids($dbh);
-    for my $id (@ids){
-      clean_ugly_bibtex_fields($dbh, $id);
-    }
-    $self->write_log("clean_ugly_bibtex_fields_for_all_entries finished");
-};
 ####################################################################################
-sub clean_ugly_bibtex_fields {
-    my $dbh = shift;
-    my $eid = shift;
-    my @bib_fields_to_delete = shift || qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
-
-    my @ary = $dbh->selectrow_array("SELECT bib FROM Entry WHERE id = ?", undef, $eid);  
-    my $entry_str = $ary[0];
-
-    my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s($entry_str);
-    return -1 unless $entry->parse_ok;
-    my $key = $entry->key;
-
-    my $num_deleted = 0;
-
-    for my $field (@bib_fields_to_delete){
-      $entry->delete($field) if defined $entry->exists($field);
-      $num_deleted++  if defined $entry->exists($field);
-    }
-    
-    if( $num_deleted > 0){
-        my $new_bib = $entry->print_s;
-
-
-        # cleaning errors caused by sqlite - mysql import
-        
-        $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
-        $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
-
-        $new_bib =~ s/\\\\/\\/g;
-        $new_bib =~ s/\\\\/\\/g;
-
-
-        my $sth2 = $dbh->prepare( "UPDATE Entry SET bib=?, need_html_regen = 1 WHERE id =?" );  
-        $sth2->execute($new_bib, $eid);
-        $sth2->finish();
-
-        # generate_html_for_id($dbh, $eid);
-    }
-};
-
-
-##################################################################
 
 sub assign_entry_to_existing_authors_no_add{
     my $self = shift;
@@ -430,14 +357,11 @@ sub after_edit_process_authors{
       }
 
       
-      # my $tid = get_team_id($dbh, "NOTEAM");
-      # my $sth2 = $dbh->prepare("INSERT OR IGNORE INTO Author_to_Team(author_id, team_id, start, stop) Values (?, ?, ?, ?)");
-      # $sth2->execute($aid, $tid, 0, 0);
     }
     return $num_authors_created;
 }
 ################################################################################
-sub get_visibility_for_id {
+sub get_author_visibility_for_id {
    my $self = shift;
    my $id = shift;
    
@@ -453,78 +377,6 @@ sub get_visibility_for_id {
    return $disp;
 }
 ################################################################################
-sub delete_entry_by_id{
-    say "CALL: delete_entry_by_id"; 
-    my $dbh = shift;
-    my $id = shift;
-
-    my $sth = $dbh->prepare( "DELETE FROM Entry WHERE id = ?" );  
-    $sth->execute($id);
-
-    my $sth2 = $dbh->prepare( "DELETE FROM Entry_to_Tag WHERE entry_id = ?" );  
-    $sth2->execute($id);
-
-    my $sth3 = $dbh->prepare( "DELETE FROM Entry_to_Author WHERE entry_id = ?" );  
-    $sth3->execute($id);
-};
-# ################################################################################
-# sub get_all_non_hidden_entry_ids{
-#    my $dbh = shift;
-   
-#    my $qry = "SELECT DISTINCT id, creation_time, year FROM Entry WHERE hidden=0 ORDER BY year DESC, creation_time DESC";
-#    my $sth = $dbh->prepare( $qry );  
-#    $sth->execute(); 
-
-#    my @ids;
-   
-#    while(my $row = $sth->fetchrow_hashref()) {
-#       my $eid = $row->{id};
-#       push @ids, $eid if defined $eid;
-#    }
-
-#    return @ids;   
-# }
-################################################################################
-sub get_all_entry_ids{
-   my $dbh = shift;
-   
-   my $qry = "SELECT DISTINCT id FROM Entry";
-   my $sth = $dbh->prepare( $qry );  
-   $sth->execute(); 
-
-   my @ids;
-   
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{id};
-      push @ids, $eid if defined $eid;
-   }
-
-   return @ids;   
-}
-################################################################################
-sub get_all_tags{
-   my $dbh = shift;
-   
-   my $qry = "SELECT DISTINCT id, name FROM Tag ORDER BY name ASC";
-   my $sth = $dbh->prepare( $qry );  
-   $sth->execute(); 
-
-   my @tags;
-   my @ids;
-   my @parents;
-   
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $tid = $row->{id};
-      my $tag = $row->{name};
-      my $parent = 0;
-
-      push @tags, $tag if defined $tag;
-      push @ids, $tid if defined $tid;
-      push @parents, $parent if defined $parent;
-   }
-
-   return (\@tags, \@ids, \@parents);   
-}
 ################################################################################
 sub get_types_for_landing_page{
     my $dbh = shift;
@@ -642,13 +494,7 @@ sub get_DB_description_for_our_type{
     my $description = $row->{description} || undef;
     return $description;
 }
-################################################################################
-sub get_all_existing_bibtex_types{
 
-    ## defined by bibtex and constant
-
-    return ('article', 'book', 'booklet', 'conference', 'inbook', 'incollection', 'inproceedings', 'manual', 'mastersthesis', 'misc', 'phdthesis', 'proceedings', 'techreport', 'unpublished');
-}
 ################################################################################
 sub get_all_bibtex_types{
     my $dbh = shift;
@@ -723,36 +569,6 @@ sub get_all_teams{
 
    return (\@teams, \@ids);   
 }
-################################################################################
-sub get_tags_for_entry{
-   my $dbh = shift;
-   my $eid = shift;
-
-   my $qry = "SELECT Entry_to_Tag.tag_id, Tag.name 
-              FROM Entry_to_Tag 
-              LEFT JOIN Tag 
-              ON Tag.id = Entry_to_Tag.tag_id 
-              WHERE Entry_to_Tag.entry_id=? 
-              ORDER BY Tag.name";
-   my $sth = $dbh->prepare( $qry );  
-   $sth->execute($eid); 
-
-   my @tags;
-   my @ids;
-   my @parents;
-   
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $tid = $row->{tag_id};
-      my $tag = get_tag_name_for_id($dbh, $tid);
-      my $parent = '0';
-
-      push @tags, $tag if defined $tag;
-      push @ids, $tid if defined $tid;
-      push @parents, $parent if defined $parent;
-   }
-
-   return (\@tags, \@ids, \@parents);   
-}
 ##########################################################################
 sub get_year_for_entry_id{
    my $dbh = shift;
@@ -798,47 +614,6 @@ sub get_exceptions_for_entry_id{
    }
 
    return @exceptions;
-}
-##########################################################################
-sub get_entry_bibtex_type{
-   my $dbh = shift;
-   my $eid = shift;
-
-   my $sth = $dbh->prepare( "SELECT bibtex_type FROM Entry WHERE id=?" ); 
-   $sth->execute($eid);
-
-   my $row = $sth->fetchrow_hashref();
-   my $key = $row->{bibtex_type};
-   return $key;
-}
-##########################################################################
-sub get_entry_key{
-   my $dbh = shift;
-   my $eid = shift;
-
-   my $sth = $dbh->prepare( "SELECT bibtex_key FROM Entry WHERE id=?" ); 
-   $sth->execute($eid);
-
-   my $row = $sth->fetchrow_hashref();
-   my $key = $row->{bibtex_key};
-   return $key;
-}
-##########################################################################
-sub get_entry_title{
-    my $dbh = shift;
-    my $eid = shift;
-
-    my $sth = $dbh->prepare( "SELECT title FROM Entry WHERE id=?" ); 
-    $sth->execute($eid);
-
-    my $row = $sth->fetchrow_hashref();
-    my $title = $row->{title} || "title undefined";
-
-    $title =~ s/\{//g;
-    $title =~ s/\}//g;
-    $title = decode('latex', $title);
-
-    return $title;
 }
 
 ##########################################################################
@@ -920,6 +695,9 @@ sub get_master_for_id{
    return $master;
 }
 ##########################################################################
+########################################################################## # here optimize further
+##########################################################################
+##########################################################################
 sub get_team_id{
    my $dbh = shift;
    my $team = shift;
@@ -958,33 +736,6 @@ sub get_tag_id{
    print "ID = -1 for tag $tag\n" unless defined $id;
    return $id;
 }
-##########################################################################
-sub get_tag_name_for_id{
-   my $dbh = shift;
-   my $id = shift;
-
-   my $sth = $dbh->prepare( "SELECT name FROM Tag WHERE id=?" );     
-   $sth->execute($id);
-
-   my $row = $sth->fetchrow_hashref();
-   my $name = $row->{name} || -1;
-   print "ID = -1 for tag $id\n" unless defined $name;
-   return $name;
-}
-# ##########################################################################
-# sub get_tag_name_for_permalink{
-#    my $dbh = shift;
-#    my $permalink = shift;
-
-#    my $sth = $dbh->prepare( "SELECT name FROM Tag WHERE permalink=?" );     
-#    $sth->execute($permalink);
-
-#    my $row = $sth->fetchrow_hashref();
-#    my $name = $row->{name} || -1;
-#    print "permalink = -1 for tag $permalink\n" unless defined $name;
-#    return $name;
-# }
-
 ################################################################################
 sub add_team_for_author {
    my $self = shift;
@@ -1342,46 +1093,8 @@ sub create_user_id {
    return $userID;
 }
 
-################################################################################
-sub generate_html_for_id{
-   my $dbh = shift;
-   my $eid = shift;
 
-   my $sth = $dbh->prepare( "SELECT need_html_regen, bibtex_key, bib, html 
-         FROM Entry 
-         WHERE id = ?" );  
-   $sth->execute($eid); 
 
-   
-   my $bib = undef;
-   my $key = undef;
-   my $old_html = undef;
-   my $entry_needs_html_regeration = undef;
-   
-   while(my $row = $sth->fetchrow_hashref()) {
-      $bib = $row->{bib};
-      $old_html = $row->{html};
-      $key = $row->{bibtex_key};
-      $entry_needs_html_regeration = $row->{need_html_regen};
-   }
-    
-   my ($html, $htmlbib) = get_html_for_bib($bib, $key);
-
-   # this triggers: modified_time=CURRENT_TIMESTAMP  # minor severity
-
-   my $sth2 = $dbh->prepare( "UPDATE Entry
-      SET html = ? , html_bib = ?, need_html_regen = 0
-      WHERE id = ?" );  
-   $sth2->execute($html, $htmlbib, $eid); 
-};
-################################################################################
-sub generate_html_for_key{
-   my $dbh = shift;
-   my $key = shift;
-
-   my $eid = Fget_entry_id_for_bibtex_key($dbh, $key);
-   return generate_html_for_id($dbh, $eid);
-};
 
 ################################################################################
 

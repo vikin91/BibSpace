@@ -203,7 +203,7 @@ sub all_defined_by_set {
   $end_set = $end_set - get_set_of_papers_for_team($self, 1);
 
   #test
-  my $all_papers = get_set_of_all_papers($self);
+  my $all_papers = get_set_of_all_paper_ids($self->app->db);
   my $not_relevant_papers = $all_papers - get_set_of_papers_for_all_authors_of_team_id($self, 1);
 
   $end_set = $not_relevant_papers;

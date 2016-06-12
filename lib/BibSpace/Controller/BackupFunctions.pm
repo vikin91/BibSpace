@@ -35,7 +35,6 @@ our @EXPORT = qw(
     get_backup_id
     get_backup_creation_time
     get_backup_age_in_days
-    dump_db_to_bib_team
     );
 
 
@@ -332,67 +331,5 @@ sub get_backup_age_in_days{
 
 ################################################################################
 
-
-sub dump_db_to_bib_team{
-  my $self = shift;
-  my $team = shift;
-  # my $backup_dbh = $self->app->db;
-my $backup_dbh = $self->app->db; 
-  my $normal_dbh = $self->app->db;
-  my $teamid = get_team_id($normal_dbh, $team);
-
-  
-
-  # my $config = $self->conf;
-  # my $config = $self->app->plugin('Config');
-  # my $backup_dir = $config->{backupdir} || "./backups";
-  
-  my $backup_dir = "./backups";
-  my $str = Time::Piece::localtime->strftime('%Y%m%d-%H%M%S');
-  my $fname = $backup_dir."/backup-".$team."-".$str.".bak.bib";
-
-  # my $dbfname = $backup_dir."/backup-full-db-".$str.".db";
-
-  # log_to_backup_table($backup_dbh, $dbfname);
-
-  # $self->app->db->disconnect();
-  # copy("bib.db", $dbfname);
-
-  # $normal_dbh = $self->app->db;
-  
-  
-
-  my $sth = undef;
-
-  if(! defined $team or $team eq 'full'){
-      $team = "full";
-      $sth = $normal_dbh->prepare( "SELECT DISTINCT bib, year, bibtex_key FROM Entry ORDER BY year DESC, bibtex_key ASC" );  
-      $sth->execute();
-  }
-  else{
-      $sth = $normal_dbh->prepare( "SELECT DISTINCT bib
-      FROM Entry
-      LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id 
-      LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id
-      LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id       
-         WHERE Entry.bibtex_key IS NOT NULL
-         AND ((Exceptions_Entry_to_Team.team_id = ? ) OR (Author_to_Team.team_id = ?))
-         ORDER BY Entry.year DESC, Entry.bibtex_key ASC" );  
-      $sth->execute($teamid, $teamid);
-  }
-
-  $self->write_log("Dumping bib form DB for team: $team");
- 
-  
-  say "saving bib dump to file $fname";
-  
-  write_file( $fname, {append => 0 }, undef );
-
-
-  while(my $row = $sth->fetchrow_hashref()) {
-      my $bib = $row->{bib} || " ";
-      write_file( $fname, {append => 1 }, $bib );
-   }
-}
 ####################################################################################
 1;

@@ -8,7 +8,6 @@ use File::Slurp;
 use Try::Tiny;
 
 use Mojo::Base 'Mojolicious::Controller';
-use BibSpace::Controller::Core qw(get_all_entry_ids);
 use BibSpace::Controller::BackupFunctions;
 
 

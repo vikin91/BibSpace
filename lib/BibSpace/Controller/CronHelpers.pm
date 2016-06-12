@@ -16,6 +16,8 @@ use BibSpace::Controller::Set;
 use BibSpace::Controller::Publications;
 use BibSpace::Controller::BackupFunctions;
 
+use BibSpace::Functions::FPublications;
+
 use base 'Mojolicious::Plugin';
 sub register {
 
@@ -35,18 +37,10 @@ sub register {
         my $self = shift;
         my $dbh = $self->app->db;
 
-        my $sth = $dbh->prepare( "SELECT DISTINCT id FROM Entry WHERE need_html_regen = 1" );  
-        $sth->execute(); 
-
-        my @ids;
-
-        while(my $row = $sth->fetchrow_hashref()) {
-            my $eid = $row->{id};
-            push @ids, $eid if defined $eid;
-        }
-        for my $id (@ids){
-           generate_html_for_id($dbh, $id);
-           # $self->write_log("HTML regen from helper  for eid $id");
+        my @entries = MEntry->static_all($dbh);
+        for my $e (@entries){
+          $e->generate_html($dbh);
+          $e->save($dbh);
         }
     });
 
@@ -72,7 +66,7 @@ sub register {
 
     $app->helper(helper_clean_ugly_bibtex_fields_for_all_entries => sub {
         my $self = shift;
-        clean_ugly_bibtex_fields_for_all_entries($self);
+        Fclean_ugly_bibtex_fields_for_all_entries($self->app->db);
     });
 
     

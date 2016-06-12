@@ -78,7 +78,7 @@ sub show {
       # my $id = get_author_id_for_master($dbh, $master);
       my $mid = $master_id; #get_master_id_for_master($dbh, $master);
 
-      my $disp = get_visibility_for_id($self, $mid);      
+      my $disp = get_author_visibility_for_id($self, $mid);      
 
       push @autorzy_id_arr, $mid;
       push @autorzy_names_arr, $master;
@@ -198,7 +198,7 @@ sub can_be_deleted{
   my $self = shift;
   my $id = shift;
 
-  my $visibility = get_visibility_for_id($self, $id);
+  my $visibility = get_author_visibility_for_id($self, $id);
 
 
   my ($teams_arr, $start_arr, $stop_arr, $team_id_arr) = get_teams_of_author($self, $id);
@@ -343,7 +343,7 @@ sub delete_author {
      my $dbh = $self->app->db;
      my $id = $self->param('id');
 
-     my $visibility = get_visibility_for_id($self, $id);
+     my $visibility = get_author_visibility_for_id($self, $id);
 
      if(defined $id and $id != -1 and can_be_deleted($self, $id)==1){
         delete_author_force($self, $id);
@@ -373,7 +373,7 @@ sub do_delete_author_force {
      my $dbh = $self->app->db;
      my $id = shift;
 
-     my $visibility = get_visibility_for_id($self, $id);
+     my $visibility = get_author_visibility_for_id($self, $id);
 
      if(defined $id and $id != -1){
         my $sth = $dbh->prepare('DELETE FROM Author WHERE master_id=?');
@@ -590,7 +590,7 @@ sub reassign_authors_to_entries_and_create_authors {
 
    my $dbh = $self->app->db;
    my $master = get_master_for_id($dbh, $id);
-   my $disp = get_visibility_for_id($self, $id);
+   my $disp = get_author_visibility_for_id($self, $id);
 
    my $sth2;
 

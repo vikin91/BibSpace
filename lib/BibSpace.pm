@@ -323,12 +323,12 @@ sub startup {
   $logged_user->get('/teams')->to('teams#show');
   $logged_user->get('/teams/members/:teamid')->to('teams#team_members');
 
-  $logged_user->get('/teams/edit/:teamid')->to('teams#edit');
+  $logged_user->get('/teams/edit/:teamid')->to('teams#edit')->name('edit_team');
   $logged_user->get('/teams/delete/:id_to_delete')->to('teams#delete_team');
   $logged_user->get('/teams/delete/:id_to_delete/force')->to('teams#delete_team_force');
   $logged_user->get('/teams/unrealted_papers/:teamid')->to('publications#show_unrelated_to_team');
 
-  $logged_user->get('/teams/add')->to('teams#add_team');
+  $logged_user->get('/teams/add')->to('teams#add_team')->name('add_team_get');
   $logged_user->post('/teams/add/')->to('teams#add_team_post');
 
   ################ EDITING PUBLICATIONS ################

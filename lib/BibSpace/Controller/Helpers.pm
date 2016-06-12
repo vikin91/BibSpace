@@ -19,7 +19,6 @@ use BibSpace::Controller::BackupFunctions;
 
 use BibSpace::Functions::FPublications;
 
-use BibSpace::Functions::TagObj;
 use BibSpace::Functions::TagTypeObj;
 
 use base 'Mojolicious::Plugin';
@@ -125,8 +124,7 @@ sub register {
         my $eid = shift;
         my $type = shift || 1;
 
-        my @tobjarr = BibSpace::Functions::TagObj->getTagsOfTypeForPaper($self->app->db, $eid, $type);
-        return @tobjarr;
+        return  MTag->static_get_all_of_type_for_paper($self->app->db, $eid, $type);
     });
 
     $app->helper(get_unassigned_tags_of_type_for_paper => sub {
@@ -134,8 +132,7 @@ sub register {
         my $eid = shift;
         my $type = shift || 1;
 
-        my @tobjarr = BibSpace::Functions::TagObj->getUnassignedTagsOfTypeForPaper($self->app->db, $eid, $type);
-        return @tobjarr;
+        return  MTag->static_get_unassigned_of_type_for_paper($self->app->db, $eid, $type);
     });
 
     
@@ -203,14 +200,15 @@ sub register {
     $app->helper(get_tag_name => sub {
         my $self = shift;
         my $id = shift;
-        return get_tag_name_for_id($self->app->db, $id);
+        my $mtag = MTag->static_get($self->app->db, $id);
+        return $mtag->{name};
     });
 
     $app->helper(author_is_visible => sub {
         my $self = shift;
         my $id = shift;
 
-        return get_visibility_for_id($self, $id);
+        return get_author_visibility_for_id($self, $id);
       });
 
 
@@ -218,7 +216,7 @@ sub register {
         my $self = shift;
         my $id = shift;
 
-        my $visibility = get_visibility_for_id($self, $id);
+        my $visibility = get_author_visibility_for_id($self, $id);
         return 0 if $visibility == 1;
 
         my ($teams_arr, $start_arr, $stop_arr, $team_id_arr) = get_teams_of_author($self, $id);
@@ -270,11 +268,16 @@ sub register {
 
     
     $app->helper(helper_get_entry_title => sub {
-        my $self = shift;
-        my $eid = shift;
+      my $self = shift;
+      my $id = shift;
+      my $dbh = $self->app->db;
 
-        return get_entry_title($self->app->db, $eid);
-      });
+      my $mentry = MEntry->static_get($dbh, $id);
+      if(!defined $mentry){
+        return "";
+      }
+      return $mentry->{title};
+    });
 
     
 

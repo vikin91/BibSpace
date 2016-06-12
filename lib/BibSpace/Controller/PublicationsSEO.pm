@@ -48,6 +48,11 @@ sub meta {
   my $id = $self->param('id');
 
   my $mentry = MEntry->static_get($self->app->db, $id);
+  if(!defined $mentry){
+    $self->flash(msg => "There is no entry with id $id");
+    $self->redirect_to($self->get_referrer);  
+    return;
+  }
 
   if($mentry->{hidden} == 1){
     $self->render(text => 'Cannot find entry id: '.$id, status => 404);

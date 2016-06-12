@@ -205,30 +205,6 @@ done_testing();
 #     ->text_is( h2 => "Tags of type test (ID=$tag_type_id)" );
 
 
-# note "============ Adding tag ============";
-# $t_logged_in->post_ok("/tags/add/$tag_type_id" => form => {new_tag => 'test'});
-# my $tag_id = TagObj->getByName($dbh, 'test')->{id} || -1;
-
-# $t_logged_in->get_ok("/tags/$tag_type_id")
-#     ->status_is(200)
-#     ->text_is( h2 => "Tags of type test (ID=$tag_type_id)" )
-#     ->content_like(qr/bibtex\?tag=Test/i);
-
-# note "============ Adding second tag ============";
-# $t_logged_in->post_ok("/tags/add/$tag_type_id" => form => {new_tag => 'second_test'});
-# my $second_tag_id = TagObj->getByName($dbh, 'second_test')->{id} || -1;
-
-# $t_logged_in->get_ok("/tags/$tag_type_id")
-#     ->status_is(200)
-#     ->text_is( h2 => "Tags of type test (ID=$tag_type_id)" )
-#     ->content_like(qr/bibtex\?tag=Second_test/i);
-
-# note "============ Removing tag ============";
-# $t_logged_in->get_ok("/tags/delete/$second_tag_id")
-#     ->status_isnt(404)->status_isnt(500)
-#     ->text_isnt( h2 => "Tags of type test (ID=$tag_type_id)" )
-#     ->content_unlike(qr/bibtex\?tag=Second_test"/i);
-
 
 
 

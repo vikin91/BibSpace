@@ -33,6 +33,7 @@ our @EXPORT = qw(
     Fget_publications_core_from_array_ref
     Fget_publications_core_from_set
     Fget_publications_core
+    Fclean_ugly_bibtex_fields_for_all_entries
     );
 
 ####################################################################################
@@ -128,6 +129,7 @@ sub Fhandle_add_edit_publication {
   my $e;
   $e = MEntry->new() if $id < 0;
   $e = MEntry->static_get($dbh, $id) if $id > 0;
+  $e = MEntry->new() if !defined $e; # by wrong id, we create new object. Should never happen
   $e->{id} = $id;
   $e->{bib} = $new_bib;
   my $bibtex_code_valid = $e->populate_from_bib();
@@ -326,5 +328,14 @@ sub Fget_publications_core{
     return @objs;
 }
 ####################################################################################
-
-
+sub Fclean_ugly_bibtex_fields_for_all_entries {
+  my $dbh = shift; 
+    
+  my @entries = MEntry->static_all($dbh);
+  my $num_del = 0;
+  foreach my $e (@entries){
+    $num_del = $num_del + $e->clean_ugly_bibtex_fields($dbh);
+  }
+  return $num_del;
+};
+####################################################################################

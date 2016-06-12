@@ -1,7 +1,8 @@
 use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
-
+use Data::Dumper;
+use Array::Utils qw(:all);
 
 
 my $t_anyone = Test::Mojo->new('BibSpace');
@@ -175,15 +176,15 @@ $en2->{bib} = '@misc{test, tags = {aa;bb;cc}}';
 is($en2->process_tags($dbh), 1, "Adding 1 extra tag");
 
 
-foreach my $num_tags ((1,5,7,8,9,34,56,99,432)){
-  $dbh->do('DELETE FROM Tag;');
-  my $tstr = '@misc{test, tags = {';
-  $tstr .= join ';' => map random_string(25), 1 .. $num_tags;
-  $tstr .= '}}';  
-  $en2->{bib} = $tstr;
+# foreach my $num_tags ((1,5,7,8,9,34,56,99,432)){
+#   $dbh->do('DELETE FROM Tag;');
+#   my $tstr = '@misc{test, tags = {';
+#   $tstr .= join ';' => map random_string(25), 1 .. $num_tags;
+#   $tstr .= '}}';  
+#   $en2->{bib} = $tstr;
 
-  is($en2->process_tags($dbh), $num_tags, "Adding $num_tags tags"); # we assume, that some may repeat
-}
+#   is($en2->process_tags($dbh), $num_tags, "Adding $num_tags tags"); # we assume, that some may repeat
+# }
 
 
 # test adding many tags
@@ -411,6 +412,99 @@ is($en7->is_talk_in_DB($dbh), 1);
 is($en7->is_talk_in_tag($dbh), 1);
 $en7->make_paper($dbh);
 
+
+{
+
+  my $en2 = MEntry->new();
+  $en2->{bib} = '@mastersthesis{ma_199A,
+    address = {World},
+    author = {James Bond},
+    month = {August},
+    school = {University of Bond},
+    title = {{Selected aspects of some methods}},
+    year = {1999},
+  }';
+
+
+  ok($en2->bibtex_has_field('year'), "MEntry has field year");
+  ok(!$en2->bibtex_has_field('journal'), "MEntry hasn't field");
+  ok($en2->bibtex_has_field('school'), "MEntry has field school");
+
+  is($en2->remove_bibtex_fields($dbh, ['school']), 1, "Remove field school");
+  ok(!$en2->bibtex_has_field('school'), "MEntry hasn't field");
+
+  is($en2->remove_bibtex_fields($dbh, ['address', 'author']), 2, "Remove 2 fields");
+  ok(!$en2->bibtex_has_field('address'), "MEntry hasn't field");
+  ok(!$en2->bibtex_has_field('author'), "MEntry hasn't field");
+
+}
+
+{
+  my $entry = MEntry->new();
+  $entry->{bib} = '@mastersthesis{ma_'.random_string(25).',
+    address = {World},
+    author = {James Bond},
+    month = {August},
+    school = {University of Bond},
+    title = {{Selected aspects of some methods}},
+    year = {1999},
+  }';
+  $entry->populate_from_bib($dbh);
+  $entry->make_paper($dbh);
+  $entry->save($dbh);
+  # test adding many tags
+  # map { int rand(40) } ( 1..30 ) -- array of length 30 filled with ints between 5 and 39+5
+  my @ints_arr = map { 5+int rand(40) } ( 1..30 );
+  
+
+  foreach my $num_tags (@ints_arr){
+    $dbh->do('DELETE FROM Tag;');
+    $dbh->do('DELETE FROM Entry_to_Tag WHERE entry_id='.$entry->{id}.';');
+    
+    my @tags_to_add_mix = map { random_string(25) } (1 .. $num_tags);
+    my @tags_to_add = unique(@tags_to_add_mix, @tags_to_add_mix);
+
+    is($entry->add_tags($dbh, \@tags_to_add), $num_tags, "Adding $num_tags tags");
+
+    my @got_tags = $entry->tags($dbh);
+    my @got_tag_names = map {$_->{name}} @got_tags;
+    is(scalar @got_tag_names, $num_tags, "Added correctly");
+
+    is(array_diff(@got_tag_names, @tags_to_add), 0, "Arrays identical");
+
+    # my $random_index = int rand($num_tags - 1);
+    my $some_tag_name = shift @got_tag_names; #$got_tag_names[$random_index];
+    is($entry->remove_tag_by_name($dbh, $some_tag_name), 1, "MEntry remove Tag by name: $some_tag_name ");
+
+    @got_tags = $entry->tags($dbh);
+    @got_tag_names = map {$_->{name}} @got_tags;
+    is(array_diff(@got_tag_names, @tags_to_add), 1, "Arrays identical but 1");
+
+    my $some_tag_name2 = shift @got_tag_names;
+    my $some_tag_name3 = shift @got_tag_names;
+    my $some_tag_name4 = shift @got_tag_names;
+    is($entry->remove_tag_by_name($dbh, $some_tag_name2), 1, "MEntry remove Tag by name: $some_tag_name2 ");
+    is($entry->remove_tag_by_name($dbh, $some_tag_name3), 1, "MEntry remove Tag by name: $some_tag_name3 ");
+    is($entry->remove_tag_by_name($dbh, $some_tag_name4), 1, "MEntry remove Tag by name: $some_tag_name4 ");
+
+    @got_tags = $entry->tags($dbh);
+    @got_tag_names = map {$_->{name}} @got_tags;
+    is(array_diff(@got_tag_names, @tags_to_add), 4, "Arrays identical but 4");
+  }
+
+  is($entry->remove_tag_by_name($dbh, "zzz"), 0, "MEntry remove Tag by name zzz");
+
+  is($entry->remove_tag_by_id($dbh, -1), 0, "MEntry remove Tag by id -1");
+  my @some_tag_objs = $entry->tags($dbh);
+  my $some_tag_obj = shift @some_tag_objs;
+  is($entry->remove_tag_by_id($dbh, $some_tag_obj->{id}), 1, "MEntry remove Tag by id $some_tag_obj->{id}");
+}
+
+
+# sub remove_tag_by_id {
+#   my $self = shift;
+#   my $dbh = shift;
+#   my $tag_id = shift;
 
 
 ### to test:

@@ -13,6 +13,8 @@ use DBI;
 
 use BibSpace::Controller::Core;
 
+use BibSpace::Model::MTeam;
+
 use Set::Scalar;
 
 use Exporter;
@@ -27,100 +29,36 @@ our @EXPORT = qw(
     get_set_of_authors_for_team
     get_set_of_papers_for_all_authors_of_team_id
     get_set_of_papers_for_team
-    get_set_of_all_papers
-    get_ids_arr_of_unassigned_tags
+    get_set_of_all_paper_ids
     get_set_of_papers_with_no_tags
     get_set_of_tagged_papers
     get_set_of_teams_for_author_id
     get_set_of_teams_for_author_id_w_year
     get_set_of_teams_for_entry_id
-    get_set_of_all_teams
+    get_set_of_all_team_ids
     get_set_of_papers_for_team_and_tag
     get_set_of_papers_with_exceptions
    );
 
-
 ####################################################################################
 
-sub get_ids_arr_of_unassigned_tags {
-    my $self = shift;
-    my $eid = shift;
-    my $dbh = $self->app->db;
+sub get_set_of_all_team_ids {
+    my $dbh = shift;
 
-    
-
-    my ($all_tags_arrref, $all_ids_arrref, $all_parents_arrref) = get_all_tags($dbh);
-    my ($tags_arrref, $ids_arrref, $parents_arrref) = get_tags_for_entry($dbh, $eid);
-
-    my $set_all_tags = Set::Scalar->new(@$all_ids_arrref);
-    my $set_assigned_tags = Set::Scalar->new(@$ids_arrref);
-    # probles with sorting when using sets!
-
-
-    my @result;
-
-    for my $t (@$all_ids_arrref){
-        if ( !grep( /^$t$/, @$ids_arrref ) ) {
-            push @result, $t;
-        }
-    }
-
-    # @result = ($set_all_tags - $set_assigned_tags)->members;
-    return @result;
-    
-}
-####################################################################################
-
-sub get_set_of_all_teams {
-    my $self = shift;
-    my $dbh = $self->app->db;
-
-    my $set = new Set::Scalar;
-
-
-    my @params;
-
-    my $qry = "SELECT DISTINCT id
-                FROM Team
-                WHERE name IS NOT NULL ";
-
-    my $sth = $dbh->prepare_cached( $qry );  
-    $sth->execute(@params); 
-
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $team_id = $row->{id};
-
-      $set->insert($team_id);
-    }
-
+    my @all_teams = MTeam->static_all($dbh);
+    my @all_team_ids_arr = map {$_->{id}} @all_teams;
+    my $set = Set::Scalar->new(@all_team_ids_arr);
     return $set;
 }
 ####################################################################################
 
-sub get_set_of_all_papers {
-    my $self = shift;
-    my $dbh = $self->app->db;
+sub get_set_of_all_paper_ids {
+    my $dbh = shift;
 
-    my $set = new Set::Scalar;
-
-
-    my @params;
-
-    my $qry = "SELECT DISTINCT id, year, bibtex_key
-                FROM Entry
-                WHERE bibtex_key IS NOT NULL ";
-    $qry .= "ORDER BY year DESC, bibtex_key ASC";
-
-    my $sth = $dbh->prepare_cached( $qry );  
-    $sth->execute(@params); 
-
-    while(my $row = $sth->fetchrow_hashref()) {
-      my $eid = $row->{id};
-
-      $set->insert($eid);
-    }
-
-    return $set;
+    my @all_entry_objects = MEntry->static_all($dbh);
+    my @all_entry_objects_ids_arr = map {$_->{id}} @all_entry_objects; # wow!
+    my $all_entry_objects_ids_arr_set = Set::Scalar->new(@all_entry_objects_ids_arr);
+    return $all_entry_objects_ids_arr_set;
 }
 
 ####################################################################################

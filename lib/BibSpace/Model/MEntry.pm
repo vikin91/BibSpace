@@ -39,60 +39,60 @@ package MEntry;
    has 'need_html_regen' => (is => 'rw', default => '1'); 
 
 ####################################################################################
-    sub static_all {
-        my $self = shift;
-        my $dbh = shift;
+sub static_all {
+  my $self = shift;
+  my $dbh = shift;
 
-        my $qry = "SELECT DISTINCT id,
-                    entry_type,
-                    bibtex_key,
-                    bibtex_type,
-                    bib,
-                    html,
-                    html_bib,
-                    abstract,
-                    title,
-                    hidden,
-                    year,
-                    month,
-                    sort_month,
-                    teams_str,
-                    people_str,
-                    tags_str,
-                    creation_time,
-                    modified_time,
-                    need_html_regen
-                FROM Entry";
-        my @objs;
-        my $sth = $dbh->prepare( $qry );
-        $sth->execute();
+  my $qry = "SELECT id,
+              entry_type,
+              bibtex_key,
+              bibtex_type,
+              bib,
+              html,
+              html_bib,
+              abstract,
+              title,
+              hidden,
+              year,
+              month,
+              sort_month,
+              teams_str,
+              people_str,
+              tags_str,
+              creation_time,
+              modified_time,
+              need_html_regen
+          FROM Entry";
+  my @objs = ();
+  my $sth = $dbh->prepare( $qry );
+  $sth->execute();
 
-        while(my $row = $sth->fetchrow_hashref()) {
-            my $obj = MEntry->new(
-                                  id => $row->{id},
-                                  entry_type => $row->{entry_type},
-                                  bibtex_key => $row->{bibtex_key},
-                                  bibtex_type => $row->{bibtex_type},
-                                  bib => $row->{bib},
-                                  html => $row->{html},
-                                  html_bib => $row->{html_bib},
-                                  abstract => $row->{abstract},
-                                  title => $row->{title},
-                                  hidden => $row->{hidden},
-                                  year => $row->{year},
-                                  month => $row->{month},
-                                  sort_month => $row->{sort_month},
-                                  teams_str => $row->{teams_str},
-                                  people_str => $row->{people_str},
-                                  tags_str => $row->{tags_str},
-                                  creation_time => $row->{creation_time},
-                                  modified_time => $row->{modified_time},
-                                  need_html_regen => $row->{need_html_regen},
-                            );
-            push @objs, $obj;
-        }
-        return @objs;
-    }
+  while(my $row = $sth->fetchrow_hashref()) {
+    my $obj = MEntry->new(
+                          id => $row->{id},
+                          entry_type => $row->{entry_type},
+                          bibtex_key => $row->{bibtex_key},
+                          bibtex_type => $row->{bibtex_type},
+                          bib => $row->{bib},
+                          html => $row->{html},
+                          html_bib => $row->{html_bib},
+                          abstract => $row->{abstract},
+                          title => $row->{title},
+                          hidden => $row->{hidden},
+                          year => $row->{year},
+                          month => $row->{month},
+                          sort_month => $row->{sort_month},
+                          teams_str => $row->{teams_str},
+                          people_str => $row->{people_str},
+                          tags_str => $row->{tags_str},
+                          creation_time => $row->{creation_time},
+                          modified_time => $row->{modified_time},
+                          need_html_regen => $row->{need_html_regen},
+                    );
+    push @objs, $obj;
+  }
+  return @objs;
+}
 ####################################################################################
 sub static_get {
   my $self = shift;
@@ -158,6 +158,9 @@ sub update {
 
   my $result = "";
 
+  $self->{title} =~ s/\{//g if defined $self->{title};
+  $self->{title} =~ s/\}//g if defined $self->{title};
+  $self->{title} = BibSpace::Controller::Core::decode('latex', $self->{title}) if defined $self->{title};
 
   if(!defined $self->{id}){
       say "Cannot update. Entry id not set. The entry may not exist in the DB. Returning -1";
@@ -215,6 +218,10 @@ sub insert {
   my $dbh = shift;
 
   my $result = "";
+
+  $self->{title} =~ s/\{//g;
+  $self->{title} =~ s/\}//g;
+  $self->{title} = BibSpace::Controller::Core::decode('latex', $self->{title});
 
 
   my $qry = "
@@ -433,11 +440,12 @@ sub fix_month {
   return $num_fixes;
 }
 ########################################################################################################################
-sub is_talk_in_DB{
+sub is_talk_in_DB {
   my $self = shift;
   my $dbh = shift;
 
   my $db_e = MEntry->static_get($dbh, $self->{id});
+  return undef unless defined $db_e;
   if( $db_e->{entry_type} eq 'talk'){
     return 1;
   }
@@ -666,7 +674,7 @@ sub static_get_from_id_array {
   # the performance here can be optimized 
   for my $wanted_id (@input_id_arr){
     my $e = MEntry->static_get($dbh, $wanted_id);
-    push @output_arr, $e;
+    push @output_arr, $e if defined $e;
   }
 
   # say "static_get_from_id_array output1: ".Dumper \@output_arr;
@@ -804,11 +812,11 @@ sub hasTag{
     my $dbh = shift;
     my $tag_to_find = shift;
 
-    my $tag_id = BibSpace::Controller::Core::get_tag_id($dbh, $tag_to_find);
-    if($tag_id == -1){
-        $tag_id = $tag_to_find;
-    }
+    my $mtag = MTag->static_get_by_name($dbh, $tag_to_find);
+    return 0 if !defined $mtag;
+    return 0 if defined $mtag and $mtag->{id} < 0;
 
+    my $tag_id = $mtag->{id};
     my $qry = "SELECT COUNT(*) FROM Entry_to_Tag WHERE entry_id = ? AND tag_id = ?";
     my @ary = $dbh->selectrow_array($qry, undef, $self->{id}, $tag_id);  
     my $key_exists = $ary[0];
@@ -820,5 +828,137 @@ sub hasTag{
     return 0;
 
 }
+####################################################################################
+sub tags {
+  my $self = shift;
+  my $dbh = shift;
+
+  return () if !defined $self->{id} or $self->{id} < 0;
+
+  my $qry = "SELECT entry_id, tag_id FROM Entry_to_Tag WHERE entry_id = ?";
+  my $sth = $dbh->prepare_cached( $qry );  
+  $sth->execute($self->{id}); 
+
+  my @tags = ();
+
+  while(my $row = $sth->fetchrow_hashref()) {
+    my $tag_id = $row->{tag_id};
+    my $mtag = MTag->static_get($dbh, $tag_id);
+    push @tags, $mtag if defined $mtag;
+  }
+  return @tags;
+};
+####################################################################################
+sub add_tags {
+  my $self = shift;
+  my $dbh = shift;
+  my $tag_names_arr_ref = shift;
+  my $tag_type = shift // 1;
+  my @tag_names =  @$tag_names_arr_ref;
+
+  my $num_added = 0;
+
+  return 0 if !defined $self->{id} or $self->{id} < 0;
+
+  my @tags = ();
+  foreach my $tn (@tag_names){
+    my $t = MTag->static_get_by_name($dbh, $tn);
+    if(!defined $t){
+      $t = MTag->new();
+      $t->{name} = $tn;
+      $t->{tag_type} = $tag_type;
+      $t->save($dbh);
+    }
+    $t = MTag->static_get_by_name($dbh, $tn);
+
+    my $sth = $dbh->prepare( "INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
+    my $added = $sth->execute($self->{id}, $t->{id});
+    $num_added = $num_added + $added;
+  }
+  return $num_added;
+};
+####################################################################################
+sub remove_tag_by_id {
+  my $self = shift;
+  my $dbh = shift;
+  my $tag_id = shift;
+
+  my $num_deleted = 0;
+
+  return 0 if !defined $self->{id} or $self->{id} < 0;
+
+  my $tag = MTag->static_get($dbh, $tag_id);
+  if(defined $tag){
+    my $sth = $dbh->prepare( "DELETE FROM Entry_to_Tag WHERE entry_id=? AND tag_id=?");
+    $num_deleted = $sth->execute($self->{id}, $tag->{id});  
+  }
+  return $num_deleted;
+};
+####################################################################################
+sub remove_tag_by_name {
+  my $self = shift;
+  my $dbh = shift;
+  my $tag_name = shift;
+
+  my $num_deleted = 0;
+
+  return 0 if !defined $self->{id} or $self->{id} < 0;
+
+  my $tag = MTag->static_get_by_name($dbh, $tag_name);
+  if(defined $tag){
+    $num_deleted = $self->remove_tag_by_id($dbh, $tag->{id});
+  }
+  return $num_deleted;
+};
+####################################################################################
+
+
+
+
+
+
+####################################################################################
+sub clean_ugly_bibtex_fields {
+  my $self = shift;
+  my $dbh = shift;
+
+  my @arr_default = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
+  return $self->remove_bibtex_fields($dbh, \@arr_default);
+};
+####################################################################################
+sub remove_bibtex_fields {
+  my $self = shift;
+  my $dbh = shift;
+  my $arr_ref_bib_fields_to_delete = shift;
+  my @bib_fields_to_delete = @$arr_ref_bib_fields_to_delete;
+
+  my $entry = new Text::BibTeX::Entry();
+  $entry->parse_s($self->{bib});
+  return -1 unless $entry->parse_ok;
+  my $key = $entry->key;
+
+  my $num_deleted = 0;
+
+  for my $field (@bib_fields_to_delete){
+    $entry->delete($field) if defined $entry->exists($field);
+    $num_deleted++  if defined $entry->exists($field);
+  }
+  
+  if( $num_deleted > 0){
+    my $new_bib = $entry->print_s;
+
+    # cleaning errors caused by sqlite - mysql import # FIXME: do we still need this?
+    $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
+    $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
+
+    $new_bib =~ s/\\\\/\\/g;
+    $new_bib =~ s/\\\\/\\/g;
+
+
+    $self->{bib} = $new_bib;
+    $self->save($dbh);
+  }
+  return $num_deleted;
+};
 ####################################################################################
 1;
