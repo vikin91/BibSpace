@@ -1108,7 +1108,7 @@ sub get_html_for_bib{
   $bib_str =~ s/''o/\\''o/g;
   $bib_str =~ s/''e/\\''e/g;
 
-  say "USING GLOBAL TMP DIR (bibtex2html_tmp_dir): $bibtex2html_tmp_dir";
+  # say "USING GLOBAL TMP DIR (bibtex2html_tmp_dir): $bibtex2html_tmp_dir";
 
   my $out_file = $bibtex2html_tmp_dir."/out";
   my $outhtml = $out_file.".html";
@@ -1140,11 +1140,17 @@ sub get_html_for_bib{
 
   # print "COMMAND: $bibtex2html_command\n";
   my $syscommand = "export TMPDIR=".$bibtex2html_tmp_dir." && ".$bibtex2html_command.' &> /dev/null';
+  `$syscommand`;
+  my $command_output = $?;
   # say "=====\n";
   # say "cwd: ".$cwd."\n";
-  # say $syscommand;
+  # say "Running: $syscommand";
+  say "Output: $command_output.";
   # say "=====\n";
-  system($syscommand);
+  if($command_output ne '0'){
+    return "", "";
+  }
+  
 
 
 

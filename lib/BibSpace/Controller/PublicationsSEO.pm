@@ -30,13 +30,8 @@ use Mojo::Log;
 sub metalist {
     my $self = shift;
 
-    my @ids_arr = ();
     my @pubs = Fget_publications_main_hashed_args_only($self, {hidden => 0, entry_type=>'paper'});
-    for my $entry (@pubs){
-        my $eid = $entry->{id};
-        push @ids_arr, $eid if defined $eid;
-    }
-    $self->stash(ids => \@ids_arr);
+    $self->stash(entries => \@pubs);
     $self->render(template => 'publicationsSEO/metalist');
 }
 
@@ -72,10 +67,8 @@ sub meta {
   # EXTRACTING IMPORTANT FIELDS
 
   # TITLE
-  my $title = $entry->get('title') || '';
-  $title =~ s/\{//g;
-  $title =~ s/\}//g;
-  $title = decode('latex', $title);
+  my $title = $mentry->{title};
+ 
 
   my $citation_title = $title;
 

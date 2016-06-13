@@ -12,7 +12,48 @@ use BibSpace::Controller::Backup;
 use BibSpace::Controller::BackupFunctions;
 
 # BEGIN{
-# 	$ENV{BIBSPACE_CONFIG}="lib/BibSpace/files/config/testing.conf";
+# 	#$ENV{BIBSPACE_CONFIG}="lib/BibSpace/files/config/testing.conf";
+#   say "BIBSPACE_CONFIG: ".$ENV{BIBSPACE_CONFIG};
+#   my $a = Test::Mojo->new('BibSpace');
+#   $ENV{BIBSPACE_CONFIG_HASH} = {
+#     backups_dir         => './backups',  # $a->app->home->rel_dir('backups'),
+#     upload_dir          => './public/uploads',  # $a->app->home->rel_dir('public/uploads'),
+#     log_dir             => './log',  # $a->app->home->rel_dir('log'),
+#     log_file            => './log/bibspace_test.log',  # $a->app->home->rel_file('log/my.log'),
+#     key_cookie          => 'somesectretstring',
+#     registration_enabled    => 1,
+
+#     backup_age_in_days_to_delete_automatically    => 30,
+#     allow_delete_backups_older_than => 7,
+
+#     db_host         => "localhost",
+#     db_user         => "bibspace_user",
+#     db_database     => "bibspace",
+#     db_pass         => "dupa",#"passw00rd",
+
+#     cron_day_freq_lock => 1,
+#     cron_night_freq_lock => 4, 
+#     cron_week_freq_lock => 24, 
+#     cron_month_freq_lock => 48,
+    
+#     demo_mode    => 0,
+#     demo_msg    => '',
+#     proxy_prefix        => '',
+#     mailgun_key         => 'your-key',
+#     mailgun_domain      => 'your-sandbox3534635643567808d.mailgun.org',
+#     mailgun_from        => 'Mailgun Sandbox <postmaster@your-sandbox3534635643567808d.mailgun.org>',
+#     footer_inject_code   =>  qq(
+#     <!-- For example Google Analytics -->
+#     ),
+#     hypnotoad => {
+#         listen  => ['http://*:8080'],
+#         pid_file => './hypnotoad.pid',
+#         workers => 1,
+#         proxy => 1
+#     }
+#   };
+#   say "BIBSPACE_CONFIG_HASH: ".$ENV{BIBSPACE_CONFIG_HASH};
+#   say "MOJO_CONFIG after: ".$ENV{MOJO_CONFIG};
 # }
 
 
@@ -23,8 +64,9 @@ $t_logged_in->post_ok(
     form        => { user   => 'pub_admin', pass => 'asdf' }
 );
 
-my $dbh = $t_logged_in->app->db;
 my $self = $t_logged_in->app;
+my $dbh = $self->app->db;
+
 
 my $fixture_dir = "./fixture/";
 

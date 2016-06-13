@@ -224,7 +224,7 @@ sub Fget_publications_main_hashed_args { #
 
 ####################################################################################
 sub Fget_publications_core_from_array_ref {
-  say "CALL: Fget_publications_core_from_array. This function could be removed...";
+  say "CALL: Fget_publications_core_from_array_ref. This function could be removed...";
     my $self = shift;
     my $array_ref = shift;
     my $sort = shift;

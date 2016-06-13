@@ -343,7 +343,7 @@ subtest 'MEntry; static_get_from_id_array' => sub {
   is(scalar @en6, 0, "MEntry->static_get_from_id_array: Empty input array returns 0?");
 
   my @all_entries = MEntry->static_all($dbh);
-  my $some_entry = shift( \@all_entries );
+  my $some_entry = shift @all_entries;
   @en6 = MEntry->static_get_from_id_array($dbh, [$some_entry->{id}], 1);
   is(scalar @en6, 1, "MEntry->static_get_from_id_array: input array with one object (entry id: ".$some_entry->{id}.") returns 1?");
 };

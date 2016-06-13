@@ -1,50 +1,41 @@
-#package BibSpace::Model::MEntry;
-
-use strict;
-use warnings;
-
-# use BibSpace::Functions::FPublications; # there should be really no call to this module. All calls should be moved to a new module
-
-
-
-
-
-
 package MEntry;
-    use Data::Dumper;
-    use utf8;
-    use Text::BibTeX; # parsing bib files
-    use 5.010; #because of ~~ and say
-    use DBI;
-    use Try::Tiny;
-    use Moose;
+  use Data::Dumper;
+  use utf8;
+  use Text::BibTeX; # parsing bib files
+  use 5.010; #because of ~~ and say
+  use DBI;
+  use Try::Tiny;
+  use Moose;
+  use TeX::Encode;
+  use Encode;
 
-   has 'id' => (is => 'rw'); 
-   has 'entry_type' => (is => 'rw', default => 'paper'); 
-   has 'bibtex_key' => (is => 'rw');
-   has 'bibtex_type' => (is => 'rw');
-   has 'bib' => (is => 'rw', isa => 'Str'); 
-   has 'html' => (is => 'rw'); 
-   has 'html_bib' => (is => 'rw'); 
-   has 'abstract' => (is => 'rw'); 
-   has 'title' => (is => 'rw'); 
-   has 'hidden' => (is => 'rw', default => 0); 
-   has 'year' => (is => 'rw'); 
-   has 'month' => (is => 'rw'); 
-   has 'sort_month' => (is => 'rw'); 
-   has 'teams_str' => (is => 'rw'); 
-   has 'people_str' => (is => 'rw'); 
-   has 'tags_str' => (is => 'rw'); 
-   has 'creation_time' => (is => 'rw'); 
-   has 'modified_time' => (is => 'rw'); 
-   has 'need_html_regen' => (is => 'rw', default => '1'); 
+  has 'id' => (is => 'rw'); 
+  has 'entry_type' => (is => 'rw', default => 'paper'); 
+  has 'bibtex_key' => (is => 'rw');
+  has 'bibtex_type' => (is => 'rw');
+  has 'bib' => (is => 'rw', isa => 'Str'); 
+  has 'html' => (is => 'rw'); 
+  has 'html_bib' => (is => 'rw'); 
+  has 'abstract' => (is => 'rw'); 
+  has 'title' => (is => 'rw'); 
+  has 'hidden' => (is => 'rw', default => 0); 
+  has 'year' => (is => 'rw'); 
+  has 'month' => (is => 'rw'); 
+  has 'sort_month' => (is => 'rw'); 
+  has 'teams_str' => (is => 'rw'); 
+  has 'people_str' => (is => 'rw'); 
+  has 'tags_str' => (is => 'rw'); 
+  has 'creation_time' => (is => 'rw'); 
+  has 'modified_time' => (is => 'rw'); 
+  has 'need_html_regen' => (is => 'rw', default => '1'); 
 
 ####################################################################################
 sub static_all {
   my $self = shift;
   my $dbh = shift;
 
-  my $qry = "SELECT id,
+  my $qry = "SELECT DISTINCT
+              id,
               entry_type,
               bibtex_key,
               bibtex_type,
@@ -100,7 +91,8 @@ sub static_get {
   my $dbh = shift;
   my $id = shift;
 
-  my $qry = "SELECT DISTINCT id,
+  my $qry = "SELECT 
+              id,
               entry_type,
               bibtex_key,
               bibtex_type,
@@ -150,6 +142,7 @@ sub static_get {
   $e->{creation_time} = $row->{creation_time};
   $e->{modified_time} = $row->{modified_time};
   $e->{need_html_regen} = $row->{need_html_regen};
+  $e->decodeLatex();
   return $e;
 }
 ####################################################################################
@@ -387,7 +380,8 @@ sub populate_from_bib {
 
     $self->{bibtex_key} = $bibtex_entry->key;
     $self->{year} = $bibtex_entry->get('year');
-    $self->{title} = $bibtex_entry->get('title') || '';
+    $self->{title} = $bibtex_entry->get('booktitle') if $bibtex_entry->exists('booktitle');
+    $self->{title} = $bibtex_entry->get('title') if $bibtex_entry->exists('title');
     $self->{abstract} = $bibtex_entry->get('abstract') || undef;
     $self->{bibtex_type} = $bibtex_entry->type;
     return 1;
@@ -748,18 +742,26 @@ sub static_get_filter{
 
     my @params;
 
-    my $qry = "SELECT DISTINCT  Entry.bibtex_key, 
-                                Entry.hidden, 
-                                Entry.id, 
-                                Entry.bib, 
-                                Entry.html, 
-                                Entry.bibtex_type, 
-                                Entry.entry_type, 
-                                Entry.year, 
-                                Entry.month, 
-                                Entry.sort_month, 
-                                Entry.modified_time, 
-                                Entry.creation_time
+    my $qry = "SELECT DISTINCT          
+                      Entry.id,
+                      Entry.entry_type,
+                      Entry.bibtex_key,
+                      Entry.bibtex_type,
+                      Entry.bib,
+                      Entry.html,
+                      Entry.html_bib,
+                      Entry.abstract,
+                      Entry.title,
+                      Entry.hidden,
+                      Entry.month,
+                      Entry.year,
+                      Entry.sort_month,
+                      Entry.teams_str,
+                      Entry.people_str,
+                      Entry.tags_str,
+                      Entry.creation_time,
+                      Entry.modified_time,
+                      Entry.need_html_regen
                 FROM Entry
                 LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
                 LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
@@ -837,9 +839,19 @@ sub static_get_filter{
                 creation_time => $row->{creation_time},
                 modified_time => $row->{modified_time},
                 need_html_regen => $row->{need_html_regen});
+    $obj->decodeLatex();
     push @objs, $obj;
   }
   return @objs;
+}
+####################################################################################
+sub decodeLatex{
+  my $self = shift;
+
+  $self->{title} =~ s/^\{//g;
+  $self->{title} =~ s/\}$//g;
+  $self->{title} = decode('latex', $self->{title});
+  $self->{title} = decode('latex', $self->{title});
 }
 ####################################################################################
 sub hasTag{

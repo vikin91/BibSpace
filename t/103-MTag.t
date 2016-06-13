@@ -76,7 +76,7 @@ subtest 'MTag: basics 3: delete' => sub {
 	my $num_tags = scalar(@tags);
 	is($num_tags, 1, "Got 1 tags");
 
-	my $some_team = shift( \@tags );
+	my $some_team = shift @tags;
 	is($some_team->delete($dbh), 1);
 
 	@tags = MTag->static_all($dbh);

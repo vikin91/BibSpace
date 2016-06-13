@@ -33,7 +33,7 @@ $t1->save($dbh);
 $num_teams = scalar(@teams);
 is($num_teams, 1, "Got 1 teams");
 
-my $some_team = shift( \@teams );
+my $some_team = shift @teams;
 is($some_team->delete($dbh), 1);
 @teams = MTeam->static_all($dbh);
 $num_teams = scalar(@teams);
