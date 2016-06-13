@@ -26,18 +26,21 @@ sub test {
     my $self = shift;
 
     my $msg = "";
-    my $filename = $self->app->config->{log_file};
+    my $log_file = $self->app->config->{log_file};
+
+    my $backup_dir_absolute = $self->config->{backups_dir};
+    $backup_dir_absolute =~ s!/*$!/!; # makes sure that there is exactly one / at the end
 
     my $errored = 0;
 
     ###################
     $msg .= "<br/>"."Opening log: ";
     try{
-        read_file($filename);
+        read_file($log_file);
         $msg .= "OK ";
     }
     catch{
-        $msg .= "ERROR ";
+        $msg .= "ERROR: $_";
         $errored = 1;
     };
 
@@ -48,7 +51,7 @@ sub test {
         $msg .= "OK ";
     }
     catch{
-        $msg .= "ERROR ";
+        $msg .= "ERROR: $_";
         $errored = 1;
     };
     ###################
@@ -58,20 +61,41 @@ sub test {
         $msg .= "OK ";
     }
     catch{
-        $msg .= "ERROR ";
+        $msg .= "ERROR: $_";
         $errored = 1;
     };
     ###################
     $msg .= "<br/>"."Writing backup dir: ";
+    my $bfname = "";
     try{
-        my $bfname = $self->do_mysql_db_backup_silent("test");
+        $bfname = $self->do_mysql_db_backup_silent("can-be-deleted-test");
         say "Creating: $bfname ";
-        unlink $bfname;
         $msg .= "OK ";
     }
     catch{
-        $msg .= "ERROR ";
+        $msg .= "ERROR: $_";
         $errored = 1;
+    };
+    #### only one location is the correct one!
+    my $test_backup_path = $bfname;
+    if(-e $bfname){
+        $test_backup_path = $bfname;
+    }
+    elsif(-e $backup_dir_absolute.$test_backup_path){
+        $test_backup_path = $backup_dir_absolute.$test_backup_path;
+    }
+    elsif(-e $backup_dir_absolute."\\".$test_backup_path){
+        $test_backup_path = $backup_dir_absolute."\\".$test_backup_path;
+    }
+    else{
+        $msg .= "WARNING: test backup file cannot be removed: Wrong path.";    
+    }
+
+    try{
+        unlink $test_backup_path;
+    }
+    catch{
+        $msg .= "WARNING: test backup file cannot be removed. Error: $_.";
     };
     ###################
     

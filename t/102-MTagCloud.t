@@ -31,8 +31,6 @@ $tc->{count} = $random4;
 
 my $html = $tc->getHTML();
 
-say $html;
-
 unlike($html, qr/$random1/, "Html should not contain $random1");
 like($html, qr/$random2/, "Html should contain $random2");
 like($html, qr/$random3/, "Html should contain $random3");

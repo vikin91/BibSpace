@@ -12,7 +12,6 @@ package MTagCloud;
 ####################################################################################
 sub getHTML {
     my $self = shift;
-    my $css = shift || undef;
 
     my $code = '<a href="'.$self->{url}.'" target="blank" class="tclink">'.$self->{name}.'</a>';
     $code .= '<span class="tctext">('.$self->{count}.')</span>';
