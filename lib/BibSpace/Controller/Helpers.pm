@@ -76,7 +76,7 @@ sub register {
         my $backup_dir_absolute = $self->config->{backups_dir};
         $backup_dir_absolute =~ s!/*$!/!;
 
-        my $b_fname = get_backup_filename($self, $bid);
+        my $b_fname = get_backup_filename_by_id($backup_dbh, $bid);
         my $file_path = $backup_dir_absolute.$b_fname;
 
         my $file_exists = 0;

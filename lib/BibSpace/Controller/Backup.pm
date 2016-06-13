@@ -141,12 +141,22 @@ sub delete_backup{
 ####################################################################################
 sub restore_backup{
     my $self = shift;
-    my $backup_dbh = $self->app->db;
+    my $dbh = $self->app->db;
     my $id = $self->param('id');
 
     say "CALL: restore_backup";
 
-    my $return_value = do_restore_backup($self, $id);
+    my $backup_filename = get_backup_filename_by_id($dbh, $id);
+
+    my $backup_dir_absolute = $self->app->config->{backups_dir};
+    $backup_dir_absolute =~ s!/*$!/!; # makes sure that there is exactly one / at the end
+    my $backup_file_path = $backup_dir_absolute.$backup_filename;
+
+
+    do_backup_current_state($self, "pre-restore");
+    $self->write_log("Restoring backup from file $backup_file_path");
+    my $return_value = do_restore_backup_from_file($dbh, $backup_file_path, $self->app->config);
+
 
     if($return_value ==1){
         $self->flash(msg => "Backup restored successfully");

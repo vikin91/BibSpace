@@ -29,11 +29,11 @@ our @EXPORT = qw(
     do_mysql_db_backup
     do_delete_backup
     do_delete_broken_or_old_backup
-    do_restore_backup
+    get_backup_filename_by_id
+    do_restore_backup_by_id
     do_restore_backup_from_file
     do_backup_current_state
     get_dir_size 
-    get_backup_filename
     get_backup_id
     get_backup_creation_time
     get_backup_age_in_days
@@ -203,37 +203,23 @@ sub do_delete_broken_or_old_backup {   # added 22.08.14
 }
 
 ####################################################################################
-sub do_restore_backup{
-    my $self = shift;
+sub get_backup_filename_by_id {
+    my $dbh = shift;
     my $id = shift;
-    my $dbh = $self->app->db;
-    
 
-    
-
-    my $sth = $dbh->prepare("SELECT filename FROM Backup WHERE id = ?");
+    my $sth = $dbh->prepare("SELECT id, filename FROM Backup WHERE id=? LIMIT 1");
     $sth->execute($id);
     my $row = $sth->fetchrow_hashref();
-    my $backup_file_name = $row->{filename};
-    $sth->finish();
-
-    my $backup_dir_absolute = $self->config->{backups_dir};
-    $backup_dir_absolute =~ s!/*$!/!; # makes sure that there is exactly one / at the end
-    my $backup_file_path = $backup_dir_absolute.$backup_file_name;
-
-    # saving current state with special prefix to provide the possibility to restore the pre-restore state 
-    do_backup_current_state($self, "pre-restore");
-    $dbh->disconnect();
-
-    $self->write_log("Restoring backup from file $backup_file_name");
-    return $self->do_restore_backup_from_file($backup_file_path);
-
-}
+    return $row->{filename} || "";
+};
 ####################################################################################
 sub do_restore_backup_from_file {
-    my $self = shift;
+    my $dbh = shift;
     my $file_path = shift;
-    my $dbh = $self->app->db;
+    my $config = shift;
+
+    say "CALL: do_restore_backup_from_file";
+    
     
     # I assume that $file_path is the SQL dump that I want to restore
 
@@ -246,13 +232,13 @@ sub do_restore_backup_from_file {
         return 0;
     }
     
-    $dbh->disconnect();
+    #$dbh->disconnect() if defined $dbh;
     
 
-    my $db_host = $self->config->{db_host};
-    my $db_user = $self->config->{db_user};
-    my $db_database = $self->config->{db_database};
-    my $db_pass = $self->config->{db_pass};
+    my $db_host = $config->{db_host};
+    my $db_user = $config->{db_user};
+    my $db_database = $config->{db_database};
+    my $db_pass = $config->{db_pass};
 
 
     my $cmd = "mysql -u $db_user -p$db_pass $db_database  < $file_path";
@@ -302,17 +288,6 @@ sub get_dir_size {
   return $size;
 };
 
-####################################################################################
-sub get_backup_filename{
-    my $self = shift;
-    my $bip = shift;
-    my $dbh = $self->app->db;
-
-    my $sth = $dbh->prepare("SELECT id, filename FROM Backup WHERE id=? LIMIT 1");
-    $sth->execute($bip);
-    my $row = $sth->fetchrow_hashref();
-    return $row->{filename} || "";
-}
 ####################################################################################
 sub get_backup_id{
     my $self = shift;

@@ -22,6 +22,10 @@ use File::Slurp;
 use POSIX qw/strftime/;
 use Try::Tiny;
 use Path::Tiny;    # for creating directories
+use Mojo::Home;
+
+use Cwd;
+use File::Spec;
 
 # for Makemake. Needs to be removed for Dist::Zilla
 # our $VERSION = '0.4.1';
@@ -35,9 +39,15 @@ use Path::Tiny;    # for creating directories
 our $bibtex2html_tmp_dir = "./tmp";
 
 has is_demo => sub {
-  return 1 if shift->app->config->{demo_mode};
+  return 1 if shift->config->{demo_mode};
   return 0;
 };
+
+has home => sub {
+  my $path = $ENV{BIBSPACE_HOME} || getcwd;
+  return Mojo::Home->new(File::Spec->rel2abs($path));
+};
+
 
 has config_file => sub {
   my $self = shift;
@@ -71,18 +81,56 @@ sub startup {
 ################################################################
 sub setup_config {
   my $self = shift;
-  my $config = $self->app->config;
-  say "Config1 ".Dumper $config; # to jest zwykły hasz!!!!
-  my $config_hash = $ENV{BIBSPACE_CONFIG_HASH};
-  if (defined $config_hash and $config_hash ne "") {
-    say "Using config from BIBSPACE_CONFIG_HASH.";
-    $config = $self->plugin('Config' => $ENV{BIBSPACE_CONFIG_HASH});    ### THIS DOESN'T WORK!!
-  }
-  else {
-    say "Using config: " . $self->app->config_file;
-    $config = $self->plugin('Config' => {file => $self->app->config_file});
-  }
-  # say "Config2 ".Dumper $config;
+  my $app = $self; 
+  $self->plugin('Config' => {file => $self->app->config_file});
+  
+  # if ($self->app->mode eq 'development'){
+  #   my $hash_config = $ENV{BIBSPACE_CONFIG};
+  #   if (defined $hash_config) {
+  #     $self->plugin('Config' => {default => $hash_config})   
+  #   }
+  #   else{
+        
+  #   }
+  # }
+  # elsif ($self->app->mode eq 'production'){
+  #   $self->plugin('Config' => {
+  #     file => $self->app->config_file, 
+  #     default => {
+  #         backups_dir         => $app->home->rel_dir('backups'),
+  #         upload_dir          => $app->home->rel_dir('public/uploads'),
+  #         log_dir             => $app->home->rel_dir('log'),
+  #         log_file            => $app->home->rel_dir('./log/bibspace_test.log'),
+  #         key_cookie          => 'somesectretstring',
+  #         registration_enabled    => 1,
+  #         backup_age_in_days_to_delete_automatically    => 30,
+  #         allow_delete_backups_older_than => 7,
+  #         db_host         => "localhost",
+  #         db_user         => "bibspace_user",
+  #         db_database     => "bibspace",
+  #         db_pass         => "passw00rd",
+  #         cron_day_freq_lock => 1,
+  #         cron_night_freq_lock => 4, 
+  #         cron_week_freq_lock => 24, 
+  #         cron_month_freq_lock => 48,
+  #         demo_mode => 0,
+  #         demo_msg  => '',
+  #         proxy_prefix        => '',
+  #         mailgun_key         => 'your-key',
+  #         mailgun_domain      => 'your-sandbox.mailgun.org',
+  #         mailgun_from        => 'Mailgun Sandbox',
+  #         footer_inject_code   => '',
+  #         hypnotoad => {
+  #             listen  => ['http://*:8080'],
+  #             pid_file => './hypnotoad.pid',
+  #             workers => 1,
+  #             proxy => 1
+  #         }
+  #       },
+  #   });
+  # }
+
+  say "After reading config backups_dir: ".$app->config->{backups_dir};
 };
 ################################################################
 sub setup_plugins {

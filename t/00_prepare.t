@@ -11,50 +11,12 @@ use BibSpace::Controller::Cron;
 use BibSpace::Controller::Backup;
 use BibSpace::Controller::BackupFunctions;
 
-# BEGIN{
-# 	#$ENV{BIBSPACE_CONFIG}="lib/BibSpace/files/config/testing.conf";
-#   say "BIBSPACE_CONFIG: ".$ENV{BIBSPACE_CONFIG};
-#   my $a = Test::Mojo->new('BibSpace');
-#   $ENV{BIBSPACE_CONFIG_HASH} = {
-#     backups_dir         => './backups',  # $a->app->home->rel_dir('backups'),
-#     upload_dir          => './public/uploads',  # $a->app->home->rel_dir('public/uploads'),
-#     log_dir             => './log',  # $a->app->home->rel_dir('log'),
-#     log_file            => './log/bibspace_test.log',  # $a->app->home->rel_file('log/my.log'),
-#     key_cookie          => 'somesectretstring',
-#     registration_enabled    => 1,
+use BibSpace::Functions::FDB;
 
-#     backup_age_in_days_to_delete_automatically    => 30,
-#     allow_delete_backups_older_than => 7,
-
-#     db_host         => "localhost",
-#     db_user         => "bibspace_user",
-#     db_database     => "bibspace",
-#     db_pass         => "dupa",#"passw00rd",
-
-#     cron_day_freq_lock => 1,
-#     cron_night_freq_lock => 4, 
-#     cron_week_freq_lock => 24, 
-#     cron_month_freq_lock => 48,
-    
-#     demo_mode    => 0,
-#     demo_msg    => '',
-#     proxy_prefix        => '',
-#     mailgun_key         => 'your-key',
-#     mailgun_domain      => 'your-sandbox3534635643567808d.mailgun.org',
-#     mailgun_from        => 'Mailgun Sandbox <postmaster@your-sandbox3534635643567808d.mailgun.org>',
-#     footer_inject_code   =>  qq(
-#     <!-- For example Google Analytics -->
-#     ),
-#     hypnotoad => {
-#         listen  => ['http://*:8080'],
-#         pid_file => './hypnotoad.pid',
-#         workers => 1,
-#         proxy => 1
-#     }
-#   };
-#   say "BIBSPACE_CONFIG_HASH: ".$ENV{BIBSPACE_CONFIG_HASH};
-#   say "MOJO_CONFIG after: ".$ENV{MOJO_CONFIG};
-# }
+BEGIN{
+  my $a = Test::Mojo->new('BibSpace');
+  $ENV{BIBSPACE_CONFIG} = $a->app->home->rel_dir('fixture/default.conf');
+}
 
 
 my $t_anyone = Test::Mojo->new('BibSpace');
@@ -66,7 +28,19 @@ $t_logged_in->post_ok(
 
 my $self = $t_logged_in->app;
 my $dbh = $self->app->db;
+my $app_config = $t_logged_in->app->config;
 
+
+####################################################################
+subtest '00: checking if DB runs' => sub {
+  my $db_host     = $self->config->{db_host};
+  my $db_user     = $self->config->{db_user};
+  my $db_database = $self->config->{db_database};
+  my $db_pass     = $self->config->{db_pass};
+  my $is_up       = db_is_up($db_host, $db_user, $db_database, $db_pass);
+  is($is_up, 1, "MySQL Server is up and the credentials are ok");
+  ok(db_connect($db_host, $db_user, $db_database, $db_pass), "Can connect to database");
+};
 
 my $fixture_dir = "./fixture/";
 
@@ -81,7 +55,7 @@ SKIP: {
 	skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir."db.sql";
 
 	my $status = 0;
-	$status = $t_logged_in->app->do_restore_backup_from_file("./fixture/db.sql");
+	$status = do_restore_backup_from_file($dbh, "./fixture/db.sql", $app_config);
 	is($status, 1, "preparing DB for test");
 }
 

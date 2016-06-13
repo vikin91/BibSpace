@@ -32,6 +32,7 @@ subtest 'PublicationsSEO: public functions' => sub {
 
   my $main_page = "/read/publications/meta";
   $t_anyone->get_ok($main_page)->status_isnt(404, "Checking: 404 $main_page")->status_isnt(500, "Checking: 500 $main_page");
+  $t_anyone->get_ok($main_page)->status_is(200)->content_unlike(qr/\{/i);
 
   for my $e (@entries){
     note "============ Testing SEO page for entry id $e->{id} ============";
@@ -44,7 +45,7 @@ subtest 'PublicationsSEO: public functions' => sub {
     else{
     	$t_anyone->get_ok($page)->status_is(404, "HIDDEN==TRUE Checking: 404 $page");
     	my $str_that_should_not_be = "<li>Paper with id $entry_id: <a href";
-    	$t_anyone->get_ok($main_page)->status_is(200)->content_unlike(qr/$str_that_should_not_be/i);
+    	$t_anyone->get_ok($main_page)->status_is(200)->content_unlike(qr/$str_that_should_not_be/i);  ### this is slow!!!
     	
     }
     
