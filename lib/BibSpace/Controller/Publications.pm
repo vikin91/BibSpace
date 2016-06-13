@@ -967,8 +967,7 @@ sub download {
     my $id = $self->param('id');      # entry ID
     my $filetype = $self->param('filetype') || 'paper';  # paper, slides
 
-    $self->write_log("Requesting download: filetype $filetype, id $id. ");
-
+    # $self->write_log("Requesting download: filetype $filetype, id $id. ");
 
     my $file_path = $self->get_paper_pdf_path($id, "$filetype");
     say "Found paper type $filetype : $file_path";
@@ -983,7 +982,7 @@ sub download {
     $exists = 1 if -e $file_path;
 
     if($exists == 1){
-        $self->write_log("Serving file $file_path");
+        # $self->write_log("Serving file $file_path");
         $self->render_file('filepath' => $file_path);
     }
     else{
