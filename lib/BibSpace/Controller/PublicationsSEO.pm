@@ -16,6 +16,7 @@ use Encode;
 use BibSpace::Controller::Core; # ok
 use BibSpace::Functions::FPublications; #ok
 use BibSpace::Model::MEntry; # ok
+use BibSpace::Controller::Publications; # ok
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -27,7 +28,6 @@ use Mojo::Log;
 
 ####################################################################################
 sub metalist {
-    say "CALL: BibSpace::Controller::PublicationsSEO::metalist ";
     my $self = shift;
 
     my @ids_arr = ();
@@ -43,7 +43,6 @@ sub metalist {
 ####################################################################################
 
 sub meta {
-	say "CALL: BibSpace::Controller::PublicationsSEO::meta";
   my $self = shift;
   my $id = $self->param('id');
 
@@ -55,7 +54,7 @@ sub meta {
   }
 
   if($mentry->{hidden} == 1){
-    $self->render(text => 'Cannot find entry id: '.$id, status => 404);
+    $self->render(text => 'Error 404: Cannot find entry id: '.$id, status => 404);
     return;
   }
     
@@ -66,7 +65,7 @@ sub meta {
   my $entry = new Text::BibTeX::Entry();
   $entry->parse_s($entry_str);
   unless($entry->parse_ok){
-    $self->render(text => 'Cannot parse BibTeX code for this entry! Entry id: '.$id, status => 503); # TODO: check proper error code
+    $self->render(text => 'Error 503: Cannot parse BibTeX code for this entry! Entry id: '.$id, status => 503); # TODO: check proper error code
     return;   
   }
 
@@ -207,13 +206,33 @@ sub meta {
 
   # PDF URL
   my $citation_pdf_url = undef;
-  $citation_pdf_url = $entry->exists('pdf') if $entry->exists('pdf'); #$self->url_for('download_publication_pdf', filetype=>'paper', id=>$id) if $entry->exists('pdf');
-  $citation_pdf_url = $entry->exists('slides') if $entry->exists('slides'); #$self->url_for('download_publication_pdf', filetype=>'slides', id=>$id) if $entry->exists('slides');
-  $citation_pdf_url = $entry->get('url') if $entry->exists('url'); # and $entry->get('url') =~ /.*\.pdf^/;
 
-
-
-
+  if($entry->exists('pdf')){
+    my $local_file_paper = BibSpace::Controller::Publications::get_paper_pdf_path($self, $id, 'paper');
+    if(-e $local_file_paper){
+      $citation_pdf_url = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$id);
+    }
+    else{
+      $citation_pdf_url = $entry->get('pdf');
+    }  
+  }
+  elsif($entry->exists('slides')){
+    my $local_file_slides = BibSpace::Controller::Publications::get_paper_pdf_path($self, $id, 'slides');
+    if(-e $local_file_slides){
+      $citation_pdf_url = $self->url_for('download_publication_pdf', filetype=>'slides', id=>$id);
+    }
+    else{
+      $citation_pdf_url = $entry->get('slides');
+    }
+  }
+  elsif($entry->exists('url')){
+    $citation_pdf_url = $entry->get('url');
+  }
+  else{
+    # this entry has no pdf/slides/url. $citation_pdf_url remains undef
+  }
+  
+  
 
   # READY SET OF VARIABLES HOLDING METADATA. Some may be undef
   my $ca_ref = \@citation_authors;

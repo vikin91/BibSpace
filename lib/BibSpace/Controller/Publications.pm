@@ -974,7 +974,7 @@ sub download {
 
     if(!defined $file_path or $file_path eq 0){
         $self->write_log("Unsuccessful download filetype $filetype, id $id.");
-        $self->render(text => "File not found. Unsuccessful download filetype $filetype, id $id.");
+        $self->render(text => "File not found. Unsuccessful download filetype $filetype, id $id.", status=> 404);
         return;
     }
 
