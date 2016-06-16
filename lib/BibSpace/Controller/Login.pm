@@ -341,7 +341,7 @@ sub store_password {
     else{
         $self->flash(msg => 'Passwords are not same. Try again.', token => $token);
         $self->stash(msg => 'Passwords are not same. Try again.', token => $token);
-        $self->write_log("Forgot: Chnage failed. Passwords are not same.");
+        $self->write_log("Forgot: Change failed. Passwords are not same.");
         $final_error=0;
         $self->redirect_to('token_clicked', token => $token);
         # $self->render(template => 'login/set_new_password');    
@@ -351,7 +351,7 @@ sub store_password {
     
     if($final_error==1){
         $self->users->remove_token($token, $dbh);
-        $self->write_log("Forgot: Chnage failed. Token deleted.");
+        $self->write_log("Forgot: Change failed. Token deleted.");
         $self->stash(msg => 'Something went wrong. The password has not been changed. The reset token is no longer valid. You need to request a new one by clicking in \'I forgot my password\'.');
         $self->redirect_to('login_form');
     }
@@ -383,9 +383,9 @@ sub login {
             return;
         }
         else{
-            $self->write_log("Login: Bad username or password for user $user");
-            $self->flash(msg => 'Wrong username or password');
-            $self->stash(msg => 'Wrong username or password');
+            $self->write_log("Login: Bad user name or password for user $user");
+            $self->flash(msg => 'Wrong user name or password');
+            $self->stash(msg => 'Wrong user name or password');
             $self->render(template => 'login/index');
             return;
         }
@@ -407,10 +407,10 @@ sub login_form {
 sub bad_password{
     my $self = shift;
 
-    $self->write_log("Login: Bad username or password! (/badpassword)");
+    $self->write_log("Login: Bad user name or password! (/badpassword)");
 
-    $self->flash(msg => 'Wrong username or password');
-    $self->stash(msg => 'Wrong username or password');
+    $self->flash(msg => 'Wrong user name or password');
+    $self->stash(msg => 'Wrong user name or password');
     $self->render(template => 'login/index');
 }
 ####################################################################################
