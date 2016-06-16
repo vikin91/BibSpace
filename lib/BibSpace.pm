@@ -56,6 +56,8 @@ has config_file => sub {
     if -e $self->app->home->rel_file('/etc/bibspace.conf');
   return $self->app->home->rel_file('lib/BibSpace/files/config/default.conf')
     if -e $self->app->home->rel_file('lib/BibSpace/files/config/default.conf');
+  return $self->app->home->rel_file('config/default.conf')          # for travis
+    if -e $self->app->home->rel_file('config/default.conf');
 };
 
 has db => sub {

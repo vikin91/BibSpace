@@ -110,11 +110,13 @@ $t_anyone->get_ok("/noregister")
 
 
 
-if( $t_anyone->app->config->{registration_enabled} == 1){
+####################################################################
+subtest 'User management: public registration' => sub {
+  if( $t_anyone->app->config->{registration_enabled} == 1){
 
     my $token = BibSpace::Functions::MyUsers->generate_token();
     note "=== Registration anyone: using token $token";
-    
+
 
     $t_anyone->get_ok("/register")
         ->status_is(200)
@@ -173,78 +175,84 @@ if( $t_anyone->app->config->{registration_enabled} == 1){
     ->status_isnt(404)
     ->status_isnt(500)
     ->content_like(qr/This login is already taken/i, "Trying to register pub_admin");
-}
-########################################################
-note "============ Registration admin ============";
+  }
+};
 
 
-$t_logged_in->get_ok("/noregister")
+####################################################################
+subtest 'User management: noregister' => sub {
+  $t_logged_in->get_ok("/noregister")
     ->status_is(200)
     ->content_like(qr/Registration is disabled/i);
+};
+
+
+####################################################################
+subtest 'User management: admin registration' => sub {
+
+
+    my $token = BibSpace::Functions::MyUsers->generate_token();
+    note "=== Registration admin: using token $token";
+
+    $t_logged_in->get_ok("/register")
+        ->status_is(200)
+        ->content_unlike(qr/Registration is disabled/i)
+        ->text_is(label => "Login", , "Admin is trying to register a user");
+
+
+    $t_logged_in->post_ok('/register' => form => { 
+                                            login  => $token, 
+                                            name  => 'Henry',
+                                            email  => 'h@example.com',
+                                            password1 => 'asdf', 
+                                            password2 => 'qwerty' })
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_like(qr/Passwords don't match!/i, "Trying to register with non-matching passwords");
+
+    $t_logged_in->post_ok('/register' => form => { 
+                                            login  => $token, 
+                                            name  => 'Henry',
+                                            email  => 'h@example.com',
+                                            password1 => 'a', 
+                                            password2 => 'a' })
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_like(qr/Password is too short, use minimum 4 symbols/i, "Trying to register with too short password");
+
+    $t_logged_in->post_ok('/register' => form => { 
+                                            login  => '', 
+                                            name  => '',
+                                            email  => 'h@example.com',
+                                            password1 => 'a1234', 
+                                            password2 => 'a1234' })
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_like(qr/Some input is missing!/i, "Trying to register with missing login and email");
 
 
 
-my $token = BibSpace::Functions::MyUsers->generate_token();
-note "=== Registration admin: using token $token";
+    $t_logged_in->post_ok('/register' => form => { 
+                                            login  => $token, 
+                                            name  => 'Henry John',
+                                            email  => $token.'@example.com',
+                                            password1 => 'qwerty', 
+                                            password2 => 'qwerty' })
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_like(qr/User created successfully! You may now login using login: $token/i, "Trying to register with valid data");
 
-$t_logged_in->get_ok("/register")
-    ->status_is(200)
-    ->content_unlike(qr/Registration is disabled/i)
-    ->text_is(label => "Login", , "Admin is trying to register a user");
+    $t_logged_in->post_ok('/register' => form => { 
+                                            login  => 'pub_admin', 
+                                            name  => 'Henry John',
+                                            email  => $token.'@example.com',
+                                            password1 => 'qwerty', 
+                                            password2 => 'qwerty' })
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_like(qr/This login is already taken/i, "Trying to register pub_admin");
 
-
-$t_logged_in->post_ok('/register' => form => { 
-                                        login  => $token, 
-                                        name  => 'Henry',
-                                        email  => 'h@example.com',
-                                        password1 => 'asdf', 
-                                        password2 => 'qwerty' })
-->status_isnt(404)
-->status_isnt(500)
-->content_like(qr/Passwords don't match!/i, "Trying to register with non-matching passwords");
-
-$t_logged_in->post_ok('/register' => form => { 
-                                        login  => $token, 
-                                        name  => 'Henry',
-                                        email  => 'h@example.com',
-                                        password1 => 'a', 
-                                        password2 => 'a' })
-->status_isnt(404)
-->status_isnt(500)
-->content_like(qr/Password is too short, use minimum 4 symbols/i, "Trying to register with too short password");
-
-$t_logged_in->post_ok('/register' => form => { 
-                                        login  => '', 
-                                        name  => '',
-                                        email  => 'h@example.com',
-                                        password1 => 'a1234', 
-                                        password2 => 'a1234' })
-->status_isnt(404)
-->status_isnt(500)
-->content_like(qr/Some input is missing!/i, "Trying to register with missing login and email");
-
-
-
-$t_logged_in->post_ok('/register' => form => { 
-                                        login  => $token, 
-                                        name  => 'Henry John',
-                                        email  => $token.'@example.com',
-                                        password1 => 'qwerty', 
-                                        password2 => 'qwerty' })
-->status_isnt(404)
-->status_isnt(500)
-->content_like(qr/User created successfully! You may now login using login: $token/i, "Trying to register with valid data");
-
-$t_logged_in->post_ok('/register' => form => { 
-                                        login  => 'pub_admin', 
-                                        name  => 'Henry John',
-                                        email  => $token.'@example.com',
-                                        password1 => 'qwerty', 
-                                        password2 => 'qwerty' })
-->status_isnt(404)
-->status_isnt(500)
-->content_like(qr/This login is already taken/i, "Trying to register pub_admin");
-
+};
 
  
 done_testing();
