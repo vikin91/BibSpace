@@ -644,9 +644,11 @@ sub set_landing_for_our_type{
     say "set type $type val $val";
 
     if(defined $val and ($val == 0 or $val==1)){
-        my $qry = "UPDATE OurType_to_Type SET landing=? WHERE our_type=?";
-        my $sth = $dbh->prepare( $qry );  
-        $sth->execute($val, $type);
+### Update Christoph ###
+        #my $qry = "UPDATE OurType_to_Type SET landing=? WHERE our_type=?";
+        #my $sth = $dbh->prepare( $qry );  
+        #$sth->execute($val, $type);
+	$dbh->resultset('Entry')->search({our_type => $type})->update({landing => $val });
     }
 }
 
