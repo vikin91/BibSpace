@@ -10,6 +10,7 @@ use v5.10;
 use Try::Tiny;
 use Data::Dumper;
 use Exporter;
+use DBI;
 our @ISA= qw( Exporter );
 
 
