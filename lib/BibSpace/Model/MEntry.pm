@@ -27,7 +27,9 @@ package MEntry;
   has 'tags_str' => (is => 'rw'); 
   has 'creation_time' => (is => 'rw'); 
   has 'modified_time' => (is => 'rw'); 
-  has 'need_html_regen' => (is => 'rw', default => '1'); 
+  has 'need_html_regen' => (is => 'rw', default => '1');
+  # not DB fields
+  has 'warnings' => (is => 'ro', default => '');
 
 ####################################################################################
 sub static_all {
@@ -201,7 +203,7 @@ sub update {
             $self->{tags_str},
             # $self->{creation_time},
             # $self->{modified_time},
-            1, #$self->{need_html_regen},
+            $self->{need_html_regen},
             $self->{id}
             );
     $sth->finish();
@@ -260,7 +262,7 @@ sub insert {
             $self->{tags_str},
             # $self->{creation_time},
             # $self->{modified_time},
-            1, #$self->{need_html_regen},
+            $self->{need_html_regen},
             );
   my $inserted_id = $dbh->last_insert_id('', '', 'Entry', '');
   $self->{id} = $inserted_id;
@@ -499,30 +501,41 @@ sub postprocess_updated {
   $self->regenerate_html($dbh); # has save
   # $self->save($dbh);
   
-
-  my $exit_code = 1; # TODO: old code!
-  return $exit_code;
+  return 1; # TODO: old code! 
 }
 ####################################################################################
 sub generate_html {
   my $self = shift;
+  my $bst_file = shift;
+
+  # FIXME: pass this parameter in all calls to this function.
+  # Store it in app config!
+  $bst_file = "/Users/piotr/Dropbox/AA-little-workspace/perl/publiste/lib/descartes2.bst"
+    if !defined $bst_file;
 
   $self->populate_from_bib();
-    
-  my ($html, $htmlbib) = BibSpace::Controller::Core::get_html_for_bib($self->{bib}, $self->{bibtex_key});
-  $self->{html} = $html;
-  $self->{html_bib} = $htmlbib;
 
-  return ($html, $htmlbib);
+  my $c = BibSpaceBibtexToHtml::BibSpaceBibtexToHtml->new();
+  $self->{html} = $c->convert_to_html({
+      method => 'new', 
+      bib => $self->{bib}, 
+      bst => $bst_file
+      });
+  $self->{warnings} = join(', ', @{ $c->{warnings_arr} });
+
+  $self->{need_html_regen} = 0;
+
+  return ($self->{html}, $self->{bib});
 }
 ####################################################################################
 sub regenerate_html {
   my $self = shift;
   my $dbh = shift;
+  my $force = shift // 0;
 
-  if( $self->{need_html_regen} == 1){
+  if( $force == 1 or $self->{need_html_regen} == 1){
     $self->populate_from_bib();
-    $self->generate_html($dbh);
+    $self->generate_html();
     $self->{need_html_regen} = 0;
     $self->save($dbh);
   } 

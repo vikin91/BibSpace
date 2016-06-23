@@ -688,13 +688,8 @@ sub landing_types_obj {
         my $key = 'talk';
 
 # my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
-        my @talk_objs = Fget_publications_main_hashed_args(
-            $self,
-            {   entry_type => 'talk',
-                visible    => 0,
-                hidden     => 0
-            }
-        );
+        my @talk_objs = Fget_publications_main_hashed_args( $self,
+            { entry_type => 'talk', visible => 0, hidden => 0 } );
         if ( scalar @talk_objs > 0 ) {
             $hash_dict{$key}   = "Talks";
             $hash_values{$key} = \@talk_objs;
@@ -758,13 +753,8 @@ sub landing_types_obj {
         my $key = 'talk';
 
 # my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
-        my @talk_objs = Fget_publications_main_hashed_args(
-            $self,
-            {   entry_type => 'talk',
-                visible    => 0,
-                hidden     => 0
-            }
-        );
+        my @talk_objs = Fget_publications_main_hashed_args( $self,
+            { entry_type => 'talk', visible => 0, hidden => 0 } );
         if ( scalar @talk_objs > 0 ) {
             $hash_dict{$key}   = "Talks";
             $hash_values{$key} = \@talk_objs;
@@ -861,10 +851,10 @@ sub display_landing {
     my $tag_name_for_permalink = -1;
     $tag_name_for_permalink = $tag_obj->{name} if defined $tag_obj;
 
-    $tag_name = $tag_name_for_permalink unless $tag_name_for_permalink eq -1;
+    $tag_name = $tag_name_for_permalink unless $tag_name_for_permalink == -1;
     $tag_name = $permalink
         if !defined $self->param('tag')
-        and $tag_name_for_permalink eq -1;
+        and $tag_name_for_permalink == -1;
     $tag_name =~ s/_+/_/g
         if defined $tag_name
         and defined $show_title
@@ -949,7 +939,7 @@ sub replace_urls_to_file_serving_function {
         # check if the entry has pdf
         my $pdf_path = $self->get_paper_pdf_path( $e->{id}, "paper" );
         if ( $pdf_path ne 0 ) {    # this means that file exists locally
-            if ( has_bibtex_field( $dbh, $e->{id}, "pdf" ) ) {
+            if ( $e->bibtex_has_field("pdf") ) {
                 add_field_to_bibtex_code( $dbh, $e->{id}, "pdf", "$url_pdf" );
                 $str .= "id $e->{id}, PDF: " . $url_pdf;
                 $str .= '<br/>';
@@ -957,7 +947,7 @@ sub replace_urls_to_file_serving_function {
         }
         my $slides_path = $self->get_paper_pdf_path( $e->{id}, "slides" );
         if ( $slides_path ne 0 ) {    # this means that file exists locally
-            if ( has_bibtex_field( $dbh, $e->{id}, "slides" ) ) {
+            if ( $e->bibtex_has_field("slides") ) {
                 add_field_to_bibtex_code( $dbh, $e->{id}, "slides",
                     "$url_slides" );
                 $str .= "id $e->{id}, SLI: " . $url_slides;
@@ -1271,8 +1261,7 @@ sub add_pdf_post {
         my $msg
             = "Successfully uploaded the $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>.
         The file was renamed to: <em>$fname</em>. URL <a href=\""
-            . $file_url
-            . "\">$name</a>";
+            . $file_url . "\">$name</a>";
 
         my $mentry = MEntry->static_get( $dbh, $id );
         if ( !defined $mentry ) {
@@ -1298,8 +1287,17 @@ sub regenerate_html_for_all {
     $self->write_log("regenerate_html_for_all is running");
 
     my @entries = MEntry->static_all($dbh);
+    my $i       = 0;
+    my $num     = scalar @entries
+        ; # for performance reasons as separate variable. Not benchmarked however.
+
     for my $e (@entries) {
-        $e->regenerate_html($dbh);
+        say "Regenrating HTML NORMAL for entry "
+            . $e->{id}
+            . ". Progress $i/"
+            . $num;
+        $e->regenerate_html( $dbh, 0 );
+        ++$i;
     }
 
     $self->write_log("regenerate_html_for_all has finished");
@@ -1315,12 +1313,14 @@ sub regenerate_html_for_all_force {
     my $dbh  = $self->app->db;
     $self->write_log("regenerate_html_for_all FORCE is running");
 
-    my @entries = MEntry->static_all($dbh);
 
+    my @entries = MEntry->static_all($dbh);
     for my $e (@entries) {
-        $e->generate_html($dbh);
-        $e->save($dbh);
+        say "Regenrating HTML FORCE for entry " . $e->{id};
+        $e->regenerate_html( $dbh, 1 );
     }
+
+
     $self->write_log("regenerate_html_for_all FORCE has finished");
     $self->flash( msg => 'Regeneration of HTML code finished.' );
     my $referrer = $self->get_referrer();
@@ -1339,12 +1339,10 @@ sub regenerate_html {
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    $mentry->regenerate_html($dbh);
+    $mentry->regenerate_html( $dbh, 1 );
 
     $self->redirect_to( $self->get_referrer );
 }
-
-####################################################################################
 ####################################################################################
 
 sub delete_sure {
@@ -1627,8 +1625,7 @@ sub get_adding_editing_message_for_error_code {
 
 }
 
-####################################################################################
-################################################################ EDITING ###########
+
 ####################################################################################
 sub publications_add_get {
     say "CALL: publications_add_get ";
@@ -1692,8 +1689,12 @@ sub publications_add_post {
     # 2 => KEY_OK
     # 3 => KEY_TAKEN
 
+    
+    if($mentry->{warnings} ne ''){
+        $msg .= "<br/>";
+        $msg .= "<strong>BibTeX Warnings</strong>: ".$mentry->{warnings};
+    }
     $self->stash( mentry => $mentry, msg => $msg );
-
     if ( $status_code_str eq 'ADD_OK' ) {
         $self->flash( msg => $msg );
         $self->redirect_to(
@@ -1724,10 +1725,15 @@ sub publications_edit_get {
     $mentry->populate_from_bib();
     $mentry->generate_html();
 
+    if($mentry->{warnings} ne ''){
+        $msg .= "<br/><br/>";
+        $msg .= "<strong>BibTeX Warnings</strong>: ".$mentry->{warnings};
+    }
+
     $self->stash( mentry => $mentry, msg => $msg );
     $self->render( template => 'publications/edit_entry' );
 }
-############################################################################################################
+####################################################################################
 sub publications_edit_post {
     say "CALL: publications_edit_post";
     my $self            = shift;
@@ -1753,6 +1759,11 @@ sub publications_edit_post {
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );
 
+    if($mentry->{warnings} ne ''){
+        $msg .= "<br/>";
+        $msg .= "<strong>BibTeX Warnings</strong>: ".$mentry->{warnings};
+    }
+
     $self->write_log(
         "Editing publication id $id. Action: > $action <. Status code: $status_code_str."
     );
@@ -1768,10 +1779,6 @@ sub publications_edit_post {
     $self->stash( mentry => $mentry, msg => $msg );
     $self->render( template => 'publications/edit_entry' );
 }
-##################################################################
-
-##########################################################################################
-
 ####################################################################################
 sub clean_ugly_bibtex {
     say "CALL: clean_ugly_bibtex ";
@@ -1790,11 +1797,6 @@ sub clean_ugly_bibtex {
 
     $self->redirect_to( $self->get_referrer );
 }
-
-####################################################################################
-
-####################################################################################
-
 ####################################################################################
 sub get_paper_pdf_path {
     my $self = shift;
@@ -1841,5 +1843,5 @@ sub get_paper_pdf_path {
     my $file_path = $directory . $filename;
     return $file_path;
 }
-
+####################################################################################
 1;

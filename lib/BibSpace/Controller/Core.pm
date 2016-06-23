@@ -1,6 +1,7 @@
 package BibSpace::Controller::Core;
 
 use BibSpace::Functions::FDB;
+use BibSpaceBibtexToHtml::BibSpaceBibtexToHtml;
 
 use Data::Dumper;
 use utf8;
@@ -34,7 +35,6 @@ our @EXPORT = qw(
     get_author_id_for_uid
     get_author_id_for_master
     get_master_for_id
-    get_html_for_bib
     get_teams_of_author
     get_team_members
     add_team_for_author
@@ -62,7 +62,6 @@ our @EXPORT = qw(
     get_tags_for_author
     get_tags_for_team
     add_field_to_bibtex_code
-    has_bibtex_field
     clean_tag_name
     get_author_visibility_for_id
     postprocess_all_entries_after_author_uids_change
@@ -1044,22 +1043,22 @@ sub add_field_to_bibtex_code {
     $sth2->finish();
 }
 ####################################################################################
-sub has_bibtex_field {
-    my $dbh   = shift;
-    my $eid   = shift;
-    my $field = shift;
+# sub has_bibtex_field {
+#     my $dbh   = shift;
+#     my $eid   = shift;
+#     my $field = shift;
 
-    my @ary = $dbh->selectrow_array( "SELECT bib FROM Entry WHERE id = ?",
-        undef, $eid );
-    my $entry_str = $ary[0];
+#     my @ary = $dbh->selectrow_array( "SELECT bib FROM Entry WHERE id = ?",
+#         undef, $eid );
+#     my $entry_str = $ary[0];
 
-    my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s($entry_str);
-    return -1 unless $entry->parse_ok;
-    my $key = $entry->key;
+#     my $entry = new Text::BibTeX::Entry();
+#     $entry->parse_s($entry_str);
+#     return -1 unless $entry->parse_ok;
+#     my $key = $entry->key;
 
-    return $entry->exists($field);
-}
+#     return $entry->exists($field);
+# }
 ################################################################################
 
 sub create_user_id {
@@ -1122,165 +1121,6 @@ sub create_user_id {
     # print "$userID \n";
     return $userID;
 }
-
-################################################################################
-# I wish there exist a good replacement for this legacy function that calls legacy external, non-Perl software...
-sub get_html_for_bib {
-    my $bib_str = shift;
-    my $key = shift || 'no-bibtex-key';
-
-    # fix for the coding problems with mysql
-    $bib_str =~ s/J''urgen/J\\''urgen/g;
-    $bib_str =~ s/''a/\\''a/g;
-    $bib_str =~ s/''o/\\''o/g;
-    $bib_str =~ s/''e/\\''e/g;
-
-    # say "USING GLOBAL TMP DIR (bibtex2html_tmp_dir): $bibtex2html_tmp_dir";
-
-    my $out_file = $bibtex2html_tmp_dir . "/out";
-    my $outhtml  = $out_file . ".html";
-
-    my $out_bibhtml = $out_file . "_bib.html";
-    my $databib     = $bibtex2html_tmp_dir . "/data.bib";
-
-    open( my $MYFILE, q{>}, $databib );
-    print $MYFILE $bib_str;
-    close($MYFILE);
-
-    open( my $fh, q{>}, $outhtml )
-        or die
-        "Processing key $key. Cannot open file for writing (touch): $outhtml";
-    close($fh);
-    open( $fh, q{>}, $out_bibhtml )
-        or die
-        "Processing key $key. Cannot open file for writing (touch): $out_bibhtml";
-    close($fh);
-
-    my $cwd      = getcwd();
-    my $bst_file = $cwd . "/lib/descartes2";
-
-    mkdir( $bibtex2html_tmp_dir, 0777 );
-
-# -nokeys  --- no number in brackets by entry
-# -nodoc   --- dont generate document but a part of it - to omit html head body headers
-# -single  --- does not provide links to pdf, html and bib but merges bib with html output
-    my $bibtex2html_command
-        = "bibtex2html -s "
-        . $bst_file
-        . " -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc  -no-footer -o "
-        . $out_file
-        . " $databib ";
-
-    # my $tune_html_command = "./tuneSingleHtmlFile.sh out.html";
-
-    # print "COMMAND: $bibtex2html_command\n";
-    my $syscommand
-        = "export TMPDIR="
-        . $bibtex2html_tmp_dir . " && "
-        . $bibtex2html_command
-        . ' &> /dev/null';
-    `$syscommand`;
-    my $command_output = $?;
-
-    # say "=====\n";
-    # say "cwd: ".$cwd."\n";
-    # say "Running: $syscommand";
-    say "Output: $command_output.";
-
-    # say "=====\n";
-    if ( $command_output ne '0' ) {
-        return "", "";
-    }
-
-    my $html    = read_file($outhtml);
-    my $htmlbib = read_file($out_bibhtml);
-
-    $htmlbib =~ s/<h1>data.bib<\/h1>//g;
-
-    $htmlbib =~ s/<a href="$outhtml#(.*)">(.*)<\/a>/$1/g;
-    $htmlbib =~ s/<a href=/<a target="blank" href=/g;
-
-    $html = tune_html( $html, $key, $htmlbib );
-
-    # now the output jest w out.html i out_bib.html
-
-    return $html, $htmlbib;
-}
-
-################################################################################
-
-sub tune_html {
-    my $s       = shift;
-    my $key     = shift;
-    my $htmlbib = shift || "";
-
-    $s =~ s/out_bib.html#(.*)/\/publications\/get\/bibtex\/$1/g;
-
-    # FROM .pdf">.pdf</a>&nbsp;]
-    # TO   .pdf" target="blank">.pdf</a>&nbsp;]
-    # $s =~ s/.pdf">/.pdf" target="blank">/g;
-
-    $s =~ s/>.pdf<\/a>/ target="blank">.pdf<\/a>/g;
-    $s =~ s/>slides<\/a>/ target="blank">slides<\/a>/g;
-    $s =~ s/>http<\/a>/ target="blank">http<\/a>/g;
-    $s =~ s/>.http<\/a>/ target="blank">http<\/a>/g;
-    $s =~ s/>DOI<\/a>/ target="blank">DOI<\/a>/g;
-
-    $s =~ s/<a (.*)>bib<\/a>/BIB_LINK_ID/g;
-
-    # # replace &lt; and &gt; b< '<' and '>' in Samuel's files.
-    # sed 's_\&lt;_<_g' $FILE > $TMP && mv -f $TMP $FILE
-    # sed 's_\&gt;_>_g' $FILE > $TMP && mv -f $TMP $FILE
-    $s =~ s/\&lt;/</g;
-    $s =~ s/\&gt;/>/g;
-
-# ### insert JavaScript hrefs to show/hide abstracts on click ###
-# #replaces every newline command with <NeueZeile> to insert the Abstract link in the next step properly
-# perl -p -i -e "s/\n/<NeueZeile>/g" $FILE
-    $s =~ s/\n/<NeueZeile>/g;
-
-# #inserts the link to javascript
-# sed 's_\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">_\&nbsp;\|\&nbsp;<a href=\"javascript:showAbstract(this);\" onclick=\"showAbstract(this)\">Abstract</a><noscript> (JavaScript required!)</noscript>\&nbsp;\]<div style=\"display:none;\"><blockquote id=\"abstractBQ\">_g' $FILE > $TMP && mv -f $TMP $FILE
-# sed 's_</font></blockquote><NeueZeile><p>_</blockquote></div>_g' $FILE > $TMP && mv -f $TMP $FILE
-# $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a href=\"javascript:showAbstract(this);\" onclick=\"showAbstract(this)\">Abstract<\/a><noscript> (JavaScript required!)<\/noscript>\&nbsp;\]<div style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
-
-#$s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \]<div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
-    $s
-        =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote class=\"abstractBQ\">/g;
-    $s =~ s/<\/font><\/blockquote><NeueZeile><p>/<\/blockquote><\/div>/g;
-
-    #inserting bib DIV marker
-    $s =~ s/\&nbsp;\]/\&nbsp; \]/g;
-    $s =~ s/\&nbsp; \]/\&nbsp; \] BIB_DIV_ID/g;
-
-    $key =~ s/\./_/g;
-
-    # handling BIB_DIV_ID marker
-    $s
-        =~ s/BIB_DIV_ID/<div id="bib-of-$key" class="inline-bib" style=\"display:none;\">$htmlbib<\/div>/g;
-
-    # handling BIB_LINK_ID marker
-    $s
-        =~ s/BIB_LINK_ID/<a class="abstract-a" onclick=\"showAbstract(\'bib-of-$key\')\">bib<\/a>/g;
-
-    # #undo the <NeueZeile> insertions
-    # perl -p -i -e "s/<NeueZeile>/\n/g" $FILE
-    $s =~ s/<NeueZeile>/\n/g;
-
-    $s =~ s/(\s)\s+/$1/g;    # !!! TEST
-
-    $s =~ s/<p>//g;
-    $s =~ s/<\/p>//g;
-
-    $s =~ s/<a name="(.*)"><\/a>//g;
-
-    # $s =~ s/<a name=/<a id=/g;
-
-    $s =~ s/\&amp /\&amp; /g;
-
-    $s;
-}
-
 ################################################################################
 
 1;
