@@ -16,9 +16,12 @@ use DBI;
 use TeX::Encode;
 use Encode;
 
+
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
 use BibSpace::Model::MEntry;
+
+use BibSpace::Controller::Set; # deprecated but needed so far. TODO: refactor this
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -255,7 +258,7 @@ sub split_bibtex_entries {
 }
 ####################################################################################
 
-### THIS IS ONLY TEST FUNCTION TO TEST functionalities provided by sets
+### THIS IS ONLY Exemplary FUNCTION TO play with functionalities provided by sets
 sub all_defined_by_set {
     say "CALL: all_defined_by_set ";
     my $self = shift;

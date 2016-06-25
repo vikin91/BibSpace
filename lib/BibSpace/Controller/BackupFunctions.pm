@@ -334,7 +334,7 @@ sub get_backup_age_in_days {
     my $row = $sth->fetchrow_hashref();
 
     my $ret = -1;
-    $ret = $row->{age} if $row->{age} >= 0;
+    $ret = $row->{age} if defined $row->{age} and $row->{age} >= 0;
 
     # say "call: Core::get_backup_age_in_days. Returning $ret";
     return $ret;
