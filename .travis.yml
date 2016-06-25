@@ -57,6 +57,7 @@ install:
     # - cpanm --nq --no-interactive --installdeps .
     - cpanm -nq --no-interactive Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent Text::BibTeX HTML::TagCloud::Sortable Crypt::Random WWW::Mechanize Test::Differences Test::MockModule Mojolicious::Plugin::RenderFile Path::Tiny 
     - cpanm -nq --no-interactive Moose Test::Pod::Coverage TeX::Encode Array::Utils File::Spec
+    - cpanm -nq --no-interactive Text::ASCIIMathML
 before_script:
     - mysql --version
     - mysql -u root -e "SELECT VERSION();"

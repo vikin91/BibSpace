@@ -475,7 +475,6 @@ sub get_landing_for_our_type { #TODO: refactor to MType
 sub set_landing_for_our_type { #TODO: refactor to MType
 
     my $dbh  = shift;
-    my $dbh  = shift;
     my $type = shift;
     my $val  = shift;
 
