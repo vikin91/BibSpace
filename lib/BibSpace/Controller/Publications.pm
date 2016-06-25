@@ -993,7 +993,7 @@ sub remove_attachment {
         $num_deleted_files = $self->remove_attachment_do( $id, $filetype );
 
         if ( $num_deleted_files > 0 ) {
-            $mentry->regenerate_html($dbh);
+            $mentry->regenerate_html($dbh, 0);
         }
 
         $self->write_log(
@@ -1269,7 +1269,7 @@ sub add_pdf_post {
             $self->redirect_to( $self->get_referrer );
             return;
         }
-        $mentry->regenerate_html($dbh);
+        $mentry->regenerate_html( $dbh, 0 );
 
         $self->flash( message => $msg );
         $self->redirect_to( $self->get_referrer );
@@ -1633,6 +1633,8 @@ sub publications_add_get {
     $self->write_log("Adding publication");
     my $dbh = $self->app->db;
 
+
+
     my $msg = "<strong>Adding mode</strong> You operate on an unsaved entry!";
     my $e_dummy = MEntry->new();
     $e_dummy->{id} = -1;
@@ -1646,7 +1648,7 @@ sub publications_add_get {
     $e_dummy->{bib}    = $bib;
     $e_dummy->{hidden} = 0;      # new papers are not hidden by default
     $e_dummy->populate_from_bib();
-    $e_dummy->generate_html();
+    $e_dummy->generate_html($self->app->bst);
 
     $self->stash( mentry => $e_dummy, msg => $msg );
     $self->render( template => 'publications/edit_entry' );
@@ -1672,7 +1674,7 @@ sub publications_add_post {
     $new_bib =~ s/^\t//g;
 
     my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-        = Fhandle_add_edit_publication( $dbh, $new_bib, -1, $action );
+        = Fhandle_add_edit_publication( $dbh, $new_bib, -1, $action, $self->app->bst );
     my $msg
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );
@@ -1723,7 +1725,7 @@ sub publications_edit_get {
         return;
     }
     $mentry->populate_from_bib();
-    $mentry->generate_html();
+    $mentry->generate_html($self->app->bst);
 
     if($mentry->{warnings} ne ''){
         $msg .= "<br/><br/>";
@@ -1754,7 +1756,7 @@ sub publications_edit_post {
     $new_bib =~ s/^\t//g;
 
     my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-        = Fhandle_add_edit_publication( $dbh, $new_bib, $id, $action );
+        = Fhandle_add_edit_publication( $dbh, $new_bib, $id, $action, $self->app->bst );
     my $msg
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );

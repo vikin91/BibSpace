@@ -25,7 +25,6 @@ our @EXPORT = qw(
     Fget_single_publication
     Ffix_months
     Fbibtex_key_exists
-    Fget_html_preview
     Fget_entry_id_for_bibtex_key
     Fhandle_add_edit_publication
     Fget_publications_main_hashed_args_only
@@ -74,16 +73,17 @@ sub Fbibtex_key_exists {
     my $key_exists = $ary[0];
     return $key_exists;
 };
-####################################################################################
-sub Fget_html_preview {
-    my $new_bib = shift;
+# ####################################################################################
+# sub Fget_html_preview {
+#     my $new_bib = shift;
+#     my $bst_file = shift;
     
-    my $e_dummy = MEntry->new();
-    $e_dummy->{bib} = $new_bib;
-    $e_dummy->populate_from_bib();
-    my ($html, $html_bib) = $e_dummy->generate_html();
-    return $html, $html_bib;
-};
+#     my $e_dummy = MEntry->new();
+#     $e_dummy->{bib} = $new_bib;
+#     $e_dummy->populate_from_bib();
+#     my ($html, $html_bib) = $e_dummy->generate_html($bst_file);
+#     return $html, $html_bib;
+# };
 ####################################################################################
 sub Fget_entry_id_for_bibtex_key{
    my $dbh = shift;
@@ -101,7 +101,7 @@ sub Fget_entry_id_for_bibtex_key{
 
 ####################################################################################
 sub Fhandle_add_edit_publication {
-  my ($dbh, $new_bib, $id, $action) = @_;
+  my ($dbh, $new_bib, $id, $action, $bst_file) = @_;
 
   say "CALL Fhandle_add_edit_publication: id $id action $action";
 
@@ -153,18 +153,18 @@ sub Fhandle_add_edit_publication {
   }
   else{
     $status_code_str = 'KEY_TAKEN';
-    $e->generate_html();
+    $e->generate_html($bst_file);
     return ($e, $status_code_str, $existing_id, -1);
   }
   if($action eq 'check_key'){ # user wanted only to check key - we give him the preview as well
-    $e->generate_html();
+    $e->generate_html($bst_file);
     $e->populate_from_bib();
     return ($e, $status_code_str, $existing_id, -1);
   }
 
   if($action eq 'preview'){ # user wanted only to check key and get preview
     $status_code_str = 'PREVIEW';
-    $e->generate_html();
+    $e->generate_html($bst_file);
     $e->populate_from_bib();
     return ($e, $status_code_str, $existing_id, -1); 
   }
@@ -178,7 +178,7 @@ sub Fhandle_add_edit_publication {
     }
     
     $e->populate_from_bib();
-    $e->regenerate_html($dbh);
+    $e->regenerate_html($dbh, 0);
     
     $e->postprocess_updated($dbh); # this saves 
     $added_under_id = $e->{id};

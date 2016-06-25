@@ -30,6 +30,7 @@ package MEntry;
   has 'need_html_regen' => (is => 'rw', default => '1');
   # not DB fields
   has 'warnings' => (is => 'ro', default => '');
+  has 'bst_file' => (is => 'ro', default => './lib/descartes2.bst');
 
 ####################################################################################
 sub static_all {
@@ -498,7 +499,7 @@ sub postprocess_updated {
   $self->process_authors($dbh);
   $self->fix_month($dbh);
 
-  $self->regenerate_html($dbh); # has save
+  $self->regenerate_html($dbh, 0); # has save
   # $self->save($dbh);
   
   return 1; # TODO: old code! 
@@ -508,10 +509,7 @@ sub generate_html {
   my $self = shift;
   my $bst_file = shift;
 
-  # FIXME: pass this parameter in all calls to this function.
-  # Store it in app config!
-  $bst_file = "/Users/piotr/Dropbox/AA-little-workspace/perl/publiste/lib/descartes2.bst"
-    if !defined $bst_file;
+  $bst_file = $self->{bst_file} if !defined $bst_file;
 
   $self->populate_from_bib();
 
@@ -531,11 +529,14 @@ sub generate_html {
 sub regenerate_html {
   my $self = shift;
   my $dbh = shift;
-  my $force = shift // 0;
+  my $force = shift;
+  my $bst_file = shift;
+
+  $bst_file = $self->{bst_file} if !defined $bst_file;
 
   if( $force == 1 or $self->{need_html_regen} == 1){
     $self->populate_from_bib();
-    $self->generate_html();
+    $self->generate_html($bst_file);
     $self->{need_html_regen} = 0;
     $self->save($dbh);
   } 
@@ -706,7 +707,7 @@ sub static_get_from_id_array {
   my @input_id_arr = @$input_id_arr_ref;
 
   unless(grep {defined($_)} @input_id_arr){ # if array is empty
-    say "MEntry->static_get_from_id_array array is empty";
+    # say "MEntry->static_get_from_id_array array is empty";
     return ();
   }
 

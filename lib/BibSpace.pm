@@ -47,6 +47,23 @@ has home => sub {
   return Mojo::Home->new(File::Spec->rel2abs($path));
 };
 
+has bst => sub {
+  my $self = shift;
+
+  return File::Spec->rel2abs($self->app->config->{bst_file})
+    if File::Spec->file_name_is_absolute( $self->app->config->{bst_file} )
+    and -e File::Spec->rel2abs($self->app->config->{bst_file});
+
+  return File::Spec->rel2abs($self->app->home.$self->app->config->{bst_file})
+    unless File::Spec->file_name_is_absolute( $self->app->config->{bst_file} )
+    and -e File::Spec->rel2abs($self->app->home.$self->app->config->{bst_file});
+
+  return File::Spec->rel2abs($self->app->home.'lib/descartes2.bst')
+    if -e File::Spec->rel2abs($self->app->home.'lib/descartes2.bst');
+
+  return './bst-not-found.bst';
+};
+
 
 has config_file => sub {
   my $self = shift;

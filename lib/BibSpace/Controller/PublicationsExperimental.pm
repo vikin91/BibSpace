@@ -208,7 +208,7 @@ sub publications_add_many_post {
 
     for my $bibtex_code (@bibtex_codes) {
         my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-            = Fhandle_add_edit_publication( $dbh, $bibtex_code, -1, 'save' );
+            = Fhandle_add_edit_publication( $dbh, $bibtex_code, -1, 'save', $self->app->bst );
 
         if ( $status_code_str eq 'ADD_OK' ) {
             $debug_str .= "<br>"
