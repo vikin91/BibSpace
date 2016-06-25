@@ -65,6 +65,14 @@ subtest 'MTeam basics 2' => sub {
     my $the_same = MTeam->static_get( $dbh, $rteam->{id} );
     is( $the_same->{id}, $rteam->{id}, "getter team for id" );
 
+    # test getter by name
+    $rteam = $teams[rand @teams];
+    $the_same = MTeam->static_get_by_name( $dbh, $rteam->{name} );
+    is( $the_same->{id}, $rteam->{id}, "getter team for name" );
+    
+    # test getter by name - name does not exist
+    is(MTeam->static_get_by_name( $dbh, "doesnotexitsforsure" ), undef, "getter by name not exsiting team");
+    
     #test saving bad team
     my $bad_team = MTeam->new();
     $bad_team->{id} = undef;
