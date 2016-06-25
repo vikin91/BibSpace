@@ -3,7 +3,6 @@ package BibSpace v0.4.2;
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
 use BibSpace::Controller::Core;
-use BibSpace::Controller::Search;
 use BibSpace::Controller::BackupFunctions;
 use BibSpace::Controller::Publications;
 use BibSpace::Controller::PublicationsExperimental;
@@ -399,9 +398,6 @@ sub setup_routes {
   $logged_user->get('/authors/toggle_visibility')
     ->to('authors#toggle_visibility');
 
-  ################ SEARCH ################
-  # what is this?? # TODO: test it!
-  $anyone->get('/search/:type/:q')->to('search#search');
 
   ################ TAG TYPES ################
   # $logged_user->get('/tags/')->to('tags#index')->name("tags_index");
