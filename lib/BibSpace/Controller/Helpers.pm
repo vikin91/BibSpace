@@ -362,8 +362,6 @@ sub register {
                 { hidden => 0, author => $mid, tag => $tag_id } );
             my $count = scalar @objs;
             return $count;
-
-       # my $set = get_set_of_papers_for_author_and_tag($self, $mid, $tag_id);
         }
     );
 

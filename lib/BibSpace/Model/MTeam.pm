@@ -68,7 +68,7 @@ sub update {
 
     if ( !defined $self->{id} ) {
         say
-"Cannot update. MTeam id not set. The entry may not exist in the DB. Returning -1";
+"Cannot update. MTeam id not set. The entry may not exist in the DB. Returning -1. Should never happen!";
         return -1;
     }
 

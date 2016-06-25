@@ -42,14 +42,14 @@ subtest '00: checking if DB runs' => sub {
   ok(db_connect($db_host, $db_user, $db_database, $db_pass), "Can connect to database");
 };
 
-my $fixture_dir = "./fixture/";
+
 
 note "============ BACKING UP THE DATABASE ============";
 my $db_backup_file = $t_logged_in->app->do_mysql_db_backup("basic_backup_testing");
 note "============ BACKING FILE: $db_backup_file ============";
 
 
-
+my $fixture_dir = "./fixture/";
 SKIP: {
 	note "============ APPLY DATABASE FIXTURE ============";
 	skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir."db.sql";

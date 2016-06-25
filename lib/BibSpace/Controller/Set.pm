@@ -12,25 +12,22 @@ use warnings;
 use DBI;
 
 use BibSpace::Controller::Core;
-
 use BibSpace::Model::MTeam;
+
+use BibSpace::Functions::FSet
+    ;  # the functions that do not rely on controller should be exported there
 
 use Set::Scalar;
 
 use Exporter;
 our @ISA = qw( Exporter );
 
-# these CAN be exported.
-# our @EXPORT_OK = qw( export_me export_me_too );
-
-# these are exported by default.
 our @EXPORT = qw(
     get_set_of_papers_for_author_id
     get_set_of_authors_for_team
     get_set_of_papers_for_all_authors_of_team_id
     get_set_of_papers_for_team
-    get_set_of_all_paper_ids
-    get_set_of_papers_with_no_tags
+    
     get_set_of_tagged_papers
     get_set_of_teams_for_author_id
     get_set_of_teams_for_author_id_w_year
@@ -44,25 +41,8 @@ our @EXPORT = qw(
 
 sub get_set_of_all_team_ids {
     my $dbh = shift;
-
-    my @all_teams        = MTeam->static_all($dbh);
-    my @all_team_ids_arr = map { $_->{id} } @all_teams;
-    my $set              = Set::Scalar->new(@all_team_ids_arr);
-    return $set;
+    return Fget_set_of_all_team_ids($dbh);
 }
-####################################################################################
-
-sub get_set_of_all_paper_ids {
-    my $dbh = shift;
-
-    my @all_entry_objects = MEntry->static_all($dbh);
-    my @all_entry_objects_ids_arr
-        = map { $_->{id} } @all_entry_objects;    # wow!
-    my $all_entry_objects_ids_arr_set
-        = Set::Scalar->new(@all_entry_objects_ids_arr);
-    return $all_entry_objects_ids_arr_set;
-}
-
 ####################################################################################
 
 sub get_set_of_papers_for_team {
@@ -70,330 +50,77 @@ sub get_set_of_papers_for_team {
     my $tid  = shift;
     my $dbh  = $self->app->db;
 
-    my $set = new Set::Scalar;
-
-    my @params;
-
-    my $qry
-        = "SELECT DISTINCT Entry.bibtex_key, Entry.id, Entry.bib, Entry.year, Entry.html, Entry.bibtex_type
-                FROM Entry
-                LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
-                LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
-                LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
-                LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
-                LEFT JOIN OurType_to_Type ON OurType_to_Type.bibtex_type = Entry.bibtex_type 
-                LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
-                WHERE Entry.bibtex_key IS NOT NULL ";
-
-    push @params, $tid;
-    push @params, $tid;
-
-# push @params, $tid;
-# $qry .= "AND ((Exceptions_Entry_to_Team.team_id=? ) OR Author.display = 1) ";
-    $qry
-        .= "AND ((Exceptions_Entry_to_Team.team_id=? ) OR (Author_to_Team.team_id=? AND start <= Entry.year  AND (stop >= Entry.year OR stop = 0))) ";
-
-    $qry .= "ORDER BY Entry.year DESC, Entry.bibtex_key ASC";
-
-    my $sth = $dbh->prepare_cached($qry);
-    $sth->execute(@params);
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-
-        $set->insert($eid);
-    }
-
-    return $set;
+    return Fget_set_of_papers_for_team( $dbh, $tid );
 }
 
 ####################################################################################
 
 sub get_set_of_papers_with_exceptions {
     my $self = shift;
-    my $dbh  = $self->app->db;
-
-    my $set = new Set::Scalar;
-
-    my @params;
-
-    my $qry
-        = "SELECT DISTINCT entry_id FROM Exceptions_Entry_to_Team WHERE team_id>-1";
-    my $sth = $dbh->prepare_cached($qry);
-    $sth->execute();
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{entry_id};
-        $set->insert($eid);
-    }
-
-    return $set;
+    return Fget_set_of_papers_with_exceptions( $self->app->db );
 }
 
 ####################################################################################
 
 sub get_set_of_tagged_papers {
     my $self = shift;
-    my $dbh  = $self->app->db;
-
-    my $set = new Set::Scalar;
-
-    my $qry = "SELECT DISTINCT entry_id FROM Entry_to_Tag";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute();
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{entry_id};
-        $set->insert($eid);
-    }
-
-    return $set;
+    return Fget_set_of_tagged_papers( $self->app->db );
 }
 ####################################################################################
 
-sub get_set_of_papers_with_no_tags {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-
-    my $set = new Set::Scalar;
-
-    my $qry
-        = "SELECT DISTINCT id, key FROM Entry WHERE id NOT IN (SELECT DISTINCT entry_id FROM Entry_to_Tag)";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute();
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        $set->insert($eid);
-    }
-
-    return $set;
-}
+# sub get_set_of_papers_with_no_tags {
+#     my $self = shift;
+#     return Fget_set_of_papers_with_no_tags( $self->app->db );
+# }
 
 ####################################################################################
 
 sub get_set_of_papers_for_all_authors_of_team_id {
     my $self = shift;
     my $tid  = shift;
-    my $dbh  = $self->app->db;
 
-    my $set = new Set::Scalar;
-
-    my $authors_set = get_set_of_authors_for_team( $self, $tid );
-
-    while ( defined( my $aid = $authors_set->each ) ) {
-        $set = $set + get_set_of_papers_for_author_id( $self, $aid );
-
-    }
-
-    return $set;
+    return Fget_set_of_papers_for_all_authors_of_team_id( $self->app->db,
+        $tid );
 }
 ####################################################################################
-
-sub get_set_of_authors_for_team {
-    my $self = shift;
-    my $tid  = shift;
-    my $dbh  = $self->app->db;
-
-    my $set = new Set::Scalar;
-
-    my $qry = "SELECT author_id, team_id 
-            FROM Author_to_Team 
-            WHERE team_id=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($tid);
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{author_id};
-
-        $set->insert($eid);
-    }
-
-    # print "Authors for team: ", $set, "\n";
-    return $set;
-}
-####################################################################################
-
-sub get_set_of_papers_for_author_id {
-    my $self = shift;
-    my $aid  = shift;
-    my $dbh  = $self->app->db;
-
-    my $set = new Set::Scalar;
-
-    my $qry = "SELECT author_id, entry_id 
-            FROM Entry_to_Author 
-            WHERE author_id=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($aid);
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{entry_id};
-
-        $set->insert($eid);
-    }
-
-    # print "Papers for author $aid: ", $set, "\n";
-    return $set;
-}
-
-####################################################################################
-
-sub get_set_of_papers_for_tag {
-    my $self = shift;
-    my $tid  = shift;
-    my $dbh  = $self->app->db;
-
-    my $set = new Set::Scalar;
-
-    my $qry = "SELECT entry_id
-            FROM Entry_to_Tag 
-            WHERE tag_id=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($tid);
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{entry_id};
-
-        $set->insert($eid);
-    }
-    print "Papers for tag $tid: ", $set, "\n";
-    return $set;
-}
-####################################################################################
-
-# sub get_set_of_papers_for_author_and_tag {
-#     my $self = shift;
-#     my $aid = shift;
-#     my $tid = shift;
-#     my $dbh = $self->app->db;
-
-#     say "This function (get_set_of_papers_for_author_and_tag) may be deprecated! It does not take into account hidden!";
-
-#     my $set_author_papers = get_set_of_papers_for_author_id($self, $aid);
-#     my $set_tag_papers = get_set_of_papers_for_tag($self, $tid);
-
-#     return $set_tag_papers * $set_author_papers;
-#  }
-
-####################################################################################
-
 sub get_set_of_papers_for_team_and_tag {
-    my $self   = shift;
+    my $dbh   = shift;
     my $teamid = shift;
     my $tagid  = shift;
-    my $dbh    = $self->app->db;
 
-    my $set_tag_papers = get_set_of_papers_for_tag( $self, $tagid );
-    my $set_team_papers = get_set_of_papers_for_team( $self, $teamid );
-
-    return $set_tag_papers * $set_team_papers;
+    return Fget_set_of_papers_for_team_and_tag($dbh, $teamid, $tagid);
 }
-####################################################################################
-# sub get_set_of_papers_for_author_and_team{
-#     my $self = shift;
-#     my $aid = shift;
-#     my $tid = shift;
-#     my $dbh = $self->app->db;
-
-#     my $set_author_papers = get_set_of_papers_for_author_id($self, $aid);
-#     my $set_team_papers = get_set_of_papers_for_team($self, $tid);
-
-#     return $set_team_papers * $set_author_papers;
-
-# }
 ####################################################################################
 
 sub get_set_of_teams_for_author_id_w_year {
     my $self = shift;
     my $aid  = shift;
     my $year = shift;
-    my $dbh  = $self->app->db;
 
-    my $set = new Set::Scalar;
-
-    my $qry = "SELECT author_id, team_id 
-            FROM Author_to_Team 
-            WHERE author_id=?
-            AND start <= ?  AND (stop >= ? OR stop = 0)";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $aid, $year, $year );
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $tid = $row->{team_id};
-
-        $set->insert($tid);
-    }
-    print "Teams for author $aid: ", $set, "\n";
-    return $set;
+    return Fget_set_of_teams_for_author_id_w_year( $self->app->db, $aid, $year );
 }
 ####################################################################################
 
 sub get_set_of_teams_for_author_id {
     my $self = shift;
     my $aid  = shift;
-    my $dbh  = $self->app->db;
 
-    my $set = new Set::Scalar;
-
-    my $qry = "SELECT author_id, team_id 
-            FROM Author_to_Team 
-            WHERE author_id=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($aid);
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $tid = $row->{team_id};
-
-        $set->insert($tid);
-    }
-    print "Teams for author $aid: ", $set, "\n";
-    return $set;
+    return Fget_set_of_teams_for_author_id( $self->app->db, $aid );
 }
 ####################################################################################
 
 sub get_set_of_authors_for_entry_id {
     my $self = shift;
     my $eid  = shift;
-    my $dbh  = $self->app->db;
 
-    my $set = new Set::Scalar;
-
-    my $qry = "SELECT author_id FROM Entry_to_Author WHERE entry_id=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($eid);
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $aid = $row->{author_id};
-
-        $set->insert($aid);
-    }
-    print "Authors of entry $eid: ", $set, "\n";
-    return $set;
+    return Fget_set_of_authors_for_entry_id( $self->app->db, $eid );
 }
 ####################################################################################
 sub get_set_of_teams_for_entry_id {
     my $self = shift;
     my $eid  = shift;
-    my $dbh  = $self->app->db;
 
-    my $entry_year = get_year_for_entry_id( $dbh, $eid );
-
-    my $teams_for_paper = new Set::Scalar;
-
-    my $authors_set = get_set_of_authors_for_entry_id( $self, $eid );
-
-    while ( defined( my $aid = $authors_set->each ) ) {
-        $teams_for_paper
-            = $teams_for_paper
-            + get_set_of_teams_for_author_id_w_year( $self, $aid,
-            $entry_year );
-    }
-
-    print "Teams for paper $eid: ", $teams_for_paper, "\n";
-    return $teams_for_paper;
+    return Fget_set_of_teams_for_entry_id( $self->app->db, $eid );
 }
 
 1;

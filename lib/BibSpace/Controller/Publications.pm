@@ -340,7 +340,7 @@ sub show_unrelated_to_team {
 
     my $dbh = $self->app->db;
 
-    my $set_all_papers = get_set_of_all_paper_ids($dbh);
+    my $set_all_papers = Set::Scalar->new( map { $_->{id} } MEntry->static_all($dbh) );
     my $set_of_related_to_team
         = get_set_of_papers_for_all_authors_of_team_id( $self, $team_id );
     my $end_set = $set_all_papers - $set_of_related_to_team;
@@ -386,7 +386,7 @@ sub all_candidates_to_delete {
 
     $self->write_log("Displaying entries that are candidates_to_delete");
 
-    my $set_all_papers = get_set_of_all_paper_ids( $self->app->db );
+    my $set_all_papers = Set::Scalar->new( map { $_->{id} } MEntry->static_all($self->app->db) );
     my $end_set        = $set_all_papers;
 
     # print "A1 ", $end_set, "\n";

@@ -78,6 +78,10 @@ subtest 'MTeam basics 2' => sub {
     $bad_team->{id} = undef;
     is( $bad_team->save($dbh), -1, "saving bad team" );
 
+    $rteam = $teams[rand @teams];
+    $rteam->{id} = undef;
+    is( $rteam->update($dbh), -1, "updating with undef id" );
+
 };
 
 done_testing();

@@ -16,12 +16,12 @@ use DBI;
 use TeX::Encode;
 use Encode;
 
-
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
 use BibSpace::Model::MEntry;
 
-use BibSpace::Controller::Set; # deprecated but needed so far. TODO: refactor this
+use BibSpace::Controller::Set
+    ;    # deprecated but needed so far. TODO: refactor this
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -211,7 +211,8 @@ sub publications_add_many_post {
 
     for my $bibtex_code (@bibtex_codes) {
         my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-            = Fhandle_add_edit_publication( $dbh, $bibtex_code, -1, 'save', $self->app->bst );
+            = Fhandle_add_edit_publication( $dbh, $bibtex_code, -1, 'save',
+            $self->app->bst );
 
         if ( $status_code_str eq 'ADD_OK' ) {
             $debug_str .= "<br>"
@@ -267,7 +268,8 @@ sub all_defined_by_set {
     $end_set = $end_set - get_set_of_papers_for_team( $self, 1 );
 
     #test
-    my $all_papers          = get_set_of_all_paper_ids( $self->app->db );
+    my $all_papers = Set::Scalar->new( map { $_->{id} }
+            MEntry->static_all( $self->app->db ) );
     my $not_relevant_papers = $all_papers
         - get_set_of_papers_for_all_authors_of_team_id( $self, 1 );
 
