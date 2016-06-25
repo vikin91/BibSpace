@@ -26,7 +26,7 @@ sub show {
    $sth->execute(); 
 
    my @teams;
-   my @ids
+   my @ids;
    my $i = 1;
    while(my $row = $sth->fetchrow_hashref()) {
       my $team = $row->{name} || "noname-team";
