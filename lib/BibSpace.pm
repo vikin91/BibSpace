@@ -1,8 +1,7 @@
-package BibSpace;
+package BibSpace v0.4.2;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
-use BibSpace::Functions::FDB;
 use BibSpace::Controller::Core;
 use BibSpace::Controller::Search;
 use BibSpace::Controller::BackupFunctions;
@@ -10,11 +9,12 @@ use BibSpace::Controller::Publications;
 use BibSpace::Controller::PublicationsExperimental;
 use BibSpace::Controller::PublicationsSEO;
 use BibSpace::Controller::Helpers;
+
 use BibSpace::Functions::MyUsers;
+use BibSpace::Functions::FDB;
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
-
 
 use Time::Piece;
 use Data::Dumper;
@@ -23,9 +23,8 @@ use POSIX qw/strftime/;
 use Try::Tiny;
 use Path::Tiny;    # for creating directories
 use Mojo::Home;
-
-use Cwd;
 use File::Spec;
+use Cwd;
 
 # for Makemake. Needs to be removed for Dist::Zilla
 # our $VERSION = '0.4.1';

@@ -161,12 +161,15 @@ sub nohtml {
     my $key  = shift;
     my $type = shift;
     return
-        "<span class=\"label label-danger\">NO HTML </span><span class=\"label label-default\">($type) $key</span>"
+        "<span class=\"label label-danger\">"
+        ."NO HTML "
+        ."</span><span class=\"label label-default\">"
+        ."($type) $key</span>"
         . "<BR>";
 }
 ##################################################################
-sub postprocess_all_entries_after_author_uids_change
-{    # assigns papers to their authors ONLY. No tags, no regeneration.
+sub postprocess_all_entries_after_author_uids_change { #TODO: refactor to FPublications of MEntry
+    # assigns papers to their authors ONLY. No tags, no regeneration.
     my $self = shift;
 
     $self->write_log("reassign papers to authors started");
@@ -196,8 +199,8 @@ sub postprocess_all_entries_after_author_uids_change
 }
 
 ##################################################################
-sub postprocess_all_entries_after_author_uids_change_w_creating_authors
-{ # assigns papers to their authors ONLY. No tags, no regeneration. Not existing authors will be created
+sub postprocess_all_entries_after_author_uids_change_w_creating_authors { #TODO: refactor to FPublications of Mentry. TODO: merge with postprocess_all_entries_after
+    # assigns papers to their authors ONLY. No tags, no regeneration. Not existing authors will be created
     my $self = shift;
 
     $self->write_log(
@@ -238,7 +241,7 @@ sub postprocess_all_entries_after_author_uids_change_w_creating_authors
 # clean_ugly_bibtex_fileds_for_all_entries
 ####################################################################################
 
-sub assign_entry_to_existing_authors_no_add {
+sub assign_entry_to_existing_authors_no_add { #TODO: refactor to MEntry
     my $self  = shift;
     my $entry = shift;
     my $dbh   = $self->app->db;
@@ -297,7 +300,7 @@ sub assign_entry_to_existing_authors_no_add {
 }
 ##################################################################
 
-sub after_edit_process_authors {
+sub after_edit_process_authors { #TODO: this seems to be duplicate to a method in MEntry
     my $dbh   = shift;
     my $entry = shift;
 
@@ -378,7 +381,7 @@ sub after_edit_process_authors {
     return $num_authors_created;
 }
 ################################################################################
-sub get_author_visibility_for_id {
+sub get_author_visibility_for_id { #TODO: refactor to MAuthor
     my $self = shift;
     my $id   = shift;
 
@@ -395,7 +398,7 @@ sub get_author_visibility_for_id {
 }
 ################################################################################
 ################################################################################
-sub get_types_for_landing_page {
+sub get_types_for_landing_page { #TODO: refactor to MType
     my $dbh = shift;
 
     my $qry
@@ -438,7 +441,7 @@ sub get_bibtex_types_for_our_type {
     return @btypes;
 }
 ################################################################################
-sub get_description_for_our_type {
+sub get_description_for_our_type { #TODO: refactor to MType
     my $dbh  = shift;
     my $type = shift;
 
@@ -454,7 +457,7 @@ sub get_description_for_our_type {
     return $description;
 }
 ################################################################################
-sub get_landing_for_our_type {
+sub get_landing_for_our_type { #TODO: refactor to MType
     my $dbh  = shift;
     my $type = shift;
 
@@ -469,7 +472,9 @@ sub get_landing_for_our_type {
     return $landing;
 }
 ################################################################################
-sub set_landing_for_our_type {
+sub set_landing_for_our_type { #TODO: refactor to MType
+
+    my $dbh  = shift;
     my $dbh  = shift;
     my $type = shift;
     my $val  = shift;
@@ -484,7 +489,7 @@ sub set_landing_for_our_type {
 }
 
 ################################################################################
-sub toggle_landing_for_our_type {
+sub toggle_landing_for_our_type { #TODO: document this or make clearer
     my $dbh  = shift;
     my $type = shift;
 
@@ -498,7 +503,7 @@ sub toggle_landing_for_our_type {
     }
 }
 ################################################################################
-sub get_DB_description_for_our_type {
+sub get_DB_description_for_our_type {#TODO: refactor to MType
     my $dbh  = shift;
     my $type = shift;
 
@@ -514,7 +519,7 @@ sub get_DB_description_for_our_type {
 }
 
 ################################################################################
-sub get_all_bibtex_types {
+sub get_all_bibtex_types {#TODO: refactor to MType
     my $dbh = shift;
 
     my $qry = "SELECT DISTINCT bibtex_type, our_type
@@ -534,7 +539,7 @@ sub get_all_bibtex_types {
     return @btypes;
 }
 ################################################################################
-sub get_all_our_types {
+sub get_all_our_types {#TODO: refactor to MType
     my $dbh = shift;
 
     my $qry = "SELECT DISTINCT our_type
@@ -555,7 +560,7 @@ sub get_all_our_types {
 }
 
 ################################################################################
-sub get_type_description {
+sub get_type_description {#TODO: refactor to MType
     my $dbh  = shift;
     my $type = shift;
 
@@ -566,7 +571,7 @@ sub get_type_description {
     return "Publications of type " . $type;
 }
 ################################################################################
-sub get_all_teams {
+sub get_all_teams {#TODO: refactor to MType
     my $dbh = shift;
 
     my $qry = "SELECT DISTINCT id, name FROM Team";
@@ -587,7 +592,7 @@ sub get_all_teams {
     return ( \@teams, \@ids );
 }
 ##########################################################################
-sub get_year_for_entry_id {
+sub get_year_for_entry_id {#TODO: refactor to MEntry. it should be there for a long time!
     my $dbh = shift;
     my $eid = shift;
 

@@ -1,12 +1,11 @@
-package BibSpaceBibtexToHtml::LocalBibStyle;
-use Data::Dumper;
+package BibSpaceBibtexToHtml::LocalBibStyle v0.0.4;
+# use Data::Dumper;
 =head1 NAME
 
 Text::BibTeX::BibStyle - Format Text::BibTeX::Entry items using .bst
 
 =cut
 
-our $VERSION = '0.03';
 
 =head1 DESCRIPTION
 
