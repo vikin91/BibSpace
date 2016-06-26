@@ -412,9 +412,9 @@ sub setup_routes {
     $logged_user->get('/publications')->to('publications#all')
         ;    # logged_user icons!
     $logged_user->get('/publications/recently_added/:num')
-        ->to('publications#all_recently_added');    # logged_user icons!
+        ->to('publications#all_recently_added')->name('recently_added');
     $logged_user->get('/publications/recently_modified/:num')
-        ->to('publications#all_recently_modified');
+        ->to('publications#all_recently_modified')->name('recently_changed');
     $logged_user->get('/publications/orphaned')
         ->to('publications#all_without_author');
     $logged_user->get('/publications/untagged/:tagtype')

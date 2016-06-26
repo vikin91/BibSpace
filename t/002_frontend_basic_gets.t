@@ -36,6 +36,8 @@ my @pages = (
 	$self->url_for('clean_ugly_bibtex'),
 	$self->url_for('add_publication'),
 	$self->url_for('add_many_publications'),
+	$self->url_for('recently_changed', num=>10),
+	$self->url_for('recently_added', num=>10),
 	"/manage_users",
 	"/settings/fix_entry_types",
 	"/settings/fix_months",
