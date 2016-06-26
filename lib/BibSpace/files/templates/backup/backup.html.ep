@@ -80,7 +80,8 @@
                                         The backup will be lost forever.
                                       </div>
                                       <div class="modal-footer">
-                                        %= form_for 'backup_delete' => {id => $id} => (class=>'display-inline') => begin
+                                        %= form_for 'backup_delete'  => {id => $id} => (class=>'display-inline') => begin
+                                          %= hidden_field id => $id
                                           <button type="submit" class="btn btn-danger"> 
                                             Yes, delete it <span class="glyphicon glyphicon-fire"></span>
                                           </button>
@@ -117,6 +118,7 @@
                                     </div>
                                     <div class="modal-footer">
                                     %= form_for 'backup_restore' => {id => $id} => (class=>'display-inline') => begin
+                                      %= hidden_field id => $id
                                       <button type="submit" class="btn btn-warning">
                                         Yes, restore <span class="glyphicon glyphicon-import"></span>
                                       </button>

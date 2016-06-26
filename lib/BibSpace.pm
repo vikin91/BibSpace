@@ -302,6 +302,7 @@ sub setup_routes {
     # DELETE '/backups/id'
     $superadmin->delete('/backups/:id')->to('backup#delete_backup')
         ->name('backup_delete');
+    #$superadmin->post('/backups')->to('backup#delete_backup')->name('backup_delete');
 
 # PUT '/backups/id'
 # $manager->get('/restore/do/:id')->to('backup#restore_backup')->name('backup_restore');
