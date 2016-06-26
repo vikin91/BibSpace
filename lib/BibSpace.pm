@@ -278,7 +278,7 @@ sub setup_routes {
     $superadmin->get('/settings/fix_months')->to('publications#fixMonths');
 
     $manager->get('/settings/clean_all')
-        ->to('publications#clean_ugly_bibtex');
+        ->to('publications#clean_ugly_bibtex')->name('clean_ugly_bibtex');
     $manager->get('/settings/regenerate_all_force')
         ->to('publications#regenerate_html_for_all_force');
     $logged_user->get('/settings/regenerate_all')
