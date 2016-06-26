@@ -721,7 +721,6 @@ sub assign_authors {
 }
 ####################################################################################
 sub process_authors {  
-    say "CALL MEntry process_authors";
     my $self = shift;
     my $dbh  = shift;
     my $create_authors  = shift // 0;
@@ -735,8 +734,7 @@ sub process_authors {
     return ($num_authors_created, $num_authors_assigned);
 }
 ####################################################################################
-sub process_tags {     # was Core::after_edit_process_tags
-    say "CALL MEntry process_tags";
+sub process_tags {     
     my $self = shift;
     my $dbh  = shift;
 
@@ -832,7 +830,6 @@ sub static_get_from_id_array {
     my @input_id_arr = @$input_id_arr_ref;
 
     unless ( grep { defined($_) } @input_id_arr ) {    # if array is empty
-            # say "MEntry->static_get_from_id_array array is empty";
         return ();
     }
 
@@ -844,8 +841,6 @@ sub static_get_from_id_array {
         my $e = MEntry->static_get( $dbh, $wanted_id );
         push @output_arr, $e if defined $e;
     }
-
-    # say "static_get_from_id_array output1: ".Dumper \@output_arr;
 
     if ( $keep_order == 0 ) {
         return sort sort_by_year_month_modified_time @output_arr;
