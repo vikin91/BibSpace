@@ -33,7 +33,8 @@ my $dbh = $t_logged_in->app->db;
 
 
 my $token = BibSpace::Functions::MyUsers->generate_token();
-ok(defined $token and $token =~ y===c = 32);
+ok(defined $token);
+is($token =~ y///c, 32);
 
 ########################################################
 $t_anyone->ua->max_redirects(10);
