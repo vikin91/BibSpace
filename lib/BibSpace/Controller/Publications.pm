@@ -345,12 +345,16 @@ sub show_unrelated_to_team {
         = get_set_of_papers_for_all_authors_of_team_id( $self, $team_id );
     my $end_set = $set_all_papers - $set_of_related_to_team;
 
+    my $team_name = "";
+    my $mteam = MTeam->static_get( $dbh, $team_id );
+    $team_name = $mteam->{name} if defined $mteam;
+
     my $msg = "This list contains papers, that are:
         <ul>
             <li>Not assigned to the team "
-        . get_team_for_id( $dbh, $team_id ) . "</li>
+        . $team_name . "</li>
             <li>Not assigned to any author (former or actual) of the team "
-        . get_team_for_id( $dbh, $team_id ) . "</li>
+        . $team_name . "</li>
         </ul>";
 
     my @objs = Fget_publications_core_from_set( $self, $end_set );
@@ -484,7 +488,7 @@ sub single {
     my $id   = $self->param('id');
 
     my @objs = ();
-    my $e = Fget_single_publication( $self->app->db, $id );
+    my $e = MEntry->static_get( $self->app->db, $id );
     if ( defined $e ) {
         push @objs, $e;
     }
@@ -503,7 +507,7 @@ sub single_read {
     my $id   = $self->param('id');
 
     my @objs = ();
-    my $e = Fget_single_publication( $self->app->db, $id );
+    my $e = MEntry->static_get( $self->app->db, $id );
 
     if ( defined $e and $e->is_hidden == 0 ) {
         push @objs, $e;
@@ -1789,8 +1793,8 @@ sub clean_ugly_bibtex {
     my $dbh = $self->app->db;
 
     $self->write_log("Cleaning ugly bibtex fields for all entries");
-
-    $self->helper_clean_ugly_bibtex_fields_for_all_entries();
+    
+    Fclean_ugly_bibtex_fields_for_all_entries($dbh);
 
     $self->write_log(
         "Cleaning ugly bibtex fields for all entries has finished");

@@ -14,7 +14,10 @@ use Scalar::Util qw(looks_like_number);
 
 use BibSpace::Controller::Core;
 use BibSpace::Functions::TagTypeObj;
+
 use BibSpace::Controller::Set;
+use BibSpace::Functions::FSet;
+use BibSpace::Functions::FPublications;
 
 use BibSpace::Model::MTag;
 use BibSpace::Model::MTagCloud;
@@ -292,7 +295,7 @@ sub get_tags_for_author_read {
         $i++;
     }
 
-    my @sorted = reverse sort { $a->getCount() <=> $b->getCount() } @TCarr;
+    my @sorted = reverse sort { $a->{count} <=> $b->{count} } @TCarr;
 
     ### old code
 
@@ -309,18 +312,18 @@ sub get_tags_for_author_read {
 sub get_tags_for_team_read {
     my $self = shift;
     my $team = $self->param('tid');
-    my $tid  = $team;
+    my $team_id  = $team;
 
     my $dbh = $self->app->db;
-    $tid = get_team_id( $dbh, $team );
-    if ( $tid == -1 ) {
+    $team_id = get_team_id( $dbh, $team );
+    if ( $team_id == -1 ) {
 
         #user input is already team id! using the user's input
-        $tid = $team;
+        $team_id = $team;
     }
 
     my ( $tag_ids_arr_ref, $tags_arr_ref )
-        = get_tags_for_team( $self, $tid, 1 );
+        = get_tags_for_team( $self, $team_id, 1 );
 
     ### here list of objects should be created
 
@@ -333,11 +336,15 @@ sub get_tags_for_team_read {
         my $name = $tag;
         $name =~ s/_/\ /g;
 
-        my $set = get_set_of_papers_for_team_and_tag( $self, $tid, $tag_id );
-        my $count = scalar $set->members;
+        my @entry_objs = MEntry->static_get_filter(
+            $dbh,    undef, undef, undef, undef, $tag_id,
+            $team_id, undef, undef, undef
+        );
 
-# my $url = "/ly/p?team=".get_team_for_id($self->app->db, $tid)."&tag=".$tag."&title=1&navbar=1";
-        my $team_name = get_team_for_id( $self->app->db, $tid );
+        my $team_name = "";
+        my $mteam = MTeam->static_get($dbh, $team_id);
+        $team_name = $mteam->{name} if defined $mteam;
+
         my $url = $self->url_for('lyp')->query(
             team   => $team_name,
             tag    => $tag,
@@ -348,14 +355,14 @@ sub get_tags_for_team_read {
         my $tc_obj = MTagCloud->new();
         $tc_obj->{tag}   = $tag;
         $tc_obj->{url}   = $url;
-        $tc_obj->{count} = $count;
+        $tc_obj->{count} = scalar @entry_objs;
         $tc_obj->{name}  = $name;
 
         push @TCarr, $tc_obj;
         $i++;
     }
 
-    my @sorted = reverse sort { $a->getCount() <=> $b->getCount() } @TCarr;
+    my @sorted = reverse sort { $a->{count} <=> $b->{count} } @TCarr;
 
     ### old code
 

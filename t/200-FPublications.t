@@ -112,6 +112,16 @@ ok(($fixed_entries > 0), "fix_months fixed some entries");
 
 ok(Fclean_ugly_bibtex_fields_for_all_entries($dbh) >= 0, "Fclean_ugly_bibtex_fields_for_all_entries");
 
+my ($num_authors_created, $num_authors_assigned) = Fhandle_author_uids_change_for_all_entries($dbh, 0);
+ok( $num_authors_created  == 0, "Fhandle_author_uids_change_for_all_entries create 0");
+ok( $num_authors_assigned >= 0, "Fhandle_author_uids_change_for_all_entries create 0");
+
+($num_authors_created, $num_authors_assigned) = Fhandle_author_uids_change_for_all_entries($dbh, 1);
+ok( $num_authors_created  >= 0, "Fhandle_author_uids_change_for_all_entries create 1");
+ok( $num_authors_assigned >= 0, "Fhandle_author_uids_change_for_all_entries create 1");
+
+
+
 ### this will fail if the user gives a month name with a typo = bad test
 # for my $entry (@entries){	
 # 	if($entry->bibtex_has('month')){

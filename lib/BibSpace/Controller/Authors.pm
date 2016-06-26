@@ -14,6 +14,8 @@ use DBI;
 use BibSpace::Controller::Core;
 use BibSpace::Controller::Publications;
 
+use BibSpace::Functions::FPublications;
+
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
@@ -657,7 +659,7 @@ sub reassign_authors_to_entries {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    postprocess_all_entries_after_author_uids_change($self);
+    Fhandle_author_uids_change_for_all_entries( $self->app->db, 0 );
 
     $self->flash( msg => 'Reassignment has finished.' );
     $self->redirect_to( $self->get_referrer );
@@ -667,12 +669,11 @@ sub reassign_authors_to_entries_and_create_authors {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my $num_authors_created
-        = postprocess_all_entries_after_author_uids_change_w_creating_authors(
-        $self);
+    my ( $num_authors_created, $num_authors_assigned )
+        = Fhandle_author_uids_change_for_all_entries( $self->app->db, 1 );
     $self->flash( msg =>
-            'Reassignment with author creation has finished. Num created authors: '
-            . $num_authors_created );
+            "Reassignment with author creation has finished. $num_authors_created authors have been created and $num_authors_assigned assigned to their entries."
+    );
     $self->redirect_to( $self->get_referrer );
 }
 

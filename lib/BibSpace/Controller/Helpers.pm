@@ -240,7 +240,11 @@ sub register {
         get_team_name => sub {
             my $self = shift;
             my $id   = shift;
-            return get_team_for_id( $self->app->db, $id );
+
+            my $team_name = "";
+            my $mteam = MTeam->static_get( $self->app->db, $id );
+            $team_name = $mteam->{name} if defined $mteam;
+            return $team_name;
         }
     );
 

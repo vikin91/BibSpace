@@ -1,6 +1,5 @@
 package BibSpace::Controller::Cron;
 
-use BibSpace::Functions::FDB;
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
@@ -11,6 +10,9 @@ use 5.010;           #because of ~~
 use strict;
 use warnings;
 use DBI;
+
+use BibSpace::Functions::FDB;
+use BibSpace::Functions::FPublications;
 
 use Mojo::Base 'Mojolicious::Controller';
 
@@ -156,7 +158,7 @@ sub do_cron_day {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    $self->helper_do_mysql_backup_current_state("cron");
+    $self->helper_do_mysql_db_backup( $self, "cron" );
 }
 ##########################################################################################
 sub do_cron_night {
@@ -173,8 +175,9 @@ sub do_cron_week {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-# $self->helper_reassign_papers_to_authors();  #can be anbled later
-# $self->helper_$self->helper_clean_ugly_bibtex_fields_for_all_entries(); #can be enabled later
+    # Fhandle_author_uids_change_for_all_entries($self->app->db, 0);
+    # Fclean_ugly_bibtex_fields_for_all_entries($dbh);
+
     $self->helper_do_delete_broken_or_old_backup();
 }
 ##########################################################################################
@@ -182,8 +185,8 @@ sub do_cron_month {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-# $self->helper_reassign_papers_to_authors();  #can be enabled later
-# $self->helper_$self->helper_clean_ugly_bibtex_fields_for_all_entries(); #can be enabled later
+    # Fhandle_author_uids_change_for_all_entries($self->app->db, 0);
+    # Fclean_ugly_bibtex_fields_for_all_entries($dbh);
 }
 ##########################################################################################
 ##########################################################################################

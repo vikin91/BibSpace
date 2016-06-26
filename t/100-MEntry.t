@@ -54,10 +54,31 @@ subtest 'MEntry; basics 1, new, static_all, populate_from_bib, save' => sub {
     $en4->save($dbh);
 
     @entries     = MEntry->static_all($dbh);
-    $num_entries = scalar(@entries);
-    ok( $num_entries > 0, "Got more than 0 entries" );
+    ok( scalar(@entries) > 0, "Got more than 0 entries" );
 };
+####################################################################
+subtest 'MEntry; basics static_get, static_get_by_bibtex_key' => sub {
 
+    my @entries     = MEntry->static_all($dbh);
+    ok( scalar(@entries) > 0, "Got more than 0 entries" );
+
+    my $random_entry = $entries[ rand @entries ];
+
+    is( MEntry->static_get( $dbh, $random_entry->{id} )->{id},
+        $random_entry->{id}, "static_get by id" );
+    is( MEntry->static_get( $dbh, $random_entry->{id} )->{bib},
+        $random_entry->{bib}, "static_get by id" );
+
+    is( MEntry->static_get_by_bibtex_key( $dbh, $random_entry->{bibtex_key} )->{bibtex_key},
+        $random_entry->{bibtex_key},
+        "static_get_by_bibtex_key by key"
+    );
+    is( MEntry->static_get_by_bibtex_key( $dbh, $random_entry->{bibtex_key} )->{id},
+        $random_entry->{id},
+        "static_get_by_bibtex_key by key"
+    );
+
+};
 #### START fix months
 
 #### single entry
@@ -191,11 +212,20 @@ subtest 'MEntry; process_tags manual' => sub {
     title = {{Selected aspects of some methods}},
     year = {1999},
   }';
-    $en2->{bib} = '@misc{test, tags = {aa;bb}}';
+    $en2->{bib} = '@misc{testA1, tags = {aa;bb}}';
+    $en2->populate_from_bib();
+    $en2->save($dbh);
     is( $en2->process_tags($dbh), 2, "Adding 2 tags" );
-    $en2->{bib} = '@misc{test, tags = {}}';
+
+    $en2->{bib} = '@misc{testA2, tags = {}}';
+    $en2->populate_from_bib();
+    $en2->save($dbh);
     is( $en2->process_tags($dbh), 0, "Adding 0 tags" );
-    $en2->{bib} = '@misc{test, tags = {aa;bb;cc}}';
+
+
+    $en2->{bib} = '@misc{testA3, tags = {aa;bb;cc}}';
+    $en2->populate_from_bib();
+    $en2->save($dbh);
     is( $en2->process_tags($dbh), 1, "Adding 1 extra tag" );
 };
 
@@ -214,15 +244,17 @@ subtest 'MEntry; process_tags auto' => sub {
   }';
 
 # map { int rand(100) } ( 1..30 ) -- array of length 30 filled with ints between 0 and 99
-    foreach my $num_tags ( map { int rand(100) } ( 1 .. 30 ) ) {
+    foreach my $num_tags ( map { int rand(100) } ( 1 .. 10 ) ) {
         $dbh->do('DELETE FROM Tag;');
-        my $tstr = '@misc{test, tags = {';
+
+        my $tstr = '@misc{test'.random_string(10).', tags = {';
         $tstr .= join ';' => map random_string(25), 1 .. $num_tags;
         $tstr .= '}}';
         $en2->{bib} = $tstr;
+        $en2->populate_from_bib();
+        $en2->save($dbh);
 
-        is( $en2->process_tags($dbh), $num_tags, "Adding $num_tags tags" )
-            ;    # we assume, that some may repeat
+        is( $en2->process_tags($dbh), $num_tags, "Adding $num_tags tags" );
     }
 };
 ####################################################################
@@ -249,8 +281,9 @@ subtest 'MEntry; process_authors' => sub {
         $tstr .= '}}';
         $en2->{bib} = $tstr;
 
-        is( $en2->process_authors($dbh),
-            $num_authors, "Adding $num_authors authors" );
+        my ($num_authors_created, $num_authors_assigned) = $en2->process_authors($dbh, 1);
+        is( $num_authors_created, $num_authors, "Adding $num_authors authors" );
+        is( $num_authors_assigned, $num_authors, "Assigning $num_authors authors" );
     }
 };
 

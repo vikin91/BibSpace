@@ -33,7 +33,6 @@ our @EXPORT = qw(
     get_set_of_teams_for_author_id_w_year
     get_set_of_teams_for_entry_id
     get_set_of_all_team_ids
-    get_set_of_papers_for_team_and_tag
     get_set_of_papers_with_exceptions
 );
 
@@ -81,14 +80,6 @@ sub get_set_of_papers_for_all_authors_of_team_id {
 
     return Fget_set_of_papers_for_all_authors_of_team_id( $self->app->db,
         $tid );
-}
-####################################################################################
-sub get_set_of_papers_for_team_and_tag {
-    my $dbh   = shift;
-    my $teamid = shift;
-    my $tagid  = shift;
-
-    return Fget_set_of_papers_for_team_and_tag($dbh, $teamid, $tagid);
 }
 ####################################################################################
 

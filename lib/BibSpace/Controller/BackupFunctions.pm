@@ -99,6 +99,7 @@ sub do_mysql_db_backup {
 
     my $dbh = $self->app->db;
     my $dbfname = do_mysql_db_backup_silent( $self, $fname_prefix );
+    
     if ( !defined $dbfname or $dbfname eq "" ) {
         return "";
     }
@@ -141,7 +142,7 @@ sub do_delete_backup {    # added 22.08.14
     unlink $file_path;
 }
 ####################################################################################
-sub do_delete_broken_or_old_backup {    # added 22.08.14
+sub do_delete_broken_or_old_backup {    # added 22.08.14 # TODO: refactor -get rid of self!
     my $self       = shift;
     my $backup_dbh = $self->app->db;
 

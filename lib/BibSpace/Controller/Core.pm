@@ -42,7 +42,6 @@ our @EXPORT = qw(
     uniq
     get_team_for_id
     get_team_id
-    get_tag_id
     get_master_id_for_uid
     get_master_id_for_master
     get_master_id_for_author_id
@@ -64,9 +63,6 @@ our @EXPORT = qw(
     add_field_to_bibtex_code
     clean_tag_name
     get_author_visibility_for_id
-    postprocess_all_entries_after_author_uids_change
-    postprocess_all_entries_after_author_uids_change_w_creating_authors
-    after_edit_process_authors
     get_html_for_entry_id
     get_exceptions_for_entry_id
     get_year_for_entry_id
@@ -161,105 +157,29 @@ sub nohtml {
     my $key  = shift;
     my $type = shift;
     return
-        "<span class=\"label label-danger\">"
-        ."NO HTML "
-        ."</span><span class=\"label label-default\">"
-        ."($type) $key</span>"
-        . "<BR>";
-}
-##################################################################
-sub postprocess_all_entries_after_author_uids_change { #TODO: refactor to FPublications of MEntry
-    # assigns papers to their authors ONLY. No tags, no regeneration.
-    my $self = shift;
-
-    $self->write_log("reassign papers to authors started");
-
-    my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
-    my $sth = $self->app->db->prepare($qry);
-    $sth->execute();
-
-    my @bibs;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $bib = $row->{bib};
-        my $key = $row->{bibtex_key};
-        my $id  = $row->{id};
-
-        push @bibs, $bib;
-    }
-    $sth->finish();
-
-    foreach my $entry_str (@bibs) {
-        my $entry_obj = new Text::BibTeX::Entry();
-        $entry_obj->parse_s($entry_str);
-
-        assign_entry_to_existing_authors_no_add( $self, $entry_obj );
-    }
-
-    $self->write_log("reassign papers to authors finished");
-}
-
-##################################################################
-sub postprocess_all_entries_after_author_uids_change_w_creating_authors { #TODO: refactor to FPublications of Mentry. TODO: merge with postprocess_all_entries_after
-    # assigns papers to their authors ONLY. No tags, no regeneration. Not existing authors will be created
-    my $self = shift;
-
-    $self->write_log(
-        "reassigning papers to authors (with authors creation) started");
-
-    my $qry = "SELECT DISTINCT bibtex_key, id, bib FROM Entry";
-    my $sth = $self->app->db->prepare($qry);
-    $sth->execute();
-
-    my @bibs;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $bib = $row->{bib};
-        my $key = $row->{bibtex_key};
-        my $id  = $row->{id};
-
-        push @bibs, $bib;
-    }
-    $sth->finish();
-
-    my $num_authors_created = 0;
-
-    foreach my $entry_str (@bibs) {
-        my $entry_obj = new Text::BibTeX::Entry();
-        $entry_obj->parse_s($entry_str);
-
-        my $num_a_cre
-            = after_edit_process_authors( $self->app->db, $entry_obj );
-        $num_authors_created = $num_authors_created + $num_a_cre;
-        assign_entry_to_existing_authors_no_add( $self, $entry_obj );
-    }
-
-    $self->write_log(
-        "reassigning papers to authors (with authors creation) finished");
-    return $num_authors_created;
+          "<span class=\"label label-danger\">"
+        . "NO HTML "
+        . "</span><span class=\"label label-default\">"
+        . "($type) $key</span>" . "<BR>";
 }
 
 ####################################################################################
 # clean_ugly_bibtex_fileds_for_all_entries
 ####################################################################################
 
-sub assign_entry_to_existing_authors_no_add { #TODO: refactor to MEntry
-    my $self  = shift;
+sub assign_entry_to_existing_authors_no_add {    #TODO: refactor to MEntry
+    my $dbh  = shift;
     my $entry = shift;
-    my $dbh   = $self->app->db;
 
-    my $entry_key = $entry->key;
-    my $key       = $entry->key;
-    my $eid       = Fget_entry_id_for_bibtex_key( $dbh, $entry_key );
+    my $key = $entry->key;
+    my $e = MEntry->static_get_by_bibtex_key( $dbh, $key );
+
+    return unless defined $e;
 
     # $dbh->begin_work; #transaction
 
     my $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
-    if ( defined $sth ) {
-        $sth->execute($eid);
-    }
-    else {
-        warn
-            'cannot execute DELETE FROM Entry_to_Author WHERE entry_id = ?. FIXME Core.pm.';
-    }
+    $sth->execute( $e->{id} );
 
     my @names;
     if ( $entry->exists('author') ) {
@@ -286,7 +206,7 @@ sub assign_entry_to_existing_authors_no_add { #TODO: refactor to MEntry
                 'INSERT IGNORE Entry_to_Author(author_id, entry_id) VALUES(?, ?)'
                 );
             if ( defined $sth3 ) {
-                $sth3->execute( $mid, $eid );
+                $sth3->execute( $mid, $e->{id} );
                 $sth3->finish();
             }
             else {
@@ -298,90 +218,8 @@ sub assign_entry_to_existing_authors_no_add { #TODO: refactor to MEntry
 
     # $dbh->commit; #end transaction
 }
-##################################################################
-
-sub after_edit_process_authors { #TODO: this seems to be duplicate to a method in MEntry
-    my $dbh   = shift;
-    my $entry = shift;
-
-    my $entry_key = $entry->key;
-    my $key       = $entry->key;
-    my $eid       = Fget_entry_id_for_bibtex_key( $dbh, $entry_key );
-
-    my $num_authors_created = 0;
-
-    my $sth = undef;
-    $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
-    $sth->execute($eid) if $eid > 0;
-
-    my @names;
-
-    if ( $entry->exists('author') ) {
-        my @authors = $entry->split('author');
-        my (@n) = $entry->names('author');
-        @names = @n;
-    }
-    elsif ( $entry->exists('editor') ) {
-        my @authors = $entry->split('editor');
-        my (@n) = $entry->names('editor');
-        @names = @n;
-    }
-
-    # authors need to be added to have their ids!!
-    for my $name (@names) {
-        my $uid = create_user_id($name);
-
-        my $aid = get_author_id_for_uid( $dbh, $uid );
-
-        # say "\t pre! entry $eid -> uid $uid, aid $aid";
-
-        if ( $aid eq '-1' ) {    # there is no such author
-            $num_authors_created = $num_authors_created + 1;
-
-            my $sth0 = $dbh->prepare(
-                'INSERT INTO Author(uid, master) VALUES(?, ?)');
-            $sth0->execute( $uid, $uid ) if $aid eq '-1';
-        }
-
-        $aid = get_author_id_for_uid( $dbh, $uid );
-        my $mid = get_master_id_for_author_id( $dbh, $aid );
-
-        # if author was not in the uid2muid config, then mid = aid
-        if ( $mid eq -1 ) {
-            $mid = $aid;
-        }
-
-        # say "\t pre2! entry $eid -> uid $uid, aid $aid, mid $mid";
-
-        my $sth2 = $dbh->prepare('UPDATE Author SET master_id=? WHERE id=?');
-        $sth2->execute( $mid, $aid );
-
-    }
-
-    for my $name (@names) {
-        my $uid = create_user_id($name);
-        my $aid = get_author_id_for_uid( $dbh, $uid );
-        my $mid = get_master_id_for_author_id( $dbh, $aid )
-            ;    #there tables are not filled yet!!
-
-        # say "\t !!! entry $eid -> uid $uid, aid $aid, mid $mid";
-
-        if ( defined $mid and $mid != -1 )
-        {        #added 5.05.2015 - may skip some authors!
-            my $sth3
-                = $dbh->prepare(
-                'INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)'
-                );
-
-# my $sth3 = $dbh->prepare('UPDATE Entry_to_Author SET author_id = ? WHERE entry_id = ?');
-            $sth3->execute( $mid, $eid );
-        }
-
-    }
-    return $num_authors_created;
-}
 ################################################################################
-sub get_author_visibility_for_id { #TODO: refactor to MAuthor
+sub get_author_visibility_for_id {    #TODO: refactor to MAuthor
     my $self = shift;
     my $id   = shift;
 
@@ -398,7 +236,7 @@ sub get_author_visibility_for_id { #TODO: refactor to MAuthor
 }
 ################################################################################
 ################################################################################
-sub get_types_for_landing_page { #TODO: refactor to MType
+sub get_types_for_landing_page {    #TODO: refactor to MType
     my $dbh = shift;
 
     my $qry
@@ -441,7 +279,7 @@ sub get_bibtex_types_for_our_type {
     return @btypes;
 }
 ################################################################################
-sub get_description_for_our_type { #TODO: refactor to MType
+sub get_description_for_our_type {    #TODO: refactor to MType
     my $dbh  = shift;
     my $type = shift;
 
@@ -457,7 +295,7 @@ sub get_description_for_our_type { #TODO: refactor to MType
     return $description;
 }
 ################################################################################
-sub get_landing_for_our_type { #TODO: refactor to MType
+sub get_landing_for_our_type {    #TODO: refactor to MType
     my $dbh  = shift;
     my $type = shift;
 
@@ -472,7 +310,7 @@ sub get_landing_for_our_type { #TODO: refactor to MType
     return $landing;
 }
 ################################################################################
-sub set_landing_for_our_type { #TODO: refactor to MType
+sub set_landing_for_our_type {    #TODO: refactor to MType
 
     my $dbh  = shift;
     my $type = shift;
@@ -488,7 +326,7 @@ sub set_landing_for_our_type { #TODO: refactor to MType
 }
 
 ################################################################################
-sub toggle_landing_for_our_type { #TODO: document this or make clearer
+sub toggle_landing_for_our_type {    #TODO: document this or make clearer
     my $dbh  = shift;
     my $type = shift;
 
@@ -502,7 +340,7 @@ sub toggle_landing_for_our_type { #TODO: document this or make clearer
     }
 }
 ################################################################################
-sub get_DB_description_for_our_type {#TODO: refactor to MType
+sub get_DB_description_for_our_type {    #TODO: refactor to MType
     my $dbh  = shift;
     my $type = shift;
 
@@ -518,7 +356,7 @@ sub get_DB_description_for_our_type {#TODO: refactor to MType
 }
 
 ################################################################################
-sub get_all_bibtex_types {#TODO: refactor to MType
+sub get_all_bibtex_types {    #TODO: refactor to MType
     my $dbh = shift;
 
     my $qry = "SELECT DISTINCT bibtex_type, our_type
@@ -538,7 +376,7 @@ sub get_all_bibtex_types {#TODO: refactor to MType
     return @btypes;
 }
 ################################################################################
-sub get_all_our_types {#TODO: refactor to MType
+sub get_all_our_types {    #TODO: refactor to MType
     my $dbh = shift;
 
     my $qry = "SELECT DISTINCT our_type
@@ -559,7 +397,7 @@ sub get_all_our_types {#TODO: refactor to MType
 }
 
 ################################################################################
-sub get_type_description {#TODO: refactor to MType
+sub get_type_description {    #TODO: refactor to MType
     my $dbh  = shift;
     my $type = shift;
 
@@ -570,7 +408,7 @@ sub get_type_description {#TODO: refactor to MType
     return "Publications of type " . $type;
 }
 ################################################################################
-sub get_all_teams {#TODO: refactor to MType
+sub get_all_teams {           #TODO: refactor to MType
     my $dbh = shift;
 
     my $qry = "SELECT DISTINCT id, name FROM Team";
@@ -591,7 +429,8 @@ sub get_all_teams {#TODO: refactor to MType
     return ( \@teams, \@ids );
 }
 ##########################################################################
-sub get_year_for_entry_id {#TODO: refactor to MEntry. it should be there for a long time!
+sub get_year_for_entry_id
+{    #TODO: refactor to MEntry. it should be there for a long time!
     my $dbh = shift;
     my $eid = shift;
 
@@ -721,41 +560,20 @@ sub get_master_for_id {
 ##########################################################################
 sub get_team_id {
     my $dbh  = shift;
-    my $team = shift;
+    my $team_name = shift;
 
-    my $sth = $dbh->prepare("SELECT id FROM Team WHERE name=?");
-    $sth->execute($team);
-
-    my $row = $sth->fetchrow_hashref();
-    my $id = $row->{id} || -1;
-    print "ID = -1 for team $team\n" unless defined $id;
-    return $id;
+    my $team = MTeam->static_get_by_name($dbh, $team_name);
+    return -1 unless defined $team;
+    return $team->{id};
 }
 ##########################################################################
 sub get_team_for_id {
     my $dbh = shift;
     my $id  = shift;
 
-    my $sth = $dbh->prepare("SELECT name FROM Team WHERE id=?");
-    $sth->execute($id);
-
-    my $row = $sth->fetchrow_hashref();
-    my $name = $row->{name} || undef;
-
-    return $name;
-}
-##########################################################################
-sub get_tag_id {
-    my $dbh = shift;
-    my $tag = shift;
-
-    my $sth = $dbh->prepare("SELECT id FROM Tag WHERE name=?");
-    $sth->execute($tag);
-
-    my $row = $sth->fetchrow_hashref();
-    my $id = $row->{id} || -1;
-    print "ID = -1 for tag $tag\n" unless defined $id;
-    return $id;
+    my $team = MTeam->static_get($dbh, $id);
+    return undef unless defined $team;
+    return $team->{name};
 }
 ################################################################################
 sub add_team_for_author {
@@ -849,10 +667,12 @@ sub get_teams_of_author {
         my $start  = $row->{start};
         my $stop   = $row->{stop};
 
-        my $team = get_team_for_id( $dbh, $teamid );
+        my $team_name;
+        my $mteam = MTeam->static_get( $dbh, $teamid );
+        $team_name = $mteam->{name} if defined $mteam;
 
         push @team_ids,  $teamid if defined $teamid;
-        push @teams,     $team   if defined $team;
+        push @teams,     $team_name   if defined $team_name;
         push @start_arr, $start  if defined $start;
         push @stop_arr,  $stop   if defined $stop;
     }

@@ -53,11 +53,11 @@ sub static_get {
         return undef;
     }
 
-    my $e = MTeam->new();
-    $e->{id}     = $id;
-    $e->{name}   = $row->{name};
-    $e->{parent} = $row->{parent};
-    return $e;
+    return MTeam->new(
+        id     => $id,
+        name   => $row->{name},
+        parent => $row->{parent}
+    );
 }
 ####################################################################################
 sub update {
@@ -68,7 +68,7 @@ sub update {
 
     if ( !defined $self->{id} ) {
         say
-"Cannot update. MTeam id not set. The entry may not exist in the DB. Returning -1. Should never happen!";
+            "Cannot update. MTeam id not set. The entry may not exist in the DB. Returning -1. Should never happen!";
         return -1;
     }
 
@@ -83,8 +83,8 @@ sub update {
 }
 ####################################################################################
 sub insert {
-    my $self = shift;
-    my $dbh  = shift;
+    my $self   = shift;
+    my $dbh    = shift;
     my $result = "";
 
     my $qry = "
@@ -104,7 +104,7 @@ sub save {
     my $self = shift;
     my $dbh  = shift;
 
-    warn "No databse handle supplied!" unless defined $dbh;
+    warn "No database handle supplied!" unless defined $dbh;
 
     my $result = "";
 
@@ -113,11 +113,11 @@ sub save {
         # say "MTeam save: updating ID = ".$self->{id};
         return $self->update($dbh);
     }
-    elsif(defined $self and !defined $self->{name}){
+    elsif ( defined $self and !defined $self->{name} ) {
         warn "Cannot save MTeam that has no name";
         return -1;
     }
-    else{
+    else {
         my $inserted_id = $self->insert($dbh);
         $self->{id} = $inserted_id;
 
@@ -154,4 +154,6 @@ sub static_get_by_name {
     return undef;
 }
 ####################################################################################
+no Moose;
+__PACKAGE__->meta->make_immutable;
 1;
