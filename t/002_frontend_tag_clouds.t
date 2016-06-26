@@ -11,8 +11,9 @@ use BibSpace::Controller::Core;
 my $t_anyone = Test::Mojo->new('BibSpace');
 my $self = $t_anyone->app;
 my $dbh      = $t_anyone->app->db;
-$t_anyone->ua->inactivity_timeout(3600);
 
+$t_anyone->ua->inactivity_timeout(3600);
+$t_anyone->ua->max_redirects(10);
 
 
 use BibSpace::Model::MTeam;

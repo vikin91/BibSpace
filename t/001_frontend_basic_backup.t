@@ -13,6 +13,8 @@ $t_logged_in->post_ok(
 my $self = $t_logged_in->app;
 
 
+# $t_logged_in->ua->max_redirects(10);  # if uncommented, this breaks the test - FIXME
+
 
 my $db_backup_file = BibSpace::Controller::BackupFunctions::do_mysql_db_backup($t_logged_in->app, "basic_backup_testing");
 my $backup_id = BibSpace::Controller::BackupFunctions::get_backup_id($self, $db_backup_file);

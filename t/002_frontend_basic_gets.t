@@ -16,7 +16,8 @@ $t_logged_in->post_ok(
 );
 my $self = $t_logged_in->app;
 
-$t_anyone->ua->inactivity_timeout(3600);
+$t_logged_in->ua->max_redirects(10);
+$t_logged_in->ua->inactivity_timeout(3600);
 
 
 # generated with: ./script/bibspace routes | grep GET | grep -v : 

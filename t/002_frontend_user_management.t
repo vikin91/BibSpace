@@ -28,7 +28,8 @@ $t_logged_in->post_ok(
 );
 
 my $dbh = $t_logged_in->app->db;
-
+$t_anyone->ua->max_redirects(10);
+$t_logged_in->ua->max_redirects(10);
 # # ############################ READY FOR TESTING
 
 
@@ -37,8 +38,7 @@ ok(defined $token);
 is($token =~ y///c, 32);
 
 ########################################################
-$t_anyone->ua->max_redirects(10);
-$t_logged_in->ua->max_redirects(10);
+
 
 subtest 'Requesting password reset' => sub {
 

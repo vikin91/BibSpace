@@ -159,7 +159,11 @@ sub setup_plugins {
     $self->helper(
         get_referrer => sub {
             my $s = shift;
-            return $s->req->headers->referrer || $s->url_for('/');
+            my $ret = $s->url_for('start');
+            $ret = $s->req->headers->referrer 
+                if defined $s->req->headers->referrer 
+                and $s->req->headers->referrer ne '';
+            return $ret;
         }
     );
 

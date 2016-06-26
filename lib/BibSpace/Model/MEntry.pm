@@ -344,8 +344,8 @@ sub save {
 
     my $result = "";
 
-    $self->{title}
-        = BibSpace::Controller::Core::decode( 'latex', $self->{title} );
+    $self->decodeLatex();
+
     $self->{creation_time} = '1970-01-01 00:00:00'
         if !defined $self->{creation_time}
         or $self->{creation_time} eq ''
@@ -988,8 +988,8 @@ sub decodeLatex {
     if(defined $self->{title}){
       $self->{title} =~ s/^\{//g;
       $self->{title} =~ s/\}$//g;
-      $self->{title} = decode( 'latex', $self->{title} );
-      $self->{title} = decode( 'latex', $self->{title} );
+      # $self->{title} = decode( 'latex', $self->{title} );
+      # $self->{title} = decode( 'latex', $self->{title} );
     }
 }
 ####################################################################################

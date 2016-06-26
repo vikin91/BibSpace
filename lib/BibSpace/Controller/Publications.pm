@@ -1796,9 +1796,6 @@ sub clean_ugly_bibtex {
     
     Fclean_ugly_bibtex_fields_for_all_entries($dbh);
 
-    $self->write_log(
-        "Cleaning ugly bibtex fields for all entries has finished");
-
     $self->flash( msg => 'All entries have now their Bibtex cleaned.' );
 
     $self->redirect_to( $self->get_referrer );
