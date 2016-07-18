@@ -599,7 +599,7 @@ sub generate_html {
     return ( $self->{html}, $self->{bib} );
 }
 ####################################################################################
-sub regenerate_html {
+sub regenerate_html {  # TODO: I think saving should be removed from this function to make it clear what this function does
     my $self     = shift;
     my $dbh      = shift;
     my $force    = shift;

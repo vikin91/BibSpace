@@ -53,8 +53,12 @@ sub save_token_email{
     my $email = shift; 
     my $user_dbh = shift;
 
-    my $sth = $user_dbh->prepare("INSERT INTO Token (requested, email, token) VALUES (CURRENT_TIMESTAMP, ?,?)");
-    $sth->execute($email, $token);  
+    # there should be only one active token!
+    my $sth = $user_dbh->prepare("DELETE FROM Token WHERE email=?");
+    $sth->execute($email);
+
+    my $sth2 = $user_dbh->prepare("INSERT INTO Token (requested, email, token) VALUES (CURRENT_TIMESTAMP, ?,?)");
+    $sth2->execute($email, $token);
 }
 ####################################################################################################
 sub get_token_for_email {  #### FOR TESTING ONLY
