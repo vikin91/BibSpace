@@ -95,19 +95,16 @@ sub unhide {
 
 ####################################################################################
 sub hide {
-    say "CALL: Publications::hide";
     my $self = shift;
     my $id   = $self->param('id');
-    my $dbh  = $self->app->db;
 
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
+    my $mentry = MEntry->static_get( $self->app->db, $id );
+    if ( defined $mentry ) {
+        $mentry->hide($self->app->db);
     }
-    $mentry->hide($dbh);
-
+    else{
+        $self->flash( msg => "There is no entry with id $id" );
+    }
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################

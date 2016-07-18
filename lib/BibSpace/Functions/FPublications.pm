@@ -72,7 +72,7 @@ sub Fhandle_add_edit_publication {
     # var that will be returned
     my $mentry;         # the entry object
     my $status_code;    # the status code
-    my $existing_id;    # id of exiting enrty having the same bibtex key
+    my $existing_id    = -1;  # id of exiting enrty having the same bibtex key
     my $added_under_id = -1;
 
     # $action => 'save'
@@ -250,12 +250,12 @@ sub Fget_publications_core {
     }
 
     my $tagid = -1;
-    my $t = MTag->static_get_by_name($dbh, $tag);
+    my $t = MTag->static_get_by_name( $dbh, $tag );
     $tagid = $t->{id} if defined $t;
 
     # it means that tag was given as tag_id and not as tag name
     $tagid = $tag if $tagid == -1;
-     
+
     $teamid    = undef unless defined $team;
     $master_id = undef unless defined $author;
     $tagid     = undef unless defined $tag;
@@ -287,10 +287,10 @@ sub Fhandle_author_uids_change_for_all_entries {
     my $num_authors_assigned = 0;
 
     foreach my $e (@all_entries) {
-        my ($cre, $ass) = $e->process_authors($dbh, $create_authors);
-        $num_authors_created = $num_authors_created + $cre;
+        my ( $cre, $ass ) = $e->process_authors( $dbh, $create_authors );
+        $num_authors_created  = $num_authors_created + $cre;
         $num_authors_assigned = $num_authors_assigned + $ass;
     }
-    return ($num_authors_created, $num_authors_assigned);
+    return ( $num_authors_created, $num_authors_assigned );
 }
 ####################################################################################

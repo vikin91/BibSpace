@@ -409,8 +409,6 @@ sub delete {
     my $tag_to_delete = $self->param('id_to_delete');
     my $type = $self->param('type') || 1;
 
-    say $tag_to_delete;
-
     if ( defined $tag_to_delete ) {
 
         $self->write_log("Deleting tag id: $tag_to_delete.");
