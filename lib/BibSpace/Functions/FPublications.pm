@@ -93,8 +93,7 @@ sub Fhandle_add_edit_publication {
     $e = MEntry->new() if $id < 0;
     $e = MEntry->static_get( $dbh, $id ) if $id > 0;
     $e = MEntry->new()
-        if !
-        defined $e;   # by wrong id, we create new object. Should never happen
+        if !defined $e;   # by wrong id, we create new object. Should never happen
     $e->{id}  = $id;
     $e->{bib} = $new_bib;
     my $bibtex_code_valid = $e->populate_from_bib();
@@ -149,8 +148,9 @@ sub Fhandle_add_edit_publication {
 
         $e->populate_from_bib();
         $e->regenerate_html( $dbh, 0 );
-
-        $e->postprocess_updated($dbh);    # this saves
+        $e->fix_month();
+        $e->postprocess_updated($dbh);    # this has optional save
+        $e->save($dbh);    # so we save for sure
         $added_under_id = $e->{id};
     }
     else {

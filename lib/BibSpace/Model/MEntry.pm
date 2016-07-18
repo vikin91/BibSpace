@@ -565,11 +565,11 @@ sub postprocess_updated {
     my $self = shift;
     my $dbh  = shift;
 
+
     $self->process_tags($dbh);
     my $populated = $self->populate_from_bib();
-
+    $self->fix_month();
     $self->process_authors($dbh, 1);
-    $self->fix_month($dbh);
 
     $self->regenerate_html( $dbh, 0 );    # has save
                                           # $self->save($dbh);
