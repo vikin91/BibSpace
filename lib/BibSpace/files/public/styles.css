@@ -58,11 +58,24 @@ h1 {
     font-weight: bold;
 }
 
+blockquote.abstractBQ {
+    text-align: justify;
+    font-size: 0.8em;
+}
+
 a.abstract-a {
     text-decoration:underline;
     cursor: pointer; 
     /*cursor: hand;*/
     color: #00f;
+}
+
+tr.v-align-top {
+    vertical-align: text-top;
+}
+
+td.bibtexnumber {
+    text-align: right;
 }
 
 .bibtexnumber a{

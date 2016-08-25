@@ -25,7 +25,7 @@
                 </button>   
                 <ul class="dropdown-menu" role="menu">
                     <li>
-                        <a href="<%= url_for('/teams/unrealted_papers/')%><%=$teamid%>" data-toggle="tooltip" data-placement="left" title="Click to see the unrelated publications"><span class="glyphicon glyphicon-search"></span> Show completly unrealted papers...</a>
+                        <a href="<%= url_for('/teams/unrealted_papers/')%><%=$teamid%>" data-toggle="tooltip" data-placement="left" title="Click to see the unrelated publications"><span class="glyphicon glyphicon-search"></span> Show completely unrelated papers...</a>
                     </li>
                     % if(is_admin()){
                         <li>
@@ -38,6 +38,7 @@
     </div>
 
     <hr>
+    <h1>Team <%= $teamname %></h1>
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-8 col-md-8 col-xs-8">
@@ -54,15 +55,7 @@
     </div>
 
     <hr>    
-    <div class="row">
-        <div class="col-lg-1"></div>
-        <div class="col-lg-6 col-md-6 col-xs-6">
-            <div class="alert alert-info">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <i class="fa  fa-exclamation-circle "></i> There are the members of team <strong><%= $teamname %></strong>
-            </div>
-        </div>
-    </div>
+    <h1>Members of team <%= $teamname %></h1>
   
 
     <div class="row">
@@ -92,7 +85,7 @@
                         <div class="btn-group">
                             % my $visibility = author_is_visible($author_id) || 0;
                             % if ($visibility == 1){
-                                <a class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="left" title="Make author invisible" href="<%= url_for('/authors/toggle_visibility/')%><%=$author_id%>"><span class="glyphicon glyphicon-eye-open"></span></a>
+                                <a class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="left" title="Make author invisible" href="<%= url_for('/authors/toggle_visibility/')%><%=$author_id%>"><span class="glyphicon glyphicon-eye-open"></span> </a>
                             %}
                             %else{
                                 <a class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="left" title="Make author visible" href="<%= url_for('/authors/toggle_visibility/')%><%=$author_id%>"><span class="glyphicon glyphicon-eye-close"></span></a>

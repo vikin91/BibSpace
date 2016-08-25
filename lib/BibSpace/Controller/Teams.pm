@@ -10,6 +10,7 @@ use warnings;
 use DBI;
 
 use BibSpace::Controller::Core;
+use BibSpace::Model::MTeam;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -26,7 +27,6 @@ sub show {
 
    my @teams;
    my @ids;
-
    my $i = 1;
    while(my $row = $sth->fetchrow_hashref()) {
       my $team = $row->{name} || "noname-team";
@@ -54,39 +54,31 @@ sub add_team {
 ##############################################################################################################
 ### POST like for HTML forms, not a blog post
 sub add_team_post {
-    my $self = shift;
-    my $dbh = $self->app->db;
-    my $new_team = $self->param('new_team');
+  my $self = shift;
+  my $dbh = $self->app->db;
+  my $new_team_name = $self->param('new_team');
 
-    if(defined $new_team){
-        my $existing_team = get_team_id($dbh, $new_team);
-        if($existing_team == -1){
-            
-            my $sth = $dbh->prepare('INSERT INTO Team(name) VALUES(?)');
-            $sth->execute($new_team);    
+  my $existing_mteam = MTeam->static_get_by_name($dbh, $new_team_name);
+  if(defined $existing_mteam){
+    $self->write_log("add new team: team with proposed name ($new_team_name) exists!!");
+    $self->flash(msg => "Team with such name exists already! Pick a different one.");
+    $self->redirect_to($self->url_for('add_team_get'));
+    return;
+  }
 
-            my $teamid = $dbh->last_insert_id(undef, undef, 'Team', 'id');
+  my $new_mteam = MTeam->new();
+  $new_mteam->{name} = $new_team_name;
+  $new_mteam->{parent} = undef;
+  my $new_team_id = $new_mteam->save($dbh);
 
-            if(!defined $teamid){
-                $self->flash(msg => "Something went wrong. The Team $new_team has not beed added");
-                $self->redirect_to('teamsadd');
-                return;
-            }
-            
-            $self->write_log("add new team: Added new team with proposed name ($new_team). Team id is $teamid.");
-
-            $self->redirect_to('teamseditteamid', teamid=>$teamid); 
-            return;
-            
-        }
-        else{
-            $self->write_log("add new team: team with proposed name ($new_team) exists!!");
-            $self->flash(msg => "Team with such name exists already! Pick a different one.");
-            $self->redirect_to('/teams/add');
-            return;
-        }
-    } 
-     $self->redirect_to('teams');
+  if(!defined $new_team_id or $new_team_id <= 0){
+      $self->flash(msg => "Something went wrong. The Team $new_team_name has not been added.");
+      $self->redirect_to($self->url_for('add_team_get'));
+      return;
+  }
+  
+  $self->write_log("Add new team: Added new team with proposed name ($new_team_name). Team id is $new_team_id.");
+  $self->redirect_to('edit_team', teamid=>$new_team_id); 
 }
 
 ##############################################################################################################
@@ -98,6 +90,7 @@ sub delete_team {
     if(defined $id_to_delete and $id_to_delete != -1 and  $self->team_can_be_deleted($id_to_delete)){
         do_delete_team_force($self, $id_to_delete);
     }
+    $self->flash(msg => "Team id $id_to_delete has been deleted.");
     $self->redirect_to($self->get_referrer);
 };
 
@@ -130,54 +123,41 @@ sub delete_team_force {
 
 ##############################################################################################################
 sub do_delete_team_force {
-    my $self = shift;
-    my $dbh = $self->app->db;
-    my $id_to_delete = shift;
+  my $self = shift;
+  my $id = shift;
 
+  my $dbh = $self->app->db;
 
-    if(defined $id_to_delete and $id_to_delete != -1){
-        $dbh->begin_work; #transaction
-
-        my $sth = $dbh->prepare('DELETE FROM Author_to_Team WHERE team_id=?');
-        $sth->execute($id_to_delete);
-
-        my $sth2 = $dbh->prepare('DELETE FROM Team WHERE id=?');
-        $sth2->execute($id_to_delete);  
-
-        $dbh->commit; #end transaction
-    }
-    
+  my $mteam = MTeam->static_get($dbh, $id);
+  if(!defined $mteam){
+    $self->flash(msg => "There is no team with id $id");
+    $self->redirect_to($self->get_referrer);  
+    return;
+  }
+  $mteam->delete($dbh);    
 };
 ################################################################################################################
 
 sub edit {
-    my $self = shift;
-    my $teamid = $self->param('teamid');
-    my $dbh = $self->app->db;
+  my $self = shift;
+  my $id = $self->param('teamid');
+  my $dbh = $self->app->db;
 
-    # TODO: Implement me!!
+  my $mteam = MTeam->static_get($dbh, $id);
+  if(!defined $mteam){
+    $self->flash(msg => "There is no team with id $id");
+    $self->redirect_to($self->get_referrer);  
+    return;
+  }
 
-    return team_members($self);
+  my ($author_ids_ref, $start_arr_ref, $stop_arr_ref) = get_team_members($self, $id);
+  my @members = @$author_ids_ref;
+  my $team_name = $mteam->{name};
 
-    $self->redirect_to('teams');
+
+  $self->stash(members  => \@members, start_arr => $start_arr_ref, stop_arr => $stop_arr_ref, team => $id, teamname => $team_name);
+  $self->render(template => 'teams/members');
 }
-################################################################################################################
-
- sub team_members {
-   my $self = shift;
-   my $teamid = $self->param('teamid');
-   my $dbh = $self->app->db;
-
-
-   my ($author_ids_ref, $start_arr_ref, $stop_arr_ref) = get_team_members($self, $teamid);
-   my @members = @$author_ids_ref;
-   my $team_name = get_team_for_id($dbh, $teamid);
-
-   
-   $self->stash(members  => \@members, start_arr => $start_arr_ref, stop_arr => $stop_arr_ref, team => $teamid, teamname => $team_name);
-   $self->render(template => 'teams/members');
- }
-
 ################################################################################################################
 
 1;

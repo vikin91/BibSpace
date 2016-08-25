@@ -42,7 +42,7 @@
                     <tr valign="top">
                         <td align="right" class="bibtexnumber">[<%= $j %>]</td>
                         <td class="bibtexitem">
-                            %== $obj->{html}
+                            %== $obj->{html} || "no html"
                         </td>
                     </tr>
                     % $i++;

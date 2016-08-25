@@ -5,7 +5,6 @@ use Test::Mojo;
 
 use BibSpace;
 use BibSpace::Controller::Core;
-use BibSpace::Functions::EntryObj;
 
 
 
@@ -16,6 +15,9 @@ $t_logged_in->post_ok(
     form        => { user   => 'pub_admin', pass => 'asdf' }
 );
 my $self = $t_logged_in->app;
+
+$t_logged_in->ua->max_redirects(10);
+$t_logged_in->ua->inactivity_timeout(3600);
 
 
 # generated with: ./script/bibspace routes | grep GET | grep -v : 
@@ -31,6 +33,12 @@ my @pages = (
 	"/log",
 	"/settings/clean_all",
 	"/settings/regenerate_all_force",
+	$self->url_for('fix_attachment_urls'),
+	$self->url_for('clean_ugly_bibtex'),
+	$self->url_for('add_publication'),
+	$self->url_for('add_many_publications'),
+	$self->url_for('recently_changed', num=>10),
+	$self->url_for('recently_added', num=>10),
 	"/manage_users",
 	"/settings/fix_entry_types",
 	"/settings/fix_months",
@@ -56,8 +64,6 @@ my @pages = (
 	"/publications/missing_month",
 	"/publications/fix_urls",
 	"/publications/sdqpdf",
-	"/publications/add",
-	"/publications/add_many",
 	"/read/publications/meta",
 	"/read/publications",
 	"/r/publications",
@@ -66,8 +72,18 @@ my @pages = (
 	"/r/bibtex",
 	"/r/b",
 	"/landing/publications",
+	"/landing/publications?entry_type=paper",
+	"/landing/publications?entry_type=paper&bibtex_type=inproceedings",
+	"/landing/publications?entry_type=talk",
+	"/landing/publications?entry_type=talk&bibtex_type=misc",
 	"/l/p",
 	"/landing-years/publications",
+	"/landing-years/publications?entry_type=paper",
+	"/landing-years/publications?entry_type=paper&year=2013",
+	"/landing-years/publications?entry_type=paper&year=2013&bibtex_type=inproceedings",
+	"/landing-years/publications?entry_type=talk",
+	"/landing-years/publications?entry_type=talk&year=2013",
+	"/landing-years/publications?entry_type=talk&year=2013&bibtex_type=misc",
 	"/ly/p",
 	"/cron",
 	"/cron/day",

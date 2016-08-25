@@ -7,7 +7,7 @@ use Crypt::Random; # sudo cpanm Crypt::Random
 use LWP::UserAgent;
 use Session::Token;
 
-use BibSpace::Controller::DB;
+use BibSpace::Functions::FDB;
 use BibSpace::Functions::UserObj; 
 
 
@@ -24,8 +24,6 @@ sub new {
 ####################################################################################################
 sub check {
     my ($self, $user, $pass, $dbh) = @_;
-
-    $self->prepare_user_table_mysql($dbh);
     $self->insert_admin($dbh);
 
     my $hash_from_db = $self->get_user_hash($user, $dbh);
@@ -55,8 +53,12 @@ sub save_token_email{
     my $email = shift; 
     my $user_dbh = shift;
 
-    my $sth = $user_dbh->prepare("INSERT INTO Token (requested, email, token) VALUES (CURRENT_TIMESTAMP, ?,?)");
-    $sth->execute($email, $token);  
+    # there should be only one active token!
+    my $sth = $user_dbh->prepare("DELETE FROM Token WHERE email=?");
+    $sth->execute($email);
+
+    my $sth2 = $user_dbh->prepare("INSERT INTO Token (requested, email, token) VALUES (CURRENT_TIMESTAMP, ?,?)");
+    $sth2->execute($email, $token);
 }
 ####################################################################################################
 sub get_token_for_email {  #### FOR TESTING ONLY

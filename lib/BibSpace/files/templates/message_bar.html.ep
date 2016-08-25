@@ -15,7 +15,6 @@
 % if(defined $msg_s and $msg_s ne ''){
 %    $msg = $msg_s;
 % }
-
 % if (defined $msg) {
 <div class="container">
     <div class="row">
@@ -33,5 +32,4 @@
     <!-- Space here is defined in <%= url_for('styles.css')->to_abs %> in section ".spacer" -->
     </div>
 %}
-
 <!-- End of Message bar -->
