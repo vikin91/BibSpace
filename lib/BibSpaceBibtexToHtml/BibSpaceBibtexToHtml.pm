@@ -95,7 +95,7 @@ sub convert_to_html {
   }
   if(!-e $self->{bst}){
     warn "Cannot convert. Bst file does not exist! File: $self->{bst}";
-    return "ERROR: BST";
+    return "ERROR: BST - .bst file cannot be found";
   }
 
   my $entry = new Text::BibTeX::Entry();

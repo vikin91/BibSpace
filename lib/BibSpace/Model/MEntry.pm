@@ -564,14 +564,18 @@ sub fix_entry_type_based_on_tag {
 sub postprocess_updated {
     my $self = shift;
     my $dbh  = shift;
+    my $bst_file = shift;
 
+    $bst_file = $self->{bst_file} if !defined $bst_file;
+
+    warn "Warning, you use Mentry->postprocess_updated without valid bst file!" unless defined $bst_file;
 
     $self->process_tags($dbh);
     my $populated = $self->populate_from_bib();
     $self->fix_month();
     $self->process_authors($dbh, 1);
 
-    $self->regenerate_html( $dbh, 0 );    # has save
+    $self->regenerate_html( $dbh, 0, $bst_file );    # has save
                                           # $self->save($dbh);
 
     return 1;                             # TODO: old code!
@@ -606,6 +610,7 @@ sub regenerate_html {  # TODO: I think saving should be removed from this functi
     my $bst_file = shift;
 
     $bst_file = $self->{bst_file} if !defined $bst_file;
+    warn "Warning, you use Mentry->regenerate_html without valid bst file!" unless defined $bst_file;
 
     if ( $force == 1 or $self->{need_html_regen} == 1 ) {
         $self->populate_from_bib();

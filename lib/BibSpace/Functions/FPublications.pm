@@ -147,9 +147,9 @@ sub Fhandle_add_edit_publication {
         }
 
         $e->populate_from_bib();
-        $e->regenerate_html( $dbh, 0 );
+        $e->regenerate_html( $dbh, 0, $bst_file ); # this saves in fact - the save will be removed from this func for clarity
         $e->fix_month();
-        $e->postprocess_updated($dbh);    # this has optional save
+        $e->postprocess_updated($dbh, $bst_file);    # this has optional save
         $e->save($dbh);    # so we save for sure
         $added_under_id = $e->{id};
     }
