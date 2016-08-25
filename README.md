@@ -1,6 +1,6 @@
 # README #
 
-BibSpace is an Online Bibtex Publications Management Software for Authors and Research Groups. Read about its features on the [BibSpace @ the Error Blog](https://blog.hex64.com/bibspace-online-bibtex-publications-management-software-for-authors-and-research-groups/).
+BibSpace is an Online Bibtex Publications Management Software for Authors and Research Groups. Read about some of its features and development on the [BibSpace @ ErrorBlog](https://blog.hex64.com/tag/bibspace/).
 
 ## Build status ##
 
@@ -26,7 +26,7 @@ BibSpace is currently undergoing serious refactoring. I try to keep current stat
 - [] Describe HTML embedding
 
 ### Developer TODO ###
-- [] ``perlcritic -4 `find ./lib -iname *.pm```
+- [x] ``perlcritic -4 `find ./lib -iname *.pm``` (integrated into vim)
 - [x] Upload local list of known bugs – see Trelo Board
 - [x] try to get rid of bibtex2html or provide an alternative (the alternative is not much beter, hovewer)
 
