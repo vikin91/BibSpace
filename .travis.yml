@@ -38,7 +38,7 @@ before_install:
     - cat ~/travis-perl-helpers/bin/build-dist
     # - dzil build -v 
     # - HELPERS_DEBUG=1 build-dist
-    - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
+    # - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
     - pwd
     - mkdir tmp
     - touch tmp/data.bib
