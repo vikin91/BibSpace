@@ -391,10 +391,9 @@ sub store_password {
     else {
         $self->flash(
             msg   => 'Passwords are not same. Try again.',
-            token => $token
+            type  => 'warning'
         );
         $self->stash(
-            msg   => 'Passwords are not same. Try again.',
             token => $token
         );
         $self->write_log("Forgot: Change failed. Passwords are not same.");
@@ -408,7 +407,7 @@ sub store_password {
     if ( $final_error == 1 ) {
         $self->users->remove_token( $token, $dbh );
         $self->write_log("Forgot: Change failed. Token deleted.");
-        $self->stash( msg =>
+        $self->flash(type=>'danger', msg =>
                 'Something went wrong. The password has not been changed. The reset token is no longer valid. You need to request a new one by clicking in \'I forgot my password\'.'
         );
         $self->redirect_to('login_form');
@@ -444,16 +443,14 @@ sub login {
         else {
             $self->write_log(
                 "Login: Bad user name or password for user $user");
-            $self->flash( msg => 'Wrong user name or password' );
-            $self->stash( msg => 'Wrong user name or password' );
-            $self->render( template => 'login/index' );
+            $self->flash( msg_type=>'danger', msg => 'Wrong user name or password' );
+            $self->redirect_to( $self->url_for('login_form') );
             return;
         }
     }
     else {
-        $self->flash( msg => 'Please login first!' );
-        $self->stash( msg => 'Please login first!' );
-        $self->render( template => 'login/index' );
+        $self->flash( msg_type=>'info', msg => 'Please login first!' );
+        $self->redirect_to( $self->url_for('login_form') );
         return;
     }
 }
@@ -469,9 +466,8 @@ sub bad_password {
 
     $self->write_log("Login: Bad user name or password! (/badpassword)");
 
-    $self->flash( msg => 'Wrong user name or password' );
-    $self->stash( msg => 'Wrong user name or password' );
-    $self->render( template => 'login/index' );
+    $self->flash( msg_type=>'danger', msg => 'Wrong user name or password' );
+    $self->redirect_to( $self->url_for('login_form') );
 }
 ####################################################################################
 sub not_logged_in {
@@ -480,9 +476,8 @@ sub not_logged_in {
         "Calling a page that requires login but user is not logged in. Redirecting to login."
     );
 
-    $self->flash( msg => 'Wrong username or password' );
-    $self->stash( msg => 'Wrong username or password' );
-    $self->render( template => 'login/index' );
+    $self->flash( msg_type=>'danger', msg => 'Wrong username or password' );
+    $self->redirect_to( $self->url_for('login_form') );
 }
 
 ####################################################################################

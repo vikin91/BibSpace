@@ -235,13 +235,13 @@ sub all_without_tag {
     }
 
     my $msg
-        = "This list contains papers with no tags (of type $tagtype) assigned. Use this list to tag the untagged papers! ";
+        = "This list contains papers that have no tags of type $tagtype. Use this list to tag the untagged papers! ";
 
     # my @objs = Fget_publications_core_from_array_ref($self, \@array);
     # $self->stash(objs => \@objs, msg => $msg);
 
     my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->stash( msg     => $msg );
+    $self->stash( msg_type=>'info', msg     => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -291,7 +291,7 @@ sub all_without_tag_for_author {
         = "This list contains papers with no tags (of type $tagtype) assigned. Use this list to tag the untagged papers! ";
 
     my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->stash( msg     => $msg );
+    $self->flas( type=>'info ',msg     => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -355,7 +355,7 @@ sub show_unrelated_to_team {
         </ul>";
 
     my @objs = Fget_publications_core_from_set( $self, $end_set );
-    $self->stash( msg     => $msg );
+    $self->stash( msg_type=>'info', msg     => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -376,7 +376,7 @@ sub all_with_missing_month {
     my $msg
         = "<p>This list contains entries with missing BibTeX field 'month'. Add this data to get the proper chronological sorting.</p> ";
 
-    $self->stash( msg     => $msg );
+    $self->stash( msg_type=>'info', msg     => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -416,7 +416,7 @@ sub all_candidates_to_delete {
       <p>Such entries may wanted to be removed form the system or serve as a help with configuration.</p>";
 
     my @objs = Fget_publications_core_from_set( $self, $end_set );
-    $self->stash( msg     => $msg );
+    $self->stash( msg_type=>'info', msg     => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -490,7 +490,7 @@ sub single {
         push @objs, $e;
     }
     else {
-        $self->stash( msg => "Entry $id does not exist." );
+        $self->stash( msg_type=>'danger', msg => "Entry $id does not exist." );
     }
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
@@ -995,6 +995,7 @@ sub remove_attachment {
 
         if ( $num_deleted_files > 0 ) {
             $mentry->regenerate_html($dbh, 0);
+            $mentry->save($dbh);
         }
 
         $self->write_log(
@@ -1271,6 +1272,7 @@ sub add_pdf_post {
             return;
         }
         $mentry->regenerate_html( $dbh, 0 );
+        $mentry->save($dbh);
 
         $self->flash( message => $msg );
         $self->redirect_to( $self->get_referrer );
@@ -1293,11 +1295,12 @@ sub regenerate_html_for_all {
         ; # for performance reasons as separate variable. Not benchmarked however.
 
     for my $e (@entries) {
-        say "Regenrating HTML NORMAL for entry "
+        say "Regenerating HTML NORMAL for entry "
             . $e->{id}
             . ". Progress $i/"
             . $num;
         $e->regenerate_html( $dbh, 0 );
+        $e->save($dbh);
         ++$i;
     }
 
@@ -1319,6 +1322,7 @@ sub regenerate_html_for_all_force {
     for my $e (@entries) {
         say "Regenrating HTML FORCE for entry " . $e->{id};
         $e->regenerate_html( $dbh, 1 );
+        $e->save($dbh);
     }
 
 
@@ -1341,6 +1345,7 @@ sub regenerate_html {
         return;
     }
     $mentry->regenerate_html( $dbh, 1 );
+    $mentry->save($dbh);
 
     $self->redirect_to( $self->get_referrer );
 }

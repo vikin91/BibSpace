@@ -266,22 +266,6 @@ sub register {
         }
     );
 
-    $app->helper(
-        author_can_be_deleted => sub {
-            my $self = shift;
-            my $id   = shift;
-
-            my $visibility = get_author_visibility_for_id( $self, $id );
-            return 0 if $visibility == 1;
-
-            my ( $teams_arr, $start_arr, $stop_arr, $team_id_arr )
-                = get_teams_of_author( $self, $id );
-            my $num_teams = scalar @$teams_arr;
-
-            return 1 if $num_teams == 0 and $visibility == 0;
-            return 0;
-        }
-    );
 
     $app->helper(
         num_tags => sub {

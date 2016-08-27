@@ -1,4 +1,5 @@
 package MEntry;
+
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
@@ -575,8 +576,8 @@ sub postprocess_updated {
     $self->fix_month();
     $self->process_authors($dbh, 1);
 
-    $self->regenerate_html( $dbh, 0, $bst_file );    # has save
-                                          # $self->save($dbh);
+    $self->regenerate_html( $dbh, 0, $bst_file );    
+    $self->save($dbh);
 
     return 1;                             # TODO: old code!
 }
@@ -603,7 +604,7 @@ sub generate_html {
     return ( $self->{html}, $self->{bib} );
 }
 ####################################################################################
-sub regenerate_html {  # TODO: I think saving should be removed from this function to make it clear what this function does
+sub regenerate_html {  
     my $self     = shift;
     my $dbh      = shift;
     my $force    = shift;
@@ -616,7 +617,6 @@ sub regenerate_html {  # TODO: I think saving should be removed from this functi
         $self->populate_from_bib();
         $self->generate_html($bst_file);
         $self->{need_html_regen} = 0;
-        $self->save($dbh);
     }
 }
 ####################################################################################

@@ -81,9 +81,9 @@ sub publications_add_many_get {
         key         => '',
         existing_id => '',
         exit_code   => '',
-        msg         => $msg,
         preview     => ''
     );
+    $self->stash( msg_type=>'warning', msg => $msg);
     $self->render( template => 'publications/add_multiple_entries' );
 }
 ############################################################################################################
@@ -307,7 +307,7 @@ sub all_with_pdf_on_sdq {
         = "This list contains papers that have pdfs on the sdqweb server. Please use this list to move pdfs to our server - this improves the performance.";
 
     my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->stash( msg     => $msg );
+    $self->stash( msg_type=>'info', msg     => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }

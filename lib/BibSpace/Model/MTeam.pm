@@ -1,6 +1,8 @@
 package MTeam;
+
 use Data::Dumper;
 use utf8;
+use BibSpace::Model::MAuthor;
 use Text::BibTeX;    # parsing bib files
 use 5.010;           #because of ~~ and say
 use DBI;
@@ -152,6 +154,29 @@ sub static_get_by_name {
         return MTeam->static_get( $dbh, $id );
     }
     return undef;
+}
+################################################################################
+sub members {
+    my $self   = shift;
+    my $dbh    = shift;
+
+
+    my $qry = "SELECT author_id, start, stop
+            FROM Author_to_Team 
+            WHERE team_id=?";
+
+    my $sth = $dbh->prepare($qry);
+    $sth->execute($self->{id});
+
+    my @authors;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        my $author = MAuthor->static_get( $dbh, $row->{author_id} ) if defined $row->{author_id} and $row->{author_id} ne '';
+        # if author is undef then such author does not exists and the table Author_to_Team contains trash!
+        push @authors, $author if defined $author;
+        # my $start = $row->{start};
+        # my $stop  = $row->{stop};
+    }
+    return @authors;
 }
 ####################################################################################
 no Moose;

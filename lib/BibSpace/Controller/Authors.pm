@@ -1,5 +1,6 @@
 package BibSpace::Controller::Authors;
 
+
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
@@ -11,6 +12,8 @@ use strict;
 use warnings;
 use DBI;
 
+use BibSpace::Model::MAuthor;
+
 use BibSpace::Controller::Core;
 use BibSpace::Controller::Publications;
 
@@ -20,86 +23,25 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
 ##############################################################################################################
-sub show {
+sub show { # refactored
     my $self    = shift;
     my $dbh     = $self->app->db;
-    my $visible = $self->param('visible') || 0;
+    my $visible = $self->param('visible');
     my $search  = $self->param('search') || '%';
     my $letter  = $self->param('letter') || '%';
 
     if ( $letter ne '%' ) {
         $letter .= '%';
     }
-    if ( $search ne '%' ) {
-        $search = '%' . $search;
-        $search .= '%';
-    }
 
-    my @params;
-
-#my $qry = "SELECT master_id, id, master, display, substr(master, 0, 2) AS let FROM Author WHERE master IS NOT NULL ";
-# my $qry = "SELECT master_id, id, master, display FROM Author WHERE master IS NOT NULL ";
-    my $qry
-        = "SELECT master_id, id, master, display FROM Author WHERE id=master_id AND master IS NOT NULL ";
-
-    if ( defined $visible and $visible eq '1' ) {
-        $qry .= "AND display=1 ";
-    }
-    if ( defined $search and $search ne '%' ) {
-        push @params, $search;
-        $qry .= "AND master LIKE ? ";
-    }
-    elsif ( defined $letter and $letter ne '%' ) {
-        push @params, $letter;
-
-        # $qry .= "AND let LIKE ? ";
-        $qry .= "AND substr(master, 1, 1) LIKE ? ";    # mysql
-
-    }
-
-    # $qry .= "GROUP BY master_id ORDER BY display DESC, master ASC";
-    $qry .= "ORDER BY display DESC, master ASC";
-
-    $self->write_log(
-        "Show authors: visible $visible, letter $letter, search $search");
-
-    my $sth = $dbh->prepare_cached($qry);
-    $sth->execute(@params);
-
-    my @autorzy_id_arr;
-    my @autorzy_names_arr;
-    my %autorzy_display;
-
-    my $i = 1;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $master
-            = $row->{master} || "000 This author has no master_id!" . "<BR>";
-
-        # my $disp = $row->{display} || "0";
-
-        my $master_id = $row->{master_id};
-        my $id        = $row->{id};
-        $master_id = $id if !defined $master_id;
-
-        # my $id = get_author_id_for_master($dbh, $master);
-        my $mid = $master_id;    #get_master_id_for_master($dbh, $master);
-
-        my $disp = get_author_visibility_for_id( $self, $mid );
-
-        push @autorzy_id_arr,    $mid;
-        push @autorzy_names_arr, $master;
-
-        $autorzy_display{$mid} = $disp;
-        $i++;
-    }
+    my @authors = MAuthor->static_get_filter($dbh, $visible, $letter);
 
     my @letters = $self->get_set_of_first_letters($visible);
+
     $self->stash(
-        visible   => $visible,
-        names_arr => \@autorzy_names_arr,
-        disp      => \%autorzy_display,
+        authors   => \@authors,
         letters   => \@letters,
-        ids_arr   => \@autorzy_id_arr
+        visible   => $visible
     );
 
     $self->render( template => 'authors/authors' );
@@ -115,7 +57,6 @@ sub add_author {
 }
 
 ##############################################################################################################
-### POST like for HTML forms, not a blog post
 sub add_post {
     my $self       = shift;
     my $dbh        = $self->app->db;
@@ -123,46 +64,32 @@ sub add_post {
 
     if ( defined $new_master ) {
 
-        my $existing_author = get_master_id_for_uid( $dbh, $new_master );
-        if ( $existing_author == -1 ) {
+        my $a = MAuthor->static_get_by_name( $dbh, $new_master );
+        
+        if(!defined $a){ # no such user exists yet
+            
+            $a = MAuthor->new(uid => $new_master);
+            $a->save($dbh);
 
-            my $sth = $dbh->prepare(
-                'INSERT INTO Author(uid, master) VALUES(?, ?)');
-            $sth->execute( $new_master, $new_master );
-            my $aid = $dbh->last_insert_id( undef, undef, 'Author', 'id' );
-
-            my $sth2 = $dbh->prepare(
-                'UPDATE Author SET master_id=?, display=1 WHERE id=?');
-            $sth2->execute( $aid, $aid );
-
-            if ( !defined $aid ) {
-                $self->flash( msg =>
-                        "Something went wrong. The Author has not beed added"
-                );
-                $self->redirect_to( $self->url_for('/authors/add') );
+            if ( !defined $a->{id} ) {
+                $self->flash(type=>'danger', msg =>"Error saving author. Saving to the database returned no insert row id.");
+                $self->redirect_to( $self->url_for('add_author') );
                 return;
             }
-
-            $self->write_log(
-                "add new author: Added new author with proposed master ($new_master). Author id is $aid."
-            );
-
-            $self->redirect_to( $self->url_for('/authors/edit/') . $aid );
-            return;
+            $self->write_log( "Added new author with master: $new_master. Author id is ".$a->{id});
+            $self->flash(type=>'success', msg =>"Author added successfully!");
+            $self->redirect_to( $self->url_for('edit_author', id=>$a->{id})  );
+            return;   
         }
-        else {
-            $self->write_log(
-                "add new author: author with proposed master ($new_master) exists!"
-            );
-            $self->flash( msg =>
-                    "Author with such MasterID exists! Pick a different one."
-            );
-            $self->redirect_to( $self->url_for('/authors/add') );
+        else { # such user already exists!
+            $self->write_log("Author with master: $new_master already exists!");
+            $self->flash( msg_type=>'warning', msg =>"Author with proposed master: $new_master already exists! Pick a different one.");
+            $self->redirect_to( $self->url_for('add_author') );
             return;
         }
     }
 
-    $self->redirect_to( $self->url_for('/authors/add') );
+    $self->redirect_to( $self->url_for('add_author') );
 }
 ##############################################################################################################
 sub edit_author {
@@ -679,27 +606,14 @@ sub reassign_authors_to_entries_and_create_authors {
 
 ##############################################################################################################
 
-sub toggle_visibility {
+sub toggle_visibility { # refactored 
     my $self = shift;
+    my $dbh  = $self->app->db;
     my $id   = $self->param('id');
 
-    my $dbh    = $self->app->db;
-    my $master = get_master_for_id( $dbh, $id );
-    my $disp   = get_author_visibility_for_id( $self, $id );
+    my $author = MAuthor->static_get( $dbh, $id );
+    $author->toggle_visibility($dbh);
 
-    my $sth2;
-
-    $sth2 = $dbh->prepare('UPDATE Author SET display=? WHERE id=?');
-    if ( $disp == 1 ) {
-        $sth2->execute( 0, $id );
-    }
-    else {
-        $sth2->execute( 1, $id );
-    }
-    $sth2->finish() if defined $sth2;
-
-    $self->write_log("Author with id $id has now visibility set to $disp");
-    say "Author with id $id has now visibility set to $disp";
 
     $self->redirect_to( $self->get_referrer );
 }

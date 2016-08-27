@@ -35,7 +35,9 @@ before_install:
     - source ~/travis-perl-helpers/init
     - build-perl
     - perl -V
-    - build-dist
+    - cat ~/travis-perl-helpers/bin/build-dist
+    # - dzil build -v 
+    # - HELPERS_DEBUG=1 build-dist
     - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
     - pwd
     - mkdir tmp
@@ -80,7 +82,6 @@ script:
     # - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf cover -report coveralls # runs ./Build test that does not work
 
 # after_failure:
-    # - cover -report coveralls
     # - coverage-report
 
 after_success:
