@@ -35,9 +35,7 @@ before_install:
     - source ~/travis-perl-helpers/init
     - build-perl
     - perl -V
-    - cat ~/travis-perl-helpers/bin/build-dist
-    # - dzil build -v 
-    # - HELPERS_DEBUG=1 build-dist
+    # - build-dist                # does not work anymore - must be some incompatibility due to version changes
     # - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
     - pwd
     - mkdir tmp

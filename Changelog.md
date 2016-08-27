@@ -1,5 +1,9 @@
 ### Changelog ###
 
+#### v0.4.2 and 0.4.3 06-08.2016 ####
+* Code refactoring
+* Multiple improvements
+
 #### v0.4.1 31.05.2016 ####
 * Add function to change download urls from direct file paths to file serving function
 * Add function to remove attachments
