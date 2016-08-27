@@ -35,8 +35,8 @@ before_install:
     - source ~/travis-perl-helpers/init
     - build-perl
     - perl -V
-    - build-dist
-    - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
+    # - build-dist                # does not work anymore - must be some incompatibility due to version changes
+    # - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
     - pwd
     - mkdir tmp
     - touch tmp/data.bib
@@ -65,6 +65,7 @@ before_script:
     - mysql -u root -e "CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';"
     - mysql -u root -e "GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';"
     - mysql -u root -e "FLUSH PRIVILEGES;"
+    - mojo version
     - coverage-setup
 
 
@@ -79,7 +80,6 @@ script:
     # - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf cover -report coveralls # runs ./Build test that does not work
 
 # after_failure:
-    # - cover -report coveralls
     # - coverage-report
 
 after_success:

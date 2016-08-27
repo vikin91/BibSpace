@@ -1,4 +1,4 @@
-package BibSpace v0.4.2;
+package BibSpace v0.4.3;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
@@ -97,7 +97,7 @@ has db => sub {
 
 has version => sub {
     my $self = shift;
-    return $BibSpace::VERSION // "0.4.1";
+    return $BibSpace::VERSION // "0.4.2";
 };
 ################################################################
 sub startup {
@@ -114,6 +114,7 @@ sub setup_config {
     $self->plugin( 'Config' => { file => $self->app->config_file } );
 
     say "Using CONFIG: ".$self->app->config_file;
+    say "Active bst file is: ".$self->app->bst;
 }
 ################################################################
 sub setup_plugins {
@@ -334,13 +335,13 @@ sub setup_routes {
 
     ################ AUTHORS ################
 
-    $logged_user->get('/authors/')->to('authors#show');
-    $logged_user->get('/authors/add')->to('authors#add_author');
+    $logged_user->get('/authors/')->to('authors#show')->name('all_authors');
+    $logged_user->get('/authors/add')->to('authors#add_author')->name('add_author');
     $logged_user->post('/authors/add/')->to('authors#add_post');
 
-    $logged_user->get('/authors/edit/:id')->to('authors#edit_author');
+    $logged_user->get('/authors/edit/:id')->to('authors#edit_author')->name('edit_author');
     $logged_user->post('/authors/edit/')->to('authors#edit_post');
-    $logged_user->get('/authors/delete/:id')->to('authors#delete_author');
+    $logged_user->get('/authors/delete/:id')->to('authors#delete_author')->name('delete_author');
     $logged_user->get('/authors/delete/:id/force')
         ->to('authors#delete_author_force');
     $logged_user->post('/authors/edit_membership_dates')
@@ -359,9 +360,10 @@ sub setup_routes {
         ->to('authors#reassign_authors_to_entries_and_create_authors');
 
     $logged_user->get('/authors/toggle_visibility/:id')
-        ->to('authors#toggle_visibility');
-    $logged_user->get('/authors/toggle_visibility')
-        ->to('authors#toggle_visibility');
+        ->to('authors#toggle_visibility')->name('toggle_author_visibility');
+
+    # $logged_user->get('/authors/toggle_visibility')
+    #     ->to('authors#toggle_visibility');
 
     ################ TAG TYPES ################
     # $logged_user->get('/tags/')->to('tags#index')->name("tags_index");

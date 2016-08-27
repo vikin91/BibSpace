@@ -1,13 +1,6 @@
 % layout 'admin';
 
 
-% my $i = 0;
-% my $size = @{$teams_arr};
-% my @teams_arr = @{$teams_arr};
-% my @ids_arr = @{$ids_arr};
-
-% my $j = $size;
-
 <div class="container">
 
     <div class="row">
@@ -23,25 +16,21 @@
             <thead>
             </thead>
             <tbody>
-            % foreach my $team (@teams_arr){
-              % my $id = $ids_arr[$i];
-              
+            % foreach my $team (@{$teams}){
               <tr>
-                <td><span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Team's ID"><span class="glyphicon glyphicon-barcode"></span> <%= $id %></span></td>
+                <td><span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Team's ID"><span class="glyphicon glyphicon-barcode"></span> <%= $team->{id} %></span></td>
                 <td>
                     <div class="btn-group">
-                        <a class="btn btn-success btn-sm" href="<%= url_for('/teams/edit/')%><%=$id%>" data-toggle="tooltip" data-placement="left" title="Edit team members"><span class="glyphicon glyphicon-pencil"></span></a>
-                        <span class="btn btn-default btn-sm" ><i class="fa fa-users"></i> <%= $team %></span>
+                        <a class="btn btn-success btn-sm" href="<%= url_for('/teams/edit/')%><%= $team->{id} %>" data-toggle="tooltip" data-placement="left" title="Edit team members"><span class="glyphicon glyphicon-pencil"></span></a>
+                        <span class="btn btn-default btn-sm" ><i class="fa fa-users"></i> <%= $team->{name} %></span>
                     </div>
                 </td>
-                <td><a class="btn btn-default btn-sm" href="<%= url_for('/publications?team=')%><%= $team %>"><i class="fa fa-files-o"></i> Show papers</a></td>
-                <td><a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications?team=')%><%= $team %>"><span class="glyphicon glyphicon-plane"></span> Landing page</a></td>
+                <td><a class="btn btn-default btn-sm" href="<%= url_for('/publications')->query(team=>$team->{name})%>"><i class="fa fa-files-o"></i> Show papers</a></td>
+                <td><a class="btn btn-default btn-sm" href="<%= url_for('/publications')->query(team=>$team->{name}) %>"><span class="glyphicon glyphicon-plane"></span> Landing page</a></td>
                 <td>
-                <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications?team=')%><%= $team %>"><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing page</a>
+                <a class="btn btn-default btn-sm" href="<%= url_for('/publications')->query(team=>$team->{name}) %>"><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing page</a>
                 </td>
               </tr>
-              % $i++;
-              % $j--;
             %}
             </tbody>
             </table>

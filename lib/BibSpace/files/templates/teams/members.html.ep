@@ -10,8 +10,8 @@
             <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
             <a class="btn btn-info" href="<%= url_for('/teams')%>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all teams</a>
 
-            % if(team_can_be_deleted($teamid) and is_manager()){
-                <a class="btn btn-danger" href="<%= url_for('/teams/delete/')%><%=$teamid%>" data-toggle="tooltip" data-placement="left" title="Delete team"><span class="glyphicon glyphicon-trash"></span> Delete team</a>
+            % if(team_can_be_deleted($team->{id}) and is_manager()){
+                <a class="btn btn-danger" href="<%= url_for('/teams/delete/', id_to_delete=>$team->{id}) %>" data-toggle="tooltip" data-placement="left" title="Delete team"><span class="glyphicon glyphicon-trash"></span> Delete team</a>
             % }
             % else{
                 <a class="btn btn-default" href="#" data-toggle="tooltip" data-placement="left" title="Cannot delete team because it still has members"><span class="glyphicon glyphicon-trash"></span> <del>Delete team</del></a>
@@ -25,7 +25,7 @@
                 </button>   
                 <ul class="dropdown-menu" role="menu">
                     <li>
-                        <a href="<%= url_for('/teams/unrealted_papers/')%><%=$teamid%>" data-toggle="tooltip" data-placement="left" title="Click to see the unrelated publications"><span class="glyphicon glyphicon-search"></span> Show completely unrelated papers...</a>
+                        <a href="<%= url_for('/teams/unrealted_papers/', teamid=>$team->{id}) %>" data-toggle="tooltip" data-placement="left" title="Click to see the unrelated publications"><span class="glyphicon glyphicon-search"></span> Show completely unrelated papers...</a>
                     </li>
                     % if(is_admin()){
                         <li>
@@ -38,24 +38,24 @@
     </div>
 
     <hr>
-    <h1>Team <%= $teamname %></h1>
+    <h1>Team <%= $team->{name} %></h1>
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-8 col-md-8 col-xs-8">
             
-            <a class="btn btn-default btn-sm" href="<%= url_for('/publications?team=')%><%= $teamname %>"  data-toggle="tooltip" data-placement="left" title="Show papers of the team <%= $teamname %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-list-alt"></span> Show papers</a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('publications')->query(team=>$team->{name}) %>"  data-toggle="tooltip" data-placement="left" title="Show papers of the team <%= $team->{name} %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-list-alt"></span> Show papers</a>
 
-            <a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications?team=')%><%= $teamname %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the team <%= $teamname %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span></a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications')->query(team=>$team->{name}) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the team <%= $team->{name} %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span></a>
             
-            <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications?team=')%><%= $teamname %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the team <%= $teamname %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications')->query(team=>$team->{name}) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the team <%= $team->{name} %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
 
-            <a class="btn btn-default btn-sm" href="<%= url_for('/read/bibtex?team=')%><%= $teamname %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of team <%= $teamname %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span> BibTeX</a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('/read/bibtex')->query(team=>$team->{name}) %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of team <%= $team->{name} %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span> BibTeX</a>
             
         </div>
     </div>
 
     <hr>    
-    <h1>Members of team <%= $teamname %></h1>
+    <h1>Members of team <%= $team->{name} %></h1>
   
 
     <div class="row">
@@ -74,36 +74,35 @@
             </thead>
             <tbody>
             % my $i = 0;
-            % foreach my $author_id (@{$members}){
-                % my $start = ${$start_arr}[$i];
-                % my $stop = ${$stop_arr}[$i];
+            % foreach my $author (@{$members}){
+                % my $start = $author->joined_team(app->db, $team);
+                % my $stop  = $author->left_team(app->db, $team);
                 <tr>
                     <td>    
-                        <a class="btn btn-danger btn-sm" href="<%= url_for('/authors/')%><%=$author_id%>/remove_from_team/<%=$teamid%>" data-toggle="tooltip" data-placement="right" title="Remove author <%= get_master_for_id($author_id) %> from team <%= $teamname %>"><i class="fa fa-users"></i> <span class="glyphicon glyphicon-minus"></span></a>
+                        <a class="btn btn-danger btn-sm" href="<%= url_for('remove_author_from_team', id=>$author->{id}, tid=>$team->{id}) %>" data-toggle="tooltip" data-placement="right" title="Remove author <%= $author->{master} %> from team <%= $team->{name} %>"><i class="fa fa-users"></i> <span class="glyphicon glyphicon-minus"></span></a>
                     </td>
                     <td>
                         <div class="btn-group">
-                            % my $visibility = author_is_visible($author_id) || 0;
-                            % if ($visibility == 1){
-                                <a class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="left" title="Make author invisible" href="<%= url_for('/authors/toggle_visibility/')%><%=$author_id%>"><span class="glyphicon glyphicon-eye-open"></span> </a>
+                            % if ($author->{display} == 1){
+                                <a class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="left" title="Make author invisible" href="<%= url_for('toggle_author_visibility', id=>$author->{id}) %>"><span class="glyphicon glyphicon-eye-open"></span> </a>
                             %}
                             %else{
-                                <a class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="left" title="Make author visible" href="<%= url_for('/authors/toggle_visibility/')%><%=$author_id%>"><span class="glyphicon glyphicon-eye-close"></span></a>
+                                <a class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="left" title="Make author visible" href="<%= url_for('toggle_author_visibility', id=>$author->{id}) %>"><span class="glyphicon glyphicon-eye-close"></span></a>
                             %}
-                            <a class="btn btn-success btn-sm" data-toggle="tooltip" data-placement="left" title="Show author's edit page" href="<%= url_for('/authors/edit/')%><%=$author_id%>"><span class="glyphicon glyphicon-user"></span> <span class="glyphicon glyphicon-pencil"></span></a>
+                            <a class="btn btn-success btn-sm" data-toggle="tooltip" data-placement="left" title="Show author's edit page" href="<%= url_for('edit_author', id=>$author->{id}) %>"><span class="glyphicon glyphicon-user"></span> <span class="glyphicon glyphicon-pencil"></span></a>
 
-                            <span class="btn btn-default btn-sm"  data-toggle="tooltip" data-placement="left" title="Author's master name and ID"><span class="glyphicon glyphicon-user"></span> <%= get_master_for_id($author_id) %> ( <span class="glyphicon glyphicon-barcode"></span> <%= $author_id %> )</span>
+                            <span class="btn btn-default btn-sm"  data-toggle="tooltip" data-placement="left" title="Author's master name and ID"><span class="glyphicon glyphicon-user"></span> <%= $author->{master} %> ( <span class="glyphicon glyphicon-barcode"></span> <%= $author->{id} %> )</span>
                         </div>
                     </td>
                     <td>
-                        <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Year of becoming a member of <%= $teamname %>"><i class="fa fa-sun-o"></i> <%= $start %></span>
+                        <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Year of becoming a member of <%= $team->{name} %>"><i class="fa fa-sun-o"></i> <%= $start %></span>
                     </td>
                     <td>
-                        <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Year of leaving <%= $teamname %>"><i class="fa fa-moon-o"></i> <%= $stop %></span>
+                        <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Year of leaving <%= $team->{name} %>"><i class="fa fa-moon-o"></i> <%= $stop %></span>
                     </td>
                     <td>
-                        <a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications?team=')%><%= $teamname %>&author=<%= get_master_for_id($author_id) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of <%= get_master_for_id($author_id) %> as he was a member of <%= $teamname %>"><span class="glyphicon glyphicon-plane"></span></a>
-                        <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications?team=')%><%= $teamname %>&author=<%= get_master_for_id($author_id) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of <%= get_master_for_id($author_id) %> as he was a member of <%= $teamname %>"><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
+                        <a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications')->query(team=>$team->{name}, author=>$author->{master}) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of <%= $author->{master} %> as he was a member of <%= $team->{name} %>"><span class="glyphicon glyphicon-plane"></span></a>
+                        <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications')->query(team=>$team->{name}, author=>$author->{master})%>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of <%= $author->{master} %> as he was a member of <%= $team->{name} %>"><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
                     </td>
                     % $i++;
                 </tr>
@@ -119,7 +118,7 @@
         <div class="col-lg-6 col-md-6 col-xs-6">
             <div class="alert alert-info">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <i class="fa  fa-exclamation-circle "></i> To add a new author to team <strong><%= $teamname %></strong>, go to that author's page.
+                <i class="fa  fa-exclamation-circle "></i> To add a new author to team <strong><%= $team->{name} %></strong>, go to that author's page.
             </div>
         </div>
     </div>

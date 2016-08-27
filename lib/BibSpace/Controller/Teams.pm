@@ -8,6 +8,7 @@ use 5.010; #because of ~~
 use strict;
 use warnings;
 use DBI;
+use Data::Dumper;
 
 use BibSpace::Controller::Core;
 use BibSpace::Model::MTeam;
@@ -20,25 +21,11 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 sub show {
    my $self = shift;
    my $dbh = $self->app->db;
-   
-   my $sth = $dbh->prepare( "SELECT id, name, parent FROM Team
-         ORDER BY name ASC" );  
-   $sth->execute(); 
 
-   my @teams;
-   my @ids;
-   my $i = 1;
-   while(my $row = $sth->fetchrow_hashref()) {
-      my $team = $row->{name} || "noname-team";
-      my $id = $row->{id};
+   my @teams = MTeam->static_all( $self->app->db );
+   
 
-      push @teams, $team;
-      push @ids, $id;
-      $i++;
-   }
-   
-   
-   $self->stash(teams_arr  => \@teams, ids_arr  => \@ids);
+   $self->stash(teams  => \@teams);
    $self->render(template => 'teams/teams', layout => 'admin');
  };
 
@@ -150,14 +137,18 @@ sub edit {
     return;
   }
 
-  my ($author_ids_ref, $start_arr_ref, $stop_arr_ref) = get_team_members($self, $id);
-  my @members = @$author_ids_ref;
-  my $team_name = $mteam->{name};
+  my @team_members = $mteam->members($dbh);
+  say Dumper \@team_members;
+
+  # my ($author_ids_ref, $start_arr_ref, $stop_arr_ref) = get_team_members($self, $id); # get_team_members is deprecated
+  # my @members = @$author_ids_ref;
+  # my $team_name = $mteam->{name};
 
 
-  $self->stash(members  => \@members, start_arr => $start_arr_ref, stop_arr => $stop_arr_ref, team => $id, teamname => $team_name);
+  $self->stash(members  => \@team_members, team => $mteam);
   $self->render(template => 'teams/members');
 }
 ################################################################################################################
+
 
 1;

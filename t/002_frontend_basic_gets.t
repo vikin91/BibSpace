@@ -52,7 +52,6 @@ my @pages = (
 	"/authors/add",
 	"/authors/reassign",
 	"/authors/reassign_and_create",
-	"/authors/toggle_visibility",
 	"/tagtypes",
 	"/tagtypes/add",
 	"/teams",

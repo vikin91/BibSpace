@@ -1,4 +1,5 @@
 package BibSpaceBibtexToHtml::LocalBibStyle v0.0.4;
+
 # use Data::Dumper;
 =head1 NAME
 

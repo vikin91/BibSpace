@@ -1,2 +1,0 @@
-#!/bin/sh
-./bin/bibspace daemon --listen http://*:$PORT --mode production
