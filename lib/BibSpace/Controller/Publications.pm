@@ -100,9 +100,9 @@ sub hide {
 
     my $mentry = MEntry->static_get( $self->app->db, $id );
     if ( defined $mentry ) {
-        $mentry->hide($self->app->db);
+        $mentry->hide( $self->app->db );
     }
-    else{
+    else {
         $self->flash( msg => "There is no entry with id $id" );
     }
     $self->redirect_to( $self->get_referrer );
@@ -241,7 +241,7 @@ sub all_without_tag {
     # $self->stash(objs => \@objs, msg => $msg);
 
     my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->stash( msg_type=>'info', msg     => $msg );
+    $self->stash( msg_type => 'info', msg => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -291,7 +291,7 @@ sub all_without_tag_for_author {
         = "This list contains papers with no tags (of type $tagtype) assigned. Use this list to tag the untagged papers! ";
 
     my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->flas( type=>'info ',msg     => $msg );
+    $self->flas( type => 'info ', msg => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -337,7 +337,8 @@ sub show_unrelated_to_team {
 
     my $dbh = $self->app->db;
 
-    my $set_all_papers = Set::Scalar->new( map { $_->{id} } MEntry->static_all($dbh) );
+    my $set_all_papers
+        = Set::Scalar->new( map { $_->{id} } MEntry->static_all($dbh) );
     my $set_of_related_to_team
         = get_set_of_papers_for_all_authors_of_team_id( $self, $team_id );
     my $end_set = $set_all_papers - $set_of_related_to_team;
@@ -355,7 +356,7 @@ sub show_unrelated_to_team {
         </ul>";
 
     my @objs = Fget_publications_core_from_set( $self, $end_set );
-    $self->stash( msg_type=>'info', msg     => $msg );
+    $self->stash( msg_type => 'info', msg => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -376,7 +377,7 @@ sub all_with_missing_month {
     my $msg
         = "<p>This list contains entries with missing BibTeX field 'month'. Add this data to get the proper chronological sorting.</p> ";
 
-    $self->stash( msg_type=>'info', msg     => $msg );
+    $self->stash( msg_type => 'info', msg => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -387,8 +388,9 @@ sub all_candidates_to_delete {
 
     $self->write_log("Displaying entries that are candidates_to_delete");
 
-    my $set_all_papers = Set::Scalar->new( map { $_->{id} } MEntry->static_all($self->app->db) );
-    my $end_set        = $set_all_papers;
+    my $set_all_papers = Set::Scalar->new( map { $_->{id} }
+            MEntry->static_all( $self->app->db ) );
+    my $end_set = $set_all_papers;
 
     # print "A1 ", $end_set, "\n";
 
@@ -416,7 +418,7 @@ sub all_candidates_to_delete {
       <p>Such entries may wanted to be removed form the system or serve as a help with configuration.</p>";
 
     my @objs = Fget_publications_core_from_set( $self, $end_set );
-    $self->stash( msg_type=>'info', msg     => $msg );
+    $self->stash( msg_type => 'info', msg => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -490,7 +492,10 @@ sub single {
         push @objs, $e;
     }
     else {
-        $self->stash( msg_type=>'danger', msg => "Entry $id does not exist." );
+        $self->stash(
+            msg_type => 'danger',
+            msg      => "Entry $id does not exist."
+        );
     }
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
@@ -994,7 +999,7 @@ sub remove_attachment {
         $num_deleted_files = $self->remove_attachment_do( $id, $filetype );
 
         if ( $num_deleted_files > 0 ) {
-            $mentry->regenerate_html($dbh, 0);
+            $mentry->regenerate_html( $dbh, 0 );
             $mentry->save($dbh);
         }
 
@@ -1389,16 +1394,16 @@ sub show_authors_of_entry {
     my $html_preview = $mentry->{html};
     my $key          = $mentry->{bibtex_key};
 
-    my @authors         = $mentry->authors($dbh); # $self->get_authors_of_entry($id);
+    my @authors = $mentry->authors($dbh);  # $self->get_authors_of_entry($id);
     my $teams_for_paper = get_set_of_teams_for_entry_id( $self, $id );
     my @teams           = $teams_for_paper->members;
 
     $self->stash(
-        eid        => $id,
-        key        => $key,
-        preview    => $html_preview,
-        authors => \@authors,
-        team_ids   => \@teams
+        eid      => $id,
+        key      => $key,
+        preview  => $html_preview,
+        authors  => \@authors,
+        team_ids => \@teams
     );
     $self->render( template => 'publications/show_authors' );
 }
@@ -1640,7 +1645,6 @@ sub publications_add_get {
     my $dbh = $self->app->db;
 
 
-
     my $msg = "<strong>Adding mode</strong> You operate on an unsaved entry!";
     my $e_dummy = MEntry->new();
     $e_dummy->{id} = -1;
@@ -1654,7 +1658,7 @@ sub publications_add_get {
     $e_dummy->{bib}    = $bib;
     $e_dummy->{hidden} = 0;      # new papers are not hidden by default
     $e_dummy->populate_from_bib();
-    $e_dummy->generate_html($self->app->bst);
+    $e_dummy->generate_html( $self->app->bst );
 
     $self->stash( mentry => $e_dummy, msg => $msg );
     $self->render( template => 'publications/edit_entry' );
@@ -1680,7 +1684,8 @@ sub publications_add_post {
     $new_bib =~ s/^\t//g;
 
     my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-        = Fhandle_add_edit_publication( $dbh, $new_bib, -1, $action, $self->app->bst );
+        = Fhandle_add_edit_publication( $dbh, $new_bib, -1, $action,
+        $self->app->bst );
     my $msg
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );
@@ -1697,10 +1702,10 @@ sub publications_add_post {
     # 2 => KEY_OK
     # 3 => KEY_TAKEN
 
-    
-    if($mentry->{warnings} ne ''){
+
+    if ( $mentry->{warnings} ne '' ) {
         $msg .= "<br/>";
-        $msg .= "<strong>BibTeX Warnings</strong>: ".$mentry->{warnings};
+        $msg .= "<strong>BibTeX Warnings</strong>: " . $mentry->{warnings};
     }
     $self->stash( mentry => $mentry, msg => $msg );
     if ( $status_code_str eq 'ADD_OK' ) {
@@ -1731,11 +1736,11 @@ sub publications_edit_get {
         return;
     }
     $mentry->populate_from_bib();
-    $mentry->generate_html($self->app->bst);
+    $mentry->generate_html( $self->app->bst );
 
-    if($mentry->{warnings} ne ''){
+    if ( $mentry->{warnings} ne '' ) {
         $msg .= "<br/><br/>";
-        $msg .= "<strong>BibTeX Warnings</strong>: ".$mentry->{warnings};
+        $msg .= "<strong>BibTeX Warnings</strong>: " . $mentry->{warnings};
     }
 
     $self->stash( mentry => $mentry, msg => $msg );
@@ -1762,14 +1767,15 @@ sub publications_edit_post {
     $new_bib =~ s/^\t//g;
 
     my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-        = Fhandle_add_edit_publication( $dbh, $new_bib, $id, $action, $self->app->bst );
+        = Fhandle_add_edit_publication( $dbh, $new_bib, $id, $action,
+        $self->app->bst );
     my $msg
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );
 
-    if($mentry->{warnings} ne ''){
+    if ( $mentry->{warnings} ne '' ) {
         $msg .= "<br/>";
-        $msg .= "<strong>BibTeX Warnings</strong>: ".$mentry->{warnings};
+        $msg .= "<strong>BibTeX Warnings</strong>: " . $mentry->{warnings};
     }
 
     $self->write_log(
@@ -1795,7 +1801,7 @@ sub clean_ugly_bibtex {
     my $dbh = $self->app->db;
 
     $self->write_log("Cleaning ugly bibtex fields for all entries");
-    
+
     Fclean_ugly_bibtex_fields_for_all_entries($dbh);
 
     $self->flash( msg => 'All entries have now their Bibtex cleaned.' );
