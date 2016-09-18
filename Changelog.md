@@ -1,5 +1,9 @@
 ### Changelog ###
 
+#### v0.4.4 18-09.2016 ####
+* Code refactoring - towards OO design and getting rid of core.pm
+* Bugfix - saving publication creates now authors and provides updated preview
+
 #### v0.4.2 and 0.4.3 06-08.2016 ####
 * Code refactoring
 * Multiple improvements

@@ -2,7 +2,7 @@
 % layout 'admin';
 
 % my @team_ids = @{$team_ids};
-% my @author_ids = @{$author_ids};
+% my @authors = @{$authors};
 
 <div class="container">
 
@@ -25,15 +25,15 @@
         <div class="col-lg-1"></div>
         <div class="col-lg-2 col-md-2 col-xs-2">
             <button type="button" class="btn btn-success">
-                <span class="glyphicon glyphicon-user"></span> Detected authors <span class="badge"><%= scalar @author_ids %></span>
+                <span class="glyphicon glyphicon-user"></span> Detected authors <span class="badge"><%= scalar @authors %></span>
             </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
             % my $i = 0;
-            % foreach my $aid (@author_ids){
-                <a class="btn btn-default" type="button" href="<%= url_for('authorseditid', id=>$aid)%>">
+            % foreach my $author (@authors){
+                <a class="btn btn-default" type="button" href="<%= url_for('edit_author', id=>$author->{id})%>">
                     <span class="glyphicon glyphicon-user"></span> 
-                    <%= get_master_for_id($aid) %> 
+                    <%= $author->{master} %> 
                     <i class="fa fa-external-link"></i> 
                 </a>
                 % $i++;

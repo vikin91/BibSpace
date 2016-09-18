@@ -280,6 +280,9 @@ subtest 'MEntry; process_authors' => sub {
             1 .. $num_authors );
         $tstr .= '}}';
         $en2->{bib} = $tstr;
+        
+        $en2->populate_from_bib();
+        $en2->save($dbh);
 
         my ($num_authors_created, $num_authors_assigned) = $en2->process_authors($dbh, 1);
         is( $num_authors_created, $num_authors, "Adding $num_authors authors" );

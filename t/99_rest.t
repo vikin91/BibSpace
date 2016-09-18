@@ -5,6 +5,7 @@ use Test::Mojo;
 use BibSpace;
 use BibSpace::Controller::Core;
 
+`rm test-backups/*sql`;
 
 ok(1);
 done_testing();

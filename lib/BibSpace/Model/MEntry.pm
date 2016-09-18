@@ -65,7 +65,8 @@ sub static_all {
     $sth->execute();
 
     while ( my $row = $sth->fetchrow_hashref() ) {
-        push @objs, MEntry->new(
+        push @objs,
+            MEntry->new(
             id              => $row->{id},
             entry_type      => $row->{entry_type},
             bibtex_key      => $row->{bibtex_key},
@@ -85,7 +86,7 @@ sub static_all {
             creation_time   => $row->{creation_time},
             modified_time   => $row->{modified_time},
             need_html_regen => $row->{need_html_regen},
-        );
+            );
     }
     return @objs;
 }
@@ -152,9 +153,9 @@ sub static_get {
 }
 ####################################################################################
 sub static_get_by_bibtex_key {
-    my $self        = shift;
-    my $dbh         = shift;
-    my $bibtex_key  = shift;
+    my $self       = shift;
+    my $dbh        = shift;
+    my $bibtex_key = shift;
 
     my $qry = "SELECT 
               id,
@@ -252,26 +253,15 @@ sub update {
     my $sth = $dbh->prepare($qry);
     try {
         $result = $sth->execute(
-            $self->{entry_type},
-            $self->{bibtex_key},
-            $self->{bibtex_type},
-            $self->{bib},
-            $self->{html},
-            $self->{html_bib},
-            $self->{abstract},
-            $self->{title},
-            $self->{hidden},
-            $self->{year},
-            $self->{month},
-            $self->{sort_month},
-            $self->{teams_str},
-            $self->{people_str},
-            $self->{tags_str},
+            $self->{entry_type}, $self->{bibtex_key}, $self->{bibtex_type},
+            $self->{bib},        $self->{html},       $self->{html_bib},
+            $self->{abstract},   $self->{title},      $self->{hidden},
+            $self->{year},       $self->{month},      $self->{sort_month},
+            $self->{teams_str},  $self->{people_str}, $self->{tags_str},
 
             # $self->{creation_time},
             # $self->{modified_time},
-            $self->{need_html_regen},
-            $self->{id}
+            $self->{need_html_regen}, $self->{id}
         );
         $sth->finish();
     }
@@ -311,20 +301,10 @@ sub insert {
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW(),?);";
     my $sth = $dbh->prepare($qry);
     $result = $sth->execute(
-        $self->{entry_type},
-        $self->{bibtex_key},
-        $self->{bibtex_type},
-        $self->{bib},
-        $self->{html},
-        $self->{html_bib},
-        $self->{abstract},
-        $self->{title},
-        $self->{hidden},
-        $self->{year},
-        $self->{month},
-        $self->{sort_month},
-        $self->{teams_str},
-        $self->{people_str},
+        $self->{entry_type}, $self->{bibtex_key}, $self->{bibtex_type},
+        $self->{bib}, $self->{html}, $self->{html_bib}, $self->{abstract},
+        $self->{title}, $self->{hidden}, $self->{year}, $self->{month},
+        $self->{sort_month}, $self->{teams_str}, $self->{people_str},
         $self->{tags_str},
 
         # $self->{creation_time},
@@ -493,7 +473,7 @@ sub get_bibtex_field_value {
 }
 ####################################################################################
 sub fix_month {
-    my $self = shift;
+    my $self         = shift;
     my $bibtex_entry = new Text::BibTeX::Entry();
     $bibtex_entry->parse_s( $self->{bib} );
 
@@ -563,23 +543,25 @@ sub fix_entry_type_based_on_tag {
 }
 ####################################################################################
 sub postprocess_updated {
-    my $self = shift;
-    my $dbh  = shift;
+    my $self     = shift;
+    my $dbh      = shift;
     my $bst_file = shift;
 
     $bst_file = $self->{bst_file} if !defined $bst_file;
 
-    warn "Warning, you use Mentry->postprocess_updated without valid bst file!" unless defined $bst_file;
+    warn
+        "Warning, you use Mentry->postprocess_updated without valid bst file!"
+        unless defined $bst_file;
 
     $self->process_tags($dbh);
     my $populated = $self->populate_from_bib();
     $self->fix_month();
-    $self->process_authors($dbh, 1);
+    $self->process_authors( $dbh, 1 );
 
-    $self->regenerate_html( $dbh, 0, $bst_file );    
+    $self->regenerate_html( $dbh, 0, $bst_file );
     $self->save($dbh);
 
-    return 1;                             # TODO: old code!
+    return 1;    # TODO: old code!
 }
 ####################################################################################
 sub generate_html {
@@ -592,11 +574,7 @@ sub generate_html {
 
     my $c = BibSpaceBibtexToHtml::BibSpaceBibtexToHtml->new();
     $self->{html} = $c->convert_to_html(
-        {   method => 'new',
-            bib    => $self->{bib},
-            bst    => $bst_file
-        }
-    );
+        { method => 'new', bib => $self->{bib}, bst => $bst_file } );
     $self->{warnings} = join( ', ', @{ $c->{warnings_arr} } );
 
     $self->{need_html_regen} = 0;
@@ -604,14 +582,15 @@ sub generate_html {
     return ( $self->{html}, $self->{bib} );
 }
 ####################################################################################
-sub regenerate_html {  
+sub regenerate_html {
     my $self     = shift;
     my $dbh      = shift;
     my $force    = shift;
     my $bst_file = shift;
 
     $bst_file = $self->{bst_file} if !defined $bst_file;
-    warn "Warning, you use Mentry->regenerate_html without valid bst file!" unless defined $bst_file;
+    warn "Warning, you use Mentry->regenerate_html without valid bst file!"
+        unless defined $bst_file;
 
     if ( $force == 1 or $self->{need_html_regen} == 1 ) {
         $self->populate_from_bib();
@@ -620,9 +599,8 @@ sub regenerate_html {
     }
 }
 ####################################################################################
-sub create_authors { 
+sub authors_from_bibtex {
     my $self = shift;
-    my $dbh  = shift;
 
     $self->populate_from_bib();
 
@@ -642,104 +620,154 @@ sub create_authors {
         @names = @n;
     }
 
+    my @author_names;
+    foreach my $name (@names){
+        push @author_names,  BibSpace::Controller::Core::create_user_id($name);
+    }
+    return @author_names;
+}
+####################################################################################
+sub create_authors {
+    my $self = shift;
+    my $dbh  = shift;
+
     my $num_authors_created = 0;
+    
+    foreach my $name ($self->authors_from_bibtex() ) {
+        my $author_candidate = MAuthor->static_get_by_name( $dbh, $name );
+        # such author does not exist
+        if ( !defined $author_candidate ) {
+            $author_candidate = MAuthor->new( uid => $name );
+            $author_candidate->save($dbh);
 
-    # authors need to be added to have their ids!!
-    for my $name (@names) {
-        my $uid = BibSpace::Controller::Core::create_user_id($name);
-        my $aid
-            = BibSpace::Controller::Core::get_author_id_for_uid( $dbh, $uid );
-
-        # if there is no such author
-        if ( $aid eq '-1' ) {    
-            
-            my $sth0 = $dbh->prepare(
-                'INSERT INTO Author(uid, master) VALUES(?, ?)');
-            $sth0->execute( $uid, $uid );
 
             ++$num_authors_created;
         }
-        $aid
-            = BibSpace::Controller::Core::get_author_id_for_uid( $dbh, $uid );
-        my $mid
-            = BibSpace::Controller::Core::get_master_id_for_author_id( $dbh,
-            $aid );
-        # if author has no other master, it is the master for itself
-        if ( $mid eq -1 ) {
-            $mid = $aid;
-        }
-        my $sth2 = $dbh->prepare('UPDATE Author SET master_id=? WHERE id=?');
-        $sth2->execute( $mid, $aid );
+        else {
+            # such author exists already
+            # we do nothing
 
+        }
     }
     return $num_authors_created;
 }
 ####################################################################################
+sub authors {
+    my $self = shift;
+    my $dbh  = shift;
+
+    die "MEntry::authors Calling authors on undefined or empty entry!" if !defined $self->{id} or $self->{id} < 0;
+    die "MEntry::authors Calling authors with no database hande!" unless defined $dbh;
+
+
+    my $qry
+        = "SELECT entry_id, author_id FROM Entry_to_Author WHERE entry_id = ?";
+    my $sth = $dbh->prepare_cached($qry);
+    $sth->execute( $self->{id} );
+
+    my @authors;
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        my $author = MAuthor->static_get( $dbh, $row->{author_id} );
+
+        push @authors, $author if defined $author;
+    }
+    return @authors;
+}
 ####################################################################################
-sub assign_authors { 
+sub assign_author {
+    my $self   = shift;
+    my $dbh    = shift;
+    my $author = shift;
+
+    if ( defined $author ) {
+        my $sth
+            = $dbh->prepare(
+            'INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)'
+            );
+        $sth->execute( $author->{id}, $self->{id} );
+        return 1;
+    }
+    return 0;
+}
+####################################################################################
+sub remove_author {
+    my $self   = shift;
+    my $dbh    = shift;
+    my $author = shift;
+
+    if ( defined $author ) {
+
+        my $sth
+            = $dbh->prepare(
+            'DELETE FROM Entry_to_Author WHERE entry_id = ? AND author_id = ?'
+            );
+        $sth->execute( $self->{id}, $author->{id} );
+        return 1;
+    }
+    return 0;
+}
+####################################################################################
+sub remove_all_authors {
+    my $self = shift;
+    my $dbh  = shift;
+
+    if ( defined $self->{id} ) {
+        my $sth
+            = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
+        $sth->execute( $self->{id} );
+    }
+}
+####################################################################################
+=item assign_existing_authors
+This function processes the authors from bibtex entries, 
+then searches for existing authors in database and 
+assigns them to the entry by modifying the database.
+
+Author will not be assigned if it does not extist in the DB !
+=cut 
+sub assign_existing_authors {
     my $self = shift;
     my $dbh  = shift;
 
     $self->populate_from_bib();
     my $bibtex_entry = new Text::BibTeX::Entry();
     $bibtex_entry->parse_s( $self->{bib} );
-
     my $entry_key = $self->{bibtex_key};
 
     my $num_authors_assigned = 0;
 
-    my $sth = undef;
-    $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
-    $sth->execute( $self->{id} ) if defined $self->{id} and $self->{id} > 0;
 
-    my @names;
+    $self->remove_all_authors($dbh);
 
-    if ( $bibtex_entry->exists('author') ) {
-        my @authors = $bibtex_entry->split('author');
-        my (@n) = $bibtex_entry->names('author');
-        @names = @n;
-    }
-    elsif ( $bibtex_entry->exists('editor') ) {
-        my @authors = $bibtex_entry->split('editor');
-        my (@n) = $bibtex_entry->names('editor');
-        @names = @n;
-    }
+    # We assume that entry has no authors, so $self->authors($dbh) cannot be used!
 
-    for my $name (@names) {
-        my $uid = BibSpace::Controller::Core::create_user_id($name);
-        my $aid
-            = BibSpace::Controller::Core::get_author_id_for_uid( $dbh, $uid );
-        my $mid
-            = BibSpace::Controller::Core::get_master_id_for_author_id( $dbh,
-            $aid );    #there tables are not filled yet!!
+    foreach my $name ($self->authors_from_bibtex() ) {
+        my $author = MAuthor->static_get_by_name( $dbh, $name );
 
-        if ( defined $mid and $mid != -1 ){              
-            my $sth3
-                = $dbh->prepare(
-                'INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)'
-                );
-            $sth3->execute( $mid, $self->{id} );
-            ++$num_authors_assigned;
-        }
+        my $num_assigned = 0;
+        $num_assigned = $self->assign_author( $dbh, $author ) if defined $author;
+        $num_authors_assigned = $num_authors_assigned + $num_assigned;
     }
     return $num_authors_assigned;
 }
 ####################################################################################
-sub process_authors {  
-    my $self = shift;
-    my $dbh  = shift;
-    my $create_authors  = shift // 0;
+sub process_authors {
+    my $self           = shift;
+    my $dbh            = shift;
+    my $create_authors = shift // 0;
 
     my $num_authors_created = 0;
-    $num_authors_created = $self->create_authors($dbh) if $create_authors == 1;
+    $num_authors_created = $self->create_authors($dbh)
+        if $create_authors == 1;
 
     my $num_authors_assigned = 0;
-    $num_authors_assigned = $self->assign_authors($dbh);
+    $num_authors_assigned = $self->assign_existing_authors($dbh);
 
-    return ($num_authors_created, $num_authors_assigned);
+    return ( $num_authors_created, $num_authors_assigned );
 }
 ####################################################################################
-sub process_tags {     
+sub process_tags {
     my $self = shift;
     my $dbh  = shift;
 
@@ -784,7 +812,7 @@ sub process_tags {
             $num_tags_added = $num_tags_added + $sth3->rows;
 
             my $tagid2 = -1;
-            my $t = MTag->static_get_by_name($dbh, $tag);
+            my $t = MTag->static_get_by_name( $dbh, $tag );
             $tagid2 = $t->{id} if defined $t;
 
             $sth3
@@ -990,11 +1018,12 @@ sub static_get_filter {
 ####################################################################################
 sub decodeLatex {
     my $self = shift;
-    if(defined $self->{title}){
-      $self->{title} =~ s/^\{//g;
-      $self->{title} =~ s/\}$//g;
-      # $self->{title} = decode( 'latex', $self->{title} );
-      # $self->{title} = decode( 'latex', $self->{title} );
+    if ( defined $self->{title} ) {
+        $self->{title} =~ s/^\{//g;
+        $self->{title} =~ s/\}$//g;
+
+        # $self->{title} = decode( 'latex', $self->{title} );
+        # $self->{title} = decode( 'latex', $self->{title} );
     }
 }
 ####################################################################################

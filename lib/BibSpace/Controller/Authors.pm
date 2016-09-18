@@ -23,7 +23,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
 ##############################################################################################################
-sub show { # refactored
+sub show {    # refactored
     my $self    = shift;
     my $dbh     = $self->app->db;
     my $visible = $self->param('visible');
@@ -34,14 +34,14 @@ sub show { # refactored
         $letter .= '%';
     }
 
-    my @authors = MAuthor->static_get_filter($dbh, $visible, $letter);
+    my @authors = MAuthor->static_get_filter( $dbh, $visible, $letter );
 
     my @letters = $self->get_set_of_first_letters($visible);
 
     $self->stash(
-        authors   => \@authors,
-        letters   => \@letters,
-        visible   => $visible
+        authors => \@authors,
+        letters => \@letters,
+        visible => $visible
     );
 
     $self->render( template => 'authors/authors' );
@@ -65,25 +65,40 @@ sub add_post {
     if ( defined $new_master ) {
 
         my $a = MAuthor->static_get_by_name( $dbh, $new_master );
-        
-        if(!defined $a){ # no such user exists yet
-            
-            $a = MAuthor->new(uid => $new_master);
+
+        if ( !defined $a ) {    # no such user exists yet
+
+            $a = MAuthor->new( uid => $new_master );
             $a->save($dbh);
 
             if ( !defined $a->{id} ) {
-                $self->flash(type=>'danger', msg =>"Error saving author. Saving to the database returned no insert row id.");
+                $self->flash(
+                    type => 'danger',
+                    msg =>
+                        "Error saving author. Saving to the database returned no insert row id."
+                );
                 $self->redirect_to( $self->url_for('add_author') );
                 return;
             }
-            $self->write_log( "Added new author with master: $new_master. Author id is ".$a->{id});
-            $self->flash(type=>'success', msg =>"Author added successfully!");
-            $self->redirect_to( $self->url_for('edit_author', id=>$a->{id})  );
-            return;   
+            $self->write_log(
+                "Added new author with master: $new_master. Author id is "
+                    . $a->{id} );
+            $self->flash(
+                type => 'success',
+                msg  => "Author added successfully!"
+            );
+            $self->redirect_to(
+                $self->url_for( 'edit_author', id => $a->{id} ) );
+            return;
         }
-        else { # such user already exists!
-            $self->write_log("Author with master: $new_master already exists!");
-            $self->flash( msg_type=>'warning', msg =>"Author with proposed master: $new_master already exists! Pick a different one.");
+        else {    # such user already exists!
+            $self->write_log(
+                "Author with master: $new_master already exists!");
+            $self->flash(
+                msg_type => 'warning',
+                msg =>
+                    "Author with proposed master: $new_master already exists! Pick a different one."
+            );
             $self->redirect_to( $self->url_for('add_author') );
             return;
         }
@@ -156,7 +171,8 @@ sub can_be_deleted {
     my $self = shift;
     my $id   = shift;
 
-    my $visibility = get_author_visibility_for_id( $self, $id );
+    my $author = MAuthor->static_get($dbh, $id);
+    my $visibility = $author->{display};
 
     my ( $teams_arr, $start_arr, $stop_arr, $team_id_arr )
         = get_teams_of_author( $self, $id );
@@ -205,17 +221,17 @@ sub remove_uid {
 sub edit_post {
     my $self = shift;
     my $dbh  = $self->app->db;
-
     my $id          = $self->param('id');
-    my $master      = get_master_for_id( $dbh, $id );
     my $new_master  = $self->param('new_master');
     my $new_user_id = $self->param('new_user_id');
 
     my $visibility = $self->param('visibility');
 
-    if ( defined $master ) {
+    my $author = MAuthor->static_get($dbh, $id);
+
+    if ( defined $author ) {
         if ( defined $new_master ) {
-            my $status = update_master_id( $self, $id, $new_master );
+            my $status = update_master_id( $self, $author->{id}, $new_master );
 
             # 0 OK
             # -1 conflict
@@ -236,25 +252,10 @@ sub edit_post {
 
         }
         elsif ( defined $visibility ) {
-            toggle_visibility( $self, $id );
+            $author->toggle_visibility($dbh);
         }
         elsif ( defined $new_user_id ) {
-            my $success
-                = add_new_user_id_to_master( $self, $id, $new_user_id );
-            if ( $success == 0 ) {
-                $self->write_log(
-                    "add_new_user_id_to_master for master id $id and new_user_id $new_user_id was succesfull."
-                );
-                say
-                    "add_new_user_id_to_master for master id $id and new_user_id $new_user_id was succesfull.";
-            }
-            else {
-                $self->write_log(
-                    "add_new_user_id_to_master for master id $id and new_user_id $new_user_id was UNSUCCESSFUL: such user already exists."
-                );
-                say
-                    "add_new_user_id_to_master for master id $id and new_user_id $new_user_id was UNSUCCESSFUL: such user already exists.";
-            }
+            $author->add_user_id($dbh, $new_user_id);
         }
     }
     $self->redirect_to( $self->url_for('/authors/edit/') . $id );
@@ -333,8 +334,6 @@ sub delete_author {
     my $dbh  = $self->app->db;
     my $id   = $self->param('id');
 
-    my $visibility = get_author_visibility_for_id( $self, $id );
-
     if ( defined $id and $id != -1 and can_be_deleted( $self, $id ) == 1 ) {
         delete_author_force( $self, $id );
         return;
@@ -363,7 +362,6 @@ sub do_delete_author_force {
     my $dbh  = $self->app->db;
     my $id   = shift;
 
-    my $visibility = get_author_visibility_for_id( $self, $id );
 
     if ( defined $id and $id != -1 ) {
         my $sth = $dbh->prepare('DELETE FROM Author WHERE master_id=?');
@@ -388,69 +386,44 @@ sub add_new_user_id_to_master {
     my $new_user_id = shift;
     my $dbh         = $self->app->db;
 
-    # checking if such an uid already exists
-    my $aid = get_author_id_for_uid( $dbh, $new_user_id );
-    my $master_str = get_master_for_id( $dbh, $id );
+    say "call: add_new_user_id_to_master id=$id new_user_id=$new_user_id";
 
-    my $sth = $dbh->prepare(
-        'INSERT IGNORE INTO Author(uid, master, master_id) VALUES(?, ?, ?)');
+    # Check if Author with $id can have added the $new_user_id
 
-    # adding only if doenst exist yet
-    if ( $aid eq '-1' ) {
-        $sth->execute( $new_user_id, $master_str, $id );
+    # candidate
+    my $author_candidate = MAuthor->static_get_by_name( $dbh, $new_user_id );
+
+    # existing author
+    my $author_obj = MAuthor->static_get( $dbh, $id );
+
+    if ( defined $author_candidate ) {
+
+        # author with new_user_id already exist
+        # move all entries of candidate to this author
+        $author_obj->move_entries_from_author($dbh, $author_candidate);
+
+        $author_candidate->{master} = $author_obj->{master};
+        $author_candidate->{master_id} = $author_obj->{master_id};
+
+        # TODO: cleanup author_candidate teams?
+
+        # return add_new_user_id_to_master_force( $self, $id, $new_user_id );
+    }
+    else {
+       # we add a new user and assign master and master_id from the author_obj
+       # create new user
+       # assign it to master
+        my $author_candidate = MAuthor->new(
+            uid       => $new_user_id,
+            master    => $author_obj->{master},
+            master_id => $author_obj->{master_id}
+        );
+        $author_candidate->save($dbh);
         return 0;
     }
-    else {
-        say
-            "add_new_user_id_to_master: author ID already exists. aid: $aid. Master for this ais is:  $master_str";
-        say "calling: add_new_user_id_to_master_force($id, $new_user_id)";
-        return add_new_user_id_to_master_force( $self, $id, $new_user_id );
-    }
+
 }
 
-##############################################################################################################
-sub add_new_user_id_to_master_force {
-    my $self        = shift;
-    my $id          = shift;
-    my $new_user_id = shift;
-    my $dbh         = $self->app->db;
-
-    # checking if such an uid already exists
-    my $aid = get_author_id_for_uid( $dbh, $new_user_id )
-        ;    # SELECT id FROM Author WHERE uid=?
-    my $master_str = get_master_for_id( $dbh, $id )
-        ;    # SELECT master FROM Author WHERE id=?
-
-    # aid - user id to be merged with id
-    my $is_new_id_master_of_other
-        = get_master_id_for_author_id( $dbh, $aid ) > 0;
-    say "aid $aid master_str $master_str";
-
-# my $sth = $dbh->prepare('INSERT IGNORE INTO Author(uid, master, master_id) VALUES(?, ?, ?)');
-# aid is <> than -1 if such author already exists
-    if ( $aid ne '-1' ) {
-
-        say "duplicate uid (user to be merged): ADD $aid TO $id";
-
-# master id (user to be merged with): $id
-# TODO: if you merge USER_2 Master ID wit USER_1 and USER_2 has other IDS, here you will get error
-
-        my $sth3 = $dbh->prepare(
-            'UPDATE Entry_to_Author SET author_id=? WHERE author_id=?');
-        $sth3->execute( $id, $aid );
-
-        my $sth4 = $dbh->prepare(
-            'UPDATE Author_to_Team SET author_id=? WHERE author_id=?');
-        $sth4->execute( $id, $aid );
-
-        do_delete_author_force( $self, $aid );
-
-        return add_new_user_id_to_master( $self, $id, $new_user_id );
-    }
-    else {
-        add_new_user_id_to_master( $self, $id, $new_user_id );
-    }
-}
 
 ##############################################################################################################
 sub remove_user_id_from_master {
@@ -606,7 +579,7 @@ sub reassign_authors_to_entries_and_create_authors {
 
 ##############################################################################################################
 
-sub toggle_visibility { # refactored 
+sub toggle_visibility {    # refactored
     my $self = shift;
     my $dbh  = $self->app->db;
     my $id   = $self->param('id');
