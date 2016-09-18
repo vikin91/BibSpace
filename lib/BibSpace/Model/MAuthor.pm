@@ -361,11 +361,15 @@ sub can_be_deleted {
     return 0;
 }
 ####################################################################################
-sub entries {
+sub entries
+ {
     my $self = shift;
     my $dbh  = shift;
 
+    warn "No database handle supplied!" unless defined $dbh;
+    return () unless defined $dbh;
     return () if !defined $self->{id} or $self->{id} < 0;
+    
 
     my $qry
         = "SELECT entry_id, author_id FROM Entry_to_Author WHERE author_id = ?";
@@ -387,7 +391,7 @@ sub move_entries_from_author {
     my $dbh         = shift;
     my $from_author = shift;
 
-    for ( my $entry = $from_author->entries() ) {
+    for my $entry ( $from_author->entries( $dbh ) ) {
         $entry->remove_author( $dbh, $from_author );
         $entry->assign_author( $dbh, $self );
 
