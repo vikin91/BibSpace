@@ -1,4 +1,4 @@
-package BibSpace v0.4.3;
+package BibSpace v0.4.4;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
@@ -26,7 +26,7 @@ use File::Spec;
 use Cwd;
 
 # for Makemake. Needs to be removed for Dist::Zilla
-# our $VERSION = '0.4.1';
+# our $VERSION = '0.4.4';
 
 # 0 4,12,20 * * * curl http://localhost:8081/cron/day
 # 0 2 * * * curl http://localhost:8081/cron/night

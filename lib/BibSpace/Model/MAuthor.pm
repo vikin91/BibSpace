@@ -360,6 +360,76 @@ sub can_be_deleted {
     return 1 if scalar @teams == 0 and $self->{display} == 0;
     return 0;
 }
+####################################################################################
+sub entries {
+    my $self = shift;
+    my $dbh  = shift;
+
+    return () if !defined $self->{id} or $self->{id} < 0;
+
+    my $qry
+        = "SELECT entry_id, author_id FROM Entry_to_Author WHERE author_id = ?";
+    my $sth = $dbh->prepare_cached($qry);
+    $sth->execute( $self->{id} );
+
+    my @entries;
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        my $entry = MEntry->static_get( $dbh, $row->{entry_id} );
+
+        push @entries, $entry if defined $entry;
+    }
+    return @entries;
+}
+####################################################################################
+sub move_entries_from_author {
+    my $self = shift;
+    my $dbh  = shift;
+    my $from_author  = shift;
+
+    for ( my $entry = $from_author->entries() ){
+        $entry->remove_author( $dbh, $from_author );
+        $entry->assign_author( $dbh, $self );
+
+    }
+}
+##############################################################################################################
+sub add_user_id {
+    my $self        = shift;
+    my $dbh         = shift;
+    my $new_user_id = shift;
+    
+
+    # Check if Author with $id can have added the $new_user_id
+
+    # candidate
+    my $author_candidate = MAuthor->static_get_by_name( $dbh, $new_user_id );
+
+    if ( defined $author_candidate ) {
+
+        # author with new_user_id already exist
+        # move all entries of candidate to this author
+        $self->move_entries_from_author($dbh, $author_candidate);
+
+        $author_candidate->{master}    = $self->{master};
+        $author_candidate->{master_id} = $self->{master_id};
+
+        # TODO: cleanup author_candidate teams?
+
+    }
+    else {
+       # we add a new user and assign master and master_id from the author_obj
+       # create new user
+       # assign it to master
+        $author_candidate = MAuthor->new(
+            uid       => $new_user_id,
+            master    => $self->{master},
+            master_id => $self->{master_id}
+        );
+    }
+    $author_candidate->save($dbh);
+
+}
 ################################################################################
 sub teams {
     my $self   = shift;

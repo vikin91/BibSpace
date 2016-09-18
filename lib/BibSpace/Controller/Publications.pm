@@ -1389,7 +1389,7 @@ sub show_authors_of_entry {
     my $html_preview = $mentry->{html};
     my $key          = $mentry->{bibtex_key};
 
-    my @authors         = $self->get_authors_of_entry($id);
+    my @authors         = $mentry->authors($dbh); # $self->get_authors_of_entry($id);
     my $teams_for_paper = get_set_of_teams_for_entry_id( $self, $id );
     my @teams           = $teams_for_paper->members;
 
@@ -1397,7 +1397,7 @@ sub show_authors_of_entry {
         eid        => $id,
         key        => $key,
         preview    => $html_preview,
-        author_ids => \@authors,
+        authors => \@authors,
         team_ids   => \@teams
     );
     $self->render( template => 'publications/show_authors' );

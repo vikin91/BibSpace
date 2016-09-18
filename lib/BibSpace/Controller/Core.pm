@@ -31,7 +31,7 @@ our @EXPORT = qw(
     get_key_from_bibtex_code
     random_string
     create_user_id
-    tune_html
+
     get_author_id_for_uid
     get_author_id_for_master
     get_master_for_id
@@ -62,7 +62,6 @@ our @EXPORT = qw(
     get_tags_for_team
     add_field_to_bibtex_code
     clean_tag_name
-    get_author_visibility_for_id
     get_html_for_entry_id
     get_exceptions_for_entry_id
     get_year_for_entry_id
@@ -167,73 +166,57 @@ sub nohtml {
 # clean_ugly_bibtex_fileds_for_all_entries
 ####################################################################################
 
-sub assign_entry_to_existing_authors_no_add {    #TODO: refactor to MEntry
-    my $dbh  = shift;
-    my $entry = shift;
+# sub assign_entry_to_existing_authors_no_add {    #TODO: refactor to MEntry
+#     my $dbh  = shift;
+#     my $entry = shift;
 
-    my $key = $entry->key;
-    my $e = MEntry->static_get_by_bibtex_key( $dbh, $key );
+#     my $key = $entry->key;
+#     my $e = MEntry->static_get_by_bibtex_key( $dbh, $key );
 
-    return unless defined $e;
+#     return unless defined $e;
 
-    # $dbh->begin_work; #transaction
+#     # $dbh->begin_work; #transaction
 
-    my $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
-    $sth->execute( $e->{id} );
+#     my $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
+#     $sth->execute( $e->{id} );
 
-    my @names;
-    if ( $entry->exists('author') ) {
-        my @authors = $entry->split('author');
-        my (@n) = $entry->names('author');
-        @names = @n;
-    }
-    elsif ( $entry->exists('editor') ) {
-        my @authors = $entry->split('editor');
-        my (@n) = $entry->names('editor');
-        @names = @n;
-    }
+#     my @names;
+#     if ( $entry->exists('author') ) {
+#         my @authors = $entry->split('author');
+#         my (@n) = $entry->names('author');
+#         @names = @n;
+#     }
+#     elsif ( $entry->exists('editor') ) {
+#         my @authors = $entry->split('editor');
+#         my (@n) = $entry->names('editor');
+#         @names = @n;
+#     }
 
-    for my $name (@names) {
-        my $uid = create_user_id($name);
-        my $aid = get_author_id_for_uid( $dbh, $uid );
-        my $mid = get_master_id_for_author_id( $dbh, $aid );
+#     for my $name (@names) {
+#         my $uid = create_user_id($name);
+#         my $aid = get_author_id_for_uid( $dbh, $uid );
+#         my $mid = get_master_id_for_author_id( $dbh, $aid );
 
-        if ( defined $mid and $mid != -1 ) {
+#         if ( defined $mid and $mid != -1 ) {
 
-# my $sth3 = $dbh->prepare('INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
-            my $sth3
-                = $dbh->prepare(
-                'INSERT IGNORE Entry_to_Author(author_id, entry_id) VALUES(?, ?)'
-                );
-            if ( defined $sth3 ) {
-                $sth3->execute( $mid, $e->{id} );
-                $sth3->finish();
-            }
-            else {
-                warn
-                    'INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?). FIXME Core.pm';
-            }
-        }
-    }
+# # my $sth3 = $dbh->prepare('INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
+#             my $sth3
+#                 = $dbh->prepare(
+#                 'INSERT IGNORE Entry_to_Author(author_id, entry_id) VALUES(?, ?)'
+#                 );
+#             if ( defined $sth3 ) {
+#                 $sth3->execute( $mid, $e->{id} );
+#                 $sth3->finish();
+#             }
+#             else {
+#                 warn
+#                     'INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?). FIXME Core.pm';
+#             }
+#         }
+#     }
+#     # $dbh->commit; #end transaction
+# }
 
-    # $dbh->commit; #end transaction
-}
-################################################################################
-sub get_author_visibility_for_id {    #TODO: refactor to MAuthor
-    my $self = shift;
-    my $id   = shift;
-
-    my $dbh = $self->app->db;
-
-    my $sth;
-    $sth = $dbh->prepare("SELECT display FROM Author WHERE id=?");
-    $sth->execute($id);
-
-    my $row  = $sth->fetchrow_hashref();
-    my $disp = $row->{display};
-
-    return $disp;
-}
 ################################################################################
 ################################################################################
 sub get_types_for_landing_page {    #TODO: refactor to MType
@@ -520,13 +503,18 @@ sub get_author_id_for_uid {
     my $dbh    = shift;
     my $master = shift;
 
-    my $sth = $dbh->prepare("SELECT id FROM Author WHERE uid=?");
-    $sth->execute($master);
+    my $author_obj = MAuthor->static_get_by_name( $dbh, $master );
 
-    my $row = $sth->fetchrow_hashref();
-    my $id = $row->{id} || -1;
-    print "ID = -1 for author $master\n" unless defined $id;
-    return $id;
+    warn "Using Core::get_author_id_for_uid is deprecated. Use MAuthor->static_get_by_name instead!";
+    return $author_obj->{id} or -1;
+
+    # my $sth = $dbh->prepare("SELECT id FROM Author WHERE uid=?");
+    # $sth->execute($master);
+
+    # my $row = $sth->fetchrow_hashref();
+    # my $id = $row->{id} || -1;
+    # print "ID = -1 for author $master\n" unless defined $id;
+    # return $id;
 }
 ##########################################################################
 sub get_author_id_for_master {

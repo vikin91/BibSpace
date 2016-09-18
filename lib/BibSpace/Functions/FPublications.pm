@@ -145,7 +145,7 @@ sub Fhandle_add_edit_publication {
         else {              #adding
             $status_code_str = 'ADD_OK';
         }
-
+        $e->generate_html($bst_file);
         $e->populate_from_bib();
         $e->fix_month();
         $e->postprocess_updated($dbh, $bst_file);    # this has optional save

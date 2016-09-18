@@ -261,8 +261,8 @@ sub register {
         author_is_visible => sub {
             my $self = shift;
             my $id   = shift;
-
-            return get_author_visibility_for_id( $self, $id );
+            my $author = MAuthor->static_get($self->app->db, $id);
+            return $author->{display};
         }
     );
 
