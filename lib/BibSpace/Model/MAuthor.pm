@@ -383,11 +383,11 @@ sub entries {
 }
 ####################################################################################
 sub move_entries_from_author {
-    my $self = shift;
-    my $dbh  = shift;
-    my $from_author  = shift;
+    my $self        = shift;
+    my $dbh         = shift;
+    my $from_author = shift;
 
-    for ( my $entry = $from_author->entries() ){
+    for ( my $entry = $from_author->entries() ) {
         $entry->remove_author( $dbh, $from_author );
         $entry->assign_author( $dbh, $self );
 
@@ -398,7 +398,7 @@ sub add_user_id {
     my $self        = shift;
     my $dbh         = shift;
     my $new_user_id = shift;
-    
+
 
     # Check if Author with $id can have added the $new_user_id
 
@@ -409,7 +409,7 @@ sub add_user_id {
 
         # author with new_user_id already exist
         # move all entries of candidate to this author
-        $self->move_entries_from_author($dbh, $author_candidate);
+        $self->move_entries_from_author( $dbh, $author_candidate );
 
         $author_candidate->{master}    = $self->{master};
         $author_candidate->{master_id} = $self->{master_id};
@@ -432,8 +432,8 @@ sub add_user_id {
 }
 ################################################################################
 sub teams {
-    my $self   = shift;
-    my $dbh    = shift;
+    my $self = shift;
+    my $dbh  = shift;
 
 
     my $qry = "SELECT author_id, team_id, start, stop
@@ -441,13 +441,15 @@ sub teams {
             WHERE author_id=?";
 
     my $sth = $dbh->prepare($qry);
-    $sth->execute($self->{id});
+    $sth->execute( $self->{id} );
 
     my @teams;
     while ( my $row = $sth->fetchrow_hashref() ) {
-        my $team = MTeam->static_get( $dbh, $row->{team_id} ) if defined $row->{team_id} and $row->{team_id} ne '';
-        
+        my $team = MTeam->static_get( $dbh, $row->{team_id} )
+            if defined $row->{team_id} and $row->{team_id} ne '';
+
         push @teams, $team if defined $team;
+
         # my $start = $row->{start};
         # my $stop  = $row->{stop};
     }

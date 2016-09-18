@@ -170,8 +170,9 @@ sub edit_author {
 sub can_be_deleted {
     my $self = shift;
     my $id   = shift;
+    my $dbh  = $self->app->db;
 
-    my $author = MAuthor->static_get($dbh, $id);
+    my $author = MAuthor->static_get( $dbh, $id );
     my $visibility = $author->{display};
 
     my ( $teams_arr, $start_arr, $stop_arr, $team_id_arr )
@@ -219,19 +220,20 @@ sub remove_uid {
 ##############################################################################################################
 ### POST like for HTML forms, not a blog post
 sub edit_post {
-    my $self = shift;
-    my $dbh  = $self->app->db;
+    my $self        = shift;
+    my $dbh         = $self->app->db;
     my $id          = $self->param('id');
     my $new_master  = $self->param('new_master');
     my $new_user_id = $self->param('new_user_id');
 
     my $visibility = $self->param('visibility');
 
-    my $author = MAuthor->static_get($dbh, $id);
+    my $author = MAuthor->static_get( $dbh, $id );
 
     if ( defined $author ) {
         if ( defined $new_master ) {
-            my $status = update_master_id( $self, $author->{id}, $new_master );
+            my $status
+                = update_master_id( $self, $author->{id}, $new_master );
 
             # 0 OK
             # -1 conflict
@@ -255,7 +257,7 @@ sub edit_post {
             $author->toggle_visibility($dbh);
         }
         elsif ( defined $new_user_id ) {
-            $author->add_user_id($dbh, $new_user_id);
+            $author->add_user_id( $dbh, $new_user_id );
         }
     }
     $self->redirect_to( $self->url_for('/authors/edit/') . $id );
@@ -400,9 +402,9 @@ sub add_new_user_id_to_master {
 
         # author with new_user_id already exist
         # move all entries of candidate to this author
-        $author_obj->move_entries_from_author($dbh, $author_candidate);
+        $author_obj->move_entries_from_author( $dbh, $author_candidate );
 
-        $author_candidate->{master} = $author_obj->{master};
+        $author_candidate->{master}    = $author_obj->{master};
         $author_candidate->{master_id} = $author_obj->{master_id};
 
         # TODO: cleanup author_candidate teams?

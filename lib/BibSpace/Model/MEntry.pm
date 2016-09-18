@@ -621,8 +621,8 @@ sub authors_from_bibtex {
     }
 
     my @author_names;
-    foreach my $name (@names){
-        push @author_names,  BibSpace::Controller::Core::create_user_id($name);
+    foreach my $name (@names) {
+        push @author_names, BibSpace::Controller::Core::create_user_id($name);
     }
     return @author_names;
 }
@@ -632,9 +632,10 @@ sub create_authors {
     my $dbh  = shift;
 
     my $num_authors_created = 0;
-    
-    foreach my $name ($self->authors_from_bibtex() ) {
+
+    foreach my $name ( $self->authors_from_bibtex() ) {
         my $author_candidate = MAuthor->static_get_by_name( $dbh, $name );
+
         # such author does not exist
         if ( !defined $author_candidate ) {
             $author_candidate = MAuthor->new( uid => $name );
@@ -656,8 +657,11 @@ sub authors {
     my $self = shift;
     my $dbh  = shift;
 
-    die "MEntry::authors Calling authors on undefined or empty entry!" if !defined $self->{id} or $self->{id} < 0;
-    die "MEntry::authors Calling authors with no database hande!" unless defined $dbh;
+    die "MEntry::authors Calling authors on undefined or empty entry!"
+        if !defined $self->{id}
+        or $self->{id} < 0;
+    die "MEntry::authors Calling authors with no database hande!"
+        unless defined $dbh;
 
 
     my $qry
@@ -719,6 +723,7 @@ sub remove_all_authors {
     }
 }
 ####################################################################################
+
 =item assign_existing_authors
 This function processes the authors from bibtex entries, 
 then searches for existing authors in database and 
@@ -726,6 +731,7 @@ assigns them to the entry by modifying the database.
 
 Author will not be assigned if it does not extist in the DB !
 =cut 
+
 sub assign_existing_authors {
     my $self = shift;
     my $dbh  = shift;
@@ -740,13 +746,14 @@ sub assign_existing_authors {
 
     $self->remove_all_authors($dbh);
 
-    # We assume that entry has no authors, so $self->authors($dbh) cannot be used!
+# We assume that entry has no authors, so $self->authors($dbh) cannot be used!
 
-    foreach my $name ($self->authors_from_bibtex() ) {
+    foreach my $name ( $self->authors_from_bibtex() ) {
         my $author = MAuthor->static_get_by_name( $dbh, $name );
 
         my $num_assigned = 0;
-        $num_assigned = $self->assign_author( $dbh, $author ) if defined $author;
+        $num_assigned = $self->assign_author( $dbh, $author )
+            if defined $author;
         $num_authors_assigned = $num_authors_assigned + $num_assigned;
     }
     return $num_authors_assigned;
