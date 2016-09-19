@@ -21,12 +21,12 @@ Visit [hex64.com](http://www.hex64.com/) and click backend/frontend demo to have
 BibSpace is currently undergoing serious refactoring. I try to keep current status up to date in [BibSpace Trelo Board](https://trello.com/b/yQ2VPiQ3/bibspace)
 
 Goals of the ongoing refactoring:
-- provide clean MVC without SQL in the controller
-– Apply Perl Object-Oriented code design 
-– Improve code orthogonality
-– Remove code duplication
-– Simplify templates thanks to OO
-- (Future) Provide BibSpace API and separate frontend and backend
+* provide clean MVC without SQL in the controller
+* Apply Perl Object-Oriented code design 
+* Improve code orthogonality
+* Remove code duplication
+* Simplify templates thanks to OO
+* (Future) Provide BibSpace API and separate frontend and backend
 
 
 
