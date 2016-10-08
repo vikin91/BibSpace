@@ -40,6 +40,7 @@ our @EXPORT = qw(
     add_team_for_author
     remove_team_for_author
     uniq
+    uniqlc
     get_team_for_id
     get_team_id
     get_master_id_for_uid
@@ -58,8 +59,6 @@ our @EXPORT = qw(
     nohtml
     get_author_ids_for_tag_id
     get_author_ids_for_tag_id_and_team
-    get_tags_for_author
-    get_tags_for_team
     add_field_to_bibtex_code
     clean_tag_name
     get_html_for_entry_id
@@ -152,6 +151,10 @@ sub uniq {
     return keys %{ { map { $_ => 1 } @_ } };
 }
 ################################################################################
+sub uniqlc {
+    return keys %{ { map { lc $_ => 1 } @_ } };
+}
+################################################################################
 sub nohtml {
     my $key  = shift;
     my $type = shift;
@@ -162,60 +165,7 @@ sub nohtml {
         . "($type) $key</span>" . "<BR>";
 }
 
-####################################################################################
-# clean_ugly_bibtex_fileds_for_all_entries
-####################################################################################
 
-# sub assign_entry_to_existing_authors_no_add {    #TODO: refactor to MEntry
-#     my $dbh  = shift;
-#     my $entry = shift;
-
-#     my $key = $entry->key;
-#     my $e = MEntry->static_get_by_bibtex_key( $dbh, $key );
-
-#     return unless defined $e;
-
-#     # $dbh->begin_work; #transaction
-
-#     my $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
-#     $sth->execute( $e->{id} );
-
-#     my @names;
-#     if ( $entry->exists('author') ) {
-#         my @authors = $entry->split('author');
-#         my (@n) = $entry->names('author');
-#         @names = @n;
-#     }
-#     elsif ( $entry->exists('editor') ) {
-#         my @authors = $entry->split('editor');
-#         my (@n) = $entry->names('editor');
-#         @names = @n;
-#     }
-
-#     for my $name (@names) {
-#         my $uid = create_user_id($name);
-#         my $aid = get_author_id_for_uid( $dbh, $uid );
-#         my $mid = get_master_id_for_author_id( $dbh, $aid );
-
-#         if ( defined $mid and $mid != -1 ) {
-
-# # my $sth3 = $dbh->prepare('INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)');
-#             my $sth3
-#                 = $dbh->prepare(
-#                 'INSERT IGNORE Entry_to_Author(author_id, entry_id) VALUES(?, ?)'
-#                 );
-#             if ( defined $sth3 ) {
-#                 $sth3->execute( $mid, $e->{id} );
-#                 $sth3->finish();
-#             }
-#             else {
-#                 warn
-#                     'INSERT OR IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?). FIXME Core.pm';
-#             }
-#         }
-#     }
-#     # $dbh->commit; #end transaction
-# }
 
 ################################################################################
 ################################################################################
@@ -733,99 +683,9 @@ sub get_author_ids_for_tag_id_and_team {
 
     return @author_ids;
 }
+
 ################################################################################
-sub get_tags_for_author {
 
-    #todo: objectify!
-    my $self      = shift;
-    my $master_id = shift;
-    my $type      = shift || 1;
-    my $dbh       = $self->app->db;
-
-    my $qry = "SELECT DISTINCT Entry_to_Tag.tag_id, Tag.name 
-            FROM Entry_to_Author 
-            LEFT JOIN Entry_to_Tag ON Entry_to_Author.entry_id = Entry_to_Tag.entry_id 
-            LEFT JOIN Tag ON Entry_to_Tag.tag_id = Tag.id 
-            WHERE Entry_to_Author.author_id=? 
-            AND Entry_to_Tag.tag_id IS NOT NULL
-            AND Tag.type = ?
-            ORDER BY Tag.name ASC";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $master_id, $type );
-
-    my @tag_ids;
-    my @tags;
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $tag_id = $row->{tag_id};
-        my $tag    = $row->{name};
-
-        push @tag_ids, $tag_id if defined $tag_id;
-        push @tags,    $tag    if defined $tag;
-
-    }
-
-    return ( \@tag_ids, \@tags );
-}
-################################################################################
-sub get_tags_for_team {
-    my $self   = shift;
-    my $teamid = shift;
-    my $type   = shift || 1;
-    my $dbh    = $self->app->db;
-
-    my @params;
-
-    my $qry
-        = "SELECT DISTINCT Tag.name as tagname, Tag.id as tagid, Entry.year
-                FROM Entry
-                LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
-                LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
-                LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
-                LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
-                LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
-                LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id 
-                WHERE Entry.bibtex_key IS NOT NULL 
-                AND Tag.type = ?";
-
-    push @params, $type;
-
-    if ( defined $teamid ) {
-        push @params, $teamid;
-        push @params, $teamid;
-
-        # push @params, $teamid;
-        # $qry .= "AND Exceptions_Entry_to_Team.team_id=?  ";
-        $qry
-            .= "AND ((Exceptions_Entry_to_Team.team_id=? ) OR (Author_to_Team.team_id=? AND start <= Entry.year  AND (stop >= Entry.year OR stop = 0))) ";
-    }
-    $qry .= "ORDER BY Entry.year DESC";
-
-    my $sth = $dbh->prepare_cached($qry);
-    $sth->execute(@params);
-
-    my @tag_ids;
-    my @tags;
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $tag_id = $row->{tagid};
-        my $tag    = $row->{tagname};
-
-        if ( grep( /^$tag_id$/, @tag_ids ) ) {
-
-            # already exists!
-        }
-        else {
-            push @tag_ids, $tag_id if defined $tag_id;
-            push @tags,    $tag    if defined $tag;
-        }
-
-    }
-
-    return ( \@tag_ids, \@tags );
-}
-####################################################################################
 sub add_field_to_bibtex_code {
     my $dbh   = shift;
     my $eid   = shift;

@@ -288,10 +288,10 @@ sub all_without_tag_for_author {
     }
 
     my $msg
-        = "This list contains papers with no tags (of type $tagtype) assigned. Use this list to tag the untagged papers! ";
+        = "This list contains papers that miss tags of type $tagtype. ";
 
     my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->flas( type => 'info ', msg => $msg );
+    $self->flash( type => 'info ', msg => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
@@ -317,9 +317,7 @@ sub all_without_author {
 
     my $msg
         = "This list contains papers, that are currently not assigned to any of authors.
-            This doesn't mean that they don't have authors.
-            Maybe some authors of the papers need to have their user ids corrected?
-            Even if this list is empty, some authors might need have their user ids adjusted!";
+            This doesn't mean that they don't have authors.";
 
     my @objs = Fget_publications_core_from_array_ref( $self, \@array );
     $self->stash( msg     => $msg );
@@ -333,7 +331,7 @@ sub show_unrelated_to_team {
     my $self    = shift;
     my $team_id = $self->param('teamid');
 
-    $self->write_log("Displaying entries unrelated to team with it $team_id");
+    $self->write_log("Displaying entries unrelated to team with it $team_id.");
 
     my $dbh = $self->app->db;
 

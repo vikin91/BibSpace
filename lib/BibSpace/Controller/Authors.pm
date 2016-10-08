@@ -112,56 +112,52 @@ sub edit_author {
     my $id   = $self->param('id');
 
     my $dbh = $self->app->db;
-    my $master = get_master_for_id( $dbh, $id );
+    my $author = MAuthor->static_get( $dbh, $id );
 
-    $self->write_log("edit_author: master: $master. id: $id.");
 
-    my @uids;
-    my @aids;
 
-    my $qry = "SELECT master, uid, id, display
-               FROM Author 
-               WHERE master_id=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($id);
+    # my $master = get_master_for_id( $dbh, $id );
 
-    my $disp = 0;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $uid = $row->{uid} || "no_id";
-        my $aid = $row->{id}  || "-1";
-        $disp = 1 if $row->{display} == 1;
-        push @uids, $uid;
-        push @aids, $aid;
-    }
+    # $self->write_log("edit_author: master: $master. id: $id.");
 
-    if ( scalar @aids == 0 or $aids[0] eq '-1' ) {
-        $self->flash( msg => "Author with id $id does not exist!" );
-        $self->redirect_to( $self->url_for('/authors') );
+    # my @uids;
+    # my @aids;
+
+    # my $qry = "SELECT master, uid, id, display
+    #            FROM Author 
+    #            WHERE master_id=?";
+    # my $sth = $dbh->prepare($qry);
+    # $sth->execute($id);
+
+    # my $disp = 0;
+    # while ( my $row = $sth->fetchrow_hashref() ) {
+    #     my $uid = $row->{uid} || "no_id";
+    #     my $aid = $row->{id}  || "-1";
+    #     $disp = 1 if $row->{display} == 1;
+    #     push @uids, $uid;
+    #     push @aids, $aid;
+    # }
+
+    if ( !defined $author ) {
+        $self->flash( msg => "Author with id $id does not exist!" ,
+                      msg_type => "danger" );
+        $self->redirect_to( $self->url_for('all_authors') );
     }
     else {
-        my ( $all_teams_arr, $all_teams_ids_arr ) = get_all_teams($dbh);
 
-        my ( $teams_arr, $start_arr, $stop_arr, $team_id_arr )
-            = get_teams_of_author( $self, $id );
+        my @all_teams    = MTeam->static_all( $dbh );
+        my @author_teams = $author->teams( $dbh );
+        my @author_tags  = $author->tags( $dbh );
 
-        my ( $tag_ids_arr_ref, $tags_arr_ref )
-            = get_tags_for_author( $self, $id );
+        my @minor_authors = $author->all_author_user_ids($dbh);
 
         $self->stash(
-            master        => $master,
-            id            => $id,
-            uids          => \@uids,
-            aids          => \@aids,
-            disp          => $disp,
-            teams         => $teams_arr,
-            team_ids      => $team_id_arr,
-            start_arr     => $start_arr,
-            stop_arr      => $stop_arr,
+            author        => $author,
+            minor_authors => \@minor_authors,
+            teams         => \@author_teams,
             exit_code     => '',
-            tag_ids       => $tag_ids_arr_ref,
-            tags          => $tags_arr_ref,
-            all_teams     => $all_teams_arr,
-            all_teams_ids => $all_teams_ids_arr
+            tags          => \@author_tags,
+            all_teams     => \@all_teams
         );
         $self->render( template => 'authors/edit_author' );
     }

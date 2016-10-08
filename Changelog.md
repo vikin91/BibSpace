@@ -1,5 +1,10 @@
 ### Changelog ###
 
+#### v0.4.5 08-10.2016 ####
+* Code refactoring - towards OO design and getting rid of core.pm - edit_author, authors, tags
+* Various bugfixes, e.g., showing publications with no tag for autor no longer returns 404.
+
+
 #### v0.4.4 18-09.2016 ####
 * Code refactoring - towards OO design and getting rid of core.pm
 * Bugfix - saving publication creates now authors and provides updated preview

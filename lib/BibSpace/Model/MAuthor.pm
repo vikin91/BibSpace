@@ -69,6 +69,7 @@ sub static_all_masters {
     }
     return @objs;
 }
+
 ####################################################################################
 sub static_get {
     my $self = shift;
@@ -132,6 +133,34 @@ sub static_get_filter {
     $sth->execute(@params);
 
     my @objs;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        my $obj = MAuthor->new(
+            id        => $row->{id},
+            uid       => $row->{uid},
+            display   => $row->{display},
+            master    => $row->{master},
+            master_id => $row->{master_id}
+        );
+        push @objs, $obj;
+    }
+    return @objs;
+}
+####################################################################################
+sub all_author_user_ids {
+    my $self = shift;
+    my $dbh  = shift;
+
+    my $qry = "SELECT 
+            id,
+            uid,
+            display,
+            master,
+            master_id
+        FROM Author WHERE master_id=?";
+    my @objs;
+    my $sth = $dbh->prepare($qry);
+    $sth->execute( $self->{master_id} );
+
     while ( my $row = $sth->fetchrow_hashref() ) {
         my $obj = MAuthor->new(
             id        => $row->{id},
@@ -361,15 +390,14 @@ sub can_be_deleted {
     return 0;
 }
 ####################################################################################
-sub entries
- {
+sub entries {
     my $self = shift;
     my $dbh  = shift;
 
     warn "No database handle supplied!" unless defined $dbh;
     return () unless defined $dbh;
     return () if !defined $self->{id} or $self->{id} < 0;
-    
+
 
     my $qry
         = "SELECT entry_id, author_id FROM Entry_to_Author WHERE author_id = ?";
@@ -391,7 +419,7 @@ sub move_entries_from_author {
     my $dbh         = shift;
     my $from_author = shift;
 
-    for my $entry ( $from_author->entries( $dbh ) ) {
+    for my $entry ( $from_author->entries($dbh) ) {
         $entry->remove_author( $dbh, $from_author );
         $entry->assign_author( $dbh, $self );
 
@@ -458,6 +486,35 @@ sub teams {
         # my $stop  = $row->{stop};
     }
     return @teams;
+}
+####################################################################################
+####################################################################################
+sub tags {
+
+    my $self = shift;
+    my $dbh  = shift;
+    my $type = shift || 1;
+
+    my $qry = "SELECT DISTINCT Entry_to_Tag.tag_id, Tag.name 
+            FROM Entry_to_Author 
+            LEFT JOIN Entry_to_Tag ON Entry_to_Author.entry_id = Entry_to_Tag.entry_id 
+            LEFT JOIN Tag ON Entry_to_Tag.tag_id = Tag.id 
+            WHERE Entry_to_Author.author_id=? 
+            AND Entry_to_Tag.tag_id IS NOT NULL
+            AND Tag.type = ?
+            ORDER BY Tag.name ASC";
+
+    my $sth = $dbh->prepare($qry);
+    $sth->execute( $self->{master_id}, $type );
+
+    my @tags;
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        my $tag = MTag->static_get( $dbh, $row->{tag_id} );
+        push @tags, $tag if defined $tag;
+
+    }
+    return @tags;
 }
 ####################################################################################
 no Moose;

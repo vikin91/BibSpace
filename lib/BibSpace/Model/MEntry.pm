@@ -1096,12 +1096,22 @@ sub add_tags {
             $t->save($dbh);
         }
         $t = MTag->static_get_by_name( $dbh, $tn );
-
-        my $sth = $dbh->prepare(
-            "INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
-        my $added = $sth->execute( $self->{id}, $t->{id} );
-        $num_added = $num_added + $added;
+        $num_added = $num_added + $self->assign_tag($dbh, $t);
     }
+    return $num_added;
+}
+####################################################################################
+sub assign_tag {
+    my $self              = shift;
+    my $dbh               = shift;
+    my $tag               = shift;
+
+    my $num_added = 0;
+
+    return 0 if !defined $self->{id} or $self->{id} < 0 or !defined $tag or $tag->{id} <= 0;
+
+    my $sth = $dbh->prepare("INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
+    $num_added = $sth->execute( $self->{id}, $tag->{id} );
     return $num_added;
 }
 ####################################################################################
