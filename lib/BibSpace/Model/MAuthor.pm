@@ -173,6 +173,42 @@ sub all_author_user_ids {
     }
     return @objs;
 }
+################################################################################
+sub static_all_with_tag_and_team {
+    my $self         = shift;
+    my $dbh          = shift;
+    my $tag          = shift;
+    my $team         = shift;
+    my $current_year = shift // BibSpace::Controller::Core::get_current_year();
+
+    my $qry = "SELECT DISTINCT Entry_to_Author.author_id
+            FROM Entry_to_Author 
+            LEFT JOIN Entry_to_Tag ON Entry_to_Author.entry_id = Entry_to_Tag.entry_id 
+            LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
+            WHERE Entry_to_Tag.tag_id =? 
+            AND Entry_to_Author.author_id IS NOT NULL
+            AND Entry_to_Author.author_id IN (
+                SELECT DISTINCT (author_id)
+                FROM Author_to_Team 
+                JOIN Author 
+                ON Author.master_id = Author_to_Team.author_id
+                WHERE team_id=?
+                AND Author_to_Team.start <= ?
+                AND ((Author_to_Team.stop = 0) OR (Author_to_Team.stop >= ?))
+            )";
+
+    my $sth = $dbh->prepare($qry);
+    $sth->execute( $tag->{id}, $team->{id}, $current_year, $current_year );
+
+    my @result;
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        push @result, MAuthor->static_get( $dbh, $row->{author_id}) ;
+
+    }
+
+    return @result;
+}
 ####################################################################################
 sub update {
     my $self = shift;
@@ -181,7 +217,7 @@ sub update {
     my $result = "";
 
     if ( !defined $self->{id} ) {
-        say
+        warn
             "Cannot update. MAuthor id not set. The entry may not exist in the DB. Returning -1. Should never happen!";
         return -1;
     }

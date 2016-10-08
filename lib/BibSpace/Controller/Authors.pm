@@ -116,27 +116,6 @@ sub edit_author {
 
 
 
-    # my $master = get_master_for_id( $dbh, $id );
-
-    # $self->write_log("edit_author: master: $master. id: $id.");
-
-    # my @uids;
-    # my @aids;
-
-    # my $qry = "SELECT master, uid, id, display
-    #            FROM Author 
-    #            WHERE master_id=?";
-    # my $sth = $dbh->prepare($qry);
-    # $sth->execute($id);
-
-    # my $disp = 0;
-    # while ( my $row = $sth->fetchrow_hashref() ) {
-    #     my $uid = $row->{uid} || "no_id";
-    #     my $aid = $row->{id}  || "-1";
-    #     $disp = 1 if $row->{display} == 1;
-    #     push @uids, $uid;
-    #     push @aids, $aid;
-    # }
 
     if ( !defined $author ) {
         $self->flash( msg => "Author with id $id does not exist!" ,
@@ -171,9 +150,7 @@ sub can_be_deleted {
     my $author = MAuthor->static_get( $dbh, $id );
     my $visibility = $author->{display};
 
-    my ( $teams_arr, $start_arr, $stop_arr, $team_id_arr )
-        = get_teams_of_author( $self, $id );
-    my $num_teams = scalar @$teams_arr;
+    my $num_teams = scalar $author->teams($dbh);
 
     return 1 if $num_teams == 0 and $visibility == 0;
     return 0;

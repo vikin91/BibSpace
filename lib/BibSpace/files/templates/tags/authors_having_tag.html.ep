@@ -12,7 +12,7 @@
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-lg-2 col-md-2 col-xs-2">
-            <span href ="#" class="btn btn-default" title=""><i class="fa fa-tags"></i> Authors having papers with tag <i><%= $tag %></i></span>
+            <span href ="#" class="btn btn-default" title=""><i class="fa fa-tags"></i> Authors having papers with tag <i><%= $tag->{name} %></i></span>
         </div>
     </div>
     <br>
@@ -23,22 +23,18 @@
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            %foreach my $author_id (@$author_ids){
+            %foreach my $author (@$authors){
                 <div class="btn-group">
                     <span class="btn btn-default">
-                      <span class="glyphicon glyphicon-tag"></span> <%= get_master_for_id($author_id) %> 
+                      <span class="glyphicon glyphicon-tag"></span> <%= $author->{master} %> 
                     </span>
-                    <a class="btn btn-info" href="<%= url_for('/publications?author=')%><%=get_master_for_id($author_id)%>&tag=<%= $tag %>">
+                    <a class="btn btn-info" href="<%= url_for('publications')->query( author=>$author->{master}, tag=>$tag->{name} ) %>">
                       <span class="glyphicon glyphicon-file"></span>
-                      <span class="badge"><%=num_pubs_for_author_and_tag($author_id, $tag_id)%></span>
+                      <span class="badge"><%=num_pubs_for_author_and_tag($author->{id}, $tag->{id})%></span>
                     </a>
                 </div>
             %}
         </div>
     </div> 
 </div>
-
-
-
-%################################################################################################################
 

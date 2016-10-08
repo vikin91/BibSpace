@@ -164,7 +164,6 @@ sub Fhandle_add_edit_publication {
 sub Fget_publications_main_hashed_args_only {
     my ( $self, $args ) = @_;
 
-    say "Fget_publications_main_hashed_args_only " . Dumper $args;
 
     my @dbg = Fget_publications_core(
         $self,                $args->{author},     $args->{year},
@@ -172,14 +171,11 @@ sub Fget_publications_main_hashed_args_only {
         $args->{team},        $args->{visible},    $args->{permalink},
         $args->{hidden},
     );
-    say "Fget_publications_main_hashed_args_only RESULT " . scalar @dbg;
     return @dbg;
 }
 ####################################################################################
 sub Fget_publications_main_hashed_args {    #
     my ( $self, $args ) = @_;
-
-    say "Fget_publications_main_hashed_args " . Dumper $args;
 
 
     return Fget_publications_core(
@@ -280,8 +276,6 @@ sub Fget_publications_core {
         $dbh,   $master_id, $year,    $bibtex_type, $entry_type,
         $tagid, $teamid,    $visible, $permalink,   $hidden
     );
-
-    say "Fget_publications_core result: " . scalar @dbg;
     return @dbg;
 }
 ####################################################################################

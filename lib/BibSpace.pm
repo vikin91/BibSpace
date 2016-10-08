@@ -379,7 +379,7 @@ sub setup_routes {
     $logged_user->get('/tags/add/:type')->to( 'tags#add', type => 1 );
     $logged_user->post('/tags/add/:type')->to( 'tags#add_post', type => 1 );
     $logged_user->get('/tags/authors/:tid/:type')
-        ->to( 'tags#get_authors_for_tag', type => 1 );
+        ->to( 'tags#get_authors_for_tag', type => 1 )->name('get_authors_for_tag');
     $logged_user->any('/tags/add_and_assign/:eid')->to('tags#add_and_assign');
     $logged_user->get('/tags/delete/:id_to_delete')->to('tags#delete');
     $logged_user->get('/tags/edit/:id')->to('tags#edit');
@@ -535,9 +535,12 @@ sub setup_routes {
     $anyone->get('/ly/p')->to('publications#landing_years_obj');     #ALIAS
 
     $anyone->get('/read/authors-for-tag/:tid/:team')
-        ->to('tags#get_authors_for_tag_read');
-    $anyone->get('/r/a4t/:tid/:team')->to('tags#get_authors_for_tag_read')
-        ;                                                            #ALIAS
+        ->to('tags#get_authors_for_tag_read')
+        ->name('get_authors_for_tag_read');
+    #ALIAS
+    $anyone->get('/r/a4t/:tid/:team')
+    ->to('tags#get_authors_for_tag_read')
+    ->name('get_authors_for_tag_read');
 
     $anyone->get('/read/tags-for-author/:author_id')
         ->to('tags#get_tags_for_author_read')->name('tags_for_author');

@@ -167,8 +167,6 @@ sub _convert_bib_to_bbl {
 
   my $warnings_arr_ref = $bibstyle->{warnings};
 
-  #my @b = shift @a;
-  #say Dumper \@b;
   my $bbl_dirty = join '', @{$bibstyle->{output}};
   my $dirty_bbl_array_ref = \@{$bibstyle->{output}};
 

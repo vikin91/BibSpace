@@ -1,12 +1,8 @@
 % layout 'default';
 
 <div class="bibtexitem">
-<%= $tag %>: 
-%foreach my $author_id (@$author_ids){
-    <a href="<%= url_for('lyp')->query(author=>get_master_for_id($author_id), tag=>$tag)%>"> <%= get_master_for_id($author_id) %> (<%=num_pubs_for_author_and_tag($author_id, $tag_id)%>)</a>,  
+<%= $tag->{name} %>: 
+%foreach my $author (@$authors){
+    <a href="<%= url_for('lyp')->query( author=>$author->{master}, tag=>$tag->{name} ) %>"> <%= $author->{master} %> (<%=num_pubs_for_author_and_tag($author->{id}, $tag->{id})%>)</a>,  
 %}
 </div>
-
-
-%################################################################################################################
-

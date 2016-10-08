@@ -458,10 +458,9 @@ sub register {
         get_master_for_id => sub {
             my $self = shift;
             my $id   = shift;
-
-            # navi uses it
-
-            return get_master_for_id( $self->app->db, $id );
+            # navi uses it 
+            my $author = MAuthor->static_get( $self->app->db, $id );
+            return $author->{master};
         }
     );
 

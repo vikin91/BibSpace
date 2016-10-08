@@ -19,6 +19,15 @@ my $self = $t_logged_in->app;
 $t_logged_in->ua->max_redirects(10);
 $t_logged_in->ua->inactivity_timeout(3600);
 
+my $dbh = $t_logged_in->app->db;
+
+my @all_tag_type_objs = BibSpace::Functions::TagTypeObj->getAll($dbh);
+my $some_tag_type_obj = $all_tag_type_objs[0];
+my @tags = MTag->static_all($dbh);
+my $some_tag = $tags[0];
+
+my @teams = MTeam->static_all($dbh);
+my $some_team = $teams[0];
 
 # generated with: ./script/bibspace routes | grep GET | grep -v : 
 my @pages = (
@@ -44,7 +53,6 @@ my @pages = (
 	"/settings/fix_months",
 	"/publications/fix_urls",
 	"/profile",
-	"/settings/regenerate_all",
 	"/backups",
 	"/types",
 	"/types/add",
@@ -88,7 +96,10 @@ my @pages = (
 	"/cron/day",
 	"/cron/night",
 	"/cron/week",
-	"/cron/month"
+	"/cron/month",
+	$self->url_for('get_authors_for_tag', tid=>$some_tag->{id}, type=>$some_tag_type_obj->{id}),
+	$self->url_for('get_authors_for_tag_read', tid=>$some_tag->{id}, team=>$some_team->{id}),
+	"/settings/regenerate_all"
 );
 
 for my $page (@pages){
