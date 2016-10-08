@@ -28,7 +28,6 @@ our @ISA = qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw(
-    get_key_from_bibtex_code
     random_string
     create_user_id
 
@@ -43,10 +42,6 @@ our @EXPORT = qw(
     uniqlc
     get_team_for_id
     get_team_id
-    get_master_id_for_uid
-    get_master_id_for_master
-    get_master_id_for_author_id
-    get_all_teams
     get_all_our_types
     get_all_bibtex_types
     get_all_existing_bibtex_types
@@ -61,7 +56,6 @@ our @EXPORT = qw(
     get_author_ids_for_tag_id_and_team
     add_field_to_bibtex_code
     clean_tag_name
-    get_html_for_entry_id
     get_exceptions_for_entry_id
     get_year_for_entry_id
     prepare_backup_table
@@ -82,15 +76,6 @@ sub get_all_existing_bibtex_types {
         'mastersthesis', 'misc',         'phdthesis',     'proceedings',
         'techreport',    'unpublished'
     );
-}
-####################################################################################
-sub get_key_from_bibtex_code {
-    say "CALL: get_key_from_bibtex_code";
-    my $code  = shift;
-    my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s($code);
-    return -1 unless $entry->parse_ok;
-    return $entry->key;
 }
 ####################################################################################
 sub random_string {
@@ -156,8 +141,8 @@ sub uniqlc {
 }
 ################################################################################
 sub nohtml {
-    my $key  = shift;
-    my $type = shift;
+    my $key  = shift // "key-unknown";
+    my $type = shift // "no-type";
     return
           "<span class=\"label label-danger\">"
         . "NO HTML "
@@ -340,27 +325,27 @@ sub get_type_description {    #TODO: refactor to MType
     # in case of no secription, the name is the description itself
     return "Publications of type " . $type;
 }
-################################################################################
-sub get_all_teams {           #TODO: refactor to MType
-    my $dbh = shift;
+# ################################################################################
+# sub get_all_teams {           #TODO: refactor to MType
+#     my $dbh = shift;
 
-    my $qry = "SELECT DISTINCT id, name FROM Team";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute();
+#     my $qry = "SELECT DISTINCT id, name FROM Team";
+#     my $sth = $dbh->prepare($qry);
+#     $sth->execute();
 
-    my @teams;
-    my @ids;
+#     my @teams;
+#     my @ids;
 
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $tid  = $row->{id};
-        my $team = $row->{name};
+#     while ( my $row = $sth->fetchrow_hashref() ) {
+#         my $tid  = $row->{id};
+#         my $team = $row->{name};
 
-        push @teams, $team if defined $team;
-        push @ids,   $tid  if defined $tid;
-    }
+#         push @teams, $team if defined $team;
+#         push @ids,   $tid  if defined $tid;
+#     }
 
-    return ( \@teams, \@ids );
-}
+#     return ( \@teams, \@ids );
+# }
 ##########################################################################
 sub get_year_for_entry_id
 {    #TODO: refactor to MEntry. it should be there for a long time!
@@ -375,23 +360,7 @@ sub get_year_for_entry_id
     return $year;
 }
 ##########################################################################
-sub get_html_for_entry_id {
-    my $dbh = shift;
-    my $eid = shift;
-
-    my $sth = $dbh->prepare("SELECT html, bibtex_key FROM Entry WHERE id=?");
-    $sth->execute($eid);
-
-    my $row  = $sth->fetchrow_hashref();
-    my $html = $row->{html};
-    my $key  = $row->{bibtex_key};
-    my $type = $row->{type};
-
-    return nohtml( $key, $type ) unless defined $html;
-    return $html;
-}
-##########################################################################
-sub get_exceptions_for_entry_id {
+sub get_exceptions_for_entry_id { # TODO: refactor into MEntry
     my $dbh = shift;
     my $eid = shift;
 
@@ -409,45 +378,7 @@ sub get_exceptions_for_entry_id {
     return @exceptions;
 }
 
-##########################################################################
-sub get_master_id_for_uid {
-    my $dbh = shift;
-    my $uid = shift;
 
-    my $sth = $dbh->prepare("SELECT master_id FROM Author WHERE uid=?");
-    $sth->execute($uid);
-
-    my $row = $sth->fetchrow_hashref();
-    my $id = $row->{master_id} || -1;
-    print "ID = -1 for author $uid\n" unless defined $id;
-    return $id;
-}
-##########################################################################
-sub get_master_id_for_master {
-    my $dbh    = shift;
-    my $master = shift;
-
-    my $sth = $dbh->prepare("SELECT master_id FROM Author WHERE master=?");
-    $sth->execute($master);
-
-    my $row = $sth->fetchrow_hashref();
-    my $id = $row->{master_id} || -1;
-    print "ID = -1 for author $master\n" unless defined $id;
-    return $id;
-}
-##########################################################################
-sub get_master_id_for_author_id {
-    my $dbh = shift;
-    my $id  = shift;
-
-    my $sth = $dbh->prepare("SELECT master_id FROM Author WHERE id=?");
-    $sth->execute($id);
-
-    my $row = $sth->fetchrow_hashref();
-    my $mid = $row->{master_id} || -1;
-    print "ID = -1 for author id $id\n" unless defined $id;
-    return $mid;
-}
 ##########################################################################
 sub get_author_id_for_uid {
     my $dbh    = shift;

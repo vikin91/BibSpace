@@ -488,6 +488,25 @@ sub teams {
     return @teams;
 }
 ####################################################################################
+sub update_master_name {
+    my $self       = shift;
+    my $dbh        = shift;
+    my $new_master = shift;
+
+
+    my $new_master_author = MAuthor->static_get_by_master($dbh, $new_master);
+
+    if( defined $new_master_author ){
+        return $new_master_author->{id}; 
+    }
+
+    $self->{master} = $new_master;
+    $self->{uid}    = $new_master;
+    $self->save($dbh);
+
+
+    return 0;
+}
 ####################################################################################
 sub tags {
 

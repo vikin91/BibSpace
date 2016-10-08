@@ -248,22 +248,17 @@ sub all_without_tag {
 ####################################################################################
 sub all_without_tag_for_author {
     say "CALL: all_without_tag_for_author ";
-    my $self    = shift;
-    my $dbh     = $self->app->db;
-    my $author  = $self->param('author');
-    my $tagtype = $self->param('tagtype');
-    my $aid     = -1;
+    my $self        = shift;
+    my $dbh         = $self->app->db;
+    my $master_name = $self->param('author');
+    my $tagtype     = $self->param('tagtype');
 
-    my $mid = get_master_id_for_master( $dbh, $author ) || -1;
-    if ( $mid == -1 ) {    #no such master. Assume, that author id was given
-        $aid = $author;
-    }
-    else {
-        $aid = $mid;
-    }
+    my $author = MAuthor->static_get_by_master( $dbh, $master_name );
+    $author = MAuthor->static_get( $dbh, $master_name )
+        if !defined $author; #no such master. Assume, that author id was given
 
     my $str
-        = "Displaying papers without any tag of type $tagtype for author id $aid";
+        = "Displaying papers without any tag of type $tagtype for author id $author->{id}";
     $self->write_log($str);
     say $str;
 
@@ -279,7 +274,7 @@ sub all_without_tag_for_author {
                     WHERE Tag.type = ?)
                 ORDER BY year, sort_month DESC";
     my $sth = $dbh->prepare($qry);
-    $sth->execute( $aid, $tagtype );
+    $sth->execute( $author->{id}, $tagtype );
 
     my @array;
     while ( my $row = $sth->fetchrow_hashref() ) {
@@ -287,8 +282,7 @@ sub all_without_tag_for_author {
         push @array, $eid;
     }
 
-    my $msg
-        = "This list contains papers that miss tags of type $tagtype. ";
+    my $msg = "This list contains papers that miss tags of type $tagtype. ";
 
     my @objs = Fget_publications_core_from_array_ref( $self, \@array );
     $self->flash( type => 'info ', msg => $msg );
@@ -331,7 +325,8 @@ sub show_unrelated_to_team {
     my $self    = shift;
     my $team_id = $self->param('teamid');
 
-    $self->write_log("Displaying entries unrelated to team with it $team_id.");
+    $self->write_log(
+        "Displaying entries unrelated to team with it $team_id.");
 
     my $dbh = $self->app->db;
 

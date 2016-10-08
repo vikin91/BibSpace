@@ -116,11 +116,11 @@ sub publications_add_many_post {
     for my $bibtex_code (@bibtex_codes) {
 
         # $debug_str.="<br>Found code!";
+        my $entry = MEntry->new(bib=>$bibtex_code);
+        $entry->populate_from_bib();
+        $debug_str .= "<br>Found key: $entry->{bibtex_key}";
 
-        my $bibtex_key = get_key_from_bibtex_code($bibtex_code);
-        $debug_str .= "<br>Found key: $bibtex_key";
-
-        push @key_arr, $bibtex_key;
+        push @key_arr, $entry->{bibtex_key};
     }
 
     my @mentries = ();

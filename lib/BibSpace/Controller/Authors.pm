@@ -228,24 +228,22 @@ sub edit_post {
 
     if ( defined $author ) {
         if ( defined $new_master ) {
-            my $status
-                = update_master_id( $self, $author->{id}, $new_master );
+            my $status = $author->update_master_name($dbh, $new_master);
+        
+            # status = 0 OK
+            # status > 0 existing master id
 
-            # 0 OK
-            # -1 conflict
-            # >0 new master id
-            if ( $status > 0 ) {
-                $self->write_log(
-                    "change master for master id $id and new master $new_master - status: $status. AUTHOR ID HAS CHANGED!"
-                );
-                $self->redirect_to(
-                    $self->url_for('/authors/edit/') . $status );
+            if ( $status == 0 ) {
+                $self->flash( msg=>"Master name has been updated sucesfully.", msg_type=>"success" );
+                $self->redirect_to( $self->url_for('edit_author', id=>$status)  );
             }
-            else {
-                $self->write_log(
-                    "change master for master id $id and new master $new_master - status: $status. SUCH AUTHOR EXISTS ALREADY under id $status!"
-                );
-                $self->redirect_to( $self->url_for('/authors/edit/') . $id );
+            elsif( $status != $id ) {
+                my $existing_author = MAuthor->static_get( $dbh, $status );
+                $self->flash( msg=>"This master name is already taken by <a href=\"".$self->url_for('edit_author', id=>$status)."\">".$existing_author->{master}."</a>.", msg_type=>"danger" );
+                $self->redirect_to( $self->url_for('edit_author', id=>$id)  );
+            }
+            else{
+                $self->flash( msg=>"Master name has not changed.", msg_type=>"info" );
             }
 
         }
@@ -256,7 +254,7 @@ sub edit_post {
             $author->add_user_id( $dbh, $new_user_id );
         }
     }
-    $self->redirect_to( $self->url_for('/authors/edit/') . $id );
+    $self->redirect_to( $self->url_for('edit_author', id=>$id) );
 }
 ##############################################################################################################
 sub post_edit_membership_dates {
@@ -443,61 +441,6 @@ sub remove_user_id_from_master {
         $self->flash( msg => $str );
         $self->redirect_to( $self->get_referrer );
     }
-}
-##############################################################################################################
-sub update_master_id {
-    my $self       = shift;
-    my $id         = shift;
-    my $new_master = shift;
-    my $dbh        = $self->app->db;
-
-    my $ret = 0;
-
-    # 0 - change - OK
-    # -1 - new_master exists!!
-
-    my $existing_master_id = get_master_id_for_uid( $dbh, $new_master );
-
-    if ( $existing_master_id == -1 )
-    {    # the new proposed master name is unique
-
-        my $old_master = get_master_for_id( $dbh, $id );
-        $self->write_log(
-            "Updating master id for user: $old_master. New muid: $new_master."
-        );
-
-        my $sth = $dbh->prepare(
-            "UPDATE Author SET uid=?, master=? WHERE master_id=? AND id=?");
-        $sth->execute( $new_master, $new_master, $id, $id );
-
-        my $sth2
-            = $dbh->prepare("UPDATE Author SET master=? WHERE master_id=?");
-        $sth2->execute( $new_master, $id );
-
-        $ret = 0;
-    }
-    else {    # the new proposed master name exists already in DB!
-        $ret = -1 * $existing_master_id;
-
-    }
-
-    my $new_master_id = get_author_id_for_master( $dbh, $new_master );
-
-    if ( $new_master_id != -1 and $new_master_id != $id and $ret == 0 )
-    {         #something has changed in the DB
-
-        $ret = $new_master_id;
-
-        my $sth3 = $dbh->prepare(
-            "UPDATE Entry_to_Author SET author_id=? WHERE author_id=?");
-        $sth3->execute( $new_master_id, $id );
-
-        my $sth4 = $dbh->prepare(
-            "UPDATE Author_to_Team SET author_id=? WHERE author_id=?");
-        $sth4->execute( $new_master_id, $id );
-    }
-
-    return $ret;
 }
 
 ##############################################################################################################

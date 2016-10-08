@@ -110,7 +110,7 @@
           <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-eye-open"></span> Visibility</span>
         </div>
         <div class="col-lg-4 col-md-4 col-xs-4">
-            <a href="<%= url_for('authorstoggle_visibilityid', id=>$id) %>">
+            <a href="<%= url_for('toggle_author_visibility', id=>$id) %>">
             <div class="btn-group" data-toggle="tooltip" data-placement="bottom" title="Toggle visibility">
             % if ($author->{display} eq '1'){
               <span class="btn btn-success active"><span class="glyphicon glyphicon-eye-open"></span></span>
@@ -251,7 +251,7 @@
                     </span>
                     <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->{master}, tag=>$tag->{name} ) %>">
                       <span class="glyphicon glyphicon-file"></span>
-                      <span class="badge"><%= num_pubs_for_author_and_tag( $author->{id}, $tag->{id} )%></span>
+                      <span class="badge"><%= num_pubs_for_author_and_tag( $author->{master_id}, $tag->{id} )%></span>
                     </a>
                 </div>
               % $k++;

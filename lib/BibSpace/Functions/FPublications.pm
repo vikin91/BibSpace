@@ -163,16 +163,24 @@ sub Fhandle_add_edit_publication {
 # this function ignores the parameters given in the $self object
 sub Fget_publications_main_hashed_args_only {
     my ( $self, $args ) = @_;
-    return Fget_publications_core(
+
+    say "Fget_publications_main_hashed_args_only " . Dumper $args;
+
+    my @dbg = Fget_publications_core(
         $self,                $args->{author},     $args->{year},
         $args->{bibtex_type}, $args->{entry_type}, $args->{tag},
         $args->{team},        $args->{visible},    $args->{permalink},
         $args->{hidden},
     );
+    say "Fget_publications_main_hashed_args_only RESULT " . scalar @dbg;
+    return @dbg;
 }
 ####################################################################################
 sub Fget_publications_main_hashed_args {    #
     my ( $self, $args ) = @_;
+
+    say "Fget_publications_main_hashed_args " . Dumper $args;
+
 
     return Fget_publications_core(
         $self,
@@ -227,7 +235,7 @@ sub Fget_publications_core {
     my $entry_type  = shift;
     my $tag         = shift;
     my $team        = shift;
-    my $visible     = shift || 0;
+    my $visible     = shift // 0;
     my $permalink   = shift;
     my $hidden      = shift;
 
@@ -235,34 +243,46 @@ sub Fget_publications_core {
 
     my $dbh = $self->app->db;
 
-    my $teamid = BibSpace::Controller::Core::get_team_id( $dbh, $team )
-        || undef;    # gives -1 if $team contains id
-    $teamid = $team if defined $teamid and $teamid eq -1;   # so team = teamid
-
-    my $master_id
-        = BibSpace::Controller::Core::get_master_id_for_master( $dbh,
-        $author )
-        || undef;
-    if ( $master_id == -1 ) {
-        $master_id = $author
-            ; # it means that author was given as master_id and not as master name
+    my $team_obj = MTeam->static_get_by_name( $dbh, $team );
+    if ( !defined $team_obj ){
+        # no such master. Assume, that author id was given
+        $team_obj = MTeam->static_get( $dbh, $team );    
     }
 
-    my $tagid = -1;
-    my $t = MTag->static_get_by_name( $dbh, $tag );
-    $tagid = $t->{id} if defined $t;
+    my $author_obj = MAuthor->static_get_by_master( $dbh, $author );
+    if ( !defined $author_obj ){
+        # no such master. Assume, that author id was given
+        $author_obj = MAuthor->static_get( $dbh, $author );    
+    }
 
-    # it means that tag was given as tag_id and not as tag name
-    $tagid = $tag if $tagid == -1;
 
-    $teamid    = undef unless defined $team;
-    $master_id = undef unless defined $author;
-    $tagid     = undef unless defined $tag;
+    my $tag_obj = MTag->static_get_by_name( $dbh, $tag );
+    if ( !defined $tag_obj ){
+        # no such master. Assume, that author id was given
+        $tag_obj = MTag->static_get( $dbh, $tag );    
+    }
+    
+    my $teamid = undef;
+    $teamid = $team_obj->{id} if defined $team_obj;    
 
-    return MEntry->static_get_filter(
+    my $master_id = undef;
+    $master_id = $author_obj->{id} if defined $author_obj;
+
+    my $tagid = undef;
+    $tagid = $tag_obj->{id} if defined $tag_obj;
+
+    # $teamid    = undef unless defined $team;
+    # $master_id = undef unless defined $author or defined $author_obj;
+    # $tagid     = undef unless defined $tag;
+
+
+    my @dbg = MEntry->static_get_filter(
         $dbh,   $master_id, $year,    $bibtex_type, $entry_type,
         $tagid, $teamid,    $visible, $permalink,   $hidden
     );
+
+    say "Fget_publications_core result: " . scalar @dbg;
+    return @dbg;
 }
 ####################################################################################
 sub Fclean_ugly_bibtex_fields_for_all_entries {
