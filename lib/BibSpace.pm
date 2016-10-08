@@ -1,4 +1,4 @@
-package BibSpace v0.4.4;
+package BibSpace v0.4.5;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
@@ -94,6 +94,7 @@ has db => sub {
         $self->config->{db_database}, $self->config->{db_pass}
     );
 };
+
 
 has version => sub {
     my $self = shift;
@@ -340,7 +341,7 @@ sub setup_routes {
     $logged_user->post('/authors/add/')->to('authors#add_post');
 
     $logged_user->get('/authors/edit/:id')->to('authors#edit_author')->name('edit_author');
-    $logged_user->post('/authors/edit/')->to('authors#edit_post');
+    $logged_user->post('/authors/edit/')->to('authors#edit_post')->name('edit_author_post');
     $logged_user->get('/authors/delete/:id')->to('authors#delete_author')->name('delete_author');
     $logged_user->get('/authors/delete/:id/force')
         ->to('authors#delete_author_force');
@@ -374,7 +375,7 @@ sub setup_routes {
     $logged_user->any('/tagtypes/edit/:id')->to('tagtypes#edit');
 
     ################ TAGS ################
-    $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 );
+    $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )->name('all_tags');
     $logged_user->get('/tags/add/:type')->to( 'tags#add', type => 1 );
     $logged_user->post('/tags/add/:type')->to( 'tags#add_post', type => 1 );
     $logged_user->get('/tags/authors/:tid/:type')
@@ -393,7 +394,7 @@ sub setup_routes {
     $logged_user->get('/teams/delete/:id_to_delete/force')
         ->to('teams#delete_team_force');
     $logged_user->get('/teams/unrealted_papers/:teamid')
-        ->to('publications#show_unrelated_to_team');
+        ->to('publications#show_unrelated_to_team')->name('unrelated_papers_for_team');
 
     $logged_user->get('/teams/add')->to('teams#add_team')
         ->name('add_team_get');
@@ -416,8 +417,7 @@ sub setup_routes {
 
     # EXPERIMENTAL END
 
-    $logged_user->get('/publications')->to('publications#all')
-        ;    # logged_user icons!
+    $logged_user->get('/publications')->to('publications#all')->name('publications');
     $logged_user->get('/publications/recently_added/:num')
         ->to('publications#all_recently_added')->name('recently_added');
     $logged_user->get('/publications/recently_modified/:num')
@@ -425,9 +425,9 @@ sub setup_routes {
     $logged_user->get('/publications/orphaned')
         ->to('publications#all_without_author');
     $logged_user->get('/publications/untagged/:tagtype')
-        ->to( 'publications#all_without_tag', tagtype => 1 );
+        ->to( 'publications#all_without_tag', tagtype => 1 )->name('get_untagged_publications');
     $logged_user->get('/publications/untagged/:author/:tagtype')
-        ->to( 'publications#all_without_tag_for_author', tagtype => 1 );
+        ->to( 'publications#all_without_tag_for_author' )->name('get_untagged_publications_for_author');
     $logged_user->get('/publications/candidates_to_delete')
         ->to('publications#all_candidates_to_delete');
     $logged_user->get('/publications/missing_month')
@@ -539,9 +539,9 @@ sub setup_routes {
     $anyone->get('/r/a4t/:tid/:team')->to('tags#get_authors_for_tag_read')
         ;                                                            #ALIAS
 
-    $anyone->get('/read/tags-for-author/:aid')
+    $anyone->get('/read/tags-for-author/:author_id')
         ->to('tags#get_tags_for_author_read')->name('tags_for_author');
-    $anyone->get('/r/t4a/:aid')->to('tags#get_tags_for_author_read');   #ALIAS
+    $anyone->get('/r/t4a/:author_id')->to('tags#get_tags_for_author_read');   #ALIAS
 
     $anyone->get('/read/tags-for-team/:tid')
         ->to('tags#get_tags_for_team_read')->name('tags_for_team');

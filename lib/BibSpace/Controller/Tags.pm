@@ -18,6 +18,7 @@ use BibSpace::Functions::TagTypeObj;
 use BibSpace::Controller::Set;
 use BibSpace::Functions::FSet;
 use BibSpace::Functions::FPublications;
+use BibSpace::Functions::FTags;
 
 use BibSpace::Model::MTag;
 use BibSpace::Model::MTagCloud;
@@ -56,67 +57,11 @@ sub get_first_letters {
     my $dbh  = $self->app->db;
     my $type = shift || 1;
 
-    my $sth
-        = $dbh->prepare(
-        "SELECT DISTINCT substr(name, 0, 2) as let FROM Tag WHERE type=? ORDER BY let ASC"
-        );
-    $sth->execute($type);
-    my @letters;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $letter = $row->{let} || "*";
-        push @letters, uc($letter);
-    }
+    my @all_tags = MTag->static_all($dbh);
 
-    return @letters;
+    return sort { lc($a) cmp lc($b) } uniq map {ucfirst substr $_->{name}, 0, 1 } @all_tags;
 }
-####################################################################################
-sub add_tags_from_string {
-    my $self        = shift;
-    my $tags_to_add = shift;
-    my $type        = shift || 1;
-    my $dbh         = $self->app->db;
 
-    my @tag_ids;
-    my @tags_arr;
-
-    say "call: add_tags_from_string";
-
-    say "tags_to_add $tags_to_add";
-
-    if ( defined $tags_to_add ) {
-
-        my @pre_tags_arr = split( ';', $tags_to_add );
-
-        foreach my $tag (@pre_tags_arr) {
-            $tag = clean_tag_name($tag);
-
-            if ( defined $tag and $tag ne '' and length($tag) > 0 ) {
-                push @tags_arr, $tag if defined $tag;
-                $self->write_log( "Adding new tag ->" . $tag . "<-" );
-            }
-        }
-
-        foreach my $tag (@tags_arr) {
-            my $qry = 'INSERT IGNORE INTO Tag(name, type) VALUES (?,?)';
-            my $sth = $dbh->prepare($qry);
-            $sth->execute( $tag, $type );
-            $sth->finish();
-        }
-
-        foreach my $tag (@tags_arr) {
-            my $sth2
-                = $dbh->prepare("SELECT id FROM Tag WHERE name=? AND type=?");
-            $sth2->execute( $tag, $type );
-            my $row = $sth2->fetchrow_hashref();
-            my $id = $row->{id} || -1;
-            push @tag_ids, $id if $id > -1;
-            $sth2->finish();
-        }
-    }
-
-    return @tag_ids;
-
-}
 ####################################################################################
 sub add {
     my $self = shift;
@@ -134,17 +79,18 @@ sub add_post {
     my $type = $self->param('type') || 1;
 
     my $tags_to_add = $self->param('new_tag');
-    my @tag_ids = add_tags_from_string( $self, $tags_to_add, $type );
+    my @tags = add_tags_from_string( $dbh, $tags_to_add, $type );
 
-    if ( scalar @tag_ids > 0 ) {
-        $self->flash( msg =>
-                "The following tags (of type $type) were added successfully: <i>$tags_to_add</i> , ids: <i>"
-                . join( ", ", @tag_ids )
-                . "</i>" );
-    }
+
+    $self->flash( msg =>
+            "The following tags (of type $type) were added successfully: <i>$tags_to_add</i> , ids: <i>"
+            . join( ", ", map { $_->{id} } @tags )
+            . "</i>" ) if scalar @tags > 0;
+    
     $self->write_log(
-        "tags added: $tags_to_add, ids: " . join( ", ", @tag_ids ) );
-    $self->redirect_to("/tags/$type");
+        "tags added: $tags_to_add, ids: " . join( ", ", map { $_->{id} } @tags ) );
+
+    $self->redirect_to( $self->url_for( 'all_tags', type=>$type ) );
 
     # $self->render(template => 'tags/add');
 }
@@ -158,17 +104,11 @@ sub add_and_assign {
     my $type        = $self->param('type') || 1;
     my $dbh         = $self->app->db;
 
-    my @tag_ids = add_tags_from_string( $self, $tags_to_add );
+    my @tags = add_tags_from_string( $dbh, $tags_to_add, $type);
 
-    foreach my $tag_id (@tag_ids) {
-        say "Want to assign tag (type $type) id $tag_id to entry eid $eid";
-        my $sth = $dbh->prepare(
-            "INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
-        $sth->execute( $eid, $tag_id )
-            if defined $eid
-            and $eid > 0
-            and defined $tag_id
-            and $tag_id > 0;
+    foreach my $tag (@tags) {
+        my $entry = MEtnry->static_get($dbh, $eid);
+        $entry->assign_tag($dbh, $tag) if defined $entry and defined $tag;
     }
 
     $self->redirect_to( $self->get_referrer );
@@ -247,63 +187,57 @@ sub get_authors_for_tag_read {
 ####################################################################################
 sub get_tags_for_author_read {
 
-    my $self = shift;
-    my $user = $self->param('aid');
-    my $maid = $user;
+    my $self      = shift;
+    my $dbh       = $self->app->db;
+    my $author_id = $self->param('author_id');
 
-    my $dbh = $self->app->db;
-    $maid = get_master_id_for_master( $dbh, $user );
-    if ( $maid == -1 ) {
+    my $author;
+    $author = MAuthor->static_get_by_name( $dbh, $author_id );
+    $author = MAuthor->static_get( $dbh, $author_id ) if !defined $author; # given master id instead of name
 
-        #user input is already master id! using the user's input
-        $maid = $user;
-    }
+    my @author_tags  = ();
+    @author_tags  = $author->tags( $dbh ) if defined $author;
 
-    my ( $tag_ids_arr_ref, $tags_arr_ref )
-        = get_tags_for_author( $self, $maid );
 
     ### here list of objects should be created
 
-    my @TCarr;
+    my @tagc_cloud_arr;
+    my @sorted_tagc_cloud_arr;
 
-    my $i = 0;
-    foreach my $tag_id (@$tag_ids_arr_ref) {
-        my $tag = $$tags_arr_ref[$i];
+    foreach my $tag (@author_tags) {
+        
 
-        my $name = $tag;
-        $name =~ s/_/\ /g;
+        my $tag_name = $tag->{name};
+        $tag_name =~ s/_/\ /g;
         my @objs = Fget_publications_main_hashed_args( $self,
-            { hidden => 0, author => $maid, tag => $tag_id } );
+            { hidden => 0, author => $author->{id}, tag => $tag->{id} } );
         my $count = scalar @objs;
 
 # my $url = "/ly/p?author=".get_master_for_id($self->app->db, $maid)."&tag=".$tag."&title=1&navbar=1";
-        my $author_master = get_master_for_id( $self->app->db, $maid );
         my $url = $self->url_for('lyp')->query(
-            author => $author_master,
-            tag    => $tag,
+            author => $author->{master},
+            tag    => $tag_name,
             title  => '1',
             navbar => '1'
         );
 
-        my $tc_obj = MTagCloud->new();
-        $tc_obj->{tag}   = $tag;
-        $tc_obj->{url}   = $url;
-        $tc_obj->{count} = $count;
-        $tc_obj->{name}  = $name;
+        my $tag_cloud_obj = MTagCloud->new();
+        $tag_cloud_obj->{tag}   = $tag->{name};
+        $tag_cloud_obj->{url}   = $url;
+        $tag_cloud_obj->{count} = $count;
+        $tag_cloud_obj->{name}  = $tag_name;
 
-        push @TCarr, $tc_obj;
-        $i++;
+        push @tagc_cloud_arr, $tag_cloud_obj;
     }
 
-    my @sorted = reverse sort { $a->{count} <=> $b->{count} } @TCarr;
+    @sorted_tagc_cloud_arr = reverse sort { $a->{count} <=> $b->{count} } @tagc_cloud_arr;
 
     ### old code
 
     $self->stash(
-        tags      => $tags_arr_ref,
-        tag_ids   => $tag_ids_arr_ref,
-        author_id => $maid,
-        tcarr     => \@sorted
+        tags      => \@author_tags,
+        author    => $author,
+        tcarr     => \@sorted_tagc_cloud_arr
     );
     $self->render( template => 'tags/author_tags_read' );
 
@@ -311,66 +245,54 @@ sub get_tags_for_author_read {
 ####################################################################################
 sub get_tags_for_team_read {
     my $self = shift;
-    my $team = $self->param('tid');
-    my $team_id  = $team;
-
+    my $team_id = $self->param('tid');
     my $dbh = $self->app->db;
-    $team_id = get_team_id( $dbh, $team );
-    if ( $team_id == -1 ) {
 
-        #user input is already team id! using the user's input
-        $team_id = $team;
-    }
+    my $team = MTeam->static_get( $dbh, $team_id );
+    $team = MTeam->static_get_by_name( $dbh, $team_id ) if !defined $team; # given team name instead of id
 
-    my ( $tag_ids_arr_ref, $tags_arr_ref )
-        = get_tags_for_team( $self, $team_id, 1 );
+    my @team_tags  = ();
+    @team_tags  =  $team->tags( $dbh ) if defined $team;
+    
 
-    ### here list of objects should be created
+    my @tagc_cloud_arr;
+    my @sorted_tagc_cloud_arr;
 
-    my @TCarr;
+    foreach my $tag (@team_tags) {
 
-    my $i = 0;
-    foreach my $tag_id (@$tag_ids_arr_ref) {
-        my $tag = $$tags_arr_ref[$i];
 
-        my $name = $tag;
-        $name =~ s/_/\ /g;
+        my $tag_name = $tag->{name};
+        $tag_name =~ s/_/\ /g;
 
         my @entry_objs = MEntry->static_get_filter(
-            $dbh,    undef, undef, undef, undef, $tag_id,
+            $dbh,    undef, undef, undef, undef, $tag->{id},
             $team_id, undef, undef, undef
         );
 
-        my $team_name = "";
-        my $mteam = MTeam->static_get($dbh, $team_id);
-        $team_name = $mteam->{name} if defined $mteam;
-
         my $url = $self->url_for('lyp')->query(
-            team   => $team_name,
-            tag    => $tag,
+            team   => $team->{name},
+            tag    => $tag_name,
             title  => '1',
             navbar => '1'
         );
 
-        my $tc_obj = MTagCloud->new();
-        $tc_obj->{tag}   = $tag;
-        $tc_obj->{url}   = $url;
-        $tc_obj->{count} = scalar @entry_objs;
-        $tc_obj->{name}  = $name;
+        my $tag_cloud_obj = MTagCloud->new();
+        $tag_cloud_obj->{tag}   = $tag->{name};
+        $tag_cloud_obj->{url}   = $url;
+        $tag_cloud_obj->{count} = scalar @entry_objs;
+        $tag_cloud_obj->{name}  = $tag_name;
 
-        push @TCarr, $tc_obj;
-        $i++;
+        push @tagc_cloud_arr, $tag_cloud_obj;
     }
 
-    my @sorted = reverse sort { $a->{count} <=> $b->{count} } @TCarr;
+    @sorted_tagc_cloud_arr = reverse sort { $a->{count} <=> $b->{count} } @tagc_cloud_arr;
 
     ### old code
 
     $self->stash(
-        tags      => $tags_arr_ref,
-        tag_ids   => $tag_ids_arr_ref,
-        author_id => $team,
-        tcarr     => \@sorted
+        tags      => \@team_tags,
+        author    => $team,
+        tcarr     => \@sorted_tagc_cloud_arr
     );
     $self->render( template => 'tags/author_tags_read' );
 
@@ -405,22 +327,17 @@ sub get_authors_for_tag {
 sub delete {
     my $self = shift;
     my $dbh  = $self->app->db;
-
     my $tag_to_delete = $self->param('id_to_delete');
-    my $type = $self->param('type') || 1;
 
-    if ( defined $tag_to_delete ) {
+    my $tag = MTag->static_get( $dbh, $tag_to_delete );
 
-        $self->write_log("Deleting tag id: $tag_to_delete.");
+    if ( defined $tag ) {
 
-        my $sth = $dbh->prepare('DELETE FROM Tag WHERE id=?');
-        $sth->execute($tag_to_delete);
-
-        my $sth2 = $dbh->prepare('DELETE FROM Entry_to_Tag WHERE tag_id=?');
-        $sth2->execute($tag_to_delete);
+        $self->write_log("Deleting tag $tag->{name} id $tag->{id}.");
+        $tag->delete($dbh);
     }
 
     $self->redirect_to( $self->get_referrer );
 }
-
+####################################################################################
 1;

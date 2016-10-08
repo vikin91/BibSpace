@@ -157,8 +157,8 @@ sub static_get_by_name {
 }
 ################################################################################
 sub members {
-    my $self   = shift;
-    my $dbh    = shift;
+    my $self = shift;
+    my $dbh  = shift;
 
 
     my $qry = "SELECT author_id, start, stop
@@ -166,17 +166,79 @@ sub members {
             WHERE team_id=?";
 
     my $sth = $dbh->prepare($qry);
-    $sth->execute($self->{id});
+    $sth->execute( $self->{id} );
 
     my @authors;
     while ( my $row = $sth->fetchrow_hashref() ) {
-        my $author = MAuthor->static_get( $dbh, $row->{author_id} ) if defined $row->{author_id} and $row->{author_id} ne '';
-        # if author is undef then such author does not exists and the table Author_to_Team contains trash!
+        my $author = MAuthor->static_get( $dbh, $row->{author_id} )
+            if defined $row->{author_id} and $row->{author_id} ne '';
+
+# if author is undef then such author does not exists and the table Author_to_Team contains trash!
         push @authors, $author if defined $author;
+
         # my $start = $row->{start};
         # my $stop  = $row->{stop};
     }
     return @authors;
+}
+####################################################################################
+sub get_membership_beginning {
+    my $self   = shift;
+    my $dbh    = shift;
+    my $author = shift;
+
+    die("Author is undefined") unless defined $author;
+
+    return $author->joined_team( $dbh, $self );
+}
+####################################################################################
+sub get_membership_end {
+    my $self   = shift;
+    my $dbh    = shift;
+    my $author = shift;
+
+    die("Author is undefined") unless defined $author;
+
+    return $author->left_team( $dbh, $self );
+}
+####################################################################################
+sub tags {
+    my $self = shift;
+    my $dbh  = shift;
+    my $type = shift || 1;
+
+    my @params;
+
+    my $qry = "SELECT DISTINCT Tag.id as tagid
+                FROM Entry
+                LEFT JOIN Exceptions_Entry_to_Team  ON Entry.id = Exceptions_Entry_to_Team.entry_id
+                LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
+                LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
+                LEFT JOIN Author_to_Team ON Entry_to_Author.author_id = Author_to_Team.author_id 
+                LEFT JOIN Entry_to_Tag ON Entry.id = Entry_to_Tag.entry_id 
+                LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id 
+                WHERE Entry.bibtex_key IS NOT NULL 
+                AND Tag.type = ?";
+
+    push @params, $type;
+
+    push @params, $self->{id};
+    push @params, $self->{id};
+    $qry .= "AND ( ( Exceptions_Entry_to_Team.team_id=? ) OR 
+                   ( Author_to_Team.team_id=? AND start <= Entry.year  AND ( stop >= Entry.year OR stop = 0 ) )
+                )";
+
+    my $sth = $dbh->prepare_cached($qry);
+    $sth->execute(@params);
+
+    my @tags;
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        my $tag = MTag->static_get( $dbh, $row->{tagid} );
+        push @tags, $tag if defined $tag;
+    }
+
+    return @tags;
 }
 ####################################################################################
 no Moose;

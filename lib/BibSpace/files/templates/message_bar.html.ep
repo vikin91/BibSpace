@@ -12,8 +12,7 @@
 
 % my $msg_type_f = flash 'msg_type';
 % my $msg_type_s = stash 'msg_type';
-% my $msg_type = undef;
-% $msg_type = $msg_type_f or $msg_type_s;
+% my $msg_type = $msg_type_f or $msg_type_s;
 
 
 % if (defined $msg) {

@@ -27,6 +27,15 @@ sub register {
 
     my ( $self, $app ) = @_;
 
+
+    $app->helper(
+        get_dbh => sub {
+            my $self = shift;
+            return $self->app->db;
+        }
+    );
+    
+
 # TODO: Move all implementations to a separate files to avoid code redundancy! Here only function calls should be present, not theirs implementation
 
     $app->helper(
