@@ -15,13 +15,6 @@ my $self = $t_logged_in->app;
 my $dbh = $t_logged_in->app->db;
 
 
-  # say "get 1:   ".$en->get($self->app->db, 1);
-  # my @entries = $en->all($self->app->db);
-  # for my $en (@entries){
-  #   say Dumper $en;
-  #   say $en->{id};
-  #   say $en->{bibtex_key};
-  # }
 
 use BibSpace::Model::MEntry;
 use BibSpace::Functions::FPublications;

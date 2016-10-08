@@ -314,6 +314,29 @@ sub static_get_unassigned_of_type_for_paper {
     return @objs;
 }
 ####################################################################################
+sub get_authors {
+    my $self   = shift;
+    my $dbh    = shift;
+
+    my $qry = "SELECT DISTINCT Entry_to_Author.author_id
+            FROM Entry_to_Author 
+            LEFT JOIN Entry_to_Tag ON Entry_to_Author.entry_id = Entry_to_Tag.entry_id 
+            LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
+            WHERE Entry_to_Tag.tag_id =? 
+            AND Entry_to_Author.author_id IS NOT NULL";
+
+    my $sth = $dbh->prepare($qry);
+    $sth->execute($self->{id});
+
+    my @authors;
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        my $author = MAuthor->static_get( $dbh, $row->{author_id} );
+        push @authors, $author if defined $author;
+    }
+    return @authors;
+}
+####################################################################################
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

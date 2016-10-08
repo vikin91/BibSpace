@@ -138,7 +138,6 @@ sub edit {
   }
 
   my @team_members = $mteam->members($dbh);
-  say Dumper \@team_members;
 
   # my ($author_ids_ref, $start_arr_ref, $stop_arr_ref) = get_team_members($self, $id); # get_team_members is deprecated
   # my @members = @$author_ids_ref;

@@ -31,10 +31,6 @@ our @EXPORT = qw(
     random_string
     create_user_id
 
-    get_author_id_for_uid
-    get_author_id_for_master
-    get_master_for_id
-    get_teams_of_author
     get_team_members
     add_team_for_author
     remove_team_for_author
@@ -52,8 +48,6 @@ our @EXPORT = qw(
     get_landing_for_our_type
     toggle_landing_for_our_type
     nohtml
-    get_author_ids_for_tag_id
-    get_author_ids_for_tag_id_and_team
     add_field_to_bibtex_code
     clean_tag_name
     get_exceptions_for_entry_id
@@ -378,51 +372,6 @@ sub get_exceptions_for_entry_id { # TODO: refactor into MEntry
     return @exceptions;
 }
 
-
-##########################################################################
-sub get_author_id_for_uid {
-    my $dbh    = shift;
-    my $master = shift;
-
-    my $author_obj = MAuthor->static_get_by_name( $dbh, $master );
-
-    warn "Using Core::get_author_id_for_uid is deprecated. Use MAuthor->static_get_by_name instead!";
-    return $author_obj->{id} or -1;
-
-    # my $sth = $dbh->prepare("SELECT id FROM Author WHERE uid=?");
-    # $sth->execute($master);
-
-    # my $row = $sth->fetchrow_hashref();
-    # my $id = $row->{id} || -1;
-    # print "ID = -1 for author $master\n" unless defined $id;
-    # return $id;
-}
-##########################################################################
-sub get_author_id_for_master {
-    my $dbh    = shift;
-    my $master = shift;
-
-    my $sth = $dbh->prepare("SELECT id FROM Author WHERE master=?");
-    $sth->execute($master);
-
-    my $row = $sth->fetchrow_hashref();
-    my $id = $row->{id} || -1;
-    print "ID = -1 for author $master\n" unless defined $id;
-    return $id;
-}
-##########################################################################
-sub get_master_for_id {
-    my $dbh = shift;
-    my $id  = shift;
-
-    my $sth = $dbh->prepare("SELECT master FROM Author WHERE id=?");
-    $sth->execute($id);
-
-    my $row = $sth->fetchrow_hashref();
-    my $master = $row->{master} || -1;
-
-    return $master;
-}
 ##########################################################################
 ########################################################################## # here optimize further
 ##########################################################################
@@ -512,110 +461,6 @@ sub get_team_members {
 }
 
 ################################################################################
-sub get_teams_of_author {
-    my $self = shift;
-    my $mid  = shift;
-    my $dbh  = $self->app->db;
-
-    my @teams;
-    my @team_ids;
-    my @start_arr;
-    my @stop_arr;
-
-    my $qry = "SELECT author_id, team_id, start, stop
-            FROM Author_to_Team 
-            WHERE author_id=?
-            ORDER BY start DESC";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($mid);
-
-    my $disp;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $teamid = $row->{team_id};
-        my $start  = $row->{start};
-        my $stop   = $row->{stop};
-
-        my $team_name;
-        my $mteam = MTeam->static_get( $dbh, $teamid );
-        $team_name = $mteam->{name} if defined $mteam;
-
-        push @team_ids,  $teamid if defined $teamid;
-        push @teams,     $team_name   if defined $team_name;
-        push @start_arr, $start  if defined $start;
-        push @stop_arr,  $stop   if defined $stop;
-    }
-    return ( \@teams, \@start_arr, \@stop_arr, \@team_ids );
-}
-################################################################################
-sub get_author_ids_for_tag_id {
-    my $self   = shift;
-    my $tag_id = shift;
-    my $dbh    = $self->app->db;
-
-    say "tag_id $tag_id";
-
-    my $qry = "SELECT DISTINCT Entry_to_Author.author_id
-            FROM Entry_to_Author 
-            LEFT JOIN Entry_to_Tag ON Entry_to_Author.entry_id = Entry_to_Tag.entry_id 
-            LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
-            WHERE Entry_to_Tag.tag_id =? 
-            AND Entry_to_Author.author_id IS NOT NULL";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($tag_id);
-
-    my @author_ids;
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $author_id = $row->{author_id};
-
-        push @author_ids, $author_id if defined $author_id;
-    }
-
-    return @author_ids;
-}
-################################################################################
-sub get_author_ids_for_tag_id_and_team {
-    my $self         = shift;
-    my $tag_id       = shift;
-    my $team_id      = shift;
-    my $dbh          = $self->app->db;
-    my $current_year = get_current_year();
-
-    my $qry = "SELECT DISTINCT Entry_to_Author.author_id
-            FROM Entry_to_Author 
-            LEFT JOIN Entry_to_Tag ON Entry_to_Author.entry_id = Entry_to_Tag.entry_id 
-            LEFT JOIN Author ON Entry_to_Author.author_id = Author.id 
-            WHERE Entry_to_Tag.tag_id =? 
-            AND Entry_to_Author.author_id IS NOT NULL
-            AND Entry_to_Author.author_id IN (
-                SELECT DISTINCT (author_id)
-                FROM Author_to_Team 
-                JOIN Author 
-                ON Author.master_id = Author_to_Team.author_id
-                WHERE team_id=?
-                AND Author_to_Team.start <= ?
-                AND ((Author_to_Team.stop = 0) OR (Author_to_Team.stop >= ?))
-            )";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $tag_id, $team_id, $current_year, $current_year );
-
-# my (\@team_members, \@start_arr, \@stop_arr) = get_team_members($self, $team_id);
-
-    my @author_ids;
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $author_id = $row->{author_id};
-
-        push @author_ids, $author_id if defined $author_id;
-    }
-
-    return @author_ids;
-}
-
-################################################################################
 
 sub add_field_to_bibtex_code {
     my $dbh   = shift;
@@ -623,27 +468,18 @@ sub add_field_to_bibtex_code {
     my $field = shift;
     my $value = shift;
 
-    say "call: add_field_to_bibtex_code eid $eid field $field value $value";
-
-    my @ary = $dbh->selectrow_array( "SELECT bib FROM Entry WHERE id = ?",
-        undef, $eid );
-    my $entry_str = $ary[0];
+    my $mentry = MEntry->static_get( $dbh, $eid );
 
     my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s($entry_str);
+    $entry->parse_s($mentry->{bib});
     return -1 unless $entry->parse_ok;
     my $key = $entry->key;
     $entry->set( $field, $value );
     my $new_bib = $entry->print_s;
 
-# my $sth2 = $dbh->prepare( "UPDATE Entry SET bib=?, modified_time=datetime('now', 'localtime'), need_html_regen = 1 WHERE id =?" );
-    my $sth2
-        = $dbh->prepare(
-        "UPDATE Entry SET bib=?, modified_time=CURRENT_TIMESTAMP, need_html_regen = 1 WHERE id =?"
-        );
-
-    $sth2->execute( $new_bib, $eid );
-    $sth2->finish();
+    $mentry->{bib} = $new_bib;
+    $mentry->populate_from_bib();
+    $mentry->save($dbh);
 }
 ####################################################################################
 # sub has_bibtex_field {

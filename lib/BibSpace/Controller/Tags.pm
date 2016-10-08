@@ -171,16 +171,14 @@ sub get_authors_for_tag_read {
         return;
     }
 
-    my @author_ids = get_author_ids_for_tag_id( $self, $tag->{id} );
-    if ( defined $team_id and defined $team ) {
-        @author_ids = get_author_ids_for_tag_id_and_team( $self, $tag->{id},
-            $team->{id} );
+    my @authors = $tag->get_authors($dbh);
+    if ( defined $team ) {
+        @authors = MAuthor->static_all_with_tag_and_team($dbh, $tag, $team);
     }
 
     $self->stash(
-        tag        => $tag->{name},
-        tag_id     => $tag->{id},
-        author_ids => \@author_ids
+        tag        => $tag,
+        authors    => \@authors
     );
     $self->render( template => 'tags/authors_having_tag_read' );
 }
@@ -213,7 +211,6 @@ sub get_tags_for_author_read {
             { hidden => 0, author => $author->{id}, tag => $tag->{id} } );
         my $count = scalar @objs;
 
-# my $url = "/ly/p?author=".get_master_for_id($self->app->db, $maid)."&tag=".$tag."&title=1&navbar=1";
         my $url = $self->url_for('lyp')->query(
             author => $author->{master},
             tag    => $tag_name,
@@ -306,20 +303,12 @@ sub get_authors_for_tag {
     my $mtag = MTag->static_get( $self->app->db, $tag_id );
     if ( !defined $mtag ) {
         $self->render( text => 'Tag does not exist.', status => 404 );
+        return;
     }
-    my $tag;
+    
+    my @authors = $mtag->get_authors($dbh);
 
-    my @authors = ();
-    if ( defined $mtag ) {
-        $tag = $mtag->{name};
-        @authors = get_author_ids_for_tag_id( $self, $tag_id );
-    }
-    else {
-        $tag_id = 0;
-        $tag    = 'noname';
-    }
-
-    $self->stash( tag => $tag, tag_id => $tag_id, author_ids => \@authors );
+    $self->stash( tag => $mtag, authors => \@authors );
     $self->render( template => 'tags/authors_having_tag' );
 }
 ####################################################################################
