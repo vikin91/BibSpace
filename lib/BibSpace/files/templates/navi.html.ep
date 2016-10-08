@@ -158,13 +158,13 @@
 
         <li class="divider"></li>
         <li role="presentation" class="dropdown-header">Teams</li>
-        % foreach my $team_id (get_teams_id_arr()){
-        % my $team_name = get_team_name($team_id);
+        % my @all_teams = MTeam->static_all( get_dbh() );
+        % foreach my $team ( @all_teams ){
             <li>
-                <a href="<%= url_for('/teams/edit/')%><%=$team_id%>">
-                    <i class="fa fa-users"></i> <%= $team_name %> 
+                <a href="<%= url_for('edit_team', teamid=>$team->{id} )%>">
+                    <i class="fa fa-users"></i> <%= $team->{name} %> 
                     <span class="badge">
-                        <%= get_num_members_for_team($team_id)%>
+                        <%= scalar $team->members( get_dbh() ) %>
                         <span class="glyphicon glyphicon-user"></span>
                     </span>
                     

@@ -63,19 +63,19 @@ sub manage {
     my $type = $self->param('type');
     my $dbh  = $self->app->db;
 
-    my @all_otypes      = get_all_our_types($dbh);
-    my @all_btypes      = get_all_bibtex_types($dbh);
-    my @assigned_btypes = get_bibtex_types_for_our_type( $dbh, $type );
+    my @all_our_types      = get_all_our_types($dbh);
+    my @all_bibtex_types      = get_all_bibtex_types($dbh);
+    my @assigned_bibtex_types = get_bibtex_types_for_our_type( $dbh, $type );
 
     my $set_unassigned_btypes
-        = Set::Scalar->new(@all_btypes) - Set::Scalar->new(@assigned_btypes);
+        = Set::Scalar->new(@all_bibtex_types) - Set::Scalar->new(@assigned_bibtex_types);
     my @unassigned_btypes = $set_unassigned_btypes->members;
 
     $self->stash(
-        all_otypes        => \@all_otypes,
+        all_otypes        => \@all_our_types,
         unassigned_btypes => \@unassigned_btypes,
-        all_btypes        => \@all_btypes,
-        assigned_btypes   => \@assigned_btypes,
+        all_btypes        => \@all_bibtex_types,
+        assigned_btypes   => \@assigned_bibtex_types,
         type              => $type
     );
     $self->render( template => 'types/manage_types' );

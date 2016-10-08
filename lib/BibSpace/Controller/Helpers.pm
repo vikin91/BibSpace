@@ -34,7 +34,7 @@ sub register {
             return $self->app->db;
         }
     );
-    
+
 
 # TODO: Move all implementations to a separate files to avoid code redundancy! Here only function calls should be present, not theirs implementation
 
@@ -230,18 +230,7 @@ sub register {
     $app->helper(
         get_num_teams => sub {
             my $self = shift;
-            my ( $teams_arr_ref, $team_ids_arr_ref )
-                = get_all_teams( $self->app->db );
-            return scalar @$team_ids_arr_ref;
-        }
-    );
-
-    $app->helper(
-        get_teams_id_arr => sub {
-            my $self = shift;
-            my ( $teams_arr_ref, $team_ids_arr_ref )
-                = get_all_teams( $self->app->db );
-            return @$team_ids_arr_ref;
+            return scalar MTeam->static_all( $self->app->db );
         }
     );
 
@@ -268,9 +257,9 @@ sub register {
 
     $app->helper(
         author_is_visible => sub {
-            my $self = shift;
-            my $id   = shift;
-            my $author = MAuthor->static_get($self->app->db, $id);
+            my $self   = shift;
+            my $id     = shift;
+            my $author = MAuthor->static_get( $self->app->db, $id );
             return $author->{display};
         }
     );
@@ -351,12 +340,16 @@ sub register {
 
     $app->helper(
         num_pubs_for_author_and_tag => sub {
-            my $self   = shift;
-            my $mid    = shift;
-            my $tag_id = shift;
+            my $self      = shift;
+            my $master_id = shift;
+            my $tag_id    = shift;
+
+            say "call HELPER num_pubs_for_author_and_tag: master: $master_id tag $tag_id";
+
 
             my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => 0, author => $mid, tag => $tag_id } );
+                { hidden => 0, author => $master_id, tag => $tag_id } );
+
             my $count = scalar @objs;
             return $count;
         }
@@ -364,14 +357,14 @@ sub register {
 
     $app->helper(
         num_pubs_for_author_and_team => sub {
-            my $self    = shift;
-            my $mid     = shift;
-            my $team_id = shift;
+            my $self      = shift;
+            my $master_id = shift;
+            my $team_id   = shift;
 
-            say "call HELPER num_pubs_for_author_and_team";
+            
 
             my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => 0, author => $mid, team => $team_id } );
+                { hidden => 0, author => $master_id, team => $team_id } );
             my $count = scalar @objs;
 
             return $count;
