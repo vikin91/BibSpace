@@ -12,6 +12,8 @@ use warnings;
 use DBI;
 use Set::Scalar;
 
+use Mojo::Redis2;
+
 use BibSpace::Controller::Core;
 use BibSpace::Controller::Set;
 use BibSpace::Controller::Publications;
@@ -34,6 +36,13 @@ sub register {
             return $self->app->db;
         }
     );
+
+    $app->helper(
+        redis => sub { 
+            shift->stash->{redis} ||= Mojo::Redis2->new; 
+        }
+    );
+
 
 
 # TODO: Move all implementations to a separate files to avoid code redundancy! Here only function calls should be present, not theirs implementation
