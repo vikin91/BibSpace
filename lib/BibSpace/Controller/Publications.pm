@@ -1282,7 +1282,7 @@ sub add_pdf_post {
 sub regenerate_html_for_all {
     say "CALL: regenerate_html_for_all ";
     my $self = shift;
-
+    $self->inactivity_timeout(300);
     my $dbh = $self->app->db;
 
     $self->write_log("regenerate_html_for_all is running");
@@ -1312,13 +1312,14 @@ sub regenerate_html_for_all {
 sub regenerate_html_for_all_force {
     say "CALL: regenerate_html_for_all_force ";
     my $self = shift;
+    $self->inactivity_timeout(300);
     my $dbh  = $self->app->db;
     $self->write_log("regenerate_html_for_all FORCE is running");
 
 
     my @entries = MEntry->static_all($dbh);
     for my $e (@entries) {
-        say "Regenrating HTML FORCE for entry " . $e->{id};
+        # say "Regenrating HTML FORCE for entry " . $e->{id};
         $e->regenerate_html( $dbh, 1 );
         $e->save($dbh);
     }

@@ -592,7 +592,7 @@ sub regenerate_html {
     warn "Warning, you use Mentry->regenerate_html without valid bst file!"
         unless defined $bst_file;
 
-    if ( $force == 1 or $self->{need_html_regen} == 1 ) {
+    if ( $force == 1 or $self->{need_html_regen} == 1 or $self->{html} =~ m/ERROR/ ) {
         $self->populate_from_bib();
         $self->generate_html($bst_file);
         $self->{need_html_regen} = 0;
