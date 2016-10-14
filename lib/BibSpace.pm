@@ -42,8 +42,6 @@ has is_demo => sub {
 };
 
 
-
-
 has config_file => sub {
     my $self = shift;
     return $ENV{BIBSPACE_CONFIG} if $ENV{BIBSPACE_CONFIG};
@@ -77,10 +75,10 @@ sub startup {
     $self->setup_plugins;
     $self->setup_routes;
     $self->setup_hooks;
-    
-    say "Using CONFIG: ".$self->app->config_file;
-    say "App home is: ".$self->app->home;
-    say "Active bst file is: ".$self->app->bst;
+
+    say "Using CONFIG: " . $self->app->config_file;
+    say "App home is: " . $self->app->home;
+    say "Active bst file is: " . $self->app->bst;
 }
 ################################################################
 sub setup_config {
@@ -131,10 +129,10 @@ sub setup_plugins {
 
     $self->helper(
         get_referrer => sub {
-            my $s = shift;
+            my $s   = shift;
             my $ret = $s->url_for('start');
-            $ret = $s->req->headers->referrer 
-                if defined $s->req->headers->referrer 
+            $ret = $s->req->headers->referrer
+                if defined $s->req->headers->referrer
                 and $s->req->headers->referrer ne '';
             return $ret;
         }
@@ -276,7 +274,8 @@ sub setup_routes {
     # DELETE '/backups/id'
     $superadmin->delete('/backups/:id')->to('backup#delete_backup')
         ->name('backup_delete');
-    #$superadmin->post('/backups')->to('backup#delete_backup')->name('backup_delete');
+
+#$superadmin->post('/backups')->to('backup#delete_backup')->name('backup_delete');
 
 # PUT '/backups/id'
 # $manager->get('/restore/do/:id')->to('backup#restore_backup')->name('backup_restore');
@@ -309,12 +308,16 @@ sub setup_routes {
     ################ AUTHORS ################
 
     $logged_user->get('/authors/')->to('authors#show')->name('all_authors');
-    $logged_user->get('/authors/add')->to('authors#add_author')->name('add_author');
+    $logged_user->get('/authors/add')->to('authors#add_author')
+        ->name('add_author');
     $logged_user->post('/authors/add/')->to('authors#add_post');
 
-    $logged_user->get('/authors/edit/:id')->to('authors#edit_author')->name('edit_author');
-    $logged_user->post('/authors/edit/')->to('authors#edit_post')->name('edit_author_post');
-    $logged_user->get('/authors/delete/:id')->to('authors#delete_author')->name('delete_author');
+    $logged_user->get('/authors/edit/:id')->to('authors#edit_author')
+        ->name('edit_author');
+    $logged_user->post('/authors/edit/')->to('authors#edit_post')
+        ->name('edit_author_post');
+    $logged_user->get('/authors/delete/:id')->to('authors#delete_author')
+        ->name('delete_author');
     $logged_user->get('/authors/delete/:id/force')
         ->to('authors#delete_author_force');
     $logged_user->post('/authors/edit_membership_dates')
@@ -347,11 +350,13 @@ sub setup_routes {
     $logged_user->any('/tagtypes/edit/:id')->to('tagtypes#edit');
 
     ################ TAGS ################
-    $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )->name('all_tags');
+    $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )
+        ->name('all_tags');
     $logged_user->get('/tags/add/:type')->to( 'tags#add', type => 1 );
     $logged_user->post('/tags/add/:type')->to( 'tags#add_post', type => 1 );
     $logged_user->get('/tags/authors/:tid/:type')
-        ->to( 'tags#get_authors_for_tag', type => 1 )->name('get_authors_for_tag');
+        ->to( 'tags#get_authors_for_tag', type => 1 )
+        ->name('get_authors_for_tag');
     $logged_user->any('/tags/add_and_assign/:eid')->to('tags#add_and_assign');
     $logged_user->get('/tags/delete/:id_to_delete')->to('tags#delete');
     $logged_user->get('/tags/edit/:id')->to('tags#edit');
@@ -366,7 +371,8 @@ sub setup_routes {
     $logged_user->get('/teams/delete/:id_to_delete/force')
         ->to('teams#delete_team_force');
     $logged_user->get('/teams/unrealted_papers/:teamid')
-        ->to('publications#show_unrelated_to_team')->name('unrelated_papers_for_team');
+        ->to('publications#show_unrelated_to_team')
+        ->name('unrelated_papers_for_team');
 
     $logged_user->get('/teams/add')->to('teams#add_team')
         ->name('add_team_get');
@@ -389,7 +395,8 @@ sub setup_routes {
 
     # EXPERIMENTAL END
 
-    $logged_user->get('/publications')->to('publications#all')->name('publications');
+    $logged_user->get('/publications')->to('publications#all')
+        ->name('publications');
     $logged_user->get('/publications/recently_added/:num')
         ->to('publications#all_recently_added')->name('recently_added');
     $logged_user->get('/publications/recently_modified/:num')
@@ -397,9 +404,11 @@ sub setup_routes {
     $logged_user->get('/publications/orphaned')
         ->to('publications#all_without_author');
     $logged_user->get('/publications/untagged/:tagtype')
-        ->to( 'publications#all_without_tag', tagtype => 1 )->name('get_untagged_publications');
+        ->to( 'publications#all_without_tag', tagtype => 1 )
+        ->name('get_untagged_publications');
     $logged_user->get('/publications/untagged/:author/:tagtype')
-        ->to( 'publications#all_without_tag_for_author' )->name('get_untagged_publications_for_author');
+        ->to('publications#all_without_tag_for_author')
+        ->name('get_untagged_publications_for_author');
     $logged_user->get('/publications/candidates_to_delete')
         ->to('publications#all_candidates_to_delete');
     $logged_user->get('/publications/missing_month')
@@ -492,35 +501,40 @@ sub setup_routes {
     $anyone->get('/r/bibtex')->to('publications#all_bibtex');        #ALIAS
     $anyone->get('/r/b')->to('publications#all_bibtex');             #ALIAS
 
-    # TODO: document this
     $anyone->get('/read/publications/get/:id')
+        ->to('publications#single_read')
+        ->name('get_single_publication');
+    $anyone->get('/r/p/get/:id')
         ->to('publications#single_read');
-    $anyone->get('/r/p/get/:id')->to('publications#single_read');    #ALIAS
 
-    $anyone->get('/landing/publications')
-        ->to('publications#landing_types_obj');
-    $anyone->get('/l/p')->to('publications#landing_types_obj')->name('lp')
-        ;                                                            #ALIAS
+    $anyone->get('/landing/publications')->get('/l/p')
+        ->to('publications#landing_types_obj')
+        ->name('landing_publications');
+    $anyone->get('/l/p')
+        ->to('publications#landing_types_obj')
+        ->name('lp');
 
     $anyone->get('/landing-years/publications')
-        ->to('publications#landing_years_obj');
+        ->to('publications#landing_years_obj')
+        ->name('landing_years_publications');
     $anyone->get('/ly/p')->to('publications#landing_years_obj');     #ALIAS
 
     $anyone->get('/read/authors-for-tag/:tid/:team')
         ->to('tags#get_authors_for_tag_read')
         ->name('get_authors_for_tag_read');
+
     #ALIAS
-    $anyone->get('/r/a4t/:tid/:team')
-    ->to('tags#get_authors_for_tag_read')
-    ->name('get_authors_for_tag_read');
+    $anyone->get('/r/a4t/:tid/:team')->to('tags#get_authors_for_tag_read')
+        ->name('get_authors_for_tag_read');
 
     $anyone->get('/read/tags-for-author/:author_id')
         ->to('tags#get_tags_for_author_read')->name('tags_for_author');
-    $anyone->get('/r/t4a/:author_id')->to('tags#get_tags_for_author_read');   #ALIAS
+    $anyone->get('/r/t4a/:author_id')->to('tags#get_tags_for_author_read')
+        ;    #ALIAS
 
     $anyone->get('/read/tags-for-team/:tid')
         ->to('tags#get_tags_for_team_read')->name('tags_for_team');
-    $anyone->get('/r/t4t/:tid')->to('tags#get_tags_for_team_read');     #ALIAS
+    $anyone->get('/r/t4t/:tid')->to('tags#get_tags_for_team_read');    #ALIAS
 
     ################ CRON ################
 
