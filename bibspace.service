@@ -1,0 +1,12 @@
+[Unit]
+Description=BibSpace management of bibtex publication entries
+
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+SyslogIdentifier=bibspace
+PIDFile=/home/piotr/perl/bibspace-demo/bibspace.pid
+ExecStart=/usr/bin/hypnotoad /home/piotr/perl/bibspace-demo/bin/bibspace -f
+ExecStop=/usr/bin/hypnotoad -s /home/piotr/perl/bibspace-demo/bin/bibspace
+ExecReload=/usr/bin/hypnotoad /home/piotr/perl/bibspace-demo/bin/bibspace
