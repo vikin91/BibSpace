@@ -187,18 +187,18 @@ sub remove_uid {
     my $author_master = MAuthor->static_get( $dbh, $master_id );
     my $author_minor  = MAuthor->static_get( $dbh, $minor_id );
 
-    # my $sth = $dbh->prepare('DELETE FROM Author WHERE id=? AND master_id=?');
-    # $sth->execute( $minor_id, $master_id );
+   # my $sth = $dbh->prepare('DELETE FROM Author WHERE id=? AND master_id=?');
+   # $sth->execute( $minor_id, $master_id );
 
-    if($author_master == $author_minor){
+    if ( $author_master == $author_minor ) {
         $self->flash(
             msg =>
                 "Cannot remove user_id $minor_id. Reason: it is a master_id.",
             msg_type => "danger"
         );
     }
-    else{
-        
+    else {
+
 
         $author_minor->{master_id} = $author_minor->{id};
         $author_minor->{master}    = $author_minor->{uid};
@@ -209,6 +209,21 @@ sub remove_uid {
     }
     $self->redirect_to( $self->get_referrer );
 }
+##############################################################################################################
+sub merge_authors {
+    my $self           = shift;
+    my $dbh            = $self->app->db;
+    my $destination_id = $self->param('destination_id');
+    my $source_id      = $self->param('source_id');
+
+    my $author_destination = MAuthor->static_get( $dbh, $destination_id );
+    my $author_source      = MAuthor->static_get( $dbh, $source_id );
+
+    $author_destination->merge_authors( $dbh, $author_source );
+
+    $self->redirect_to( $self->get_referrer );
+}
+
 
 ##############################################################################################################
 sub edit_post {
@@ -262,9 +277,10 @@ sub edit_post {
         }
         elsif ( defined $new_user_id ) {
             my $success = $author->add_user_id( $dbh, $new_user_id );
-            if( !$success ){
+            if ( !$success ) {
                 $self->flash(
-                    msg      => "Cannot add user ID $new_user_id. Such ID already exist. Maybe you wan to merge authors?",
+                    msg =>
+                        "Cannot add user ID $new_user_id. Such ID already exist. Maybe you wan to merge authors?",
                     msg_type => "warning"
                 );
             }
@@ -496,7 +512,7 @@ sub reassign_authors_to_entries {
 
     Fhandle_author_uids_change_for_all_entries( $self->app->db, 0 );
 
-    $self->flash( msg => 'Reassignment has finished.' );
+    $self->flash( msg => 'Reassignment complete.' );
     $self->redirect_to( $self->get_referrer );
 }
 ##############################################################################################################
