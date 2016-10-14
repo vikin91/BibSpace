@@ -425,11 +425,14 @@ sub is_talk {
 sub populate_from_bib {
     my $self = shift;
 
-    my $this_bib = $self->{bib};
 
-    if ( defined $this_bib and $this_bib ne '' ) {
+    if ( defined $self->{bib} and $self->{bib} ne '' ) {
         my $bibtex_entry = new Text::BibTeX::Entry();
-        $bibtex_entry->parse_s($this_bib);
+        my $s = $bibtex_entry->parse_s($self->{bib});
+
+        unless( $bibtex_entry->parse_ok ){
+            return 0;
+        }
 
         $self->{bibtex_key} = $bibtex_entry->key;
         $self->{year}       = $bibtex_entry->get('year');

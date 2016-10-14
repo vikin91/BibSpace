@@ -992,7 +992,7 @@ sub remove_attachment {
         $num_deleted_files = $self->remove_attachment_do( $id, $filetype );
 
         if ( $num_deleted_files > 0 ) {
-            $mentry->regenerate_html( $dbh, 0 , $self->app->bst);
+            $mentry->regenerate_html( $dbh, 0, $self->app->bst );
             $mentry->save($dbh);
         }
 
@@ -1269,7 +1269,7 @@ sub add_pdf_post {
             $self->redirect_to( $self->get_referrer );
             return;
         }
-        $mentry->regenerate_html( $dbh, 0 , $self->app->bst);
+        $mentry->regenerate_html( $dbh, 0, $self->app->bst );
         $mentry->save($dbh);
 
         $self->flash( message => $msg );
@@ -1289,11 +1289,12 @@ sub regenerate_html_for_all {
     my @entries = MEntry->static_all($dbh);
 
     my $bst_file = $self->app->bst;
+
     # for performance reasons as separate variable. Not benchmarked however.
 
     for my $e (@entries) {
         $e->{bst_file} = $bst_file;
-        $e->regenerate_html( $dbh, 0, $self->app->bst);
+        $e->regenerate_html( $dbh, 0, $self->app->bst );
         $e->save($dbh);
     }
 
@@ -1307,7 +1308,7 @@ sub regenerate_html_for_all {
 sub regenerate_html_for_all_force {
     my $self = shift;
     $self->inactivity_timeout(3000);
-    my $dbh  = $self->app->db;
+    my $dbh = $self->app->db;
     $self->write_log("regenerate_html_for_all FORCE is running");
 
     my $bst_file = $self->app->bst;
@@ -1339,7 +1340,7 @@ sub regenerate_html {
         return;
     }
     $mentry->{bst_file} = $self->app->bst;
-    $mentry->regenerate_html( $dbh, 1 ); 
+    $mentry->regenerate_html( $dbh, 1 );
     $mentry->save($dbh);
 
     $self->redirect_to( $self->get_referrer );
@@ -1676,7 +1677,7 @@ sub publications_add_post {
     my ( $mentry, $status_code_str, $existing_id, $added_under_id )
         = Fhandle_add_edit_publication( $dbh, $new_bib, -1, $action,
         $self->app->bst );
-    my $msg
+    my $adding_msg
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );
 
@@ -1691,15 +1692,16 @@ sub publications_add_post {
     # 1 => EDIT_OK
     # 2 => KEY_OK
     # 3 => KEY_TAKEN
+    my $bibtex_warnings = FprintBibtexWarnings( $mentry->{warnings} );
+    my $msg             = $adding_msg . $bibtex_warnings;
+    my $msg_type        = 'success';
+    $msg_type = 'warning' if $bibtex_warnings =~ m/Warning/;
+    $msg_type = 'danger'  if $status_code_str eq 'ERR_BIBTEX' or $status_code_str eq 'KEY_TAKEN' or$bibtex_warnings =~ m/Error/;
 
+    $self->stash( mentry => $mentry, msg => $msg, msg_type => $msg_type );
 
-    if ( $mentry->{warnings} ne '' ) {
-        $msg .= "<br/>";
-        $msg .= "<strong>BibTeX Warnings</strong>: " . $mentry->{warnings};
-    }
-    $self->stash( mentry => $mentry, msg => $msg );
     if ( $status_code_str eq 'ADD_OK' ) {
-        $self->flash( msg => $msg );
+        $self->flash( msg => $msg, msg_type => $msg_type );
         $self->redirect_to(
             $self->url_for( 'edit_publication', id => $added_under_id ) );
     }
@@ -1717,7 +1719,6 @@ sub publications_edit_get {
 
     my $dbh = $self->app->db;
 
-    my $msg = "";
 
     my $mentry = MEntry->static_get( $dbh, $id );
     if ( !defined $mentry ) {
@@ -1728,12 +1729,7 @@ sub publications_edit_get {
     $mentry->populate_from_bib();
     $mentry->generate_html( $self->app->bst );
 
-    if ( $mentry->{warnings} ne '' ) {
-        $msg .= "<br/><br/>";
-        $msg .= "<strong>BibTeX Warnings</strong>: " . $mentry->{warnings};
-    }
-
-    $self->stash( mentry => $mentry, msg => $msg );
+    $self->stash( mentry => $mentry );
     $self->render( template => 'publications/edit_entry' );
 }
 ####################################################################################
@@ -1759,14 +1755,10 @@ sub publications_edit_post {
     my ( $mentry, $status_code_str, $existing_id, $added_under_id )
         = Fhandle_add_edit_publication( $dbh, $new_bib, $id, $action,
         $self->app->bst );
-    my $msg
+    my $adding_msg
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );
 
-    if ( $mentry->{warnings} ne '' ) {
-        $msg .= "<br/>";
-        $msg .= "<strong>BibTeX Warnings</strong>: " . $mentry->{warnings};
-    }
 
     $self->write_log(
         "Editing publication id $id. Action: > $action <. Status code: $status_code_str."
@@ -1780,7 +1772,13 @@ sub publications_edit_post {
     # 2 => KEY_OK
     # 3 => KEY_TAKEN
 
-    $self->stash( mentry => $mentry, msg => $msg );
+    my $bibtex_warnings = FprintBibtexWarnings( $mentry->{warnings} );
+    my $msg             = $adding_msg . $bibtex_warnings;
+    my $msg_type        = 'success';
+    $msg_type = 'warning' if $bibtex_warnings =~ m/Warning/;
+    $msg_type = 'danger'  if $status_code_str eq 'ERR_BIBTEX' or $status_code_str eq 'KEY_TAKEN' or$bibtex_warnings =~ m/Error/;
+
+    $self->stash( mentry => $mentry, msg => $msg, msg_type => $msg_type );
     $self->render( template => 'publications/edit_entry' );
 }
 ####################################################################################

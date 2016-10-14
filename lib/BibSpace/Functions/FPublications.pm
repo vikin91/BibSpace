@@ -23,6 +23,7 @@ our @ISA = qw( Exporter );
 # these are exported by default.
 our @EXPORT = qw(
     Ffix_months
+    FprintBibtexWarnings
     Fhandle_add_edit_publication
     Fget_publications_main_hashed_args_only
     Fget_publications_main_hashed_args
@@ -32,6 +33,20 @@ our @EXPORT = qw(
     Fclean_ugly_bibtex_fields_for_all_entries
     Fhandle_author_uids_change_for_all_entries
 );
+####################################################################################
+sub FprintBibtexWarnings {
+    my $str = shift;
+
+    my $msg = '';
+    if ( $str ne '' ) {
+        
+        $str =~ s/Warning/<br\/>Warning/g;
+
+        $msg .= "<br/><br/>";
+        $msg .= "<strong>BibTeX Warnings</strong>: $str";
+    }
+    return $msg;
+}
 ####################################################################################
 sub Ffix_months {
     my $dbh = shift;
@@ -90,11 +105,10 @@ sub Fhandle_add_edit_publication {
     # 3 => KEY_TAKEN
 
     my $e;
-    $e = MEntry->new() if $id < 0;
+    
     $e = MEntry->static_get( $dbh, $id ) if $id > 0;
-    $e = MEntry->new()
-        if !defined $e;   # by wrong id, we create new object. Should never happen
-    $e->{id}  = $id;
+    $e = MEntry->new( id=>$id, bib=>$new_bib ) if $id < 0 or !defined $e;
+
     $e->{bib} = $new_bib;
     my $bibtex_code_valid = $e->populate_from_bib();
 
@@ -148,8 +162,11 @@ sub Fhandle_add_edit_publication {
         $e->generate_html($bst_file);
         $e->populate_from_bib();
         $e->fix_month();
-        $e->postprocess_updated($dbh, $bst_file);    # this has optional save
         $e->save($dbh);    # so we save for sure
+
+        # these functions require that the object is in the DB
+        $e->postprocess_updated($dbh, $bst_file);    # this has optional save
+        # $e->process_authors( $dbh, 1 );
         $added_under_id = $e->{id};
     }
     else {

@@ -330,6 +330,10 @@ sub setup_routes {
     $logged_user->get('/authors/:masterid/remove_uid/:uid')
         ->to('authors#remove_uid')->name('remove_author_uid');
 
+    ### Not avaialble via frontend yet
+    $logged_user->get('/authors/:destination_id/merge/:source_id')
+        ->to('authors#merge_authors')->name('merge_authors');
+
     $logged_user->get('/authors/reassign')
         ->to('authors#reassign_authors_to_entries');
     $logged_user->get('/authors/reassign_and_create')
