@@ -1,0 +1,169 @@
+<ul class="nav nav-tabs nav-justified" id="myTab" role="tablist">
+  <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#bibtex" role="tab" aria-controls="BibTeX types">BibTeX types</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#national" role="tab" aria-controls="National symbols">National symbols</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#descartes" role="tab" aria-controls="Descartes custom fields">Descartes custom fields</a></li>
+</ul>
+
+<div class="tab-content">
+  <div class="tab-pane active" id="bibtex" role="tabpanel">
+      <ul class="nav nav-tabs nav-justified" id="myTab2" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#summary" role="tab" aria-controls="summary">*</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#article" role="tab" aria-controls="article">article</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#book" role="tab" aria-controls="book">book</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#incollection" role="tab" aria-controls="incollection">incollection</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#inproceedings" role="tab" aria-controls="inproceedings">inproceedings</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#manual" role="tab" aria-controls="manual">manual</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#mastersthesis" role="tab" aria-controls="mastersthesis">mastersthesis</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#phdthesis" role="tab" aria-controls="phdthesis">phdthesis</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#proceedings" role="tab" aria-controls="proceedings">proceedings</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#techreport" role="tab" aria-controls="techreport">techreport</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#unpublished" role="tab" aria-controls="unpublished">unpublished</a></li>
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#misc" role="tab" aria-controls="misc">misc</a></li>
+      </ul>
+      <div class="tab-content">
+          <div class="tab-pane" id="summary" role="tabpanel">
+            <h3>Summary</h3>
+            <ul>
+            <li>article - An article in a journal or magazine. 
+            </li>
+            <li>book - Use this entry if you are the author of whole book. 
+            </li>
+            
+            <li> 
+              <span style="color:#AAA">
+                conference - An article in the proceedings of a conference. This entry is identical to the 'inproceedings'.
+              </span> 
+              Hence, <b>please use 'inproceedings' directly</b>.
+            </li>
+            <li>incollection - A part of a book with its own title. Book chapters should be used here! 
+            </li>
+            <li>inproceedings - An article in the proceedings of a conference.
+            </li>
+            <li>manual - Technical documentation, manual, tutorial. 
+            </li>
+            <li>mastersthesis - Master thesis. 
+            </li>
+            <li>pdhthesis - PhD thesis. 
+            </li>
+            <li>proceedings - Use this entry if you are the author of WHOLE proceedings (e.g., you are an editor). 
+            </li>
+            <li>techreport - A report published by a school or other institution, usually numbered within a series. 
+            </li>
+            <li>unpublished - A document with an author and title, but not formally published. 
+            </li>
+            <li>misc - Any other stuff e.g., web page, white paper etc.
+            </li>
+            <li>booklet - A work that is printed and bound, but without a named publisher or sponsoring institution. 
+            </li>
+            <li>
+              <span style="color:#AAA">
+              inbook - A part of a book, which may be a chapter and/or a range of pages. 
+              </span> 
+              <b>For chapters with its own title and author use 'incollection' </b>. 
+            </li>
+            </ul>
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="article" role="tabpanel">
+        article TODO
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="book" role="tabpanel">
+        book TODO
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="incollection" role="tabpanel">
+        incollection TODO
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="inproceedings" role="tabpanel">
+        inproceedings TODO
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="manual" role="tabpanel">
+        manual TODO
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="mastersthesis" role="tabpanel">
+        mastersthesis TODO
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="phdthesis" role="tabpanel">
+        phdthesis TODO
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="proceedings" role="tabpanel">
+        proceedings TODO
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="techreport" role="tabpanel">
+        techreport TODO
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="unpublished" role="tabpanel">
+        unpublished TODO
+        </div>
+        <!-- ====================================================================== -->
+        <div class="tab-pane" id="misc" role="tabpanel">
+        misc TODO
+        </div>
+        <!-- ====================================================================== -->
+     </div>
+  </div>
+  <div class="tab-pane" id="national" role="tabpanel">
+  <!-- ====================================================================== -->
+    <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
+        <i class="fa fa-asterisk"></i> DE <i class="fa fa-asterisk"></i>
+        <ul class="list-unstyled">
+          <li>&auml; <i class="fa fa-hand-o-right"></i> \"{a} </li>
+          <li>&uuml; <i class="fa fa-hand-o-right"></i> \"{u}</li>
+          <li>&ouml; <i class="fa fa-hand-o-right"></i> \"{o}</li>
+          <li>&szlig; <i class="fa fa-hand-o-right"></i> \ss </li>
+        </ul>            
+    </div>
+    <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
+        <i class="fa fa-asterisk"></i> PL <i class="fa fa-asterisk"></i><br/>
+        <ul class="list-unstyled">
+          <li>&oacute; <i class="fa fa-hand-o-right"></i> \\\'{o}  </li>
+          <li>&#347; <i class="fa fa-hand-o-right"></i> \\\'{s}   </li>
+          <li>&#322; <i class="fa fa-hand-o-right"></i> {\l}      </li>
+          <li>&#261; <i class="fa fa-hand-o-right"></i> \k{a}     </li>
+        </ul>
+    </div>
+    <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
+      <i class="fa fa-asterisk"></i> Symbols <i class="fa fa-asterisk"></i>
+      <ul class="list-unstyled">
+        <li><a href="http://www.bibtex.org/SpecialSymbols/">Help 1 <i class="fa fa-external-link"></i></a></li>
+        <li><a href="http://leptokurtosis.com/main/node/42">Help 2 <i class="fa fa-external-link"></i></a></li>
+      </ul>
+    </div>
+  
+  <!-- ====================================================================== -->
+  </div>
+  <div class="tab-pane" id="descartes" role="tabpanel">
+  <!-- ====================================================================== -->
+        <h3>Descartes Custom fields</h3>
+        <ul>
+        <li>day - day or range of days of a conference.
+        </li>
+        <li>titleaddon - type of paper, e.g., Short paper, extended abstract 
+        </li>
+        <li>...
+        </li>
+        </ul>
+  <!-- ====================================================================== -->
+  </div>
+
+  
+
+</div>
+
+<script>
+  $(function () {
+    $('#myTab a:first').tab('show')
+    $('#myTab2 a:first').tab('show')
+  })
+</script>
+
+
+
