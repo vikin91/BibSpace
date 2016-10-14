@@ -327,7 +327,7 @@ sub setup_routes {
         ->to('authors#add_to_team')->name('add_author_to_team');
     $logged_user->get('/authors/:id/remove_from_team/:tid')
         ->to('authors#remove_from_team')->name('remove_author_from_team');
-    $logged_user->get('/authors/:id/remove_uid/:uid')
+    $logged_user->get('/authors/:masterid/remove_uid/:uid')
         ->to('authors#remove_uid')->name('remove_author_uid');
 
     $logged_user->get('/authors/reassign')

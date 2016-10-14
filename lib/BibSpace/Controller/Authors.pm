@@ -115,18 +115,18 @@ sub edit_author {
     my $author = MAuthor->static_get( $dbh, $id );
 
 
-
-
     if ( !defined $author ) {
-        $self->flash( msg => "Author with id $id does not exist!" ,
-                      msg_type => "danger" );
+        $self->flash(
+            msg      => "Author with id $id does not exist!",
+            msg_type => "danger"
+        );
         $self->redirect_to( $self->url_for('all_authors') );
     }
     else {
 
-        my @all_teams    = MTeam->static_all( $dbh );
-        my @author_teams = $author->teams( $dbh );
-        my @author_tags  = $author->tags( $dbh );
+        my @all_teams    = MTeam->static_all($dbh);
+        my @author_teams = $author->teams($dbh);
+        my @author_tags  = $author->tags($dbh);
 
         my @minor_authors = $author->all_author_user_ids($dbh);
 
@@ -179,19 +179,38 @@ sub remove_from_team {
 }
 ##############################################################################################################
 sub remove_uid {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-    my $muid = $self->param('id');
-    my $uid  = $self->param('uid');
+    my $self      = shift;
+    my $dbh       = $self->app->db;
+    my $master_id = $self->param('masterid');
+    my $minor_id  = $self->param('uid');
 
-    remove_user_id_from_master( $self, $muid, $uid );
+    my $author_master = MAuthor->static_get( $dbh, $master_id );
+    my $author_minor  = MAuthor->static_get( $dbh, $minor_id );
 
+    # my $sth = $dbh->prepare('DELETE FROM Author WHERE id=? AND master_id=?');
+    # $sth->execute( $minor_id, $master_id );
+
+    if($author_master == $author_minor){
+        $self->flash(
+            msg =>
+                "Cannot remove user_id $minor_id. Reason: it is a master_id.",
+            msg_type => "danger"
+        );
+    }
+    else{
+        
+
+        $author_minor->{master_id} = $author_minor->{id};
+        $author_minor->{master}    = $author_minor->{uid};
+        $author_minor->save($dbh);
+        $author_master->move_entries_from_author( $dbh, $author_minor );
+        $author_minor->delete($dbh);
+
+    }
     $self->redirect_to( $self->get_referrer );
-
 }
 
 ##############################################################################################################
-### POST like for HTML forms, not a blog post
 sub edit_post {
     my $self        = shift;
     my $dbh         = $self->app->db;
@@ -205,22 +224,36 @@ sub edit_post {
 
     if ( defined $author ) {
         if ( defined $new_master ) {
-            my $status = $author->update_master_name($dbh, $new_master);
-        
+            my $status = $author->update_master_name( $dbh, $new_master );
+
             # status = 0 OK
             # status > 0 existing master id
 
             if ( $status == 0 ) {
-                $self->flash( msg=>"Master name has been updated sucesfully.", msg_type=>"success" );
-                $self->redirect_to( $self->url_for('edit_author', id=>$status)  );
+                $self->flash(
+                    msg      => "Master name has been updated sucesfully.",
+                    msg_type => "success"
+                );
+                $self->redirect_to(
+                    $self->url_for( 'edit_author', id => $status ) );
             }
-            elsif( $status != $id ) {
+            elsif ( $status != $id ) {
                 my $existing_author = MAuthor->static_get( $dbh, $status );
-                $self->flash( msg=>"This master name is already taken by <a href=\"".$self->url_for('edit_author', id=>$status)."\">".$existing_author->{master}."</a>.", msg_type=>"danger" );
-                $self->redirect_to( $self->url_for('edit_author', id=>$id)  );
+                $self->flash(
+                    msg => "This master name is already taken by <a href=\""
+                        . $self->url_for( 'edit_author', id => $status )
+                        . "\">"
+                        . $existing_author->{master} . "</a>.",
+                    msg_type => "danger"
+                );
+                $self->redirect_to(
+                    $self->url_for( 'edit_author', id => $id ) );
             }
-            else{
-                $self->flash( msg=>"Master name has not changed.", msg_type=>"info" );
+            else {
+                $self->flash(
+                    msg      => "Master name has not changed.",
+                    msg_type => "info"
+                );
             }
 
         }
@@ -228,10 +261,16 @@ sub edit_post {
             $author->toggle_visibility($dbh);
         }
         elsif ( defined $new_user_id ) {
-            $author->add_user_id( $dbh, $new_user_id );
+            my $success = $author->add_user_id( $dbh, $new_user_id );
+            if( !$success ){
+                $self->flash(
+                    msg      => "Cannot add user ID $new_user_id. Such ID already exist. Maybe you wan to merge authors?",
+                    msg_type => "warning"
+                );
+            }
         }
     }
-    $self->redirect_to( $self->url_for('edit_author', id=>$id) );
+    $self->redirect_to( $self->url_for( 'edit_author', id => $id ) );
 }
 ##############################################################################################################
 sub post_edit_membership_dates {
@@ -397,28 +436,6 @@ sub add_new_user_id_to_master {
 
 }
 
-
-##############################################################################################################
-sub remove_user_id_from_master {
-    my $self = shift;
-    my $mid  = shift;
-    my $uid  = shift;
-    my $dbh  = $self->app->db;
-
- # cannot remove aid that is muid, because you would remove the user completly
-    if ( $mid != $uid ) {
-        my $sth
-            = $dbh->prepare('DELETE FROM Author WHERE id=? AND master_id=?');
-        $sth->execute( $uid, $mid );
-    }
-    else {
-        my $str
-            = "Function remove_user_id_from_master: cannot remove this user id because it is the master id. Removing the master id would remove the user completly";
-        say $str;
-        $self->flash( msg => $str );
-        $self->redirect_to( $self->get_referrer );
-    }
-}
 
 ##############################################################################################################
 

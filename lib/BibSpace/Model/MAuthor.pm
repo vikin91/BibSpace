@@ -462,40 +462,50 @@ sub move_entries_from_author {
     }
 }
 ##############################################################################################################
+sub merge_authors {
+    my $self   = shift;
+    my $dbh    = shift;
+    my $source_author = shift;
+
+    if ( defined $source_author and $source_author != $self ) {
+
+        # author with new_user_id already exist
+        # move all entries of candidate to this author
+        $self->move_entries_from_author( $dbh, $source_author );
+
+        $source_author->{master}    = $self->{master};
+        $source_author->{master_id} = $self->{master_id};
+
+        # TODO: cleanup author_candidate teams?
+
+    }
+    $source_author->save($dbh);
+
+}
+##############################################################################################################
 sub add_user_id {
     my $self        = shift;
     my $dbh         = shift;
     my $new_user_id = shift;
 
-
-    # Check if Author with $id can have added the $new_user_id
-
-    # candidate
     my $author_candidate = MAuthor->static_get_by_name( $dbh, $new_user_id );
 
+
     if ( defined $author_candidate ) {
-
         # author with new_user_id already exist
-        # move all entries of candidate to this author
-        $self->move_entries_from_author( $dbh, $author_candidate );
-
-        $author_candidate->{master}    = $self->{master};
-        $author_candidate->{master_id} = $self->{master_id};
-
-        # TODO: cleanup author_candidate teams?
-
+        return 0; # no success
     }
-    else {
-       # we add a new user and assign master and master_id from the author_obj
-       # create new user
-       # assign it to master
-        $author_candidate = MAuthor->new(
-            uid       => $new_user_id,
-            master    => $self->{master},
-            master_id => $self->{master_id}
-        );
-    }
+    
+   # we add a new user and assign master and master_id from the author_obj
+   # create new user
+   # assign it to master
+    $author_candidate = MAuthor->new(
+        uid       => $new_user_id,
+        master    => $self->{master},
+        master_id => $self->{master_id}
+    );
     $author_candidate->save($dbh);
+    return 1; # success
 
 }
 ################################################################################
