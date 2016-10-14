@@ -384,8 +384,6 @@ sub register {
             my $master_id = shift;
             my $tag_id    = shift;
 
-            say "call HELPER num_pubs_for_author_and_tag: master: $master_id tag $tag_id";
-
 
             my @objs = Fget_publications_main_hashed_args_only( $self,
                 { hidden => 0, author => $master_id, tag => $tag_id } );

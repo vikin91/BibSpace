@@ -46,7 +46,7 @@
 
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
-          <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-user"></span> Master ID</span>
+          <span class="btn btn-default pull-right" data-toggle="tooltip" data-placement="bottom" title="Also called Master ID"><span class="glyphicon glyphicon-user"></span> Master name</span>
         </div>
         <div class="col-lg-4 col-md-4 col-xs-4">
           <form class="form-horizontal" role="form" method="POST" action="<%= url_for('edit_author_post') %>">
@@ -64,7 +64,7 @@
 
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
-          <span href ="#" class="btn btn-default pull-right"  data-toggle="tooltip" data-placement="bottom" title="Unique Master User ID"><span class="glyphicon glyphicon-barcode"></span> UMUID</span>
+          <span href ="#" class="btn btn-default pull-right"  data-toggle="tooltip" data-placement="bottom" title="Unique Master User ID"><span class="glyphicon glyphicon-barcode"></span> Master ID</span>
         </div>
         <div class="col-lg-4 col-md-4 col-xs-4">
           <span class="btn btn-default" ><span class="glyphicon glyphicon-barcode"></span> <%=$id%></span>
@@ -84,7 +84,7 @@
             <div class="btn-group">
               <button type="button" class="btn btn-default"><%= $minor_author->{uid} %> <span class="glyphicon glyphicon-barcode"></span> <%= $minor_author->{id} %></button>
               %if( $minor_author->{id} != $id){
-                  <a class="btn btn-default" href="<%= url_for('remove_author_uid', id=>$id, uid=>$minor_author->{id}) %>"><span style="color: white">|</span><span class="glyphicon glyphicon-minus" style="color: red;"></span></a>
+                  <a class="btn btn-default" href="<%= url_for('remove_author_uid', masterid=>$id, uid=>$minor_author->{id}) %>"><span style="color: white">|</span><span class="glyphicon glyphicon-minus" style="color: red;"></span></a>
               %}
             </div>
         %}
@@ -280,13 +280,7 @@
               </div>
               <div class="modal-body">
 
-                  <p>Are you sure you want to delete this author from DB? His papers remain untouched.</p>
-                  <pre>
-                      DELETE FROM Author WHERE master_id=?
-                      DELETE FROM Author WHERE id=?
-                      DELETE FROM Entry_to_Author WHERE author_id=?
-                      DELETE FROM Author_to_Team WHERE author_id=?
-                  </pre>
+                  <p>Are you sure you want to delete this author from the system? His/her papers remain untouched.</p>
                   
                   <div class="modal-footer">
                     <a class="btn btn-warning" href="<%= url_for('authorsdeleteidforce', id=>$id)%>"><span class="glyphicon glyphicon-trash"></span> Yes, delete this author!</a>
