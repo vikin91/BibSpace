@@ -41,11 +41,13 @@ has is_demo => sub {
     return 0;
 };
 
-has home => sub {
-    # my $path = $ENV{BIBSPACE_HOME} || getcwd;
-    # return Mojo::Home->new( File::Spec->rel2abs($path) );
-    Mojo::Home->new;
-};
+# has home => sub {
+#     # my $path = $ENV{BIBSPACE_HOME} || getcwd;
+#     # return Mojo::Home->new( File::Spec->rel2abs($path) );
+#     my $self = shift;
+#     my $home = Mojo::Home->new;
+#     $home->detect(ref $self);
+# };
 
 has bst => sub {
     my $self = shift;
@@ -99,7 +101,7 @@ has db => sub {
 
 has version => sub {
     my $self = shift;
-    return $BibSpace::VERSION // "0.4.2";
+    return $BibSpace::VERSION // "0.4.5";
 };
 ################################################################
 sub startup {
