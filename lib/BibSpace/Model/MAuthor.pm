@@ -320,7 +320,7 @@ sub static_get_by_master {
     my $dbh  = shift;
     my $name = shift;
 
-    my $sth = $dbh->prepare("SELECT id FROM Author WHERE master=?");
+    my $sth = $dbh->prepare("SELECT id FROM Author WHERE master=? AND master_id=id");
     $sth->execute($name);
     my $row = $sth->fetchrow_hashref();
     my $id = $row->{id} || -1;
@@ -455,11 +455,13 @@ sub move_entries_from_author {
     my $dbh         = shift;
     my $from_author = shift;
 
-    for my $entry ( $from_author->entries($dbh) ) {
-        $entry->remove_author( $dbh, $from_author );
-        $entry->assign_author( $dbh, $self );
+    my $sth = $dbh->prepare(
+            'UPDATE IGNORE Entry_to_Author SET author_id = ? WHERE author_id = ?'
+    );
+    $sth->execute( $self->{id}, $from_author->{id} );
 
-    }
+    # $entry->remove_author( $dbh, $from_author );
+    # $entry->assign_author( $dbh, $self );
 }
 ##############################################################################################################
 sub merge_authors {
@@ -467,19 +469,26 @@ sub merge_authors {
     my $dbh    = shift;
     my $source_author = shift;
 
-    if ( defined $source_author and $source_author != $self ) {
+    if ( defined $source_author and $source_author->{id} != $self->{id} ) {
 
         # author with new_user_id already exist
         # move all entries of candidate to this author
+        say "source: " . Dumper $source_author;
+        say "destin: " . Dumper $self;
+
         $self->move_entries_from_author( $dbh, $source_author );
+
+        # necessary due to possible conflicts caused on ON UPDATE CASCADE
+        $source_author->abandon_all_entries( $dbh ); 
+        $source_author->abandon_all_teams( $dbh ); 
 
         $source_author->{master}    = $self->{master};
         $source_author->{master_id} = $self->{master_id};
-
-        # TODO: cleanup author_candidate teams?
+        $source_author->save($dbh);
+        return 1;
 
     }
-    $source_author->save($dbh);
+    return 0;
 
 }
 ##############################################################################################################
@@ -507,6 +516,30 @@ sub add_user_id {
     $author_candidate->save($dbh);
     return 1; # success
 
+}
+################################################################################
+sub abandon_all_entries {
+    my $self = shift;
+    my $dbh  = shift;
+
+
+    my $qry = "DELETE FROM Entry_to_Author
+            WHERE author_id=?";
+
+    my $sth = $dbh->prepare($qry);
+    $sth->execute( $self->{id} );
+}
+################################################################################
+sub abandon_all_teams {
+    my $self = shift;
+    my $dbh  = shift;
+
+
+    my $qry = "DELETE FROM Author_to_Team
+            WHERE author_id=?";
+
+    my $sth = $dbh->prepare($qry);
+    $sth->execute( $self->{id} );
 }
 ################################################################################
 sub teams {

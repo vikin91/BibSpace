@@ -166,7 +166,8 @@ sub Fhandle_add_edit_publication {
 
         # these functions require that the object is in the DB
         $e->postprocess_updated($dbh, $bst_file);    # this has optional save
-        # $e->process_authors( $dbh, 1 );
+        $e->process_authors( $dbh, 1 );
+        $e->save($dbh);    # so we save for sure
         $added_under_id = $e->{id};
     }
     else {
@@ -193,6 +194,7 @@ sub Fget_publications_main_hashed_args_only {
 ####################################################################################
 sub Fget_publications_main_hashed_args {    #
     my ( $self, $args ) = @_;
+
 
 
     return Fget_publications_core(
@@ -252,6 +254,7 @@ sub Fget_publications_core {
     my $permalink   = shift;
     my $hidden      = shift;
 
+
     # say "CALL: get_publications_core author $author tag $tag";
 
     my $dbh = $self->app->db;
@@ -267,7 +270,6 @@ sub Fget_publications_core {
         # no such master. Assume, that author id was given
         $author_obj = MAuthor->static_get( $dbh, $author );    
     }
-
 
     my $tag_obj = MTag->static_get_by_name( $dbh, $tag );
     if ( !defined $tag_obj ){

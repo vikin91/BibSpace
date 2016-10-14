@@ -7,26 +7,20 @@
 % $adding = 0 if $mentry->{id} > 0;
 
 <div class="container">
-
     <div class="row">
         <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
             <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
         </div>
-    </div>
-
-
-    <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
-        
-        <table class="table table-condensed table-hover">
-            <thead>
-            </thead>
-            <tbody>
-            % if ($adding == 0) { 
-                %= include 'publications_table_row', use_modal => 1, entry_obj => $mentry, j => '';
-            % }
-        </tbody>
-        </table>
+            <table class="table table-condensed table-hover">
+                <thead>
+                </thead>
+                <tbody>
+                % if ($adding == 0) { 
+                    %= include 'publications_table_row', use_modal => 1, entry_obj => $mentry, j => '';
+                % }
+                </tbody>
+            </table>
         </div>
     </div> 
 
@@ -40,9 +34,9 @@
         % if($adding){
         %    $route_name = 'add_publication_post';
         % }
-        
+
         %= form_for $route_name => {id => $mentry->{id}} => (class=>'form-horizontal', role=>'form', method=>'POST') => begin
-            <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="form-group">
                     <label for="bibtex">BibTeX code</label>
                     <textarea class="form-control" rows="12" id="description" name="new_bib"><%=$mentry->{bib}%></textarea>
@@ -53,19 +47,21 @@
                     <button name="check_key" value="check_key" type="submit" class="btn btn-default"><i class="fa fa-exclamation-triangle" style="color: red;"></i> Check if BibTeX key exists</button>
                 </div>
             </div>
-            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
+            % end
+<!--             <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
                 <div class="alert alert-info">
                     %= include 'bibtex_help';
                 </div>
-            </div>
-            % end
+            </div> -->
+            
     </div>
-
-  <div class="row">
- 
-  </div>
-
-
+    <div class="row">
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="alert">
+                %= include 'bibtex_help_entry';
+            </div>
+        </div>
+    </div>
 </div>
 
 

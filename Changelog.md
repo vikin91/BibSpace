@@ -1,5 +1,16 @@
 ### Changelog ###
 
+#### v0.4.6 15-10.2016 ####
+* Code refactoring - removed small parts of unused code
+* add systemd .service profile
+* add cpanfile stub
+* rebuild edit author page 
+* fix remove user id from author 
+* add function merge authors 
+* add tab-pane with bibtex help for adding publications 
+* minor fixes and improvements # i love to write this :P
+
+
 #### v0.4.5 08-10.2016 ####
 * Code refactoring - towards OO design and getting rid of core.pm - edit_author, authors, tags
 * Various bugfixes, e.g., showing publications with no tag for autor no longer returns 404.
