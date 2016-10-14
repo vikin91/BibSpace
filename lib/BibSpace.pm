@@ -507,7 +507,7 @@ sub setup_routes {
     $anyone->get('/r/p/get/:id')
         ->to('publications#single_read');
 
-    $anyone->get('/landing/publications')->get('/l/p')
+    $anyone->get('/landing/publications')
         ->to('publications#landing_types_obj')
         ->name('landing_publications');
     $anyone->get('/l/p')
