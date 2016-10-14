@@ -574,7 +574,11 @@ sub generate_html {
 
     my $c = BibSpaceBibtexToHtml::BibSpaceBibtexToHtml->new();
     $self->{html} = $c->convert_to_html(
-        { method => 'new', bib => $self->{bib}, bst => $bst_file } );
+        { method => 'new', 
+          bib => $self->{bib}, 
+          bst => $bst_file 
+        } 
+    );
     $self->{warnings} = join( ', ', @{ $c->{warnings_arr} } );
 
     $self->{need_html_regen} = 0;
@@ -592,7 +596,10 @@ sub regenerate_html {
     warn "Warning, you use Mentry->regenerate_html without valid bst file!"
         unless defined $bst_file;
 
-    if ( $force == 1 or $self->{need_html_regen} == 1 or $self->{html} =~ m/ERROR/ ) {
+    if (   $force == 1
+        or $self->{need_html_regen} == 1
+        or $self->{html} =~ m/ERROR/ )
+    {
         $self->populate_from_bib();
         $self->generate_html($bst_file);
         $self->{need_html_regen} = 0;
@@ -1096,21 +1103,26 @@ sub add_tags {
             $t->save($dbh);
         }
         $t = MTag->static_get_by_name( $dbh, $tn );
-        $num_added = $num_added + $self->assign_tag($dbh, $t);
+        $num_added = $num_added + $self->assign_tag( $dbh, $t );
     }
     return $num_added;
 }
 ####################################################################################
 sub assign_tag {
-    my $self              = shift;
-    my $dbh               = shift;
-    my $tag               = shift;
+    my $self = shift;
+    my $dbh  = shift;
+    my $tag  = shift;
 
     my $num_added = 0;
 
-    return 0 if !defined $self->{id} or $self->{id} < 0 or !defined $tag or $tag->{id} <= 0;
+    return 0
+        if !defined $self->{id}
+        or $self->{id} < 0
+        or !defined $tag
+        or $tag->{id} <= 0;
 
-    my $sth = $dbh->prepare("INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
+    my $sth = $dbh->prepare(
+        "INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
     $num_added = $sth->execute( $self->{id}, $tag->{id} );
     return $num_added;
 }
