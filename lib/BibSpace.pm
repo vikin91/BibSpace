@@ -1,4 +1,4 @@
-package BibSpace v0.4.5;
+package BibSpace v0.4.6;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
@@ -66,7 +66,7 @@ has db => sub {
 
 has version => sub {
     my $self = shift;
-    return $BibSpace::VERSION // "0.4.5";
+    return $BibSpace::VERSION // "0.4.6";
 };
 ################################################################
 sub startup {
@@ -330,8 +330,7 @@ sub setup_routes {
     $logged_user->get('/authors/:masterid/remove_uid/:uid')
         ->to('authors#remove_uid')->name('remove_author_uid');
 
-    ### Not avaialble via frontend yet
-    $logged_user->get('/authors/:destination_id/merge/:source_id')
+    $logged_user->post('/authors/merge/')
         ->to('authors#merge_authors')->name('merge_authors');
 
     $logged_user->get('/authors/reassign')

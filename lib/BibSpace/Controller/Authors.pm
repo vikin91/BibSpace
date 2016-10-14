@@ -114,6 +114,11 @@ sub edit_author {
     my $dbh = $self->app->db;
     my $author = MAuthor->static_get( $dbh, $id );
 
+    if( defined $author and $author->{id} != $author->{master_id} ){
+        $self->redirect_to( $self->url_for('edit_author', id=>$author->{master_id}) );
+        return;
+    }
+
 
     if ( !defined $author ) {
         $self->flash(
@@ -199,13 +204,20 @@ sub remove_uid {
     }
     else {
 
-
+        my @all_entries = $author_master->entries( $dbh );
+        
         $author_minor->{master_id} = $author_minor->{id};
         $author_minor->{master}    = $author_minor->{uid};
         $author_minor->save($dbh);
-        $author_master->move_entries_from_author( $dbh, $author_minor );
-        $author_minor->delete($dbh);
+        # authors are uncnnected now
+        # ON UPDATE CASCADE has removed all entreis from $author_master and assigned them to $author_minor
+        # All entries of the $author_master from before seperation needs be updated
+        # The $author_minor comes back to the list of all authors and it keeps its entries.
 
+        foreach my $e (@all_entries) {
+            # 0 = no creation of new authors
+            $e->process_authors( $dbh, 0 ); 
+        }
     }
     $self->redirect_to( $self->get_referrer );
 }
@@ -213,13 +225,46 @@ sub remove_uid {
 sub merge_authors {
     my $self           = shift;
     my $dbh            = $self->app->db;
-    my $destination_id = $self->param('destination_id');
-    my $source_id      = $self->param('source_id');
+    my $destination_id = $self->param('author_to');
+    my $source_id      = $self->param('author_from');
 
-    my $author_destination = MAuthor->static_get( $dbh, $destination_id );
-    my $author_source      = MAuthor->static_get( $dbh, $source_id );
+    my $author_destination;
+    if ($destination_id =~ m/^\d+$/){
+       $author_destination = MAuthor->static_get( $dbh, $destination_id )  
+    }
+    else{
+        $author_destination = MAuthor->static_get_by_master( $dbh, $destination_id ) 
+    }
 
-    $author_destination->merge_authors( $dbh, $author_source );
+    my $author_source;
+    if ($source_id =~ m/^\d+$/){
+       $author_source = MAuthor->static_get( $dbh, $source_id )  
+    }
+    else{
+        $author_source = MAuthor->static_get_by_master( $dbh, $source_id ) 
+    }
+    my $copy_name          = $author_source->{uid};
+
+    my $success = 0;
+
+    if( defined $author_source and defined $author_destination ){
+        $success = $author_destination->merge_authors( $dbh, $author_source );
+    }
+
+    if ($success){
+        $self->flash(
+            msg =>
+                "Authors merged. <strong>$copy_name</strong> was merged into <strong>$author_destination->{master}</strong>.",
+            msg_type => "success"
+        );
+    }
+    else{
+        $self->flash(
+            msg =>
+                "Authors cannot be merged. ",
+            msg_type => "danger"
+        );   
+    }
 
     $self->redirect_to( $self->get_referrer );
 }

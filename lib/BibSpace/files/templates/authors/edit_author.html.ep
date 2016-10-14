@@ -5,10 +5,19 @@
 
 <div class="container">
     <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2"></div>
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            
+        </div>
+    </div>
+
+    <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
             <a class="btn btn-info pull-right" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
         </div>
-        <div class="col-lg-8 col-md-8 col-xs-8">
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            <h1> <%= $author->{master} %> </h1>
+
             <a class="btn btn-success" href="<%= url_for('publications')->query(author=>$author->{master}) %>">
                 <i class="fa fa-files-o"></i> Show all <span class="badge"><%= num_pubs_for_author($id)%></span> papers of this author
             </a>
@@ -29,7 +38,7 @@
     <br/>
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2"></div>
-        <div class="col-lg-8 col-md-8 col-xs-8">
+        <div class="col-lg-10 col-md-10 col-xs-10">
             % my @ttobjs = get_all_tag_types($self);
             % foreach my $ttobj (@ttobjs){
                 <a class="btn btn-default" href="<%= url_for('get_untagged_publications_for_author', author=> $author->{id}, tagtype=>$ttobj->{id} ) %>">
@@ -40,7 +49,14 @@
     </div>
 
 
-  <hr>
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+        </div>
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            <h1> Edit author </h1>
+        </div>
+    </div>
+  
 
   <!-- MUID -->
 
@@ -48,7 +64,7 @@
         <div class="col-lg-2 col-md-2 col-xs-2">
           <span class="btn btn-default pull-right" data-toggle="tooltip" data-placement="bottom" title="Also called Master ID"><span class="glyphicon glyphicon-user"></span> Master name</span>
         </div>
-        <div class="col-lg-4 col-md-4 col-xs-4">
+        <div class="col-lg-6 col-md-6 col-xs-6">
           <form class="form-horizontal" role="form" method="POST" action="<%= url_for('edit_author_post') %>">
               <div class="input-group">
                 <input type="hidden" name="master" value="<%= $author->{master} %>"></input>
@@ -62,45 +78,54 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-2 col-md-2 col-xs-2">
-          <span href ="#" class="btn btn-default pull-right"  data-toggle="tooltip" data-placement="bottom" title="Unique Master User ID"><span class="glyphicon glyphicon-barcode"></span> Master ID</span>
-        </div>
-        <div class="col-lg-4 col-md-4 col-xs-4">
-          <span class="btn btn-default" ><span class="glyphicon glyphicon-barcode"></span> <%=$id%></span>
-        </div>
-    </div>  
 
   <!-- UIDs -->
 
-  <div class="row">
-    <div class="col-lg-2 col-md-2 col-xs-2">
-      <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-user"></span> User IDs</span>
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+          <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-user"></span> User IDs</span>
+        </div>
+        <div class="col-lg-6 col-md-6 col-xs-6">
+            % my $i = 0;
+            % 
+            <ul class="list-group">
+            % for my $minor_author (@$minor_authors){
+                 <li class="list-group-item">
+                    <span class="badge">
+                        <span class="glyphicon glyphicon-barcode"></span>
+                        <%= $minor_author->{id} %>        
+                    </span>
+                    %if( $minor_author->{id} != $author->{id}){
+                        <a class="btn btn-danger btn-sm" href="<%= url_for('remove_author_uid', masterid=>$id, uid=>$minor_author->{id}) %>">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                    %}
+                    <%= $minor_author->{uid} %>
+                </li>
+            %}
+            </ul>
+        </div>
     </div>
-    <div class="col-lg-4 col-md-4 col-xs-4">
-        % my $i = 0;
-        % 
-        % for my $minor_author (@$minor_authors){
-            <div class="btn-group">
-              <button type="button" class="btn btn-default"><%= $minor_author->{uid} %> <span class="glyphicon glyphicon-barcode"></span> <%= $minor_author->{id} %></button>
-              %if( $minor_author->{id} != $id){
-                  <a class="btn btn-default" href="<%= url_for('remove_author_uid', masterid=>$id, uid=>$minor_author->{id}) %>"><span style="color: white">|</span><span class="glyphicon glyphicon-minus" style="color: red;"></span></a>
-              %}
-            </div>
-        %}
-        <form class="form-horizontal" role="form" method="POST" action="<%= url_for('edit_author_post') %>">
-          <div class="input-group">
-            <input type="hidden" name="master" value="<%= $author->{master} %>"></input>
-            <input type="hidden" name="id" value="<%= $id %>"></input>
-            <input class="form-control" type="text" name="new_user_id" placeholder="UserID. Example: vonMustermanMax Juergen"></input>
-            <div class="input-group-btn">
-                <button class="btn btn-default" type="submit" data-toggle="tooltip" data-placement="bottom" title="Add User ID. If the ID exists, the authors will be merged!" ><span style="color: white">|</span><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span style="color: white">|</span></button>
-            </div>
-          </div>
-      </form>
-    </div>
-  </div>
+    
+    <!-- Add UID -->
 
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+          <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-user"></span> Add User ID</span>
+        </div>
+        <div class="col-lg-6 col-md-6 col-xs-6">
+            <form class="form-horizontal" role="form" method="POST" action="<%= url_for('edit_author_post') %>">
+                <div class="input-group">
+                    <input type="hidden" name="master" value="<%= $author->{master} %>"></input>
+                    <input type="hidden" name="id" value="<%= $id %>"></input>
+                    <input class="form-control" type="text" name="new_user_id" placeholder="UserID. Example: vonMustermanMax Juergen"></input>
+                    <div class="input-group-btn">
+                        <button class="btn btn-default" type="submit" data-toggle="tooltip" data-placement="bottom" title="Add User ID." ><span style="color: white">|</span><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span style="color: white">|</span></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Visibility -->
 
@@ -109,7 +134,7 @@
         <div class="col-lg-2 col-md-2 col-xs-2">
           <span class="btn btn-default pull-right" ><span class="glyphicon glyphicon-eye-open"></span> Visibility</span>
         </div>
-        <div class="col-lg-4 col-md-4 col-xs-4">
+        <div class="col-lg-6 col-md-6 col-xs-6">
             <a href="<%= url_for('toggle_author_visibility', id=>$id) %>">
             <div class="btn-group" data-toggle="tooltip" data-placement="bottom" title="Toggle visibility">
             % if ($author->{display} eq '1'){
@@ -262,6 +287,59 @@
     <hr>
 
     % if(is_admin()){
+
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-xs-12"/>
+                <div class="alert alert-danger" role="alert">
+                    <span class="glyphicon glyphicon-warning-sign"></span> 
+                    Admin area
+                    <span class="glyphicon glyphicon-warning-sign"></span> 
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-lg-2 col-md-2 col-xs-2">
+                <span class="btn btn-default pull-right" >
+                    <span class="glyphicon glyphicon-user"></span> 
+                    Merge authors
+                </span>
+            </div>
+            <div class="col-lg-10 col-md-10 col-xs-10">
+                <H4> Merge authors (experimental feature) </H4>
+                <P> The author, whose ID is given in the form below, will be merged into this one (<%= $author->{master} %>). Feature is experimental. </P>
+                <P> Merging affects only entries.</P>
+                <P> The result is immediate. Make backup if in doubt. Some things can be reverted (but no teams!)</P>
+                <P> Warning! The source author will abandon all teams.</P>
+            </div>
+        </div>
+
+    
+        <!-- Merging -->
+
+        <div class="row">
+            <div class="col-lg-2 col-md-2 col-xs-2">
+            </div>
+            <div class="col-lg-4 col-md-4 col-xs-4">
+                <form class="form-horizontal" role="form" method="POST" action="<%= url_for('merge_authors') %>">
+                    <div class="input-group">
+                        <input type="hidden" name="author_to" value="<%= $author->{master_id} %>"></input>
+                        <input type="hidden" name="id" value="<%= $id %>"></input>
+                        <input class="form-control" type="text" name="author_from" placeholder="Master name or Master ID"></input>
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" type="submit" data-toggle="tooltip" data-placement="bottom" title="The authors will be merged!" > Merge! </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+
+
+    <hr>
+
         <div class="row">
             <div class="col-lg-2 col-md-2 col-xs-2"></div>
             <div class="col-lg-4 col-md-4 col-xs-4">

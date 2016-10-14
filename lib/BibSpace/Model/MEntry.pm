@@ -913,16 +913,19 @@ sub static_get_filter {
     my $permalink   = shift;
     my $hidden      = shift;
 
-    # say "   master_id $master_id
-    #         year $year
-    #         bibtex_type $bibtex_type
-    #         entry_type $entry_type
-    #         tagid $tagid
-    #         teamid $teamid
-    #         visible $visible
-    #         permalink $permalink
-    #         hidden $hidden
-    # ";
+    # {
+    #      no warnings 'uninitialized';
+    #     say "   master_id $master_id
+    #             year $year
+    #             bibtex_type $bibtex_type
+    #             entry_type $entry_type
+    #             tagid $tagid
+    #             teamid $teamid
+    #             visible $visible
+    #             permalink $permalink
+    #             hidden $hidden
+    #     ";
+    # }
 
     my @params;
 
