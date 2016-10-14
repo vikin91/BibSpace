@@ -23,8 +23,18 @@
 			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
 			Resources available without login
 			<ul>
-                <li><a href="<%= url_for('/read/publications/get/ID')%>">/read/publications/get/ID</a> (ID = integer_ (alias <a href="<%= url_for('/r/p/get/ID')%>">/p/get/ID</a>)</li>
-				<li><a href="<%= url_for('/read/publications')%>">/read/publications?[filter_expr]</a> (alias <a href="<%= url_for('/r/p')%>">/r/p</a>)</li>
+                <li>
+                    <a href="<%= url_for('get_single_publication', id=>666)%>">
+                        <%= url_for('get_single_publication', id=>'ID')%>
+                    </a>
+                    (ID = integer_ (alias <a href="<%= url_for('/r/p/get/ID')%>">/p/get/ID</a>)
+                </li>
+				<li>
+                    <a href="<%= url_for('/read/publications')%>">
+                        /read/publications?[filter_expr]
+                    </a> 
+                    (alias <a href="<%= url_for('/r/p')%>">/r/p</a>)
+                </li>
 				<li><a href="<%= url_for('/read/bibtex')%>">/read/bibtex?[filter_expr]</a> (alias <a href="<%= url_for('/r/b')%>">/r/b</a>)</li>
     			<li><a href="<%= url_for('/landing/publications')%>">/landing/publications?[filter_expr][modifiers]</a> (alias <a href="<%= url_for('/l/p')%>">/l/p</a>)</li>
     			<li><a href="<%= url_for('/landing-years/publications?navbar=1')%>">/landing-years/publications?[filter_expr][&modifier]</a>  (alias <a href="<%= url_for('/ly/p')%>">/ly/p</a>)</li>
@@ -50,8 +60,8 @@
 					<li>tag=[String]</li>
                     <li>permalink=[String]</li>
 					<li>team=[String]</li>
-					<li>bibtex_type=[String]  -- <strong>changed type to bibtex_type</strong></li>
-                    <li>entry_type=[paper, talk]  -- <strong>new</strong></li>
+					<li>bibtex_type=[String]</li>
+                    <li>entry_type=[paper, talk]</li>
 					<li>year=[Integer]</li>
 				</ul>
 			</ul>
@@ -66,11 +76,11 @@
 
             <br>
 
-            Example
+            Examples
             % my @examples_array;
-            % push @examples_array, "/l/p?tag=Cloud&author=KounevSamuel&year=2013&title=1&switchlink=0";
-            % push @examples_array, "/l/p?year=2012&entry_type=talk&title=1&switchlink=0";
-            % push @examples_array, "/l/p?title=1&switchlink=1&navbar=1";
+            % push @examples_array, url_for('landing_publications')->query(author=>"KounevSamuel", year=>"2013", tag=>"Cloud", title=>1, switchlink=>0);
+            % push @examples_array, url_for('landing_publications')->query(entry_type=>"talk", title=>1, switchlink=>0);
+            % push @examples_array, url_for('landing_publications')->query(navbar=>1, title=>1, switchlink=>0);
             
             <ul>
                 % for my $example (@examples_array){
