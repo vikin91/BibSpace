@@ -41,41 +41,8 @@ has is_demo => sub {
     return 0;
 };
 
-# has home => sub {
-#     # my $path = $ENV{BIBSPACE_HOME} || getcwd;
-#     # return Mojo::Home->new( File::Spec->rel2abs($path) );
-#     my $self = shift;
-#     my $home = Mojo::Home->new;
-#     $home->detect(ref $self);
-# };
 
-has bst => sub {
-    my $self = shift;
 
-    my $bst_candidate_file = $self->app->home . '/lib/descartes2.bst';
-
-    if( defined $self->app->config->{bst_file} ){
-        $bst_candidate_file = $self->app->config->{bst_file};
-
-        return File::Spec->rel2abs( $bst_candidate_file )
-            if File::Spec->file_name_is_absolute( $bst_candidate_file )
-            and -e File::Spec->rel2abs( $bst_candidate_file );
-
-        $bst_candidate_file = $self->app->home . $self->app->config->{bst_file};
-
-        return File::Spec->rel2abs( $bst_candidate_file )
-            if File::Spec->file_name_is_absolute( $bst_candidate_file )
-            and -e File::Spec->rel2abs( $bst_candidate_file );     
-    }
-    
-    $bst_candidate_file = $self->app->home . '/lib/descartes2.bst';
-    
-
-    return File::Spec->rel2abs( $bst_candidate_file )
-        if -e File::Spec->rel2abs( $bst_candidate_file );
-
-    return './bst-not-found.bst';
-};
 
 has config_file => sub {
     my $self = shift;
@@ -110,16 +77,16 @@ sub startup {
     $self->setup_plugins;
     $self->setup_routes;
     $self->setup_hooks;
+    
+    say "Using CONFIG: ".$self->app->config_file;
+    say "App home is: ".$self->app->home;
+    say "Active bst file is: ".$self->app->bst;
 }
 ################################################################
 sub setup_config {
     my $self = shift;
     my $app  = $self;
     $self->plugin( 'Config' => { file => $self->app->config_file } );
-
-    say "Using CONFIG: ".$self->app->config_file;
-    say "App home is: ".$self->app->home;
-    say "Active bst file is: ".$self->app->bst;
 }
 ################################################################
 sub setup_plugins {
@@ -227,6 +194,7 @@ sub setup_plugins {
             };
         }
     );
+
 
 }
 ################################################################
