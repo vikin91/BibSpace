@@ -992,7 +992,7 @@ sub remove_attachment {
         $num_deleted_files = $self->remove_attachment_do( $id, $filetype );
 
         if ( $num_deleted_files > 0 ) {
-            $mentry->regenerate_html( $dbh, 0 );
+            $mentry->regenerate_html( $dbh, 0 , $self->app->bst);
             $mentry->save($dbh);
         }
 
@@ -1269,7 +1269,7 @@ sub add_pdf_post {
             $self->redirect_to( $self->get_referrer );
             return;
         }
-        $mentry->regenerate_html( $dbh, 0 );
+        $mentry->regenerate_html( $dbh, 0 , $self->app->bst);
         $mentry->save($dbh);
 
         $self->flash( message => $msg );
@@ -1280,26 +1280,21 @@ sub add_pdf_post {
 ####################################################################################
 ####################################################################################
 sub regenerate_html_for_all {
-    say "CALL: regenerate_html_for_all ";
     my $self = shift;
-    $self->inactivity_timeout(300);
+    $self->inactivity_timeout(3000);
     my $dbh = $self->app->db;
 
     $self->write_log("regenerate_html_for_all is running");
 
     my @entries = MEntry->static_all($dbh);
-    my $i       = 0;
-    my $num     = scalar @entries
-        ; # for performance reasons as separate variable. Not benchmarked however.
+
+    my $bst_file = $self->app->bst;
+    # for performance reasons as separate variable. Not benchmarked however.
 
     for my $e (@entries) {
-        say "Regenerating HTML NORMAL for entry "
-            . $e->{id}
-            . ". Progress $i/"
-            . $num;
-        $e->regenerate_html( $dbh, 0 );
+        $e->{bst_file} = $bst_file;
+        $e->regenerate_html( $dbh, 0, $self->app->bst);
         $e->save($dbh);
-        ++$i;
     }
 
     $self->write_log("regenerate_html_for_all has finished");
@@ -1310,16 +1305,16 @@ sub regenerate_html_for_all {
 }
 ####################################################################################
 sub regenerate_html_for_all_force {
-    say "CALL: regenerate_html_for_all_force ";
     my $self = shift;
-    $self->inactivity_timeout(300);
+    $self->inactivity_timeout(3000);
     my $dbh  = $self->app->db;
     $self->write_log("regenerate_html_for_all FORCE is running");
 
+    my $bst_file = $self->app->bst;
 
     my @entries = MEntry->static_all($dbh);
     for my $e (@entries) {
-        # say "Regenrating HTML FORCE for entry " . $e->{id};
+        $e->{bst_file} = $bst_file;
         $e->regenerate_html( $dbh, 1 );
         $e->save($dbh);
     }
@@ -1343,7 +1338,8 @@ sub regenerate_html {
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    $mentry->regenerate_html( $dbh, 1 );
+    $mentry->{bst_file} = $self->app->bst;
+    $mentry->regenerate_html( $dbh, 1 ); 
     $mentry->save($dbh);
 
     $self->redirect_to( $self->get_referrer );
