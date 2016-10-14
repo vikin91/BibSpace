@@ -42,8 +42,9 @@ has is_demo => sub {
 };
 
 has home => sub {
-    my $path = $ENV{BIBSPACE_HOME} || getcwd;
-    return Mojo::Home->new( File::Spec->rel2abs($path) );
+    # my $path = $ENV{BIBSPACE_HOME} || getcwd;
+    # return Mojo::Home->new( File::Spec->rel2abs($path) );
+    Mojo::Home->new;
 };
 
 has bst => sub {
@@ -115,6 +116,7 @@ sub setup_config {
     $self->plugin( 'Config' => { file => $self->app->config_file } );
 
     say "Using CONFIG: ".$self->app->config_file;
+    say "App home is: ".$self->app->home;
     say "Active bst file is: ".$self->app->bst;
 }
 ################################################################
