@@ -16,6 +16,7 @@ use DBI;
 use TeX::Encode;
 use Encode;
 
+
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
 use BibSpace::Model::MEntry;
@@ -46,7 +47,6 @@ our %mons = (
 );
 ####################################################################################
 sub fixMonths {
-    say "CALL: fixMonths ";
     my $self = shift;
 
     my ( $processed_entries, $fixed_entries ) = Ffix_months( $self->app->db );
@@ -58,7 +58,6 @@ sub fixMonths {
 }
 ####################################################################################
 sub fixEntryType {
-    say "CALL: fixEntryType ";
     my $self = shift;
 
     my @objs      = MEntry->static_all( $self->app->db );
@@ -77,7 +76,6 @@ sub fixEntryType {
 }
 ####################################################################################
 sub unhide {
-    say "CALL: Publications::unhide";
     my $self = shift;
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
@@ -109,7 +107,6 @@ sub hide {
 }
 ####################################################################################
 sub toggle_hide {
-    say "CALL: Publications::toggle_hide";
     my $self = shift;
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
@@ -158,177 +155,96 @@ sub make_talk {
 }
 ####################################################################################
 sub all_recently_added {
-    say "CALL: all_recently_added ";
     my $self = shift;
     my $num  = $self->param('num') || 10;
     my $dbh  = $self->app->db;
 
-    $self->write_log("Displaying recently added entries num $num");
+    my @objs = sort { $b->{creation_time} cmp $a->{creation_time} }
+        MEntry->static_all( $self->app->db );
+    @objs = @objs[ 0 .. $num ];
 
-    my $qry
-        = "SELECT DISTINCT id, bibtex_key, creation_time FROM Entry ORDER BY creation_time DESC LIMIT ?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($num);
+    # map {say $_->{creation_time}} @objs;
 
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array, 0 );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
 ####################################################################################
 
 sub all_recently_modified {
-    say "CALL: all_recently_modified ";
     my $self = shift;
     my $num  = $self->param('num') || 10;
     my $dbh  = $self->app->db;
 
-    $self->write_log("Displaying recently modified entries num $num");
+    my @objs = sort { $b->{modified_time} cmp $a->{modified_time} }
+        MEntry->static_all( $self->app->db );
+    @objs = @objs[ 0 .. $num ];
 
-    my $qry
-        = "SELECT DISTINCT id, bibtex_key, modified_time FROM Entry ORDER BY modified_time DESC LIMIT ?";
+    # map {say $_->{modified_time}} @objs;
 
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($num);
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array, 0 );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
 
 ####################################################################################
 sub all_without_tag {
-    say "CALL: all_without_tag ";
     my $self    = shift;
     my $tagtype = $self->param('tagtype') || 1;
     my $dbh     = $self->app->db;
 
-    $self->write_log("Displaying papers without any tag of type $tagtype");
+    my @all = MEntry->static_all($dbh);
+    my @objs = grep { scalar $_->tags( $dbh, $tagtype ) == 0 } @all;
 
-    my $qry = "SELECT DISTINCT id, bibtex_key, year
-                FROM Entry
-                WHERE entry_type = 'paper'
-                AND id NOT IN (
-                    SELECT DISTINCT entry_id
-                    FROM Entry_to_Tag
-                    LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
-                    WHERE Tag.type = ?)
-                    ORDER BY year DESC";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($tagtype);
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
 
     my $msg
         = "This list contains papers that have no tags of type $tagtype. Use this list to tag the untagged papers! ";
-
-    # my @objs = Fget_publications_core_from_array_ref($self, \@array);
-    # $self->stash(objs => \@objs, msg => $msg);
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array );
     $self->stash( msg_type => 'info', msg => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
 }
 ####################################################################################
 sub all_without_tag_for_author {
-    say "CALL: all_without_tag_for_author ";
     my $self        = shift;
     my $dbh         = $self->app->db;
     my $master_name = $self->param('author');
     my $tagtype     = $self->param('tagtype');
 
     my $author = MAuthor->static_get_by_master( $dbh, $master_name );
-    $author = MAuthor->static_get( $dbh, $master_name )
-        if !defined $author; #no such master. Assume, that author id was given
+    $author = MAuthor->static_get( $dbh, $master_name ) if !defined $author;
 
-    my $str
-        = "Displaying papers without any tag of type $tagtype for author id $author->{id}";
-    $self->write_log($str);
-    say $str;
+    # no such master. Assume, that author id was given
 
-    my $qry = "SELECT DISTINCT id, bibtex_key, year, sort_month
-                FROM Entry
-                LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id
-                WHERE Entry_to_Author.author_id = ?
-                AND entry_type='paper'
-                AND id NOT IN (
-                    SELECT DISTINCT entry_id
-                    FROM Entry_to_Tag
-                    LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
-                    WHERE Tag.type = ?)
-                ORDER BY year, sort_month DESC";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $author->{id}, $tagtype );
+    my @all_author_entries = $author->entries($dbh);
+    my @objs
+        = grep { scalar $_->tags( $dbh, $tagtype ) == 0 } @all_author_entries;
 
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
 
-    my $msg = "This list contains papers that miss tags of type $tagtype. ";
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->flash( type => 'info ', msg => $msg );
-    $self->stash( entries => \@objs );
+    my $msg
+        = "This list contains papers of $author->{master} that miss tags of type $tagtype. ";
+    $self->stash( entries => \@objs, msg_type => 'info', msg => $msg );
     $self->render( template => 'publications/all' );
 }
 ####################################################################################
 sub all_without_author {
-    say "CALL: all_without_author ";
-    say "all_without_author ";
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    $self->write_log("Displaying papers without any author");
-
-    my $qry
-        = "SELECT DISTINCT id, bibtex_key FROM Entry WHERE id NOT IN (SELECT DISTINCT entry_id FROM Entry_to_Author)";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute();
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
+    my @objs
+        = grep { scalar $_->authors($dbh) == 0 } MEntry->static_all($dbh);
 
     my $msg
-        = "This list contains papers, that are currently not assigned to any of authors.
-            This doesn't mean that they don't have authors.";
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->stash( msg     => $msg );
-    $self->stash( entries => \@objs );
+        = "This list contains papers, that are currently not assigned to any of authors.";
+    $self->stash( entries => \@objs, msg => $msg, msg_type => 'info' );
     $self->render( template => 'publications/all' );
 }
 
 ####################################################################################
 sub show_unrelated_to_team {
-    say "CALL: show_unrelated_to_team";
     my $self    = shift;
     my $team_id = $self->param('teamid');
+    my $dbh     = $self->app->db;
 
     $self->write_log(
         "Displaying entries unrelated to team with it $team_id.");
-
-    my $dbh = $self->app->db;
 
     my $set_all_papers
         = Set::Scalar->new( map { $_->{id} } MEntry->static_all($dbh) );
@@ -356,19 +272,17 @@ sub show_unrelated_to_team {
 ####################################################################################
 sub all_with_missing_month {
     my $self = shift;
+    my $dbh  = $self->app->db;
 
     $self->write_log("Displaying entries without month");
 
-    my @objs     = ();
-    my @all_objs = MEntry->static_all( $self->app->db );
-    for my $o (@all_objs) {
-        if ( !defined $o->{month} or $o->{month} < 1 or $o->{month} > 12 ) {
-            push @objs, $o;
-        }
-    }
+    my @objs
+        = grep { !defined $_->{month} or $_->{month} < 1 or $_->{month} > 12 }
+        MEntry->static_all($dbh);
 
     my $msg
-        = "<p>This list contains entries with missing BibTeX field 'month'. Add this data to get the proper chronological sorting.</p> ";
+        = "This list contains entries with missing BibTeX field 'month'. ";
+    $msg .= "Add this data to get the proper chronological sorting.";
 
     $self->stash( msg_type => 'info', msg => $msg );
     $self->stash( entries => \@objs );
@@ -378,28 +292,16 @@ sub all_with_missing_month {
 sub all_candidates_to_delete {
     say "CALL: all_candidates_to_delete";
     my $self = shift;
+    my $dbh  = $self->app->db;
 
     $self->write_log("Displaying entries that are candidates_to_delete");
 
-    my $set_all_papers = Set::Scalar->new( map { $_->{id} }
-            MEntry->static_all( $self->app->db ) );
-    my $end_set = $set_all_papers;
 
-    # print "A1 ", $end_set, "\n";
+    my @objs = MEntry->static_all( $self->app->db );
+    @objs = grep { scalar $_->tags($dbh) == 0 } @objs;  # no tags
+    @objs = grep { scalar $_->teams($dbh) == 0 } @objs; # no relation to teams
+    @objs = grep { scalar $_->exceptions($dbh) == 0 } @objs;   # no exceptions
 
-    my $set_of_all_teams = get_set_of_all_team_ids( $self->app->db );
-
-    foreach my $teamid ( $set_of_all_teams->members ) {
-        my $set_of_papers_related_to_team
-            = get_set_of_papers_for_all_authors_of_team_id( $self, $teamid );
-        $end_set = $end_set - $set_of_papers_related_to_team;
-    }
-
-    # print "A2 ", $end_set, "\n";
-
-    $end_set = $end_set - get_set_of_papers_with_exceptions($self);
-
-    $end_set = $end_set - get_set_of_tagged_papers($self);
 
     my $msg = "<p>This list contains papers, that are:</p>
       <ul>
@@ -410,7 +312,6 @@ sub all_candidates_to_delete {
       </ul>
       <p>Such entries may wanted to be removed form the system or serve as a help with configuration.</p>";
 
-    my @objs = Fget_publications_core_from_set( $self, $end_set );
     $self->stash( msg_type => 'info', msg => $msg );
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all' );
@@ -419,15 +320,11 @@ sub all_candidates_to_delete {
 ####################################################################################
 
 sub all_bibtex {
-    say "CALL: all_bibtex ";
     my $self = shift;
 
     my $entry_type = undef;
     $entry_type = $self->param('entry_type') // 'paper';
 
-# my ($arr_html, $arr_key, $arr_id, $arr_bib) = get_publications_filter($self);
-
-    # my @objs = get_publications_main($self);
     my @objs = Fget_publications_main_hashed_args( $self,
         { hidden => 0, entry_type => $entry_type } );
 
@@ -441,7 +338,6 @@ sub all_bibtex {
 }
 ####################################################################################
 sub all {
-    say "CALL: all ";
     my $self = shift;
 
     my $entry_type = undef;
@@ -1233,8 +1129,8 @@ sub add_pdf_post {
             catch { };
         }
 
-        $uploaded_file->move_to( $uploads_directory . $file_path )
-            ;    ### WORKS!!!
+        $uploaded_file->move_to( $uploads_directory . $file_path );
+
         my $new_file = $self->get_paper_pdf_path( $id, "$filetype" );
 
         my $file_url = $self->url_for(
@@ -1288,9 +1184,9 @@ sub regenerate_html_for_all {
 
     my @entries = MEntry->static_all($dbh);
 
+    # for performance reasons as separate variable. Not benchmarked however.
     my $bst_file = $self->app->bst;
 
-    # for performance reasons as separate variable. Not benchmarked however.
 
     for my $e (@entries) {
         $e->{bst_file} = $bst_file;
@@ -1300,7 +1196,10 @@ sub regenerate_html_for_all {
 
     $self->write_log("regenerate_html_for_all has finished");
 
-    $self->flash( msg => 'Regeneration of HTML code finished.' );
+    $self->flash(
+        msg_type => 'info',
+        msg      => 'Regeneration of HTML code finished.'
+    );
     my $referrer = $self->get_referrer();
     $self->redirect_to($referrer);
 }
@@ -1322,7 +1221,10 @@ sub regenerate_html_for_all_force {
 
 
     $self->write_log("regenerate_html_for_all FORCE has finished");
-    $self->flash( msg => 'Regeneration of HTML code finished.' );
+    $self->flash(
+        msg_type => 'info',
+        msg      => 'Regeneration of HTML code finished.'
+    );
     my $referrer = $self->get_referrer();
     $self->redirect_to($referrer);
 }
@@ -1348,7 +1250,6 @@ sub regenerate_html {
 ####################################################################################
 
 sub delete_sure {
-    say "CALL: delete_sure ";
     my $self = shift;
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
@@ -1364,13 +1265,12 @@ sub delete_sure {
     remove_attachment_do( $self, $id, 'slides' );
     $mentry->delete($dbh);
 
-    $self->write_log("delete_sure entry id $id. Entry deleted.");
+    $self->write_log("Entry id $id has been deleted.");
 
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
 sub show_authors_of_entry {
-    say "CALL: show_authors_of_entry";
     my $self = shift;
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
@@ -1382,29 +1282,17 @@ sub show_authors_of_entry {
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    my $html_preview = $mentry->{html};
-    my $key          = $mentry->{bibtex_key};
+    my @authors = $mentry->authors($dbh);
+    my @teams   = $mentry->teams($dbh);
 
-    my @authors = $mentry->authors($dbh);  # $self->get_authors_of_entry($id);
-    my $teams_for_paper = get_set_of_teams_for_entry_id( $self, $id );
-    my @teams           = $teams_for_paper->members;
-
-    $self->stash(
-        eid      => $id,
-        key      => $key,
-        preview  => $html_preview,
-        authors  => \@authors,
-        team_ids => \@teams
-    );
+    $self->stash( entry => $mentry, authors => \@authors, teams => \@teams );
     $self->render( template => 'publications/show_authors' );
 }
 ####################################################################################
 sub manage_exceptions {
-    say "CALL: manage_exceptions";
     my $self = shift;
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
-    $self->write_log("Manage exceptions of entry id $id");
 
     my $mentry = MEntry->static_get( $dbh, $id );
     if ( !defined $mentry ) {
@@ -1412,37 +1300,30 @@ sub manage_exceptions {
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    my $html_preview = $mentry->{html};
-    my $key          = $mentry->{bibtex_key};
-    my $btype        = $mentry->{bibtex_type};
 
-    my @current_exceptions = get_exceptions_for_entry_id( $dbh, $id );
-    my $current_exceptions_set = Set::Scalar->new(@current_exceptions);
+    my @exceptions = $mentry->exceptions($dbh);
+    my @all_teams  = MTeam->static_all($dbh);
+    my @teams      = $mentry->teams($dbh);
+    my @authors    = $mentry->authors($dbh);
 
-    my @authors = $self->get_authors_of_entry($id);
-    my $teams_for_paper = get_set_of_teams_for_entry_id( $self, $id );
-
-    my @teams = $teams_for_paper->members;
+    # cannot use objects as keysdue to stringification!
+    my %exceptions_hash = map { $_->{id} => 1 } @exceptions;
     my @unassigned_teams
-        = (   get_set_of_all_team_ids( $self->app->db )
-            - $teams_for_paper
-            - $current_exceptions_set )->members;
+        = grep { not $exceptions_hash{ $_->{id} } } @all_teams;
+
 
     $self->stash(
-        eid              => $id,
-        key              => $key,
-        btype            => $btype,
-        preview          => $html_preview,
-        author_ids       => \@authors,
-        exceptions       => \@current_exceptions,
-        team_ids         => \@teams,
+        entry            => $mentry,
+        exceptions       => \@exceptions,
+        teams            => \@teams,
+        all_teams        => \@all_teams,
+        authors          => \@authors,
         unassigned_teams => \@unassigned_teams
     );
     $self->render( template => 'publications/manage_exceptions' );
 }
 ####################################################################################
 sub manage_tags {
-    say "CALL: manage_tags";
     my $self = shift;
     my $eid  = $self->param('id');
     my $dbh  = $self->app->db;
@@ -1456,66 +1337,33 @@ sub manage_tags {
         return;
     }
 
-    my $html_preview = $mentry->{html};
-    my $key          = $mentry->{bibtex_key};
+    my @tags      = $mentry->tags($dbh);
+    my @tag_types = BibSpace::Functions::TagTypeObj->getAll($dbh);
 
-    my @all_tags     = MTag->static_all($dbh);
-    my @all_names    = map { $_->{name} } @all_tags;
-    my @all_ids      = map { $_->{id} } @all_tags;
-    my @all_parrents = map { $_->{parent} } @all_tags;
-
-    # FIXME for compatibility with obsolete code
-    my $all_tags_arrref    = \@all_names;
-    my $all_ids_arrref     = \@all_ids;
-    my $all_parents_arrref = \@all_parrents;
-
-    my @tags_for_entry = $mentry->tags($dbh);
-
-    my @entry_tag_names    = map { $_->{name} } @tags_for_entry;
-    my @entry_tag_ids      = map { $_->{id} } @tags_for_entry;
-    my @entry_tag_parrents = map { $_->{parent} } @tags_for_entry;
-
-    # FIXME for compatibility with obsolete code
-    my $tags_arrref    = \@entry_tag_names;
-    my $ids_arrref     = \@entry_tag_ids;
-    my $parents_arrref = \@entry_tag_parrents;
-
-    my @unassigned_tags_ids;
-
-    for my $tid (@all_ids) {
-        if ( !grep( /^$tid$/, @$ids_arrref ) ) {
-            push @unassigned_tags_ids, $tid;
-        }
-    }
 
     $self->stash(
-        eid                => $eid,
-        key                => $key,
-        preview            => $html_preview,
-        tags               => $tags_arrref,
-        ids                => $ids_arrref,
-        parents            => $parents_arrref,
-        all_tags           => $all_tags_arrref,
-        unassigned_tag_ids => \@unassigned_tags_ids,
-        all_ids            => $all_ids_arrref,
-        all_parents        => $all_parents_arrref
+        entry     => $mentry,
+        tags      => \@tags,
+        tag_types => \@tag_types
     );
     $self->render( template => 'publications/manage_tags' );
 }
 ####################################################################################
 
 sub remove_tag {
-    say "CALL: remove_tag";
-    my $self = shift;
-    my $eid  = $self->param('eid');
-    my $tid  = $self->param('tid');
-    my $dbh  = $self->app->db;
+    my $self     = shift;
+    my $entry_id = $self->param('eid');
+    my $tag_id   = $self->param('tid');
+    my $dbh      = $self->app->db;
 
-    $self->write_log("Removing tag id $tid from entry eid $eid");
+    my $entry = MEntry->static_get( $dbh, $entry_id );
+    my $tag = MTag->static_get( $dbh, $tag_id );
 
-    my $sth = $dbh->prepare(
-        "DELETE FROM Entry_to_Tag WHERE entry_id=? AND tag_id=?");
-    $sth->execute( $eid, $tid );
+    if ( defined $entry and defined $tag ) {
+        $entry->remove_tag( $dbh, $tag );
+        $self->write_log(
+            "Removed tag $tag->{name} from entry id $entry->{id}. ");
+    }
 
     $self->redirect_to( $self->get_referrer );
 
@@ -1523,35 +1371,36 @@ sub remove_tag {
 ####################################################################################
 
 sub add_tag {
-    say "CALL: add_tag";
-    my $self = shift;
-    my $eid  = $self->param('eid');
-    my $tid  = $self->param('tid');
-    my $dbh  = $self->app->db;
+    my $self     = shift;
+    my $entry_id = $self->param('eid');
+    my $tag_id   = $self->param('tid');
+    my $dbh      = $self->app->db;
 
-    $self->write_log("Adding tag id $tid to entry eid $eid");
+    my $entry = MEntry->static_get( $dbh, $entry_id );
+    my $tag = MTag->static_get( $dbh, $tag_id );
 
-    my $sth = $dbh->prepare(
-        "INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
-    $sth->execute( $eid, $tid );
+    if ( defined $entry and defined $tag ) {
+        $entry->assign_tag( $dbh, $tag );
+        $self->write_log("Added tag $tag->{name} to entry id $entry->{id}. ");
+    }
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
 
 sub add_exception {
-    say "CALL: add_exception";
-    my $self = shift;
-    my $eid  = $self->param('eid');
-    my $tid  = $self->param('tid');
-    my $dbh  = $self->app->db;
+    my $self     = shift;
+    my $entry_id = $self->param('eid');
+    my $team_id  = $self->param('tid');
+    my $dbh      = $self->app->db;
 
-    $self->write_log("Adding exception id $tid to entry eid $eid");
+    my $entry = MEntry->static_get( $dbh, $entry_id );
+    my $exception = MTeam->static_get( $dbh, $team_id );
 
-    my $sth
-        = $dbh->prepare(
-        "INSERT INTO Exceptions_Entry_to_Team(entry_id, team_id) VALUES (?,?)"
-        );
-    $sth->execute( $eid, $tid );
+    if ( defined $entry and defined $exception ) {
+        $entry->assign_exception( $dbh, $exception );
+        $self->write_log(
+            "Added exception $exception->{name} to entry id $entry->{id}. ");
+    }
 
     $self->redirect_to( $self->get_referrer );
 
@@ -1559,19 +1408,19 @@ sub add_exception {
 ####################################################################################
 
 sub remove_exception {
-    say "CALL: remove_exception";
-    my $self = shift;
-    my $eid  = $self->param('eid');
-    my $tid  = $self->param('tid');
-    my $dbh  = $self->app->db;
+    my $self     = shift;
+    my $entry_id = $self->param('eid');
+    my $team_id  = $self->param('tid');
+    my $dbh      = $self->app->db;
 
-    $self->write_log("Removing exception id $tid to entry eid $eid");
+    my $entry = MEntry->static_get( $dbh, $entry_id );
+    my $exception = MTeam->static_get( $dbh, $team_id );
 
-    my $sth
-        = $dbh->prepare(
-        "DELETE FROM Exceptions_Entry_to_Team WHERE entry_id=? AND team_id=?"
-        );
-    $sth->execute( $eid, $tid );
+    if ( defined $entry and defined $exception ) {
+        $entry->remove_exception( $dbh, $exception );
+        $self->write_log(
+            "Added exception $exception->{name} to entry id $entry->{id}. ");
+    }
 
     $self->redirect_to( $self->get_referrer );
 
@@ -1696,7 +1545,10 @@ sub publications_add_post {
     my $msg             = $adding_msg . $bibtex_warnings;
     my $msg_type        = 'success';
     $msg_type = 'warning' if $bibtex_warnings =~ m/Warning/;
-    $msg_type = 'danger'  if $status_code_str eq 'ERR_BIBTEX' or $status_code_str eq 'KEY_TAKEN' or$bibtex_warnings =~ m/Error/;
+    $msg_type = 'danger'
+        if $status_code_str eq 'ERR_BIBTEX'
+        or $status_code_str eq 'KEY_TAKEN'
+        or $bibtex_warnings =~ m/Error/;
 
     $self->stash( mentry => $mentry, msg => $msg, msg_type => $msg_type );
 
@@ -1776,23 +1628,27 @@ sub publications_edit_post {
     my $msg             = $adding_msg . $bibtex_warnings;
     my $msg_type        = 'success';
     $msg_type = 'warning' if $bibtex_warnings =~ m/Warning/;
-    $msg_type = 'danger'  if $status_code_str eq 'ERR_BIBTEX' or $status_code_str eq 'KEY_TAKEN' or$bibtex_warnings =~ m/Error/;
+    $msg_type = 'danger'
+        if $status_code_str eq 'ERR_BIBTEX'
+        or $status_code_str eq 'KEY_TAKEN'
+        or $bibtex_warnings =~ m/Error/;
 
     $self->stash( mentry => $mentry, msg => $msg, msg_type => $msg_type );
     $self->render( template => 'publications/edit_entry' );
 }
 ####################################################################################
 sub clean_ugly_bibtex {
-    say "CALL: clean_ugly_bibtex ";
     my $self = shift;
-
-    my $dbh = $self->app->db;
+    my $dbh  = $self->app->db;
 
     $self->write_log("Cleaning ugly bibtex fields for all entries");
 
     Fclean_ugly_bibtex_fields_for_all_entries($dbh);
 
-    $self->flash( msg => 'All entries have now their Bibtex cleaned.' );
+    $self->flash(
+        msg_type => 'info',
+        msg      => 'All entries have now their Bibtex cleaned.'
+    );
 
     $self->redirect_to( $self->get_referrer );
 }

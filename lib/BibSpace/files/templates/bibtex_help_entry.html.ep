@@ -162,7 +162,19 @@
   $(function () {
     $('#myTab a:first').tab('show')
     $('#myTab2 a:first').tab('show')
-  })
+
+    $('.nav a').click(function (e) {
+      e.preventDefault()
+      $(this).tab('show')
+    })
+    $('a').on('click', function (e) {
+        var href = $(this).attr('href');
+        $('html, body').animate({
+            scrollTop: $(href).offset().top
+        }, 'fast');
+        e.preventDefault();
+    });
+  });
 </script>
 
 

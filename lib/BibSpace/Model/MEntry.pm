@@ -266,7 +266,7 @@ sub update {
         $sth->finish();
     }
     catch {
-        say "MEntry update exception: $_";
+        warn "MEntry update exception: $_";
     };
     return $result;
 }
@@ -428,9 +428,9 @@ sub populate_from_bib {
 
     if ( defined $self->{bib} and $self->{bib} ne '' ) {
         my $bibtex_entry = new Text::BibTeX::Entry();
-        my $s = $bibtex_entry->parse_s($self->{bib});
+        my $s            = $bibtex_entry->parse_s( $self->{bib} );
 
-        unless( $bibtex_entry->parse_ok ){
+        unless ( $bibtex_entry->parse_ok ) {
             return 0;
         }
 
@@ -577,11 +577,7 @@ sub generate_html {
 
     my $c = BibSpaceBibtexToHtml::BibSpaceBibtexToHtml->new();
     $self->{html} = $c->convert_to_html(
-        { method => 'new', 
-          bib => $self->{bib}, 
-          bst => $bst_file 
-        } 
-    );
+        { method => 'new', bib => $self->{bib}, bst => $bst_file } );
     $self->{warnings} = join( ', ', @{ $c->{warnings_arr} } );
 
     $self->{need_html_regen} = 0;
@@ -687,6 +683,103 @@ sub authors {
         push @authors, $author if defined $author;
     }
     return @authors;
+}
+####################################################################################
+sub teams {
+    my $self = shift;
+    my $dbh  = shift;
+
+    die "MEntry::teams Calling authors on undefined or empty entry!"
+        if !defined $self->{id}
+        or $self->{id} < 0;
+    die "MEntry::teams Calling authors with no database handle!"
+        unless defined $dbh;
+
+    my %final_teams;
+    foreach my $author ( $self->authors( $dbh ) ){
+        foreach my $team ( $author->teams( $dbh ) ){
+            if( $author->joined_team( $dbh, $team ) <= $self->{year} and 
+                ( $author->left_team( $dbh, $team ) >  $self->{year} or
+                  $author->left_team( $dbh, $team ) == 0
+                )
+            ){
+                # $final_teams{$team}       = 1; # BAD: $team gets stringified
+                $final_teams{$team->{id}} = $team; 
+            }
+        }
+    }
+    return values %final_teams;
+}
+####################################################################################
+sub exceptions {
+    my $self = shift;
+    my $dbh  = shift;
+
+    die "MEntry::exceptions Calling authors on undefined or empty entry!"
+        if !defined $self->{id}
+        or $self->{id} < 0;
+    die "MEntry::exceptions Calling authors with no database handle!"
+        unless defined $dbh;
+
+    
+    my $qry = "SELECT team_id, entry_id FROM Exceptions_Entry_to_Team WHERE entry_id = ?";
+    my $sth = $dbh->prepare_cached($qry);
+    $sth->execute( $self->{id} );
+
+    my %teams;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        my $team = MTeam->static_get( $dbh, $row->{team_id} );
+        $teams{$team->{id}} = $team;
+    }
+
+    return values %teams;
+}
+####################################################################################
+sub remove_exception {
+    my $self   = shift;
+    my $dbh    = shift;
+    my $exception = shift;
+
+    return 0 if !defined $exception or !defined $self->{id} or $self->{id} < 0;
+
+    my $sth = $dbh->prepare("DELETE FROM Exceptions_Entry_to_Team WHERE entry_id=? AND team_id=?");
+    return $sth->execute( $self->{id}, $exception->{id} );
+}
+####################################################################################
+sub assign_exception {
+    my $self   = shift;
+    my $dbh    = shift;
+    my $exception = shift;
+
+    return 0 if !defined $exception or !defined $self->{id} or $self->{id} < 0;
+
+    my $sth
+        = $dbh->prepare(
+        'INSERT IGNORE INTO Exceptions_Entry_to_Team(entry_id, team_id) VALUES(?, ?)'
+        );
+    $sth->execute( $self->{id}, $exception->{id} );
+    return 1;
+}
+####################################################################################
+sub static_entries_with_exception {
+    my $self = shift;
+    my $dbh  = shift;
+
+    die "MEntry::static_entries_with_exception Calling authors with no database handle!"
+        unless defined $dbh;
+
+    
+    my $qry = "SELECT DISTINCT entry_id FROM Exceptions_Entry_to_Team WHERE team_id>-1";
+    my $sth = $dbh->prepare_cached($qry);
+    $sth->execute();
+
+    my @objs;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        my $entry = MEntry->static_get( $dbh, $row->{entry_id} );
+        push @objs, $entry;
+    }
+
+    return @objs;
 }
 ####################################################################################
 sub assign_author {
@@ -1071,14 +1164,27 @@ sub hasTag {
 }
 ####################################################################################
 sub tags {
-    my $self = shift;
-    my $dbh  = shift;
+    my $self     = shift;
+    my $dbh      = shift;
+    my $tag_type = shift;    # optional
 
     return () if !defined $self->{id} or $self->{id} < 0;
 
-    my $qry = "SELECT entry_id, tag_id FROM Entry_to_Tag WHERE entry_id = ?";
-    my $sth = $dbh->prepare_cached($qry);
-    $sth->execute( $self->{id} );
+    my $qry = "SELECT entry_id, tag_id 
+                FROM Entry_to_Tag 
+                LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
+                WHERE entry_id = ?";
+    my $sth;
+    if ( defined $tag_type ) {
+        $qry .= " AND Tag.type = ?";
+        $sth = $dbh->prepare_cached($qry);
+        $sth->execute( $self->{id}, $tag_type );
+    }
+    else {
+        $sth = $dbh->prepare_cached($qry);
+        $sth->execute( $self->{id} );
+    }
+
 
     my @tags = ();
 
@@ -1133,22 +1239,24 @@ sub assign_tag {
     return $num_added;
 }
 ####################################################################################
+sub remove_tag {
+    my $self   = shift;
+    my $dbh    = shift;
+    my $tag    = shift;
+
+    return 0 if !defined $tag or !defined $self->{id} or $self->{id} < 0;
+
+    my $sth = $dbh->prepare("DELETE FROM Entry_to_Tag WHERE entry_id=? AND tag_id=?");
+
+    return $sth->execute( $self->{id}, $tag->{id} );
+}
+####################################################################################
 sub remove_tag_by_id {
     my $self   = shift;
     my $dbh    = shift;
     my $tag_id = shift;
 
-    my $num_deleted = 0;
-
-    return 0 if !defined $self->{id} or $self->{id} < 0;
-
-    my $tag = MTag->static_get( $dbh, $tag_id );
-    if ( defined $tag ) {
-        my $sth = $dbh->prepare(
-            "DELETE FROM Entry_to_Tag WHERE entry_id=? AND tag_id=?");
-        $num_deleted = $sth->execute( $self->{id}, $tag->{id} );
-    }
-    return $num_deleted;
+    return $self->remove_tag( $dbh, MTag->static_get( $dbh, $tag_id ) );
 }
 ####################################################################################
 sub remove_tag_by_name {
@@ -1156,18 +1264,8 @@ sub remove_tag_by_name {
     my $dbh      = shift;
     my $tag_name = shift;
 
-    my $num_deleted = 0;
-
-    return 0 if !defined $self->{id} or $self->{id} < 0;
-
-    my $tag = MTag->static_get_by_name( $dbh, $tag_name );
-    if ( defined $tag ) {
-        $num_deleted = $self->remove_tag_by_id( $dbh, $tag->{id} );
-    }
-    return $num_deleted;
+    return $self->remove_tag( $dbh, MTag->static_get_by_name( $dbh, $tag_name ) );
 }
-####################################################################################
-
 ####################################################################################
 sub clean_ugly_bibtex_fields {
     my $self = shift;

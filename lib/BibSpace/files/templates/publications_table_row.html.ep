@@ -16,10 +16,10 @@
                             <li><a href="<%= url_for('edit_publication', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-pencil" style="color: #5CB85C;"></span> Edit BibTeX</a></li>
                             <li><a href="#modal-dialog-<%=$entry_obj->{id}%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span> Delete...</a></li>
                             <li><a href="<%= url_for('publicationsshow_authorsid', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-user"></span> Show authors</a></li>
-                            <li><a href="<%= url_for('publicationsregenerateid', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-refresh" style="color: #5CB85C;"></span> Regenerate HTML</a></li>
+                            <li><a href="<%= url_for('regenerate_publication', id=>$entry_obj->{id}) %>"><span class="glyphicon glyphicon-refresh" style="color: #5CB85C;"></span> Regenerate HTML</a></li>
                             <li><a href="<%= url_for('publicationsadd_pdfid', id=>$entry_obj->{id})%>"><i class="fa fa-upload"></i><i class="fa fa-file-pdf-o"></i><i class="fa fa-file-powerpoint-o"></i> Upload pdf/slides</a></li>
-                            <li><a href="<%= url_for('publicationsmanage_tagsid', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> Manage tags</a></li>
-                            <li><a href="<%= url_for('publicationsmanage_exceptionsid', id=>$entry_obj->{id})%>"><i class="fa fa-exclamation "></i> Manage exceptions</a></li>
+                            <li><a href="<%= url_for('manage_tags', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> Manage tags</a></li>
+                            <li><a href="<%= url_for('manage_exceptions', id=>$entry_obj->{id})%>"><i class="fa fa-exclamation "></i> Manage exceptions</a></li>
                         </ul>
                     </div>
 
@@ -61,14 +61,15 @@
                             %}
                         %}
                         % if (defined $use_modal and $use_modal == 1){
-                           <a href="#modal-dialog-talk-<%=$entry_obj->{id}%>" data-toggle="modal" class="btn <%=$t1%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
+                            <span data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER/TALK" data-container="body">
+                            <a href="#modal-dialog-talk-<%=$entry_obj->{id}%>" data-toggle="modal" class="btn <%=$t1%> btn-sm">
                                     <span class="glyphicon glyphicon-file"></span>
-                                </span>
                             </a>
+
                             <a href="#modal-dialog-talk-<%=$entry_obj->{id}%>" data-toggle="modal" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
                                     <i class="fa fa-microphone"></i>
-                                </span>
                             </a>
+                            </span>
                             <!-- MODAL DIALOG FOR SWITCHIN PAPER/TALK -->
                             <div id="modal-dialog-talk-<%=$entry_obj->{id}%>" class="modal">
                                 <div class="modal-dialog">
@@ -79,12 +80,12 @@
                                         </div>
                                         <div class="modal-body">
                                             <p>Make sure that you first save your changes by clicking <button class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Push to DB</button></p>
-                                            <p><button class="btn btn-danger"><span class="glyphicon glyphicon-warning-sign"></span> Unsaved changes will be lost! </button></p>
+                                            <p>If you forgot to save, all unsaved changes will be lost!</p>
 
                                             <div class="modal-footer">
                                                 <a href="<%= url_for('/publications/make_paper/')%><%= $entry_obj->{id} %>" class="btn btn-warning"> Change type to Paper <span class="glyphicon glyphicon-file"></span></a>
-                                                <a href="<%= url_for('/publications/make_talk/')%><%= $entry_obj->{id} %>" class="btn btn-warning"> Change type to Talk <span class="glyphicon glyphicon-volume-up"></span></a>
-                                                <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-default">Back to editing without changing anything <span class="glyphicon glyphicon-remove"></span> </button></a>
+                                                <a href="<%= url_for('/publications/make_talk/')%><%= $entry_obj->{id} %>" class="btn btn-warning"> Change type to Talk <i class="fa fa-microphone"></i></a>
+                                                <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-default">Cancel <span class="glyphicon glyphicon-remove"></span> </button></a>
                                             </div>
                                         </div>
                                     </div>
@@ -93,13 +94,11 @@
                           <!-- MODAL DIALOG FOR SWITCHIN PAPER/TALK -->
                         % }
                         % else{
-                             <a href="<%= url_for('/publications/make_paper/')%><%= $entry_obj->{id} %>" class="btn <%=$t1%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
+                             <a href="<%= url_for('make_paper', id=>$entry_obj->{id} ) %>" class="btn <%=$t1%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
                                     <span class="glyphicon glyphicon-file"></span>
-                                </span>
                             </a>
-                            <a href="<%= url_for('/publications/make_talk/')%><%= $entry_obj->{id} %>" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
+                            <a href="<%= url_for('make_talk', id=>$entry_obj->{id} ) %>" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
                                     <i class="fa fa-microphone"></i>
-                                </span>
                             </a>
                         % }
                     </div>
@@ -109,7 +108,7 @@
                 </td>
                 <!-- ID switch -->
                 <td>
-                  <button class="btn btn-default btn-sm" tooltip="Entry ID"> <span class="glyphicon glyphicon-barcode"></span> <%= $entry_obj->{id} %></button>
+                  <button class="btn btn-default btn-sm" tooltip="Entry ID" data-toggle="tooltip" data-placement="top" title="Entry ID in the database." data-container="body"> <span class="glyphicon glyphicon-barcode"></span>  <%= $entry_obj->{id} %></button>
                 </td>
                 <td>
                     <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Created: <%=$entry_obj->{creation_time}%>, Modified: <%=$entry_obj->{modified_time}%>">
@@ -122,7 +121,7 @@
                     </span>
                 </td>
                 <td>
-                  <p class="btn btn-default btn-sm"><%= $j %></p>
+                  <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Running number on this list" data-container="body"><%= $j || 1 %></span>
                 </td>
                 
                 <td class="bibtexitem">

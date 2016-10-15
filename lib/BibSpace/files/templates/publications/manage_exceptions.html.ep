@@ -1,10 +1,6 @@
 % use Mojo::ByteStream 'b';
 % layout 'admin';
 
-% my @author_ids = @{$author_ids};
-% my @team_ids = @{$team_ids};
-% my @unassigned_teams = @{$unassigned_teams};
-% my @exceptions = @{$exceptions};
 
 
 <div class="container">
@@ -20,32 +16,20 @@
         </div>
     </div>
 
-    %= include 'preview_row', preview => $preview, btype=> $btype, bkey =>$key;
+    %= include 'preview_row', preview => $entry->{html}, btype=> $entry->{bibtex_type}, bkey => $entry->{bibtex_key};
+
 
     <div class="row">
-        <div class="col-lg-1"></div>
-        <div class="col-lg-10 col-md-10 col-xs-10">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <h3>Preview of entry <%= $key %></h3>
-                    %= b($preview)
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-1"></div>
         <div class="col-lg-2 col-md-2 col-xs-2">
             <button type="button" class="btn btn-success">
-                <span class="glyphicon glyphicon-user"></span> Detected authors <span class="badge"><%= scalar @author_ids %></span>
+                <span class="glyphicon glyphicon-user"></span> Detected authors <span class="badge"><%= scalar @$authors %></span>
             </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            % foreach my $aid (@author_ids){
-                <a class="btn btn-default" type="button" href="<%= url_for('authorseditid', id=>$aid)%>">
+            % foreach my $author (@$authors){
+                <a class="btn btn-default" type="button" href="<%= url_for('edit_author', id=>$author->{id})%>">
                     <span class="glyphicon glyphicon-user"></span> 
-                    <%= get_master_for_id($aid) %> 
+                    <%= $author->{master} %> 
                     <i class="fa fa-external-link"></i> 
                 </a>
             % }
@@ -55,17 +39,16 @@
     <hr>
 
     <div class="row">
-        <div class="col-lg-1"></div>
         <div class="col-lg-2 col-md-2 col-xs-2">
-            <button type="button" class="btn btn-success">
-                <i class="fa fa-users"></i> Detected teams <span class="badge"><%= scalar @team_ids %></span>
+            <button type="button" class="btn btn-success pull-right">
+                <i class="fa fa-users"></i> Detected teams <span class="badge"><%= scalar @$teams %></span>
             </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            % foreach my $team_id (@team_ids){
-                <a class="btn btn-default" type="button" href="<%= url_for('teamseditteamid', teamid=>$team_id)%>">
+            % foreach my $team (@$teams){
+                <a class="btn btn-default" type="button" href="<%= url_for('edit_team', teamid=>$team->{id} )%>">
                     <i class="fa fa-users"></i>
-                    <%= get_team_name($team_id) %> 
+                    <%= $team->{name} %> 
                     <i class="fa fa-external-link"></i> 
                 </a>
             % }   
@@ -75,25 +58,24 @@
     <hr>
 
     <div class="row">
-        <div class="col-lg-1"></div>
         <div class="col-lg-2 col-md-2 col-xs-2">
             <button type="button" class="btn btn-warning">
-                <i class="fa fa-exclamation"></i> Detected exceptions <span class="badge"><%= scalar @exceptions %></span>
+                <i class="fa fa-exclamation"></i> Detected exceptions <span class="badge"><%= scalar @$exceptions %></span>
             </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            % foreach my $exception_id (@exceptions){
+            % foreach my $exception (@$exceptions){
                 <div class="btn-group">
-                    <a class="btn btn-default" type="button" href="<%= url_for('teamseditteamid', teamid=>$exception_id)%>">
+                    <a class="btn btn-default" type="button" href="<%= url_for('edit_team', teamid=>$exception->{id} )%>">
                         <i class="fa fa-exclamation " style="color: red;"></i>
                         <i class="fa fa-users " style="color: #5CB85C;"></i> 
-                        <%= get_team_name($exception_id) %>
+                        <%= $exception->{name} %>
                         <i class="fa fa-external-link"></i>
                     </a>
-                    <a class="btn btn-default" href="<%= url_for('remove_exception_from_publication', eid=>$eid, tid=>$exception_id)%>"><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
+                    <a class="btn btn-default" href="<%= url_for('remove_exception_from_publication', eid=>$entry->{id}, tid=>$exception->{id})%>"><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
                 </div>
             % }
-            % if (scalar @exceptions == 0){
+            % if (scalar @$exceptions == 0){
                 <div class="alert alert-warning">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                     <i class="fa fa-exclamation " style="color: red;"></i>
@@ -107,18 +89,16 @@
     <hr>
 
     <div class="row">
-        <div class="col-lg-1"></div>
         <div class="col-lg-2 col-md-2 col-xs-2">
-            <button type="button" class="btn btn-default"><i class="fa fa-users"></i> Unassigned teams </button>
+            <span class="btn btn-default pull-right"><i class="fa fa-users"></i> Unassigned teams </span>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            % foreach my $team_id (@$unassigned_teams){
-            %   my $team = get_team_name($team_id);
+            % foreach my $team (@$unassigned_teams){
                 <div class="btn-group">
-                    <a class="btn btn-default" type="button" href="<%= url_for('teamseditteamid', teamid=>$team_id)%>">
-                        <i class="fa fa-users " style="color: #5CB85C;"></i> <%= $team %>
+                    <a class="btn btn-default" type="button" href="<%= url_for('edit_team', teamid=>$team->{id})%>">
+                        <i class="fa fa-users " style="color: #5CB85C;"></i> <%= $team->{name} %>
                     </a>
-                    <a class="btn btn-default" href="<%= url_for('add_exception_to_publication', eid=>$eid, tid=>$team_id )%>">
+                    <a class="btn btn-default" href="<%= url_for('add_exception_to_publication', eid=>$entry->{id}, tid=>$team->{id} )%>">
                         <span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><i class="fa fa-exclamation " style="color: #5CB85C;"></i>
                     </a>
                 </div>

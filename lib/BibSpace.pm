@@ -452,12 +452,12 @@ sub setup_routes {
         ->name('edit_publication_post');
 
     $logged_user->get('/publications/make_paper/:id')
-        ->to('publications#make_paper');
+        ->to('publications#make_paper')->name('make_paper');
     $logged_user->get('/publications/make_talk/:id')
-        ->to('publications#make_talk');
+        ->to('publications#make_talk')->name('make_talk');
 
     $logged_user->get('/publications/regenerate/:id')
-        ->to('publications#regenerate_html');
+        ->to('publications#regenerate_html')->name('regenerate_publication');
     $logged_user->get('/publications/delete/:id')->to('publications#delete');
     $logged_user->get('/publications/delete_sure/:id')
         ->to('publications#delete_sure');
@@ -468,14 +468,14 @@ sub setup_routes {
         ->to('publications#add_pdf_post');
 
     $logged_user->get('/publications/manage_tags/:id')
-        ->to('publications#manage_tags');
+        ->to('publications#manage_tags')->name('manage_tags');
     $logged_user->get('/publications/:eid/remove_tag/:tid')
         ->to('publications#remove_tag')->name('remove_tag_from_publication');
     $logged_user->get('/publications/:eid/add_tag/:tid')
         ->to('publications#add_tag')->name('add_tag_to_publication');
 
     $logged_user->get('/publications/manage_exceptions/:id')
-        ->to('publications#manage_exceptions');
+        ->to('publications#manage_exceptions')->name('manage_exceptions');
     $logged_user->get('/publications/:eid/remove_exception/:tid')
         ->to('publications#remove_exception')
         ->name('remove_exception_from_publication');

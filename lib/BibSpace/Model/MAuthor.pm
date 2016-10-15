@@ -387,18 +387,6 @@ sub assign_master {
     $self->{master}    = $master_author->{uid};
     $self->{master_id} = $master_author->{id};
     $self->update($dbh);
-
-    # my $qry = "UPDATE Author SET
-    #             master=?,
-    #             master_id=?
-    #         WHERE id = ?";
-    # my $sth = $dbh->prepare($qry);
-    # $sth->execute(
-    #     $master_author->{master},
-    #     $master_author->{id},
-    #     $self->{id}
-    # );
-    # $sth->finish();
 }
 ####################################################################################
 sub toggle_visibility {
@@ -542,7 +530,7 @@ sub abandon_all_teams {
     $sth->execute( $self->{id} );
 }
 ################################################################################
-sub teams {
+sub teams { # this must remain as SQL query or object calls only withing this class. Reason: methods form other classes use it.
     my $self = shift;
     my $dbh  = shift;
 
