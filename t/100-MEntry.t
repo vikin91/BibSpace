@@ -1,6 +1,7 @@
 use Mojo::Base -strict;
 use Test::More 0.96;
 use Test::Mojo;
+use Test::Exception;
 use Data::Dumper;
 use Array::Utils qw(:all);
 
@@ -271,7 +272,7 @@ subtest 'MEntry; process_authors' => sub {
     year = {1999},
   }';
 
-    foreach my $num_authors ( map { int rand(100) } ( 1 .. 30 ) ) {
+    foreach my $num_authors ( map { int rand(40) } ( 1 .. 30 ) ) {
         $dbh->do('DELETE FROM Author;');
         my $tstr = '@misc{test, author = {';
         $tstr
@@ -369,6 +370,41 @@ subtest 'MEntry; is_paper, is_talk, make_paper, make_talk' => sub {
 ####################################################################
 subtest 'MEntry; static_get_from_id_array' => sub {
 
+    my $e = MEntry->new(bib => 
+    '@misc{zzz' . random_string(12) . ',
+        author = {James Bond},
+        month = {August},
+        title = {{Selected aspects of some methods}},
+        year = {2019},
+    }' );
+    ok( $e->save($dbh) );
+    $e = MEntry->new(bib => 
+    '@misc{zzz' . random_string(12) . ',
+        author = {James Bond},
+        month = {August},
+        title = {{Selected aspects of some methods}},
+        year = {2000},
+    }' );
+    ok( $e->save($dbh) );
+
+    $e = MEntry->new(bib => 
+    '@misc{zzz' . random_string(12) . ',
+        author = {James Bond},
+        month = {August},
+        title = {{Selected aspects of some methods}},
+        year = {1990},
+    }' );
+    ok( $e->save($dbh) );
+
+    $e = MEntry->new(bib => 
+    '@misc{zzz' . random_string(12) . ',
+        author = {James Bond},
+        month = {August},
+        title = {{Selected aspects of some methods}},
+        year = {3000},
+    }' );
+    ok( $e->save($dbh) );
+
     my @en6 = MEntry->static_get_from_id_array( $dbh, [], 1 );
     is( scalar @en6, 0,
         "MEntry->static_get_from_id_array: Empty input array returns 0?" );
@@ -382,13 +418,32 @@ subtest 'MEntry; static_get_from_id_array' => sub {
             . $some_entry->{id}
             . ") returns 1?"
     );
+
+    my @all_entry_ids = map { $_->{id} } MEntry->static_all($dbh);
+    @en6 = MEntry->static_get_from_id_array( $dbh, \@all_entry_ids, 1 );
+    is( scalar @en6,
+        scalar @all_entry_ids,
+        "MEntry->static_get_from_id_array: getting all ordered"
+    );
+    my $str1 = join(' ', map {$_->{id}} @en6 );
+    my $str2 = join(' ', @all_entry_ids); 
+    is( $str1,
+        $str2,
+        "static_get_from_id_array: is ordered ?"
+    );
+    
+    @en6 = MEntry->static_get_from_id_array( $dbh, \@all_entry_ids, 0 );
+    $str1 = join(' ', map {$_->{id}} @en6 );
+    $str2 = join(' ', @all_entry_ids); 
+    isnt( $str1,
+        $str2,
+        "static_get_from_id_array: is unordered ?"
+    );
 };
 ####################################################################
 ###### testing filter function - this may be difficult
 subtest 'MEntry; static_get_filter' => sub {
     ## todo: write more cases for static_get_filter
-
-    my @all_entries = MEntry->static_all($dbh);
 
     my $test_master_id   = undef;
     my $test_year        = undef;
@@ -399,21 +454,28 @@ subtest 'MEntry; static_get_filter' => sub {
     my $test_visible     = undef;
     my $test_permalink   = undef;
     my $test_hidden      = undef;
+
     my @en_objs          = MEntry->static_get_filter(
         $dbh,              $test_master_id,  $test_year,
         $test_bibtex_type, $test_entry_type, $test_tagid,
         $test_teamid,      $test_visible,    $test_permalink,
         $test_hidden
     );
-    @all_entries = MEntry->static_all($dbh);
+
+
+
+    my @all_entries = MEntry->static_all($dbh);
+
+
     is( scalar @all_entries,
         scalar @en_objs,
         "MEntry->static_get_filter: no filter returns all?"
     );
+
 };
 
 ####################################################################
-subtest 'MEntry; hasTag, process_tags' => sub {
+subtest 'MEntry; has_tag_named, process_tags' => sub {
     my $random1 = random_string(16);
     my $random2 = random_string(8);
     my $random3 = random_string(8);
@@ -431,11 +493,11 @@ subtest 'MEntry; hasTag, process_tags' => sub {
   }';
     $en7->populate_from_bib($dbh);
     $en7->save($dbh);
-    is( $en7->hasTag( $dbh, $random3 ), 0, "Entry has no tag $random3 yet" );
-    is( $en7->hasTag( $dbh, $random4 ), 0, "Entry has no tag $random4 yet" );
+    is( $en7->has_tag_named( $dbh, $random3 ), 0, "Entry has no tag $random3 yet" );
+    is( $en7->has_tag_named( $dbh, $random4 ), 0, "Entry has no tag $random4 yet" );
     is( $en7->process_tags($dbh), 2, "Should add 2 tags" );
-    is( $en7->hasTag( $dbh, $random3 ), 1, "Entry has no tag $random3 yet" );
-    is( $en7->hasTag( $dbh, $random4 ), 1, "Entry has no tag $random4 yet" );
+    is( $en7->has_tag_named( $dbh, $random3 ), 1, "Entry has no tag $random3 yet" );
+    is( $en7->has_tag_named( $dbh, $random4 ), 1, "Entry has no tag $random4 yet" );
 };
 ####################################################################
 subtest
@@ -559,34 +621,48 @@ subtest 'MEntry; add_tags, tags, remove_tag_by_name, remove_tag_by_id ' =>
 
         my @got_tags = $entry->tags($dbh);
         my @got_tag_names = map { $_->{name} } @got_tags;
-        is( scalar @got_tag_names, $num_tags, "Added correctly" );
+        is( scalar @got_tag_names, $num_tags, "Added correctly default tag type" );
 
         is( array_diff( @got_tag_names, @tags_to_add ),
             0, "Arrays identical" );
 
-        # my $random_index = int rand($num_tags - 1);
-        my $some_tag_name
-            = shift @got_tag_names;    #$got_tag_names[$random_index];
-        is( $entry->remove_tag_by_name( $dbh, $some_tag_name ),
-            1, "MEntry remove Tag by name: $some_tag_name " );
+        ###### tags type 2
+        my @tags_to_add_mix2 = map { random_string(25) } ( 1 .. $num_tags );
+        my @tags_to_add2 = unique( @tags_to_add_mix2, @tags_to_add_mix2 );
 
-        @got_tags = $entry->tags($dbh);
-        @got_tag_names = map { $_->{name} } @got_tags;
+        is( $entry->add_tags( $dbh, \@tags_to_add2, 2 ),
+            $num_tags, "Adding $num_tags tags of type 2" );
+
+        my @got_tag_names2 = map { $_->{name} } $entry->tags($dbh, 2);
+        is( scalar @got_tag_names2, $num_tags, "Added correctly type 2" );
+
+        is( array_diff( @got_tag_names2, @tags_to_add2 ),
+            0, "Arrays identical" );
+
+        ###### end tags type 2
+        my @entry_tags = $entry->tags($dbh);
+
+        my $some_tag = shift @entry_tags;
+        is( $entry->remove_tag_by_name( $dbh, $some_tag->{name} ),
+            1, "MEntry remove Tag by name: $some_tag->{name} " );
+
+        @entry_tags = $entry->tags($dbh, 1);
+        @got_tag_names = map { $_->{name} } @entry_tags;
         is( array_diff( @got_tag_names, @tags_to_add ),
             1, "Arrays identical but 1" );
 
-        my $some_tag_name2 = shift @got_tag_names;
-        my $some_tag_name3 = shift @got_tag_names;
-        my $some_tag_name4 = shift @got_tag_names;
-        is( $entry->remove_tag_by_name( $dbh, $some_tag_name2 ),
-            1, "MEntry remove Tag by name: $some_tag_name2 " );
-        is( $entry->remove_tag_by_name( $dbh, $some_tag_name3 ),
-            1, "MEntry remove Tag by name: $some_tag_name3 " );
-        is( $entry->remove_tag_by_name( $dbh, $some_tag_name4 ),
-            1, "MEntry remove Tag by name: $some_tag_name4 " );
+        my $some_tag2 = shift @entry_tags;
+        my $some_tag3 = shift @entry_tags;
+        my $some_tag4 = shift @entry_tags;
+        is( $entry->remove_tag_by_name( $dbh, $some_tag2->{name} ),
+            1, "MEntry remove Tag by name2: $some_tag2->{name} " );
+        is( $entry->remove_tag_by_name( $dbh, $some_tag3->{name} ),
+            1, "MEntry remove Tag by name3: $some_tag3->{name} " );
+        is( $entry->remove_tag_by_name( $dbh, $some_tag4->{name} ),
+            1, "MEntry remove Tag by name4: $some_tag4->{name} " );
 
-        @got_tags = $entry->tags($dbh);
-        @got_tag_names = map { $_->{name} } @got_tags;
+        @entry_tags = $entry->tags($dbh, 1);
+        @got_tag_names = map { $_->{name} } @entry_tags;
 
         is( array_diff( @got_tag_names, @tags_to_add ),
             4, "Arrays identical but 4" );
@@ -601,7 +677,7 @@ subtest 'MEntry; add_tags, tags, remove_tag_by_name, remove_tag_by_id ' =>
     my $some_tag_obj  = shift @some_tag_objs;
     is( $entry->remove_tag_by_id( $dbh, $some_tag_obj->{id} ),
         1, "MEntry remove Tag by id $some_tag_obj->{id}" );
-    };
+};
 
 ####################################################################
 subtest 'MEntry: generate with bst' => sub {
@@ -627,7 +703,7 @@ subtest 'MEntry: generate with bst' => sub {
     unlike( $entry->{html}, qr/ERROR: BST/ );
     is( $entry->{need_html_regen}, 0, "need_html_regen 0" );
 
-    $entry->regenerate_html( $dbh, 1, 'id-dont-exist.bst' );
+    $entry->regenerate_html( $dbh, 1, 'id-doesnt-exist.bst' );
     is( $entry->{need_html_regen}, 0, "need_html_regen 0" );
     like( $entry->{html}, qr/ERROR: BST/ );
 
@@ -639,6 +715,61 @@ subtest 'MEntry: generate with bst' => sub {
     $entry->regenerate_html( $dbh, 1 );
     unlike( $entry->{html}, qr/ERROR: BST/ );
 };
+
+####################################################################
+subtest 'MEntry; exceptions, teams, authors2 ' => sub {
+
+    plan 'skip_all' => "There are no teams to test exceptions"
+        if scalar MTeam->static_all($dbh) == 0;
+
+    my $auth = random_string(8) . ' ' . random_string(8);
+    my $edit = random_string(8) . ' ' . random_string(8);
+
+    my $e = MEntry->new();
+    $e->{bib} = '@incollection{ma_' . random_string(12) . ',
+        author = {' . $auth . '},
+        editor = {' . $edit . '},
+        month = {August},
+        title = {{Selected aspects of some methods}},
+        year = {1999},
+    }';
+    $e->{bst_file} = './lib/descartes2.bst';
+    $e->populate_from_bib($dbh);
+    $e->make_paper($dbh);
+    ok( $e->save($dbh) );
+    
+
+    my @teams     = MTeam->static_all($dbh);
+    my $some_team = shift @teams;
+
+    is( scalar $e->teams($dbh), 0, "new paper has no teams" );
+    is( scalar $e->exceptions($dbh), 0, "new paper has no exceptions" );
+
+    is( scalar $e->authors($dbh), 0, "new paper has 0 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
+    is( $e->create_authors($dbh), 2, "created 2 authors" );
+    $e->process_authors($dbh);
+    is( scalar $e->authors($dbh), 2, "new paper has 2 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
+    is( scalar $e->authors_from_bibtex($dbh), 2, "new paper has 2 authors" );
+
+    is( $e->postprocess_updated($dbh), 1, "postproces_updated returns 1" ); # only call
+    is( scalar $e->authors($dbh), 2, "new paper has 2 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
+
+    my $a = ($e->authors($dbh))[0];
+    is( $e->remove_author( $dbh, $a), 1, "removed author");
+    is( scalar $e->authors($dbh), 1, "the paper has 1 author: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
+
+    dies_ok { $e->teams() } 'expecting to die';
+    dies_ok { $e->exceptions() } 'expecting to die';
+
+    say "Exceptions: " . join(' ', map {$_->{name}} $e->exceptions($dbh));
+    is( $e->assign_exception($dbh, $some_team), 1, "assign exception. Current exceptions: " . join(' ', map {$_->{name}} $e->exceptions($dbh)) );
+    is( $e->assign_exception($dbh, undef), 0, "assign bad exception. Current exceptions: " . join(' ', map {$_->{name}} $e->exceptions($dbh)) );
+    is( scalar $e->exceptions($dbh), 1, "the paper has 1 exception. Current exceptions: " . join(' ', map {$_->{name}} $e->exceptions($dbh)) );
+    is( $e->remove_exception($dbh, $some_team), 1, "remove exception. Current exceptions: " . join(' ', map {$_->{name}} $e->exceptions($dbh)) );
+    is( scalar $e->exceptions($dbh), 0, "the paper has 0 exceptions: " . join(' ', map {$_->{name}} $e->exceptions($dbh)) );
+
+};
+
 
 pass("dummy");
 

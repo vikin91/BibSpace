@@ -326,6 +326,7 @@ sub save {
     my $result = "";
 
     $self->decodeLatex();
+    $self->populate_from_bib();
 
     $self->{creation_time} = '1970-01-01 00:00:00'
         if !defined $self->{creation_time}
@@ -509,10 +510,10 @@ sub is_talk_in_tag {
     my $self = shift;
     my $dbh  = shift;
     my $sum
-        = $self->hasTag( $dbh, "Talks" )
-        + $self->hasTag( $dbh, "Talk" )
-        + $self->hasTag( $dbh, "talks" )
-        + $self->hasTag( $dbh, "talk" );
+        = $self->has_tag_named( $dbh, "Talks" )
+        + $self->has_tag_named( $dbh, "Talk" )
+        + $self->has_tag_named( $dbh, "talks" )
+        + $self->has_tag_named( $dbh, "talk" );
     return 1 if $sum > 0;
     return 0;
 }
@@ -618,12 +619,12 @@ sub authors_from_bibtex {
     if ( $bibtex_entry->exists('author') ) {
         my @authors = $bibtex_entry->split('author');
         my (@n) = $bibtex_entry->names('author');
-        @names = @n;
+        push @names, @n;
     }
-    elsif ( $bibtex_entry->exists('editor') ) {
+    if ( $bibtex_entry->exists('editor') ) {
         my @authors = $bibtex_entry->split('editor');
         my (@n) = $bibtex_entry->names('editor');
-        @names = @n;
+        push @names, @n;
     }
 
     my @author_names;
@@ -1140,7 +1141,7 @@ sub decodeLatex {
     }
 }
 ####################################################################################
-sub hasTag {
+sub has_tag_named {
     my $self        = shift;
     my $dbh         = shift;
     my $tag_to_find = shift;
@@ -1158,8 +1159,7 @@ sub hasTag {
     #my $sth = $dbh->prepare( $qry );
     #$sth->execute($self->{id}, $tag_id);
 
-    return 1 if $key_exists == 1;
-    return 0;
+    return $key_exists == 1;
 
 }
 ####################################################################################
@@ -1207,11 +1207,12 @@ sub add_tags {
 
     return 0 if !defined $self->{id} or $self->{id} < 0;
 
-    my @tags = ();
+    # say "MEntry add_tags type $tag_type. Tags: " . join(", ", @tag_names);
+
     foreach my $tn (@tag_names) {
         my $t = MTag->static_get_by_name( $dbh, $tn );
         if ( !defined $t ) {
-            $t = MTag->new( name => $tn, tag_type => $tag_type );
+            $t = MTag->new( name => $tn, type => $tag_type );
             $t->save($dbh);
         }
         $t = MTag->static_get_by_name( $dbh, $tn );
