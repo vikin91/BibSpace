@@ -38,6 +38,7 @@ on 'test' => sub {
   requires 'Test::Pod::Coverage' , '>= 0.0';
   requires 'Test::Differences' , '>= 0.0';
   requires 'Test::MockModule' , '>= 0.0';
+  requires 'Test::Exception' , '>= 0.0';
 };
 
 on 'develop' => sub {
