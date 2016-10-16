@@ -26,10 +26,10 @@ sub save {
     my $return_value = do_backup_current_state( $self, "normal" );
 
     if ( defined $return_value ) {
-        $self->flash( msg => "Backup created successfully" );
+        $self->flash( msg_type=>'success', msg => "Backup created successfully" );
     }
     else {
-        $self->flash( msg => "Backup create failed!" );
+        $self->flash(msg_type=>'danger',  msg => "Backup create failed!" );
     }
     $self->redirect_to( 'backup_index' );
 }
@@ -39,7 +39,7 @@ sub cleanup {
     my $self        = shift;
     my $num_deleted = do_delete_broken_or_old_backup($self);
 
-    $self->flash( msg => "$num_deleted backups have been cleaned." );
+    $self->flash( msg_type=>'success', msg => "$num_deleted backups have been cleaned." );
 
     # redirecting to referrer here breaks the test if the test supports redirects! why?
     # disabling redirects for test and putting here referrer allows test to pass
@@ -51,7 +51,6 @@ sub cleanup {
 sub index {
     my $self       = shift;
     my $backup_dbh = $self->app->db;
-    say "call: Backup::backup";
 
     my $sth
         = $backup_dbh->prepare(
@@ -140,14 +139,15 @@ sub delete_backup {
 
     if ( $self->can_delete_backup($id) == 1 ) {
         do_delete_backup( $self, $id );
-        $self->flash( msg => "Backup id $id deleted!" );
+        $self->flash( msg_type=>'success', msg => "Backup id $id deleted!" );
     }
     else{
-        $self->flash( msg => "Cannot delete, backup id $id not found!" );   
+        $self->flash( msg_type=>'warning', msg => "Cannot delete, backup id $id not found!" );   
     }
 
     # redirecting to referrer here breaks the test if the test supports redirects! why?
     # disabling redirects for test and putting here referrer allows test to pass
+    $self->res->code(303);
     $self->redirect_to($self->url_for('backup_index'));
 }
 
@@ -172,10 +172,10 @@ sub restore_backup {
         $self->app->config );
 
     if ( $return_value == 1 ) {
-        $self->flash( msg => "Backup restored successfully" );
+        $self->flash( msg_type=>'success', msg => "Backup restored successfully" );
     }
     else {
-        $self->flash( msg => "Backup restore failed!" );
+        $self->flash( msg_type=>'danger', msg => "Backup restore failed!" );
     }
     $self->redirect_to('backup_index');
 }
