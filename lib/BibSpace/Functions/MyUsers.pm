@@ -263,6 +263,8 @@ sub add_new_user{
 
         my $sth = $user_dbh->prepare("INSERT IGNORE INTO Login (login, email, pass, pass2, real_name, rank) VALUES (?,?,?,?,?,?)");
         $sth->execute($uname, $email, $hash, $salt, $name, $rank);
+        my $sth2 = $user_dbh->prepare("UPDATE Login SET registration_time=CURRENT_TIMESTAMP WHERE login=?");
+        $sth2->execute($uname);
     }
 };
 ####################################################################################################
