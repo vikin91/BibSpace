@@ -27,9 +27,12 @@ sub under_check_is_manager {
     my $dbh  = $self->app->db;
     return 1 if $self->check_is_manager();
 
-    $self->flash( msg =>
+    $self->flash(
+        msg_type => 'danger',
+        msg =>
             "You need to have at least manager rights to access this page! You have just tried to access: "
-            . $self->url_for('current')->to_abs );
+            . $self->url_for('current')->to_abs
+    );
     my $redirect_to = $self->get_referrer;
     $redirect_to = $self->url_for('/')
         if $self->get_referrer eq $self->url_for('current')->to_abs
@@ -54,9 +57,12 @@ sub under_check_is_admin {
     my $dbh  = $self->app->db;
     return 1 if $self->check_is_admin();
 
-    $self->flash( msg =>
+    $self->flash(
+        msg_type => 'danger',
+        msg =>
             "You need to have admin rights to access this page! You have just tried to access: "
-            . $self->url_for('current')->to_abs );
+            . $self->url_for('current')->to_abs
+    );
     my $redirect_to = $self->get_referrer;
     $redirect_to = $self->url_for('/')
         if $self->get_referrer eq $self->url_for('current')->to_abs
@@ -117,7 +123,9 @@ sub make_manager {
     }
     else {
         $self->flash(
-            msg => "User \`$usr_obj->{login}\` cannot become \`manager\`." );
+            msg_type => 'danger',
+            msg => "User \`$usr_obj->{login}\` cannot become \`manager\`."
+        );
     }
     $self->redirect_to('manage_users');
 }
@@ -134,7 +142,9 @@ sub make_admin {
     }
     else {
         $self->flash(
-            msg => "User \`$usr_obj->{login}\` cannot become \`admin\`." );
+            msg_type => 'danger',
+            msg      => "User \`$usr_obj->{login}\` cannot become \`admin\`."
+        );
     }
     $self->redirect_to('manage_users');
 }
@@ -147,28 +157,32 @@ sub delete_user {
     my $usr_obj = BibSpace::Functions::UserObj->new( { id => $profile_id } );
     $usr_obj->initFromDB($dbh);
 
-    my $message = "";
+    my $message      = "";
+    my $message_type = "";
 
     if (    $self->users->login_exists( $usr_obj->{login}, $dbh )
         and $usr_obj->is_admin() == 1 )
     {
         $message
             = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.";
+        $message_type = 'danger';
     }
     else {
 
         if ( $self->users->do_delete_user( $profile_id, $dbh ) ) {
             $message
                 = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) has been deleted.";
+            $message_type = 'success';
         }
         else {
             $message
                 = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) could not been deleted.";
+            $message_type = 'danger';
         }
 
     }
     $self->write_log($message);
-    $self->flash( msg => $message );
+    $self->flash( msg_type => $message_type, msg => $message );
 
     # $self->redirect_to('manage_users');
 
@@ -280,16 +294,22 @@ sub post_gen_forgot_token {
         $self->send_email( $token, $final_email, $email_content );
 
         $self->write_log("Forgot: reset token sent to $final_email");
-        $self->flash( msg =>
+        $self->flash(
+            msg_type => 'info',
+            msg =>
                 "Email with password reset instructions has been sent. Expect an email from "
-                . $self->app->config->{mailgun_from} );
+                . $self->app->config->{mailgun_from}
+        );
         $self->redirect_to('/');
 
     }
     else {
 
         $self->write_log("Forgot: user does not exist.");
-        $self->flash( msg => 'User or email does not exists. Try again.' );
+        $self->flash(
+            msg_type => 'warning',
+            msg      => 'User or email does not exists. Try again.'
+        );
         $self->redirect_to('forgot');
     }
 }
@@ -335,7 +355,6 @@ sub token_clicked {
     my $token = $self->param('token');
     my $dbh   = $self->app->db;
 
-    say "call: token_clicked";
 
     # verify if token exists
     # display form for setting new password.
@@ -360,8 +379,11 @@ sub store_password {
 
     if ( $self->users->email_exists( $email, $dbh ) == 0 ) {
 
-        $self->flash( msg =>
-                'Reset password token is invalid! Abuse will be reported.' );
+        $self->flash(
+            msg_type => 'danger',
+            msg =>
+                'Reset password token is invalid! Make sure you click the newest token that you requested.'
+        );
 
 # $self->stash(msg => 'Reset password token is invalid! Abuse will be reported.');
         $self->write_log("Forgot: Reset password token is invalid! ($token)");
@@ -377,7 +399,9 @@ sub store_password {
 
             $self->users->remove_token( $token, $dbh );
             $self->users->remove_all_tokens_for_email( $email, $dbh );
-            $self->flash( msg =>
+            $self->flash(
+                msg_type => 'success',
+                msg =>
                     'Password change successful. All your password reset tokens have been removed. You may login now.'
             );
             $self->write_log(
@@ -390,12 +414,10 @@ sub store_password {
     }
     else {
         $self->flash(
-            msg   => 'Passwords are not same. Try again.',
-            type  => 'warning'
+            msg      => 'Passwords are not same. Try again.',
+            msg_type => 'danger'
         );
-        $self->stash(
-            token => $token
-        );
+        $self->stash( token => $token );
         $self->write_log("Forgot: Change failed. Passwords are not same.");
         $final_error = 0;
         $self->redirect_to( 'token_clicked', token => $token );
@@ -407,7 +429,9 @@ sub store_password {
     if ( $final_error == 1 ) {
         $self->users->remove_token( $token, $dbh );
         $self->write_log("Forgot: Change failed. Token deleted.");
-        $self->flash(type=>'danger', msg =>
+        $self->flash(
+            msg_type => 'danger',
+            msg =>
                 'Something went wrong. The password has not been changed. The reset token is no longer valid. You need to request a new one by clicking in \'I forgot my password\'.'
         );
         $self->redirect_to('login_form');
@@ -422,8 +446,6 @@ sub login {
     my $user = $self->param('user');
     my $pass = $self->param('pass');
     my $dbh  = $self->app->db;
-
-    say "Login: trying to log in as user $user";
 
     if ( defined $user and defined $pass ) {
 
@@ -443,13 +465,16 @@ sub login {
         else {
             $self->write_log(
                 "Login: Bad user name or password for user $user");
-            $self->flash( msg_type=>'danger', msg => 'Wrong user name or password' );
+            $self->flash(
+                msg_type => 'danger',
+                msg      => 'Wrong user name or password'
+            );
             $self->redirect_to( $self->url_for('login_form') );
             return;
         }
     }
     else {
-        $self->flash( msg_type=>'info', msg => 'Please login first!' );
+        $self->flash( msg_type => 'info', msg => 'Please login first!' );
         $self->redirect_to( $self->url_for('login_form') );
         return;
     }
@@ -466,7 +491,10 @@ sub bad_password {
 
     $self->write_log("Login: Bad user name or password! (/badpassword)");
 
-    $self->flash( msg_type=>'danger', msg => 'Wrong user name or password' );
+    $self->flash(
+        msg_type => 'danger',
+        msg      => 'Wrong user name or password'
+    );
     $self->redirect_to( $self->url_for('login_form') );
 }
 ####################################################################################
@@ -476,7 +504,7 @@ sub not_logged_in {
         "Calling a page that requires login but user is not logged in. Redirecting to login."
     );
 
-    $self->flash( msg_type=>'danger', msg => 'Wrong username or password' );
+    $self->flash( msg_type => 'danger', msg => 'Wrong username or password' );
     $self->redirect_to( $self->url_for('login_form') );
 }
 
@@ -574,7 +602,9 @@ sub post_do_register {
                         $self->users->add_new_user( $login, $email, $name,
                             $password1, 0, $dbh );
 
-                        $self->flash( msg =>
+                        $self->flash(
+                            msg_type => 'success',
+                            msg =>
                                 "User created successfully! You may now login using login: $login."
                         );
                         $self->write_log(
@@ -585,7 +615,10 @@ sub post_do_register {
                     else {
                         # $self->stash(msg => "This login is already taken");
 
-                        $self->flash( msg => "This login is already taken" );
+                        $self->flash(
+                            msg_type => 'danger',
+                            msg      => "This login is already taken"
+                        );
                         $self->stash(
                             name      => $name,
                             email     => $email,
@@ -602,8 +635,10 @@ sub post_do_register {
                 else {
                     # $self->stash(msg => "Password is too short");
 
-                    $self->flash( msg =>
-                            "Password is too short, use minimum 4 symbols" );
+                    $self->flash(
+                        msg_type => 'danger',
+                        msg => "Password is too short, use minimum 4 symbols"
+                    );
                     $self->stash(
                         name      => $name,
                         email     => $email,
@@ -620,6 +655,7 @@ sub post_do_register {
             else {
                 # $self->stash(msg => "Passwords don't match!");
                 $self->flash(
+                    msg_type  => 'danger',
                     msg       => "Passwords don't match!",
                     name      => $name,
                     email     => $email,
@@ -636,6 +672,7 @@ sub post_do_register {
         else {
             # $self->stash(msg => "Some input is missing!");
             $self->flash(
+                msg_type  => 'danger',
                 msg       => "Some input is missing!",
                 name      => $name,
                 email     => $email,
@@ -655,6 +692,7 @@ sub post_do_register {
             );
             $self->redirect_to(
                 'register',
+                msg_type  => 'danger',
                 msg       => "Some input is missing!",
                 name      => $name,
                 email     => $email,
