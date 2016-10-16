@@ -384,10 +384,6 @@ sub setup_routes {
     ################ EDITING PUBLICATIONS ################
 
     # EXPERIMENTAL
-    $logged_user->get('/publications-set')
-        ->to('publicationsexperimental#all_defined_by_set');
-    $logged_user->get('/publications/sdqpdf')
-        ->to('publicationsexperimental#all_with_pdf_on_sdq');
 
     $logged_user->get('/publications/add_many')
         ->to('publicationsexperimental#publications_add_many_get')

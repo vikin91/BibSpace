@@ -89,8 +89,8 @@ sub publications_add_many_get {
 ############################################################################################################
 
 ## Called after every preview or store command issued by ADD_MULTIPLE form
+##  finish this function using the new way of adding editing
 
-## THIS DOES NOT WORK ! finish this function using the new way of adding editing
 sub publications_add_many_post {
     say "CALL: publications_add_many_post ";
     my $self          = shift;
@@ -157,6 +157,7 @@ sub publications_add_many_post {
             bib         => $new_bib,
             existing_id => 0,
             key         => '',
+            msg_type    => 'danger',
             msg         => $msg,
             exit_code   => $code,
             preview     => $html_preview
@@ -199,6 +200,7 @@ sub publications_add_many_post {
             bib         => $new_bib,
             existing_id => 0,
             key         => '',
+            msg_type    => 'danger',
             msg         => $msg,
             exit_code   => $code,
             preview     => $html_preview
@@ -208,6 +210,8 @@ sub publications_add_many_post {
     }
 
     $debug_str .= "<br>Entries ready to add! Starting.";
+
+    my $msg_type = 'success';
 
     for my $bibtex_code (@bibtex_codes) {
         my ( $mentry, $status_code_str, $existing_id, $added_under_id )
@@ -221,13 +225,14 @@ sub publications_add_many_post {
         else {    # => bibtex OK, key OK
             $debug_str .= "<br>"
                 . "Something went wrong. Status: $status_code_str<br/>";
+            $msg_type = 'danger';
         }
     }
-    say "after bibtex codes loop";
 
     $self->stash(
         bib         => $new_bib,
         existing_id => 0,
+        msg_type    => $msg_type,
         key         => '',
         msg         => $msg . $debug_str,
         exit_code   => $code,
@@ -237,7 +242,6 @@ sub publications_add_many_post {
 }
 ####################################################################################
 sub split_bibtex_entries {
-    say "CALL: split_bibtex_entries";
     my $input = shift;
 
     my @bibtex_codes = ();
@@ -259,58 +263,5 @@ sub split_bibtex_entries {
 }
 ####################################################################################
 
-### THIS IS ONLY Exemplary FUNCTION TO play with functionalities provided by sets
-sub all_defined_by_set {
-    say "CALL: all_defined_by_set ";
-    my $self = shift;
-
-    my $end_set = get_set_of_papers_for_all_authors_of_team_id( $self, 1 );
-    $end_set = $end_set - get_set_of_papers_for_team( $self, 1 );
-
-    #test
-    my $all_papers = Set::Scalar->new( map { $_->{id} }
-            MEntry->static_all( $self->app->db ) );
-    my $not_relevant_papers = $all_papers
-        - get_set_of_papers_for_all_authors_of_team_id( $self, 1 );
-
-    $end_set = $not_relevant_papers;
-
-    ### TODO!!!
-    # not_relev = not_relev - tagged
-    # not_relev = not_relev - exceptions
-
-    my @objs = Fget_publications_core_from_set( $self, $end_set );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-sub all_with_pdf_on_sdq {
-    say "CALL: all_with_pdf_on_sdq ";
-    my $self = shift;
-    my $num  = $self->param('num') || 10;
-    my $dbh  = $self->app->db;
-
-    $self->write_log("Displaying papers with pdfs on sdq server");
-
-    my $qry = "SELECT id from Entry WHERE html_bib LIKE ?";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute("%sdqweb%");
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-    my $msg
-        = "This list contains papers that have pdfs on the sdqweb server. Please use this list to move pdfs to our server - this improves the performance.";
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->stash( msg_type=>'info', msg     => $msg );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
 
 1;
