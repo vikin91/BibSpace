@@ -7,6 +7,8 @@ my $self     = $t_anyone->app;
 my $dbh      = $t_anyone->app->db;
 
 use BibSpace::Model::MAuthor;
+use BibSpace::Model::MTeam;
+use BibSpace::Model::MEntry;
 
 use BibSpace::Controller::Set;
 use BibSpace::Controller::Core;
@@ -158,15 +160,111 @@ subtest 'MAuthor assign master 1' => sub {
 
     @master_authors     = MAuthor->static_all_masters($dbh);
     is( scalar @master_authors, 1, "Got 1 master_author" );
-    
+};
+
+####################################################################
+subtest 'MAuthor all_author_user_ids add_user_id merge_authors' => sub {
+
+    $dbh->do('DELETE FROM Author;');
+
+
+
+    my $t2 = MAuthor->new(uid => 'MasterAuthor');
+    $t2->save($dbh);
+
+    is( scalar $t2->all_author_user_ids($dbh), 1, "Got 1 uids" );
+    is( ($t2->all_author_user_ids($dbh))[0]->{uid}, 'MasterAuthor', "uid ok" );
+
+    ok( $t2->add_user_id($dbh, 'SuperMan'), "add user id" );
+    is( scalar $t2->all_author_user_ids($dbh), 2, "Got 2 uids" );
+    is( ($t2->all_author_user_ids($dbh))[0]->{uid}, 'MasterAuthor', "uid 1 ok" );
+    is( ($t2->all_author_user_ids($dbh))[1]->{uid}, 'SuperMan', "uid 2 ok" );
+
+    my $t1 = MAuthor->new(uid => 'BigAuthor');
+    $t1->save($dbh);
+
+    ok( $t2->merge_authors($dbh, $t1), "merge authors");
+
+    is( scalar $t2->all_author_user_ids($dbh), 3, "Got 3 uids" );
+    is( ($t2->all_author_user_ids($dbh))[0]->{uid}, 'MasterAuthor', "uid 1 ok" );
+    is( ($t2->all_author_user_ids($dbh))[1]->{uid}, 'SuperMan', "uid 2 ok" );
+    is( ($t2->all_author_user_ids($dbh))[2]->{uid}, 'BigAuthor', "uid 3 ok" );
+};
+
+####################################################################
+subtest 'MAuthor abandon entries update_master_name' => sub {
+
+    $dbh->do('DELETE FROM Author;');
+
+    my $e = MEntry->new(bib => '@mastersthesis{zz'.random_string(12).',
+        address = {World},
+        author = {James Bond},
+        month = {March},
+        school = {University of Bond},
+        title = {{Selected aspects of some methods}},
+        year = {1999},
+      }');
+    $e->populate_from_bib($dbh);
+    $e->save($dbh);
+    is( $e->postprocess_updated($dbh), 1, "postproces_updated returns 1" ); # only call
+
+    my @authors = $e->authors($dbh);
+    my $a = shift @authors;
+
+    is( scalar $a->entries($dbh), 1, "Got 1 entries" );
+    is( $a->entries(undef), undef, "Got 0 entries" );
+
+    $a->{display} = 1;
+    $a->save($dbh);
+
+    is($a->can_be_deleted($dbh), 0, 'author can_be_deleted');
+
+    $a->abandon_all_entries( $dbh );
+    is($a->can_be_deleted($dbh), 0, 'author can_be_deleted');
+    is( scalar $a->entries($dbh), 0, "Got 0 entries" );
+
+    $a->{display} = 0;
+    $a->save($dbh);
+    is($a->can_be_deleted($dbh), 1, 'author can_be_deleted');
+
+    is( $a->update_master_name($dbh, 'HeMan'), 0, 'update_master_name' );
+    is($a->{master}, 'HeMan', 'new master ok');
+
+    my $t2 = MAuthor->new(uid => 'MasterAuthor');
+    $t2->save($dbh);
+    isnt( $a->update_master_name($dbh, 'MasterAuthor'), 0, 'update_master_name' );
+    is( $a->update_master_name($dbh, 'MasterAuthor'), $t2->{id}, 'update_master_name' );
 
 };
 
-# assign_master
+####################################################################
+subtest 'MAuthor teams' => sub {
 
-# teams 
-# joined_team 
-# left_team 
+    $dbh->do('DELETE FROM Author;');
+    $dbh->do('DELETE FROM Team;');
+
+    my $a = MAuthor->new(uid => 'MasterAuthor');
+    $a->save($dbh);
+
+    my $t = MTeam->new(name => 'Masters');
+    $t->save($dbh);
+    
+    is(scalar $a->teams($dbh), 0, 'teams');
+    is($a->add_to_team($dbh, undef), 0, 'add to team' );
+    isnt($a->add_to_team($dbh, $t), 0, 'add to team' );
+    is(scalar $a->teams($dbh), 1, 'teams');
+
+    is($a->joined_team($dbh, undef), -1, 'joined_team');
+    is($a->joined_team($dbh, $t), 0, 'joined_team');
+    is($a->left_team($dbh, undef), -1, 'left_team');
+    is($a->left_team($dbh, $t), 0, 'left_team');
+
+    is  ($a->remove_from_team($dbh, undef), 0, 'add to team' );
+    isnt($a->remove_from_team($dbh, $t), 0, 'add to team' );
+    is(scalar $a->teams($dbh), 0, 'teams');
+
+};
+
 
 
 done_testing();

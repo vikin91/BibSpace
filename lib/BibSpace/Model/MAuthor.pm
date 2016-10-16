@@ -336,6 +336,8 @@ sub joined_team {
     my $dbh  = shift;
     my $team = shift;
 
+    return -1 if !defined $team;
+
     my $qry = "SELECT DISTINCT author_id, team_id, start, stop
             FROM Author_to_Team 
             WHERE team_id=? AND author_id=?";
@@ -359,6 +361,9 @@ sub left_team {
     my $self = shift;
     my $dbh  = shift;
     my $team = shift;
+
+    return -1 if !defined $team;
+
 
     my $qry = "SELECT DISTINCT author_id, team_id, start, stop
             FROM Author_to_Team 
@@ -461,8 +466,6 @@ sub merge_authors {
 
         # author with new_user_id already exist
         # move all entries of candidate to this author
-        say "source: " . Dumper $source_author;
-        say "destin: " . Dumper $self;
 
         $self->move_entries_from_author( $dbh, $source_author );
 
@@ -532,11 +535,11 @@ sub abandon_all_teams {
 ################################################################################
 sub add_to_team {
     my $self      = shift;
+    my $dbh       = shift;
     my $team      = shift;
 
-    return 0 if !defined $team and $team->{id} <=0;
 
-    my $dbh = $self->app->db;
+    return 0 if !defined $team and $team->{id} <=0;
 
     my $qry
         = "INSERT IGNORE INTO Author_to_Team(author_id, team_id) VALUES (?,?)";
@@ -547,11 +550,11 @@ sub add_to_team {
 ################################################################################
 sub remove_from_team {
     my $self      = shift;
+    my $dbh       = shift;
     my $team      = shift;
 
     return 0 if !defined $team and $team->{id} <=0;
 
-    my $dbh = $self->app->db;
 
     my $qry = "DELETE FROM Author_to_Team WHERE author_id=? AND team_id=?";
     my $sth = $dbh->prepare($qry);
