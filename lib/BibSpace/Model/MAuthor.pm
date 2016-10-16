@@ -530,6 +530,35 @@ sub abandon_all_teams {
     $sth->execute( $self->{id} );
 }
 ################################################################################
+sub add_to_team {
+    my $self      = shift;
+    my $team      = shift;
+
+    return 0 if !defined $team and $team->{id} <=0;
+
+    my $dbh = $self->app->db;
+
+    my $qry
+        = "INSERT IGNORE INTO Author_to_Team(author_id, team_id) VALUES (?,?)";
+    my $sth = $dbh->prepare($qry);
+    return $sth->execute( $self->{master_id}, $team->{id} );
+
+}
+################################################################################
+sub remove_from_team {
+    my $self      = shift;
+    my $team      = shift;
+
+    return 0 if !defined $team and $team->{id} <=0;
+
+    my $dbh = $self->app->db;
+
+    my $qry = "DELETE FROM Author_to_Team WHERE author_id=? AND team_id=?";
+    my $sth = $dbh->prepare($qry);
+    return $sth->execute( $self->{master_id}, $team->{id} );
+
+}
+################################################################################
 sub teams { # this must remain as SQL query or object calls only withing this class. Reason: methods form other classes use it.
     my $self = shift;
     my $dbh  = shift;

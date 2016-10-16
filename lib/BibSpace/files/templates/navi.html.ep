@@ -89,7 +89,7 @@
         </li>
       <li class="divider"></li>
       <li role="presentation" class="dropdown-header">Papers of visible authors</li>
-      % foreach my $y (get_years_arr){
+      % foreach my $y (get_recent_years_arr){
           <li>
             <a href="<%= url_for('/publications')->query(year=> $y) %>">
             <span class="glyphicon glyphicon-chevron-right"></span> 
@@ -129,13 +129,13 @@
 
         <li class="divider"></li>
         <li role="presentation" class="dropdown-header">Visible authors</li>
-        % foreach my $mid (get_author_mids_arr){
-        % my $master = get_master_for_id($mid);
+        % my @authors = sort {$a->{master} cmp $b->{master}}  grep {$_->{display} == 1} MAuthor->static_all_masters($self->app->db);
+        % foreach my $author (@authors){
             <li>
-                <a href="<%= url_for('/authors/edit/')%><%=$mid%>" >
-                    <span class="glyphicon glyphicon-user"></span> <%= $master %> 
+                <a href="<%= url_for('edit_author', id=>$author->{master_id})%>" >
+                    <span class="glyphicon glyphicon-user"></span> <%= $author->{master} %> 
                     <span class="badge">
-                        <%= num_pubs_for_author($mid)%>
+                        <%= num_pubs_for_author($author->{master})%>
                         <span class="glyphicon glyphicon-file"></span> 
                     </span>
                 </a>

@@ -132,28 +132,11 @@ sub register {
     );
 
     $app->helper(
-        can_delete_backup => sub {
+        can_delete_backup_helper => sub {
             my $self       = shift;
             my $bid        = shift;
-            my $backup_dbh = $self->app->db;
 
-            my $backup_dir_absolute = $self->config->{backups_dir};
-            $backup_dir_absolute =~ s!/*$!/!;
-
-            my $b_fname = get_backup_filename_by_id( $backup_dbh, $bid );
-            my $file_path = $backup_dir_absolute . $b_fname;
-
-            my $file_exists = 0;
-            $file_exists = 1 if -e $file_path;
-            my $b_age = get_backup_age_in_days( $self, $bid );
-
-            my $age_limit = $self->config->{allow_delete_backups_older_than};
-
-# say "helper(can_delete_backup: age limit is $age_limit, backup age: $b_age file_exists $file_exists file_path $file_path ";
-
-            return 1 if $file_exists == 1 and $b_age >= $age_limit;
-            return 1 if $file_exists == 0;
-            return 0;
+            return can_delete_backup($self->app->db, $bid, $self->app->config);
         }
     );
 
@@ -216,28 +199,14 @@ sub register {
     $app->helper(
         num_authors => sub {
             my $self = shift;
-
-            my $sth = $self->app->db->prepare(
-                "SELECT COUNT(DISTINCT(master_id)) as num FROM Author ");
-            $sth->execute();
-            my $row = $sth->fetchrow_hashref();
-            my $num = $row->{num};
-            return $num;
+            return scalar MAuthor->static_all_masters($self->app->db);
         }
     );
 
     $app->helper(
         num_visible_authors => sub {
             my $self = shift;
-
-            my $sth
-                = $self->app->db->prepare(
-                "SELECT COUNT(DISTINCT(master_id)) as num FROM Author WHERE display=1"
-                );
-            $sth->execute();
-            my $row = $sth->fetchrow_hashref();
-            my $num = $row->{num};
-            return $num;
+            return scalar grep {$_->{display} == 1} MAuthor->static_all_masters($self->app->db);
         }
     );
 
@@ -246,10 +215,8 @@ sub register {
             my $self = shift;
             my $id   = shift;
 
-            my ( $author_ids_ref, $start_arr_ref, $stop_arr_ref )
-                = get_team_members( $self, $id );
-            my $num_authors = scalar @$author_ids_ref;
-            return $num_authors;
+            my $author = MAuthor->static_get( $self->app->db, $id );
+            return scalar $author->teams($self->app->db);
         }
     );
 
@@ -258,11 +225,8 @@ sub register {
             my $self = shift;
             my $id   = shift;
 
-            my ( $author_ids_ref, $start_arr_ref, $stop_arr_ref )
-                = get_team_members( $self, $id );
-            my $num_authors = scalar @$author_ids_ref;
-            return 0 if $num_authors > 0;
-
+            my $team = MTeam->static_get( $self->app->db, $id );
+            return 0 if !defined $team or scalar $team->members($self->app->db) > 0;
             return 1;
         }
     );
@@ -274,35 +238,6 @@ sub register {
         }
     );
 
-    $app->helper(
-        get_team_name => sub {
-            my $self = shift;
-            my $id   = shift;
-
-            my $team_name = "";
-            my $mteam = MTeam->static_get( $self->app->db, $id );
-            $team_name = $mteam->{name} if defined $mteam;
-            return $team_name;
-        }
-    );
-
-    $app->helper(
-        get_tag_name => sub {
-            my $self = shift;
-            my $id   = shift;
-            my $mtag = MTag->static_get( $self->app->db, $id );
-            return $mtag->{name};
-        }
-    );
-
-    $app->helper(
-        author_is_visible => sub {
-            my $self   = shift;
-            my $id     = shift;
-            my $author = MAuthor->static_get( $self->app->db, $id );
-            return $author->{display};
-        }
-    );
 
 
     $app->helper(
@@ -310,12 +245,7 @@ sub register {
             my $self = shift;
             my $type = shift || 1;
 
-            my $sth = $self->app->db->prepare(
-                "SELECT COUNT(id) as num FROM Tag WHERE type=?");
-            $sth->execute($type);
-            my $row = $sth->fetchrow_hashref();
-            my $num = $row->{num};
-            return $num;
+            return scalar MTag->static_all_type($self->app->db, $type);
         }
     );
 
@@ -412,10 +342,13 @@ sub register {
     );
 
     $app->helper(
-        get_years_arr => sub {
+        get_recent_years_arr => sub {
             my $self = shift;
 
-            return MEntry->static_get_unique_years_array( $self->app->db );
+            my @arr = MEntry->static_get_unique_years_array( $self->app->db );
+            my $max = scalar @arr;
+            $max = 10 if $max > 10;
+            return @arr[0 .. $max];
         }
     );
 
@@ -431,36 +364,18 @@ sub register {
         }
     );
 
-    $app->helper(
-        get_authors_of_entry => sub {
-            my $self = shift;
-            my $eid  = shift;
 
-            my $sth = $self->app->db->prepare(
-                "SELECT author_id FROM Entry_to_Author WHERE entry_id=?");
-            $sth->execute($eid);
+    # $app->helper(
+    #     num_unhidden_pubs_for_tag => sub {
+    #         my $self = shift;
+    #         my $tid  = shift;
 
-            my @authors;
-            while ( my $row = $sth->fetchrow_hashref() ) {
-                my $author_id = $row->{author_id};
-                push @authors, $author_id;
-            }
-
-            return @authors;
-        }
-    );
-
-    $app->helper(
-        num_unhidden_pubs_for_tag => sub {
-            my $self = shift;
-            my $tid  = shift;
-
-            my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => 0, tag => $tid } );
-            my $count = scalar @objs;
-            return $count;
-        }
-    );
+    #         my @objs = Fget_publications_main_hashed_args_only( $self,
+    #             { hidden => 0, tag => $tid } );
+    #         my $count = scalar @objs;
+    #         return $count;
+    #     }
+    # );
 
     $app->helper(
         num_pubs_for_tag => sub {
@@ -474,56 +389,49 @@ sub register {
         }
     );
 
-    $app->helper(
-        get_author_mids_arr => sub {
-            my $self = shift;
+    # $app->helper(
+    #     get_author_mids_arr => sub {
+    #         my $self = shift;
 
-            my $sth
-                = $self->app->db->prepare(
-                "SELECT DISTINCT master_id, master FROM Author WHERE display = 1 ORDER BY master ASC"
-                );
-            $sth->execute();
-            my @arr;
-            while ( my $row = $sth->fetchrow_hashref() ) {
-                my $mid = $row->{master_id};
-                push @arr, $mid;
-            }
-            return @arr;
-        }
-    );
+    #         my @authors = MAuthor->static_all_masters($self->app->db);
+    #         return map {$_->{master_id}} 
+    #             sort {$a->{master} cmp $b->{master}} 
+    #             grep {$_->{display} == 1} @authors;
+    #     }
+    # );
 
-    $app->helper(
-        get_master_for_id => sub {
-            my $self = shift;
-            my $id   = shift;
-            # navi uses it 
-            my $author = MAuthor->static_get( $self->app->db, $id );
-            return $author->{master};
-        }
-    );
+    # $app->helper(
+    #     get_master_for_id => sub {
+    #         my $self = shift;
+    #         my $id   = shift;
+    #         # navi uses it 
+    #         my $author = MAuthor->static_get( $self->app->db, $id );
+    #         return $author->{master};
+    #     }
+    # );
 
-    $app->helper(
-        get_first_letters => sub {
-            my $self = shift;
-            my $dbh  = $self->app->db;
+    # $app->helper(
+    #     get_first_letters => sub {
+    #         my $self = shift;
+    #         my $dbh  = $self->app->db;
 
-            my $sth = $dbh->prepare(
-                "SELECT DISTINCT substr(master, 0, 2) as let FROM Author
-                 WHERE display=1
-                 ORDER BY let ASC"
-            );
-            $sth->execute();
-            my @letters;
-            while ( my $row = $sth->fetchrow_hashref() ) {
-                my $letter = $row->{let} || "*";
-                push @letters, uc($letter);
-            }
+    #         my $sth = $dbh->prepare(
+    #             "SELECT DISTINCT substr(master, 0, 2) as let FROM Author
+    #              WHERE display=1
+    #              ORDER BY let ASC"
+    #         );
+    #         $sth->execute();
+    #         my @letters;
+    #         while ( my $row = $sth->fetchrow_hashref() ) {
+    #             my $letter = $row->{let} || "*";
+    #             push @letters, uc($letter);
+    #         }
 
-            # @letters = uniq(@letters);
-            my @sorted_letters = sort(@letters);
-            return @sorted_letters;
-        }
-    );
+    #         # @letters = uniq(@letters);
+    #         my @sorted_letters = sort(@letters);
+    #         return @sorted_letters;
+    #     }
+    # );
 }
 
 1;

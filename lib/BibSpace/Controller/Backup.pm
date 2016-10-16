@@ -74,7 +74,7 @@ sub index {
     while ( my $row = $sth->fetchrow_hashref() ) {
         my $id = $row->{id};
 
-        $self->can_delete_backup($id);
+        can_delete_backup($backup_dbh, $id, $self->app->config);
 
         my $backup_file_name = $row->{filename};
         my $exists           = 0;
@@ -137,7 +137,7 @@ sub delete_backup {
     my $id         = $self->param('id');
 
 
-    if ( $self->can_delete_backup($id) == 1 ) {
+    if ( can_delete_backup($backup_dbh, $id, $self->app->config) == 1 ) {
         do_delete_backup( $self, $id );
         $self->flash( msg_type=>'success', msg => "Backup id $id deleted!" );
     }

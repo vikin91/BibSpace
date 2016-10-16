@@ -11,7 +11,7 @@
             <a class="btn btn-info" href="<%= url_for('/teams')%>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all teams</a>
 
             % if(team_can_be_deleted($team->{id}) and is_manager()){
-                <a class="btn btn-danger" href="<%= url_for('/teams/delete/', id_to_delete=>$team->{id}) %>" data-toggle="tooltip" data-placement="left" title="Delete team"><span class="glyphicon glyphicon-trash"></span> Delete team</a>
+                <a class="btn btn-danger" href="<%= url_for('delete_team', id_to_delete=>$team->{id}) %>" data-toggle="tooltip" data-placement="left" title="Delete team"><span class="glyphicon glyphicon-trash"></span> Delete team</a>
             % }
             % else{
                 <a class="btn btn-default" href="#" data-toggle="tooltip" data-placement="left" title="Cannot delete team because it still has members"><span class="glyphicon glyphicon-trash"></span> <del>Delete team</del></a>

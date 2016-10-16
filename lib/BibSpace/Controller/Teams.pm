@@ -76,9 +76,13 @@ sub delete_team {
 
     if(defined $id_to_delete and $id_to_delete != -1 and  $self->team_can_be_deleted($id_to_delete)){
         do_delete_team_force($self, $id_to_delete);
+        $self->flash(msg_type=>'success', msg => "Team id $id_to_delete has been deleted.");
     }
-    $self->flash(msg => "Team id $id_to_delete has been deleted.");
-    $self->redirect_to($self->get_referrer);
+    else{
+      $self->flash(msg_type=>'warning', msg => "Unable to delete team id $id_to_delete."); 
+    }
+    
+    $self->redirect_to($self->url_for('all_teams'));
 };
 
 ##############################################################################################################
@@ -138,10 +142,6 @@ sub edit {
   }
 
   my @team_members = $mteam->members($dbh);
-
-  # my ($author_ids_ref, $start_arr_ref, $stop_arr_ref) = get_team_members($self, $id); # get_team_members is deprecated
-  # my @members = @$author_ids_ref;
-  # my $team_name = $mteam->{name};
 
 
   $self->stash(members  => \@team_members, team => $mteam);

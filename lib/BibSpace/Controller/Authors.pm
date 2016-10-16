@@ -167,7 +167,10 @@ sub add_to_team {
     my $master_id = $self->param('id');
     my $team_id   = $self->param('tid');
 
-    add_team_for_author( $self, $master_id, $team_id );
+    my $author = MAuthor->static_get( $dbh, $master_id );
+    my $team = MTeam->static_get( $dbh, $team_id );
+
+    $author->add_to_team($dbh, $team);
 
     $self->redirect_to( $self->get_referrer );
 }
@@ -178,7 +181,10 @@ sub remove_from_team {
     my $master_id = $self->param('id');
     my $team_id   = $self->param('tid');
 
-    remove_team_for_author( $self, $master_id, $team_id );
+    my $author = MAuthor->static_get( $dbh, $master_id );
+    my $team = MTeam->static_get( $dbh, $team_id );
+    
+    $author->remove_from_team($dbh, $team);
 
     $self->redirect_to( $self->get_referrer );
 }

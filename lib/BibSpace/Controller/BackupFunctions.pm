@@ -24,6 +24,7 @@ our @ISA = qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw(
+    can_delete_backup
     do_mysql_db_backup_silent
     do_mysql_db_backup
     do_delete_backup
@@ -39,15 +40,32 @@ our @EXPORT = qw(
 );
 
 ####################################################################################
-# TODO: This function should be moved to a separate file, e.g. BackupFunctions.pm
-# The same for the other functions related to a given controller ..
+sub can_delete_backup {
+    my $dbh  = shift;
+    my $bid  = shift;
+    my $config = shift; # exception - we need this here
+    
+
+    my $backup_dir_absolute = $config->{backups_dir};
+    $backup_dir_absolute =~ s!/*$!/!;
+
+    my $b_fname = get_backup_filename_by_id( $dbh, $bid );
+    my $file_path = $backup_dir_absolute . $b_fname;
+
+    my $file_exists = 0;
+    $file_exists = 1 if -e $file_path;
+    my $b_age = get_backup_age_in_days( $dbh, $bid );
+
+    my $age_limit = $config->{allow_delete_backups_older_than};
+
+    return 1 if $file_exists == 1 and $b_age >= $age_limit;
+    return 1 if $file_exists == 0;
+    return 0;
+}
+####################################################################################
 sub do_mysql_db_backup_silent {
     my $self = shift;
     my $fname_prefix = shift || "normal";
-
-    say "call: BackupFunctions::do_mysql_db_backup_silent";
-
-    # my $backup_dbh = $self->app->db;
     my $dbh = $self->app->db;
 
     my $backup_dir_absolute = $self->config->{backups_dir};
@@ -175,7 +193,7 @@ sub do_delete_broken_or_old_backup {    # added 22.08.14 # TODO: refactor -get r
     my $i           = 0;
     my $num_deleted = 0;
     foreach my $id (@ids) {
-        my $b_age            = get_backup_age_in_days( $self, $id );
+        my $b_age            = get_backup_age_in_days( $backup_dbh, $id );
         my $backup_file_name = $backup_file_names[$i];
         my $exists           = 0;
 
@@ -320,24 +338,18 @@ sub get_backup_creation_time {
 }
 ####################################################################################
 sub get_backup_age_in_days {
-    my $self       = shift;
+    my $dbh       = shift;
     my $bid        = shift;
-    my $backup_dbh = $self->app->db;
 
-# mysql: SELECT TIMESTAMPDIFF(SECOND, '2010-11-29 13:13:55', '2010-11-29 13:16:55')
     my $sth
-        = $backup_dbh->prepare(
+        = $dbh->prepare(
         "SELECT id, ABS(TIMESTAMPDIFF(DAY, CURRENT_TIMESTAMP, creation_time)) as age FROM Backup WHERE id=? LIMIT 1"
         );
-
-# my $sth = $backup_dbh->prepare("SELECT (julianday('now', 'localtime') - julianday(creation_time)) as age FROM Backup WHERE id=? LIMIT 1");
     $sth->execute($bid);
     my $row = $sth->fetchrow_hashref();
 
     my $ret = -1;
     $ret = $row->{age} if defined $row->{age} and $row->{age} >= 0;
-
-    # say "call: Core::get_backup_age_in_days. Returning $ret";
     return $ret;
 }
 

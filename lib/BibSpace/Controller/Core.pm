@@ -30,14 +30,8 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw(
     random_string
     create_user_id
-
-    get_team_members
-    add_team_for_author
-    remove_team_for_author
     uniq
     uniqlc
-    get_team_for_id
-    get_team_id
     get_all_our_types
     get_all_bibtex_types
     get_all_existing_bibtex_types
@@ -50,8 +44,6 @@ our @EXPORT = qw(
     nohtml
     add_field_to_bibtex_code
     clean_tag_name
-    get_exceptions_for_entry_id
-    get_year_for_entry_id
     prepare_backup_table
     get_month_numeric
     get_current_year
@@ -319,146 +311,11 @@ sub get_type_description {    #TODO: refactor to MType
     # in case of no secription, the name is the description itself
     return "Publications of type " . $type;
 }
-# ################################################################################
-# sub get_all_teams {           #TODO: refactor to MType
-#     my $dbh = shift;
-
-#     my $qry = "SELECT DISTINCT id, name FROM Team";
-#     my $sth = $dbh->prepare($qry);
-#     $sth->execute();
-
-#     my @teams;
-#     my @ids;
-
-#     while ( my $row = $sth->fetchrow_hashref() ) {
-#         my $tid  = $row->{id};
-#         my $team = $row->{name};
-
-#         push @teams, $team if defined $team;
-#         push @ids,   $tid  if defined $tid;
-#     }
-
-#     return ( \@teams, \@ids );
-# }
-##########################################################################
-sub get_year_for_entry_id
-{    #TODO: refactor to MEntry. it should be there for a long time!
-    my $dbh = shift;
-    my $eid = shift;
-
-    my $sth = $dbh->prepare("SELECT year FROM Entry WHERE id=?");
-    $sth->execute($eid);
-
-    my $row  = $sth->fetchrow_hashref();
-    my $year = $row->{year};
-    return $year;
-}
-##########################################################################
-sub get_exceptions_for_entry_id { # TODO: refactor into MEntry
-    my $dbh = shift;
-    my $eid = shift;
-
-    my $sth = $dbh->prepare(
-        "SELECT team_id FROM Exceptions_Entry_to_Team  WHERE entry_id=?");
-    $sth->execute($eid);
-
-    my @exceptions;
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $team_id = $row->{team_id};
-        push @exceptions, $team_id;
-    }
-
-    return @exceptions;
-}
 
 ##########################################################################
 ########################################################################## # here optimize further
 ##########################################################################
-##########################################################################
-sub get_team_id {
-    my $dbh  = shift;
-    my $team_name = shift;
 
-    my $team = MTeam->static_get_by_name($dbh, $team_name);
-    return -1 unless defined $team;
-    return $team->{id};
-}
-##########################################################################
-sub get_team_for_id {
-    my $dbh = shift;
-    my $id  = shift;
-
-    my $team = MTeam->static_get($dbh, $id);
-    return undef unless defined $team;
-    return $team->{name};
-}
-################################################################################
-sub add_team_for_author {
-    my $self      = shift;
-    my $master_id = shift;
-    my $teamid    = shift;
-
-    my $dbh = $self->app->db;
-
-    my $qry
-        = "INSERT IGNORE INTO Author_to_Team(author_id, team_id) VALUES (?,?)";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $master_id, $teamid );
-
-    $self->write_log(
-        "Author with master id $master_id becomes a member of team with id $teamid."
-    );
-}
-################################################################################
-sub remove_team_for_author {
-    my $self      = shift;
-    my $master_id = shift;
-    my $teamid    = shift;
-
-    my $dbh = $self->app->db;
-
-    my $qry = "DELETE FROM Author_to_Team WHERE author_id=? AND team_id=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $master_id, $teamid );
-
-    $self->write_log(
-        "Author with master id $master_id IS NO LONGER a member of team with id $teamid."
-    );
-}
-
-################################################################################
-sub get_team_members {
-    my $self   = shift;
-    my $teamid = shift;
-    my $dbh    = $self->app->db;
-
-    my @author_ids;
-    my @start_arr;
-    my @stop_arr;
-
-    my $qry = "SELECT DISTINCT (author_id), start, stop, Author.display
-            FROM Author_to_Team 
-            JOIN Author 
-            ON Author.master_id = Author_to_Team.author_id
-            WHERE team_id=?
-            ORDER BY display DESC";    #, uid ASC";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($teamid);
-
-    my $disp;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $aid   = $row->{author_id};
-        my $start = $row->{start};
-        my $stop  = $row->{stop};
-
-        push @author_ids, $aid   if defined $aid;
-        push @start_arr,  $start if defined $start;
-        push @stop_arr,   $stop  if defined $stop;
-    }
-    return ( \@author_ids, \@start_arr, \@stop_arr );
-}
 
 ################################################################################
 
@@ -481,23 +338,6 @@ sub add_field_to_bibtex_code {
     $mentry->populate_from_bib();
     $mentry->save($dbh);
 }
-####################################################################################
-# sub has_bibtex_field {
-#     my $dbh   = shift;
-#     my $eid   = shift;
-#     my $field = shift;
-
-#     my @ary = $dbh->selectrow_array( "SELECT bib FROM Entry WHERE id = ?",
-#         undef, $eid );
-#     my $entry_str = $ary[0];
-
-#     my $entry = new Text::BibTeX::Entry();
-#     $entry->parse_s($entry_str);
-#     return -1 unless $entry->parse_ok;
-#     my $key = $entry->key;
-
-#     return $entry->exists($field);
-# }
 ################################################################################
 
 sub create_user_id {

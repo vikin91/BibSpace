@@ -62,7 +62,7 @@
                         %}
                     </td>
                     <td>
-                        % if(can_delete_backup($id) == 1){
+                        % if(can_delete_backup_helper($id) == 1){
                             <a class="btn btn-danger btn-sm" href="#modal-dialog-del-<%=$id%>" data-toggle="modal"><span class="glyphicon glyphicon-fire"></span> Destroy</a>
                             <!-- MODAL DIALOG FOR DELETE -->
                             <div id="modal-dialog-del-<%=$id%>" class="modal">

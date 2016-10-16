@@ -365,12 +365,12 @@ sub setup_routes {
     $logged_user->get('/tags/edit/:id')->to('tags#edit');
 
     ################ TEAMS ################
-    $logged_user->get('/teams')->to('teams#show');
+    $logged_user->get('/teams')->to('teams#show')->name('all_teams');
     $logged_user->get('/teams/members/:teamid')->to('teams#team_members');
 
     $logged_user->get('/teams/edit/:teamid')->to('teams#edit')
         ->name('edit_team');
-    $logged_user->get('/teams/delete/:id_to_delete')->to('teams#delete_team');
+    $logged_user->get('/teams/delete/:id_to_delete')->to('teams#delete_team')->name('delete_team');
     $logged_user->get('/teams/delete/:id_to_delete/force')
         ->to('teams#delete_team_force');
     $logged_user->get('/teams/unrealted_papers/:teamid')

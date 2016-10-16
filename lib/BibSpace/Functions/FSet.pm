@@ -277,7 +277,7 @@ sub Fget_set_of_teams_for_entry_id {    # TODO: refactor it away to MEntry!
     my $dbh = shift;
     my $eid = shift;
 
-    my $entry_year = get_year_for_entry_id( $dbh, $eid );
+    my $entry = MEntry->static_get( $dbh, $eid );
 
     my $teams_for_paper = new Set::Scalar;
 
@@ -287,7 +287,7 @@ sub Fget_set_of_teams_for_entry_id {    # TODO: refactor it away to MEntry!
         $teams_for_paper
             = $teams_for_paper
             + Fget_set_of_teams_for_author_id_w_year( $dbh, $aid,
-            $entry_year );
+            $entry->{year} );
     }
 
     return $teams_for_paper;
