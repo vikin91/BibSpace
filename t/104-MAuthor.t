@@ -114,6 +114,8 @@ subtest 'MAuthor basics 3' => sub {
     is( $random_author->{display}, 0, "author invisible" );
     $random_author->toggle_visibility($dbh);
     is( $random_author->{display}, 1, "author visible" );
+    $random_author->toggle_visibility($dbh);
+    is( $random_author->{display}, 0, "author invisible" );
 
     is( $random_author->delete($dbh), 1, "author deleted" );
     @authors     = MAuthor->static_all($dbh);
@@ -175,7 +177,9 @@ subtest 'MAuthor all_author_user_ids add_user_id merge_authors' => sub {
     is( scalar $t2->all_author_user_ids($dbh), 1, "Got 1 uids" );
     is( ($t2->all_author_user_ids($dbh))[0]->{uid}, 'MasterAuthor', "uid ok" );
 
-    ok( $t2->add_user_id($dbh, 'SuperMan'), "add user id" );
+    is( $t2->add_user_id($dbh, 'MasterAuthor'), 0,  "add user id" );
+    is( $t2->add_user_id($dbh, 'SuperMan'), 1, "add user id" );
+
     is( scalar $t2->all_author_user_ids($dbh), 2, "Got 2 uids" );
     is( ($t2->all_author_user_ids($dbh))[0]->{uid}, 'MasterAuthor', "uid 1 ok" );
     is( ($t2->all_author_user_ids($dbh))[1]->{uid}, 'SuperMan', "uid 2 ok" );
@@ -183,6 +187,7 @@ subtest 'MAuthor all_author_user_ids add_user_id merge_authors' => sub {
     my $t1 = MAuthor->new(uid => 'BigAuthor');
     $t1->save($dbh);
 
+    is( $t2->merge_authors($dbh, undef), 0, "merge authors");
     ok( $t2->merge_authors($dbh, $t1), "merge authors");
 
     is( scalar $t2->all_author_user_ids($dbh), 3, "Got 3 uids" );
