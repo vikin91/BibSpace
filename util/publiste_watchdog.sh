@@ -1,7 +1,8 @@
 #!/bin/bash
+DIR="/home/piotr/perl/bibspace"
 
-STATUS=`/home/piotr/perl/publiste3/util/test_server_alive.sh`
-STATUS_OK=`/home/piotr/perl/publiste3/util/test_server_OK.sh`
+STATUS=`$DIR/util/test_server_alive.sh`
+STATUS_OK=`$DIR/util/test_server_OK.sh`
 
 RESTART=false
 if [ $STATUS -gt 399 ]; then
@@ -12,9 +13,9 @@ if [ $STATUS_OK -gt 399 ]; then
 fi
 
 if [ "$RESTART" = true ]; then
-    pkill -9 -f /home/piotr/perl/git_bibspace/bin/bibspace
-    export BIBSPACE_CONFIG=/home/piotr/perl/publiste3/production.conf
-    /usr/bin/hypnotoad /home/piotr/perl/git_bibspace/bin/bibspace
+    pkill -9 -f "$DIR/bin/bibspace"
+    export BIBSPACE_CONFIG=/etc/bibspace.conf
+    /usr/bin/hypnotoad "$DIR/bin/bibspace"
 fi
 
 _timestamp=`date`

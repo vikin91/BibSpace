@@ -1,18 +1,19 @@
 #!/bin/bash
+DIR="/home/piotr/perl/bibspace"
 
-echo "Was: "
+echo "Currnet status: "
 ps aux | grep "bin/bibspace"
 echo "killing hypnotoad with pkill"
 echo "callink pkill"
-pkill -9 -f /home/piotr/perl/git_bibspace/bin/bibspace
+pkill -9 -f "$DIR/bin/bibspace"
 echo "Waiting few seconds for hypnotoad to be dead"
 sleep 5
-echo "Killing done. Verificartion: "
+echo "Killing done. Verification: "
 ps aux | grep "bin/bibspace"
 echo "waiting again"
 sleep 5
 echo "Starting Hypnotoad"
-export BIBSPACE_CONFIG=/home/piotr/perl/publiste3/production.conf
-/usr/bin/hypnotoad /home/piotr/perl/publiste3/bin/bibspace
-echo "Done. Verificartion: "
+export BIBSPACE_CONFIG=/etc/bibspace.conf
+/usr/bin/hypnotoad "$DIR/bin/bibspace"
+echo "Done. Verification: "
 ps aux | grep "bin/bibspace"
