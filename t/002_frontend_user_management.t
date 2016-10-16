@@ -98,7 +98,7 @@ subtest 'Setting new password' => sub {
     $t_anyone->post_ok('/forgot/store' => form => { token  => 'invalid_token', pass1 => 'asdf', pass2 => 'asdf' })
             ->status_isnt(404)
             ->status_isnt(500)
-            ->content_like(qr/Reset password token is invalid! Abuse will be reported/i, "Trying invalid token");
+            ->content_like(qr/Reset password token is invalid!/i, "Trying invalid token");
 };
 
 ########################################################

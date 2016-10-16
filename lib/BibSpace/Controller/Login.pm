@@ -105,6 +105,7 @@ sub make_user {
     }
     else {
         $self->flash(
+            msg_type => 'danger', 
             msg => "User \`$usr_obj->{login}\` cannot become \`user\`." );
     }
     $self->redirect_to('manage_users');
@@ -579,9 +580,6 @@ sub post_do_register {
 
         my $s
             = "Login: received registration data from login: $login, email: $email.";
-        say "call: post_do_register: $s";
-        say "call: post_do_register: $s"
-            . " password1 $password1 password2 $password2";
 
         $self->write_log($s);
 
