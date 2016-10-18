@@ -737,6 +737,8 @@ subtest 'MEntry; exceptions, teams, authors2 ' => sub {
     $e->populate_from_bib($dbh);
     $e->make_paper($dbh);
     ok( $e->save($dbh) );
+
+    ### editor should be ignored here!!
     
 
     my @teams     = MTeam->static_all($dbh);
@@ -746,17 +748,17 @@ subtest 'MEntry; exceptions, teams, authors2 ' => sub {
     is( scalar $e->exceptions($dbh), 0, "new paper has no exceptions" );
 
     is( scalar $e->authors($dbh), 0, "new paper has 0 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
-    is( $e->create_authors($dbh), 2, "created 2 authors" );
+    is( $e->create_authors($dbh), 1, "created 1 authors" );
     $e->process_authors($dbh);
-    is( scalar $e->authors($dbh), 2, "new paper has 2 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
-    is( scalar $e->authors_from_bibtex($dbh), 2, "new paper has 2 authors" );
+    is( scalar $e->authors($dbh), 1, "new paper has 1 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
+    is( scalar $e->authors_from_bibtex($dbh), 1, "new paper has 1 authors" );
 
     is( $e->postprocess_updated($dbh), 1, "postproces_updated returns 1" ); # only call
-    is( scalar $e->authors($dbh), 2, "new paper has 2 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
+    is( scalar $e->authors($dbh), 1, "new paper has 1 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
 
     my $a = ($e->authors($dbh))[0];
     is( $e->remove_author( $dbh, $a), 1, "removed author");
-    is( scalar $e->authors($dbh), 1, "the paper has 1 author: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
+    is( scalar $e->authors($dbh), 0, "the paper has 0 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
 
     dies_ok { $e->teams() } 'expecting to die';
     dies_ok { $e->exceptions() } 'expecting to die';
@@ -771,9 +773,5 @@ subtest 'MEntry; exceptions, teams, authors2 ' => sub {
 };
 
 
-pass("dummy");
-
-### to test:
-# sort_by_year_month_modified_time
 
 done_testing();

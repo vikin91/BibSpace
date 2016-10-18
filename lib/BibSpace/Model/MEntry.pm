@@ -621,7 +621,7 @@ sub authors_from_bibtex {
         my (@n) = $bibtex_entry->names('author');
         push @names, @n;
     }
-    if ( $bibtex_entry->exists('editor') ) {
+    elsif ( $bibtex_entry->exists('editor') ) {       # issue with Alex Dagstuhl Chapter
         my @authors = $bibtex_entry->split('editor');
         my (@n) = $bibtex_entry->names('editor');
         push @names, @n;
