@@ -6,7 +6,7 @@
     %   }    
                 <td style="width: 120px;">
                     <div class="btn-group">
-                        <a class="btn btn-warning" href="<%= url_for('publicationsmanage_tagsid', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> T</a>
+                        <a class="btn btn-warning" href="<%= url_for('manage_tags', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> T</a>
                         <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                         <span class="glyphicon glyphicon-pencil"></span>
                         <span class="caret"></span>
