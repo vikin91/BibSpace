@@ -854,10 +854,12 @@ sub assign_existing_authors {
 
     foreach my $name ( $self->authors_from_bibtex() ) {
         my $author = MAuthor->static_get_by_name( $dbh, $name );
+        my $master = $author;
+        $master = $author->get_master( $dbh ) if defined $author;
 
         my $num_assigned = 0;
-        $num_assigned = $self->assign_author( $dbh, $author )
-            if defined $author;
+        $num_assigned = $self->assign_author( $dbh, $master )
+            if defined $author and defined $master;
         $num_authors_assigned = $num_authors_assigned + $num_assigned;
     }
     return $num_authors_assigned;

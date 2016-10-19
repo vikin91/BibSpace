@@ -304,7 +304,7 @@ sub static_get_by_name {
     my $dbh  = shift;
     my $name = shift;
 
-    my $sth = $dbh->prepare("SELECT id FROM Author WHERE uid=?");
+    my $sth = $dbh->prepare("SELECT id, master_id FROM Author WHERE uid=?");
     $sth->execute($name);
     my $row = $sth->fetchrow_hashref();
     my $id = $row->{id} || -1;
@@ -313,6 +313,15 @@ sub static_get_by_name {
         return MAuthor->static_get( $dbh, $id );
     }
     return undef;
+}
+####################################################################################
+sub get_master {
+    my $self = shift;
+    my $dbh  = shift;
+
+
+    return $self if $self->{id} == $self->{master_id};
+    return MAuthor->static_get( $dbh, $self->{master_id} );
 }
 ####################################################################################
 sub static_get_by_master {

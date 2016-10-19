@@ -323,6 +323,7 @@ sub Fhandle_author_uids_change_for_all_entries {
         $num_authors_created  = $num_authors_created + $cre;
         $num_authors_assigned = $num_authors_assigned + $ass;
     }
+    say "Fhandle_author_uids_change_for_all_entries: $num_authors_created, $num_authors_assigned";
     return ( $num_authors_created, $num_authors_assigned );
 }
 ####################################################################################
