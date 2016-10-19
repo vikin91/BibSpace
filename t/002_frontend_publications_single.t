@@ -24,8 +24,15 @@ TODO: {
     local $TODO = "Testing gets for single publications";
 
     my @entries     = MEntry->static_all($dbh);
-    foreach my $e (@entries){
+    my $size = $#entries;
+    my $limit = 50;
+    my $num_done = 0;
+
+    while($num_done < $limit)
+        my $rand = int(rand($size));
+        my $e = $entries[$rand];
         my $id = $e->{id};
+
         my @pages = (
             $self->url_for('/publications/get/:id', id=>$id),
             $self->url_for('edit_publication', id=>$id),
@@ -40,7 +47,7 @@ TODO: {
             note "============ Testing page $page for paper id $id ============";
             $t_logged_in->get_ok($page)->status_isnt(404, "Checking: 404 $page")->status_isnt(500, "Checking: 500 $page");
         }
-
+        $num_done = $num_done + 1;
     }
 };
 
