@@ -28,7 +28,7 @@ TODO: {
     my $limit = 50;
     my $num_done = 0;
 
-    while($num_done < $limit)
+    while($num_done < $limit){
         my $rand = int(rand($size));
         my $e = $entries[$rand];
         my $id = $e->{id};
