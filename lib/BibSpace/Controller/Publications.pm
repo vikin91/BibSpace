@@ -858,51 +858,43 @@ sub replace_urls_to_file_serving_function {
 sub remove_attachment {
     my $self     = shift;
     my $id       = $self->param('id');                     # entry ID
-    my $filetype = $self->param('filetype') || 'paper';    # paper, slides
+    my $filetype = $self->param('filetype') // 'paper';    # paper, slides
     my $dbh      = $self->app->db;
 
     my $mentry = MEntry->static_get( $dbh, $id );
 
     # no check as we want to have the files deleted anyway!
 
-    $self->write_log(
-        "Removing attachment to download: filetype $filetype, id $id. ");
-    say "Removing attachment to download: filetype $filetype, id $id. ";
-
     my $file_path = get_paper_pdf_path( $self, $id, "$filetype" );
     say "file_path $file_path";
     my $num_deleted_files = 0;
+    my $msg;
+    my $msg_type;
 
     if ( !defined $file_path or $file_path eq 0 ) {
-        $self->write_log(
-            "Cannot remove attachment. File does not exist. Filetype $filetype, id $id."
-        );
-        $self->flash( msg =>
-                "File not found. Cannot remove attachment. Filetype $filetype, id $id."
-        );
-        $self->redirect_to( $self->get_referrer );
-        return;
+        $msg = "File not found. Cannot remove attachment. Filetype $filetype or entry id $id.";
+        $msg_type = 'danger';
     }
     else {    # file exists
 
         $num_deleted_files = $self->remove_attachment_do( $id, $filetype );
-
-        if ( $num_deleted_files > 0 ) {
+        if ( defined $mentry and $num_deleted_files > 0 ) {
+            $mentry->remove_bibtex_fields( $dbh, ['pdf'] ) if $filetype eq 'paper';
+            $mentry->remove_bibtex_fields( $dbh, ['slides'] ) if $filetype eq 'slides';
             $mentry->regenerate_html( $dbh, 0, $self->app->bst );
             $mentry->save($dbh);
         }
 
-        $self->write_log(
-            "$num_deleted_files attachments removed for id $id.");
-        $self->flash( msg =>
-                "There were $num_deleted_files attachments removed for id $id."
-        );
-        $self->redirect_to( $self->get_referrer );
+        $msg = "There were $num_deleted_files attachments removed for id $id.";
+        $msg_type = 'success';
     }
+
+    $self->write_log($msg);
+    $self->flash( msg_type=> $msg_type, msg => $msg );
+    $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
-sub remove_attachment_do {
-    say "CALL: remove_attachment_do";
+sub remove_attachment_do {  # refactor this - this is clutter
     my $self     = shift;
     my $id       = shift;
     my $filetype = shift;
@@ -911,18 +903,15 @@ sub remove_attachment_do {
     my $mentry = MEntry->static_get( $dbh, $id );
 
     my $file_path = get_paper_pdf_path( $self, $id, "$filetype" );
-    say "Found paper type $filetype : $file_path";
-
     my $num_deleted_files = 0;
 
-    if ( !defined $file_path or $file_path eq 0 ) {
+    if ( !defined $mentry or !defined $file_path or $file_path eq 0 ) {
         return 0;
     }
 
     try {
         unlink $file_path;
         $num_deleted_files = $num_deleted_files + 1;
-        say "Deleting attachment file: $file_path";
     }
     catch { };
 
@@ -930,30 +919,13 @@ sub remove_attachment_do {
     my $file_path_after_delete
         = get_paper_pdf_path( $self, $id, "$filetype" );
     while ( $file_path_after_delete ne 0 ) {
-        say "File deleted but something is left: $file_path_after_delete";
         try {
             unlink $file_path;
             $num_deleted_files = $num_deleted_files + 1;
-            say "Deleting attachment file: $file_path";
         }
         catch { };
         $file_path_after_delete
             = get_paper_pdf_path( $self, $id, "$filetype" );
-    }
-
-    # deleted for sure!
-
-# for safety and privacy reasons, we DO LET to delete files event if the entry does not exist
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
-    if ( $filetype eq 'paper' ) {
-        $mentry->remove_bibtex_fields( $dbh, ['pdf'] );
-    }
-    if ( $filetype eq 'slides' ) {
-        $mentry->remove_bibtex_fields( $dbh, ['slides'] );
     }
 
     return $num_deleted_files;
@@ -998,24 +970,16 @@ sub add_pdf {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    # getting html preview
-    my $sth
-        = $dbh->prepare(
-        "SELECT DISTINCT bibtex_key, html, bibtex_type FROM Entry WHERE id = ?"
-        );
-    $sth->execute($id);
-    my $row = $sth->fetchrow_hashref();
-    my $html_preview
-        = $row->{html} || nohtml( $row->{bibtex_key}, $row->{bibtex_type} );
-    my $key  = $row->{bibtex_key};
-    my $type = $row->{bibtex_type};
+    my $mentry = MEntry->static_get( $dbh, $id );
+    if ( !defined $mentry ) {
+        $self->flash( msg => "There is no entry with id $id" );
+        $self->redirect_to( $self->get_referrer );
+        return;
+    }
+    $mentry->populate_from_bib();
+    $mentry->generate_html( $self->app->bst );
 
-    $self->stash(
-        id      => $id,
-        bkey    => $key,
-        btype   => $type,
-        preview => $html_preview
-    );
+    $self->stash( mentry => $mentry );
     $self->render( template => 'publications/pdf_upload' );
 }
 ####################################################################################
@@ -1558,7 +1522,6 @@ sub publications_add_post {
 }
 ####################################################################################
 sub publications_edit_get {
-    say "CALL: publications_edit_get ";
     my $self = shift;
     my $id = $self->param('id') || -1;
 

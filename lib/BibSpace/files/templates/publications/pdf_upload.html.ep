@@ -6,11 +6,19 @@
 <div class="container">
 
     <div class="row">
-        <div class="col-lg-1"></div>
-        <div class="col-lg-10 col-md-10 col-xs-10">
+        <div class="col-lg-12 col-md-12 col-xs-12">
             <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
             <a class="btn btn-default" href="<%= url_for('regenerate_publication', id=>$id)%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
             <a class="btn btn-success" href="<%= url_for('edit_publication', id=>$id) %>"><span class="glyphicon glyphicon-pencil"></span> Edit BibTeX of this entry</a>
+        </div>
+        <div class="col-lg-12 col-md-12 col-xs-12">
+            <table class="table table-condensed table-hover">
+                <thead>
+                </thead>
+                <tbody>
+                  %= include 'publications_table_row', use_modal => 1, entry_obj => $mentry, j => '';
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -18,22 +26,17 @@
 
 
 
- %= include 'preview_row', preview => $preview, btype=> $btype, bkey =>$bkey;
-
-
-
-  
 
 <div class="row">
   <div class="col-lg-1"></div>
   <div class="col-lg-4 col-md-6 col-xs-12">
     <div class="panel panel-primary">
 
-      <form action="<%= url_for('post_upload_pdf', id=>$id)%>" method="post"  enctype="multipart/form-data">
+      <form action="<%= url_for('post_upload_pdf', id=>$mentry->{id} )%>" method="post"  enctype="multipart/form-data">
         <div class="form-group">
           <label for="exampleInputFile">Paper file input</label>
           <input type="file" id="exampleInputFile" name="uploaded_file">
-          <input type="hidden" name="id" value="<%=$id%>">
+          <input type="hidden" name="id" value="<%=$mentry->{id} %>">
           <input type="hidden" name="back_url" value="<%= get_referrer  %>">
           <input type="hidden" name="filetype" value="paper">
           <p class="help-block">Select the pdf file with your publication.</p>
@@ -47,11 +50,11 @@
   <div class="col-lg-4 col-md-6 col-xs-12">
     <div class="panel panel-primary">
 
-      <form action="<%= url_for('post_upload_pdf', id=>$id)%>" method="post"  enctype="multipart/form-data">
+      <form action="<%= url_for('post_upload_pdf', id=>$mentry->{id} )%>" method="post"  enctype="multipart/form-data">
         <div class="form-group">
           <label for="exampleInputFile">Slides file input</label>
           <input type="file" id="exampleInputFile" name="uploaded_file">
-          <input type="hidden" name="id" value="<%=$id%>">
+          <input type="hidden" name="id" value="<%=$mentry->{id} %>">
           <input type="hidden" name="back_url" value="<%= get_referrer %>">
           <input type="hidden" name="filetype" value="slides">
           <p class="help-block">Select a file containing your publication slides.</p>
@@ -68,10 +71,10 @@
 <div class="row">
     <div class="col-lg-1"></div>
     <div class="col-lg-4 col-md-6 col-xs-12">
-        <a class="btn btn-danger" href="<%= url_for('publications_remove_attachment', filetype=>'paper', id=>$id)%>" data-toggle="tooltip" data-placement="top" title="Warning, there will be no confirmation. Click = delete! This cannot be undone!"><span class="glyphicon glyphicon-trash"></span> Delete paper attachment from server</a>
+        <a class="btn btn-danger" href="<%= url_for('publications_remove_attachment', filetype=>'paper', id=>$mentry->{id} )%>" data-toggle="tooltip" data-placement="top" title="Warning, there will be no confirmation. Click = delete! This cannot be undone!"><span class="glyphicon glyphicon-trash"></span> Delete paper attachment from server</a>
     </div>
     <div class="col-lg-4 col-md-6 col-xs-12">
-        <a class="btn btn-danger" href="<%= url_for('publications_remove_attachment', filetype=>'slides', id=>$id)%>" data-toggle="tooltip" data-placement="top" title="Warning, there will be no confirmation. Click = delete! This cannot be undone!"><span class="glyphicon glyphicon-trash"></span> Delete slides attachment from server</a>
+        <a class="btn btn-danger" href="<%= url_for('publications_remove_attachment', filetype=>'slides', id=>$mentry->{id} )%>" data-toggle="tooltip" data-placement="top" title="Warning, there will be no confirmation. Click = delete! This cannot be undone!"><span class="glyphicon glyphicon-trash"></span> Delete slides attachment from server</a>
     </div>
 </div>
 </div> <!-- container -->
