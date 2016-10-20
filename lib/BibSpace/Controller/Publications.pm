@@ -801,7 +801,7 @@ sub display_landing {
         title       => $title,
         switch_link => $switchlink
     );
-    $self->res->headers->header('Access-Control-Allow-Origin' => 'http://http://se.informatik.uni-wuerzburg.de/');
+    $self->res->headers->header('Access-Control-Allow-Origin' => 'http://se.informatik.uni-wuerzburg.de/');
     $self->render( template => 'publications/landing_obj' );
 }
 
