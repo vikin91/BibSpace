@@ -506,8 +506,8 @@ sub landing_years_obj {
 }
 
 ############################################################################################################
-sub landing_types_obj {
-    say "CALL: landing_types_obj";
+sub landing_types_obj {  # clean this mess!
+    
     my $self        = shift;
     my $bibtex_type = $self->param('bibtex_type') || undef;
     my $entry_type  = $self->param('entry_type') || undef;
@@ -515,9 +515,10 @@ sub landing_types_obj {
     # say "bibtex_type $bibtex_type";
     # say "entry_type $entry_type";
 
-    my %hash_dict
-        ; # key: bibtex_type (SELECT DISTINCT our_type FROM OurType_to_Type WHERE landing=1 ORDER BY our_type ASC)
-          # value: description of type
+    # key: bibtex_type (SELECT DISTINCT our_type FROM OurType_to_Type WHERE landing=1 ORDER BY our_type ASC)
+    # value: description of type
+    my %hash_dict; 
+    
     my %hash_values;    # key: bibtex_type
                         # value: ref to array of entry objects
 
@@ -717,7 +718,6 @@ sub landing_types_obj {
 
 ############################################################################################################
 sub display_landing {
-    say "CALL: display_landing";
     my $self            = shift;
     my $hash_values_ref = shift;
     my $hash_dict_ref   = shift;
@@ -801,12 +801,12 @@ sub display_landing {
         title       => $title,
         switch_link => $switchlink
     );
+    $self->res->headers->header('Access-Control-Allow-Origin' => 'http://http://se.informatik.uni-wuerzburg.de/');
     $self->render( template => 'publications/landing_obj' );
 }
 
 ####################################################################################
 sub replace_urls_to_file_serving_function {
-    say "CALL: replace_urls_to_file_serving_function";
 
     ##
     # http://127.0.0.1:3000/publications/download/paper/4/pdf
