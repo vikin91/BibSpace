@@ -994,12 +994,9 @@ sub download {
 ####################################################################################
 
 sub add_pdf {
-    say "CALL: add_pdf ";
     my $self = shift;
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
-
-    $self->write_log("Page: add pdf for paper id $id");
 
     # getting html preview
     my $sth
@@ -1023,7 +1020,6 @@ sub add_pdf {
 }
 ####################################################################################
 sub add_pdf_post {
-    say "CALL: add_pdf_post";
     my $self     = shift;
     my $id       = $self->param('id') || "unknown";
     my $filetype = $self->param('filetype') || undef;
@@ -1230,7 +1226,6 @@ sub regenerate_html_for_all_force {
 }
 ####################################################################################
 sub regenerate_html {
-    say "CALL: regenerate_html ";
     my $self = shift;
     my $dbh  = $self->app->db;
     my $id   = $self->param('id');
