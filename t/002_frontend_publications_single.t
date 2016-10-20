@@ -6,6 +6,9 @@ use Test::Mojo;
 use BibSpace;
 use BibSpace::Controller::Core;
 
+my $num_publications_limit = 50;
+plan tests => 1 + 9 * 3 * $num_publications_limit;
+
 my $t_anyone    = Test::Mojo->new('BibSpace');
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(
@@ -25,22 +28,23 @@ TODO: {
 
     my @entries     = MEntry->static_all($dbh);
     my $size = $#entries;
-    my $limit = 50;
     my $num_done = 0;
 
-    while($num_done < $limit){
+
+    while($num_done < $num_publications_limit){
         my $rand = int(rand($size));
         my $e = $entries[$rand];
         my $id = $e->{id};
 
         my @pages = (
-            $self->url_for('/publications/get/:id', id=>$id),
+            $self->url_for('get_single_publication', id=>$id),
+            $self->url_for('get_single_publication_read', id=>$id),
             $self->url_for('edit_publication', id=>$id),
             $self->url_for('regenerate_publication', id=>$id),
-            $self->url_for('/publications/add_pdf/:id', id=>$id),
+            $self->url_for('manage_attachments', id=>$id),
             $self->url_for('manage_tags', id=>$id),
             $self->url_for('manage_exceptions', id=>$id),
-            $self->url_for('/publications/show_authors/:id', id=>$id),
+            $self->url_for('show_authors_of_entry', id=>$id),
             $self->url_for('metalist_entry', id=>$id),
         );
         for my $page (@pages){

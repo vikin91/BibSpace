@@ -1506,14 +1506,10 @@ under the same terms as Perl itself.
                 }
                 my $out_tie =
                   !$long && ( $must_tie || $may_tie && $need_tie ) ? '~' : '';
-                $output .=
-                    ( $pre || '' )
-                  . join( '', @out_names )
-                  . ( $post || '' )
-                  .
-
-                  #		'';
-                  $out_tie;
+                $output .= ( $pre || '' );
+                $output .= join( '', @out_names ) if defined $out_names[0];
+                $output .= ( $post || '' );
+                $output .= $out_tie;
             }
             else {
                 $output .= $_;
@@ -2343,9 +2339,13 @@ sub _trim_string {
         my ($s) = @_;
 
         return $s unless %Brackets;
-        my $brack_re = join '|', map( "\Q$_", keys %Brackets );
-        while ( $s =~ s/($brack_re)/{$Brackets{uc $1}}/igx ) { }
-        return $s;
+        ## fix this later: no warnings 'uninitialized'
+        {                                       
+            no warnings 'uninitialized';
+            my $brack_re = join '|', map( "\Q$_", keys %Brackets );
+            while ( $s =~ s/($brack_re)/{$Brackets{uc $1}}/igx ) { }
+            return $s;
+        }
     }
 }
 

@@ -1256,7 +1256,7 @@ sub delete_sure {
 
     my $mentry = MEntry->static_get( $dbh, $id );
     if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
+        $self->flash( mgs_type => 'danger', msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
         return;
     }

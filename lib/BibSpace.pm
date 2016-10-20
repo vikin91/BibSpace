@@ -330,8 +330,8 @@ sub setup_routes {
     $logged_user->get('/authors/:masterid/remove_uid/:uid')
         ->to('authors#remove_uid')->name('remove_author_uid');
 
-    $logged_user->post('/authors/merge/')
-        ->to('authors#merge_authors')->name('merge_authors');
+    $logged_user->post('/authors/merge/')->to('authors#merge_authors')
+        ->name('merge_authors');
 
     $logged_user->get('/authors/reassign')
         ->to('authors#reassign_authors_to_entries');
@@ -370,7 +370,8 @@ sub setup_routes {
 
     $logged_user->get('/teams/edit/:teamid')->to('teams#edit')
         ->name('edit_team');
-    $logged_user->get('/teams/delete/:id_to_delete')->to('teams#delete_team')->name('delete_team');
+    $logged_user->get('/teams/delete/:id_to_delete')->to('teams#delete_team')
+        ->name('delete_team');
     $logged_user->get('/teams/delete/:id_to_delete/force')
         ->to('teams#delete_team_force');
     $logged_user->get('/teams/unrealted_papers/:teamid')
@@ -382,7 +383,7 @@ sub setup_routes {
     $logged_user->post('/teams/add/')->to('teams#add_team_post');
 
     ################ EDITING PUBLICATIONS ################
-
+    #<<< no perltidy here
     # EXPERIMENTAL
 
     $logged_user->get('/publications/add_many')
@@ -394,94 +395,142 @@ sub setup_routes {
 
     # EXPERIMENTAL END
 
-    $logged_user->get('/publications')->to('publications#all')
+    $logged_user->get('/publications')
+        ->to('publications#all')
         ->name('publications');
+
     $logged_user->get('/publications/recently_added/:num')
-        ->to('publications#all_recently_added')->name('recently_added');
+        ->to('publications#all_recently_added')
+        ->name('recently_added');
+
     $logged_user->get('/publications/recently_modified/:num')
-        ->to('publications#all_recently_modified')->name('recently_changed');
+        ->to('publications#all_recently_modified')
+        ->name('recently_changed');
+
     $logged_user->get('/publications/orphaned')
         ->to('publications#all_without_author');
+
     $logged_user->get('/publications/untagged/:tagtype')
         ->to( 'publications#all_without_tag', tagtype => 1 )
         ->name('get_untagged_publications');
+
     $logged_user->get('/publications/untagged/:author/:tagtype')
         ->to('publications#all_without_tag_for_author')
         ->name('get_untagged_publications_for_author');
+
     $logged_user->get('/publications/candidates_to_delete')
         ->to('publications#all_candidates_to_delete');
+
     $logged_user->get('/publications/missing_month')
         ->to('publications#all_with_missing_month');
 
-    $logged_user->get('/publications/get/:id')->to('publications#single');
+    $logged_user->get('/publications/get/:id')
+        ->to('publications#single')
+        ->name('get_single_publication');
     #
     $anyone->get('/publications/download/:filetype/:id')
-        ->to('publications#download')->name('download_publication');
+        ->to('publications#download')
+        ->name('download_publication');
+
     $anyone->get('/publications/download/:filetype/(:id).pdf')
-        ->to('publications#download')->name('download_publication_pdf');
+        ->to('publications#download')
+        ->name('download_publication_pdf');
     #
     $logged_user->get('/publications/remove_attachment/:filetype/:id')
         ->to('publications#remove_attachment')
         ->name('publications_remove_attachment');
 
-    $logged_user->get('/publications/hide/:id')->to('publications#hide');
-    $logged_user->get('/publications/unhide/:id')->to('publications#unhide');
-    $logged_user->get('/publications/toggle_hide/:id')
-        ->to('publications#toggle_hide');
+    $logged_user->get('/publications/hide/:id')
+        ->to('publications#hide');
 
-    $superadmin->get('/publications/fix_urls')
+    $logged_user->get('/publications/unhide/:id')
+        ->to('publications#unhide');
+
+    $logged_user->get('/publications/toggle_hide/:id')
+        ->to('publications#toggle_hide')
+        ->name('toggle_hide_publication');
+
+    # candidate to be removed
+    $superadmin->get('/publications/fix_urls')              
         ->to('publications#replace_urls_to_file_serving_function')
         ->name('fix_attachment_urls');
 
-    # $anyone->get('/publications/get/:id')->to('publications#single_read');
 
     $logged_user->get('/publications/add')
-        ->to('publications#publications_add_get')->name('add_publication');
+        ->to('publications#publications_add_get')
+        ->name('add_publication');
+
     $logged_user->post('/publications/add')
         ->to('publications#publications_add_post')
         ->name('add_publication_post');
 
     $logged_user->get('/publications/edit/:id')
-        ->to('publications#publications_edit_get')->name('edit_publication');
+        ->to('publications#publications_edit_get')
+        ->name('edit_publication');
+
     $logged_user->post('/publications/edit/:id')
         ->to('publications#publications_edit_post')
         ->name('edit_publication_post');
 
     $logged_user->get('/publications/make_paper/:id')
-        ->to('publications#make_paper')->name('make_paper');
+        ->to('publications#make_paper')
+        ->name('make_paper');
+
     $logged_user->get('/publications/make_talk/:id')
-        ->to('publications#make_talk')->name('make_talk');
+        ->to('publications#make_talk')
+        ->name('make_talk');
 
     $logged_user->get('/publications/regenerate/:id')
-        ->to('publications#regenerate_html')->name('regenerate_publication');
-    $logged_user->get('/publications/delete/:id')->to('publications#delete');
-    $logged_user->get('/publications/delete_sure/:id')
-        ->to('publications#delete_sure');
+        ->to('publications#regenerate_html')
+        ->name('regenerate_publication');
 
-    $logged_user->get('/publications/add_pdf/:id')
-        ->to('publications#add_pdf');
+
+    # change to POST or DELETE
+    $logged_user->get('/publications/delete_sure/:id')
+        ->to('publications#delete_sure')
+        ->name('delete_publication_sure');
+
+    $logged_user->get('/publications/attachments/:id')
+        ->to('publications#add_pdf')
+        ->name('manage_attachments');
+
     $logged_user->post('/publications/add_pdf/do/:id')
-        ->to('publications#add_pdf_post');
+        ->to('publications#add_pdf_post')
+        ->name('post_upload_pdf');
 
     $logged_user->get('/publications/manage_tags/:id')
-        ->to('publications#manage_tags')->name('manage_tags');
+        ->to('publications#manage_tags')
+        ->name('manage_tags');
+
+    # change to POST or DELETE
     $logged_user->get('/publications/:eid/remove_tag/:tid')
-        ->to('publications#remove_tag')->name('remove_tag_from_publication');
+        ->to('publications#remove_tag')
+        ->name('remove_tag_from_publication');
+
+    # change to POST or UPDATE
     $logged_user->get('/publications/:eid/add_tag/:tid')
-        ->to('publications#add_tag')->name('add_tag_to_publication');
+        ->to('publications#add_tag')
+        ->name('add_tag_to_publication');
 
     $logged_user->get('/publications/manage_exceptions/:id')
-        ->to('publications#manage_exceptions')->name('manage_exceptions');
+        ->to('publications#manage_exceptions')
+        ->name('manage_exceptions');
+
+    # change to POST or DELETE
     $logged_user->get('/publications/:eid/remove_exception/:tid')
         ->to('publications#remove_exception')
         ->name('remove_exception_from_publication');
+
+    # change to POST or UPDATE
     $logged_user->get('/publications/:eid/add_exception/:tid')
         ->to('publications#add_exception')
         ->name('add_exception_to_publication');
 
     $logged_user->get('/publications/show_authors/:id')
-        ->to('publications#show_authors_of_entry');
+        ->to('publications#show_authors_of_entry')
+        ->name('show_authors_of_entry');
 
+    #>>> 
     ################ OPEN ACCESS ################
 
     # contains meta info for every paper. Optimization for google scholar
@@ -502,21 +551,17 @@ sub setup_routes {
 
     $anyone->get('/read/publications/get/:id')
         ->to('publications#single_read')
-        ->name('get_single_publication');
-    $anyone->get('/r/p/get/:id')
-        ->to('publications#single_read');
+        ->name('get_single_publication_read');
+    $anyone->get('/r/p/get/:id')->to('publications#single_read');
 
     $anyone->get('/landing/publications')
-        ->to('publications#landing_types_obj')
-        ->name('landing_publications');
-    $anyone->get('/l/p')
-        ->to('publications#landing_types_obj')
-        ->name('lp');
+        ->to('publications#landing_types_obj')->name('landing_publications');
+    $anyone->get('/l/p')->to('publications#landing_types_obj')->name('lp');
 
     $anyone->get('/landing-years/publications')
         ->to('publications#landing_years_obj')
         ->name('landing_years_publications');
-    $anyone->get('/ly/p')->to('publications#landing_years_obj');     #ALIAS
+    $anyone->get('/ly/p')->to('publications#landing_years_obj');    #ALIAS
 
     $anyone->get('/read/authors-for-tag/:tid/:team')
         ->to('tags#get_authors_for_tag_read')

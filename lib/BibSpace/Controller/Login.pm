@@ -270,19 +270,19 @@ sub post_gen_forgot_token {
 
         # get email of this user
         $final_email = $self->users->get_email_for_uname( $user, $dbh );
-        $self->write_log("Forgot: requesting new password for user $user");
+        $self->write_log("requesting new password for user $user");
     }
     elsif ( $self->users->email_exists( $email, $dbh ) == 1 ) {
         $do_gen      = 1;
         $final_email = $email;
-        $self->write_log("Forgot: requesting new password for email $email");
+        $self->write_log("requesting new password for email $email");
     }
     else {
         $do_gen = 0;
     }
 
     $self->write_log(
-        "Forgot: requested new password for user $user or email $email but none of them found in the database."
+        "requested new password for user $user or email $email but none of them found in the database."
     );
 
     if ( $do_gen == 1 and $final_email ne "" ) {
@@ -294,7 +294,7 @@ sub post_gen_forgot_token {
             token => $token );
         $self->send_email( $token, $final_email, $email_content );
 
-        $self->write_log("Forgot: reset token sent to $final_email");
+        $self->write_log("reset token sent to $final_email");
         $self->flash(
             msg_type => 'info',
             msg =>
@@ -306,7 +306,7 @@ sub post_gen_forgot_token {
     }
     else {
 
-        $self->write_log("Forgot: user does not exist.");
+        $self->write_log("Cannot reset password: user $user or email $email do not exist.");
         $self->flash(
             msg_type => 'warning',
             msg      => 'User or email does not exists. Try again.'

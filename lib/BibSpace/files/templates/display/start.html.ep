@@ -24,8 +24,8 @@
 			Resources available without login
 			<ul>
                 <li>
-                    <a href="<%= url_for('get_single_publication', id=>666)%>">
-                        <%= url_for('get_single_publication', id=>'ID')%>
+                    <a href="<%= url_for('get_single_publication_read', id=>666)%>">
+                        <%= url_for('get_single_publication_read', id=>'ID')%>
                     </a>
                     (ID = integer_ (alias <a href="<%= url_for('/r/p/get/ID')%>">/p/get/ID</a>)
                 </li>
