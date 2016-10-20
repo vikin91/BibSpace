@@ -9,8 +9,8 @@
 /*]]>*/</style> 
 
   <body>
-  <h1>Error 500...</h1>
-  <p>If this page appears for more than one hour, go to the intern-wiki and search for "error 500". You will be guided how to rescue the system.</p>
+  <h1>Error 500</h1>
+  <p>Something went wrong... Please inform yout system administrator or <a href="https://github.com/vikin91/BibSpace/issues">fill a bug report</a>.</p>
 
       %= include 'global_footer'
       

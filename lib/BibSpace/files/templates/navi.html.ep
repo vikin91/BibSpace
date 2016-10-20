@@ -2,6 +2,7 @@
 % my $thisY = Time::Piece::localtime->strftime('%Y');
 % use Mojo::ByteStream 'b';
 
+
 <!-- LOGIN BUTTON -->
 % if(session 'user'){
 
@@ -379,11 +380,11 @@
 %} #END OF BIG IF
 
 <a type="button" class="btn btn-default" href="<%= url_for('metalist_all_entries') %>">
-    Meta-info for Webcrawlers
+    <i class="fa fa-map-o"></i> Sitemap
 </a>
 
 % if(session 'user'){
-  <a type="button" class="btn btn-default"><small>Version: <%= $self->app->version %> </small></a>
+  <a type="button" class="btn btn-default"><small><%= $self->app->version %> </small></a>
 % }
 
 % unless($config->{demo_msg} eq ''){
