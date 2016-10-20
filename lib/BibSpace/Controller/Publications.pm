@@ -290,7 +290,6 @@ sub all_with_missing_month {
 }
 ####################################################################################
 sub all_candidates_to_delete {
-    say "CALL: all_candidates_to_delete";
     my $self = shift;
     my $dbh  = $self->app->db;
 
@@ -357,10 +356,7 @@ sub all {
 ####################################################################################
 
 sub all_read {
-    say "CALL: all_read ";
     my $self = shift;
-
-    # my @objs = get_publications_main($self);
 
     my @objs = Fget_publications_main_hashed_args( $self,
         { hidden => 0, entry_type => undef } );
@@ -371,7 +367,6 @@ sub all_read {
 ####################################################################################
 
 sub single {
-    say "CALL: single ";
     my $self = shift;
     my $id   = $self->param('id');
 
@@ -393,7 +388,6 @@ sub single {
 ####################################################################################
 
 sub single_read {
-    say "CALL: single_read ";
     my $self = shift;
     my $id   = $self->param('id');
 
@@ -403,18 +397,13 @@ sub single_read {
     if ( defined $e and $e->is_hidden == 0 ) {
         push @objs, $e;
     }
-    else {
-        $self->render( text => 'Entry does not exist.' );
-    }
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all_read' );
-
 }
 
 ############################################################################################################
 
 sub landing_years_obj {
-    say "CALL: landing_years_obj";
     my $self = shift;
     my $year = $self->param('year') || undef;
 
@@ -426,7 +415,7 @@ sub landing_years_obj {
 
     my $min_year = $self->get_year_of_oldest_entry || 0;
     my $max_year = $self->current_year;
-    if ( $self->current_month > 8 ) {
+    if ( $self->current_month > 8 ) {    # TODO export to config
         $max_year++;
     }
 
@@ -463,22 +452,38 @@ sub landing_years_obj {
         }
     }
 
-    # WARNING, it depends on routing! anti-pattern! Correct it some day
-    # todo: this code is duplicated! fix it!
-    # FIXME! TODO! Catastrophe! use here url_with to fix it!!
+    my $switchlink = $self->get_switchlink("types");
+    my $navbar_html = $self->get_navbar( \@keys, \%hash_dict, 'years' );
 
-    my $url     = $self->url_with('lp');
-    my $url_msg = "Switch to grouping by types";
-    my $switchlink
-        = '<a class="bibtexitem" href="' . $url . '">' . $url_msg . '</a>';
-
-    # NAVBAR
+    return $self->display_landing( \%hash_values, \%hash_dict, \@keys,
+        $switchlink, $navbar_html );
+}
+############################################################################################################
+sub get_switchlink {
+    my $self    = shift;
+    my $keyword = shift;
+    return
+          '<a class="bibtexitem" href="'
+        . $self->url_with('lp')
+        . '">Switch to grouping by '
+        . $keyword . ' </a>'
+        if $keyword eq 'types';
+    return
+          '<a class="bibtexitem" href="'
+        . $self->url_with('lyp')
+        . '">Switch to grouping by '
+        . $keyword . ' </a>';
+}
+############################################################################################################
+sub get_navbar_switch {    # only temporary
+    my $self          = shift;
+    
     my $tmp_year = $self->req->url->query->param('year');
     $self->req->url->query->remove('year');
     my $navbar_html
         = '<a class="bibtexitem" href="'
         . $self->url_with('current')
-        . '">[show ALL years]</a> ';
+        . '">[Clear year filter]</a> ';
     $self->req->url->query->param( year => $tmp_year )
         if defined $tmp_year and $tmp_year ne "";
 
@@ -487,40 +492,109 @@ sub landing_years_obj {
     $navbar_html
         .= '<a class="bibtexitem" href="'
         . $self->url_with('current')
-        . '">[show ALL types]</a> ';
+        . '">[Clear type filter]</a> ';
     $navbar_html .= '<br/>';
     $self->req->url->query->param( bibtex_type => $tmp_type )
         if defined $tmp_type and $tmp_type ne "";
+    return $navbar_html;
+}
+############################################################################################################
+sub get_navbar2_switch {    # only temporary TODO: refactor
+    my $self          = shift;
+    
+    my $tmp_year = $self->req->url->query->param('year');
+    $self->req->url->query->remove('year');
+    my $navbar_html
+        = '<a class="bibtexitem" href="'
+        . $self->url_with('current')
+        . '">[Clear year filter]</a> ';
+    $self->req->url->query->param( year => $tmp_year )
+        if defined $tmp_year and $tmp_year ne "";
 
-    foreach my $key ( reverse sort @keys ) {
+    $self->req->url->query->remove('bibtex_type');
+    $self->req->url->query->remove('entry_type');
+    $navbar_html
+        .= '<a class="bibtexitem" href="'
+        . $self->url_with('current')
+        . '">[Clear type filter]</a> ';
+    $navbar_html .= '<br/>';
+    return $navbar_html;
+}
+############################################################################################################
+sub get_navbar { # only temporary TODO: refactor
+    my $self          = shift;
+    my $keys          = shift;
+    my $hash_dict_ref = shift;
+    my $type          = shift // 'years';
+    my %hash_dict     = %$hash_dict_ref;
+    say "using get_navbar";
+
+    my $navbar_html = $self->get_navbar_switch;
+    my $tmp_type = $self->req->url->query->param('bibtex_type');
+    # NAVBAR
+
+
+    foreach my $key ( reverse sort @$keys ) {
 
         $self->req->url->query->param( year => $key );
         $navbar_html .= '<a class="bibtexitem" href="'
             . $self->url_with( 'current', bibtex_type => $tmp_type ) . '">';
         $navbar_html .= '[' . $hash_dict{$key} . ']';
         $navbar_html .= '</a> ';
+
     }
 
-    return $self->display_landing( \%hash_values, \%hash_dict, \@keys,
-        $switchlink, $navbar_html );
+    $navbar_html;
 }
 
 ############################################################################################################
-sub landing_types_obj {  # clean this mess!
-    
+sub get_navbar2 {    # only temporary TODO: refactor
+    my $self          = shift;
+    my $keys          = shift;
+    my $hash_dict_ref = shift;
+    my $type          = shift // 'years';
+    my %hash_dict     = %$hash_dict_ref;
+
+    say "using get_navbar2";
+
+    my $navbar_html = $self->get_navbar2_switch;
+
+    foreach my $key ( sort @$keys ) {
+
+        # say "key in keys_with_papers: $key";
+
+        if ( $key eq 'talk' ) {
+            $self->req->url->query->remove('bibtex_type');
+            $self->req->url->query->param( entry_type => 'talk' );
+            $navbar_html .= '<a class="bibtexitem" href="'
+                . $self->url_with( 'current', entry_type => 'talk' ) . '">';
+        }
+        else {
+            $self->req->url->query->remove('entry_type');
+            $self->req->url->query->param( bibtex_type => $key );
+            $navbar_html .= '<a class="bibtexitem" href="'
+                . $self->url_with( 'current', bibtex_type => $key ) . '">';
+        }
+        $navbar_html .= '[' . $hash_dict{$key} . ']';
+        $navbar_html .= '</a> ';
+    }
+    return $navbar_html;
+}
+############################################################################################################
+sub landing_types_obj {    # clean this mess!
+
     my $self        = shift;
     my $bibtex_type = $self->param('bibtex_type') || undef;
     my $entry_type  = $self->param('entry_type') || undef;
 
-    # say "bibtex_type $bibtex_type";
-    # say "entry_type $entry_type";
-
-    # key: bibtex_type (SELECT DISTINCT our_type FROM OurType_to_Type WHERE landing=1 ORDER BY our_type ASC)
+    # key: bibtex_type 
     # value: description of type
-    my %hash_dict; 
-    
-    my %hash_values;    # key: bibtex_type
-                        # value: ref to array of entry objects
+    my %bibtex_type_to_label;
+
+    # key: bibtex_type
+    # value: ref to array of entry objects
+    my %bibtex_type_to_entries;    
+                        
 
     my @keys;
     my @all_keys = get_types_for_landing_page( $self->app->db );
@@ -551,16 +625,6 @@ sub landing_types_obj {  # clean this mess!
         say "OPTION 1 - only one type";
         my $key = $bibtex_type;
 
-        # $args->{author}
-        # $args->{year}
-        # $args->{bibtex_type}
-        # $args->{entry_type}
-        # $args->{tag}
-        # $args->{team}
-        # $args->{visible}
-        # $args->{permalink}
-        # $args->{hidden}
-
 # my @paper_objs = get_publications_main($self, undef, undef, $bibtex_type, $entry_type, undef, undef, 0, undef);
         my @paper_objs = Fget_publications_main_hashed_args(
             $self,
@@ -571,8 +635,8 @@ sub landing_types_obj {  # clean this mess!
             }
         );
         if ( scalar @paper_objs > 0 ) {
-            $hash_dict{$key} = get_type_description( $self->app->db, $key );
-            $hash_values{$key} = \@paper_objs;
+            $bibtex_type_to_label{$key} = get_type_description( $self->app->db, $key );
+            $bibtex_type_to_entries{$key} = \@paper_objs;
             push @keys_with_papers, $key;
         }
     }
@@ -587,8 +651,8 @@ sub landing_types_obj {  # clean this mess!
         my @talk_objs = Fget_publications_main_hashed_args( $self,
             { entry_type => 'talk', visible => 0, hidden => 0 } );
         if ( scalar @talk_objs > 0 ) {
-            $hash_dict{$key}   = "Talks";
-            $hash_values{$key} = \@talk_objs;
+            $bibtex_type_to_label{$key}   = "Talks";
+            $bibtex_type_to_entries{$key} = \@talk_objs;
             push @keys_with_papers, $key;
         }
     }
@@ -614,9 +678,9 @@ sub landing_types_obj {  # clean this mess!
                 }
             );
             if ( scalar @paper_objs > 0 ) {
-                $hash_dict{$key}
+                $bibtex_type_to_label{$key}
                     = get_type_description( $self->app->db, $key );
-                $hash_values{$key} = \@paper_objs;
+                $bibtex_type_to_entries{$key} = \@paper_objs;
                 push @keys_with_papers, $key;
             }
         }
@@ -640,9 +704,9 @@ sub landing_types_obj {  # clean this mess!
                 }
             );
             if ( scalar @paper_objs > 0 ) {
-                $hash_dict{$key}
+                $bibtex_type_to_label{$key}
                     = get_type_description( $self->app->db, $key );
-                $hash_values{$key} = \@paper_objs;
+                $bibtex_type_to_entries{$key} = \@paper_objs;
                 push @keys_with_papers, $key;
             }
         }
@@ -652,8 +716,8 @@ sub landing_types_obj {  # clean this mess!
         my @talk_objs = Fget_publications_main_hashed_args( $self,
             { entry_type => 'talk', visible => 0, hidden => 0 } );
         if ( scalar @talk_objs > 0 ) {
-            $hash_dict{$key}   = "Talks";
-            $hash_values{$key} = \@talk_objs;
+            $bibtex_type_to_label{$key}   = "Talks";
+            $bibtex_type_to_entries{$key} = \@talk_objs;
             push @keys_with_papers, $key;
         }
     }
@@ -661,57 +725,18 @@ sub landing_types_obj {  # clean this mess!
         say "OPTION 5 - else";
     }
 
-    my $url     = $self->url_with('lyp');
-    my $url_msg = "Switch to grouping by years";
-    my $switchlink
-        = '<a class="bibtexitem" href="' . $url . '">' . $url_msg . '</a>';
 
-    # NAVBAR
-
-    my $tmp_year = $self->req->url->query->param('year');
-    $self->req->url->query->remove('year');
+    # not ready yet
+    my $switchlink = $self->get_switchlink('years');
     my $navbar_html
-        = '<a class="bibtexitem" href="'
-        . $self->url_with('current')
-        . '">[show ALL years]</a> ';
-    $self->req->url->query->param( year => $tmp_year )
-        if defined $tmp_year and $tmp_year ne "";
+        = $self->get_navbar2( \@keys_with_papers, \%bibtex_type_to_label, 'types' );
 
-    $self->req->url->query->remove('bibtex_type');
-    $self->req->url->query->remove('entry_type');
-    $navbar_html
-        .= '<a class="bibtexitem" href="'
-        . $self->url_with('current')
-        . '">[show ALL types]</a> ';
-    $navbar_html .= '<br/>';
 
-    foreach my $key ( sort @keys_with_papers ) {
-
-        # say "key in keys_with_papers: $key";
-
-        if ( $key eq 'talk' ) {
-            $self->req->url->query->remove('bibtex_type');
-            $self->req->url->query->param( entry_type => 'talk' );
-            $navbar_html .= '<a class="bibtexitem" href="'
-                . $self->url_with( 'current', entry_type => 'talk' ) . '">';
-        }
-        else {
-            $self->req->url->query->remove('entry_type');
-            $self->req->url->query->param( bibtex_type => $key );
-            $navbar_html .= '<a class="bibtexitem" href="'
-                . $self->url_with( 'current', bibtex_type => $key ) . '">';
-        }
-        $navbar_html .= '[' . $hash_dict{$key} . ']';
-        $navbar_html .= '</a> ';
-    }
-
-    # say $navbar_html;
-
-    # hash_values:  key_bibtex_type -> ref_arr_entry_objects
-    # hash_dict:    key_bibtex_type -> description of the type
+    # bibtex_type_to_entries:  key_bibtex_type -> ref_arr_entry_objects
+    # bibtex_type_to_label:    key_bibtex_type -> description of the type
     # keys_with_papers: non-empty -> key_bibtex_type
     return $self->display_landing(
-        \%hash_values, \%hash_dict, \@keys_with_papers,
+        \%bibtex_type_to_entries, \%bibtex_type_to_label, \@keys_with_papers,
         $switchlink,   $navbar_html
     );
 }
@@ -801,7 +826,7 @@ sub display_landing {
         title       => $title,
         switch_link => $switchlink
     );
-    $self->res->headers->header('Access-Control-Allow-Origin' => '*');
+    $self->res->headers->header( 'Access-Control-Allow-Origin' => '*' );
     $self->render( template => 'publications/landing_obj' );
 }
 
@@ -872,29 +897,33 @@ sub remove_attachment {
     my $msg_type;
 
     if ( !defined $file_path or $file_path eq 0 ) {
-        $msg = "File not found. Cannot remove attachment. Filetype $filetype or entry id $id.";
+        $msg
+            = "File not found. Cannot remove attachment. Filetype $filetype or entry id $id.";
         $msg_type = 'danger';
     }
     else {    # file exists
 
         $num_deleted_files = $self->remove_attachment_do( $id, $filetype );
         if ( defined $mentry and $num_deleted_files > 0 ) {
-            $mentry->remove_bibtex_fields( $dbh, ['pdf'] ) if $filetype eq 'paper';
-            $mentry->remove_bibtex_fields( $dbh, ['slides'] ) if $filetype eq 'slides';
+            $mentry->remove_bibtex_fields( $dbh, ['pdf'] )
+                if $filetype eq 'paper';
+            $mentry->remove_bibtex_fields( $dbh, ['slides'] )
+                if $filetype eq 'slides';
             $mentry->regenerate_html( $dbh, 0, $self->app->bst );
             $mentry->save($dbh);
         }
 
-        $msg = "There were $num_deleted_files attachments removed for id $id.";
+        $msg
+            = "There were $num_deleted_files attachments removed for id $id.";
         $msg_type = 'success';
     }
 
     $self->write_log($msg);
-    $self->flash( msg_type=> $msg_type, msg => $msg );
+    $self->flash( msg_type => $msg_type, msg => $msg );
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
-sub remove_attachment_do {  # refactor this - this is clutter
+sub remove_attachment_do {    # refactor this - this is clutter
     my $self     = shift;
     my $id       = shift;
     my $filetype = shift;
@@ -1215,7 +1244,10 @@ sub delete_sure {
 
     my $mentry = MEntry->static_get( $dbh, $id );
     if ( !defined $mentry ) {
-        $self->flash( mgs_type => 'danger', msg => "There is no entry with id $id" );
+        $self->flash(
+            mgs_type => 'danger',
+            msg      => "There is no entry with id $id"
+        );
         $self->redirect_to( $self->get_referrer );
         return;
     }
