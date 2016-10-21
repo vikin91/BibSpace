@@ -133,6 +133,10 @@ sub edit_author {
         my @author_teams = $author->teams($dbh);
         my @author_tags  = $author->tags($dbh);
 
+         # cannot use objects as keysdue to stringification!
+        my %author_teams_hash = map { $_->{id} => 1 } @author_teams;
+        my @unassigned_teams = grep { not $author_teams_hash{ $_->{id} } } @all_teams;
+
         my @minor_authors = $author->all_author_user_ids($dbh);
 
         $self->stash(
@@ -141,7 +145,8 @@ sub edit_author {
             teams         => \@author_teams,
             exit_code     => '',
             tags          => \@author_tags,
-            all_teams     => \@all_teams
+            all_teams     => \@all_teams,
+            unassigned_teams     => \@unassigned_teams
         );
         $self->render( template => 'authors/edit_author' );
     }
@@ -378,7 +383,7 @@ sub post_edit_membership_dates {
             "post_edit_membership_dates: input INVALID. author_id or team_id invalid"
         );
     }
-    $self->redirect_to( $self->url_for('/authors/edit/') . $aid );
+    $self->redirect_to( $self->url_for('edit_author', id=>$aid) );
 }
 ##############################################################################################################
 sub do_edit_membership_dates {

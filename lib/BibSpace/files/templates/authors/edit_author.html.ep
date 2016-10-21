@@ -198,7 +198,7 @@
                                 </div>
                                 <div class="modal-body">
 
-                                    <form class="form-inline" role="form" method="POST" action="<%= url_for('/authors/edit_membership_dates') %>">
+                                    <form class="form-inline" role="form" method="POST" action="<%= url_for('edit_author_membership_dates') %>">
                                         <div class="form-group">
                                             <input type="hidden" name="tid" value="<%= $team->{id} %>"></input>
                                             <input type="hidden" name="aid" value="<%= $author->{id} %>"></input>
@@ -246,7 +246,7 @@
         </div>
         <div class="col-lg-6 col-md-6 col-xs-6">
             % my $jj = 0;
-            % foreach my $team (@$all_teams){
+            % foreach my $team (@$unassigned_teams){
                 <div class="btn-group">
                     <a type="button" class="btn btn-default btn-sm" href="<%= url_for('edit_team', teamid=>$team->{id}) %>">
                         <span style="color: gray">

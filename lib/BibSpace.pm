@@ -307,21 +307,29 @@ sub setup_routes {
 
     ################ AUTHORS ################
 
-    $logged_user->get('/authors/')->to('authors#show')->name('all_authors');
-    $logged_user->get('/authors/add')->to('authors#add_author')
+    $logged_user->get('/authors/')
+        ->to('authors#show')
+        ->name('all_authors');
+    $logged_user->get('/authors/add')
+        ->to('authors#add_author')
         ->name('add_author');
-    $logged_user->post('/authors/add/')->to('authors#add_post');
+    $logged_user->post('/authors/add/')
+        ->to('authors#add_post');
 
-    $logged_user->get('/authors/edit/:id')->to('authors#edit_author')
+    $logged_user->get('/authors/edit/:id')
+        ->to('authors#edit_author')
         ->name('edit_author');
-    $logged_user->post('/authors/edit/')->to('authors#edit_post')
+    $logged_user->post('/authors/edit/')
+        ->to('authors#edit_post')
         ->name('edit_author_post');
-    $logged_user->get('/authors/delete/:id')->to('authors#delete_author')
+    $logged_user->get('/authors/delete/:id')
+        ->to('authors#delete_author')
         ->name('delete_author');
     $logged_user->get('/authors/delete/:id/force')
         ->to('authors#delete_author_force');
     $logged_user->post('/authors/edit_membership_dates')
-        ->to('authors#post_edit_membership_dates');
+        ->to('authors#post_edit_membership_dates')
+        ->name('edit_author_membership_dates');
 
     $logged_user->get('/authors/:id/add_to_team/:tid')
         ->to('authors#add_to_team')->name('add_author_to_team');
