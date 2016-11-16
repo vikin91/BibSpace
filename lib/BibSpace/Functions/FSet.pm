@@ -30,8 +30,6 @@ our @EXPORT = qw(
     Fget_set_of_papers_for_author_id
     Fget_set_of_papers_for_team_and_tag
     Fget_set_of_teams_for_author_id
-    Fget_set_of_authors_for_entry_id
-    Fget_set_of_teams_for_entry_id
 );
 
 sub Fget_set_of_all_team_ids {
@@ -243,40 +241,17 @@ sub Fget_set_of_teams_for_author_id {
     return $set;
 }
 
-sub Fget_set_of_authors_for_entry_id {    # TODO: refactor it away to MEntry!
-    my $dbh = shift;
-    my $eid = shift;
+# sub Fget_set_of_authors_for_entry_id {    # TODO: refactor it away to MEntry!
+#     my $dbh = shift;
+#     my $eid = shift;
+#     my $set = new Set::Scalar;
+#     my $qry = "SELECT author_id FROM Entry_to_Author WHERE entry_id=?";
+#     my $sth = $dbh->prepare($qry);
+#     $sth->execute($eid);
+#     while ( my $row = $sth->fetchrow_hashref() ) {
+#         my $aid = $row->{author_id};
+#         $set->insert($aid);
+#     }
+#     return $set;
+# }
 
-    my $set = new Set::Scalar;
-
-    my $qry = "SELECT author_id FROM Entry_to_Author WHERE entry_id=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($eid);
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $aid = $row->{author_id};
-
-        $set->insert($aid);
-    }
-    return $set;
-}
-
-sub Fget_set_of_teams_for_entry_id {    # TODO: refactor it away to MEntry!
-    my $dbh = shift;
-    my $eid = shift;
-
-    my $entry = MEntry->static_get( $dbh, $eid );
-
-    my $teams_for_paper = new Set::Scalar;
-
-    my $authors_set = Fget_set_of_authors_for_entry_id( $dbh, $eid );
-
-    while ( defined( my $aid = $authors_set->each ) ) {
-        $teams_for_paper
-            = $teams_for_paper
-            + Fget_set_of_teams_for_author_id_w_year( $dbh, $aid,
-            $entry->{year} );
-    }
-
-    return $teams_for_paper;
-}

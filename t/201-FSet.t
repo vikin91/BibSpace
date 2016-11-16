@@ -115,8 +115,8 @@ TODO: {
     my $author_id = $author_ids[ rand @author_ids ];
     my $rentry = $entries[ rand @entries ];
 
-    ok( Fget_set_of_authors_for_entry_id( $dbh, $rentry->{id} )->elements );
-    ok( Fget_set_of_teams_for_entry_id( $dbh, $rentry->{id} )->elements );
+    # ok( Fget_set_of_authors_for_entry_id( $dbh, $rentry->{id} )->elements );
+    # ok( Fget_set_of_teams_for_entry_id( $dbh, $rentry->{id} )->elements );
 
     my $year = 2011;    # FIXME!
     ok( Fget_set_of_teams_for_author_id_w_year( $dbh, $author_id, $year ) );

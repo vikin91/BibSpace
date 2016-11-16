@@ -11,7 +11,7 @@ use strict;
 use warnings;
 use DBI;
 
-
+### TODO: change this to Moose!
 
 sub new
 {
