@@ -57,7 +57,7 @@ sub prepare_cron_table {
     try {
         $dbh->do("CREATE TABLE IF NOT EXISTS Cron(
             type INTEGER PRIMARY KEY,
-            last_run_time TIMESTAMP DEFAULT '0000-00-00 00:00:00'
+            last_run_time TIMESTAMP DEFAULT '1970-01-01 01:01:01'
             )");
     }
     catch{
@@ -116,7 +116,7 @@ sub create_main_db{
 
 
     try {
-        # version for new Mysql
+        # version for new Mysql - tested on 5.6 and 5.7
         $dbh->do("CREATE TABLE IF NOT EXISTS `Entry`(
           id INTEGER(8) PRIMARY KEY AUTO_INCREMENT,
           entry_type ENUM('paper', 'talk') NOT NULL,
@@ -134,8 +134,8 @@ sub create_main_db{
           teams_str TEXT,
           people_str TEXT,
           tags_str TEXT,
-          creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          modified_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          creation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          modified_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
           need_html_regen INTEGER DEFAULT 1,
           CONSTRAINT UNIQUE(bibtex_key),
           KEY idx_bibtex_key (bibtex_key)
@@ -160,8 +160,8 @@ sub create_main_db{
           teams_str TEXT,
           people_str TEXT,
           tags_str TEXT,
-          creation_time TIMESTAMP DEFAULT '0000-00-00 00:00:00',
-          modified_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          creation_time TIMESTAMP NOT NULL DEFAULT '1970-01-01 01:01:01',
+          modified_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
           need_html_regen INTEGER DEFAULT 1,
           CONSTRAINT UNIQUE(bibtex_key),
           KEY idx_bibtex_key (bibtex_key)
@@ -247,7 +247,7 @@ sub prepare_user_table_mysql{
     $dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
       id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
       registration_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      last_login TIMESTAMP DEFAULT '1970-01-01 01:01:01',
       login VARCHAR(250) NOT NULL,
       real_name VARCHAR(250) DEFAULT 'unnamed',
       email VARCHAR(250) NOT NULL,
@@ -265,7 +265,7 @@ sub prepare_user_table_mysql{
     $dbh->do("CREATE TABLE IF NOT EXISTS `Login`(
       id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
       registration_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      last_login TIMESTAMP DEFAULT '0000-00-00 00:00:00',
+      last_login TIMESTAMP DEFAULT '1970-01-01 01:01:01',
       login VARCHAR(250) NOT NULL,
       real_name VARCHAR(250) DEFAULT 'unnamed',
       email VARCHAR(250) NOT NULL,

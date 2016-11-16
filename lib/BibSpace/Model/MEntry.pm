@@ -39,7 +39,7 @@ sub static_all {
     my $self = shift;
     my $dbh  = shift;
 
-    my $qry = "SELECT DISTINCT
+    my $qry = "SELECT
               id,
               entry_type,
               bibtex_key,
@@ -213,17 +213,51 @@ sub static_get_by_bibtex_key {
     return $e;
 }
 ####################################################################################
+
+=item equals_bibtex
+    Assumes that both objects are equal if the bibtex code is identical
+=cut
+
+sub equals_bibtex {
+    my $self = shift;
+    my $obj  = shift;
+
+    return 0 if !defined $obj or !defined $self;
+    return $self->{bib} eq $obj->{bib};
+}
+####################################################################################
+sub bump_modified_time {
+    my $self = shift;
+    my $dbh  = shift;
+
+    return -1 unless defined $self->{id};
+
+    my $qry = "UPDATE Entry SET
+                modified_time=NOW()
+                WHERE id = ?";
+
+    my $sth = $dbh->prepare($qry);
+    my $result;
+    try {
+        $result = $sth->execute( $self->{id} );
+        $sth->finish();
+    }
+    catch {
+        warn "MEntry update exception: $_";
+    };
+    return $result;
+}
+####################################################################################
 sub update {
     my $self = shift;
     my $dbh  = shift;
 
-    my $result = "";
+    return -1 unless defined $self->{id};
 
-    if ( !defined $self->{id} ) {
-        say
-            "Cannot update. Entry id not set. The entry may not exist in the DB. Returning -1";
-        return -1;
-    }
+
+    # update field 'modified_time' only if needed
+    my $need_modified_update
+        = not $self->equals_bibtex( MEntry->static_get( $dbh, $self->{id} ) );
 
     my $qry = "UPDATE Entry SET
                 entry_type=?,
@@ -241,9 +275,8 @@ sub update {
                 teams_str=?,
                 people_str=?,
                 tags_str=?,
-                modified_time=NOW(),
                 need_html_regen=?
-            WHERE id = ?";
+                WHERE id = ?";
 
     # po tags_str
     # creation_time=?,
@@ -251,18 +284,20 @@ sub update {
     # przed need_html_regen=?
 
     my $sth = $dbh->prepare($qry);
+    my $result = "";
     try {
         $result = $sth->execute(
-            $self->{entry_type}, $self->{bibtex_key}, $self->{bibtex_type},
-            $self->{bib},        $self->{html},       $self->{html_bib},
-            $self->{abstract},   $self->{title},      $self->{hidden},
-            $self->{year},       $self->{month},      $self->{sort_month},
-            $self->{teams_str},  $self->{people_str}, $self->{tags_str},
-
-            # $self->{creation_time},
-            # $self->{modified_time},
-            $self->{need_html_regen}, $self->{id}
+            $self->{entry_type},  $self->{bibtex_key},
+            $self->{bibtex_type}, $self->{bib},
+            $self->{html},        $self->{html_bib},
+            $self->{abstract},    $self->{title},
+            $self->{hidden},      $self->{year},
+            $self->{month},       $self->{sort_month},
+            $self->{teams_str},   $self->{people_str},
+            $self->{tags_str},    $self->{need_html_regen},
+            $self->{id}
         );
+        $self->bump_modified_time($dbh) if $need_modified_update;
         $sth->finish();
     }
     catch {
@@ -621,7 +656,8 @@ sub authors_from_bibtex {
         my (@n) = $bibtex_entry->names('author');
         push @names, @n;
     }
-    elsif ( $bibtex_entry->exists('editor') ) {       # issue with Alex Dagstuhl Chapter
+    elsif ( $bibtex_entry->exists('editor') )
+    {    # issue with Alex Dagstuhl Chapter
         my @authors = $bibtex_entry->split('editor');
         my (@n) = $bibtex_entry->names('editor');
         push @names, @n;
@@ -697,15 +733,15 @@ sub teams {
         unless defined $dbh;
 
     my %final_teams;
-    foreach my $author ( $self->authors( $dbh ) ){
-        foreach my $team ( $author->teams( $dbh ) ){
-            if( $author->joined_team( $dbh, $team ) <= $self->{year} and 
-                ( $author->left_team( $dbh, $team ) >  $self->{year} or
-                  $author->left_team( $dbh, $team ) == 0
+    foreach my $author ( $self->authors($dbh) ) {
+        foreach my $team ( $author->teams($dbh) ) {
+            if ($author->joined_team( $dbh, $team ) <= $self->{year}
+                and (  $author->left_team( $dbh, $team ) > $self->{year}
+                    or $author->left_team( $dbh, $team ) == 0 )
                 )
-            ){
+            {
                 # $final_teams{$team}       = 1; # BAD: $team gets stringified
-                $final_teams{$team->{id}} = $team; 
+                $final_teams{ $team->{id} } = $team;
             }
         }
     }
@@ -722,37 +758,47 @@ sub exceptions {
     die "MEntry::exceptions Calling authors with no database handle!"
         unless defined $dbh;
 
-    
-    my $qry = "SELECT team_id, entry_id FROM Exceptions_Entry_to_Team WHERE entry_id = ?";
+
+    my $qry
+        = "SELECT team_id, entry_id FROM Exceptions_Entry_to_Team WHERE entry_id = ?";
     my $sth = $dbh->prepare_cached($qry);
     $sth->execute( $self->{id} );
 
     my %teams;
     while ( my $row = $sth->fetchrow_hashref() ) {
         my $team = MTeam->static_get( $dbh, $row->{team_id} );
-        $teams{$team->{id}} = $team;
+        $teams{ $team->{id} } = $team;
     }
 
     return values %teams;
 }
 ####################################################################################
 sub remove_exception {
-    my $self   = shift;
-    my $dbh    = shift;
+    my $self      = shift;
+    my $dbh       = shift;
     my $exception = shift;
 
-    return 0 if !defined $exception or !defined $self->{id} or $self->{id} < 0;
+    return 0
+        if !defined $exception
+        or !defined $self->{id}
+        or $self->{id} < 0;
 
-    my $sth = $dbh->prepare("DELETE FROM Exceptions_Entry_to_Team WHERE entry_id=? AND team_id=?");
+    my $sth
+        = $dbh->prepare(
+        "DELETE FROM Exceptions_Entry_to_Team WHERE entry_id=? AND team_id=?"
+        );
     return $sth->execute( $self->{id}, $exception->{id} );
 }
 ####################################################################################
 sub assign_exception {
-    my $self   = shift;
-    my $dbh    = shift;
+    my $self      = shift;
+    my $dbh       = shift;
     my $exception = shift;
 
-    return 0 if !defined $exception or !defined $self->{id} or $self->{id} < 0;
+    return 0
+        if !defined $exception
+        or !defined $self->{id}
+        or $self->{id} < 0;
 
     my $sth
         = $dbh->prepare(
@@ -766,11 +812,13 @@ sub static_entries_with_exception {
     my $self = shift;
     my $dbh  = shift;
 
-    die "MEntry::static_entries_with_exception Calling authors with no database handle!"
+    die
+        "MEntry::static_entries_with_exception Calling authors with no database handle!"
         unless defined $dbh;
 
-    
-    my $qry = "SELECT DISTINCT entry_id FROM Exceptions_Entry_to_Team WHERE team_id>-1";
+
+    my $qry
+        = "SELECT DISTINCT entry_id FROM Exceptions_Entry_to_Team WHERE team_id>-1";
     my $sth = $dbh->prepare_cached($qry);
     $sth->execute();
 
@@ -855,7 +903,7 @@ sub assign_existing_authors {
     foreach my $name ( $self->authors_from_bibtex() ) {
         my $author = MAuthor->static_get_by_name( $dbh, $name );
         my $master = $author;
-        $master = $author->get_master( $dbh ) if defined $author;
+        $master = $author->get_master($dbh) if defined $author;
 
         my $num_assigned = 0;
         $num_assigned = $self->assign_author( $dbh, $master )
@@ -1243,13 +1291,14 @@ sub assign_tag {
 }
 ####################################################################################
 sub remove_tag {
-    my $self   = shift;
-    my $dbh    = shift;
-    my $tag    = shift;
+    my $self = shift;
+    my $dbh  = shift;
+    my $tag  = shift;
 
     return 0 if !defined $tag or !defined $self->{id} or $self->{id} < 0;
 
-    my $sth = $dbh->prepare("DELETE FROM Entry_to_Tag WHERE entry_id=? AND tag_id=?");
+    my $sth = $dbh->prepare(
+        "DELETE FROM Entry_to_Tag WHERE entry_id=? AND tag_id=?");
 
     return $sth->execute( $self->{id}, $tag->{id} );
 }
@@ -1267,7 +1316,8 @@ sub remove_tag_by_name {
     my $dbh      = shift;
     my $tag_name = shift;
 
-    return $self->remove_tag( $dbh, MTag->static_get_by_name( $dbh, $tag_name ) );
+    return $self->remove_tag( $dbh,
+        MTag->static_get_by_name( $dbh, $tag_name ) );
 }
 ####################################################################################
 sub clean_ugly_bibtex_fields {
