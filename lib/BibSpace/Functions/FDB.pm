@@ -134,12 +134,14 @@ sub create_main_db{
           teams_str TEXT,
           people_str TEXT,
           tags_str TEXT,
-          creation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          creation_time TIMESTAMP NOT NULL DEFAULT '1970-01-01 01:01:01',
           modified_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
           need_html_regen INTEGER DEFAULT 1,
           CONSTRAINT UNIQUE(bibtex_key),
           KEY idx_bibtex_key (bibtex_key)
           )");
+
+        # was: creation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     } catch {
         say "Probably MySQL is older than 5.6. Applying workaround!";
 

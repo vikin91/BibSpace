@@ -85,18 +85,6 @@ sub Fget_set_of_papers_with_exceptions {
     my @entries = MEntry->static_entries_with_exception( $dbh );
     map { $set->insert( $_->{id} ) } @entries;
 
-    # my @params;
-
-    # my $qry
-    #     = "SELECT DISTINCT entry_id FROM Exceptions_Entry_to_Team WHERE team_id>-1";
-    # my $sth = $dbh->prepare_cached($qry);
-    # $sth->execute();
-
-    # while ( my $row = $sth->fetchrow_hashref() ) {
-    #     my $eid = $row->{entry_id};
-    #     $set->insert($eid);
-    # }
-
     return $set;
 }
 

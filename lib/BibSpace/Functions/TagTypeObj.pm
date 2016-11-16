@@ -29,7 +29,7 @@ sub getByName{
     my $dbh = shift;
     my $name = shift;
     
-    my $qry = "SELECT DISTINCT id, name, comment
+    my $qry = "SELECT id, name, comment
                FROM TagType
                WHERE name = ?";
 
@@ -51,7 +51,7 @@ sub getById{
     my $dbh = shift;
     my $id = shift;
     
-    my $qry = "SELECT DISTINCT id, name, comment
+    my $qry = "SELECT id, name, comment
                FROM TagType
                WHERE id = ?";
 
@@ -72,7 +72,7 @@ sub getAll{
     my $self = shift;
     my $dbh = shift;
 
-    my $qry = "SELECT DISTINCT id, name, comment FROM TagType ORDER BY id ASC";
+    my $qry = "SELECT id, name, comment FROM TagType ORDER BY id ASC";
     my $sth = $dbh->prepare($qry);  
     $sth->execute();  
 
