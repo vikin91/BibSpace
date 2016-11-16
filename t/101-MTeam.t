@@ -8,7 +8,7 @@ my $dbh      = $t_anyone->app->db;
 
 use BibSpace::Model::MTeam;
 
-use BibSpace::Controller::Set;
+# use BibSpace::Controller::Set;
 use BibSpace::Controller::Core;
 use Set::Scalar;
 use Data::Dumper;

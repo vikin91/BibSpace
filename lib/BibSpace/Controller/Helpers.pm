@@ -15,7 +15,7 @@ use Set::Scalar;
 use Mojo::Redis2;
 
 use BibSpace::Controller::Core;
-use BibSpace::Controller::Set;
+# use BibSpace::Controller::Set;
 use BibSpace::Controller::Publications;
 use BibSpace::Controller::BackupFunctions;
 

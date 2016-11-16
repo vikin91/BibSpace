@@ -12,59 +12,43 @@ use warnings;
 use DBI;
 
 use BibSpace::Controller::Core;
-use BibSpace::Model::MTeam;
-
-use BibSpace::Functions::FSet
-    ;  # the functions that do not rely on controller should be exported there
 
 use Set::Scalar;
 
 use Exporter;
 our @ISA = qw( Exporter );
 
-our @EXPORT = qw(
-    get_set_of_papers_for_author_id
-    get_set_of_authors_for_team
-    get_set_of_papers_for_all_authors_of_team_id
-    get_set_of_papers_for_team
-    
-    get_set_of_tagged_papers
-    get_set_of_teams_for_author_id
-    get_set_of_teams_for_author_id_w_year
-    
-    get_set_of_all_team_ids
-    get_set_of_papers_with_exceptions
-);
+our @EXPORT = qw();
 
 ####################################################################################
 
-sub get_set_of_all_team_ids {
-    my $dbh = shift;
-    return Fget_set_of_all_team_ids($dbh);
-}
+# sub get_set_of_all_team_ids {
+#     my $dbh = shift;
+#     return Fget_set_of_all_team_ids($dbh);
+# }
 ####################################################################################
 
-sub get_set_of_papers_for_team {
-    my $self = shift;
-    my $tid  = shift;
-    my $dbh  = $self->app->db;
+# sub get_set_of_papers_for_team {
+#     my $self = shift;
+#     my $tid  = shift;
+#     my $dbh  = $self->app->db;
 
-    return Fget_set_of_papers_for_team( $dbh, $tid );
-}
-
-####################################################################################
-
-sub get_set_of_papers_with_exceptions {
-    my $self = shift;
-    return Fget_set_of_papers_with_exceptions( $self->app->db );
-}
+#     return Fget_set_of_papers_for_team( $dbh, $tid );
+# }
 
 ####################################################################################
 
-sub get_set_of_tagged_papers {
-    my $self = shift;
-    return Fget_set_of_tagged_papers( $self->app->db );
-}
+# sub get_set_of_papers_with_exceptions {
+#     my $self = shift;
+#     return Fget_set_of_papers_with_exceptions( $self->app->db );
+# }
+
+####################################################################################
+
+# sub get_set_of_tagged_papers {
+#     my $self = shift;
+#     return Fget_set_of_tagged_papers( $self->app->db );
+# }
 ####################################################################################
 
 # sub get_set_of_papers_with_no_tags {
@@ -74,30 +58,28 @@ sub get_set_of_tagged_papers {
 
 ####################################################################################
 
-sub get_set_of_papers_for_all_authors_of_team_id {
-    my $self = shift;
-    my $tid  = shift;
+# sub get_set_of_papers_for_all_authors_of_team_id {
+#     my $self = shift;
+#     my $tid  = shift;
 
-    return Fget_set_of_papers_for_all_authors_of_team_id( $self->app->db,
-        $tid );
-}
+#     return Fget_set_of_papers_for_all_authors_of_team_id( $self->app->db,
+#         $tid );
+# }
 ####################################################################################
 
-sub get_set_of_teams_for_author_id_w_year {
-    my $self = shift;
-    my $aid  = shift;
-    my $year = shift;
+# sub get_set_of_teams_for_author_id_w_year {
+#     my $self = shift;
+#     my $aid  = shift;
+#     my $year = shift;
+#     return Fget_set_of_teams_for_author_id_w_year( $self->app->db, $aid, $year );
+# }
+# ####################################################################################
 
-    return Fget_set_of_teams_for_author_id_w_year( $self->app->db, $aid, $year );
-}
-####################################################################################
-
-sub get_set_of_teams_for_author_id {
-    my $self = shift;
-    my $aid  = shift;
-
-    return Fget_set_of_teams_for_author_id( $self->app->db, $aid );
-}
+# sub get_set_of_teams_for_author_id {
+#     my $self = shift;
+#     my $aid  = shift;
+#     return Fget_set_of_teams_for_author_id( $self->app->db, $aid );
+# }
 ####################################################################################
 
 # sub get_set_of_authors_for_entry_id {

@@ -22,14 +22,11 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw(
     Fget_set_of_all_team_ids
     Fget_set_of_papers_for_team
-    Fget_set_of_papers_with_exceptions
-    Fget_set_of_tagged_papers
+    
     Fget_set_of_papers_for_all_authors_of_team_id
     Fget_set_of_authors_for_team
-    Fget_set_of_teams_for_author_id_w_year
     Fget_set_of_papers_for_author_id
     Fget_set_of_papers_for_team_and_tag
-    Fget_set_of_teams_for_author_id
 );
 
 sub Fget_set_of_all_team_ids {
@@ -76,33 +73,33 @@ sub Fget_set_of_papers_for_team {
     return $set;
 }
 
-sub Fget_set_of_papers_with_exceptions {
-    my $dbh = shift;
-    my $set = new Set::Scalar;
+# sub Fget_set_of_papers_with_exceptions {
+#     my $dbh = shift;
+#     my $set = new Set::Scalar;
 
-    my @entries = MEntry->static_entries_with_exception( $dbh );
-    map { $set->insert( $_->{id} ) } @entries;
+#     my @entries = MEntry->static_entries_with_exception( $dbh );
+#     map { $set->insert( $_->{id} ) } @entries;
 
-    return $set;
-}
+#     return $set;
+# }
 
-sub Fget_set_of_tagged_papers {
-    my $dbh = shift;
+# sub Fget_set_of_tagged_papers {
+#     my $dbh = shift;
 
-    my $set = new Set::Scalar;
+#     my $set = new Set::Scalar;
 
-    my $qry = "SELECT DISTINCT entry_id FROM Entry_to_Tag";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute();
+#     my $qry = "SELECT DISTINCT entry_id FROM Entry_to_Tag";
+#     my $sth = $dbh->prepare($qry);
+#     $sth->execute();
 
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{entry_id};
-        $set->insert($eid);
-    }
+#     my @array;
+#     while ( my $row = $sth->fetchrow_hashref() ) {
+#         my $eid = $row->{entry_id};
+#         $set->insert($eid);
+#     }
 
-    return $set;
-}
+#     return $set;
+# }
 
 # sub Fget_set_of_papers_with_no_tags {
 #     my $dbh = shift;
@@ -199,47 +196,47 @@ sub Fget_set_of_papers_for_team_and_tag {
     return Set::Scalar->new( map { $_->{id} } @en_objs );
 }
 
-sub Fget_set_of_teams_for_author_id_w_year {
-    my $dbh  = shift;
-    my $aid  = shift;
-    my $year = shift;
+# sub Fget_set_of_teams_for_author_id_w_year {
+#     my $dbh  = shift;
+#     my $aid  = shift;
+#     my $year = shift;
 
-    my $set = new Set::Scalar;
+#     my $set = new Set::Scalar;
 
-    my $qry = "SELECT author_id, team_id 
-            FROM Author_to_Team 
-            WHERE author_id=?
-            AND start <= ?  AND (stop >= ? OR stop = 0)";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $aid, $year, $year );
+#     my $qry = "SELECT author_id, team_id 
+#             FROM Author_to_Team 
+#             WHERE author_id=?
+#             AND start <= ?  AND (stop >= ? OR stop = 0)";
+#     my $sth = $dbh->prepare($qry);
+#     $sth->execute( $aid, $year, $year );
 
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $tid = $row->{team_id};
+#     while ( my $row = $sth->fetchrow_hashref() ) {
+#         my $tid = $row->{team_id};
 
-        $set->insert($tid);
-    }
-    return $set;
-}
+#         $set->insert($tid);
+#     }
+#     return $set;
+# }
 
-sub Fget_set_of_teams_for_author_id {
-    my $dbh = shift;
-    my $aid = shift;
+# sub Fget_set_of_teams_for_author_id {
+#     my $dbh = shift;
+#     my $aid = shift;
 
-    my $set = new Set::Scalar;
+#     my $set = new Set::Scalar;
 
-    my $qry = "SELECT author_id, team_id 
-            FROM Author_to_Team 
-            WHERE author_id=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($aid);
+#     my $qry = "SELECT author_id, team_id 
+#             FROM Author_to_Team 
+#             WHERE author_id=?";
+#     my $sth = $dbh->prepare($qry);
+#     $sth->execute($aid);
 
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $tid = $row->{team_id};
+#     while ( my $row = $sth->fetchrow_hashref() ) {
+#         my $tid = $row->{team_id};
 
-        $set->insert($tid);
-    }
-    return $set;
-}
+#         $set->insert($tid);
+#     }
+#     return $set;
+# }
 
 # sub Fget_set_of_authors_for_entry_id {    # TODO: refactor it away to MEntry!
 #     my $dbh = shift;

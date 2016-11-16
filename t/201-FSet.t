@@ -8,7 +8,7 @@ my $dbh      = $t_anyone->app->db;
 
 use BibSpace::Model::MTeam;
 
-use BibSpace::Controller::Set;    # this code will be
+# use BibSpace::Controller::Set;    # this code will be
 use BibSpace::Functions::FSet;    # ported to here and refactored
 
 use BibSpace::Controller::Core;
@@ -45,8 +45,8 @@ my @author_ids = ();
 subtest 'Controller Set basics - getters' => sub {
 
     ok( Fget_set_of_all_team_ids($dbh) );
-    ok( Fget_set_of_papers_with_exceptions($dbh) );
-    ok( Fget_set_of_tagged_papers($dbh) );
+    # ok( Fget_set_of_papers_with_exceptions($dbh) );
+    # ok( Fget_set_of_tagged_papers($dbh) );
 
 };
 
@@ -106,20 +106,14 @@ subtest 'Controller Set basics - getters for tags' => sub {
         )
     );
 
-    ok( Fget_set_of_teams_for_author_id( $dbh, $author_id ) );
+    # ok( Fget_set_of_teams_for_author_id( $dbh, $author_id ) );
 };
 ####################################################################
 TODO: {
     local $TODO = "Fixture is not prepared for this test";
 
-    my $author_id = $author_ids[ rand @author_ids ];
-    my $rentry = $entries[ rand @entries ];
-
-    # ok( Fget_set_of_authors_for_entry_id( $dbh, $rentry->{id} )->elements );
-    # ok( Fget_set_of_teams_for_entry_id( $dbh, $rentry->{id} )->elements );
-
-    my $year = 2011;    # FIXME!
-    ok( Fget_set_of_teams_for_author_id_w_year( $dbh, $author_id, $year ) );
+    # my $author_id = $author_ids[ rand @author_ids ];
+    # my $rentry = $entries[ rand @entries ];
 };
 ####################################################################
 

@@ -10,7 +10,7 @@ use BibSpace::Model::MAuthor;
 use BibSpace::Model::MTeam;
 use BibSpace::Model::MEntry;
 
-use BibSpace::Controller::Set;
+# use BibSpace::Controller::Set;
 use BibSpace::Controller::Core;
 use Set::Scalar;
 use Data::Dumper;

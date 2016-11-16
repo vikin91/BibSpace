@@ -22,7 +22,8 @@ use BibSpace::Functions::FPublications;
 use BibSpace::Model::MEntry;
 use BibSpace::Model::MTag;
 
-use BibSpace::Controller::Set;
+# use BibSpace::Controller::Set;
+use BibSpace::Functions::FSet;
 
 use Set::Scalar;
 
@@ -249,7 +250,7 @@ sub show_unrelated_to_team {
     my $set_all_papers
         = Set::Scalar->new( map { $_->{id} } MEntry->static_all($dbh) );
     my $set_of_related_to_team
-        = get_set_of_papers_for_all_authors_of_team_id( $self, $team_id );
+        = Fget_set_of_papers_for_all_authors_of_team_id( $dbh, $team_id );
     my $end_set = $set_all_papers - $set_of_related_to_team;
 
     my $team_name = "";

@@ -15,7 +15,7 @@ use Scalar::Util qw(looks_like_number);
 use BibSpace::Controller::Core;
 use BibSpace::Functions::TagTypeObj;
 
-use BibSpace::Controller::Set;
+# use BibSpace::Controller::Set;
 use BibSpace::Functions::FSet;
 use BibSpace::Functions::FPublications;
 use BibSpace::Functions::FTags;
