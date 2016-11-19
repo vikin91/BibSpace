@@ -528,15 +528,17 @@ sub landing_years_obj {
 sub get_switchlink {
     my $self    = shift;
     my $keyword = shift;
-    my $str = '<span class="label label-info" >View: </span>&nbsp;';
+    my $str = '<button type="button" class="btn btn-primary btn-xs">View:</button>&nbsp;';
+    # my $str = '<span class="label label-info" >View: </span>&nbsp;';
     
     if($keyword eq 'years'){
-        $str .= '<a class="label label-primary" href="' . $self->url_with('lp') . '">Types</a> ';
-        $str .= '<a class="label label-default" href="' . $self->url_with('lyp') . '">Years</a> ';
+
+        $str .= '<a type="button" class="btn btn-primary btn-xs" href="' . $self->url_with('lp') . '">Types</a> ';
+        $str .= '<a type="button" class="btn btn-default btn-xs" href="' . $self->url_with('lyp') . '">Years</a> ';
     }
     elsif($keyword eq 'types'){
-        $str .= '<a class="label label-default" href="' . $self->url_with('lp') . '">Types</a> ';
-        $str .= '<a class="label label-primary" href="' . $self->url_with('lyp') . '">Years</a> ';
+        $str .= '<a type="button" class="btn btn-default btn-xs" href="' . $self->url_with('lp') . '">Types</a> ';
+        $str .= '<a type="button" class="btn btn-primary btn-xs" href="' . $self->url_with('lyp') . '">Years</a> ';
     }
     # $str .= '<br/>';
     return $str;
@@ -548,15 +550,15 @@ sub get_navbar_clear_filter_row {    # only temporary TODO: refactor
     my $tmp_year = $self->req->url->query->param('year');
     $self->req->url->query->remove('year');
     
-    my $str = '<span class="label label-info" >Filter: </span>&nbsp;';
-    $str .= '<a class="label label-default" href="' . $self->url_with('current') . '">Clear year filter</a> ';
+    my $str = '<button type="button" class="btn btn-primary btn-xs">Filter:</button>&nbsp;';
+    $str .= '<a type="button" class="btn btn-default btn-xs" href="' . $self->url_with('current') . '">Clear year filter</a> ';
 
     $self->req->url->query->param( year => $tmp_year )
         if defined $tmp_year and $tmp_year ne "";
     $self->req->url->query->remove('bibtex_type');
     $self->req->url->query->remove('entry_type');
 
-    $str .= '<a class="label label-default" href="' . $self->url_with('current') . '">Clear type filter</a> ';
+    $str .= '<a type="button" class="btn btn-default btn-xs" href="' . $self->url_with('current') . '">Clear type filter</a> ';
     $str .= '<br/>';
     return $str;
 }
@@ -573,12 +575,12 @@ sub get_navbar { # only temporary TODO: refactor
     my $tmp_type = $self->req->url->query->param('bibtex_type');
     # NAVBAR
 
-    $str .= '<span class="label label-info" >Years: </span>&nbsp;';
+    $str .= '<button type="button" class="btn btn-primary btn-xs">Types:</button>&nbsp;';
 
     foreach my $key ( reverse sort @$keys ) {
 
         $self->req->url->query->param( year => $key );
-        $str .= '<a class="label label-default" href="';
+        $str .= '<a type="button" class="btn btn-default btn-xs" href="';
         $str .=  $self->url_with( 'current', bibtex_type => $tmp_type );
         $str .=  '">'.$hash_dict{$key}.'</a> ';
     }
@@ -597,25 +599,20 @@ sub get_navbar_landing_types {    # only temporary TODO: refactor
     #say "using get_navbar_landing_types";
 
     my $str = $self->get_navbar_clear_filter_row;
-    $str .= '<span class="label label-info" >Types: </span>&nbsp;';
+    $str .= '<button type="button" class="btn btn-primary btn-xs">Years:</button>&nbsp;';
 
     foreach my $key ( sort @$keys ) {
 
         # say "key in keys_with_papers: $key";
-
+        $self->req->url->query->remove('bibtex_type');
         if ( $key eq 'talk' ) {
-            $self->req->url->query->remove('bibtex_type');
             $self->req->url->query->param( entry_type => 'talk' );
-            $str .= '<a class="label label-default" href="';
-            $str .=  $self->url_with( 'current', entry_type => 'talk' );
-
         }
         else {
-            $self->req->url->query->remove('entry_type');
-            $self->req->url->query->param( bibtex_type => $key );
-            $str .= '<a class="label label-default" href="';
-            $str .=  $self->url_with( 'current', entry_type => $key );
+            $self->req->url->query->param( bibtex_type => $key );    
         }
+        $str .= '<a type="button" class="btn btn-default btn-xs" href="';
+        $str .=  $self->url_with( 'current', entry_type => $key );
         $str .=  '">'.$hash_dict{$key}.'</a> ';
     }
     return $str;
