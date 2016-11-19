@@ -346,28 +346,35 @@ sub all {
     if ( $self->session('user') ) {
         # check cache
         my $key = "publications." . join("_", @{$self->req->params->pairs} );
-        my $html = $self->app->redis->get($key);
-
+        my $html;
+        try{
+            # this must be done in a blocking manner due to try/catch
+            $html = $self->redis->get($key);
+        }
+        catch{
+            warn "Redis server is down";
+        };
         if($html){
             $self->render(data => $html);
             # TODO: update cache in background - must be non-blocking to make sense!
             return;
         }
 
-        $self->render_later;
-        $self->delay( 
-            sub{
-                my @objs = Fget_publications_main_hashed_args( $self,
-                { entry_type => $entry_type } );
         
-                $self->stash( entries => \@objs );
-                $html = $self->render_to_string( template => 'publications/all' );
-                $self->app->redis->set($key => $html  );
-            },
-            sub { 
-                $self->render(data => $html);
-            },
-        );
+        say "Cache key $key not found. Processing normally.";
+        my @objs = Fget_publications_main_hashed_args( $self,
+        { entry_type => $entry_type } );
+
+        $self->stash( entries => \@objs );
+        $html = $self->render_to_string( template => 'publications/all' );
+        try{
+            $self->app->redis->set( $key => $html );
+        }
+        catch{
+            warn "Redis server is down";
+        };
+        $self->render(data => $html);
+
     }
     else {
         return $self->all_read();
@@ -380,19 +387,30 @@ sub all_read {
     my $self = shift;
 
     my $key = "publications.read." . join("_", @{$self->req->params->pairs} );
-    my $html = $self->app->redis->get($key);
+    my $html;
+    try{
+        $html = $self->app->redis->get($key);
+    }
+    catch{
+        warn "Redis server is down";
+    };
     if($html){
         $self->render(data => $html);
         # TODO: update cache in background - must be non-blocking to make sense!
         return;
     }
 
+
     my @objs = Fget_publications_main_hashed_args( $self,
         { hidden => 0, entry_type => undef } );
 
     $self->stash( entries => \@objs );
     $html = $self->render_to_string( template => 'publications/all_read' );
-    $self->app->redis->set($key => $html  );
+    try{
+        $self->app->redis->set($key => $html);
+    }catch{
+            warn "Redis server is down";
+    };
     $self->render( data => $html );
 }
 
@@ -457,10 +475,15 @@ sub landing_years_obj {
         $max_year = $year;
     }
 
-    my $key = "publications.landing.years." . join("_", @{$self->req->params->pairs} );
+    my $cache_key = "publications.landing.years." . join("_", @{$self->req->params->pairs} );
     # $html = $self->render_to_string( template => 'publications/all' );
-    # $self->app->redis->set($key => $html  );
-    my $html = $self->app->redis->get($key);
+    # $self->app->redis->set($cache_key => $html  );
+    my $html;
+    try{
+        $html = $self->app->redis->get($cache_key);
+    }catch{
+        warn "Redis server is down";
+    };
 
     if($html){
         $self->render(data => $html);
@@ -499,7 +522,7 @@ sub landing_years_obj {
     my $navbar_html = $self->get_navbar( \@keys, \%hash_dict, 'years' );
 
     return $self->display_landing( \%hash_values, \%hash_dict, \@keys,
-        $switchlink, $navbar_html );
+        $switchlink, $navbar_html, $cache_key );
 }
 ############################################################################################################
 sub get_switchlink {
@@ -617,6 +640,21 @@ sub landing_types_obj {    # clean this mess!
     my @all_keys = get_types_for_landing_page( $self->app->db );
 
     my @keys_with_papers;
+
+    my $cache_key = "publications.landing.types." . join("_", @{$self->req->params->pairs} );
+    # $html = $self->render_to_string( template => 'publications/all' );
+    # $self->app->redis->set($cache_key => $html  );
+    my $html;
+    try{
+        $html = $self->app->redis->get($cache_key);
+    }catch{
+        warn "Redis server is down";
+    };
+
+    if($html){
+        $self->render(data => $html);
+        return;
+    }
 
     # shitty ifs
 
@@ -754,7 +792,7 @@ sub landing_types_obj {    # clean this mess!
     # keys_with_papers: non-empty -> key_bibtex_type
     return $self->display_landing(
         \%bibtex_type_to_entries, \%bibtex_type_to_label, \@keys_with_papers,
-        $switchlink,   $navbar_html
+        $switchlink,   $navbar_html, $cache_key
     );
 }
 
@@ -766,6 +804,7 @@ sub display_landing {
     my $keys_ref        = shift;
     my $switchlink      = shift || "";
     my $navbar_html     = shift || "";
+    my $cache_key       = shift // "";
 
     my $navbar     = $self->param('navbar') || 0;
     my $show_title = $self->param('title')  || 0;
@@ -845,11 +884,15 @@ sub display_landing {
     );
     $self->res->headers->header( 'Access-Control-Allow-Origin' => '*' );
 
-    say $self->req->url;
+    # say $self->req->url;
     # putting html result into cache
-    my $key = "publications.landing.years." . join("_", @{$self->req->params->pairs} );
+    
     my $html = $self->render_to_string( template => 'publications/landing_obj' );
-    # $self->app->redis->set($key => $html);
+    try{
+        $self->app->redis->set($cache_key => $html);
+    }catch{
+        warn "Redis server is down";
+    };
     $self->render(data => $html);
     
     # $self->render( template => 'publications/landing_obj' );
