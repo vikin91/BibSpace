@@ -6,9 +6,13 @@ use Text::BibTeX;    # parsing bib files
 use 5.010;           #because of ~~ and say
 use DBI;
 use Try::Tiny;
-use Moose;
 use TeX::Encode;
 use Encode;
+use Moose;
+use MooseX::Storage;
+
+with Storage('format' => 'JSON', 'io' => 'File');
+
 
 has 'id'              => ( is => 'rw' );
 has 'entry_type'      => ( is => 'rw', default => 'paper' );
@@ -34,6 +38,14 @@ has 'need_html_regen' => ( is => 'rw', default => '1' );
 has 'warnings' => ( is => 'ro', default => '' );
 has 'bst_file' => ( is => 'ro', default => './lib/descartes2.bst' );
 
+####################################################################################
+sub TO_JSON {
+    shift->pack();
+}
+####################################################################################
+sub FROM_JSON {
+    shift->unpack();
+}
 ####################################################################################
 sub static_all {
     my $self = shift;

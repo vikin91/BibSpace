@@ -31,6 +31,7 @@ requires 'Array::Utils' , '>= 0.0';
 requires 'File::Spec' , '>= 0.0';
 requires 'Text::ASCIIMathML' , '>= 0.0';
 requires 'Mojo::Redis2' , '>= 0.0';
+requires 'JSON' , '>= 0.0';
 
 
 on 'test' => sub {

@@ -15,7 +15,7 @@ use DBI;
 
 use TeX::Encode;
 use Encode;
-
+use Mojo::Redis2;
 
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
@@ -344,10 +344,24 @@ sub all {
     $entry_type = $self->param('entry_type') // 'paper';
 
     if ( $self->session('user') ) {
-        my @objs = Fget_publications_main_hashed_args( $self,
+        # check cache
+        my $key = "publications." . join("_", @{$self->req->params->pairs} );
+        my $html = $self->app->redis->get($key);
+
+        if(!$html){
+            my @objs = Fget_publications_main_hashed_args( $self,
             { entry_type => $entry_type } );
-        $self->stash( entries => \@objs );
-        $self->render( template => 'publications/all' );
+            
+            $self->stash( entries => \@objs );
+            $html = $self->render_to_string( template => 'publications/all' );
+            $self->app->redis->set($key => $html  );
+        }
+        else{
+            # TODO: update cache in background - must be non-blocking to make sense!
+        }
+        
+
+        $self->render(data => $html);
     }
     else {
         return $self->all_read();
@@ -361,6 +375,7 @@ sub all_read {
 
     my @objs = Fget_publications_main_hashed_args( $self,
         { hidden => 0, entry_type => undef } );
+
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all_read' );
 }
@@ -1172,17 +1187,7 @@ sub regenerate_html_for_all {
 
     $self->write_log("regenerate_html_for_all is running");
 
-    my @entries = MEntry->static_all($dbh);
-
-    # for performance reasons as separate variable. Not benchmarked however.
-    my $bst_file = $self->app->bst;
-
-
-    for my $e (@entries) {
-        $e->{bst_file} = $bst_file;
-        $e->regenerate_html( $dbh, 0, $self->app->bst );
-        $e->save($dbh);
-    }
+    BibSpace::Functions::FPublications::do_regenerate_html_for_all($dbh, $self->app->bst, 0);
 
     $self->write_log("regenerate_html_for_all has finished");
 
@@ -1194,30 +1199,31 @@ sub regenerate_html_for_all {
     $self->redirect_to($referrer);
 }
 ####################################################################################
+
+####################################################################################
 sub regenerate_html_for_all_force {
     my $self = shift;
-    $self->inactivity_timeout(3000);
+    # $self->inactivity_timeout(3000);
     my $dbh = $self->app->db;
-    $self->write_log("regenerate_html_for_all FORCE is running");
-
-    my $bst_file = $self->app->bst;
-
-    my @entries = MEntry->static_all($dbh);
-    for my $e (@entries) {
-        $e->{bst_file} = $bst_file;
-        $e->regenerate_html( $dbh, 1 );
-        $e->save($dbh);
-    }
 
 
-    $self->write_log("regenerate_html_for_all FORCE has finished");
+
+    $self->redis->publish("long_running_tasks" => "regenerate_all_force");
+    $self->write_log("regenerate_html_for_all FORCE has been enqueued");
+    
+    # $self->write_log("regenerate_html_for_all_force is running");
+    # BibSpace::Functions::FPublications::do_regenerate_html_for_all($dbh, $self->app->bst, 1);
+    # $self->write_log("regenerate_html_for_all_force has finished");
+
     $self->flash(
         msg_type => 'info',
-        msg      => 'Regeneration of HTML code finished.'
+        msg      => 'Regeneration of HTML code has been enqueued and will be executed in background.'
     );
     my $referrer = $self->get_referrer();
     $self->redirect_to($referrer);
+
 }
+
 ####################################################################################
 sub regenerate_html {
     my $self = shift;

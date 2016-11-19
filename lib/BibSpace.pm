@@ -11,6 +11,7 @@ use BibSpace::Controller::Helpers;
 
 use BibSpace::Functions::MyUsers;
 use BibSpace::Functions::FDB;
+use BibSpace::Functions::FPublications;
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -24,6 +25,7 @@ use Path::Tiny;    # for creating directories
 use Mojo::Home;
 use File::Spec;
 use Cwd;
+use Mojo::Redis2;
 
 # for Makemake. Needs to be removed for Dist::Zilla
 # our $VERSION = '0.4.4';
@@ -68,6 +70,7 @@ has version => sub {
     my $self = shift;
     return $BibSpace::VERSION // "0.4.6";
 };
+
 ################################################################
 sub startup {
     my $self = shift;
@@ -79,6 +82,53 @@ sub startup {
     say "Using CONFIG: " . $self->app->config_file;
     say "App home is: " . $self->app->home;
     say "Active bst file is: " . $self->app->bst;
+
+    ######################## Redis part
+    $self->helper(
+        redis => sub {
+            state $redis = Mojo::Redis2->new(server => '127.0.0.1:6379'); 
+            # state $redis = Mojo::Redis2->new();
+        }
+    );
+    $self->helper(
+        redisSub => sub {
+            return $self->redis->subscribe(['long_running_tasks'] => sub {
+                my ($rself, $err, $res) = @_;
+                say "SUBSCRIBED to channel long_running_tasks";
+                $self->write_log("SUBSCRIBED to channel long_running_tasks");
+            });
+        }
+    );
+
+    $self->redisSub();
+
+    my $z = $self->redis->on(message => sub {
+        my ($redisself, $message, $channel) = @_;
+        # on morbo this is blocking
+        # on hypnotoad this works only once - for the first time after hot deployment restart
+        $self->write_log("DEQUEUE: $message @ $channel");
+        say "DEQUEUE: $message @ $channel";
+        sleep (10);
+        $self->write_log("FINISHED processing: $message @ $channel");
+        say "FINISHED processing: $message @ $channel";
+    });
+
+    $self->redis->on(unsubscribe => sub { 
+        my ($self, $info) = @_;  
+        say "got unsubscribe envent";
+    });
+
+    $self->redis->on(connection => sub { 
+        my ($self, $info) = @_;  
+        print "got redis connection id: $info->{id}, group: $info->{group}, nblocking: $info->{nb}. \n";
+    });
+
+    $self->redis->on(error => sub {
+        my ($self, $err) = @_;
+        print "got redis error $err!\n";
+    });
+
+    ######################## Redis part END
 }
 ################################################################
 sub setup_config {
@@ -126,6 +176,7 @@ sub setup_plugins {
     $self->helper(
         users => sub { state $users = BibSpace::Functions::MyUsers->new } );
     $self->helper( proxy_prefix => sub { $self->config->{proxy_prefix} } );
+
 
     $self->helper(
         get_referrer => sub {
