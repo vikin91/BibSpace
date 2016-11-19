@@ -85,6 +85,10 @@ pre {
     <H1><%= $title %></H1>
 % }
 
+% if(defined $switch_link and $switch_link ne ""){
+  %== $switch_link
+  <br/>
+% }
 
 % if(defined $navbar and $navbar ne ""){
   %== $navbar
@@ -93,9 +97,7 @@ pre {
 % }
 
 
-% if(defined $switch_link and $switch_link ne ""){
-  %== $switch_link
-% }
+
 
 
 % foreach my $type (@keys) {

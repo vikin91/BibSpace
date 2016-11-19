@@ -348,20 +348,26 @@ sub all {
         my $key = "publications." . join("_", @{$self->req->params->pairs} );
         my $html = $self->app->redis->get($key);
 
-        if(!$html){
-            my @objs = Fget_publications_main_hashed_args( $self,
-            { entry_type => $entry_type } );
-            
-            $self->stash( entries => \@objs );
-            $html = $self->render_to_string( template => 'publications/all' );
-            $self->app->redis->set($key => $html  );
-        }
-        else{
+        if($html){
+            $self->render(data => $html);
             # TODO: update cache in background - must be non-blocking to make sense!
+            return;
         }
-        
 
-        $self->render(data => $html);
+        $self->render_later;
+        $self->delay( 
+            sub{
+                my @objs = Fget_publications_main_hashed_args( $self,
+                { entry_type => $entry_type } );
+        
+                $self->stash( entries => \@objs );
+                $html = $self->render_to_string( template => 'publications/all' );
+                $self->app->redis->set($key => $html  );
+            },
+            sub { 
+                $self->render(data => $html);
+            },
+        );
     }
     else {
         return $self->all_read();
@@ -373,11 +379,21 @@ sub all {
 sub all_read {
     my $self = shift;
 
+    my $key = "publications.read." . join("_", @{$self->req->params->pairs} );
+    my $html = $self->app->redis->get($key);
+    if($html){
+        $self->render(data => $html);
+        # TODO: update cache in background - must be non-blocking to make sense!
+        return;
+    }
+
     my @objs = Fget_publications_main_hashed_args( $self,
         { hidden => 0, entry_type => undef } );
 
     $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all_read' );
+    $html = $self->render_to_string( template => 'publications/all_read' );
+    $self->app->redis->set($key => $html  );
+    $self->render( data => $html );
 }
 
 ####################################################################################
@@ -429,15 +445,26 @@ sub landing_years_obj {
 # if you want to list ONLY papers by default on the landing_years page, use the following line
     my $entry_type = $self->param('entry_type') || 'paper';
 
-    my $min_year = $self->get_year_of_oldest_entry || 0;
+    my $min_year = $self->get_year_of_oldest_entry // $self->current_year;
     my $max_year = $self->current_year;
-    if ( $self->current_month > 8 ) {    # TODO export to config
+    # 8 is a month in which we show publications from the next year
+    if ( $self->current_month > 8 ) {    # TODO export to config. 
         $max_year++;
     }
 
     if ( defined $year ) {
         $min_year = $year;
         $max_year = $year;
+    }
+
+    my $key = "publications.landing.years." . join("_", @{$self->req->params->pairs} );
+    # $html = $self->render_to_string( template => 'publications/all' );
+    # $self->app->redis->set($key => $html  );
+    my $html = $self->app->redis->get($key);
+
+    if($html){
+        $self->render(data => $html);
+        return;
     }
 
     my %hash_dict;
@@ -450,7 +477,7 @@ sub landing_years_obj {
 
     foreach my $yr (@allkeys) {
 
-# my @objs = get_publications_main($self, undef, $yr, undef, $entry_type, undef, undef, 0, undef);
+        # my @objs = get_publications_main($self, undef, $yr, undef, $entry_type, undef, undef, 0, undef);
         my @objs = Fget_publications_main_hashed_args(
             $self,
             {   year       => $yr,
@@ -478,63 +505,37 @@ sub landing_years_obj {
 sub get_switchlink {
     my $self    = shift;
     my $keyword = shift;
-    return
-          '<a class="bibtexitem" href="'
-        . $self->url_with('lp')
-        . '">Switch to grouping by '
-        . $keyword . ' </a>'
-        if $keyword eq 'types';
-    return
-          '<a class="bibtexitem" href="'
-        . $self->url_with('lyp')
-        . '">Switch to grouping by '
-        . $keyword . ' </a>';
+    my $str = '<span class="label label-info" >View: </span>&nbsp;';
+    
+    if($keyword eq 'years'){
+        $str .= '<a class="label label-primary" href="' . $self->url_with('lp') . '">Types</a> ';
+        $str .= '<a class="label label-default" href="' . $self->url_with('lyp') . '">Years</a> ';
+    }
+    elsif($keyword eq 'types'){
+        $str .= '<a class="label label-default" href="' . $self->url_with('lp') . '">Types</a> ';
+        $str .= '<a class="label label-primary" href="' . $self->url_with('lyp') . '">Years</a> ';
+    }
+    # $str .= '<br/>';
+    return $str;
 }
 ############################################################################################################
-sub get_navbar_switch {    # only temporary
+sub get_navbar_clear_filter_row {    # only temporary TODO: refactor
     my $self          = shift;
     
     my $tmp_year = $self->req->url->query->param('year');
     $self->req->url->query->remove('year');
-    my $navbar_html
-        = '<a class="bibtexitem" href="'
-        . $self->url_with('current')
-        . '">[Clear year filter]</a> ';
-    $self->req->url->query->param( year => $tmp_year )
-        if defined $tmp_year and $tmp_year ne "";
-
-    my $tmp_type = $self->req->url->query->param('bibtex_type');
-    $self->req->url->query->remove('bibtex_type');
-    $navbar_html
-        .= '<a class="bibtexitem" href="'
-        . $self->url_with('current')
-        . '">[Clear type filter]</a> ';
-    $navbar_html .= '<br/>';
-    $self->req->url->query->param( bibtex_type => $tmp_type )
-        if defined $tmp_type and $tmp_type ne "";
-    return $navbar_html;
-}
-############################################################################################################
-sub get_navbar2_switch {    # only temporary TODO: refactor
-    my $self          = shift;
     
-    my $tmp_year = $self->req->url->query->param('year');
-    $self->req->url->query->remove('year');
-    my $navbar_html
-        = '<a class="bibtexitem" href="'
-        . $self->url_with('current')
-        . '">[Clear year filter]</a> ';
+    my $str = '<span class="label label-info" >Filter: </span>&nbsp;';
+    $str .= '<a class="label label-default" href="' . $self->url_with('current') . '">Clear year filter</a> ';
+
     $self->req->url->query->param( year => $tmp_year )
         if defined $tmp_year and $tmp_year ne "";
-
     $self->req->url->query->remove('bibtex_type');
     $self->req->url->query->remove('entry_type');
-    $navbar_html
-        .= '<a class="bibtexitem" href="'
-        . $self->url_with('current')
-        . '">[Clear type filter]</a> ';
-    $navbar_html .= '<br/>';
-    return $navbar_html;
+
+    $str .= '<a class="label label-default" href="' . $self->url_with('current') . '">Clear type filter</a> ';
+    $str .= '<br/>';
+    return $str;
 }
 ############################################################################################################
 sub get_navbar { # only temporary TODO: refactor
@@ -543,37 +544,37 @@ sub get_navbar { # only temporary TODO: refactor
     my $hash_dict_ref = shift;
     my $type          = shift // 'years';
     my %hash_dict     = %$hash_dict_ref;
-    say "using get_navbar";
+    #say "using get_navbar";
 
-    my $navbar_html = $self->get_navbar_switch;
+    my $str = $self->get_navbar_clear_filter_row;
     my $tmp_type = $self->req->url->query->param('bibtex_type');
     # NAVBAR
 
+    $str .= '<span class="label label-info" >Years: </span>&nbsp;';
 
     foreach my $key ( reverse sort @$keys ) {
 
         $self->req->url->query->param( year => $key );
-        $navbar_html .= '<a class="bibtexitem" href="'
-            . $self->url_with( 'current', bibtex_type => $tmp_type ) . '">';
-        $navbar_html .= '[' . $hash_dict{$key} . ']';
-        $navbar_html .= '</a> ';
-
+        $str .= '<a class="label label-default" href="';
+        $str .=  $self->url_with( 'current', bibtex_type => $tmp_type );
+        $str .=  '">'.$hash_dict{$key}.'</a> ';
     }
 
-    $navbar_html;
+    $str;
 }
 
 ############################################################################################################
-sub get_navbar2 {    # only temporary TODO: refactor
+sub get_navbar_landing_types {    # only temporary TODO: refactor
     my $self          = shift;
     my $keys          = shift;
     my $hash_dict_ref = shift;
     my $type          = shift // 'years';
     my %hash_dict     = %$hash_dict_ref;
 
-    say "using get_navbar2";
+    #say "using get_navbar_landing_types";
 
-    my $navbar_html = $self->get_navbar2_switch;
+    my $str = $self->get_navbar_clear_filter_row;
+    $str .= '<span class="label label-info" >Types: </span>&nbsp;';
 
     foreach my $key ( sort @$keys ) {
 
@@ -582,19 +583,19 @@ sub get_navbar2 {    # only temporary TODO: refactor
         if ( $key eq 'talk' ) {
             $self->req->url->query->remove('bibtex_type');
             $self->req->url->query->param( entry_type => 'talk' );
-            $navbar_html .= '<a class="bibtexitem" href="'
-                . $self->url_with( 'current', entry_type => 'talk' ) . '">';
+            $str .= '<a class="label label-default" href="';
+            $str .=  $self->url_with( 'current', entry_type => 'talk' );
+
         }
         else {
             $self->req->url->query->remove('entry_type');
             $self->req->url->query->param( bibtex_type => $key );
-            $navbar_html .= '<a class="bibtexitem" href="'
-                . $self->url_with( 'current', bibtex_type => $key ) . '">';
+            $str .= '<a class="label label-default" href="';
+            $str .=  $self->url_with( 'current', entry_type => $key );
         }
-        $navbar_html .= '[' . $hash_dict{$key} . ']';
-        $navbar_html .= '</a> ';
+        $str .=  '">'.$hash_dict{$key}.'</a> ';
     }
-    return $navbar_html;
+    return $str;
 }
 ############################################################################################################
 sub landing_types_obj {    # clean this mess!
@@ -745,7 +746,7 @@ sub landing_types_obj {    # clean this mess!
     # not ready yet
     my $switchlink = $self->get_switchlink('years');
     my $navbar_html
-        = $self->get_navbar2( \@keys_with_papers, \%bibtex_type_to_label, 'types' );
+        = $self->get_navbar_landing_types( \@keys_with_papers, \%bibtex_type_to_label, 'types' );
 
 
     # bibtex_type_to_entries:  key_bibtex_type -> ref_arr_entry_objects
@@ -843,7 +844,15 @@ sub display_landing {
         switch_link => $switchlink
     );
     $self->res->headers->header( 'Access-Control-Allow-Origin' => '*' );
-    $self->render( template => 'publications/landing_obj' );
+
+    say $self->req->url;
+    # putting html result into cache
+    my $key = "publications.landing.years." . join("_", @{$self->req->params->pairs} );
+    my $html = $self->render_to_string( template => 'publications/landing_obj' );
+    # $self->app->redis->set($key => $html);
+    $self->render(data => $html);
+    
+    # $self->render( template => 'publications/landing_obj' );
 }
 
 ####################################################################################
