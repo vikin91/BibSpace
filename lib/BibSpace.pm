@@ -5,6 +5,7 @@ package BibSpace v0.4.6;
 use BibSpace::Controller::Core;
 use BibSpace::Controller::BackupFunctions;
 use BibSpace::Controller::Publications;
+use BibSpace::Controller::PublicationsLanding;
 use BibSpace::Controller::PublicationsExperimental;
 use BibSpace::Controller::PublicationsSEO;
 use BibSpace::Controller::Helpers;
@@ -613,14 +614,18 @@ sub setup_routes {
         ->name('get_single_publication_read');
     $anyone->get('/r/p/get/:id')->to('publications#single_read');
 
+    ######## PublicationsLanding
+
     $anyone->get('/landing/publications')
-        ->to('publications#landing_types_obj')->name('landing_publications');
-    $anyone->get('/l/p')->to('publications#landing_types_obj')->name('lp');
+        ->to('PublicationsLanding#landing_types_obj')->name('landing_publications');
+    $anyone->get('/l/p')->to('PublicationsLanding#landing_types_obj')->name('lp');
 
     $anyone->get('/landing-years/publications')
-        ->to('publications#landing_years_obj')
+        ->to('PublicationsLanding#landing_years_obj')
         ->name('landing_years_publications');
-    $anyone->get('/ly/p')->to('publications#landing_years_obj');    #ALIAS
+    $anyone->get('/ly/p')->to('PublicationsLanding#landing_years_obj');    #ALIAS
+
+    ########
 
     $anyone->get('/read/authors-for-tag/:tid/:team')
         ->to('tags#get_authors_for_tag_read')

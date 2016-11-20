@@ -1069,19 +1069,7 @@ sub static_get_filter {
     my $permalink   = shift;
     my $hidden      = shift;
 
-    # {
-    #      no warnings 'uninitialized';
-    #     say "   master_id $master_id
-    #             year $year
-    #             bibtex_type $bibtex_type
-    #             entry_type $entry_type
-    #             tagid $tagid
-    #             teamid $teamid
-    #             visible $visible
-    #             permalink $permalink
-    #             hidden $hidden
-    #     ";
-    # }
+
 
     my @params;
 
@@ -1189,6 +1177,22 @@ sub static_get_filter {
         $obj->decodeLatex();
         push @objs, $obj;
     }
+
+    # {
+    #      no warnings 'uninitialized';
+    #     say " MEntry static_get_filter
+    #             master_id $master_id
+    #             year $year
+    #             bibtex_type $bibtex_type
+    #             entry_type $entry_type
+    #             tagid $tagid
+    #             teamid $teamid
+    #             visible $visible
+    #             permalink $permalink
+    #             hidden $hidden
+    #             num results = " . (scalar @objs) ."
+    #     ";
+    # }
     return @objs;
 }
 ####################################################################################
