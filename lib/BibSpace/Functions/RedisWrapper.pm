@@ -44,6 +44,12 @@ sub subscribe {
 		return undef;
 }
 
+sub publish {
+		my $self = shift;
+		return $self->SUPER::publish(@_) if $self->cache_enabled;
+		return undef;
+}
+
 
 no Moose;
 __PACKAGE__->meta->make_immutable(inline_constructor => 0);

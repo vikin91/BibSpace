@@ -815,18 +815,25 @@ sub regenerate_html_for_all_force {
     # $self->inactivity_timeout(3000);
     my $dbh = $self->app->db;
 
+    my $msg = 'Regeneration of HTML code has been enqueued and will be executed in background.';
 
-
-    $self->redis->publish("long_running_tasks" => "regenerate_all_force");
-    $self->write_log("regenerate_html_for_all FORCE has been enqueued");
+    try {
+        $self->redis->publish("long_running_tasks" => "regenerate_all_force");
+        $self->write_log("regenerate_html_for_all FORCE has been enqueued");
+    }
+    catch {
+        $self->write_log("regenerate_html_for_all_force is running");
+        BibSpace::Functions::FPublications::do_regenerate_html_for_all($dbh, $self->app->bst, 1);
+        $self->write_log("regenerate_html_for_all_force has finished");
+        $msg = 'Regeneration of HTML code is complete.';
+    };
     
-    # $self->write_log("regenerate_html_for_all_force is running");
-    # BibSpace::Functions::FPublications::do_regenerate_html_for_all($dbh, $self->app->bst, 1);
-    # $self->write_log("regenerate_html_for_all_force has finished");
+    
+    
 
     $self->flash(
         msg_type => 'info',
-        msg      => 'Regeneration of HTML code has been enqueued and will be executed in background.'
+        msg      => $msg
     );
     my $referrer = $self->get_referrer();
     $self->redirect_to($referrer);
