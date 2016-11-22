@@ -8,15 +8,21 @@ use Moose;
 
 extends 'Mojo::Redis2';
 
-has 'cache_enabled' => ( is => 'ro' );
+has 'cache_enabled' => ( is => 'ro', default   => 1, isa => 'Int', );
 
 sub enable_cache {
 	shift->{cache_enabled} = 1;
+	print "Enabling Redis cache \n";
 }
 
 sub disable_cache {
 	shift->{cache_enabled} = 0;
+	print "Disabling Redis cache \n";
 }
+
+# sub new {
+# 		shift->SUPER::new(@_);
+# }
 
 sub set {
 		my $self = shift;

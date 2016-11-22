@@ -99,24 +99,39 @@ sub setup_cache {
     ######################## Redis part
     $self->helper(
         redis => sub {
-            state $redis = RedisWrapper->new(server => '127.0.0.1:6379'); 
-            $redis->enable_cache;
-            $redis->disable_cache;
-            
-            $redis;
-            # state $redis = Mojo::Redis2->new();
+            state $redis = RedisWrapper->new(server => '127.0.0.1:6379');
+            return $redis;
         }
     );
     $self->helper(
         redisSubscribeLRT => sub {
-            return $self->redis->subscribe(['long_running_tasks'] => sub {
+            $self->redis->subscribe(['long_running_tasks'] => sub {
                 my ($rself, $err, $res) = @_;
                 say "SUBSCRIBED to channel long_running_tasks";
                 $self->write_log("SUBSCRIBED to channel long_running_tasks");
             });
         }
     );
+    # $self->helper(
+    #     checkRedis => sub {
+    #         Mojo::IOLoop->delay(
+    #         sub {
+    #           my ($delay) = @_;
+    #           $self->redis->ping($delay->begin);#->get("foo", $delay->begin);
+    #         },
+    #         sub {
+    #           my ($delay, $ping_err, $ping, $get_err, $get) = @_;
+    #           # On error: $ping_err and $get_err is set to a string
+    #           # On success: $ping = "PONG", $get = "42";
+    #           $self->redis->disable_cache if $ping_err;
+    #           $self->redis->enable_cache if $ping;
+    #         },
+    #       );
+    # });
 
+    ### Cache disable until fully implemented!
+    $self->redis->disable_cache;
+    
     $self->redisSubscribeLRT();
 
     my $z = $self->redis->on(message => sub {
@@ -136,13 +151,15 @@ sub setup_cache {
     # });
 
     # $self->redis->on(connection => sub { 
-    #     my ($self, $info) = @_;  
+    #     my ($redisself, $info) = @_;  
+    #     $self->redis->enable_cache; 
     #     print "got redis connection id: $info->{id}, group: $info->{group}, nblocking: $info->{nb}. \n";
     # });
 
     # $self->redis->on(error => sub {
-    #     my ($self, $err) = @_;
-    #     print "got redis error $err!\n";
+    #     my ($redisself, $err) = @_;
+    #     $self->redis->disable_cache; 
+    #     print "Redis error: $err\n";
     # });
 
     ######################## Redis part END
