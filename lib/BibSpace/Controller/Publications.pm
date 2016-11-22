@@ -817,18 +817,20 @@ sub regenerate_html_for_all_force {
 
     my $msg = 'Regeneration of HTML code has been enqueued and will be executed in background.';
 
+    my $publish_successful;
+
     try {
-        $self->redis->publish("long_running_tasks" => "regenerate_all_force");
+        $publish_successful = $self->redis->publish("long_running_tasks" => "regenerate_all_force");
         $self->write_log("regenerate_html_for_all FORCE has been enqueued");
     }
-    catch {
+    catch { };
+    
+    unless($publish_successful){
         $self->write_log("regenerate_html_for_all_force is running");
         BibSpace::Functions::FPublications::do_regenerate_html_for_all($dbh, $self->app->bst, 1);
         $self->write_log("regenerate_html_for_all_force has finished");
         $msg = 'Regeneration of HTML code is complete.';
-    };
-    
-    
+    }
     
 
     $self->flash(
