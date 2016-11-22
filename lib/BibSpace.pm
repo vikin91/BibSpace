@@ -1,16 +1,19 @@
-package BibSpace v0.4.6;
+package BibSpace v0.4.7;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
 use BibSpace::Controller::Core;
 use BibSpace::Controller::BackupFunctions;
 use BibSpace::Controller::Publications;
+use BibSpace::Controller::PublicationsLanding;
 use BibSpace::Controller::PublicationsExperimental;
 use BibSpace::Controller::PublicationsSEO;
 use BibSpace::Controller::Helpers;
 
 use BibSpace::Functions::MyUsers;
 use BibSpace::Functions::FDB;
+use BibSpace::Functions::FPublications;
+use BibSpace::Functions::RedisWrapper;
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -24,6 +27,7 @@ use Path::Tiny;    # for creating directories
 use Mojo::Home;
 use File::Spec;
 use Cwd;
+use Mojo::Redis2;
 
 # for Makemake. Needs to be removed for Dist::Zilla
 # our $VERSION = '0.4.4';
@@ -63,11 +67,16 @@ has db => sub {
     );
 };
 
+# TODO: turn into helper if the option is changeable at run-time
+has cache_enabled => sub {  
+    return 0;
+};
 
 has version => sub {
     my $self = shift;
-    return $BibSpace::VERSION // "0.4.6";
+    return $BibSpace::VERSION // "0.4.7";
 };
+
 ################################################################
 sub startup {
     my $self = shift;
@@ -75,10 +84,69 @@ sub startup {
     $self->setup_plugins;
     $self->setup_routes;
     $self->setup_hooks;
+    $self->setup_cache;
 
     say "Using CONFIG: " . $self->app->config_file;
     say "App home is: " . $self->app->home;
     say "Active bst file is: " . $self->app->bst;
+
+    
+}
+################################################################
+sub setup_cache {
+    my $self = shift;
+    my $app  = $self;
+    ######################## Redis part
+    $self->helper(
+        redis => sub {
+            state $redis = RedisWrapper->new(server => '127.0.0.1:6379'); 
+            $redis->enable_cache;
+            #$redis->disable_cache;
+            
+            $redis;
+            # state $redis = Mojo::Redis2->new();
+        }
+    );
+    $self->helper(
+        redisSubscribeLRT => sub {
+            return $self->redis->subscribe(['long_running_tasks'] => sub {
+                my ($rself, $err, $res) = @_;
+                say "SUBSCRIBED to channel long_running_tasks";
+                $self->write_log("SUBSCRIBED to channel long_running_tasks");
+            });
+        }
+    );
+
+    $self->redisSubscribeLRT();
+
+    my $z = $self->redis->on(message => sub {
+        my ($redisself, $message, $channel) = @_;
+        # on morbo this is blocking
+        # on hypnotoad this works only once - for the first time after hot deployment restart
+        $self->write_log("DEQUEUE: $message @ $channel");
+        say "DEQUEUE: $message @ $channel";
+        sleep (10);
+        $self->write_log("FINISHED processing: $message @ $channel");
+        say "FINISHED processing: $message @ $channel";
+    });
+
+    # $self->redis->on(unsubscribe => sub { 
+    #     my ($self, $info) = @_;  
+    #     say "got unsubscribe envent";
+    # });
+
+    # $self->redis->on(connection => sub { 
+    #     my ($self, $info) = @_;  
+    #     print "got redis connection id: $info->{id}, group: $info->{group}, nblocking: $info->{nb}. \n";
+    # });
+
+    # $self->redis->on(error => sub {
+    #     my ($self, $err) = @_;
+    #     print "got redis error $err!\n";
+    # });
+
+    ######################## Redis part END
+    
 }
 ################################################################
 sub setup_config {
@@ -126,6 +194,7 @@ sub setup_plugins {
     $self->helper(
         users => sub { state $users = BibSpace::Functions::MyUsers->new } );
     $self->helper( proxy_prefix => sub { $self->config->{proxy_prefix} } );
+
 
     $self->helper(
         get_referrer => sub {
@@ -562,14 +631,18 @@ sub setup_routes {
         ->name('get_single_publication_read');
     $anyone->get('/r/p/get/:id')->to('publications#single_read');
 
+    ######## PublicationsLanding
+
     $anyone->get('/landing/publications')
-        ->to('publications#landing_types_obj')->name('landing_publications');
-    $anyone->get('/l/p')->to('publications#landing_types_obj')->name('lp');
+        ->to('PublicationsLanding#landing_types_obj')->name('landing_publications');
+    $anyone->get('/l/p')->to('PublicationsLanding#landing_types_obj')->name('lp');
 
     $anyone->get('/landing-years/publications')
-        ->to('publications#landing_years_obj')
+        ->to('PublicationsLanding#landing_years_obj')
         ->name('landing_years_publications');
-    $anyone->get('/ly/p')->to('publications#landing_years_obj');    #ALIAS
+    $anyone->get('/ly/p')->to('PublicationsLanding#landing_years_obj');    #ALIAS
+
+    ########
 
     $anyone->get('/read/authors-for-tag/:tid/:team')
         ->to('tags#get_authors_for_tag_read')

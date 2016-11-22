@@ -123,7 +123,7 @@ sub do_mysql_db_backup {
     }
     else {
         my $sth = $dbh->prepare(
-            "REPLACE INTO Backup(creation_time, filename) VALUES (NULL, ?)");
+            "REPLACE INTO Backup(creation_time, filename) VALUES (NOW(), ?)");
         $sth->execute($dbfname);
         $sth->finish();
         return $dbfname;

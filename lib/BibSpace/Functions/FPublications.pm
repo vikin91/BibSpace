@@ -22,6 +22,7 @@ our @ISA = qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw(
+    do_regenerate_html_for_all
     Ffix_months
     FprintBibtexWarnings
     Fhandle_add_edit_publication
@@ -33,6 +34,21 @@ our @EXPORT = qw(
     Fclean_ugly_bibtex_fields_for_all_entries
     Fhandle_author_uids_change_for_all_entries
 );
+####################################################################################
+sub do_regenerate_html_for_all {
+    my $dbh = shift;
+    my $bst_file = shift;
+    my $force = shift // 1;
+    
+    my @entries = MEntry->static_all($dbh);
+    @entries = @entries[0..30];
+    for my $e (@entries) {
+        $e->{bst_file} = $bst_file;
+        $e->regenerate_html( $dbh, $force, $bst_file );
+        $e->save($dbh);
+    }
+    
+}
 ####################################################################################
 sub FprintBibtexWarnings {
     my $str = shift;
@@ -295,6 +311,7 @@ sub Fget_publications_core {
         $dbh,   $master_id, $year,    $bibtex_type, $entry_type,
         $tagid, $teamid,    $visible, $permalink,   $hidden
     );
+
     return @dbg;
 }
 ####################################################################################

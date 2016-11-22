@@ -6,9 +6,13 @@ use Text::BibTeX;    # parsing bib files
 use 5.010;           #because of ~~ and say
 use DBI;
 use Try::Tiny;
-use Moose;
 use TeX::Encode;
 use Encode;
+use Moose;
+use MooseX::Storage;
+
+with Storage('format' => 'JSON', 'io' => 'File');
+
 
 has 'id'              => ( is => 'rw' );
 has 'entry_type'      => ( is => 'rw', default => 'paper' );
@@ -34,6 +38,14 @@ has 'need_html_regen' => ( is => 'rw', default => '1' );
 has 'warnings' => ( is => 'ro', default => '' );
 has 'bst_file' => ( is => 'ro', default => './lib/descartes2.bst' );
 
+####################################################################################
+sub TO_JSON {
+    shift->pack();
+}
+####################################################################################
+sub FROM_JSON {
+    shift->unpack();
+}
 ####################################################################################
 sub static_all {
     my $self = shift;
@@ -1057,19 +1069,7 @@ sub static_get_filter {
     my $permalink   = shift;
     my $hidden      = shift;
 
-    # {
-    #      no warnings 'uninitialized';
-    #     say "   master_id $master_id
-    #             year $year
-    #             bibtex_type $bibtex_type
-    #             entry_type $entry_type
-    #             tagid $tagid
-    #             teamid $teamid
-    #             visible $visible
-    #             permalink $permalink
-    #             hidden $hidden
-    #     ";
-    # }
+
 
     my @params;
 
@@ -1177,6 +1177,22 @@ sub static_get_filter {
         $obj->decodeLatex();
         push @objs, $obj;
     }
+
+    # {
+    #      no warnings 'uninitialized';
+    #     say " MEntry static_get_filter
+    #             master_id $master_id
+    #             year $year
+    #             bibtex_type $bibtex_type
+    #             entry_type $entry_type
+    #             tagid $tagid
+    #             teamid $teamid
+    #             visible $visible
+    #             permalink $permalink
+    #             hidden $hidden
+    #             num results = " . (scalar @objs) ."
+    #     ";
+    # }
     return @objs;
 }
 ####################################################################################

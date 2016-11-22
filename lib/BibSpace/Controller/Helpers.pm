@@ -36,12 +36,6 @@ sub register {
             return $self->app->db;
         }
     );
-
-    $app->helper(
-        redis => sub { 
-            shift->stash->{redis} ||= Mojo::Redis2->new; 
-        }
-    );
     $app->helper( 
         bst => sub {
             my $self = shift;
