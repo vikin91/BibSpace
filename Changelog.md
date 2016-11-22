@@ -1,5 +1,11 @@
 ### Changelog ###
 
+#### v0.4.7 22.2016 ####
+* Code refactoring - separate code for landing pages for publications
+* add Redis-based caching
+* new look-and-feel for filtering publications on the landing pages
+
+
 #### v0.4.6 15-10.2016 ####
 * Code refactoring - removed small parts of unused code
 * add systemd .service profile

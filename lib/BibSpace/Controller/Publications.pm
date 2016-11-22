@@ -352,7 +352,7 @@ sub all {
             $html = $self->redis->get($key);
         }
         catch{
-            warn "Redis server is down";
+            warn "Redis server is down. Err: $_";
         };
         if($html){
             $self->render(data => $html);
@@ -371,7 +371,7 @@ sub all {
             $self->app->redis->set( $key => $html );
         }
         catch{
-            warn "Redis server is down";
+            warn "Redis server is down. Err: $_";
         };
         $self->render(data => $html);
 
@@ -392,7 +392,7 @@ sub all_read {
         $html = $self->app->redis->get($key);
     }
     catch{
-        warn "Redis server is down";
+        warn "Redis server is down. Err: $_";
     };
     if($html){
         $self->render(data => $html);
@@ -409,7 +409,7 @@ sub all_read {
     try{
         $self->app->redis->set($key => $html);
     }catch{
-            warn "Redis server is down";
+            warn "Redis server is down. Err: $_";
     };
     $self->render( data => $html );
 }

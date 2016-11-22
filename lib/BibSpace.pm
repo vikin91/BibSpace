@@ -1,4 +1,4 @@
-package BibSpace v0.4.6;
+package BibSpace v0.4.7;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
@@ -74,7 +74,7 @@ has cache_enabled => sub {
 
 has version => sub {
     my $self = shift;
-    return $BibSpace::VERSION // "0.4.6";
+    return $BibSpace::VERSION // "0.4.7";
 };
 
 ################################################################
@@ -99,13 +99,16 @@ sub setup_cache {
     ######################## Redis part
     $self->helper(
         redis => sub {
-            state $redis = Mojo::Redis2->new(server => '127.0.0.1:6379'); 
+            state $redis = RedisWrapper->new(server => '127.0.0.1:6379'); 
+            $redis->enable_cache;
+            #$redis->disable_cache;
+            
+            $redis;
             # state $redis = Mojo::Redis2->new();
         }
     );
     $self->helper(
         redisSubscribeLRT => sub {
-            return 0 unless shift->app->cache_enabled();
             return $self->redis->subscribe(['long_running_tasks'] => sub {
                 my ($rself, $err, $res) = @_;
                 say "SUBSCRIBED to channel long_running_tasks";
@@ -117,7 +120,6 @@ sub setup_cache {
     $self->redisSubscribeLRT();
 
     my $z = $self->redis->on(message => sub {
-        return 0 unless shift->app->cache_enabled();
         my ($redisself, $message, $channel) = @_;
         # on morbo this is blocking
         # on hypnotoad this works only once - for the first time after hot deployment restart

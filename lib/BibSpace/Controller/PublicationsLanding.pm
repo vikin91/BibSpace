@@ -264,7 +264,7 @@ sub landing_types_obj {    # clean this mess!
     try{
         $html = $self->app->redis->get($cache_key);
     }catch{
-        warn "Redis server is down";
+        warn "Redis server is down. Err: $_";
     };
 
     if($html){
@@ -348,7 +348,7 @@ sub landing_years_obj {
     try{
         $html = $self->app->redis->get($cache_key);
     }catch{
-        warn "Redis server is down";
+        warn "Redis server is down. Err: $_";
     };
 
     if($html){
@@ -486,7 +486,7 @@ sub display_landing {
     try{
         $self->app->redis->set($cache_key => $html);
     }catch{
-        warn "Redis server is down";
+        warn "Redis server is down. Err: $_";
     };
     $self->render(data => $html);
     
