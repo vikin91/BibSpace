@@ -67,7 +67,8 @@ has db => sub {
     );
 };
 
-has cache_enabled => sub {
+# TODO: turn into helper if the option is changeable at run-time
+has cache_enabled => sub {  
     return 0;
 };
 
@@ -83,11 +84,18 @@ sub startup {
     $self->setup_plugins;
     $self->setup_routes;
     $self->setup_hooks;
+    $self->setup_cache;
 
     say "Using CONFIG: " . $self->app->config_file;
     say "App home is: " . $self->app->home;
     say "Active bst file is: " . $self->app->bst;
 
+    
+}
+################################################################
+sub setup_cache {
+    my $self = shift;
+    my $app  = $self;
     ######################## Redis part
     $self->helper(
         redis => sub {
@@ -136,6 +144,7 @@ sub startup {
     # });
 
     ######################## Redis part END
+    
 }
 ################################################################
 sub setup_config {
