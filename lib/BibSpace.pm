@@ -101,7 +101,7 @@ sub setup_cache {
         redis => sub {
             state $redis = RedisWrapper->new(server => '127.0.0.1:6379'); 
             $redis->enable_cache;
-            #$redis->disable_cache;
+            $redis->disable_cache;
             
             $redis;
             # state $redis = Mojo::Redis2->new();
