@@ -13,6 +13,7 @@ use BibSpace::Controller::Helpers;
 use BibSpace::Functions::MyUsers;
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
+use BibSpace::Functions::RedisWrapper;
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -66,6 +67,9 @@ has db => sub {
     );
 };
 
+has cache_enabled => sub {
+    return 0;
+};
 
 has version => sub {
     my $self = shift;
@@ -92,7 +96,8 @@ sub startup {
         }
     );
     $self->helper(
-        redisSub => sub {
+        redisSubscribeLRT => sub {
+            return 0 unless shift->app->cache_enabled();
             return $self->redis->subscribe(['long_running_tasks'] => sub {
                 my ($rself, $err, $res) = @_;
                 say "SUBSCRIBED to channel long_running_tasks";
@@ -101,9 +106,10 @@ sub startup {
         }
     );
 
-    $self->redisSub();
+    $self->redisSubscribeLRT();
 
     my $z = $self->redis->on(message => sub {
+        return 0 unless shift->app->cache_enabled();
         my ($redisself, $message, $channel) = @_;
         # on morbo this is blocking
         # on hypnotoad this works only once - for the first time after hot deployment restart
@@ -114,20 +120,20 @@ sub startup {
         say "FINISHED processing: $message @ $channel";
     });
 
-    $self->redis->on(unsubscribe => sub { 
-        my ($self, $info) = @_;  
-        say "got unsubscribe envent";
-    });
+    # $self->redis->on(unsubscribe => sub { 
+    #     my ($self, $info) = @_;  
+    #     say "got unsubscribe envent";
+    # });
 
-    $self->redis->on(connection => sub { 
-        my ($self, $info) = @_;  
-        print "got redis connection id: $info->{id}, group: $info->{group}, nblocking: $info->{nb}. \n";
-    });
+    # $self->redis->on(connection => sub { 
+    #     my ($self, $info) = @_;  
+    #     print "got redis connection id: $info->{id}, group: $info->{group}, nblocking: $info->{nb}. \n";
+    # });
 
-    $self->redis->on(error => sub {
-        my ($self, $err) = @_;
-        print "got redis error $err!\n";
-    });
+    # $self->redis->on(error => sub {
+    #     my ($self, $err) = @_;
+    #     print "got redis error $err!\n";
+    # });
 
     ######################## Redis part END
 }
