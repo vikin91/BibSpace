@@ -27,7 +27,10 @@ use Path::Tiny;    # for creating directories
 use Mojo::Home;
 use File::Spec;
 use Cwd;
-use Mojo::Redis2;
+# use Mojo::Redis2;
+use Redis;
+use BibSpace::Functions::RedisConnectionProvider;
+use BibSpace::Functions::AppHandleProvider;
 
 # for Makemake. Needs to be removed for Dist::Zilla
 # our $VERSION = '0.4.4';
@@ -80,87 +83,61 @@ has version => sub {
 ################################################################
 sub startup {
     my $self = shift;
+    
     $self->setup_config;
     $self->setup_plugins;
     $self->setup_routes;
     $self->setup_hooks;
-    $self->setup_cache;
 
-    say "Using CONFIG: " . $self->app->config_file;
-    say "App home is: " . $self->app->home;
-    say "Active bst file is: " . $self->app->bst;
+    AppHandleProvider->initialize(app => $self->app, 
+                                  dbh => $self->app->db, 
+                                  bst => $self->app->bst);
+    # $self->setup_cache;
+
+
+    # say "Using CONFIG: " . $self->app->config_file;
+    # say "App home is: " . $self->app->home;
+    # say "Active bst file is: " . $self->app->bst;
 
     
 }
+
+
+
 ################################################################
 sub setup_cache {
     my $self = shift;
     my $app  = $self;
     ######################## Redis part
-    $self->helper(
-        redis => sub {
-            state $redis = RedisWrapper->new(server => '127.0.0.1:6379');
-            return $redis;
-        }
-    );
-    $self->helper(
-        redisSubscribeLRT => sub {
-            $self->redis->subscribe(['long_running_tasks'] => sub {
-                my ($rself, $err, $res) = @_;
-                say "SUBSCRIBED to channel long_running_tasks";
-                $self->write_log("SUBSCRIBED to channel long_running_tasks");
-            });
-        }
-    );
+
+    # my $long_running_task_handler = sub { 
+    #     my ( $message, $channel, $subscribedchannel ) = @_;
+    #     say "Received message: $message, on chanel $channel"; 
+    #     my $app = AppHandleProvider->instance;
+
+    #     if( $message eq 'regen_html'){
+    #         #sleep(14);
+    #         Fdo_regenerate_html_for_all_redis_test($app->dbh, $app->bst, 1);
+    #     }
+    # };
+
     # $self->helper(
-    #     checkRedis => sub {
-    #         Mojo::IOLoop->delay(
-    #         sub {
-    #           my ($delay) = @_;
-    #           $self->redis->ping($delay->begin);#->get("foo", $delay->begin);
-    #         },
-    #         sub {
-    #           my ($delay, $ping_err, $ping, $get_err, $get) = @_;
-    #           # On error: $ping_err and $get_err is set to a string
-    #           # On success: $ping = "PONG", $get = "42";
-    #           $self->redis->disable_cache if $ping_err;
-    #           $self->redis->enable_cache if $ping;
-    #         },
-    #       );
-    # });
+    #     redisSub => sub {
+    #         RedisConnectionProvider->instance->redisSub;
+    #     }
+    # );
+    # $self->helper(
+    #     redisPub => sub {
+    #         RedisConnectionProvider->instance->redisPub;
+    #     }
+    # );
 
-    ### Cache disable until fully implemented!
-    $self->redis->disable_cache;
-    
-    $self->redisSubscribeLRT();
-
-    my $z = $self->redis->on(message => sub {
-        my ($redisself, $message, $channel) = @_;
-        # on morbo this is blocking
-        # on hypnotoad this works only once - for the first time after hot deployment restart
-        $self->write_log("DEQUEUE: $message @ $channel");
-        say "DEQUEUE: $message @ $channel";
-        sleep (10);
-        $self->write_log("FINISHED processing: $message @ $channel");
-        say "FINISHED processing: $message @ $channel";
-    });
-
-    # $self->redis->on(unsubscribe => sub { 
-    #     my ($self, $info) = @_;  
-    #     say "got unsubscribe envent";
-    # });
-
-    # $self->redis->on(connection => sub { 
-    #     my ($redisself, $info) = @_;  
-    #     $self->redis->enable_cache; 
-    #     print "got redis connection id: $info->{id}, group: $info->{group}, nblocking: $info->{nb}. \n";
-    # });
-
-    # $self->redis->on(error => sub {
-    #     my ($redisself, $err) = @_;
-    #     $self->redis->disable_cache; 
-    #     print "Redis error: $err\n";
-    # });
+    # try{
+    #     $self->redisSub->subscribe( 'CHAN', $long_running_task_handler ); 
+    # }
+    # catch{ 
+    #     warn "Redis server is down. Err: $_"; 
+    # };
 
     ######################## Redis part END
     
@@ -186,15 +163,15 @@ sub setup_plugins {
 
     say "App version: " . $self->app->version;
 
-    say "Creating directories.";
+    say "=== Creating directories.";
     for my $dir (
-        (   $self->config->{backups_dir}, $self->config->{upload_dir},
-            $self->config->{log_dir}
-        )
+                ($self->config->{backups_dir}, 
+                 $self->config->{upload_dir},
+                 $self->config->{log_dir} )
         )
     {
         $dir =~ s!/*$!/!;
-        say "Creating directory: $dir";
+        say "\t\t: $dir";
         try {
             path($dir)->mkpath;
         }
@@ -237,8 +214,7 @@ sub setup_plugins {
             return 1 if $self->app->is_demo;
             my $usr = $self->session('user');
             my $rank = $self->users->get_rank( $usr, $self->app->db ) || 0;
-            return 1 if $rank > 0;
-            return 0;
+            return $rank > 0;
         }
     );
 
@@ -248,8 +224,7 @@ sub setup_plugins {
             return 1 if $self->app->is_demo;
             my $usr = $self->session('user');
             my $rank = $self->users->get_rank( $usr, $self->app->db ) || 0;
-            return 1 if $rank > 1;
-            return 0;
+            return $rank > 1;
         }
     );
 

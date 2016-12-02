@@ -15,7 +15,8 @@ use DBI;
 
 use TeX::Encode;
 use Encode;
-use Mojo::Redis2;
+# use Mojo::Redis2;
+use Redis;
 
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
@@ -817,17 +818,19 @@ sub regenerate_html_for_all_force {
 
     my $msg = 'Regeneration of HTML code has been enqueued and will be executed in background.';
 
-    my $publish_successful;
+    my $publish_successful = undef;
 
-    try {
-        $publish_successful = $self->redis->publish("long_running_tasks" => "regenerate_all_force");
-        $self->write_log("regenerate_html_for_all FORCE has been enqueued");
-    }
-    catch { };
+    # try{
+    #     $publish_successful = $self->redisPub->publish('CHAN', 'regen_html');
+    #     $self->redisSub->wait_for_messages(0);# while (1);
+    # }
+    # catch{
+    #     warn "Redis server error: $_";
+    # };
     
-    unless($publish_successful){
+    if(!defined $publish_successful){
         $self->write_log("regenerate_html_for_all_force is running");
-        BibSpace::Functions::FPublications::do_regenerate_html_for_all($dbh, $self->app->bst, 1);
+        Fdo_regenerate_html_for_all($dbh, $self->app->bst, 1);
         $self->write_log("regenerate_html_for_all_force has finished");
         $msg = 'Regeneration of HTML code is complete.';
     }
