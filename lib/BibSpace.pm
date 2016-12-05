@@ -89,9 +89,9 @@ sub startup {
     $self->setup_routes;
     $self->setup_hooks;
 
-    AppHandleProvider->initialize(app => $self->app, 
-                                  dbh => $self->app->db, 
-                                  bst => $self->app->bst);
+    # AppHandleProvider->initialize(app => $self->app, 
+    #                               dbh => $self->app->db, 
+    #                               bst => $self->app->bst);
     # $self->setup_cache;
 
 
