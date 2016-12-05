@@ -34,6 +34,7 @@ requires 'Mojo::Redis2' , '>= 0.0';
 requires 'Redis' , '>= 0.0';
 requires 'JSON' , '>= 0.0';
 requires 'MooseX::Storage' , '>= 0.0';
+requires 'MooseX::Singleton' , '>= 0.0';
 
 
 on 'test' => sub {
