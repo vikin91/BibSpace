@@ -308,7 +308,8 @@ sub get_type_description {    #TODO: refactor to MType
     my $db_type = get_DB_description_for_our_type( $dbh, $type );
     return $db_type if defined $db_type;
 
-    # in case of no secription, the name is the description itself
+    return "Talks " if $type eq 'talk';
+    # in case of no description (and not being a talk), the description is the type itself
     return "Publications of type " . $type;
 }
 

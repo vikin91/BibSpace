@@ -324,7 +324,8 @@ sub all_bibtex {
     my $self = shift;
 
     my $entry_type = undef;
-    $entry_type = $self->param('entry_type') // 'paper';
+    # this includes papers+talks by default
+    $entry_type = $self->param('entry_type');
 
     my @objs = Fget_publications_main_hashed_args( $self,
         { hidden => 0, entry_type => $entry_type } );

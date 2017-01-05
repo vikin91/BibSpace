@@ -241,7 +241,7 @@ sub num_pubs_filtering {
 ############################################################################################################
 ############################################################################################################
 
-sub landing_types_obj {    # clean this mess!
+sub landing_types_obj {    # TODO: clean this mess!
 
     my $self        = shift;
     my $bibtex_type = $self->param('bibtex_type') || undef;
@@ -287,16 +287,17 @@ sub landing_types_obj {    # clean this mess!
     foreach my $key (@keys) {
         my @paper_objs;
 
-        my $bt;
-        $bt = $key if $key ne 'talk';
-        my $et;
-        $et = 'talk'  if $key eq 'talk';
-        $et = 'paper' if $key ne 'talk';
+        my $bibtexType = undef; # union of all bibtex types
+        $bibtexType = $key if $key ne 'talk';
+
+        my $entryType = undef; # union of both types papers+talks
+        $entryType = 'talk'  if $key eq 'talk';
+        $entryType = 'paper' if $key ne 'talk';
 
         @paper_objs = Fget_publications_main_hashed_args(
             $self,
-            {   bibtex_type => $bt,
-                entry_type  => $et,
+            {   bibtex_type => $bibtexType,
+                entry_type  => $entryType,
                 visible     => 0,
                 hidden      => 0
             }
