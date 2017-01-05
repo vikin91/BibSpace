@@ -1,5 +1,8 @@
 package MEntry;
 
+use BibSpace::Model::MTag;
+use BibSpace::Model::MTagType;
+
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
@@ -11,8 +14,8 @@ use Encode;
 use Moose;
 use MooseX::Storage;
 
-use BibSpace::Model::MTag;
-use BibSpace::Model::MTagType;
+
+
 
 with Storage('format' => 'JSON', 'io' => 'File');
 
@@ -532,15 +535,16 @@ sub fix_month {
     $bibtex_entry->parse_s( $self->{bib} );
 
     my $num_fixes = 0;
+    my $month_numeric = 0;
 
     if ( $self->bibtex_has_field('month') ) {
         my $month_str = $bibtex_entry->get('month');
-        my $month_numeric
-            = BibSpace::Controller::Core::get_month_numeric($month_str);
-        $self->{month}      = $month_numeric;
-        $self->{sort_month} = $month_numeric;
+        $month_numeric = BibSpace::Controller::Core::get_month_numeric($month_str);
         $num_fixes          = 1;
     }
+    $self->{month}      = $month_numeric;
+    $self->{sort_month} = $month_numeric;
+
     return $num_fixes;
 }
 ########################################################################################################################

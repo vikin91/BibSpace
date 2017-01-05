@@ -1206,7 +1206,6 @@ sub publications_edit_get {
 }
 ####################################################################################
 sub publications_edit_post {
-    say "CALL: publications_edit_post";
     my $self            = shift;
     my $id              = $self->param('id') || -1;
     my $new_bib         = $self->param('new_bib');
