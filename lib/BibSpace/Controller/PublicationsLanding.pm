@@ -323,11 +323,11 @@ sub landing_years_obj {
     my $self = shift;
     my $year = $self->param('year') || undef;
 
-# if you want to list talks+papers by default on the landing_years page, use the following line
-# my $entry_type = $self->param('entry_type') || undef;
+    # if you want to list talks+papers by default on the landing_years page, use the following line
+    my $entry_type = $self->param('entry_type') || undef;
 
-# if you want to list ONLY papers by default on the landing_years page, use the following line
-    my $entry_type = $self->param('entry_type') || 'paper';
+    # if you want to list ONLY papers by default on the landing_years page, use the following line
+    # my $entry_type = $self->param('entry_type') || 'paper';
 
     my $min_year = $self->get_year_of_oldest_entry // $self->current_year;
     my $max_year = $self->current_year;
