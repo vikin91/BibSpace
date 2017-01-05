@@ -54,10 +54,10 @@ sub index {
 ####################################################################################
 sub get_first_letters {
     my $self = shift;
-    my $dbh  = $self->app->db;
     my $type = shift || 1;
+    my $dbh  = $self->app->db;
 
-    my @all_tags = MTag->static_all($dbh);
+    my @all_tags = MTag->static_all_type($dbh, $type);
 
     return sort { lc($a) cmp lc($b) } uniq map {ucfirst substr $_->{name}, 0, 1 } @all_tags;
 }
