@@ -13,6 +13,20 @@ has 'comment' => ( is => 'rw' );
 
 ####################################################################################
 
+sub equals {
+    my $self = shift;
+    my $other  = shift;
+
+    if ( $self->{id} == $other->{id} and
+         $self->{name} eq $other->{name} and
+         $self->{comment} eq $other->{comment} ) {
+        return 1;
+    }
+
+    return 0;
+}
+####################################################################################
+
 sub static_get_by_name {
     my $self = shift;
     my $dbh  = shift;

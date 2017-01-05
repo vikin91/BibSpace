@@ -11,6 +11,7 @@ use BibSpace::Model::MTag;
 use BibSpace::Model::MTagType;
 
 use BibSpace::Controller::Core;
+use BibSpace::Functions::FDB;
 use Set::Scalar;
 use Data::Dumper;
 
@@ -39,6 +40,11 @@ subtest 'MTagType: basics 1: static_all' => sub {
 
 	is(scalar(MTagType->static_all($dbh)), 2, "Got 2 tag types");
 
+	my $a_tt = MTagType->static_get_by_name($dbh, 'test1');
+	my $b_tt = MTagType->static_get_by_name($dbh, 'test2');
+	is( $a_tt->equals($tt), 1, "static_get_by_name and equals ok");
+	is( $a_tt->equals($b_tt), 0, "equals ok");
+
 	$tt->{comment} = "new_comment";
 	isnt( $tt->save($dbh), undef, "updating ok");
 	my $id = $tt->{id};
@@ -52,6 +58,11 @@ subtest 'MTagType: basics 1: static_all' => sub {
 
 	is( MTagType->new( id=> undef, name=> 'test1', comment => 'test1comment')->update($dbh), undef, "fake update ok");
 	isnt( MTagType->new( id=> undef, name=> 'test1', comment => 'test1comment')->save($dbh), undef, "fake save ok");
+
+	# cleanup 
+	$dbh->do('DELETE FROM Tag;');
+	$dbh->do('DELETE FROM TagType;');
+	populate_tables($dbh);
 
 };
 

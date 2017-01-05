@@ -188,11 +188,6 @@ sub create_main_db{
         comment TEXT,
         id INTEGER(8) PRIMARY KEY AUTO_INCREMENT
         )");
-   $dbh->do("CREATE TABLE IF NOT EXISTS `TagType`(
-        name TEXT,
-        comment TEXT,
-        id INTEGER(8) PRIMARY KEY AUTO_INCREMENT
-        )");
    $dbh->do("CREATE TABLE IF NOT EXISTS `Tag`(
             name VARCHAR(250) NOT NULL,
             id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -310,6 +305,10 @@ sub populate_tables{
       $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('book','volumes',NULL,0)");
       $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('mastersthesis','supervised_theses','Supervised Theses',0)");
       $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('phdthesis','supervised_theses','Supervised Theses',0)"); 
+
+      $dbh->do("INSERT IGNORE INTO `TagType` VALUES ('Tag','keyword',1)"); 
+      $dbh->do("INSERT IGNORE INTO `TagType` VALUES ('Category','12 categories defined as in research agenda',2)");
+      $dbh->do("INSERT IGNORE INTO `TagType` VALUES ('Other','Reserved for other groupings of papers (e.g., QPME_Bibliography)',3)");
     }
     catch{
       say "Data already exist. Doing nothing."; 
