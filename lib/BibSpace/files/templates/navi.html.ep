@@ -136,7 +136,7 @@
                 <a href="<%= url_for('edit_author', id=>$author->{master_id})%>" >
                     <span class="glyphicon glyphicon-user"></span> <%= $author->{master} %> 
                     <span class="badge">
-                        <%= num_pubs_for_author($author->{master})%>
+                        <%= num_entries_for_author($author->{master})%>
                         <span class="glyphicon glyphicon-file"></span> 
                     </span>
                 </a>

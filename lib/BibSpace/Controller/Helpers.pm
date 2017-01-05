@@ -347,12 +347,36 @@ sub register {
     );
 
     $app->helper(
-        num_pubs_for_author => sub {
+        num_entries_for_author => sub {
             my $self = shift;
             my $mid  = shift;
 
             my @objs = Fget_publications_main_hashed_args_only( $self,
                 { hidden => 0, author => $mid } );
+            my $count = scalar @objs;
+            return $count;
+        }
+    );
+
+    $app->helper(
+        num_talks_for_author => sub {
+            my $self = shift;
+            my $mid  = shift;
+
+            my @objs = Fget_publications_main_hashed_args_only( $self,
+                { hidden => 0, author => $mid, entry_type => 'talk' } );
+            my $count = scalar @objs;
+            return $count;
+        }
+    );
+
+    $app->helper(
+        num_papers_for_author => sub {
+            my $self = shift;
+            my $mid  = shift;
+
+            my @objs = Fget_publications_main_hashed_args_only( $self,
+                { hidden => 0, author => $mid, entry_type => 'paper' } );
             my $count = scalar @objs;
             return $count;
         }

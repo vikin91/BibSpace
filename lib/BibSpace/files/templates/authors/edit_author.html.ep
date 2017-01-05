@@ -5,9 +5,11 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-lg-2 col-md-2 col-xs-2"></div>
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <H1 class="pull-right">Author: </H1>
+        </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            
+            <h1> <%= $author->{master} %> </h1>
         </div>
     </div>
 
@@ -16,20 +18,30 @@
             <a class="btn btn-info pull-right" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <h1> <%= $author->{master} %> </h1>
+            
 
+            <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->{master}) %>">
+                <i class="fa fa-files-o"></i> Show entries <span class="badge"><%= num_entries_for_author($id)%></span>
+            </a>
             <a class="btn btn-success" href="<%= url_for('publications')->query(author=>$author->{master}) %>">
-                <i class="fa fa-files-o"></i> Show all <span class="badge"><%= num_pubs_for_author($id)%></span> papers of this author
+                <i class="fa fa-files-o"></i> Show papers <span class="badge"><%= num_papers_for_author($id)%></span>
             </a>
             <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->{master}, entry_type=>'talk')%>">
-                <i class="fa fa-microphone"></i> Show all talks of this author
+                <i class="fa fa-microphone"></i> Show talks <span class="badge"><%= num_talks_for_author($id)%></span>
             </a>
-
-            <a class="btn btn-default btn-sm" href="<%= url_for('lp')->query(author=>$author->{master}) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $author->{master} %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span></a>
             
-            <a class="btn btn-default btn-sm" href="<%= url_for('lyp')->query(author=>$author->{master}) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $author->{master} %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
+        </div>
+    </div>
+    <br/>
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2"></div>
+        <div class="col-lg-10 col-md-10 col-xs-10">
+            
+            <a class="btn btn-default" href="<%= url_for('lp')->query(author=>$author->{master}) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $author->{master} %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> Landing Page Types</a>
+            
+            <a class="btn btn-default" href="<%= url_for('lyp')->query(author=>$author->{master}) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $author->{master} %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing Page Years</a>
 
-            <a class="btn btn-default btn-sm" href="<%= url_for('readbibtex')->query(author=>$author->{master})%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $author->{master} %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> BibTeX
+            <a class="btn btn-default" href="<%= url_for('readbibtex')->query(author=>$author->{master})%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $author->{master} %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> Landing Page BibTeX
             </a>
 
             
@@ -42,7 +54,7 @@
             % my @ttobjs = get_all_tag_types($self);
             % foreach my $ttobj (@ttobjs){
                 <a class="btn btn-default" href="<%= url_for('get_untagged_publications_for_author', author=> $author->{id}, tagtype=>$ttobj->{id} ) %>">
-                    <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without <%=$ttobj->{name}%>
+                    <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without "<%=$ttobj->{name}%>"
                 </a>
             % }
         </div>
