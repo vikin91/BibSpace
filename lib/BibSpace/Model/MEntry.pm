@@ -11,6 +11,9 @@ use Encode;
 use Moose;
 use MooseX::Storage;
 
+use BibSpace::Model::MTag;
+use BibSpace::Model::MTagType;
+
 with Storage('format' => 'JSON', 'io' => 'File');
 
 
@@ -967,32 +970,9 @@ sub process_tags {
             $tag =~ s/^\s+|\s+$//g;
             $tag =~ s/\ /_/g if defined $tag;
 
-            my $tt_obj = BibSpace::Functions::TagTypeObj->getByName( $dbh,
-                "Imported" );
-            my $tt_id = $tt_obj->{id};
-
-            if ( !defined $tt_obj->{id} ) {
-                my $sth4 = $dbh->prepare(
-                    "INSERT IGNORE INTO TagType(name, comment) VALUES(?,?)");
-                $sth4->execute( "Imported", "Tags Imported from Bibtex" );
-                $tt_obj = BibSpace::Functions::TagTypeObj->getByName( $dbh,
-                    "Imported" );
-                $tt_id = $tt_obj->{id};
-            }
-            my $sth3 = $dbh->prepare(
-                "INSERT IGNORE INTO Tag(name, type) VALUES(?,?)");
-            $sth3->execute( $tag, $tt_obj->{id} );
-            $num_tags_added = $num_tags_added + $sth3->rows;
-
-            my $tagid2 = -1;
-            my $t = MTag->static_get_by_name( $dbh, $tag );
-            $tagid2 = $t->{id} if defined $t;
-
-            $sth3
-                = $dbh->prepare(
-                "INSERT IGNORE INTO Entry_to_Tag(entry_id, tag_id) VALUES(?, ?)"
-                );
-            $sth3->execute( $e->{id}, $tagid2 );
+            my $tt = MTagType->new(name => "Imported", comment => "Automatically imported entries");
+            $tt->save($dbh);
+            $num_tags_added = $num_tags_added + $e->add_tags($dbh, [$tag], $tt->{id});
         }
     }
     return $num_tags_added;
@@ -1301,7 +1281,7 @@ sub assign_tag {
         or $tag->{id} <= 0;
 
     my $sth = $dbh->prepare(
-        "INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
+        "INSERT IGNORE INTO Entry_to_Tag( entry_id, tag_id) VALUES (?,?)");
     $num_added = $sth->execute( $self->{id}, $tag->{id} );
     return $num_added;
 }

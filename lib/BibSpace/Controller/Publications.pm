@@ -22,6 +22,7 @@ use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
 use BibSpace::Model::MEntry;
 use BibSpace::Model::MTag;
+use BibSpace::Model::MTagType;
 
 # use BibSpace::Controller::Set;
 use BibSpace::Functions::FSet;
@@ -958,7 +959,7 @@ sub manage_tags {
     }
 
     my @tags      = $mentry->tags($dbh);
-    my @tag_types = BibSpace::Functions::TagTypeObj->getAll($dbh);
+    my @tag_types = MTagType->static_all($dbh);
 
 
     $self->stash(

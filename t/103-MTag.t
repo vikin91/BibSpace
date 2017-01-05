@@ -13,8 +13,7 @@ use BibSpace::Model::MTag;
 use BibSpace::Controller::Core;
 use Set::Scalar;
 use Data::Dumper;
-
-use BibSpace::Functions::TagTypeObj; ## obsolete ! should be replaced soon
+use BibSpace::Model::MTagType;
 
 require_ok "BibSpace::Model::MTag";
 use_ok "BibSpace::Model::MTag";
@@ -33,12 +32,12 @@ subtest 'MTag: basics 1: static_all' => sub {
 
 $dbh->do('DELETE FROM Tag;');
 
-my @all_tag_type_objs = BibSpace::Functions::TagTypeObj->getAll($dbh);
+my @all_tag_type_objs = MTagType->static_all($dbh);
 if(scalar @all_tag_type_objs == 0){
 	my $sth = $dbh->prepare( "INSERT IGNORE INTO TagType(name, comment) VALUES(?,?)" );
   $sth->execute("test", "Tagtype for tests");
   $sth->finish();
-	@all_tag_type_objs = BibSpace::Functions::TagTypeObj->getAll($dbh);
+	@all_tag_type_objs = MTagType->static_all($dbh);
 }
 my $some_tag_type_obj = $all_tag_type_objs[0];
 my $some_tag_type_id = $some_tag_type_obj->{id};

@@ -135,7 +135,7 @@ sub insert {
     my $sth = $dbh->prepare($qry);
     $result
         = $sth->execute( $self->{name}, $self->{type}, $self->{permalink} );
-    my $inserted_id = $dbh->last_insert_id( '', '', 'Team', '' );
+    my $inserted_id = $dbh->last_insert_id( '', '', 'Tag', '' );
     $self->{id} = $inserted_id;
 
     # say "MTag insert. inserted_id = $inserted_id";

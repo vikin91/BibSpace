@@ -13,14 +13,13 @@ use DBI;
 use Scalar::Util qw(looks_like_number);
 
 use BibSpace::Controller::Core;
-use BibSpace::Functions::TagTypeObj;
 
-# use BibSpace::Controller::Set;
 use BibSpace::Functions::FSet;
 use BibSpace::Functions::FPublications;
 use BibSpace::Functions::FTags;
 
 use BibSpace::Model::MTag;
+use BibSpace::Model::MTagType;
 use BibSpace::Model::MTagCloud;
 
 use Mojo::Base 'Mojolicious::Controller';
@@ -135,7 +134,12 @@ sub edit {
     $mtag->{type}      = $new_type      if defined $new_type;
     $saved             = $mtag->save($dbh);
 
-    $self->stash( tagobj => $mtag, saved => $saved );
+    $self->flash(
+        msg_type => 'success',
+        msg      => 'Changes saved.'
+    );
+
+    $self->stash( tagobj => $mtag );
     $self->render( template => 'tags/edit' );
 
 }

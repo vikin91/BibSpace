@@ -5,7 +5,7 @@ use Test::Mojo;
 
 use BibSpace;
 use BibSpace::Controller::Core;
-
+use BibSpace::Model::MTagType;
 
 
 my $t_anyone = Test::Mojo->new('BibSpace');
@@ -21,7 +21,7 @@ $t_logged_in->ua->inactivity_timeout(3600);
 
 my $dbh = $t_logged_in->app->db;
 
-my @all_tag_type_objs = BibSpace::Functions::TagTypeObj->getAll($dbh);
+my @all_tag_type_objs = MTagType->static_all($dbh);
 my $some_tag_type_obj = $all_tag_type_objs[0];
 my @tags = MTag->static_all($dbh);
 my $some_tag = $tags[0];

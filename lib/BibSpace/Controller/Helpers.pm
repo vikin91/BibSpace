@@ -15,13 +15,12 @@ use Set::Scalar;
 use Mojo::Redis2;
 
 use BibSpace::Controller::Core;
-# use BibSpace::Controller::Set;
 use BibSpace::Controller::Publications;
 use BibSpace::Controller::BackupFunctions;
 
 use BibSpace::Functions::FPublications;
 
-use BibSpace::Functions::TagTypeObj;
+use BibSpace::Model::MTagType;
 
 use base 'Mojolicious::Plugin';
 
@@ -148,10 +147,7 @@ sub register {
     $app->helper(
         get_all_tag_types => sub {
             my $self     = shift;
-            my $dbh      = $self->app->db;
-            my @ttobjarr = BibSpace::Functions::TagTypeObj->getAll($dbh);
-            return @ttobjarr;
-
+            return MTagType->static_all($self->app->db);
         }
     );
 
@@ -159,12 +155,8 @@ sub register {
         get_tag_type_obj => sub {
             my $self = shift;
             my $type = shift || 1;
-            my $ttobj
-                = BibSpace::Functions::TagTypeObj->getById( $self->app->db,
-                $type );
-            return $ttobj;
 
-            # return $ttobj->{name};
+            return MTagType->static_get($self->app->db, $type);
         }
     );
 
@@ -383,18 +375,6 @@ sub register {
     );
 
 
-    # $app->helper(
-    #     num_unhidden_pubs_for_tag => sub {
-    #         my $self = shift;
-    #         my $tid  = shift;
-
-    #         my @objs = Fget_publications_main_hashed_args_only( $self,
-    #             { hidden => 0, tag => $tid } );
-    #         my $count = scalar @objs;
-    #         return $count;
-    #     }
-    # );
-
     $app->helper(
         num_pubs_for_tag => sub {
             my $self = shift;
@@ -407,49 +387,6 @@ sub register {
         }
     );
 
-    # $app->helper(
-    #     get_author_mids_arr => sub {
-    #         my $self = shift;
-
-    #         my @authors = MAuthor->static_all_masters($self->app->db);
-    #         return map {$_->{master_id}} 
-    #             sort {$a->{master} cmp $b->{master}} 
-    #             grep {$_->{display} == 1} @authors;
-    #     }
-    # );
-
-    # $app->helper(
-    #     get_master_for_id => sub {
-    #         my $self = shift;
-    #         my $id   = shift;
-    #         # navi uses it 
-    #         my $author = MAuthor->static_get( $self->app->db, $id );
-    #         return $author->{master};
-    #     }
-    # );
-
-    # $app->helper(
-    #     get_first_letters => sub {
-    #         my $self = shift;
-    #         my $dbh  = $self->app->db;
-
-    #         my $sth = $dbh->prepare(
-    #             "SELECT DISTINCT substr(master, 0, 2) as let FROM Author
-    #              WHERE display=1
-    #              ORDER BY let ASC"
-    #         );
-    #         $sth->execute();
-    #         my @letters;
-    #         while ( my $row = $sth->fetchrow_hashref() ) {
-    #             my $letter = $row->{let} || "*";
-    #             push @letters, uc($letter);
-    #         }
-
-    #         # @letters = uniq(@letters);
-    #         my @sorted_letters = sort(@letters);
-    #         return @sorted_letters;
-    #     }
-    # );
 }
 
 1;

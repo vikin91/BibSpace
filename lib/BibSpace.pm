@@ -415,11 +415,11 @@ sub setup_routes {
 
     ################ TAG TYPES ################
     # $logged_user->get('/tags/')->to('tags#index')->name("tags_index");
-    $logged_user->get('/tagtypes')->to('tagtypes#index');
-    $logged_user->get('/tagtypes/add')->to('tagtypes#add');
-    $logged_user->post('/tagtypes/add')->to('tagtypes#add_post');
-    $logged_user->get('/tagtypes/delete/:id')->to('tagtypes#delete');
-    $logged_user->any('/tagtypes/edit/:id')->to('tagtypes#edit');
+    $logged_user->get('/tagtypes')->to('tagtypes#index')->name('all_tag_types');
+    $logged_user->get('/tagtypes/add')->to('tagtypes#add')->name('add_tag_type');
+    $logged_user->post('/tagtypes/add')->to('tagtypes#add_post')->name('add_tag_type_post');
+    $logged_user->get('/tagtypes/delete/:id')->to('tagtypes#delete')->name('delete_tag_type');
+    $logged_user->any('/tagtypes/edit/:id')->to('tagtypes#edit')->name('edit_tag_type');
 
     ################ TAGS ################
     $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )

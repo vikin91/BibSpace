@@ -5,7 +5,7 @@
   <div class="row">
       <div class="col-md-1"></div>
       <div class="col-md-6">
-        <a class="btn btn-success" href="<%= url_for('/tags/')%><%= $tagobj->{type} %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all tags</a>
+        <a class="btn btn-success" href="<%= url_for('all_tags', type=>$tagobj->{type}) %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all tags</a>
       </div>
   </div>
   <br>
@@ -19,20 +19,7 @@
         </div>
       </div>
   </div>
-  
-  % if( defined $saved and $saved==1 ){
-    <div class="row">
-      <div class="col-md-1"></div>
-      <div class="col-md-6">
-        <div class="alert alert-success">
-            <button class="close" aria-hidden="true" data-dismiss="alert" type="button">×</button>
-            <i class="fa fa-exclamation-circle "></i>
-            <strong>Changes </strong> are saved.
-        </div>
-      </div>
-    </div>
-  %}
-  
+
 
   <br>
   <div class="row">
