@@ -10,7 +10,9 @@ use BibSpace::Controller::PublicationsExperimental;
 use BibSpace::Controller::PublicationsSEO;
 use BibSpace::Controller::Helpers;
 
-use BibSpace::Functions::MyUsers;
+use BibSpace::Model::MUser;
+
+use BibSpace::Model::CMUsers;
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
 use BibSpace::Functions::RedisWrapper;
@@ -186,7 +188,7 @@ sub setup_plugins {
     $self->secrets( [ $self->config->{key_cookie} ] );
 
     $self->helper(
-        users => sub { state $users = BibSpace::Functions::MyUsers->new } );
+        users => sub { state $users = CMUsers->new } );
     $self->helper( proxy_prefix => sub { $self->config->{proxy_prefix} } );
 
 
@@ -212,9 +214,9 @@ sub setup_plugins {
         is_manager => sub {
             my $self = shift;
             return 1 if $self->app->is_demo;
-            my $usr = $self->session('user');
-            my $rank = $self->users->get_rank( $usr, $self->app->db ) || 0;
-            return $rank > 0;
+            my $login = $self->session('user');
+            my $usr = MUser->static_get_by_login($self->app->db, $login);
+            return $usr->is_manager();
         }
     );
 
@@ -222,9 +224,9 @@ sub setup_plugins {
         is_admin => sub {
             my $self = shift;
             return 1 if $self->app->is_demo;
-            my $usr = $self->session('user');
-            my $rank = $self->users->get_rank( $usr, $self->app->db ) || 0;
-            return $rank > 1;
+            my $login = $self->session('user');
+            my $usr = MUser->static_get_by_login($self->app->db, $login);
+            return $usr->is_admin();
         }
     );
 

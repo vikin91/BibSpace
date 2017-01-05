@@ -6,7 +6,7 @@ use Test::Mojo;
 
 use BibSpace;
 use BibSpace::Controller::Core;
-use BibSpace::Functions::MyUsers;
+use BibSpace::Model::CMUsers;
 
 
 ### Problem with this test suite is that the token for mailgun returns error because it is not correct in the default config
@@ -28,7 +28,7 @@ $t_logged_in->ua->max_redirects(10);
 # # ############################ READY FOR TESTING
 
 
-my $token = BibSpace::Functions::MyUsers->generate_token();
+my $token = CMUsers->generate_token();
 ok(defined $token);
 is($token =~ y///c, 32);
 
@@ -110,7 +110,7 @@ $t_anyone->get_ok("/noregister")
 subtest 'User management: public registration' => sub {
   if( $t_anyone->app->config->{registration_enabled} == 1){
 
-    my $token = BibSpace::Functions::MyUsers->generate_token();
+    my $token = CMUsers->generate_token();
     note "=== Registration anyone: using token $token";
 
 
@@ -187,7 +187,7 @@ subtest 'User management: noregister' => sub {
 subtest 'User management: admin registration' => sub {
 
 
-    my $token = BibSpace::Functions::MyUsers->generate_token();
+    my $token = CMUsers->generate_token();
     note "=== Registration admin: using token $token";
 
     $t_logged_in->get_ok("/register")

@@ -4,13 +4,13 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
 use BibSpace::Functions::FDB;
-use BibSpace::Functions::UserObj;
+use BibSpace::Model::MUser;
 
 use WWW::Mechanize;
 use Data::Dumper;
 use Try::Tiny;
 
-our $admin_rank = 2;
+our $admin_rank   = 2;
 our $manager_rank = 1;
 
 ####################################################################################
@@ -28,16 +28,18 @@ sub check_is_logged_in {
 sub under_check_is_manager {
     my $self = shift;
     my $dbh  = $self->app->db;
-    return 1 if $self->check_is_manager();
 
-    my $rank = $self->users->get_rank( $self->session('user'), $dbh );
-    
+    my $me = MUser->static_get_by_login($self->app->db, $self->session('user'));
+    return 1 if $me->is_manager();
+
+    my $rank = $me->{rank};
+
     $self->flash(
         msg_type => 'danger',
         msg =>
-            "You need to have manager rights (rank $admin_rank) to access this page! " .
-            "Your rank is: $rank." .
-            " <br/> You have just tried to access: "
+            "You need to have manager rights (rank $admin_rank) to access this page! "
+            . "Your rank is: $rank."
+            . " <br/> You have just tried to access: "
             . $self->url_for('current')->to_abs
     );
     my $redirect_to = $self->get_referrer;
@@ -46,32 +48,24 @@ sub under_check_is_manager {
         or !defined $self->get_referrer;
     $self->redirect_to($redirect_to);
     return 0;
-}
-####################################################################################
-sub check_is_manager {
-    my $self = shift;
-    return 1 if $self->app->is_demo;
-    my $dbh = $self->app->db;
-    my $rank = $self->users->get_rank( $self->session('user'), $dbh );
-    return 1 if $rank >= $manager_rank;
-    return 0;
-
 }
 ####################################################################################
 # for _under_ -checking
 sub under_check_is_admin {
     my $self = shift;
     my $dbh  = $self->app->db;
-    return 1 if $self->check_is_admin();
 
-    my $rank = $self->users->get_rank( $self->session('user'), $dbh );
+    my $me = MUser->static_get_by_login($self->app->db, $self->session('user'));
+    return 1 if $me->is_admin();
+
+    my $rank = $me->{rank};
 
     $self->flash(
         msg_type => 'danger',
         msg =>
-            "You need to have admin rights (rank $admin_rank) to access this page! " .
-            "Your rank is: $rank." .
-            " <br/> You have just tried to access: "
+            "You need to have admin rights (rank ".MUser->admin_rank.") to access this page! "
+            . "Your rank is: $rank."
+            . " <br/> You have just tried to access: "
             . $self->url_for('current')->to_abs
     );
     my $redirect_to = $self->get_referrer;
@@ -79,16 +73,6 @@ sub under_check_is_admin {
         if $self->get_referrer eq $self->url_for('current')->to_abs
         or !defined $self->get_referrer;
     $self->redirect_to($redirect_to);
-    return 0;
-}
-####################################################################################
-sub check_is_admin {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-    return 1 if $self->app->is_demo;
-
-    my $rank = $self->users->get_rank( $self->session('user'), $dbh );
-    return 1 if $rank >= $admin_rank;
     return 0;
 }
 
@@ -99,7 +83,7 @@ sub manage_users {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my @user_objs = BibSpace::Functions::UserObj->getAll($dbh);
+    my @user_objs = MUser->static_all($dbh);
     $self->stash( user_objs => \@user_objs );
     $self->render( template => 'login/manage_users' );
 }
@@ -109,17 +93,42 @@ sub make_user {
     my $profile_id = $self->param('id');
     my $dbh        = $self->app->db;
 
-    my $usr_obj = BibSpace::Functions::UserObj->new( { id => $profile_id } );
-    $usr_obj->initFromDB($dbh);
-    if ( $usr_obj->make_user($dbh) == 0 ) {
+    my $usr_obj = MUser->static_get( $dbh, $profile_id );
+
+    if ( $usr_obj->make_user($dbh) == 1 ) {
         $self->write_log("Setting user \`$usr_obj->{login}\` to rank user.");
     }
     else {
         $self->flash(
-            msg_type => 'danger', 
-            msg => "User \`$usr_obj->{login}\` cannot become \`user\`." );
+            msg_type => 'danger',
+            msg      => "User \`$usr_obj->{login}\` cannot become \`user\`."
+        );
     }
     $self->redirect_to('manage_users');
+}
+####################################################################################################
+sub can_be_manager {
+    my $self = shift;
+    my $user = shift;
+
+    # pub_admin must remain admin
+    return 0 if $user->{login} eq 'pub_admin';
+
+    my $me = MUser->static_get_by_login($self->app->db, $self->session('user'));
+    
+    # cannot promote yourself
+    # cannot degrade admin
+    return 1
+        if defined $user
+        and $user->{login} ne $me->{login};
+    return 0;
+}
+####################################################################################################
+sub can_be_admin {
+    my $self = shift;
+    my $user = shift;
+    return 1 if $user->{login} eq 'pub_admin';
+    return $self->can_be_manager($user);
 }
 ####################################################################################
 sub make_manager {
@@ -127,16 +136,18 @@ sub make_manager {
     my $profile_id = $self->param('id');
     my $dbh        = $self->app->db;
 
-    my $usr_obj = BibSpace::Functions::UserObj->new( { id => $profile_id } );
-    $usr_obj->initFromDB($dbh);
-    if ( $usr_obj->make_manager($dbh) == 0 ) {
+
+    my $user    = MUser->static_get( $dbh, $profile_id );
+
+    if ( $self->can_be_manager($user) == 1 ) {
+        $user->make_manager($dbh);
         $self->write_log(
-            "Setting user \`$usr_obj->{login}\` to rank manager.");
+            "Setting user \`$user->{login}\` to rank manager.");
     }
     else {
         $self->flash(
             msg_type => 'danger',
-            msg => "User \`$usr_obj->{login}\` cannot become \`manager\`."
+            msg => "User \`$user->{login}\` cannot become \`manager\`."
         );
     }
     $self->redirect_to('manage_users');
@@ -147,15 +158,16 @@ sub make_admin {
     my $profile_id = $self->param('id');
     my $dbh        = $self->app->db;
 
-    my $usr_obj = BibSpace::Functions::UserObj->new( { id => $profile_id } );
-    $usr_obj->initFromDB($dbh);
-    if ( $usr_obj->make_admin($dbh) == 0 ) {
-        $self->write_log("Setting user \`$usr_obj->{login}\` to rank admin.");
+    my $user = MUser->static_get( $dbh, $profile_id );
+
+    if ( $self->can_be_admin($user) == 1 ) {
+        $user->make_admin($dbh);
+        $self->write_log("Setting user \`$user->{login}\` to rank admin.");
     }
     else {
         $self->flash(
             msg_type => 'danger',
-            msg      => "User \`$usr_obj->{login}\` cannot become \`admin\`."
+            msg      => "User \`$user->{login}\` cannot become \`admin\`."
         );
     }
     $self->redirect_to('manage_users');
@@ -166,14 +178,12 @@ sub delete_user {
     my $profile_id = $self->param('id');
     my $dbh        = $self->app->db;
 
-    my $usr_obj = BibSpace::Functions::UserObj->new( { id => $profile_id } );
-    $usr_obj->initFromDB($dbh);
+    my $usr_obj = MUser->static_get( $dbh, $profile_id );
 
     my $message      = "";
     my $message_type = "";
 
-    if (    $self->users->login_exists( $usr_obj->{login}, $dbh )
-        and $usr_obj->is_admin() == 1 )
+    if ( defined $usr_obj and $usr_obj->is_admin() == 1 )
     {
         $message
             = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.";
@@ -198,7 +208,7 @@ sub delete_user {
 
     # $self->redirect_to('manage_users');
 
-    my @user_objs = BibSpace::Functions::UserObj->getAll($dbh);
+    my @user_objs = MUser->static_all($dbh);
 
     $self->stash( user_objs => \@user_objs );
     $self->redirect_to('manage_users');
@@ -211,44 +221,17 @@ sub foreign_profile {
     my $profile_id = $self->param('id');
     my $dbh        = $self->app->db;
 
-    my $login = $self->users->get_login_for_id( $profile_id, $dbh );
-
-    my $reg_time = $self->users->get_registration_time( $login, $dbh );
-    my $last_login_time = $self->users->get_last_login( $login, $dbh );
-
-    my $rank = $self->users->get_rank( $login, $dbh );
-    my $email = $self->users->get_email( $login, $dbh );
-
-    $self->stash(
-        user            => $self->users,
-        reg_time        => $reg_time,
-        last_login_time => $last_login_time,
-        rank            => $rank,
-        email           => $email,
-        login           => $login
-    );
-    $self->render( template => 'login/foreign_profile' );
+    my $usrobj = MUser->static_get($dbh, $profile_id);
+    $self->stash(usrobj => $usrobj);
+    $self->render( template => 'login/profile' );
 }
 ####################################################################################
 sub profile {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my $login           = $self->session('user');
-    my $reg_time        = $self->users->get_registration_time( $login, $dbh );
-    my $last_login_time = $self->users->get_last_login( $login, $dbh );
-
-    my $rank = $self->users->get_rank( $login, $dbh );
-    my $email = $self->users->get_email( $login, $dbh );
-
-    $self->stash(
-        user            => $self->users,
-        reg_time        => $reg_time,
-        last_login_time => $last_login_time,
-        rank            => $rank,
-        email           => $email,
-        login           => $login
-    );
+    my $usrobj = MUser->static_get_by_login($dbh, $self->session('user'));
+    $self->stash(usrobj => $usrobj);
     $self->render( template => 'login/profile' );
 }
 ####################################################################################
@@ -267,21 +250,21 @@ sub post_gen_forgot_token {
     my $self = shift;
 
 # this is called when a user fills the form called "Recovery of forgotten password"
-    my $user  = $self->param('user');
+    my $login = $self->param('user');
     my $email = $self->param('email');
     my $dbh   = $self->app->db;
 
     my $do_gen      = 0;
     my $final_email = "";
 
-    # say "call: post_gen_forgot_token user $user, email $email";
+    my $existing_user =  MUser->static_get_by_login($dbh, $login);
 
-    if ( $self->users->login_exists( $user, $dbh ) == 1 ) {
+    if ( defined $existing_user ) {
         $do_gen = 1;
 
         # get email of this user
-        $final_email = $self->users->get_email_for_uname( $user, $dbh );
-        $self->write_log("requesting new password for user $user");
+        $final_email = $existing_user->{email};
+        $self->write_log("requesting new password for user $login");
     }
     elsif ( $self->users->email_exists( $email, $dbh ) == 1 ) {
         $do_gen      = 1;
@@ -293,7 +276,7 @@ sub post_gen_forgot_token {
     }
 
     $self->write_log(
-        "requested new password for user $user or email $email but none of them found in the database."
+        "requested new password for user $login or email $email but none of them found in the database."
     );
 
     if ( $do_gen == 1 and $final_email ne "" ) {
@@ -317,7 +300,9 @@ sub post_gen_forgot_token {
     }
     else {
 
-        $self->write_log("Cannot reset password: user $user or email $email do not exist.");
+        $self->write_log(
+            "Cannot reset password: user $login or email $email do not exist."
+        );
         $self->flash(
             msg_type => 'warning',
             msg      => 'User or email does not exists. Try again.'
@@ -534,7 +519,10 @@ sub register {
     my $self                 = shift;
     my $registration_enabled = $self->app->config->{registration_enabled};
 
-    if ( defined $self->check_is_admin() and $self->check_is_admin() == 1 ) {
+    my $me = MUser->static_get_by_login($self->app->db, $self->session('user'));
+    
+
+    if ( defined $me and $me->is_admin() == 1 ) {
         $self->stash(
             name      => 'Jonh New',
             email     => 'test@example.com',
@@ -574,8 +562,10 @@ sub post_do_register {
 
     my $config               = $self->app->config;
     my $registration_enabled = $config->{registration_enabled};
+    my $me = MUser->static_get_by_login($self->app->db, $self->session('user'));
 
-    if ( $self->check_is_admin() == 0
+    if ( defined $me 
+        and $me->is_admin() == 1
         and ( !defined $registration_enabled or $registration_enabled == 0 ) )
     {
         $self->redirect_to('/noregister');
@@ -607,7 +597,8 @@ sub post_do_register {
             {
 
                 if ( length($password1) >= 4 ) {
-                    if ( $self->users->login_exists( $login, $dbh ) == 0 ) {
+                    my $existing_user =  MUser->static_get_by_login($dbh, $login);
+                    if ( !defined $existing_user ) {
                         $self->users->add_new_user( $login, $email, $name,
                             $password1, 0, $dbh );
 
