@@ -43,21 +43,18 @@ sub add_post {
     my $name    = $self->param('new_name');
     my $comment = $self->param('new_comment');
 
-    my $tt = MTagType->static_get_by_name($dbh, $name);
-    if ( defined $tt ){
+    my $tt = MTagType->static_get_by_name( $dbh, $name );
+    if ( defined $tt ) {
         $self->flash(
             msg_type => 'error',
             msg      => 'Tag type with such name already exists.'
         );
     }
 
-    $tt = MTagType->new(name => $name, comment => $comment);
+    $tt = MTagType->new( name => $name, comment => $comment );
     $tt->save($dbh);
-    $self->flash(
-        msg_type => 'success',
-        msg      => 'Tag type added.'
-    );
-    $self->redirect_to( $self->url_for( 'all_tag_types' ) );
+    $self->flash( msg_type => 'success', msg => 'Tag type added.' );
+    $self->redirect_to( $self->url_for('all_tag_types') );
 }
 
 ####################################################################################
@@ -70,25 +67,21 @@ sub delete {
     if ( $id == 1 or $id == 2 ) {
         $self->flash(
             msg_type => 'error',
-            msg      => 'Tag Types 1 or 2 are essential and cannot be deleted.'
+            msg => 'Tag Types 1 or 2 are essential and cannot be deleted.'
         );
-        $self->redirect_to( $self->url_for( 'all_tag_types' ) );
+        $self->redirect_to( $self->url_for('all_tag_types') );
         return;
     }
 
-    my $tt = MTagType->static_get($dbh, $id);
+    my $tt = MTagType->static_get( $dbh, $id );
 
 
-
-    for my $t ( MTag->static_all_type($dbh, $id) ){
+    for my $t ( MTag->static_all_type( $dbh, $id ) ) {
         $t->delete($dbh);
     }
     $tt->delete($dbh);
 
-    $self->flash(
-        msg_type => 'success',
-        msg      => 'Tag type deleted.'
-    );
+    $self->flash( msg_type => 'success', msg => 'Tag type deleted.' );
 
     $self->redirect_to( $self->get_referrer );
 }
@@ -103,30 +96,27 @@ sub edit {
     my $comment = $self->param('new_comment');
     my $saved   = 0;
 
-    my $tt = MTagType->static_get($dbh, $id);
+    my $tt = MTagType->static_get( $dbh, $id );
 
     if ( !defined $tt ) {
         $self->flash(
             msg_type => 'error',
             msg      => 'Tag Type does not exist.'
         );
-        $self->redirect_to( $self->url_for( 'all_tag_types' ) );
+        $self->redirect_to( $self->url_for('all_tag_types') );
         return;
     }
 
     if ( defined $name or defined $comment ) {
-        $tt->{name} = $name if defined $name;
+        $tt->{name}    = $name    if defined $name;
         $tt->{comment} = $comment if defined $comment;
         $tt->save($dbh);
 
-        $self->flash(
-            msg_type => 'success',
-            msg      => 'Update successful.'
-        );
-        $self->redirect_to( $self->url_for( 'all_tag_types' ) );
+        $self->flash( msg_type => 'success', msg => 'Update successful.' );
+        $self->redirect_to( $self->url_for('all_tag_types') );
         return;
     }
-    else{
+    else {
         $self->flash(
             msg_type => 'warning',
             msg      => 'No change made or empty input.'
@@ -135,7 +125,7 @@ sub edit {
 
     $self->stash( obj => $tt );
     $self->render( template => 'tagtypes/edit' );
-    
+
 
 }
 ####################################################################################

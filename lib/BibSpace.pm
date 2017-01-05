@@ -416,22 +416,22 @@ sub setup_routes {
     ################ TAG TYPES ################
     # $logged_user->get('/tags/')->to('tags#index')->name("tags_index");
     $logged_user->get('/tagtypes')->to('tagtypes#index')->name('all_tag_types');
-    $logged_user->get('/tagtypes/add')->to('tagtypes#add')->name('add_tag_type');
-    $logged_user->post('/tagtypes/add')->to('tagtypes#add_post')->name('add_tag_type_post');
-    $logged_user->get('/tagtypes/delete/:id')->to('tagtypes#delete')->name('delete_tag_type');
-    $logged_user->any('/tagtypes/edit/:id')->to('tagtypes#edit')->name('edit_tag_type');
+    $superadmin->get('/tagtypes/add')->to('tagtypes#add')->name('add_tag_type');
+    $superadmin->post('/tagtypes/add')->to('tagtypes#add_post')->name('add_tag_type_post');
+    $superadmin->get('/tagtypes/delete/:id')->to('tagtypes#delete')->name('delete_tag_type');
+    $manager->any('/tagtypes/edit/:id')->to('tagtypes#edit')->name('edit_tag_type');
 
     ################ TAGS ################
     $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )
         ->name('all_tags');
-    $logged_user->get('/tags/add/:type')->to( 'tags#add', type => 1 );
-    $logged_user->post('/tags/add/:type')->to( 'tags#add_post', type => 1 );
+    $superadmin->get('/tags/add/:type')->to( 'tags#add', type => 1 );
+    $superadmin->post('/tags/add/:type')->to( 'tags#add_post', type => 1 );
     $logged_user->get('/tags/authors/:tid/:type')
         ->to( 'tags#get_authors_for_tag', type => 1 )
         ->name('get_authors_for_tag');
-    $logged_user->any('/tags/add_and_assign/:eid')->to('tags#add_and_assign');
-    $logged_user->get('/tags/delete/:id_to_delete')->to('tags#delete');
-    $logged_user->get('/tags/edit/:id')->to('tags#edit');
+    $superadmin->any('/tags/add_and_assign/:eid')->to('tags#add_and_assign');
+    $superadmin->get('/tags/delete/:id_to_delete')->to('tags#delete');
+    $manager->get('/tags/edit/:id')->to('tags#edit');
 
     ################ TEAMS ################
     $logged_user->get('/teams')->to('teams#show')->name('all_teams');

@@ -14,12 +14,13 @@ has 'comment' => ( is => 'rw' );
 ####################################################################################
 
 sub equals {
-    my $self = shift;
-    my $other  = shift;
+    my $self  = shift;
+    my $other = shift;
 
-    if ( $self->{id} == $other->{id} and
-         $self->{name} eq $other->{name} and
-         $self->{comment} eq $other->{comment} ) {
+    if (    $self->{id} == $other->{id}
+        and $self->{name} eq $other->{name}
+        and $self->{comment} eq $other->{comment} )
+    {
         return 1;
     }
 
@@ -145,6 +146,7 @@ sub save {
     if ( defined $self->{id} and $self->{id} > 0 ) {
         return $self->update($dbh);
     }
+
     # does not exits, inserting
     $self->{id} = $self->insert($dbh);
     return $self->{id};

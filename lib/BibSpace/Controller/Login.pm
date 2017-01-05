@@ -10,6 +10,9 @@ use WWW::Mechanize;
 use Data::Dumper;
 use Try::Tiny;
 
+our $admin_rank = 2;
+our $manager_rank = 1;
+
 ####################################################################################
 # for _under_ -checking if user is logged in to access other pages
 sub check_is_logged_in {
@@ -27,10 +30,14 @@ sub under_check_is_manager {
     my $dbh  = $self->app->db;
     return 1 if $self->check_is_manager();
 
+    my $rank = $self->users->get_rank( $self->session('user'), $dbh );
+    
     $self->flash(
         msg_type => 'danger',
         msg =>
-            "You need to have at least manager rights to access this page! You have just tried to access: "
+            "You need to have manager rights (rank $admin_rank) to access this page! " .
+            "Your rank is: $rank." .
+            " <br/> You have just tried to access: "
             . $self->url_for('current')->to_abs
     );
     my $redirect_to = $self->get_referrer;
@@ -46,7 +53,7 @@ sub check_is_manager {
     return 1 if $self->app->is_demo;
     my $dbh = $self->app->db;
     my $rank = $self->users->get_rank( $self->session('user'), $dbh );
-    return 1 if $rank > 0;
+    return 1 if $rank >= $manager_rank;
     return 0;
 
 }
@@ -57,10 +64,14 @@ sub under_check_is_admin {
     my $dbh  = $self->app->db;
     return 1 if $self->check_is_admin();
 
+    my $rank = $self->users->get_rank( $self->session('user'), $dbh );
+
     $self->flash(
         msg_type => 'danger',
         msg =>
-            "You need to have admin rights to access this page! You have just tried to access: "
+            "You need to have admin rights (rank $admin_rank) to access this page! " .
+            "Your rank is: $rank." .
+            " <br/> You have just tried to access: "
             . $self->url_for('current')->to_abs
     );
     my $redirect_to = $self->get_referrer;
@@ -77,7 +88,7 @@ sub check_is_admin {
     return 1 if $self->app->is_demo;
 
     my $rank = $self->users->get_rank( $self->session('user'), $dbh );
-    return 1 if $rank > 1;
+    return 1 if $rank >= $admin_rank;
     return 0;
 }
 
