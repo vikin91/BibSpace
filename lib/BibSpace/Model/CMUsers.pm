@@ -133,22 +133,6 @@ sub insert_admin {
         "asdf", "3", $dbh );
 }
 ####################################################################################################
-sub get_user_real_name {
-    my $self     = shift;
-    my $login    = shift;
-    my $user_dbh = shift;
-
-    return 0 if !defined $login or $login eq '';
-
-
-    my $sth = $user_dbh->prepare("SELECT real_name FROM Login WHERE login=?");
-    $sth->execute($login);
-    my $row       = $sth->fetchrow_hashref();
-    my $real_name = $row->{real_name};
-
-    return $real_name;
-}
-####################################################################################################
 sub record_logging_in {
     my $self     = shift;
     my $login    = shift;

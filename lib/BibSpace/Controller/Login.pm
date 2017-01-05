@@ -440,20 +440,21 @@ sub store_password {
 ####################################################################################
 sub login {
     my $self = shift;
-    my $user = $self->param('user');
-    my $pass = $self->param('pass');
+    my $input_login = $self->param('user');
+    my $input_pass = $self->param('pass');
     my $dbh  = $self->app->db;
 
-    if ( defined $user and defined $pass ) {
+    if ( defined $input_login and defined $input_pass ) {
 
-        $self->write_log("Login: trying to log in as user $user");
+        $self->write_log("Login: trying to log in as user $input_login");
 
-        if ( $self->users->check( $user, $pass, $dbh ) ) {
-            $self->session( user => $user );
-            $self->session(
-                user_name => $self->users->get_user_real_name( $user, $dbh )
-            );
-            $self->users->record_logging_in( $user, $dbh );
+        if ( $self->users->check( $input_login, $input_pass, $dbh ) ) {
+
+            my $user =  MUser->static_get_by_login($dbh, $input_login);
+
+            $self->session( user => $user->{login} );
+            $self->session( user_name => $user->{real_name} );
+            $self->users->record_logging_in( $input_login, $dbh );
 
             $self->write_log("Login success");
             $self->redirect_to('/');
@@ -461,7 +462,7 @@ sub login {
         }
         else {
             $self->write_log(
-                "Login: Bad user name or password for user $user");
+                "Login: Bad user name or password for user $input_login");
             $self->flash(
                 msg_type => 'danger',
                 msg      => 'Wrong user name or password'
