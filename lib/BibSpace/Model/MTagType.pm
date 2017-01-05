@@ -92,8 +92,8 @@ sub update {
 
     if ( !defined $self->{id} ) {
         say
-            "Cannot update MTagType: id not set. The entry may not exist in the DB. Returning -1";
-        return -1;
+            "Cannot update MTagType: id not set. The entry may not exist in the DB. Returning undef";
+        return undef;
     }
 
     my $qry = "UPDATE TagType SET
@@ -127,24 +127,13 @@ sub save {
     my $self = shift;
     my $dbh  = shift;
 
-    my $result = "";
-
-    if ( !defined $self->{id} or $self->{id} <= 0 ) {
-        my $inserted_id = $self->insert($dbh);
-        $self->{id} = $inserted_id;
-
-        # say "MTag save: inserting. inserted_id = ".$self->{id};
-        return $inserted_id;
-    }
-    elsif ( defined $self->{id} and $self->{id} > 0 ) {
-
-        # say "MTag save: updating ID = ".$self->{id};
+    # exists, updating
+    if ( defined $self->{id} and $self->{id} > 0 ) {
         return $self->update($dbh);
     }
-    else {
-        warn "MTagType save: cannot either insert nor update :( ID = "
-            . $self->{id};
-    }
+    # does not exits, inserting
+    $self->{id} = $self->insert($dbh);
+    return $self->{id};
 }
 ####################################################################################
 sub delete {
