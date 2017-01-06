@@ -6,7 +6,7 @@ use Test::Mojo;
 use BibSpace;
 use BibSpace::Controller::Core;
 
-my $num_publications_limit = 50;
+my $num_publications_limit = 10;
 plan tests => 1 + 9 * 3 * $num_publications_limit;
 
 my $t_anyone    = Test::Mojo->new('BibSpace');

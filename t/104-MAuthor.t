@@ -10,7 +10,6 @@ use BibSpace::Model::MAuthor;
 use BibSpace::Model::MTeam;
 use BibSpace::Model::MEntry;
 
-# use BibSpace::Controller::Set;
 use BibSpace::Controller::Core;
 use Set::Scalar;
 use Data::Dumper;
@@ -211,13 +210,13 @@ subtest 'MAuthor abandon entries update_master_name' => sub {
       }');
     $e->populate_from_bib($dbh);
     $e->save($dbh);
-    is( $e->postprocess_updated($dbh), 1, "postproces_updated returns 1" ); # only call
+    $e->postprocess_updated($dbh);
 
-    my @authors = $e->authors($dbh);
+    my @authors = $e->authors();
+    is( scalar @authors, 1, "Got 1 author" );
     my $a = shift @authors;
 
-    is( scalar $a->entries($dbh), 1, "Got 1 entries" );
-    is( $a->entries(undef), undef, "Got 0 entries" );
+    is( scalar $a->entries(), 1, "The author has 1 entry" );
 
     $a->{display} = 1;
     $a->save($dbh);

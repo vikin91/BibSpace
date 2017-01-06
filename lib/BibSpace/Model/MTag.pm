@@ -5,15 +5,27 @@ use utf8;
 use Text::BibTeX;    # parsing bib files
 use 5.010;           #because of ~~ and say
 use DBI;
+
+use BibSpace::Model::Persistent;
+
 use Moose;
 use MooseX::Storage;
 with Storage('format' => 'JSON', 'io' => 'File');
+
+with 'Persistent';
 
 has 'id'        => ( is => 'rw' );
 has 'name'      => ( is => 'rw' );
 has 'type'      => ( is => 'rw' );
 has 'permalink' => ( is => 'rw' );
 
+####################################################################################
+sub load {
+    my $self = shift;
+    my $dbh  = shift;
+
+    # TODO: implement me!
+}
 ####################################################################################
 sub static_all {
     my $self = shift;

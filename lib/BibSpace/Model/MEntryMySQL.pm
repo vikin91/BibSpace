@@ -3,6 +3,7 @@ package MEntryMySQL;
 use BibSpace::Model::MEntryBase;
 use BibSpace::Model::MTag;
 use BibSpace::Model::MTagType;
+use BibSpace::Model::Persistent;
 
 use Data::Dumper;
 use utf8;
@@ -13,12 +14,127 @@ use Try::Tiny;
 use TeX::Encode;
 use Encode;
 use Moose;
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
 
 extends 'MEntryBase';
+with 'Persistent';
 
+####################################################################################
+sub load {
+    my $self = shift;
+    my $dbh  = shift;
 
+    $self->bauthors( [ $self->load_authors($dbh) ] );
+    $self->btags( [ $self->load_tags($dbh) ] );
+    $self->bexceptions( [ $self->load_exceptions($dbh) ] );
+}
+####################################################################################
+
+sub load_authors {
+    my $self = shift;
+    my $dbh  = shift;
+
+    die "Undefined or empty entry!"
+        if !defined $self->{id}
+        or $self->{id} < 0;
+    die "No database handle provided!"
+        unless defined $dbh;
+
+    my $qry = "SELECT 
+                Author.id,
+                Author.uid,
+                Author.display,
+                Author.master,
+                Author.master_id
+                FROM Author
+                LEFT JOIN Entry_to_Author ON Author.id = Entry_to_Author.author_id 
+                WHERE Entry_to_Author.entry_id = ? ";
+    my @objs;
+    my $sth = $dbh->prepare($qry);
+    $sth->execute($self->{id});
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        push @objs, MAuthor->new(
+            id        => $row->{id},
+            uid       => $row->{uid},
+            display   => $row->{display},
+            master    => $row->{master},
+            master_id => $row->{master_id}
+        );
+    }
+    return @objs;
+}
+####################################################################################
+sub load_tags {
+    my $self = shift;
+    my $dbh  = shift;
+
+    die "Undefined or empty entry!"
+        if !defined $self->{id}
+        or $self->{id} < 0;
+    die "No database handle provided!"
+        unless defined $dbh;
+
+    my $qry = "SELECT 
+            Tag.id,
+            Tag.name,
+            Tag.type,
+            Tag.permalink, 
+            Entry_to_Tag.entry_id, 
+            Entry_to_Tag.tag_id 
+            FROM Entry_to_Tag 
+            LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
+            WHERE Entry_to_Tag.entry_id = ?";
+    
+    my $sth = $dbh->prepare_cached($qry);
+    $sth->execute( $self->{id} );
+    
+    my @objs;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        push @objs,
+            MTag->new(
+            id        => $row->{id},
+            name      => $row->{name},
+            type      => $row->{type},
+            permalink => $row->{permalink},
+            );
+    }
+    return @objs;
+}
+####################################################################################
+sub load_exceptions {
+    my $self = shift;
+    my $dbh  = shift;
+
+    die "Undefined or empty entry!"
+        if !defined $self->{id}
+        or $self->{id} < 0;
+    die "No database handle provided!"
+        unless defined $dbh;
+
+    my $qry = "SELECT
+                Team.id,
+                Team.name,
+                Team.parent, 
+                Exceptions_Entry_to_Team.team_id, 
+                Exceptions_Entry_to_Team.entry_id 
+                FROM Exceptions_Entry_to_Team 
+                LEFT JOIN Team ON Team.id = Exceptions_Entry_to_Team.team_id
+                WHERE entry_id = ?";
+
+    my @objs;
+    my $sth = $dbh->prepare($qry);
+    $sth->execute($self->{id});
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        push @objs, MTeam->new(
+            id     => $row->{id},
+            name   => $row->{name},
+            parent => $row->{parent}
+        );
+    }
+    return @objs;
+    
+}
 ####################################################################################
 sub static_all {
     my $self = shift;
@@ -137,89 +253,6 @@ sub static_get {
     return $e;
 }
 ####################################################################################
-sub static_get_by_bibtex_key {
-    my $self       = shift;
-    my $dbh        = shift;
-    my $bibtex_key = shift;
-
-    my $qry = "SELECT 
-              id,
-              entry_type,
-              bibtex_key,
-              bibtex_type,
-              bib,
-              html,
-              html_bib,
-              abstract,
-              title,
-              hidden,
-              year,
-              month,
-              sort_month,
-              teams_str,
-              people_str,
-              tags_str,
-              creation_time,
-              modified_time,
-              need_html_regen
-          FROM Entry
-          WHERE bibtex_key = ?";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($bibtex_key);
-    my $row = $sth->fetchrow_hashref();
-
-    if ( !defined $row ) {
-        return undef;
-    }
-
-    my $e = MEntry->new(
-        id              => $row->{id},
-        entry_type      => $row->{entry_type},
-        bibtex_key      => $row->{bibtex_key},
-        bibtex_type     => $row->{bibtex_type},
-        bib             => $row->{bib},
-        html            => $row->{html},
-        html_bib        => $row->{html_bib},
-        abstract        => $row->{abstract},
-        title           => $row->{title},
-        hidden          => $row->{hidden},
-        year            => $row->{year},
-        month           => $row->{month},
-        sort_month      => $row->{sort_month},
-        teams_str       => $row->{teams_str},
-        people_str      => $row->{people_str},
-        tags_str        => $row->{tags_str},
-        creation_time   => $row->{creation_time},
-        modified_time   => $row->{modified_time},
-        need_html_regen => $row->{need_html_regen}
-    );
-    $e->decodeLatex();
-    return $e;
-}
-####################################################################################
-sub bump_modified_time {
-    my $self = shift;
-    my $dbh  = shift;
-
-    return -1 unless defined $self->{id};
-
-    my $qry = "UPDATE Entry SET
-                modified_time=NOW()
-                WHERE id = ?";
-
-    my $sth = $dbh->prepare($qry);
-    my $result;
-    try {
-        $result = $sth->execute( $self->{id} );
-        $sth->finish();
-    }
-    catch {
-        warn "MEntry update exception: $_";
-    };
-    return $result;
-}
-####################################################################################
 sub update {
     my $self = shift;
     my $dbh  = shift;
@@ -247,8 +280,9 @@ sub update {
                 teams_str=?,
                 people_str=?,
                 tags_str=?,
-                need_html_regen=?
-                WHERE id = ?";
+                need_html_regen=?";
+    $qry .= ", modified_time=NOW()" if $need_modified_update;
+    $qry .= "WHERE id = ?";
 
     # po tags_str
     # creation_time=?,
@@ -256,7 +290,7 @@ sub update {
     # przed need_html_regen=?
 
     my $sth = $dbh->prepare($qry);
-    my $result = "";
+    my $result;
     try {
         $result = $sth->execute(
             $self->{entry_type},  $self->{bibtex_key},
@@ -269,7 +303,6 @@ sub update {
             $self->{tags_str},    $self->{need_html_regen},
             $self->{id}
         );
-        $self->bump_modified_time($dbh) if $need_modified_update;
         $sth->finish();
     }
     catch {
@@ -326,6 +359,55 @@ sub insert {
     return $inserted_id;    #or $result;
 }
 ####################################################################################
+sub insert_authors {
+    my $self = shift;
+    my $dbh  = shift;
+
+
+    my $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
+    $sth->execute($self->{id});
+
+    foreach my $author ($self->authors_all){
+        my $author_id = $author->{master_id} or $author->{id};
+        my $sth2 = $dbh->prepare(
+            'INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)'
+            );
+        $sth2->execute( $author_id, $self->{id} );
+    }
+}
+####################################################################################
+sub insert_tags {
+    my $self = shift;
+    my $dbh  = shift;
+
+
+    my $sth = $dbh->prepare('DELETE FROM Entry_to_Tag WHERE entry_id = ?');
+    $sth->execute($self->{id});
+
+    foreach my $tag ($self->tags_all){
+        my $sth2 = $dbh->prepare(
+            'INSERT IGNORE INTO Entry_to_Tag(tag_id, entry_id) VALUES(?, ?)'
+            );
+        $sth2->execute( $tag->{id}, $self->{id} );
+    }
+}
+####################################################################################
+sub insert_exceptions {
+    my $self = shift;
+    my $dbh  = shift;
+
+
+    my $sth = $dbh->prepare('DELETE FROM Exceptions_Entry_to_Team WHERE entry_id = ?');
+    $sth->execute($self->{id});
+
+    foreach my $exception_team ($self->exceptions_all){
+        my $sth2 = $dbh->prepare(
+            'INSERT IGNORE INTO Exceptions_Entry_to_Team(team_id, entry_id) VALUES(?, ?)'
+            );
+        $sth2->execute( $exception_team->{id}, $self->{id} );
+    }
+}
+####################################################################################
 sub save {
     my $self = shift;
     my $dbh  = shift;
@@ -343,6 +425,9 @@ sub save {
     if ( !defined $self->{id} or $self->{id} <= 0 ) {
         my $inserted_id = $self->insert($dbh);
         $self->{id} = $inserted_id;
+        $self->insert_authors($dbh);
+        $self->insert_tags($dbh);
+        $self->insert_exceptions($dbh);
 
         # say "Mentry save: inserting. inserted_id = ".$self->{id};
         return $inserted_id;
@@ -350,7 +435,11 @@ sub save {
     elsif ( defined $self->{id} and $self->{id} > 0 ) {
 
         # say "Mentry save: updating ID = ".$self->{id};
-        return $self->update($dbh);
+        my $result = $self->update($dbh);
+        $self->insert_authors($dbh);
+        $self->insert_tags($dbh);
+        $self->insert_exceptions($dbh);
+        return $result;
     }
     else {
         warn "Mentry save: cannot either insert nor update :( ID = "
@@ -368,186 +457,6 @@ sub delete {
 
     return $result;
 }
-####################################################################################
-sub authors {
-    my $self = shift;
-    my $dbh  = shift;
-
-    die "MEntry::authors Calling authors on undefined or empty entry!"
-        if !defined $self->{id}
-        or $self->{id} < 0;
-    die "MEntry::authors Calling authors with no database hande!"
-        unless defined $dbh;
-
-
-    my $qry
-        = "SELECT entry_id, author_id FROM Entry_to_Author WHERE entry_id = ?";
-    my $sth = $dbh->prepare_cached($qry);
-    $sth->execute( $self->{id} );
-
-    my @authors;
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $author = MAuthor->static_get( $dbh, $row->{author_id} );
-
-        push @authors, $author if defined $author;
-    }
-    return @authors;
-}
-####################################################################################
-sub teams {
-    my $self = shift;
-    my $dbh  = shift;
-
-    die "MEntry::teams Calling authors on undefined or empty entry!"
-        if !defined $self->{id}
-        or $self->{id} < 0;
-    die "MEntry::teams Calling authors with no database handle!"
-        unless defined $dbh;
-
-    my %final_teams;
-    foreach my $author ( $self->authors($dbh) ) {
-        foreach my $team ( $author->teams($dbh) ) {
-            if ($author->joined_team( $dbh, $team ) <= $self->{year}
-                and (  $author->left_team( $dbh, $team ) > $self->{year}
-                    or $author->left_team( $dbh, $team ) == 0 )
-                )
-            {
-                # $final_teams{$team}       = 1; # BAD: $team gets stringified
-                $final_teams{ $team->{id} } = $team;
-            }
-        }
-    }
-    return values %final_teams;
-}
-####################################################################################
-sub exceptions {
-    my $self = shift;
-    my $dbh  = shift;
-
-    die "MEntry::exceptions Calling authors on undefined or empty entry!"
-        if !defined $self->{id}
-        or $self->{id} < 0;
-    die "MEntry::exceptions Calling authors with no database handle!"
-        unless defined $dbh;
-
-
-    my $qry
-        = "SELECT team_id, entry_id FROM Exceptions_Entry_to_Team WHERE entry_id = ?";
-    my $sth = $dbh->prepare_cached($qry);
-    $sth->execute( $self->{id} );
-
-    my %teams;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $team = MTeam->static_get( $dbh, $row->{team_id} );
-        $teams{ $team->{id} } = $team;
-    }
-
-    return values %teams;
-}
-####################################################################################
-sub remove_exception {
-    my $self      = shift;
-    my $dbh       = shift;
-    my $exception = shift;
-
-    return 0
-        if !defined $exception
-        or !defined $self->{id}
-        or $self->{id} < 0;
-
-    my $sth
-        = $dbh->prepare(
-        "DELETE FROM Exceptions_Entry_to_Team WHERE entry_id=? AND team_id=?"
-        );
-    return $sth->execute( $self->{id}, $exception->{id} );
-}
-####################################################################################
-sub assign_exception {
-    my $self      = shift;
-    my $dbh       = shift;
-    my $exception = shift;
-
-    return 0
-        if !defined $exception
-        or !defined $self->{id}
-        or $self->{id} < 0;
-
-    my $sth
-        = $dbh->prepare(
-        'INSERT IGNORE INTO Exceptions_Entry_to_Team(entry_id, team_id) VALUES(?, ?)'
-        );
-    $sth->execute( $self->{id}, $exception->{id} );
-    return 1;
-}
-####################################################################################
-sub static_entries_with_exception {
-    my $self = shift;
-    my $dbh  = shift;
-
-    die
-        "MEntry::static_entries_with_exception Calling authors with no database handle!"
-        unless defined $dbh;
-
-
-    my $qry
-        = "SELECT DISTINCT entry_id FROM Exceptions_Entry_to_Team WHERE team_id>-1";
-    my $sth = $dbh->prepare_cached($qry);
-    $sth->execute();
-
-    my @objs;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $entry = MEntry->static_get( $dbh, $row->{entry_id} );
-        push @objs, $entry;
-    }
-
-    return @objs;
-}
-####################################################################################
-sub assign_author {
-    my $self   = shift;
-    my $dbh    = shift;
-    my $author = shift;
-
-    if ( defined $author ) {
-        my $sth
-            = $dbh->prepare(
-            'INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)'
-            );
-        $sth->execute( $author->{id}, $self->{id} );
-        return 1;
-    }
-    return 0;
-}
-####################################################################################
-sub remove_author {
-    my $self   = shift;
-    my $dbh    = shift;
-    my $author = shift;
-
-    if ( defined $author ) {
-
-        my $sth
-            = $dbh->prepare(
-            'DELETE FROM Entry_to_Author WHERE entry_id = ? AND author_id = ?'
-            );
-        $sth->execute( $self->{id}, $author->{id} );
-        return 1;
-    }
-    return 0;
-}
-####################################################################################
-sub remove_all_authors {
-    my $self = shift;
-    my $dbh  = shift;
-
-    if ( defined $self->{id} ) {
-        my $sth
-            = $dbh->prepare('DELETE FROM Entry_to_Author WHERE entry_id = ?');
-        $sth->execute( $self->{id} );
-    }
-}
-####################################################################################
 
 ####################################################################################
 sub static_get_filter {
@@ -689,135 +598,6 @@ sub static_get_filter {
     #     ";
     # }
     return @objs;
-}
-####################################################################################
-sub has_tag_named {
-    my $self        = shift;
-    my $dbh         = shift;
-    my $tag_to_find = shift;
-
-    my $mtag = MTag->static_get_by_name( $dbh, $tag_to_find );
-    return 0 if !defined $mtag;
-    return 0 if defined $mtag and $mtag->{id} < 0;
-
-    my $tag_id = $mtag->{id};
-    my $qry
-        = "SELECT COUNT(*) FROM Entry_to_Tag WHERE entry_id = ? AND tag_id = ?";
-    my @ary = $dbh->selectrow_array( $qry, undef, $self->{id}, $tag_id );
-    my $key_exists = $ary[0];
-
-    #my $sth = $dbh->prepare( $qry );
-    #$sth->execute($self->{id}, $tag_id);
-
-    return $key_exists == 1;
-
-}
-####################################################################################
-sub tags {
-    my $self     = shift;
-    my $dbh      = shift;
-    my $tag_type = shift;    # optional
-
-    return () if !defined $self->{id} or $self->{id} < 0;
-
-    my $qry = "SELECT entry_id, tag_id 
-                FROM Entry_to_Tag 
-                LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
-                WHERE entry_id = ?";
-    my $sth;
-    if ( defined $tag_type ) {
-        $qry .= " AND Tag.type = ?";
-        $sth = $dbh->prepare_cached($qry);
-        $sth->execute( $self->{id}, $tag_type );
-    }
-    else {
-        $sth = $dbh->prepare_cached($qry);
-        $sth->execute( $self->{id} );
-    }
-
-
-    my @tags = ();
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $tag_id = $row->{tag_id};
-        my $mtag = MTag->static_get( $dbh, $tag_id );
-        push @tags, $mtag if defined $mtag;
-    }
-    return @tags;
-}
-####################################################################################
-sub add_tags {
-    my $self              = shift;
-    my $dbh               = shift;
-    my $tag_names_arr_ref = shift;
-    my $tag_type          = shift // 1;
-    my @tag_names         = @$tag_names_arr_ref;
-
-    my $num_added = 0;
-
-    return 0 if !defined $self->{id} or $self->{id} < 0;
-
-    # say "MEntry add_tags type $tag_type. Tags: " . join(", ", @tag_names);
-
-    foreach my $tn (@tag_names) {
-        my $t = MTag->static_get_by_name( $dbh, $tn );
-        if ( !defined $t ) {
-            $t = MTag->new( name => $tn, type => $tag_type );
-            $t->save($dbh);
-        }
-        $t = MTag->static_get_by_name( $dbh, $tn );
-        $num_added = $num_added + $self->assign_tag( $dbh, $t );
-    }
-    return $num_added;
-}
-####################################################################################
-sub assign_tag {
-    my $self = shift;
-    my $dbh  = shift;
-    my $tag  = shift;
-
-    my $num_added = 0;
-
-    return 0
-        if !defined $self->{id}
-        or $self->{id} < 0
-        or !defined $tag
-        or $tag->{id} <= 0;
-
-    my $sth = $dbh->prepare(
-        "INSERT IGNORE INTO Entry_to_Tag( entry_id, tag_id) VALUES (?,?)");
-    $num_added = $sth->execute( $self->{id}, $tag->{id} );
-    return $num_added;
-}
-####################################################################################
-sub remove_tag {
-    my $self = shift;
-    my $dbh  = shift;
-    my $tag  = shift;
-
-    return 0 if !defined $tag or !defined $self->{id} or $self->{id} < 0;
-
-    my $sth = $dbh->prepare(
-        "DELETE FROM Entry_to_Tag WHERE entry_id=? AND tag_id=?");
-
-    return $sth->execute( $self->{id}, $tag->{id} );
-}
-####################################################################################
-sub remove_tag_by_id {
-    my $self   = shift;
-    my $dbh    = shift;
-    my $tag_id = shift;
-
-    return $self->remove_tag( $dbh, MTag->static_get( $dbh, $tag_id ) );
-}
-####################################################################################
-sub remove_tag_by_name {
-    my $self     = shift;
-    my $dbh      = shift;
-    my $tag_name = shift;
-
-    return $self->remove_tag( $dbh,
-        MTag->static_get_by_name( $dbh, $tag_name ) );
 }
 ####################################################################################
 

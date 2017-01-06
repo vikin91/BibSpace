@@ -12,8 +12,9 @@ use BibSpace::Controller::Helpers;
 
 use BibSpace::Model::MUser;
 
+
 use BibSpace::Model::CMUsers;
-use BibSpace::Model::CMObjectStore;
+# use BibSpace::Model::CMObjectStore;
 
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
@@ -94,9 +95,25 @@ sub startup {
     $self->setup_routes;
     $self->setup_hooks;
 
+    my $dbh = $self->app->db;
 
     # $self->helper( storage => sub { state $storage = CMObjectStore->new } );
     # $self->storage->loadData($self->app->db);
+
+    # use BibSpace::Model::MEntry;
+    # my @e = $self->storage->entries_all;
+    # my $en = $self->storage->entries_get(0);
+    
+
+    # say "##############################";
+    # say "### entries count: ". $self->storage->entries_count;
+    # say "### authors count: ". $en->authors_count;
+    # $en->authors($dbh);
+    # say "### Authors : " . Dumper $en->authors_all;
+
+
+    # 
+    # 
     # my $entriesJSONstring = $self->storage->freeze(); 
     # # say "Serialized Entries have length of " . length($entriesJSONstring);
     # my $storage2 = CMObjectStore->thaw($entriesJSONstring);

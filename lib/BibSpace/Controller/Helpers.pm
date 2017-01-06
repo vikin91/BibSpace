@@ -136,11 +136,7 @@ sub register {
     $app->helper(
         num_pubs => sub {
             my $self = shift;
-
-            my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => undef } );
-            my $count = scalar @objs;
-            return $count;
+            return scalar  Fget_publications_main_hashed_args_only( $self, { hidden => undef } );
         }
     );
 

@@ -178,8 +178,11 @@ sub all_recently_modified {
     my $num  = $self->param('num') || 10;
     my $dbh  = $self->app->db;
 
-    my @objs = sort { $b->{modified_time} cmp $a->{modified_time} }
-        MEntry->static_all( $self->app->db );
+    my @all_entries = MEntry->static_all( $self->app->db );
+
+
+    my @objs = sort { $b->{modified_time} cmp $a->{modified_time} } @all_entries;
+        
     @objs = @objs[ 0 .. $num ];
 
     # map {say $_->{modified_time}} @objs;
@@ -799,7 +802,8 @@ sub regenerate_html_for_all {
 
     $self->write_log("regenerate_html_for_all is running");
 
-    BibSpace::Functions::FPublications::do_regenerate_html_for_all($dbh, $self->app->bst, 0);
+    # BibSpace::Functions::FPublications::do_regenerate_html_for_all($dbh, $self->app->bst, 0);
+    Fdo_regenerate_html_for_all($dbh, $self->app->bst, 0);
 
     $self->write_log("regenerate_html_for_all has finished");
 

@@ -103,15 +103,6 @@ sub Ffix_months {
     return ( $num_checks, $num_fixes );
 }
 
-# ####################################################################################
-# sub Fget_entry_id_for_bibtex_key{
-#    my $dbh = shift;
-#    my $key = shift;
-
-#    my $e = MEntry->static_get_by_bibtex_key($dbh, $key);
-#    return -1 unless defined $e;
-#    return $e->{id};
-# };
 
 ####################################################################################
 sub Fhandle_add_edit_publication {
@@ -153,7 +144,7 @@ sub Fhandle_add_edit_publication {
         return ( $e, $status_code_str, -1, -1 );
     }
 
-    my $tmp_e = MEntry->static_get_by_bibtex_key( $dbh, $e->{bibtex_key} );
+    my $tmp_e = grep { $_->{bibtex_key} eq $e->{bibtex_key} } MEntry->static_all( $dbh );
     $existing_id = $tmp_e->{id} if defined $tmp_e;
 
     if ( $id > 0 and $existing_id == $e->{id} )
@@ -347,19 +338,16 @@ sub Fclean_ugly_bibtex_fields_for_all_entries {
 ####################################################################################
 sub Fhandle_author_uids_change_for_all_entries {
     my $dbh = shift;
-    my $create_authors = shift // 0;
 
     my @all_entries = MEntry->static_all($dbh);
 
     my $num_authors_created  = 0;
-    my $num_authors_assigned = 0;
 
     foreach my $e (@all_entries) {
-        my ( $cre, $ass ) = $e->process_authors( $dbh, $create_authors );
+        my $cre = $e->process_authors( $dbh );
+
         $num_authors_created  = $num_authors_created + $cre;
-        $num_authors_assigned = $num_authors_assigned + $ass;
     }
-    say "Fhandle_author_uids_change_for_all_entries: $num_authors_created, $num_authors_assigned";
-    return ( $num_authors_created, $num_authors_assigned );
+    return $num_authors_created;
 }
 ####################################################################################

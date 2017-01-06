@@ -576,10 +576,10 @@ sub reassign_authors_to_entries_and_create_authors {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my ( $num_authors_created, $num_authors_assigned )
+    my $num_authors_created
         = Fhandle_author_uids_change_for_all_entries( $self->app->db, 1 );
     $self->flash( msg =>
-            "Reassignment with author creation has finished. $num_authors_created authors have been created and $num_authors_assigned assigned to their entries."
+            "Reassignment with author creation has finished. $num_authors_created authors have been created or assigned."
     );
     $self->redirect_to( $self->get_referrer );
 }
