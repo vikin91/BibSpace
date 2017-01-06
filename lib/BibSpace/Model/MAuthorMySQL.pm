@@ -305,12 +305,12 @@ sub insert_entries {
     my $sth = $dbh->prepare('DELETE FROM Entry_to_Author WHERE author_id = ?');
     $sth->execute($self->{id});
 
+    my $qry = 'INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)';
+
     foreach my $entry ($self->entries_all){
-        my $author_id = $self->{id}; # or $self->{id};
-        my $sth2 = $dbh->prepare(
-            'INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES(?, ?)'
-            );
-        $sth2->execute( $author_id, $entry->{id} );
+
+        my $sth2 = $dbh->prepare($qry);
+        $sth2->execute( $self->{id}, $entry->{id} );
     }
 }
 ####################################################################################

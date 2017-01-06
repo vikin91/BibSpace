@@ -480,12 +480,18 @@ sub assign_existing_authors {
     }
     return $num_authors_assigned;
 }
+
 ####################################################################################
 sub process_authors {
     my $self   = shift;
     my $dbh    = shift;
 
-    my @authors = $self->get_authors_from_bibtex($dbh);
+    ## here: source of the problem with reassignment
+
+    my @authors = $self->get_authors_from_bibtex($dbh); # returns new objects
+    # TODO: make sure this above returns objects from DB if they exists. Otherwise, see below.
+    map {$_->save($dbh)} @authors; # inserts duplicates into DB
+
     my $num_authors_created = $self->assign_author( @authors );
     $self->save($dbh);
     return $num_authors_created;
