@@ -13,6 +13,8 @@ use BibSpace::Controller::Helpers;
 use BibSpace::Model::MUser;
 
 use BibSpace::Model::CMUsers;
+use BibSpace::Model::CMObjectStore;
+
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
 use BibSpace::Functions::RedisWrapper;
@@ -29,6 +31,7 @@ use Path::Tiny;    # for creating directories
 use Mojo::Home;
 use File::Spec;
 use Cwd;
+
 # use Mojo::Redis2;
 use Redis;
 use BibSpace::Functions::RedisConnectionProvider;
@@ -73,7 +76,7 @@ has db => sub {
 };
 
 # TODO: turn into helper if the option is changeable at run-time
-has cache_enabled => sub {  
+has cache_enabled => sub {
     return 0;
 };
 
@@ -85,14 +88,24 @@ has version => sub {
 ################################################################
 sub startup {
     my $self = shift;
-    
+
     $self->setup_config;
     $self->setup_plugins;
     $self->setup_routes;
     $self->setup_hooks;
 
-    # AppHandleProvider->initialize(app => $self->app, 
-    #                               dbh => $self->app->db, 
+
+    # $self->helper( storage => sub { state $storage = CMObjectStore->new } );
+    # $self->storage->loadData($self->app->db);
+    # my $entriesJSONstring = $self->storage->freeze(); 
+    # # say "Serialized Entries have length of " . length($entriesJSONstring);
+    # my $storage2 = CMObjectStore->thaw($entriesJSONstring);
+    # say Dumper $storage2->authors->[0];
+
+
+
+    # AppHandleProvider->initialize(app => $self->app,
+    #                               dbh => $self->app->db,
     #                               bst => $self->app->bst);
     # $self->setup_cache;
 
@@ -101,9 +114,8 @@ sub startup {
     # say "App home is: " . $self->app->home;
     # say "Active bst file is: " . $self->app->bst;
 
-    
-}
 
+}
 
 
 ################################################################
@@ -112,9 +124,9 @@ sub setup_cache {
     my $app  = $self;
     ######################## Redis part
 
-    # my $long_running_task_handler = sub { 
+    # my $long_running_task_handler = sub {
     #     my ( $message, $channel, $subscribedchannel ) = @_;
-    #     say "Received message: $message, on chanel $channel"; 
+    #     say "Received message: $message, on chanel $channel";
     #     my $app = AppHandleProvider->instance;
 
     #     if( $message eq 'regen_html'){
@@ -135,14 +147,14 @@ sub setup_cache {
     # );
 
     # try{
-    #     $self->redisSub->subscribe( 'CHAN', $long_running_task_handler ); 
+    #     $self->redisSub->subscribe( 'CHAN', $long_running_task_handler );
     # }
-    # catch{ 
-    #     warn "Redis server is down. Err: $_"; 
+    # catch{
+    #     warn "Redis server is down. Err: $_";
     # };
 
     ######################## Redis part END
-    
+
 }
 ################################################################
 sub setup_config {
@@ -167,9 +179,9 @@ sub setup_plugins {
 
     say "=== Creating directories.";
     for my $dir (
-                ($self->config->{backups_dir}, 
-                 $self->config->{upload_dir},
-                 $self->config->{log_dir} )
+        (   $self->config->{backups_dir}, $self->config->{upload_dir},
+            $self->config->{log_dir}
+        )
         )
     {
         $dir =~ s!/*$!/!;
@@ -187,8 +199,8 @@ sub setup_plugins {
     $self->plugin('BibSpace::Controller::CronHelpers');
     $self->secrets( [ $self->config->{key_cookie} ] );
 
-    $self->helper(
-        users => sub { state $users = CMUsers->new } );
+
+    $self->helper( users => sub { state $users = CMUsers->new } );
     $self->helper( proxy_prefix => sub { $self->config->{proxy_prefix} } );
 
 
@@ -215,7 +227,7 @@ sub setup_plugins {
             my $self = shift;
             return 1 if $self->app->is_demo;
             my $login = $self->session('user');
-            my $usr = MUser->static_get_by_login($self->app->db, $login);
+            my $usr = MUser->static_get_by_login( $self->app->db, $login );
             return $usr->is_manager();
         }
     );
@@ -225,7 +237,7 @@ sub setup_plugins {
             my $self = shift;
             return 1 if $self->app->is_demo;
             my $login = $self->session('user');
-            my $usr = MUser->static_get_by_login($self->app->db, $login);
+            my $usr = MUser->static_get_by_login( $self->app->db, $login );
             return $usr->is_admin();
         }
     );
@@ -370,23 +382,16 @@ sub setup_routes {
 
     ################ AUTHORS ################
 
-    $logged_user->get('/authors/')
-        ->to('authors#show')
-        ->name('all_authors');
-    $logged_user->get('/authors/add')
-        ->to('authors#add_author')
+    $logged_user->get('/authors/')->to('authors#show')->name('all_authors');
+    $logged_user->get('/authors/add')->to('authors#add_author')
         ->name('add_author');
-    $logged_user->post('/authors/add/')
-        ->to('authors#add_post');
+    $logged_user->post('/authors/add/')->to('authors#add_post');
 
-    $logged_user->get('/authors/edit/:id')
-        ->to('authors#edit_author')
+    $logged_user->get('/authors/edit/:id')->to('authors#edit_author')
         ->name('edit_author');
-    $logged_user->post('/authors/edit/')
-        ->to('authors#edit_post')
+    $logged_user->post('/authors/edit/')->to('authors#edit_post')
         ->name('edit_author_post');
-    $logged_user->get('/authors/delete/:id')
-        ->to('authors#delete_author')
+    $logged_user->get('/authors/delete/:id')->to('authors#delete_author')
         ->name('delete_author');
     $logged_user->get('/authors/delete/:id/force')
         ->to('authors#delete_author_force');
@@ -417,11 +422,16 @@ sub setup_routes {
 
     ################ TAG TYPES ################
     # $logged_user->get('/tags/')->to('tags#index')->name("tags_index");
-    $logged_user->get('/tagtypes')->to('tagtypes#index')->name('all_tag_types');
-    $superadmin->get('/tagtypes/add')->to('tagtypes#add')->name('add_tag_type');
-    $superadmin->post('/tagtypes/add')->to('tagtypes#add_post')->name('add_tag_type_post');
-    $superadmin->get('/tagtypes/delete/:id')->to('tagtypes#delete')->name('delete_tag_type');
-    $manager->any('/tagtypes/edit/:id')->to('tagtypes#edit')->name('edit_tag_type');
+    $logged_user->get('/tagtypes')->to('tagtypes#index')
+        ->name('all_tag_types');
+    $superadmin->get('/tagtypes/add')->to('tagtypes#add')
+        ->name('add_tag_type');
+    $superadmin->post('/tagtypes/add')->to('tagtypes#add_post')
+        ->name('add_tag_type_post');
+    $superadmin->get('/tagtypes/delete/:id')->to('tagtypes#delete')
+        ->name('delete_tag_type');
+    $manager->any('/tagtypes/edit/:id')->to('tagtypes#edit')
+        ->name('edit_tag_type');
 
     ################ TAGS ################
     $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )
@@ -621,20 +631,21 @@ sub setup_routes {
     $anyone->get('/r/b')->to('publications#all_bibtex');             #ALIAS
 
     $anyone->get('/read/publications/get/:id')
-        ->to('publications#single_read')
-        ->name('get_single_publication_read');
+        ->to('publications#single_read')->name('get_single_publication_read');
     $anyone->get('/r/p/get/:id')->to('publications#single_read');
 
     ######## PublicationsLanding
 
     $anyone->get('/landing/publications')
-        ->to('PublicationsLanding#landing_types_obj')->name('landing_publications');
-    $anyone->get('/l/p')->to('PublicationsLanding#landing_types_obj')->name('lp');
+        ->to('PublicationsLanding#landing_types_obj')
+        ->name('landing_publications');
+    $anyone->get('/l/p')->to('PublicationsLanding#landing_types_obj')
+        ->name('lp');
 
     $anyone->get('/landing-years/publications')
         ->to('PublicationsLanding#landing_years_obj')
         ->name('landing_years_publications');
-    $anyone->get('/ly/p')->to('PublicationsLanding#landing_years_obj');    #ALIAS
+    $anyone->get('/ly/p')->to('PublicationsLanding#landing_years_obj'); #ALIAS
 
     ########
 

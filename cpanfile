@@ -1,5 +1,4 @@
 requires 'DBI', '>= 1.619';
-requires 'Dist::Zilla' , '>= 0.0';
 requires 'Module::Build::Mojolicious' , '>= 0.0';
 requires 'Module::CPANfile' , '>= 0.0';
 requires 'Mojolicious' , '>= 0.0';
@@ -47,5 +46,5 @@ on 'test' => sub {
 };
 
 on 'develop' => sub {
-  
+  requires 'Dist::Zilla' , '>= 0.0';
 };

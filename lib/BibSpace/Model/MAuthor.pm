@@ -6,6 +6,8 @@ use Text::BibTeX;    # parsing bib files
 use 5.010;           # because of ~~ and say
 use DBI;
 use Moose;
+use MooseX::Storage;
+with Storage('format' => 'JSON', 'io' => 'File');
 
 has 'id'        => ( is => 'rw' );
 has 'uid'       => ( is => 'rw' );
