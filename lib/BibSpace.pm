@@ -103,6 +103,13 @@ sub startup {
     # use BibSpace::Model::MEntry;
     # my @e = $self->storage->entries_all;
     # my $en = $self->storage->entries_get(0);
+
+    use BibSpace::Model::StorageBase;
+
+    StorageBase::init();
+    StorageBase::load($self->app->db);
+    my @all_entries = StorageBase->get()->entries_all;
+
     
 
     # say "##############################";

@@ -351,35 +351,41 @@ sub all {
 
     if ( $self->session('user') ) {
         # check cache
-        my $key = "publications." . join("_", @{$self->req->params->pairs} );
-        my $html;
-        try{
-            # this must be done in a blocking manner due to try/catch
-            $html = $self->redis->get($key);
-        }
-        catch{
-            warn "Redis server is down. Err: $_";
-        };
-        if($html){
-            $self->render(data => $html);
-            # TODO: update cache in background - must be non-blocking to make sense!
-            return;
-        }
+        # my $key = "publications." . join("_", @{$self->req->params->pairs} );
+        # my $html;
+        # try{
+        #     # this must be done in a blocking manner due to try/catch
+        #     $html = $self->redis->get($key);
+        # }
+        # catch{
+        #     warn "Redis server is down. Err: $_";
+        # };
+        # if($html){
+        #     $self->render(data => $html);
+        #     # TODO: update cache in background - must be non-blocking to make sense!
+        #     return;
+        # }
+        # say "Cache key $key not found. Processing normally.";
 
-        
-        say "Cache key $key not found. Processing normally.";
+
         my @objs = Fget_publications_main_hashed_args( $self,
         { entry_type => $entry_type } );
 
+        use BibSpace::Model::StorageBase;
+        # StorageBase::init();
+        # StorageBase::load($self->app->db);
+        my @all_entries = StorageBase->get()->entries_all;
+        # @objs = @all_entries; 
+
         $self->stash( entries => \@objs );
-        $html = $self->render_to_string( template => 'publications/all' );
-        try{
-            $self->app->redis->set( $key => $html );
-        }
-        catch{
-            warn "Redis server is down. Err: $_";
-        };
-        $self->render(data => $html);
+        # $html = $self->render_to_string( template => 'publications/all' );
+        # try{
+        #     $self->app->redis->set( $key => $html );
+        # }
+        # catch{
+        #     warn "Redis server is down. Err: $_";
+        # };
+        # $self->render(data => $html);
 
     }
     else {

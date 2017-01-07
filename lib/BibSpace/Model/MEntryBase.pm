@@ -5,6 +5,8 @@ use BibSpace::Model::MTeam;
 use BibSpace::Model::MAuthor;
 use BibSpace::Model::MTagType;
 
+use BibSpace::Model::StorageBase;
+
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
