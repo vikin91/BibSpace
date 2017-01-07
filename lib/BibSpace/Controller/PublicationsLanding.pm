@@ -257,20 +257,20 @@ sub landing_types_obj {    # TODO: clean this mess!
     my @all_keys = get_types_for_landing_page( $self->app->db );
     my @keys_with_papers;
 
-    my $cache_key = "publications.landing.types." . join("_", @{$self->req->params->pairs} );
-    # $html = $self->render_to_string( template => 'publications/all' );
-    # $self->app->redis->set($cache_key => $html  );
-    my $html;
-    try{
-        $html = $self->app->redis->get($cache_key);
-    }catch{
-        warn "Redis server is down. Err: $_";
-    };
+    # my $cache_key = "publications.landing.types." . join("_", @{$self->req->params->pairs} );
+    # # $html = $self->render_to_string( template => 'publications/all' );
+    # # $self->app->redis->set($cache_key => $html  );
+    # my $html;
+    # try{
+    #     $html = $self->app->redis->get($cache_key);
+    # }catch{
+    #     warn "Redis server is down. Err: $_";
+    # };
 
-    if($html){
-        $self->render(data => $html);
-        return;
-    }
+    # if($html){
+    #     $self->render(data => $html);
+    #     return;
+    # }
 
     push @all_keys, "talk";
     $bibtex_type_to_label{'talk'} = "Talks";
@@ -315,7 +315,7 @@ sub landing_types_obj {    # TODO: clean this mess!
     # keys_with_papers: non-empty -> key_bibtex_type
     return $self->display_landing(
         \%bibtex_type_to_entries, \%bibtex_type_to_label, \@keys_with_papers,
-        $self->get_switchlink('years'), $self->get_filtering_navbar(), $cache_key
+        $self->get_switchlink('years'), $self->get_filtering_navbar()
     );
 }
 ############################################################################################################
@@ -342,20 +342,20 @@ sub landing_years_obj {
         $max_year = $year;
     }
 
-    my $cache_key = "publications.landing.years." . join("_", @{$self->req->params->pairs} );
+    # my $cache_key = "publications.landing.years." . join("_", @{$self->req->params->pairs} );
     # $html = $self->render_to_string( template => 'publications/all' );
     # $self->app->redis->set($cache_key => $html  );
-    my $html;
-    try{
-        $html = $self->app->redis->get($cache_key);
-    }catch{
-        warn "Redis server is down. Err: $_";
-    };
+    # my $html;
+    # try{
+    #     $html = $self->app->redis->get($cache_key);
+    # }catch{
+    #     warn "Redis server is down. Err: $_";
+    # };
 
-    if($html){
-        $self->render(data => $html);
-        return;
-    }
+    # if($html){
+    #     $self->render(data => $html);
+    #     return;
+    # }
 
     my %hash_dict;
     my %hash_values;
@@ -389,7 +389,7 @@ sub landing_years_obj {
     my $navbar_html = $self->get_filtering_navbar( \@keys, \%hash_dict, 'years' );
 
     return $self->display_landing( \%hash_values, \%hash_dict, \@keys,
-        $switchlink, $navbar_html, $cache_key );
+        $switchlink, $navbar_html );
 }
 ############################################################################################################
 sub display_landing {
@@ -484,11 +484,11 @@ sub display_landing {
     # putting html result into cache
     
     my $html = $self->render_to_string( template => 'publications/landing_obj' );
-    try{
-        $self->app->redis->set($cache_key => $html);
-    }catch{
-        warn "Redis server is down. Err: $_";
-    };
+    # try{
+    #     $self->app->redis->set($cache_key => $html);
+    # }catch{
+    #     warn "Redis server is down. Err: $_";
+    # };
     $self->render(data => $html);
     
     # $self->render( template => 'publications/landing_obj' );
