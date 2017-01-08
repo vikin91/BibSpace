@@ -19,7 +19,17 @@ has 'name'      => ( is => 'rw', isa => 'Str' );
 has 'type'      => ( is => 'rw', isa => 'Int', default => 1);
 has 'permalink' => ( is => 'rw', isa => 'Maybe[Str]' );
 
+####################################################################################
+sub replaceFromStorage {
+    my $self = shift;
+    my $storage  = shift; # dependency injection
+    # use BibSpace::Model::StorageBase;
 
+    my $storageItem = $storage->tags_find( sub{ $_->equals($self) } );
+
+    die "Cannot find ".ref($self).": ".Dumper($self)." in storage " unless $storageItem;
+    return $storageItem;
+}
 ####################################################################################
 sub toString {
     my $self = shift;

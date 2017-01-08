@@ -3,6 +3,10 @@ package CMObjectStore;
 
 use strict;
 use warnings;
+use utf8;
+use 5.010;    #because of ~~ and say
+use Try::Tiny;
+use Data::Dumper;
 
 use BibSpace::Model::MUser;
 use BibSpace::Model::MEntry;
@@ -312,14 +316,6 @@ sub loadData {
     my @allAuthors     = MAuthor->static_all($dbh);
     my @allMemberships = MTeamMembership->static_all($dbh);
 
-    # discover relations between objects - based on data from DB
-    map { $_->load($dbh) } @allEntries;
-    map { $_->load($dbh) } @allTagTypes;
-    map { $_->load($dbh) } @allTags;
-    map { $_->load($dbh) } @allTeams;
-    map { $_->load($dbh) } @allAuthors;
-    map { $_->load($dbh) } @allMemberships;
-
     # put into object storage
     $self->entries( \@allEntries );
     $self->tagtypes( \@allTagTypes );
@@ -327,14 +323,40 @@ sub loadData {
     $self->teams( \@allTeams );
     $self->authors( \@allAuthors );
     $self->teamMemberships( \@allMemberships );
- 
+
+    # this should be from storage, not from db!!
+    # try{
+    map { $_->load( $dbh, $self ) } @allEntries;
+    map { $_->load( $dbh, $self ) } @allTagTypes;
+    map { $_->load( $dbh, $self ) } @allTags;
+    map { $_->load( $dbh, $self ) } @allAuthors;
+    map { $_->load( $dbh, $self ) } @allTeams;
+    map { $_->load( $dbh, $self ) } @allMemberships;
+
+    my $sam = $self->authors_find( sub { ($_->{uid} cmp 'KounevSamuel') == 0} );
+    # say Dumper $sam;
+
+# }
+# catch{
+#     my $trace = Devel::StackTrace->new;
+#     print "\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n"; # like carp
+# };
+
+    # discover relations between objects - based on data from DB
+    # map { $_->load($dbh) } @allEntries;
+    # map { $_->load($dbh) } @allTagTypes;
+    # map { $_->load($dbh) } @allTags;
+    # map { $_->load($dbh) } @allTeams;
+    # map { $_->load($dbh) } @allAuthors;
+    # map { $_->load($dbh) } @allMemberships;
+
 
     print "CMObjectStore finished loading data from DB.\n";
 
     # my $entry   = $self->entries_find( sub { $_->{id} == 913 });
     # print "\n" . $entry->toString;
 
-    
+
     # map { print $_->toString . "\n" } @allMemberships;
     # map { print $_->toString . "\n" } @allAuthors;
     # map { print $_->toString . "\n" } @allEntries;
@@ -349,70 +371,73 @@ sub loadData {
 
 ####################################################################################
 sub add_entry_authors {
-    my $self    = shift;
-    my $entry = shift;
+    my $self       = shift;
+    my $entry      = shift;
     my $create_new = shift // 1;
-   
-    my @bibtex_authors = $entry->get_authors_from_bibtex(); 
+
+    my @bibtex_authors = $entry->get_authors_from_bibtex();
 
     my @authors;
-    for my $a (@bibtex_authors){
+    for my $a (@bibtex_authors) {
 
-        my $author_form_storage = $self->authors_find( sub { $_->equals($a) });
+        my $author_form_storage
+            = $self->authors_find( sub { $_->equals($a) } );
 
-        if( defined $author_form_storage ){
+        if ( defined $author_form_storage ) {
             my $master = $author_form_storage->get_master;
             push @authors, $author_form_storage;
         }
-        elsif( $create_new ){
+        elsif ($create_new) {
             $self->add($a);
             push @authors, $a;
         }
-    } 
+    }
 
     my $num_authors_created = 0;
-    if( @authors ){
-        $num_authors_created = $entry->assign_author( @authors );
+    if (@authors) {
+        $num_authors_created = $entry->assign_author(@authors);
     }
     return $num_authors_created;
 }
 ####################################################################################
+
 =item add_entry_tags
     Processes tags from bibtex and adds them to entry. 
     It skips the duplicates that already exist in the entry.    
     If no tagType is specified, it adds it as type 1.
     Returns number of added tags
 =cut
+
 sub add_entry_tags {
-    my $self = shift;
-    my $entry = shift;
+    my $self    = shift;
+    my $entry   = shift;
     my $tagType = shift;
 
     my $tagTypeId = 1;
 
-    if( defined $tagType ){
+    if ( defined $tagType ) {
         $tagTypeId = $tagType->id;
     }
 
     my @bibtex_tags = $entry->get_tags_from_bibtex();
 
     my @tags;
-    for my $tag (@bibtex_tags){
+    for my $tag (@bibtex_tags) {
 
-        my $tag_form_storage = $self->tags_find( sub { $_->equals($tag) });
+        my $tag_form_storage = $self->tags_find( sub { $_->equals($tag) } );
 
-        if( $tag_form_storage ){
+        if ($tag_form_storage) {
             push @tags, $tag_form_storage;
         }
-        else{
-            $tag->type($tagTypeId); 
+        else {
+            $tag->type($tagTypeId);
             $self->add($tag);
             push @tags, $tag;
         }
     }
     my $num_tags_assigned = 0;
-    if( @tags ){
-        $num_tags_assigned = $entry->assign_tag( @tags );
+    if (@tags) {
+        $num_tags_assigned = $entry->assign_tag(@tags);
     }
     return $num_tags_assigned;
 }

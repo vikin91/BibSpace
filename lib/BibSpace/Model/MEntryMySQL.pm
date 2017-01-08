@@ -4,6 +4,7 @@ use BibSpace::Model::MEntryBase;
 use BibSpace::Model::MTag;
 use BibSpace::Model::MTagType;
 use BibSpace::Model::Persistent;
+use BibSpace::Model::StorageBase;
 
 use Data::Dumper;
 use utf8;
@@ -22,10 +23,33 @@ with 'Persistent';
 sub load {
     my $self = shift;
     my $dbh  = shift;
+    my $storage  = shift; # dependency injection
 
-    $self->bauthors( [ $self->load_authors($dbh) ] );
-    $self->btags( [ $self->load_tags($dbh) ] );
-    $self->bexceptions( [ $self->load_exceptions($dbh) ] );
+    die "Cant load without DB handle" unless $dbh;
+    die "Cant load without Storage handle " unless $storage;
+
+    # warn ref($self)." calls load";
+
+    my @entryAuthors = $self->load_authors($dbh); # authors from DB
+    # replace DB object if it has a copy in storage, 
+    map {$_->replaceFromStorage($storage) } @entryAuthors;
+    # initiate similar procedure for each author
+    map { $_->load($dbh, $storage) } @entryAuthors;
+    # put references to storage  in local array
+    $self->bauthors( [ @entryAuthors ] );
+    
+
+    my @entryTags = $self->load_tags($dbh); # authors from DB
+    @entryTags = map {$_->replaceFromStorage($storage) } @entryTags;
+    map { $_->load($dbh, $storage) } @entryTags;
+    $self->btags( [ @entryTags ] );
+    
+
+    my @entryExceptions = $self->load_exceptions($dbh); # authors from DB
+    @entryExceptions = map {$_->replaceFromStorage($storage) } @entryExceptions;
+    map { $_->load($dbh, $storage) } @entryExceptions;
+    $self->bexceptions( [ @entryExceptions ] );
+    
 }
 ####################################################################################
 

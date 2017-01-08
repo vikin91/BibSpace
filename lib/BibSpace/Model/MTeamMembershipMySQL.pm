@@ -14,18 +14,42 @@ use BibSpace::Model::Persistent;
 
 extends 'MTeamMembershipBase';
 with 'Persistent';
-
 ####################################################################################
 sub load {
     my $self = shift;
-    my $dbh = shift;
+    my $dbh  = shift;
+    my $storage  = shift; # dependency injection
 
+    my $author = $self->load_author($dbh); 
+    my $team = $self->load_team($dbh); 
+    # there may be mess in DB (although it shouldn't) and some entries may miss author or team
+    if($author and $team ){ 
+        $author = $author->replaceFromStorage($storage);
+        $team = $team->replaceFromStorage($storage);
+        $self->author( $author );
+        $self->team( $team );
+    }
+    else{
+        # Membership with incomplete data makes no sense in the storage
+        warn ref($self)." Author ".$self->author_id." from DB is undefined!" unless defined $author;
+        warn ref($self)." Team ".$self->team_id." from DB is undefined!" unless defined $team;
+        $storage->delete($self);
+        return;
+        
+        
 
-
-    $self->author( $self->load_author($dbh) );
-    $self->team( $self->load_team($dbh) );
-
-    # TODO
+        # happens when:
+        # mysql> select * from Author where id = 58;
+        # Empty set (0.00 sec)
+        # mysql> select * from Author_to_Team where author_id = 58;
+        # +-----------+---------+-------+------+
+        # | author_id | team_id | start | stop |
+        # +-----------+---------+-------+------+
+        # |        58 |       4 |  2013 |    0 |
+        # |        58 |       6 |  2011 | 2013 |
+        # +-----------+---------+-------+------+
+        # 2 rows in set (0.00 sec)
+    }
 }
 ####################################################################################
 sub load_author {

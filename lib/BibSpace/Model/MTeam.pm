@@ -1,5 +1,7 @@
 package MTeam;
 
+use Try::Tiny;
+use Devel::StackTrace;
 use Data::Dumper;
 use utf8;
 use BibSpace::Model::MAuthor;
@@ -37,7 +39,17 @@ has 'bteammemberships' => (
     },
 );
 
+####################################################################################
+sub replaceFromStorage {
+    my $self = shift;
+    my $storage  = shift; # dependency injection
+    # use BibSpace::Model::StorageBase;
 
+    my $storageItem = $storage->teams_find( sub{ $_->equals($self) } );
+
+    die "Cannot find ".ref($self).": ".Dumper($self)." in storage " unless $storageItem;
+    return $storageItem;
+}
 ####################################################################################
 sub load {
     my $self = shift;
@@ -54,8 +66,19 @@ sub toString {
 sub equals {
     my $self = shift;
     my $obj  = shift;
-    my $result = $self->name cmp $obj->name;
+
+    my $result = 1; # default not-equal
+    $result = $self->{name} cmp $obj->{name};
     return $result == 0;
+    
+    # try{
+    #     $result = $self->{name} cmp $obj->{name};
+    # }
+    # catch{
+    #     my $trace = Devel::StackTrace->new;
+    #     print "\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n"; # like carp
+    # };
+    
 }
 ####################################################################################
 sub static_all {

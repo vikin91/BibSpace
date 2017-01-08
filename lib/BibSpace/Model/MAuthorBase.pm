@@ -8,6 +8,8 @@ use DBI;
 use List::MoreUtils qw(any uniq);
 use BibSpace::Model::MTeamMembership;
 
+use BibSpace::Model::StorageBase;
+
 use Moose;
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
@@ -118,6 +120,20 @@ has 'bentries' => (
     },
 );
 
+
+
+####################################################################################
+sub replaceFromStorage {
+    my $self = shift;
+    my $storage  = shift; # dependency injection
+    # use BibSpace::Model::StorageBase;
+
+    my $storageItem = $storage->authors_find( sub{ $_->equals($self) } );
+
+    die "Cannot find ".ref($self).": ".Dumper($self)." in storage " unless $storageItem;
+    return $storageItem;
+}
+
 ####################################################################################
 # called after the default constructor
 sub BUILD {
@@ -154,7 +170,7 @@ sub equals {
     my $self = shift;
     my $obj  = shift;
 
-    return 0 unless defined $obj;
+    return 0 if !defined $obj;
     # return 0 unless $obj->isa("MAuthorBase");
     my $result = $self->{uid} cmp $obj->{uid};
     return $result == 0;
@@ -165,8 +181,6 @@ sub equals {
 sub set_master {
     my $self          = shift;
     my $master_author = shift;
-
-    warn "call";
 
     $self->{masterObj} = $master_author;
 

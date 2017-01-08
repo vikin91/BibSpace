@@ -626,7 +626,9 @@ subtest 'MEntry; add_tags, tags, remove_tag_by_name, remove_tag_by_id ' =>
         my @tags_to_add_mix = map { random_string(25) } ( 1 .. $num_tags );
         my @tags_to_add = unique( @tags_to_add_mix, @tags_to_add_mix );
 
-        is( $entry->add_tags( $dbh, \@tags_to_add ),
+        my @tag_objs_to_add = map {MTag->new(name=>$_)} @tags_to_add;
+
+        is( $entry->assign_tag( @tag_objs_to_add ),
             $num_tags, "Adding $num_tags tags" );
 
         my @got_tags = $entry->tags;#($dbh);
@@ -640,8 +642,9 @@ subtest 'MEntry; add_tags, tags, remove_tag_by_name, remove_tag_by_id ' =>
         ###### tags type 2
         my @tags_to_add_mix2 = map { random_string(25) } ( 1 .. $num_tags );
         my @tags_to_add2 = unique( @tags_to_add_mix2, @tags_to_add_mix2 );
+        my @tag_objs_to_add2 = map {MTag->new(name=>$_, type=>2)} @tags_to_add2;
 
-        is( $entry->add_tags( $dbh, \@tags_to_add2, 2 ),
+        is( $entry->assign_tag( @tag_objs_to_add2 ),
             $num_tags, "Adding $num_tags tags of type 2" );
 
         my @got_tag_names2 = map { $_->{name} } $entry->tags(2);#($dbh, 2);
@@ -653,6 +656,8 @@ subtest 'MEntry; add_tags, tags, remove_tag_by_name, remove_tag_by_id ' =>
         ###### end tags type 2
         my @entry_tags = $entry->tags;#($dbh);
 
+        ok(scalar @entry_tags > 0, "there are some tags");
+
         my $some_tag = shift @entry_tags;
         is( $entry->remove_tag_by_name( $some_tag->{name} ),
             1, "MEntry remove Tag by name: $some_tag->{name} " );
@@ -662,8 +667,8 @@ subtest 'MEntry; add_tags, tags, remove_tag_by_name, remove_tag_by_id ' =>
         is( array_diff( @got_tag_names, @tags_to_add ),
             1, "Arrays identical but 1" );
 
-        print "GTN: " .Dumper \@got_tag_names;
-        print "TTA: " .Dumper \@tags_to_add;
+        # print "GTN: " .Dumper \@got_tag_names;
+        # print "TTA: " .Dumper \@tags_to_add;
 
         my $some_tag2 = shift @entry_tags;
         my $some_tag3 = shift @entry_tags;
@@ -685,8 +690,6 @@ subtest 'MEntry; add_tags, tags, remove_tag_by_name, remove_tag_by_id ' =>
     is( $entry->remove_tag_by_name( "zzz" ),
         0, "MEntry remove Tag by name zzz" );
 
-    is( $entry->remove_tag_by_id( -1 ),
-        0, "MEntry remove Tag by id -1" );
     my @some_tag_objs = $entry->tags;#($dbh);
     my $some_tag_obj  = shift @some_tag_objs;
     is( $entry->remove_tag_by_id( $some_tag_obj->{id} ),
@@ -791,7 +794,7 @@ subtest 'MEntry; exceptions, teams, authors2 ' => sub {
         is( scalar $e->authors(), 0, "the paper has 0 authors: " . join(' ', map {$_->{master}} $e->authors()) );
     }
 
-    dies_ok { $e->teams() } 'expecting to die';
+    # dies_ok { $e->teams() } 'expecting to die';
 
     say "Exceptions: " . join(' ', map {$_->{name}} $e->exceptions());
     is( $e->assign_exception($some_team), 1, "assign exception. Current exceptions: " . join(' ', map {$_->{name}} $e->exceptions($dbh)) );

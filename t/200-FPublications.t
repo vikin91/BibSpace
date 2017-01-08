@@ -13,16 +13,17 @@ $t_logged_in->post_ok(
 my $self = $t_logged_in->app;
 
 my $dbh = $t_logged_in->app->db;
-
+my $storage = StorageBase::get();
 
 
 use BibSpace::Model::MEntry;
 use BibSpace::Functions::FPublications;
 
 $dbh->do('DELETE FROM Entry;');
+$storage->entries_clear;
 
 # my $en = MEntry->new();
-my @entries = MEntry->static_all($dbh);
+my @entries = $storage->entries_all;
 my $num_entries = scalar(@entries);
 is($num_entries, 0, "Got 0 entries");
 
@@ -38,6 +39,7 @@ $en3->{bib} = '@mastersthesis{zzzzz1,
 }';
 $en3->populate_from_bib($dbh);
 $en3->save($dbh);
+$storage->add($en3);
 
 my $en4 = MEntry->new();
 $en4->{bib} = '@mastersthesis{zzzzz2,
@@ -50,10 +52,11 @@ $en4->{bib} = '@mastersthesis{zzzzz2,
 }';
 $en4->populate_from_bib($dbh);
 $en4->save($dbh);
+$storage->add($en4);
 
 
 
-@entries = MEntry->static_all($dbh);
+@entries = $storage->entries_all;
 $num_entries = scalar(@entries);
 
 my $en = MEntry->new();
@@ -67,6 +70,7 @@ ok($num_entries > 0, "Got more than 0 entries");
 #### single entry
 
 $dbh->do('DELETE FROM Entry;');
+$storage->entries_clear;
 
 ### adding some entries for the next test
 $en3 = MEntry->new();
@@ -80,6 +84,7 @@ $en3->{bib} = '@mastersthesis{xxx1,
 }';
 $en3->populate_from_bib($dbh);
 $en3->save($dbh);
+$storage->add($en3);
 
 $en4 = MEntry->new();
 $en4->{bib} = '@mastersthesis{xxx2,
@@ -92,14 +97,15 @@ $en4->{bib} = '@mastersthesis{xxx2,
 }';
 $en4->populate_from_bib($dbh);
 $en4->save($dbh);
-@entries = MEntry->static_all($dbh);
+$storage->add($en4);
+@entries = $storage->entries_all;
 $num_entries = scalar(@entries);
 
 
 #### all entries
-my ($processed_entries, $fixed_entries) = Ffix_months($dbh);
-is($processed_entries, $num_entries, "fix_months processed all entries");
-ok(($fixed_entries > 0), "fix_months fixed some entries");
+my ($numChecks, $numFixes) = Ffix_months($dbh, @entries);
+is($numChecks, $num_entries, "fix_months processed all entries");
+ok(($numFixes > 0), "fix_months fixed some entries");
 
 
 

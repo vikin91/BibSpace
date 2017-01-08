@@ -15,13 +15,22 @@ has 'name'    => ( is => 'rw', isa => 'Str' );
 has 'comment' => ( is => 'rw', isa => 'Maybe[Str]' );
 
 ####################################################################################
+sub replaceFromStorage {
+    my $self = shift;
+    my $storage  = shift; # dependency injection
+    # use BibSpace::Model::StorageBase;
 
+    my $storageItem = $storage->tagtypes_find( sub{ $_->equals($self) } );
+
+    die "Cannot find ".ref($self).": ".Dumper($self)." in storage " unless $storageItem;
+    return $storageItem;
+}
+####################################################################################
 sub equals {
     my $self  = shift;
     my $other = shift;
 
-    if (    $self->{id} == $other->{id}
-        and $self->{name} eq $other->{name}
+    if ( $self->{name} eq $other->{name}
         and $self->{comment} eq $other->{comment} )
     {
         return 1;

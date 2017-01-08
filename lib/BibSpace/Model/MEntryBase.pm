@@ -117,6 +117,17 @@ has 'bst_file' => (
 );
 
 ####################################################################################
+sub replaceFromStorage {
+    my $self = shift;
+    my $storage  = shift; # dependency injection
+    # use BibSpace::Model::StorageBase;
+
+    my $storageItem = $storage->entries_find( sub{ $_->equals($self) } );
+
+    die "Cannot find ".ref($self).": ".Dumper($self)." in storage " unless $storageItem;
+    return $storageItem;
+}
+####################################################################################
 sub toString {
     my $self = shift;
     my $str;
@@ -275,10 +286,18 @@ sub fix_month {
         my $month_str = $bibtex_entry->get('month');
         $month_numeric
             = BibSpace::Controller::Core::get_month_numeric($month_str);
+        
+    }
+    if($self->{month} != $month_numeric){
+        $self->{month} = $month_numeric; 
         $num_fixes = 1;
     }
-    $self->{month}      = $month_numeric;
-    $self->{sort_month} = $month_numeric;
+    # ve leave changed 
+    if($self->{sort_month} == 0 and $self->{sort_month} != $month_numeric){
+        $self->{sort_month} = $month_numeric;
+    }
+    
+    
 
     return $num_fixes;
 }
@@ -492,18 +511,14 @@ sub get_authors_from_bibtex {
 ####################################################################################
 sub teams {
     my $self = shift;
-    my $dbh  = shift;
-
-    die
-        "Database handle is missing! - this should be corected once Mauthors are migrated to ObjStorage"
-        unless defined $dbh;
 
     my %final_teams;
     foreach my $author ( $self->authors ) {
-        foreach my $team ( $author->teams($dbh) ) {
-            if ($author->joined_team( $dbh, $team ) <= $self->{year}
-                and (  $author->left_team( $dbh, $team ) > $self->{year}
-                    or $author->left_team( $dbh, $team ) == 0 )
+
+        foreach my $team ( $author->teams ) {
+            if ($author->joined_team( $team ) <= $self->{year}
+                and (  $author->left_team( $team ) > $self->{year}
+                    or $author->left_team( $team ) == 0 )
                 )
             {
                 # $final_teams{$team}       = 1; # BAD: $team gets stringified
@@ -618,9 +633,9 @@ sub remove_tag_by_name {
 
     my $index = $self->tags_find_index(
         sub {
-            defined $_->{name}
+                (defined $_->{name}
                 and defined $tag_name
-                and $_->{name} eq $tag_name;
+                and $_->{name} eq $tag_name);
         }
     );
     return 0 if $index == -1;

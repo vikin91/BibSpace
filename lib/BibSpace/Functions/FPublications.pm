@@ -22,7 +22,7 @@ our @ISA = qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw(
-    Fdo_regenerate_html_for_all
+    Fdo_regenerate_html
     Ffix_months
     FprintBibtexWarnings
     Fhandle_add_edit_publication
@@ -35,16 +35,15 @@ our @EXPORT = qw(
     Fhandle_author_uids_change_for_all_entries
 );
 ####################################################################################
-sub Fdo_regenerate_html_for_all {
-    my $dbh = shift;
-    my $bst_file = shift;
-    my $force = shift // 1;
+sub Fdo_regenerate_html {
+    my ($dbh, $bst_file, $force, @entries) = @_;
 
-    my @entries = MEntry->static_all($dbh);
+
+    my $num_fixes = 0;
     for my $e (@entries) {
         $e->{bst_file} = $bst_file;
         $e->regenerate_html( $force, $bst_file );
-        $e->save($dbh);
+        $e->save($dbh);    # change to $storage->store_all or sth;
     }
 }
 ####################################################################################
@@ -63,20 +62,16 @@ sub FprintBibtexWarnings {
 }
 ####################################################################################
 sub Ffix_months {
-    my $dbh = shift;
+    my ($dbh, @entries) = @_;
 
-    say "CALL: FPUblications::fix_months";
-
-    my @objs       = MEntry->static_all($dbh);
     my $num_checks = 0;
     my $num_fixes  = 0;
 
-    for my $o (@objs) {
-
+    for my $o (@entries) {
         # say " checking fix month $num_checks";
         $num_fixes = $num_fixes + $o->fix_month();
         $o->save($dbh);
-        $num_checks = $num_checks + 1;
+        ++$num_checks;
     }
 
     return ( $num_checks, $num_fixes );

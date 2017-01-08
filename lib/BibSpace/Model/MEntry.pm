@@ -4,8 +4,7 @@ package MEntry;
 
 use Moose;
 use BibSpace::Model::MEntryMySQL;
-use BibSpace::Model::MEntryMySQLDirty;
-extends 'MEntryMySQLDirty';
+extends 'MEntryMySQL';
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

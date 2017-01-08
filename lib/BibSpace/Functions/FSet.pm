@@ -73,53 +73,6 @@ sub Fget_set_of_papers_for_team {
     return $set;
 }
 
-# sub Fget_set_of_papers_with_exceptions {
-#     my $dbh = shift;
-#     my $set = new Set::Scalar;
-
-#     my @entries = MEntry->static_entries_with_exception( $dbh );
-#     map { $set->insert( $_->{id} ) } @entries;
-
-#     return $set;
-# }
-
-# sub Fget_set_of_tagged_papers {
-#     my $dbh = shift;
-
-#     my $set = new Set::Scalar;
-
-#     my $qry = "SELECT DISTINCT entry_id FROM Entry_to_Tag";
-#     my $sth = $dbh->prepare($qry);
-#     $sth->execute();
-
-#     my @array;
-#     while ( my $row = $sth->fetchrow_hashref() ) {
-#         my $eid = $row->{entry_id};
-#         $set->insert($eid);
-#     }
-
-#     return $set;
-# }
-
-# sub Fget_set_of_papers_with_no_tags {
-#     my $dbh = shift;
-
-#     my $set = new Set::Scalar;
-
-#     my $qry
-#         = "SELECT DISTINCT id, key FROM Entry WHERE id NOT IN (SELECT DISTINCT entry_id FROM Entry_to_Tag);";
-#     my $sth = $dbh->prepare($qry);
-#     $sth->execute();
-
-#     my @array;
-#     while ( my $row = $sth->fetchrow_hashref() ) {
-#         my $eid = $row->{id};
-#         $set->insert($eid);
-#     }
-
-#     return $set;
-# }
-
 sub Fget_set_of_papers_for_all_authors_of_team_id {
     my $dbh = shift;
     my $tid = shift;

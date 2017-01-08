@@ -10,26 +10,29 @@ use Devel::StackTrace;
 
 use BibSpace::Model::MAuthorBase;
 use BibSpace::Model::Persistent;
+use BibSpace::Model::StorageBase;
 
 use Moose;
 extends 'MAuthorBase';
 with 'Persistent';
+
 ####################################################################################
 sub load {
     my $self = shift;
     my $dbh  = shift;
+    my $storage  = shift; # dependency injection
 
+    my @authorMemberships = $self->load_memberships($dbh); # authors from DB
+    # in case there is a mess in DB
+    @authorMemberships = grep { defined $_->team_id and defined $_->author_id } @authorMemberships;
+    @authorMemberships = map {$_->replaceFromStorage($storage) } @authorMemberships;
+    map { $_->load($dbh, $storage) } @authorMemberships;
+    $self->bteamMemberships( [ @authorMemberships ] );
+    
 
-    my @myMemberships = $self->load_memberships($dbh);
-
-    $self->bteamMemberships( [ @myMemberships ] );
-    # this will load author and team objects into memberships
-    map { $_->load($dbh) } $self->teamMemberships_all;    
-
-    # now, there are teams
-    my @myTeams = map{ $_->team } $self->teamMemberships_all;
+    # now, there are teams loaded from storage
+    my @myTeams = map{ $_->team } grep { defined $_->team } $self->teamMemberships_all;
     $self->bteams( [ @myTeams ] );
-
 }
 ####################################################################################
 sub load_memberships {

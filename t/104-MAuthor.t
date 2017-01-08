@@ -26,12 +26,42 @@ my $app_config = $t_logged_in->app->config;
 
 
 
-my $storage = StorageBase::get();
+
 
 my $status = 0;
 $status
     = do_restore_backup_from_file( $dbh, "./fixture/db.sql", $app_config );
 is( $status, 1, "preparing DB for test" );
+
+my $storage = StorageBase::get();
+
+####################################################################
+subtest 'MAuthor teams experiments' => sub {
+    plan 'skip_all' => "Test contains hardocded data (fixture-specific). Skipping for safety!";
+
+    ok( $storage->authors_count > 0 , "There are some authors");
+    my $testAuthor = $storage->authors_find( sub { ($_->{uid} cmp 'KounevSamuel') == 0} );
+    ok( $testAuthor , "Found Samuel");
+    is( $testAuthor->teams_count, 2, "Samuel has 2 teams"); # = DESCARTES, SE_WUERZBURG
+
+    my $testTeam = $storage->teams_find( sub { ($_->{name} cmp 'PiotrPL') == 0} );
+    ok( $testTeam );
+    $testAuthor->add_to_team($testTeam);
+
+    is( scalar($testAuthor->teams), 3, "Samuel has 3 teams"); # = DESCARTES, SE_WUERZBURG
+
+    # hardocded!!!
+    my $samuelsEntry = $storage->entries_find( sub { $_->{id} == 1083} );
+    ok( $samuelsEntry , "Found Samuels Entry");
+
+    my $testAuthor2 = $samuelsEntry->authors_find( sub { ($_->{uid} cmp 'KounevSamuel') == 0} );
+    ok( $testAuthor2 , "Found Samuel2");
+    $testAuthor2->add_to_team($testTeam);
+    is( scalar($testAuthor2->teams), 3, "Samuel2 has 3 teams"); # = DESCARTES, SE_WUERZBURG
+    
+    # ok( $testAuthor == $testAuthor2, "Objects are identical!");
+
+};
 
 ####################################################################
 subtest 'MAuthor basics' => sub {

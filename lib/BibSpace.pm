@@ -107,7 +107,7 @@ sub startup {
     StorageBase::load($self->app->db);
     my @all_entries = StorageBase->get()->entries_all;
 
-    
+
 
     # say "##############################";
     # say "### entries count: ". $self->storage->entries_count;
