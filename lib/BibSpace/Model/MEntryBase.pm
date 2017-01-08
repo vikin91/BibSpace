@@ -168,25 +168,17 @@ sub is_hidden {
 ####################################################################################
 sub hide {
     my $self = shift;
-    # my $dbh  = shift;
-
     $self->{hidden} = 1;
-    # $self->save($dbh);
 }
 ####################################################################################
 sub unhide {
     my $self = shift;
-    # my $dbh  = shift;
-
     $self->{hidden} = 0;
-    # $self->save($dbh);
 }
 ####################################################################################
 sub toggle_hide {
     my $self = shift;
-    # my $dbh  = shift;
-
-    if ( $self->{hidden} == 1 ) {
+    if ( $self->is_hidden == 1 ) {
         $self->unhide();
     }
     else {
@@ -196,10 +188,7 @@ sub toggle_hide {
 ####################################################################################
 sub make_paper {
     my $self = shift;
-    # my $dbh  = shift;
-
     $self->{entry_type} = 'paper';
-    # $self->save($dbh);
 }
 ####################################################################################
 sub is_paper {
@@ -210,10 +199,7 @@ sub is_paper {
 ####################################################################################
 sub make_talk {
     my $self = shift;
-    # my $dbh  = shift;
-
     $self->{entry_type} = 'talk';
-    # $self->save($dbh);
 }
 ####################################################################################
 sub is_talk {
@@ -295,17 +281,17 @@ sub fix_month {
     return $num_fixes;
 }
 ########################################################################################################################
-sub is_talk_in_DB {
-    my $self = shift;
-    my $dbh  = shift;
+# sub is_talk_in_DB {
+#     my $self = shift;
+#     my $dbh  = shift;
 
-    my $db_e = MEntry->static_get( $dbh, $self->{id} );
-    return undef unless defined $db_e;
-    if ( $db_e->{entry_type} eq 'talk' ) {
-        return 1;
-    }
-    return 0;
-}
+#     my $db_e = MEntry->static_get( $dbh, $self->{id} );
+#     return undef unless defined $db_e;
+#     if ( $db_e->{entry_type} eq 'talk' ) {
+#         return 1;
+#     }
+#     return 0;
+# }
 ########################################################################################################################
 sub has_tag_named {
     my $self = shift;
@@ -363,7 +349,6 @@ sub fix_entry_type_based_on_tag {
 ####################################################################################
 sub postprocess_updated {
     my $self     = shift;
-    my $dbh      = shift;
     my $bst_file = shift;
 
     $bst_file = $self->{bst_file} if !defined $bst_file;
@@ -372,17 +357,10 @@ sub postprocess_updated {
         "Warning, you use Mentry->postprocess_updated without valid bst file!"
         unless defined $bst_file;
 
-    $self->process_tags($dbh);
-    my $populated = $self->populate_from_bib();
+    $self->populate_from_bib();
     $self->fix_month();
-    $self->process_authors( $dbh );
+    $self->regenerate_html( 0, $bst_file );
 
-    
-
-    $self->regenerate_html( $dbh, 0, $bst_file );
-    $self->save($dbh);
-
-    return 1;    # TODO: old code!
 }
 ####################################################################################
 sub generate_html {
@@ -405,7 +383,6 @@ sub generate_html {
 ####################################################################################
 sub regenerate_html {
     my $self     = shift;
-    my $dbh      = shift;
     my $force    = shift;
     my $bst_file = shift;
 
@@ -439,9 +416,11 @@ sub has_author {
 sub assign_author {
     my ($self, @authors)   = @_;
 
+    return 0 if !@authors or scalar @authors == 0;
+
     my $added = 0;
     foreach my $a ( @authors ){
-        if( !$self->has_author( $a ) ){
+        if( defined $a and !$self->has_author( $a ) ){
             $self->authors_add( $a );
             ++$added;
             if( !$a->has_entry($self) ){
@@ -468,101 +447,6 @@ sub remove_all_authors {
     $self->authors_clear;
 }
 ####################################################################################
-=item assign_existing_authors
-This function processes the authors from bibtex entries, 
-then searches for existing authors in database and 
-assigns them to the entry by modifying the database.
-
-Author will not be assigned if it does not extist in the DB !
-=cut 
-
-# this function shouldnt be here, because it relies on SQL-based code (static_get_by_name)
-sub assign_existing_authors {
-    my $self = shift;
-    my $dbh  = shift;
-
-    $self->populate_from_bib();
-    my $bibtex_entry = new Text::BibTeX::Entry();
-    $bibtex_entry->parse_s( $self->{bib} );
-    my $entry_key = $self->{bibtex_key};
-
-    my $num_authors_assigned = 0;
-
-
-    $self->remove_all_authors($dbh);
-
-# We assume that entry has no authors, so $self->authors($dbh) cannot be used!
-
-    foreach my $name ( $self->author_names_from_bibtex() ) {
-        my $author = MAuthor->static_get_by_name( $dbh, $name );
-        my $master = $author;
-        $master = $author->get_master($dbh) if defined $author;
-
-        if ( defined $author and defined $master ){
-            $self->assign_author( $master );
-            ++$num_authors_assigned;
-        }
-    }
-    return $num_authors_assigned;
-}
-
-####################################################################################
-sub process_authors {
-    my $self    = shift;
-    my $dbh     = shift;
-    
-    use BibSpace::Model::StorageBase;
-    my $storage = StorageBase->get();
-
-    my @bibtex_authors = $self->get_authors_from_bibtex($dbh); 
-
-    my @authors;
-    for my $a (@bibtex_authors){
-
-        my $author_form_storage = $storage->authors_find( sub { $_->equals($a) });
-
-        if( defined $author_form_storage ){
-            my $master = $author_form_storage->get_master;
-            push @authors, $author_form_storage;
-        }
-        else{
-            $storage->authors_add( $a );
-            push @authors, $a;
-        }
-    } 
-
-    my $num_authors_created = $self->assign_author( @authors );
-    $self->save($dbh);
-    return $num_authors_created;
-}
-####################################################################################
-sub process_authors_old {
-    my $self   = shift;
-    my $dbh    = shift;
-    my $create = shift // 0;
-
-
-
-    my $num_authors_created = 0;
-    if ( $create == 1 ) {
-        my @authors = $self->get_authors_from_bibtex($dbh);
-        $num_authors_created = scalar @authors;
-        # map { $_->save($dbh) } @authors;
-        $self->assign_author( @authors );
-        $self->save($dbh);
-        # $self->authors_add( @authors );
-    }
-
-    # warn "process_authors created $num_authors_created";
-
-    my $num_authors_assigned = $self->assign_existing_authors($dbh);
-
-
-    return ( $num_authors_created, $num_authors_assigned );
-}
-
-# ####################################################################################
-
 ####################################################################################
 ####################################################################################
 sub author_names_from_bibtex {
@@ -596,7 +480,6 @@ sub author_names_from_bibtex {
 ####################################################################################
 sub get_authors_from_bibtex {
     my $self = shift;
-    my $dbh  = shift;
 
     my @authors;
 
@@ -607,8 +490,6 @@ sub get_authors_from_bibtex {
     return @authors;
 }
 ####################################################################################
-
-
 sub teams {
     my $self = shift;
     my $dbh  = shift;
@@ -685,24 +566,30 @@ sub tags {
     return $self->tags_all;
 }
 ####################################################################################
-sub assign_tag {
+sub has_tag {
     my $self = shift;
-    my $tag  = shift;
+    my $tag = shift;
 
+    my $exists = $self->tags_find_index( sub { $_->equals($tag) } ) > -1;
+    return $exists;
+}
+####################################################################################
+sub assign_tag {
+    my ($self, @tags)   = @_; 
 
-    return 0
-        if !defined $self->{id}
-        or $self->{id} < 0
-        or !defined $tag
-        or $tag->{id} <= 0;
+    return 0 if !@tags or scalar @tags == 0;
 
-    # say "before Entry has tag: \n". join ("\n", map { $_->toString } $self->tags_all );
-    my $result = $self->tags_add($tag);
-    # say "adding tag ". $tag->toString;
-    # say "after Entry has tag: \n". join ("\n", map { $_->toString } $self->tags_all );
-
-    return 1 if $result;
-    return 0;
+    my $added = 0;
+    foreach my $tag ( @tags ){
+        if( defined $tag and !$self->has_tag( $tag ) ){
+            $self->tags_add( $tag );
+            ++$added;
+            # if( !$tag->has_entry($self) ){
+            #     $tag->assign_entry($self);
+            # }
+        }
+    }
+    return $added;
 }
 ####################################################################################
 sub remove_tag {
@@ -740,47 +627,44 @@ sub remove_tag_by_name {
     return 1 if $self->tags_delete($index);
     return 0;
 }
-####################################################################################
-sub process_tags {
-    my $self = shift;
-    my $dbh  = shift;
 
-    $self->populate_from_bib();
+
+####################################################################################
+sub get_tags_from_bibtex {
+    my $self = shift;
+
+    my @tags;
+
+    foreach my $name ( $self->tag_names_from_bibtex() ) {
+        push @tags, MTag->new( name => $name );
+    }
+    return @tags;
+}
+####################################################################################
+sub tag_names_from_bibtex {
+    my $self = shift;
+
+    my @tag_names;
 
     my $bibtex_entry = new Text::BibTeX::Entry();
     $bibtex_entry->parse_s( $self->{bib} );
 
-    # my $e = MEntry->static_get_by_bibtex_key( $dbh, $self->{bibtex_key} );
-    # return 0 if !defined $e;
-
-    my $num_tags_added = 0;
-
     if ( $bibtex_entry->exists('tags') ) {
         my $tags_str = $bibtex_entry->get('tags');
-        $tags_str =~ s/\,/;/g       if defined $tags_str;
-        $tags_str =~ s/^\s+|\s+$//g if defined $tags_str;
+        if($tags_str){
+            # change , into ;
+            $tags_str =~ s/\,/;/g;    
+            # remove leading and trailing spaces
+            $tags_str =~ s/^\s+|\s+$//g;
 
-        my @tags = ();
-        @tags = split( ';', $tags_str ) if defined $tags_str;
-
-        for my $tag (@tags) {
-            $tag =~ s/^\s+|\s+$//g;
-            $tag =~ s/\ /_/g if defined $tag;
-
-            my $tt = MTagType->new(
-                name    => "Imported",
-                comment => "Automatically imported entries"
-            );
-            $tt->save($dbh);
-
-            if ( !$self->has_tag_named($tag) ) {
-                $self->tags_add(
-                    MTag->new( name => $tag, type => $tt->{id} ) );
-                $num_tags_added = $num_tags_added + 1;
-            }
-        }
+            @tag_names = split( ';', $tags_str );
+            # remove leading and trailing spaces
+            map { s/^\s+|\s+$//g } @tag_names;
+            # change spaces into underscores
+            map { $_ =~ s/\ /_/g } @tag_names;
+        }        
     }
-    return $num_tags_added;
+    return @tag_names;
 }
 ####################################################################################
 sub sort_by_year_month_modified_time {

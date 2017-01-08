@@ -10,23 +10,20 @@ use BibSpace::Model::MTeamMembership;
 
 use Moose;
 use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+with Storage( 'format' => 'JSON', 'io' => 'File' );
 
 
 has 'id'      => ( is => 'rw', isa     => 'Int' );
 has 'uid'     => ( is => 'rw', isa     => 'Str' );
 has 'display' => ( is => 'rw', default => 0 );
-has 'master'  => ( 
-        is => 'rw', 
-        isa => 'Maybe[Str]', 
-        default => sub { shift->{uid} } 
-);
+has 'master' =>
+    ( is => 'rw', isa => 'Maybe[Str]', default => sub { shift->{uid} } );
 has 'master_id' => ( is => 'rw', isa => 'Maybe[Int]' );
-has 'masterObj' => ( 
-    is => 'rw', 
-    isa => 'Maybe[MAuthor]', 
-    default => sub { undef },
-    traits  => ['DoNotSerialize'] # due to cycyles
+has 'masterObj' => (
+    is      => 'rw',
+    isa     => 'Maybe[MAuthor]',
+    default => sub {undef},
+    traits  => ['DoNotSerialize']    # due to cycyles
 );
 
 # has 'bminions' => (
@@ -55,7 +52,7 @@ has 'masterObj' => (
 has 'bteamMemberships' => (
     is      => 'rw',
     isa     => 'ArrayRef[MTeamMembership]',
-    traits  => ['Array', 'DoNotSerialize'],
+    traits  => [ 'Array', 'DoNotSerialize' ],
     default => sub { [] },
     handles => {
         teamMemberships_all        => 'elements',
@@ -78,7 +75,7 @@ has 'bteamMemberships' => (
 has 'bteams' => (
     is      => 'rw',
     isa     => 'ArrayRef[MTeam]',
-    traits  => ['Array', 'DoNotSerialize'],
+    traits  => [ 'Array', 'DoNotSerialize' ],
     default => sub { [] },
     handles => {
         teams_all        => 'elements',
@@ -124,30 +121,31 @@ has 'bentries' => (
 ####################################################################################
 # called after the default constructor
 sub BUILD {
-      my $self = shift;
+    my $self = shift;
 
-      if ( !defined $self->master or $self->master eq '' ) {
+    if ( !defined $self->master or $self->master eq '' ) {
         $self->master( $self->uid );
-      }
-      if ( !defined $self->master_id and defined $self->{id} ){
+    }
+    if ( !defined $self->master_id and defined $self->{id} ) {
         $self->master_id( $self->id );
-      }
-      if ( defined $self->masterObj and $self->masterObj == $self ){
-        $self->masterObj( undef );
-      }
+    }
+    if ( defined $self->masterObj and $self->masterObj == $self ) {
+        $self->masterObj(undef);
+    }
 }
 ####################################################################################
 sub toString {
     my $self = shift;
-    my $str = $self->freeze;
-    $str .= "\n\t (MASTER): ". $self->masterObj->freeze if defined $self->masterObj;
+    my $str  = $self->freeze;
+    $str .= "\n\t (MASTER): " . $self->masterObj->freeze
+        if defined $self->masterObj;
 
     $str .= "\nMEMBERSHIPS: [\n";
-    map { $str .= "\t".$_->toString . "\n"} $self->teamMemberships_all;
+    map { $str .= "\t" . $_->toString . "\n" } $self->teamMemberships_all;
     $str .= "]\n";
 
     $str .= "\nTEAMS: [\n";
-    map { $str .= "\t".$_->toString . "\n"} $self->teams_all;
+    map { $str .= "\t" . $_->toString . "\n" } $self->teams_all;
     $str .= "]\n";
     $str;
 }
@@ -160,15 +158,14 @@ sub equals {
     my $result = $self->{uid} cmp $obj->{uid};
     return $result == 0;
 }
-
-
-
 ####################################################################################
 ####################################################################################
 ####################################################################################
 sub set_master {
     my $self          = shift;
     my $master_author = shift;
+
+    warn "call";
 
     $self->{masterObj} = $master_author;
 
@@ -178,16 +175,16 @@ sub set_master {
 ####################################################################################
 sub get_master {
     my $self = shift;
-    
+
     return $self if !defined $self->masterObj;
     return $self->masterObj;
 }
 ####################################################################################
 sub is_master {
     my $self = shift;
-    
+
     return 1 if !defined $self->masterObj;
-    return 1 if $self->equals($self->masterObj);
+    return 1 if $self->equals( $self->masterObj );
     return 0;
 }
 ####################################################################################
@@ -197,14 +194,17 @@ sub is_minion {
 }
 ####################################################################################
 sub is_minion_of {
-    my $self = shift;
+    my $self   = shift;
     my $master = shift;
 
-    return 1 if defined $self->{masterObj} and $self->{masterObj}->equals($master);
+    return 1
+        if defined $self->{masterObj} and $self->{masterObj}->equals($master);
     return 1 if defined $master->{id} and $self->{master_id} == $master->{id};
-    return 1 if defined $self->{master} and ($self->{master} cmp  $master->{uid}) == 0;
+    return 1
+        if defined $self->{master}
+        and ( $self->{master} cmp $master->{uid} ) == 0;
     return 0 if $self->is_master;
-    
+
     return 0;
 }
 ####################################################################################
@@ -213,7 +213,7 @@ sub update_master_name {
     my $new_master = shift;
 
     # TODO: if this is minion, then this may not have sense
-    if( $self->is_minion ){
+    if ( $self->is_minion ) {
         die "Cannot update master name if author is a minion";
     }
 
@@ -224,9 +224,9 @@ sub update_master_name {
 }
 ####################################################################################
 sub remove_master {
-    my $self          = shift;
+    my $self = shift;
 
-    $self->{masterObj} = $self;
+    $self->{masterObj} = undef;
 
     $self->{master}    = $self->{uid};
     $self->{master_id} = $self->{id};
@@ -240,45 +240,35 @@ sub add_minion {
     $minion->set_master($self);
     return 1;
 }
-####################################################################################
-sub add_user_id {
-    my $self        = shift;
-    my $dbh         = shift;
-    my $new_user_id = shift;
+##############################################################################################################
+sub can_merge_authors {
+    my $self          = shift;
+    my $source_author = shift;
 
-    warn "MAuthor->add_user_id is deprecated in favor of add_minon.";
 
-    my $minion = MAuthor->new(
-        uid       => $new_user_id,
-        master    => $self->{master},
-        master_id => $self->{master_id}
-    );
-    $minion->save($dbh);
-
-    return $self->add_minion($minion);
+    if (    defined $source_author
+        and $source_author->{id} != $self->{id}
+        and !$self->equals($source_author) )
+    {
+        return 1;
+    }
+    return 0;
 }
 ##############################################################################################################
 sub merge_authors {
     my $self          = shift;
     my $source_author = shift;
 
-    if ( defined $source_author and $source_author->{id} != $self->{id} ) {
-
+    if($source_author){
         # author with new_user_id already exist
         # move all entries of candidate to this author
-
-        $self->take_entries_from_author( $source_author );
+        $self->take_entries_from_author($source_author);
 
         # necessary due to possible conflicts caused on ON UPDATE CASCADE
         $source_author->abandon_all_entries();
         $source_author->abandon_all_teams();
-
         $source_author->set_master($self);
-        return 1;
-
     }
-    return 0;
-
 }
 ####################################################################################
 ####################################################################################
@@ -315,21 +305,21 @@ sub entries {
 ####################################################################################
 sub has_entry {
     my $self = shift;
-    my $e = shift;
+    my $e    = shift;
 
     my $exists = $self->entries_find_index( sub { $_->equals($e) } ) > -1;
     return $exists;
 }
 ####################################################################################
 sub assign_entry {
-    my ($self, @entries)   = @_;
+    my ( $self, @entries ) = @_;
 
     my $added = 0;
-    foreach my $e ( @entries ){
-        if( !$self->has_entry( $e ) ){
-            $self->entries_add( $e );
+    foreach my $e (@entries) {
+        if ( !$self->has_entry($e) ) {
+            $self->entries_add($e);
             ++$added;
-            if( !$e->has_author($self) ){
+            if ( !$e->has_author($self) ) {
                 $e->assign_author($self);
             }
         }
@@ -340,7 +330,7 @@ sub assign_entry {
 }
 ####################################################################################
 sub remove_entry {
-    my $self   = shift;
+    my $self  = shift;
     my $entry = shift;
 
     my $index = $self->entries_find_index( sub { $_->equals($entry) } );
@@ -359,6 +349,8 @@ sub take_entries_from_author {
     my $self        = shift;
     my $from_author = shift;
 
+    warn "This function may cause entries to be duplicated for author "
+        . $self->toString;
     $self->entries_add( $from_author->entries );
     $from_author->abandon_all_entries;
 }
@@ -380,9 +372,11 @@ sub joined_team {
 
     return -1 if !defined $team;
 
-    my $mem = $self->teamMemberships_find( sub{ 
-        $_->{team_id} == $team->id and  $_->{author_id} == $self->id
-    });
+    my $mem = $self->teamMemberships_find(
+        sub {
+            $_->{team_id} == $team->id and $_->{author_id} == $self->id;
+        }
+    );
     return -1 if !defined $mem;
     return $mem->start;
 }
@@ -393,9 +387,11 @@ sub left_team {
 
     return -1 if !defined $team;
 
-    my $mem = $self->teamMemberships_find( sub{ 
-        $_->{team_id} == $team->id and  $_->{author_id} == $self->id
-    });
+    my $mem = $self->teamMemberships_find(
+        sub {
+            $_->{team_id} == $team->id and $_->{author_id} == $self->id;
+        }
+    );
     return -1 if !defined $mem;
     return $mem->stop;
 }
@@ -408,6 +404,37 @@ sub abandon_all_teams {
 
 }
 ################################################################################
+sub update_membership {
+    my $self = shift;
+    my $team = shift;
+    my $start = shift;
+    my $stop = shift;
+
+    my $mem = $self->teamMemberships_find(
+        sub {
+            $_->{team_id} == $team->id and $_->{author_id} == $self->id;
+        }
+    );
+
+    if ( $start < 0 ){
+        die "Invalid start $start: start must be 0 or greater";
+    }
+    if ( $stop < 0 ){
+        die "Invalid stop $stop: stop must be 0 or greater";
+    }
+    if ( $stop > 0 and $start > 0 and $stop < $start){
+        die "Invalid range: stop must me non-smaller than start";
+    }
+    if( !$mem ){
+        die "Invalid team. Cannot find author membership in that team.";
+    }
+
+    if( $mem ){
+        $mem->start($start) if defined $start;
+        $mem->stop($stop) if defined $stop;
+    }
+}
+################################################################################
 sub add_to_team {
     my $self = shift;
     my $team = shift;
@@ -416,19 +443,21 @@ sub add_to_team {
     return 0 if !defined $team and $team->{id} <= 0;
     $self->teams_add($team);
 
-    # TODO: 
-    # not sure if I should have it here
-    # how do I save it later, if it is not in the storage?
-    # maybe I should remove memberships from the storage and leave them only in author and evtl. team?
+# TODO:
+# not sure if I should have it here
+# how do I save it later, if it is not in the storage?
+# maybe I should remove memberships from the storage and leave them only in author and evtl. team?
 
-    $self->teamMemberships_add(MTeamMembership->new(
-        author_id => $self->id,
-        team_id => $team->id,
-        author => $self,
-        team => $team,
-        start => 0,
-        stop => 0
-    ));
+    $self->teamMemberships_add(
+        MTeamMembership->new(
+            author_id => $self->id,
+            team_id   => $team->id,
+            author    => $self,
+            team      => $team,
+            start     => 0,
+            stop      => 0
+        )
+    );
 }
 ################################################################################
 sub remove_from_team {
@@ -437,9 +466,11 @@ sub remove_from_team {
 
     return 0 if !defined $team and $team->{id} <= 0;
 
-    my $mem_index = $self->teamMemberships_find_index( sub { 
-        $_->{team_id} == $team->id and  $_->{author_id} == $self->id
-    } );
+    my $mem_index = $self->teamMemberships_find_index(
+        sub {
+            $_->{team_id} == $team->id and $_->{author_id} == $self->id;
+        }
+    );
     return 0 if $mem_index == -1;
     $self->teamMemberships_delete($mem_index);
 
@@ -450,8 +481,7 @@ sub remove_from_team {
 
 }
 ################################################################################
-sub teams
-{ 
+sub teams {
     my $self = shift;
     return $self->teams_all;
 }
@@ -463,7 +493,7 @@ sub tags {
     my $self = shift;
     my $type = shift // 1;
 
-    my @myTags; 
+    my @myTags;
 
     map { push @myTags, $_->tags($type) } $self->entries;
     @myTags = uniq @myTags;

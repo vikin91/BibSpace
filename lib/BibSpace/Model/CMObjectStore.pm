@@ -344,11 +344,79 @@ sub loadData {
     # map { $_->load($dbh) } @allTeams;
 
     # push @{ $self->storage }, @allEntries;
-
-
 }
 
-####################################################################################################
+
+####################################################################################
+sub add_entry_authors {
+    my $self    = shift;
+    my $entry = shift;
+    my $create_new = shift // 1;
+   
+    my @bibtex_authors = $entry->get_authors_from_bibtex(); 
+
+    my @authors;
+    for my $a (@bibtex_authors){
+
+        my $author_form_storage = $self->authors_find( sub { $_->equals($a) });
+
+        if( defined $author_form_storage ){
+            my $master = $author_form_storage->get_master;
+            push @authors, $author_form_storage;
+        }
+        elsif( $create_new ){
+            $self->add($a);
+            push @authors, $a;
+        }
+    } 
+
+    my $num_authors_created = 0;
+    if( @authors ){
+        $num_authors_created = $entry->assign_author( @authors );
+    }
+    return $num_authors_created;
+}
+####################################################################################
+=item add_entry_tags
+    Processes tags from bibtex and adds them to entry. 
+    It skips the duplicates that already exist in the entry.    
+    If no tagType is specified, it adds it as type 1.
+    Returns number of added tags
+=cut
+sub add_entry_tags {
+    my $self = shift;
+    my $entry = shift;
+    my $tagType = shift;
+
+    my $tagTypeId = 1;
+
+    if( defined $tagType ){
+        $tagTypeId = $tagType->id;
+    }
+
+    my @bibtex_tags = $entry->get_tags_from_bibtex();
+
+    my @tags;
+    for my $tag (@bibtex_tags){
+
+        my $tag_form_storage = $self->tags_find( sub { $_->equals($tag) });
+
+        if( $tag_form_storage ){
+            push @tags, $tag_form_storage;
+        }
+        else{
+            $tag->type($tagTypeId); 
+            $self->add($tag);
+            push @tags, $tag;
+        }
+    }
+    my $num_tags_assigned = 0;
+    if( @tags ){
+        $num_tags_assigned = $entry->assign_tag( @tags );
+    }
+    return $num_tags_assigned;
+}
+####################################################################################
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

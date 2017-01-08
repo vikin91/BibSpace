@@ -204,7 +204,7 @@ subtest 'MEntry; bibtex_has_field, fix_month' => sub {
 };
 
 ####################################################################
-subtest 'MEntry; process_tags manual' => sub {
+subtest 'MEntry; add_entry_tags manual' => sub {
 
     $dbh->do('DELETE FROM Tag;');
 
@@ -221,22 +221,22 @@ subtest 'MEntry; process_tags manual' => sub {
     $en2->{bib} = '@misc{testA1, tags = {aa;bb}}';
     $en2->populate_from_bib();
     $en2->save($dbh);
-    is( $en2->process_tags($dbh), 2, "Adding 2 tags" );
+    is( $storage->add_entry_tags($en2), 2, "Adding 2 tags" );
 
     $en2->{bib} = '@misc{testA2, tags = {}}';
     $en2->populate_from_bib();
     $en2->save($dbh);
-    is( $en2->process_tags($dbh), 0, "Adding 0 tags" );
+    is( $storage->add_entry_tags($en2), 0, "Adding 0 tags" );
 
 
     $en2->{bib} = '@misc{testA3, tags = {aa;bb;cc}}';
     $en2->populate_from_bib();
     $en2->save($dbh);
-    is( $en2->process_tags($dbh), 1, "Adding 1 extra tag" );
+    is( $storage->add_entry_tags($en2), 1, "Adding 1 extra tag" );
 };
 
 ####################################################################
-subtest 'MEntry; process_tags auto' => sub {
+subtest 'MEntry; add_entry_tags auto' => sub {
 
     # test adding many tags
     my $en2 = MEntry->new();
@@ -260,7 +260,7 @@ subtest 'MEntry; process_tags auto' => sub {
         $en2->populate_from_bib();
         $en2->save($dbh);
 
-        is( $en2->process_tags($dbh), $num_tags, "Adding $num_tags tags" );
+        is( $storage->add_entry_tags($en2), $num_tags, "Adding $num_tags tags" );
     }
 };
 ####################################################################
@@ -290,7 +290,7 @@ subtest 'MEntry; process_authors' => sub {
         $en2->populate_from_bib();
         $en2->save($dbh);
 
-        my $num_authors_created = $en2->process_authors($dbh, 1);
+        my $num_authors_created = $storage->add_entry_authors( $en2, 1 );
         is( $num_authors_created, $num_authors, "Adding $num_authors authors" );
     }
 };
@@ -490,7 +490,7 @@ subtest 'MEntry; static_get_filter' => sub {
 };
 
 ####################################################################
-subtest 'MEntry; has_tag_named, process_tags' => sub {
+subtest 'MEntry; has_tag_named, add_entry_tags' => sub {
     my $random1 = random_string(16);
     my $random2 = random_string(8);
     my $random3 = random_string(8);
@@ -510,13 +510,13 @@ subtest 'MEntry; has_tag_named, process_tags' => sub {
     $en7->save($dbh);
     is( $en7->has_tag_named( $random3 ), 0, "Entry has no tag $random3 yet" );
     is( $en7->has_tag_named( $random4 ), 0, "Entry has no tag $random4 yet" );
-    is( $en7->process_tags($dbh), 2, "Should add 2 tags" );
+    is( $storage->add_entry_tags($en7), 2, "Should add 2 tags" );
     is( $en7->has_tag_named( $random3 ), 1, "Entry has no tag $random3 yet" );
     is( $en7->has_tag_named( $random4 ), 1, "Entry has no tag $random4 yet" );
 };
 ####################################################################
 subtest
-    'MEntry; is_talk_in_DB, is_talk_in_tag, fix_entry_type_based_on_tag, make_paper, make_talk'
+    'MEntry; is_talk_in_tag, fix_entry_type_based_on_tag, make_paper, make_talk'
     => sub {
     my $random1 = random_string(16);
     my $random2 = random_string(8);
@@ -535,48 +535,38 @@ subtest
   }';
     $en7->populate_from_bib($dbh);
     $en7->save($dbh);
-    is( $en7->is_talk_in_DB($dbh), 0 );
     $en7->{entry_type} = 'talk';
-    is( $en7->is_talk_in_DB($dbh),  0 );
     is( $en7->is_talk_in_tag($dbh), 0 );
     $en7->{entry_type} = 'paper';
     $en7->make_talk();
     $en7->save($dbh);
-    is( $en7->is_talk_in_DB($dbh),  1 );
     is( $en7->is_talk_in_tag($dbh), 0 );
     $en7->make_paper();
     $en7->save($dbh);
-    is( $en7->is_talk_in_DB($dbh),  0 );
     is( $en7->is_talk_in_tag($dbh), 0 );
     is( $en7->fix_entry_type_based_on_tag($dbh),
         0, "Entry fix_entry_type_based_on_tag" );
-    is( $en7->is_talk_in_DB($dbh),  0 );
     is( $en7->is_talk_in_tag($dbh), 0 );
 
     # reset
     $en7->populate_from_bib();
     $en7->make_paper();
     $en7->save($dbh);
-    is( $en7->is_talk_in_DB($dbh),  0 );
     is( $en7->is_talk_in_tag($dbh), 0 );
 
-    is( $en7->process_tags($dbh), 3, "Should add 3 tags" );
-    is( $en7->is_talk_in_DB($dbh),  0 );
+    is( $storage->add_entry_tags($en7), 3, "Should add 3 tags" );
     is( $en7->is_talk_in_tag($dbh), 1 );
 
     is( $en7->fix_entry_type_based_on_tag($dbh),
         1, "Entry fix_entry_type_based_on_tag" );
     $en7->save($dbh);
-    is( $en7->is_talk_in_DB($dbh),  1 );
     is( $en7->is_talk_in_tag($dbh), 1 );
     $en7->make_paper();
     $en7->save($dbh);
-    is( $en7->is_talk_in_DB($dbh),  0 );
     is( $en7->is_talk_in_tag($dbh), 1 );    # tag remains!
     is( $en7->is_talk($dbh), 0 );    # tag remains, but this has no meaning
     $en7->make_talk();
     $en7->save($dbh);
-    is( $en7->is_talk_in_DB($dbh),  1 );
     is( $en7->is_talk_in_tag($dbh), 1 );
     $en7->make_paper($dbh);
     };
@@ -723,20 +713,20 @@ subtest 'MEntry: generate with bst' => sub {
     $entry->save($dbh);
 
     is( $entry->{need_html_regen}, 1, "need_html_regen 1" );
-    $entry->regenerate_html( $dbh, 0, './lib/descartes2.bst' );
+    $entry->regenerate_html( 0, './lib/descartes2.bst' );
     unlike( $entry->{html}, qr/ERROR: BST/ );
     is( $entry->{need_html_regen}, 0, "need_html_regen 0" );
 
-    $entry->regenerate_html( $dbh, 1, 'id-doesnt-exist.bst' );
+    $entry->regenerate_html( 1, 'id-doesnt-exist.bst' );
     is( $entry->{need_html_regen}, 0, "need_html_regen 0" );
     like( $entry->{html}, qr/ERROR: BST/ );
 
     $entry->{bst_file} = 'aaa';
-    $entry->regenerate_html( $dbh, 1 );
+    $entry->regenerate_html( 1 );
     like( $entry->{html}, qr/ERROR: BST/ );
 
     $entry->{bst_file} = './lib/descartes2.bst';
-    $entry->regenerate_html( $dbh, 1 );
+    $entry->regenerate_html( 1 );
     unlike( $entry->{html}, qr/ERROR: BST/ );
 };
 
@@ -745,6 +735,8 @@ subtest 'MEntry; exceptions, teams, authors2 ' => sub {
 
     plan 'skip_all' => "There are no teams to test exceptions"
         if scalar MTeam->static_all($dbh) == 0;
+
+    my $storage = StorageBase->get();
 
     my $auth = random_string(8) . ' ' . random_string(8);
     my $edit = random_string(8) . ' ' . random_string(8);
@@ -772,8 +764,9 @@ subtest 'MEntry; exceptions, teams, authors2 ' => sub {
     is( scalar $e->exceptions(), 0, "new paper has no exceptions" );
 
     is( scalar $e->authors(), 0, "new paper has 0 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
-    is( scalar $e->get_authors_from_bibtex($dbh), 1, "created 1 authors" );
-    $e->process_authors($dbh, 1);
+    is( scalar $e->get_authors_from_bibtex(), 1, "created 1 authors" );
+    
+    $storage->add_entry_authors( $e, 1 );
 
     is( scalar $e->authors(), 1, "new paper has 1 authors: " . join(' ', map {$_->{master}} $e->authors($dbh)) );
     is( scalar $e->author_names_from_bibtex($dbh), 1, "new paper has 1 authors" );
@@ -785,8 +778,8 @@ subtest 'MEntry; exceptions, teams, authors2 ' => sub {
         $e->assign_author($a1);
         is( scalar $e->authors(), 1, "Paper should have 1 author and has: " . join(' ', map {$_->{master}} $e->authors()) );
     }
-
-    is( $e->postprocess_updated($dbh), 1, "postproces_updated returns 1" ); # only call
+    $storage->add_entry_authors($e);
+    # is( $e->postprocess_updated($dbh), 1, "postproces_updated returns 1" ); # only call
     is( scalar $e->authors() , 1, "new paper has 1 authors: " . join(' ', map {$_->{master}} $e->authors()) );
 
     {

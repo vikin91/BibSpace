@@ -5,6 +5,7 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
+use Try::Tiny;
 use File::Slurp;
 use Time::Piece;
 use 5.010;           #because of ~~
@@ -23,6 +24,40 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
 ##############################################################################################################
+
+=item find_author_by_id_or_name
+    Non-contorller function, but using it avoids code duplication.
+    TODO: refactor it to some AuthorHelpers
+=cut
+
+sub find_author_by_id_or_name {
+    my $self    = shift;    # controller obj
+    my $storage = shift;
+    my $query   = shift;
+
+    my $author = undef;
+
+    if ( $query =~ m/^\d+$/ ) {
+
+        # this must be ID as name should start with a letter
+        $author = $storage->authors_find( sub { $_->{id} == $query } );
+    }
+    else {
+        # additionally, search by master
+        $author
+            = $storage->authors_find( sub { ( $_->{master} cmp $query ) == 0 }
+            );
+
+        # additionally, search by uid
+        unless ($author) {
+            $author = $storage->authors_find(
+                sub { ( $_->{uid} cmp $query ) == 0 } );
+        }
+    }
+
+    return $author;
+}
+##############################################################################################################
 sub all_authors {    # refactored
     my $self    = shift;
     my $dbh     = $self->app->db;
@@ -37,17 +72,14 @@ sub all_authors {    # refactored
 
     my $storage = StorageBase->get();
     my @authors = $storage->authors_all;
-    if(defined $visible){
+    if ( defined $visible ) {
         @authors = grep { $_->{display} == $visible } @authors;
     }
-    if( $letter ne '%' ){
-        @authors = grep { ( substr($_->{master}, 0, 1) cmp $letter ) == 0 } @authors;
+    if ( $letter ne '%' ) {
+        @authors = grep { ( substr( $_->{master}, 0, 1 ) cmp $letter ) == 0 }
+            @authors;
     }
-
-    # my @authors = MAuthor->static_get_filter( $dbh, $visible, $letter_pattern );
-
-    # my @letters = $self->get_set_of_first_letters($visible);
-    my @letters = map { substr($_->{master}, 0, 1) } $storage->authors_all;
+    my @letters = map { substr( $_->{master}, 0, 1 ) } $storage->authors_all;
     @letters = uniq @letters;
     @letters = sort @letters;
 
@@ -73,12 +105,11 @@ sub add_post {
     my $dbh        = $self->app->db;
     my $new_master = $self->param('new_master');
 
-    if ( defined $new_master and length($new_master)>0 ) {
+    if ( defined $new_master and length($new_master) > 0 ) {
 
         my $storage = StorageBase->get();
-        my $a = $storage->authors_find( sub{ ($_->{master} cmp $new_master) ==0 } );
-
-        # my $a = MAuthor->static_get_by_name( $dbh, $new_master );
+        my $a       = $storage->authors_find(
+            sub { ( $_->{master} cmp $new_master ) == 0 } );
 
         if ( !defined $a ) {    # no such user exists yet
 
@@ -86,7 +117,6 @@ sub add_post {
             $storage->authors_add($a);
             $a->save($dbh);
 
-            
 
             if ( !defined $a->{id} ) {
                 $self->flash(
@@ -102,7 +132,7 @@ sub add_post {
                     . $a->{id} );
             $self->flash(
                 msg_type => 'success',
-                msg  => "Author added successfully!"
+                msg      => "Author added successfully!"
             );
             $self->redirect_to(
                 $self->url_for( 'edit_author', id => $a->{id} ) );
@@ -121,11 +151,7 @@ sub add_post {
         }
     }
 
-    $self->flash(
-        msg_type => 'warning',
-        msg =>
-            "Bad input."
-    );
+    $self->flash( msg_type => 'warning', msg => "Bad input." );
     $self->redirect_to( $self->url_for('add_author') );
 }
 ##############################################################################################################
@@ -133,15 +159,15 @@ sub edit_author {
     my $self = shift;
     my $id   = $self->param('id');
 
-    my $dbh = $self->app->db;
+    my $dbh     = $self->app->db;
     my $storage = StorageBase->get();
-    my $author = $storage->authors_find( sub{ $_->{id} == $id } );
+    my $author  = $storage->authors_find( sub { $_->{id} == $id } );
 
-    # redirect to master if master is defined for this author
-    # if( defined $author and $author->{id} != $author->{master_id} ){
-    #     $self->redirect_to( $self->url_for('edit_author', id=>$author->{master_id}) );
-    #     return;
-    # }
+# redirect to master if master is defined for this author
+# if( defined $author and $author->{id} != $author->{master_id} ){
+#     $self->redirect_to( $self->url_for('edit_author', id=>$author->{master_id}) );
+#     return;
+# }
 
 
     if ( !defined $author ) {
@@ -153,42 +179,47 @@ sub edit_author {
     }
     else {
 
-        my @all_teams    = $storage->teams_all;#MTeam->static_all($dbh);
-        my @author_teams = $author->teams($dbh);
-        my @author_tags  = $author->tags($dbh);
+        my @all_teams    = $storage->teams_all;
+        my @author_teams = $author->teams();
+        my @author_tags  = $author->tags();
 
-         # cannot use objects as keysdue to stringification!
+        # cannot use objects as keys due to hash stringification!
         my %author_teams_hash = map { $_->{id} => 1 } @author_teams;
-        my @unassigned_teams = grep { not $author_teams_hash{ $_->{id} } } @all_teams;
+        my @unassigned_teams
+            = grep { not $author_teams_hash{ $_->{id} } } @all_teams;
 
-        my @minor_authors = $author->all_author_user_ids($dbh);
+
+        my @minor_authors
+            = $storage->authors_filter( sub { $_->is_minion_of($author) } );
+
+        # $author->all_author_user_ids($dbh);
 
         $self->stash(
-            author        => $author,
-            minor_authors => \@minor_authors,
-            teams         => \@author_teams,
-            exit_code     => '',
-            tags          => \@author_tags,
-            all_teams     => \@all_teams,
-            unassigned_teams     => \@unassigned_teams
+            author           => $author,
+            minor_authors    => \@minor_authors,
+            teams            => \@author_teams,
+            exit_code        => '',
+            tags             => \@author_tags,
+            all_teams        => \@all_teams,
+            unassigned_teams => \@unassigned_teams
         );
         $self->render( template => 'authors/edit_author' );
     }
 }
 ##############################################################################################################
-sub can_be_deleted {
-    my $self = shift;
-    my $id   = shift;
-    my $dbh  = $self->app->db;
+# sub can_be_deleted {
+#     my $self = shift;
+#     my $id   = shift;
+#     my $dbh  = $self->app->db;
 
-    my $author = MAuthor->static_get( $dbh, $id );
-    my $visibility = $author->{display};
+#     my $author = $storage->authors_find( sub{ $_->{id} == $id } );
+#     my $visibility = $author->{display};
 
-    my $num_teams = scalar $author->teams($dbh);
+#     my $num_teams = scalar $author->teams($dbh);
 
-    return 1 if $num_teams == 0 and $visibility == 0;
-    return 0;
-}
+#     return 1 if $num_teams == 0 and $visibility == 0;
+#     return 0;
+# }
 ##############################################################################################################
 sub add_to_team {
     my $self      = shift;
@@ -196,11 +227,29 @@ sub add_to_team {
     my $master_id = $self->param('id');
     my $team_id   = $self->param('tid');
 
-    my $author = MAuthor->static_get( $dbh, $master_id );
-    my $team = MTeam->static_get( $dbh, $team_id );
+    my $storage = StorageBase->get();
+    my $author  = $storage->authors_find( sub { $_->{id} == $master_id } );
+    my $team    = $storage->teams_find( sub { $_->{id} == $team_id } );
 
-    $author->add_to_team($dbh, $team);
+    if ( $author and $team ) {
+        $author->add_to_team($team);
+        $author->save($dbh);
+        $team->save($dbh);
 
+        $self->flash(
+            msg => "Author <b>"
+                . $author->uid
+                . "</b> has just joined team <b>"
+                . $team->name . "</b>",
+            msg_type => "success"
+        );
+    }
+    else {
+        $self->flash(
+            msg      => "Author or team does does not exist!",
+            msg_type => "danger"
+        );
+    }
     $self->redirect_to( $self->get_referrer );
 }
 ##############################################################################################################
@@ -210,11 +259,28 @@ sub remove_from_team {
     my $master_id = $self->param('id');
     my $team_id   = $self->param('tid');
 
-    my $author = MAuthor->static_get( $dbh, $master_id );
-    my $team = MTeam->static_get( $dbh, $team_id );
-    
-    $author->remove_from_team($dbh, $team);
+    my $storage = StorageBase->get();
+    my $author  = $storage->authors_find( sub { $_->{id} == $master_id } );
+    my $team    = $storage->teams_find( sub { $_->{id} == $team_id } );
 
+    if ( $author and $team ) {
+        $author->remove_from_team($team);
+        $author->save($dbh);
+
+        $self->flash(
+            msg => "Author <b>"
+                . $author->uid
+                . "</b> has just left team <b>"
+                . $team->name . "</b>",
+            msg_type => "success"
+        );
+    }
+    else {
+        $self->flash(
+            msg      => "Author or team does does not exist!",
+            msg_type => "danger"
+        );
+    }
     $self->redirect_to( $self->get_referrer );
 }
 ##############################################################################################################
@@ -224,13 +290,15 @@ sub remove_uid {
     my $master_id = $self->param('masterid');
     my $minor_id  = $self->param('uid');
 
-    my $author_master = MAuthor->static_get( $dbh, $master_id );
-    my $author_minor  = MAuthor->static_get( $dbh, $minor_id );
+    my $storage = StorageBase->get();
 
-   # my $sth = $dbh->prepare('DELETE FROM Author WHERE id=? AND master_id=?');
-   # $sth->execute( $minor_id, $master_id );
+    my $author_master
+        = $storage->authors_find( sub { $_->{id} == $master_id } );
+    my $author_minor
+        = $storage->authors_find( sub { $_->{id} == $minor_id } );
 
-    if ( $author_master == $author_minor ) {
+
+    if ( $author_minor->is_master ) {
         $self->flash(
             msg =>
                 "Cannot remove user_id $minor_id. Reason: it is a master_id.",
@@ -239,19 +307,19 @@ sub remove_uid {
     }
     else {
 
-        my @all_entries = $author_master->entries( $dbh );
-        
-        $author_minor->{master_id} = $author_minor->{id};
-        $author_minor->{master}    = $author_minor->{uid};
+        my @all_entries = $author_master->entries();
+        $author_minor->remove_master();
         $author_minor->save($dbh);
-        # authors are uncnnected now
-        # ON UPDATE CASCADE has removed all entreis from $author_master and assigned them to $author_minor
-        # All entries of the $author_master from before seperation needs be updated
-        # The $author_minor comes back to the list of all authors and it keeps its entries.
+
+# authors are uncnnected now
+# ON UPDATE CASCADE has removed all entreis from $author_master and assigned them to $author_minor
+# All entries of the $author_master from before seperation needs be updated
+# The $author_minor comes back to the list of all authors and it keeps its entries.
 
         foreach my $e (@all_entries) {
+
             # 0 = no creation of new authors
-            $e->process_authors( $dbh, 0 ); 
+            $storage->add_entry_authors( $e, 0 );
         }
     }
     $self->redirect_to( $self->get_referrer );
@@ -263,42 +331,43 @@ sub merge_authors {
     my $destination_id = $self->param('author_to');
     my $source_id      = $self->param('author_from');
 
-    my $author_destination;
-    if ($destination_id =~ m/^\d+$/){
-       $author_destination = MAuthor->static_get( $dbh, $destination_id )  
-    }
-    else{
-        $author_destination = MAuthor->static_get_by_master( $dbh, $destination_id ) 
-    }
+    my $storage = StorageBase->get();
+    my $author_destination
+        = $self->find_author_by_id_or_name( $storage, $destination_id );
+    my $author_source
+        = $self->find_author_by_id_or_name( $storage, $source_id );
 
-    my $author_source;
-    if ($source_id =~ m/^\d+$/){
-       $author_source = MAuthor->static_get( $dbh, $source_id )  
-    }
-    else{
-        $author_source = MAuthor->static_get_by_master( $dbh, $source_id ) 
-    }
-    my $copy_name          = $author_source->{uid};
+    my $copy_name = $author_source->{uid};
 
     my $success = 0;
 
-    if( defined $author_source and defined $author_destination ){
-        $success = $author_destination->merge_authors( $dbh, $author_source );
-    }
+    if ( defined $author_source and defined $author_destination ) {
+        if ( $author_destination->can_merge_authors($author_source) ) {
 
-    if ($success){
-        $self->flash(
-            msg =>
-                "Authors merged. <strong>$copy_name</strong> was merged into <strong>$author_destination->{master}</strong>.",
-            msg_type => "success"
-        );
+            $author_destination->merge_authors($author_source);
+            $author_destination->save($dbh);
+            $author_source->save($dbh);
+
+            $self->flash(
+                msg =>
+                    "Authors merged. <strong>$copy_name</strong> was merged into <strong>$author_destination->{master}</strong>.",
+                msg_type => "success"
+            );
+        }
+        else {
+            $self->flash(
+                msg      => "Author cannot be merged with its self. ",
+                msg_type => "danger"
+            );
+        }
+
     }
-    else{
+    else {
         $self->flash(
             msg =>
-                "Authors cannot be merged. ",
+                "Authors cannot be merged. Some of authors does not exist.",
             msg_type => "danger"
-        );   
+        );
     }
 
     $self->redirect_to( $self->get_referrer );
@@ -312,19 +381,20 @@ sub edit_post {
     my $id          = $self->param('id');
     my $new_master  = $self->param('new_master');
     my $new_user_id = $self->param('new_user_id');
-    my $visibility = $self->param('visibility');
+    my $visibility  = $self->param('visibility');
 
     my $storage = StorageBase->get();
-    my $author = $storage->authors_find( sub{ $_->{id} == $id } );
+    my $author = $storage->authors_find( sub { $_->{id} == $id } );
 
     if ( defined $author ) {
         if ( defined $new_master ) {
-            
-            my $existing = $storage->authors_find( sub{ ($_->{master} cmp $new_master) ==0 } );
 
-            if( !defined $existing ){
-                $author->update_master_name( $new_master );
-                $author->save( $dbh );
+            my $existing = $storage->authors_find(
+                sub { ( $_->{master} cmp $new_master ) == 0 } );
+
+            if ( !defined $existing ) {
+                $author->update_master_name($new_master);
+                $author->save($dbh);
                 $self->flash(
                     msg      => "Master name has been updated sucesfully.",
                     msg_type => "success"
@@ -332,11 +402,13 @@ sub edit_post {
                 $self->redirect_to(
                     $self->url_for( 'edit_author', id => $author->{id} ) );
             }
-            else{
-                
+            else {
+
                 $self->flash(
                     msg => "This master name is already taken by <a href=\""
-                        . $self->url_for( 'edit_author', id => $existing->{id} )
+                        . $self->url_for(
+                        'edit_author', id => $existing->{id}
+                        )
                         . "\">"
                         . $existing->{master} . "</a>.",
                     msg_type => "danger"
@@ -344,20 +416,30 @@ sub edit_post {
                 $self->redirect_to(
                     $self->url_for( 'edit_author', id => $id ) );
             }
-            
+
 
         }
         elsif ( defined $visibility ) {
             $author->toggle_visibility($dbh);
         }
         elsif ( defined $new_user_id ) {
-            my $success = $author->add_user_id( $dbh, $new_user_id );
-            if ( !$success ) {
+
+            my $existing_author = $storage->authors_find(
+                sub { ( $_->{uid} cmp $new_user_id ) == 0 } );
+
+            if ( defined $existing_author ) {
                 $self->flash(
                     msg =>
                         "Cannot add user ID $new_user_id. Such ID already exist. Maybe you wan to merge authors?",
                     msg_type => "warning"
                 );
+            }
+            else {
+                my $minion = MAuthor->new( uid => $new_user_id );
+                $author->add_minion($minion);
+                $storage->add($minion);
+                $minion->save($dbh);
+                $author->save($dbh);
             }
         }
     }
@@ -365,71 +447,34 @@ sub edit_post {
 }
 ##############################################################################################################
 sub post_edit_membership_dates {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-
+    my $self      = shift;
+    my $dbh       = $self->app->db;
     my $aid       = $self->param('aid');
     my $tid       = $self->param('tid');
     my $new_start = $self->param('new_start');
     my $new_stop  = $self->param('new_stop');
 
-    $self->write_log(
-        "post_edit_membership_dates: aid $aid, tid $tid, new_start $new_start, new_stop $new_stop"
-    );
+    my $storage = StorageBase->get();
+    my $author  = $storage->authors_find( sub { $_->{id} == $aid } );
+    my $team    = $storage->teams_find( sub { $_->{id} == $tid } );
 
-    if ( defined $aid and $aid > 0 and defined $tid and $tid > 0 ) {
-        if ( $new_start >= 0 and $new_stop >= 0 ) {
-            if ( $new_stop == 0 or $new_start <= $new_stop ) {
-                $self->write_log(
-                    "post_edit_membership_dates: input valid. Changing");
-                $self->do_edit_membership_dates( $aid, $tid, $new_start,
-                    $new_stop );
-            }
-            else {
-                $self->write_log(
-                    "post_edit_membership_dates: input INVALID. start later than stop"
-                );
-            }
-        }
-        else {
-            $self->write_log(
-                "post_edit_membership_dates: input INVALID. start or stop negative"
+    if ($author) {
+        try {
+            $author->update_membership( $team, $new_start, $new_stop );
+            $author->save($dbh);
+            $self->flash(
+                msg      => "Membership updated successfully.",
+                msg_type => "success"
             );
         }
+        catch {
+            $self->flash( msg => $_, msg_type => "danger" );
+        };
+        $self->redirect_to( $self->url_for( 'edit_author', id => $author->id ) );
+        return;
     }
-    else {
-        $self->write_log(
-            "post_edit_membership_dates: input INVALID. author_id or team_id invalid"
-        );
-    }
-    $self->redirect_to( $self->url_for('edit_author', id=>$aid) );
-}
-##############################################################################################################
-sub do_edit_membership_dates {
-    my $self      = shift;
-    my $aid       = shift;
-    my $tid       = shift;
-    my $new_start = shift;
-    my $new_stop  = shift;
-    my $dbh       = $self->app->db;
-
-    # double check!
-    if (    defined $aid
-        and $aid > 0
-        and defined $tid
-        and $tid > 0
-        and defined $new_start
-        and $new_start >= 0
-        and defined $new_stop
-        and $new_stop >= 0
-        and ( $new_stop == 0 or $new_start <= $new_stop ) )
-    {
-        my $sth
-            = $dbh->prepare(
-            'UPDATE Author_to_Team SET start=?, stop=? WHERE author_id=? AND team_id=?'
-            );
-        $sth->execute( $new_start, $new_stop, $aid, $tid );
-    }
+    $self->redirect_to( $self->get_referrer );
+    
 }
 ##############################################################################################################
 sub delete_author {
@@ -437,12 +482,20 @@ sub delete_author {
     my $dbh  = $self->app->db;
     my $id   = $self->param('id');
 
-    if ( defined $id and $id != -1 and can_be_deleted( $self, $id ) == 1 ) {
-        delete_author_force( $self, $id );
-        return;
+    my $storage = StorageBase->get();
+    my $author  = $storage->authors_find( sub { $_->{id} == $id } );
+
+    if ( $author and $author->can_be_deleted() ) {
+        $self->delete_author_force();
+    }
+    else{
+        $self->flash(
+            msg      => "Cannot delete author ID $id.",
+            msg_type => "danger"
+        );
     }
 
-    $self->redirect_to( $self->get_referrer );
+    $self->redirect_to( $self->url_for( 'all_authors' ) );
 
 }
 ##############################################################################################################
@@ -451,12 +504,29 @@ sub delete_author_force {
     my $dbh  = $self->app->db;
     my $id   = $self->param('id');
 
-    do_delete_author_force( $self, $id );
+    my $storage = StorageBase->get();
+    my $author  = $storage->authors_find( sub { $_->{id} == $id } );
 
-    $self->flash( msg => "Author with id $id removed successfully." );
-    $self->write_log("Author with id $id removed successfully.");
+    if ( $author ) {
+        
+        $self->flash(
+            msg      => "Author ".$author->uid." ID $id removed successfully.",
+            msg_type => "success"
+        );
+        $author->delete($dbh);
+        $storage->delete($author);
 
-    $self->redirect_to( $self->get_referrer );
+        $self->write_log("Author ".$author->uid." ID $id has been deleted.");
+    }
+    else{
+        $self->flash(
+            msg      => "Cannot delete author ID $id.",
+            msg_type => "danger"
+        );
+    }
+    
+
+    $self->redirect_to( $self->url_for( 'all_authors' ) );
 
 }
 ##############################################################################################################
@@ -482,52 +552,6 @@ sub do_delete_author_force {
         $sth4->execute($id);
     }
 }
-##############################################################################################################
-sub add_new_user_id_to_master {
-    my $self        = shift;
-    my $id          = shift;
-    my $new_user_id = shift;
-    my $dbh         = $self->app->db;
-
-    say "call: add_new_user_id_to_master id=$id new_user_id=$new_user_id";
-
-    # Check if Author with $id can have added the $new_user_id
-
-    # candidate
-    my $author_candidate = MAuthor->static_get_by_name( $dbh, $new_user_id );
-
-    # existing author
-    my $author_obj = MAuthor->static_get( $dbh, $id );
-
-    if ( defined $author_candidate ) {
-
-        # author with new_user_id already exist
-        # move all entries of candidate to this author
-        $author_obj->take_entries_from_author( $author_candidate );
-
-        $author_candidate->{master}    = $author_obj->{master};
-        $author_candidate->{master_id} = $author_obj->{master_id};
-
-        # TODO: cleanup author_candidate teams?
-
-        # return add_new_user_id_to_master_force( $self, $id, $new_user_id );
-    }
-    else {
-       # we add a new user and assign master and master_id from the author_obj
-       # create new user
-       # assign it to master
-        my $author_candidate = MAuthor->new(
-            uid       => $new_user_id,
-            master    => $author_obj->{master},
-            master_id => $author_obj->{master_id}
-        );
-        $author_candidate->save($dbh);
-        return 0;
-    }
-
-}
-
-
 ##############################################################################################################
 
 sub get_set_of_first_letters {
@@ -610,9 +634,10 @@ sub toggle_visibility {    # refactored
     my $dbh  = $self->app->db;
     my $id   = $self->param('id');
 
-    my $author = MAuthor->static_get( $dbh, $id );
-    $author->toggle_visibility($dbh);
-
+    my $storage = StorageBase->get();
+    my $author  = $storage->authors_find( sub { $_->{id} == $id } );
+    $author->toggle_visibility();
+    $author->save($dbh);
 
     $self->redirect_to( $self->get_referrer );
 }

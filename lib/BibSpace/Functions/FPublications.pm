@@ -49,7 +49,7 @@ sub Fdo_regenerate_html_for_all_redis_test {
 
     for my $e (@entries) {
         $e->{bst_file} = $bst_file;
-        $e->regenerate_html( $dbh, $force, $bst_file );
+        $e->regenerate_html( $force, $bst_file );
         $e->save($dbh);
     }
     say "==== Finished regenerating all html codes ====";
@@ -64,7 +64,7 @@ sub Fdo_regenerate_html_for_all {
     my @entries = MEntry->static_all($dbh);
     for my $e (@entries) {
         $e->{bst_file} = $bst_file;
-        $e->regenerate_html( $dbh, $force, $bst_file );
+        $e->regenerate_html( $force, $bst_file );
         $e->save($dbh);
     }
 }
@@ -109,6 +109,8 @@ sub Fhandle_add_edit_publication {
     my ( $dbh, $new_bib, $id, $action, $bst_file ) = @_;
 
     say "CALL Fhandle_add_edit_publication: id $id action $action";
+
+    my $storage = StorageBase->get();
 
     # var that will be returned
     my $mentry;         # the entry object
@@ -192,7 +194,9 @@ sub Fhandle_add_edit_publication {
 
         # these functions require that the object is in the DB
         $e->postprocess_updated($dbh, $bst_file);    # this has optional save
-        $e->process_authors( $dbh, 1 );
+
+        $storage->add_entry_authors( $e, 1 );
+
         $e->save($dbh);    # so we save for sure
         $added_under_id = $e->{id};
     }
@@ -339,12 +343,14 @@ sub Fclean_ugly_bibtex_fields_for_all_entries {
 sub Fhandle_author_uids_change_for_all_entries {
     my $dbh = shift;
 
-    my @all_entries = MEntry->static_all($dbh);
+    my $storage = StorageBase->get();
+    my @all_entries = $storage->entries_all;
 
     my $num_authors_created  = 0;
 
     foreach my $e (@all_entries) {
-        my $cre = $e->process_authors( $dbh );
+        my $cre = $storage->add_entry_authors( $e, 0 );
+        $e->save($dbh);
 
         $num_authors_created  = $num_authors_created + $cre;
     }

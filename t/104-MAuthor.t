@@ -249,8 +249,9 @@ subtest 'MAuthor all_author_user_ids add_user_id merge_authors' => sub {
 
     # say "ALL AUTHORS \n" . Dumper $storage->authors_all;
 
-    is( $t2->merge_authors(undef), 0, "merge authors" );
-    ok( $t2->merge_authors($t1), "merge authors" );
+    is( $t2->can_merge_authors(undef), 0, "can merge authors" );
+    is( $t2->can_merge_authors($t1), 1, "can merge authors" );
+    $t2->merge_authors($t1);
     $t2->save($dbh);
     $t1->save($dbh);
 
@@ -283,7 +284,9 @@ subtest 'MAuthor abandon entries update_master_name' => sub {
     $e->populate_from_bib($dbh);
     ok( $storage->add($e) );
     $e->save($dbh);
-    $e->postprocess_updated($dbh);
+    $storage->add_entry_authors($e);
+    $storage->add_entry_tags($e);
+    $e->postprocess_updated($dbh); # deprecated
 
     my @authors = $e->authors();
     is( scalar @authors, 1, "Got 1 author" );

@@ -167,7 +167,7 @@ sub do_cron_night {
 
     my @entries = MEntry->static_all($dbh);
     for my $e (@entries) {
-        $e->regenerate_html($dbh, 0);
+        $e->regenerate_html(0);
         $e->save($dbh);
     }
 }

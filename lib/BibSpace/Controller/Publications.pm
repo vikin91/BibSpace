@@ -559,7 +559,7 @@ sub remove_attachment {
                 if $filetype eq 'paper';
             $mentry->remove_bibtex_fields( $dbh, ['slides'] )
                 if $filetype eq 'slides';
-            $mentry->regenerate_html( $dbh, 0, $self->app->bst );
+            $mentry->regenerate_html( 0, $self->app->bst );
             $mentry->save($dbh);
         }
 
@@ -805,7 +805,7 @@ sub add_pdf_post {
             $self->redirect_to( $self->get_referrer );
             return;
         }
-        $mentry->regenerate_html( $dbh, 0, $self->app->bst );
+        $mentry->regenerate_html( 0, $self->app->bst );
         $mentry->save($dbh);
 
         $self->flash( message => $msg );
@@ -884,7 +884,7 @@ sub regenerate_html {
         return;
     }
     $mentry->{bst_file} = $self->app->bst;
-    $mentry->regenerate_html( $dbh, 1 );
+    $mentry->regenerate_html( 1 );
     $mentry->save($dbh);
 
     $self->redirect_to( $self->get_referrer );
