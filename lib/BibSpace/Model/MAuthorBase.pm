@@ -5,10 +5,12 @@ use utf8;
 use Text::BibTeX;    # parsing bib files
 use 5.010;           # because of ~~ and say
 use DBI;
+use List::MoreUtils qw(any uniq);
+use BibSpace::Model::MTeamMembership;
 
 use Moose;
 use MooseX::Storage;
-with Storage( 'format' => 'JSON', 'io' => 'File' );
+with Storage('format' => 'JSON', 'io' => 'File');
 
 
 has 'id'      => ( is => 'rw', isa     => 'Int' );
@@ -19,13 +21,64 @@ has 'master'  => (
         isa => 'Maybe[Str]', 
         default => sub { shift->{uid} } 
 );
-has 'master_id' => ( is => 'rw', isa => 'Int' );
-has 'masterObj' => ( is => 'rw', isa => 'MAuthor', default => sub {shift} );
+has 'master_id' => ( is => 'rw', isa => 'Maybe[Int]' );
+has 'masterObj' => ( 
+    is => 'rw', 
+    isa => 'Maybe[MAuthor]', 
+    default => sub { undef },
+    traits  => ['DoNotSerialize'] # due to cycyles
+);
+
+# has 'bminions' => (
+#     is      => 'rw',
+#     isa     => 'ArrayRef[MAuthor]',
+#     traits  => ['Array', 'DoNotSerialize'],
+#     default => sub { [] },
+#     handles => {
+#         minions_all        => 'elements',
+#         minions_add        => 'push',
+#         minions_map        => 'map',
+#         minions_filter     => 'grep',
+#         minions_find       => 'first',
+#         minions_find_index => 'first_index',
+#         minions_delete     => 'delete',
+#         minions_clear      => 'clear',
+#         minions_get        => 'get',
+#         minions_join       => 'join',
+#         minions_count      => 'count',
+#         minions_has        => 'count',
+#         minions_has_no     => 'is_empty',
+#         minions_sorted     => 'sort',
+#     },
+# );
+
+has 'bteamMemberships' => (
+    is      => 'rw',
+    isa     => 'ArrayRef[MTeamMembership]',
+    traits  => ['Array', 'DoNotSerialize'],
+    default => sub { [] },
+    handles => {
+        teamMemberships_all        => 'elements',
+        teamMemberships_add        => 'push',
+        teamMemberships_map        => 'map',
+        teamMemberships_filter     => 'grep',
+        teamMemberships_find       => 'first',
+        teamMemberships_get        => 'get',
+        teamMemberships_find_index => 'first_index',
+        teamMemberships_delete     => 'delete',
+        teamMemberships_clear      => 'clear',
+        teamMemberships_join       => 'join',
+        teamMemberships_count      => 'count',
+        teamMemberships_has        => 'count',
+        teamMemberships_has_no     => 'is_empty',
+        teamMemberships_sorted     => 'sort',
+    },
+);
 
 has 'bteams' => (
     is      => 'rw',
     isa     => 'ArrayRef[MTeam]',
-    traits  => ['Array'],
+    traits  => ['Array', 'DoNotSerialize'],
     default => sub { [] },
     handles => {
         teams_all        => 'elements',
@@ -33,10 +86,10 @@ has 'bteams' => (
         teams_map        => 'map',
         teams_filter     => 'grep',
         teams_find       => 'first',
+        teams_get        => 'get',
         teams_find_index => 'first_index',
         teams_delete     => 'delete',
         teams_clear      => 'clear',
-        teams_get        => 'get',
         teams_join       => 'join',
         teams_count      => 'count',
         teams_has        => 'count',
@@ -69,90 +122,169 @@ has 'bentries' => (
 );
 
 ####################################################################################
+# called after the default constructor
+sub BUILD {
+      my $self = shift;
+
+      if ( !defined $self->master or $self->master eq '' ) {
+        $self->master( $self->uid );
+      }
+      if ( !defined $self->master_id and defined $self->{id} ){
+        $self->master_id( $self->id );
+      }
+      if ( defined $self->masterObj and $self->masterObj == $self ){
+        $self->masterObj( undef );
+      }
+}
+####################################################################################
+sub toString {
+    my $self = shift;
+    my $str = $self->freeze;
+    $str .= "\n\t (MASTER): ". $self->masterObj->freeze if defined $self->masterObj;
+
+    $str .= "\nMEMBERSHIPS: [\n";
+    map { $str .= "\t".$_->toString . "\n"} $self->teamMemberships_all;
+    $str .= "]\n";
+
+    $str .= "\nTEAMS: [\n";
+    map { $str .= "\t".$_->toString . "\n"} $self->teams_all;
+    $str .= "]\n";
+    $str;
+}
+####################################################################################
 sub equals {
     my $self = shift;
     my $obj  = shift;
 
-    return 0 if !defined $obj or !defined $self;
-    return $self->{uid} eq $obj->{uid};
+    return 0 unless defined $obj;
+    my $result = $self->{uid} cmp $obj->{uid};
+    return $result == 0;
 }
 
+
+
 ####################################################################################
-sub get_master {
-    my $self = shift;
-    my $dbh  = shift;
-
-
-    return $self if $self->{id} == $self->{master_id};
-    return MAuthor->static_get( $dbh, $self->{master_id} );
-}
 ####################################################################################
-sub joined_team {
-    my $self = shift;
-    my $dbh  = shift;
-    my $team = shift;
-
-    return -1 if !defined $team;
-
-    my $qry = "SELECT DISTINCT author_id, team_id, start, stop
-            FROM Author_to_Team 
-            WHERE team_id=? AND author_id=?";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $team->{id}, $self->{id} );
-
-    return -1 if $sth->rows < 0;
-
-    my @start_years;
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        push @start_years, $row->{start};
-    }
-    @start_years = sort @start_years;
-
-    return shift @start_years;
-}
 ####################################################################################
-sub left_team {
-    my $self = shift;
-    my $dbh  = shift;
-    my $team = shift;
-
-    return -1 if !defined $team;
-
-
-    my $qry = "SELECT DISTINCT author_id, team_id, start, stop
-            FROM Author_to_Team 
-            WHERE team_id=? AND author_id=?";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $team->{id}, $self->{id} );
-
-    return -1 if $sth->rows < 0;
-
-    my @stop_years;
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        push @stop_years, $row->{stop};
-    }
-    @stop_years = sort reverse @stop_years;
-
-    return shift @stop_years;
-}
-####################################################################################
-sub assign_master {
+sub set_master {
     my $self          = shift;
-    my $dbh           = shift;
     my $master_author = shift;
+
+    $self->{masterObj} = $master_author;
 
     $self->{master}    = $master_author->{uid};
     $self->{master_id} = $master_author->{id};
-    $self->update($dbh);
 }
+####################################################################################
+sub get_master {
+    my $self = shift;
+    
+    return $self if !defined $self->masterObj;
+    return $self->masterObj;
+}
+####################################################################################
+sub is_master {
+    my $self = shift;
+    
+    return 1 if !defined $self->masterObj;
+    return 1 if $self->equals($self->masterObj);
+    return 0;
+}
+####################################################################################
+sub is_minion {
+    my $self = shift;
+    return $self->is_master == 0;
+}
+####################################################################################
+sub is_minion_of {
+    my $self = shift;
+    my $master = shift;
+
+    return 1 if defined $self->{masterObj} and $self->{masterObj}->equals($master);
+    return 1 if defined $master->{id} and $self->{master_id} == $master->{id};
+    return 1 if defined $self->{master} and ($self->{master} cmp  $master->{uid}) == 0;
+    return 0 if $self->is_master;
+    
+    return 0;
+}
+####################################################################################
+sub update_master_name {
+    my $self       = shift;
+    my $new_master = shift;
+
+    # TODO: if this is minion, then this may not have sense
+    if( $self->is_minion ){
+        die "Cannot update master name if author is a minion";
+    }
+
+    $self->{master} = $new_master;
+    $self->{uid}    = $new_master;
+
+    return 1;
+}
+####################################################################################
+sub remove_master {
+    my $self          = shift;
+
+    $self->{masterObj} = $self;
+
+    $self->{master}    = $self->{uid};
+    $self->{master_id} = $self->{id};
+}
+####################################################################################
+sub add_minion {
+    my $self   = shift;
+    my $minion = shift;
+
+    return 0 unless defined $minion;
+    $minion->set_master($self);
+    return 1;
+}
+####################################################################################
+sub add_user_id {
+    my $self        = shift;
+    my $dbh         = shift;
+    my $new_user_id = shift;
+
+    warn "MAuthor->add_user_id is deprecated in favor of add_minon.";
+
+    my $minion = MAuthor->new(
+        uid       => $new_user_id,
+        master    => $self->{master},
+        master_id => $self->{master_id}
+    );
+    $minion->save($dbh);
+
+    return $self->add_minion($minion);
+}
+##############################################################################################################
+sub merge_authors {
+    my $self          = shift;
+    my $source_author = shift;
+
+    if ( defined $source_author and $source_author->{id} != $self->{id} ) {
+
+        # author with new_user_id already exist
+        # move all entries of candidate to this author
+
+        $self->take_entries_from_author( $source_author );
+
+        # necessary due to possible conflicts caused on ON UPDATE CASCADE
+        $source_author->abandon_all_entries();
+        $source_author->abandon_all_teams();
+
+        $source_author->set_master($self);
+        return 1;
+
+    }
+    return 0;
+
+}
+####################################################################################
+####################################################################################
 ####################################################################################
 sub toggle_visibility {
     my $self = shift;
-    my $dbh  = shift;
 
     if ( $self->{display} == 0 ) {
         $self->{display} = 1;
@@ -160,43 +292,20 @@ sub toggle_visibility {
     else {
         $self->{display} = 0;
     }
-    $self->update($dbh);
 }
 ####################################################################################
 sub can_be_deleted {
     my $self = shift;
-    my $dbh  = shift;
 
     return 0 if $self->{display} == 1;
 
-    my @teams = $self->teams($dbh);
+    my @teams = $self->teams();
 
     return 1 if scalar @teams == 0 and $self->{display} == 0;
     return 0;
 }
 ####################################################################################
-sub entries_old {
-    my $self = shift;
-    my $dbh  = shift;
-
-    warn "No database handle supplied!" if !defined $dbh;
-    return if !defined $dbh or !defined $self->{id} or $self->{id} < 0;
-
-
-    my $qry
-        = "SELECT entry_id, author_id FROM Entry_to_Author WHERE author_id = ?";
-    my $sth = $dbh->prepare_cached($qry);
-    $sth->execute( $self->{id} );
-
-    my @entries;
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $entry = MEntry->static_get( $dbh, $row->{entry_id} );
-
-        push @entries, $entry if defined $entry;
-    }
-    return @entries;
-}
+####################################################################################
 ####################################################################################
 sub entries {
     my $self = shift;
@@ -246,202 +355,120 @@ sub remove_all_entries {
     $self->entries_clear;
 }
 ####################################################################################
-sub move_entries_from_author {
+sub take_entries_from_author {
     my $self        = shift;
-    my $dbh         = shift;
     my $from_author = shift;
 
-    my $sth
-        = $dbh->prepare(
-        'UPDATE IGNORE Entry_to_Author SET author_id = ? WHERE author_id = ?'
-        );
-    $sth->execute( $self->{id}, $from_author->{id} );
-
-    # $entry->remove_author( $dbh, $from_author );
-    # $entry->assign_author( $dbh, $self );
+    $self->entries_add( $from_author->entries );
+    $from_author->abandon_all_entries;
 }
-##############################################################################################################
-sub merge_authors {
-    my $self          = shift;
-    my $dbh           = shift;
-    my $source_author = shift;
-
-    if ( defined $source_author and $source_author->{id} != $self->{id} ) {
-
-        # author with new_user_id already exist
-        # move all entries of candidate to this author
-
-        $self->move_entries_from_author( $dbh, $source_author );
-
-        # necessary due to possible conflicts caused on ON UPDATE CASCADE
-        $source_author->abandon_all_entries($dbh);
-        $source_author->abandon_all_teams($dbh);
-
-        $source_author->{master}    = $self->{master};
-        $source_author->{master_id} = $self->{master_id};
-        $source_author->save($dbh);
-        return 1;
-
-    }
-    return 0;
-
-}
-##############################################################################################################
-sub add_user_id {
-    my $self        = shift;
-    my $dbh         = shift;
-    my $new_user_id = shift;
-
-    my $author_candidate = MAuthor->static_get_by_name( $dbh, $new_user_id );
 
 
-    if ( defined $author_candidate ) {
-
-        # author with new_user_id already exist
-        return 0;    # no success
-    }
-
-    # we add a new user and assign master and master_id from the author_obj
-    # create new user
-    # assign it to master
-    $author_candidate = MAuthor->new(
-        uid       => $new_user_id,
-        master    => $self->{master},
-        master_id => $self->{master_id}
-    );
-    $author_candidate->save($dbh);
-    return 1;    # success
-
-}
 ################################################################################
 sub abandon_all_entries {
     my $self = shift;
-    my $dbh  = shift;
 
     $self->remove_all_entries;
+}
+################################################################################
+################################################################################ TEAMS
+################################################################################
+####################################################################################
+sub joined_team {
+    my $self = shift;
+    my $team = shift;
 
+    return -1 if !defined $team;
 
-    my $qry = "DELETE FROM Entry_to_Author
-            WHERE author_id=?";
+    my $mem = $self->teamMemberships_find( sub{ 
+        $_->{team_id} == $team->id and  $_->{author_id} == $self->id
+    });
+    return -1 if !defined $mem;
+    return $mem->start;
+}
+####################################################################################
+sub left_team {
+    my $self = shift;
+    my $team = shift;
 
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $self->{id} );
+    return -1 if !defined $team;
+
+    my $mem = $self->teamMemberships_find( sub{ 
+        $_->{team_id} == $team->id and  $_->{author_id} == $self->id
+    });
+    return -1 if !defined $mem;
+    return $mem->stop;
 }
 ################################################################################
 sub abandon_all_teams {
     my $self = shift;
-    my $dbh  = shift;
 
+    $self->teams_clear;
+    $self->teamMemberships_clear;
 
-    my $qry = "DELETE FROM Author_to_Team
-            WHERE author_id=?";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $self->{id} );
 }
 ################################################################################
 sub add_to_team {
     my $self = shift;
-    my $dbh  = shift;
     my $team = shift;
 
 
     return 0 if !defined $team and $team->{id} <= 0;
+    $self->teams_add($team);
 
-    my $qry
-        = "INSERT IGNORE INTO Author_to_Team(author_id, team_id) VALUES (?,?)";
-    my $sth = $dbh->prepare($qry);
-    return $sth->execute( $self->{master_id}, $team->{id} );
+    # TODO: 
+    # not sure if I should have it here
+    # how do I save it later, if it is not in the storage?
+    # maybe I should remove memberships from the storage and leave them only in author and evtl. team?
 
+    $self->teamMemberships_add(MTeamMembership->new(
+        author_id => $self->id,
+        team_id => $team->id,
+        author => $self,
+        team => $team,
+        start => 0,
+        stop => 0
+    ));
 }
 ################################################################################
 sub remove_from_team {
     my $self = shift;
-    my $dbh  = shift;
     my $team = shift;
 
     return 0 if !defined $team and $team->{id} <= 0;
 
+    my $mem_index = $self->teamMemberships_find_index( sub { 
+        $_->{team_id} == $team->id and  $_->{author_id} == $self->id
+    } );
+    return 0 if $mem_index == -1;
+    $self->teamMemberships_delete($mem_index);
 
-    my $qry = "DELETE FROM Author_to_Team WHERE author_id=? AND team_id=?";
-    my $sth = $dbh->prepare($qry);
-    return $sth->execute( $self->{master_id}, $team->{id} );
+    my $index = $self->teams_find_index( sub { $_->equals($team) } );
+    return 0 if $index == -1;
+    return 1 if $self->teams_delete($index);
+    return 0;
 
 }
 ################################################################################
 sub teams
-{ # this must remain as SQL query or object calls only withing this class. Reason: methods form other classes use it.
+{ 
     my $self = shift;
-    my $dbh  = shift;
-
-
-    my $qry = "SELECT author_id, team_id, start, stop
-            FROM Author_to_Team 
-            WHERE author_id=?";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $self->{id} );
-
-    my @teams;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $team = MTeam->static_get( $dbh, $row->{team_id} )
-            if defined $row->{team_id} and $row->{team_id} ne '';
-
-        push @teams, $team if defined $team;
-
-        # my $start = $row->{start};
-        # my $stop  = $row->{stop};
-    }
-    return @teams;
+    return $self->teams_all;
 }
 ####################################################################################
-sub update_master_name {
-    my $self       = shift;
-    my $dbh        = shift;
-    my $new_master = shift;
-
-
-    my $new_master_author
-        = MAuthor->static_get_by_master( $dbh, $new_master );
-
-    if ( defined $new_master_author ) {
-        return $new_master_author->{id};
-    }
-
-    $self->{master} = $new_master;
-    $self->{uid}    = $new_master;
-    $self->save($dbh);
-
-
-    return 0;
-}
+#################################################################################### TAGS
 ####################################################################################
 sub tags {
 
     my $self = shift;
-    my $dbh  = shift;
-    my $type = shift || 1;
+    my $type = shift // 1;
 
-    my $qry = "SELECT DISTINCT Entry_to_Tag.tag_id, Tag.name 
-            FROM Entry_to_Author 
-            LEFT JOIN Entry_to_Tag ON Entry_to_Author.entry_id = Entry_to_Tag.entry_id 
-            LEFT JOIN Tag ON Entry_to_Tag.tag_id = Tag.id 
-            WHERE Entry_to_Author.author_id=? 
-            AND Entry_to_Tag.tag_id IS NOT NULL
-            AND Tag.type = ?
-            ORDER BY Tag.name ASC";
+    my @myTags; 
 
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $self->{master_id}, $type );
+    map { push @myTags, $_->tags($type) } $self->entries;
+    @myTags = uniq @myTags;
 
-    my @tags;
-
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $tag = MTag->static_get( $dbh, $row->{tag_id} );
-        push @tags, $tag if defined $tag;
-
-    }
-    return @tags;
+    return @myTags;
 }
 ####################################################################################
 no Moose;

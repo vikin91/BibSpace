@@ -83,13 +83,18 @@ sub unhide {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $id });
+
+    if ( defined $entry ) {
+        
+        $entry->unhide();
+        $entry->save($dbh);
     }
-    $mentry->unhide($dbh);
+    else{
+        $self->flash( msg => "There is no entry with id $id" );
+    }
+    
 
     $self->redirect_to( $self->get_referrer );
 }
@@ -98,10 +103,15 @@ sub unhide {
 sub hide {
     my $self = shift;
     my $id   = $self->param('id');
+    my $dbh  = $self->app->db;
 
-    my $mentry = MEntry->static_get( $self->app->db, $id );
-    if ( defined $mentry ) {
-        $mentry->hide( $self->app->db );
+    # my $mentry = MEntry->static_get( $self->app->db, $id );
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $id });
+
+    if ( defined $entry ) {
+        $entry->hide();
+        $entry->save($dbh);
     }
     else {
         $self->flash( msg => "There is no entry with id $id" );
@@ -114,13 +124,17 @@ sub toggle_hide {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $id });
+
+    if ( defined $entry ) {
+        $entry->toggle_hide();
+        $entry->save($dbh);
     }
-    $mentry->toggle_hide($dbh);
+    else{
+        $self->flash( msg => "There is no entry with id $id" );
+    }
+    
 
     $self->redirect_to( $self->get_referrer );
 }
@@ -130,13 +144,17 @@ sub make_paper {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $id });
+
+    if ( defined $entry ) {
+        $entry->make_paper();
+        $entry->save($dbh);
     }
-    $mentry->make_paper($dbh);
+    else{
+        $self->flash( msg => "There is no entry with id $id" );
+    }
+    
 
     $self->redirect_to( $self->get_referrer );
 }
@@ -146,13 +164,17 @@ sub make_talk {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $id });
+
+    if ( defined $entry ) {
+        $entry->make_talk();
+        $entry->save($dbh);
     }
-    $mentry->make_talk($dbh);
+    else{
+        $self->flash( msg => "There is no entry with id $id" );
+    }
+
 
     $self->redirect_to( $self->get_referrer );
 }
@@ -162,8 +184,10 @@ sub all_recently_added {
     my $num  = $self->param('num') || 10;
     my $dbh  = $self->app->db;
 
-    my @objs = sort { $b->{creation_time} cmp $a->{creation_time} }
-        MEntry->static_all( $self->app->db );
+    my $storage = StorageBase->get();
+    my @objs   = $storage->entries_all;
+
+    @objs = sort { $b->{creation_time} cmp $a->{creation_time} } @objs;
     @objs = @objs[ 0 .. $num ];
 
     # map {say $_->{creation_time}} @objs;
@@ -178,11 +202,12 @@ sub all_recently_modified {
     my $num  = $self->param('num') || 10;
     my $dbh  = $self->app->db;
 
-    my @all_entries = MEntry->static_all( $self->app->db );
+    # my @all_entries = MEntry->static_all( $self->app->db );
 
+    my $storage = StorageBase->get();
+    my @objs   = $storage->entries_all;
 
-    my @objs = sort { $b->{modified_time} cmp $a->{modified_time} } @all_entries;
-        
+    @objs = sort { $b->{modified_time} cmp $a->{modified_time} } @objs;
     @objs = @objs[ 0 .. $num ];
 
     # map {say $_->{modified_time}} @objs;
@@ -197,7 +222,8 @@ sub all_without_tag {
     my $tagtype = $self->param('tagtype') || 1;
     my $dbh     = $self->app->db;
 
-    my @all = MEntry->static_all($dbh);
+    my $storage = StorageBase->get();
+    my @all   = $storage->entries_all;
     my @objs = grep { scalar $_->tags( $dbh, $tagtype ) == 0 } @all;
 
 
@@ -214,12 +240,26 @@ sub all_without_tag_for_author {
     my $master_name = $self->param('author');
     my $tagtype     = $self->param('tagtype');
 
-    my $author = MAuthor->static_get_by_master( $dbh, $master_name );
-    $author = MAuthor->static_get( $dbh, $master_name ) if !defined $author;
+    my $storage = StorageBase->get();
+    my $author   = $storage->authors_find( sub { ($_->{master} cmp $master_name)==0} );
+    if (!defined $author){
+        $author   = $storage->authors_find( sub { $_->{master_id} == $master_name } );
+    }
+    if (!defined $author){
+         $self->flash(
+            msg      => "Author $master_name does not exist!",
+            msg_type => "danger"
+        );
+        $self->redirect_to( $self->get_referrer );
+        return;
+    }
+
+    # my $author = MAuthor->static_get_by_master( $dbh, $master_name );
+    # $author = MAuthor->static_get( $dbh, $master_name ) 
 
     # no such master. Assume, that author id was given
 
-    my @all_author_entries = $author->entries($dbh);
+    my @all_author_entries = $author->entries(); #($dbh);
     my @objs
         = grep { scalar $_->tags( $dbh, $tagtype ) == 0 } @all_author_entries;
 
@@ -234,8 +274,9 @@ sub all_without_author {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my @objs
-        = grep { scalar $_->authors($dbh) == 0 } MEntry->static_all($dbh);
+    my $storage = StorageBase->get();
+    my @objs   = $storage->entries_filter( sub { $_->authors_count == 0 } );
+
 
     my $msg
         = "This list contains papers, that are currently not assigned to any of authors.";
@@ -252,14 +293,16 @@ sub show_unrelated_to_team {
     $self->write_log(
         "Displaying entries unrelated to team with it $team_id.");
 
+    my $storage = StorageBase->get();
+
     my $set_all_papers
-        = Set::Scalar->new( map { $_->{id} } MEntry->static_all($dbh) );
+        = Set::Scalar->new( map { $_->{id} } $storage->entries_all );
     my $set_of_related_to_team
         = Fget_set_of_papers_for_all_authors_of_team_id( $dbh, $team_id );
     my $end_set = $set_all_papers - $set_of_related_to_team;
 
     my $team_name = "";
-    my $mteam = MTeam->static_get( $dbh, $team_id );
+    my $mteam = $storage->teams_find( sub{ $_->{id} == $team_id } ); #MTeam->static_get( $dbh, $team_id );
     $team_name = $mteam->{name} if defined $mteam;
 
     my $msg = "This list contains papers, that are:
@@ -282,9 +325,11 @@ sub all_with_missing_month {
 
     $self->write_log("Displaying entries without month");
 
+    my $storage = StorageBase->get();
+
+
     my @objs
-        = grep { !defined $_->{month} or $_->{month} < 1 or $_->{month} > 12 }
-        MEntry->static_all($dbh);
+        = grep { !defined $_->{month} or $_->{month} < 1 or $_->{month} > 12 } $storage->entries_all;
 
     my $msg
         = "This list contains entries with missing BibTeX field 'month'. ";
@@ -302,7 +347,9 @@ sub all_candidates_to_delete {
     $self->write_log("Displaying entries that are candidates_to_delete");
 
 
-    my @objs = MEntry->static_all( $self->app->db );
+    my $storage = StorageBase->get();
+
+    my @objs = $storage->entries_all;
     @objs = grep { scalar $_->tags($dbh) == 0 } @objs;  # no tags
     @objs = grep { scalar $_->teams($dbh) == 0 } @objs; # no relation to teams
     @objs = grep { scalar $_->exceptions($dbh) == 0 } @objs;   # no exceptions
@@ -331,8 +378,13 @@ sub all_bibtex {
     # this includes papers+talks by default
     $entry_type = $self->param('entry_type');
 
-    my @objs = Fget_publications_main_hashed_args( $self,
-        { hidden => 0, entry_type => $entry_type } );
+    my $storage = StorageBase->get();
+    my @objs = $storage->entries_filter( sub{ $_->{hidden} == 0 } );
+
+    @objs = grep {($_->{entry_type} cmp $entry_type) == 0} @objs if defined $entry_type;
+
+    # my @objs = Fget_publications_main_hashed_args( $self,
+    #     { hidden => 0, entry_type => $entry_type } );
 
     my $big_str = "<pre>\n";
     foreach my $obj (@objs) {
@@ -350,40 +402,15 @@ sub all {
     $entry_type = $self->param('entry_type') // 'paper';
 
     if ( $self->session('user') ) {
-        # check cache
-        # my $key = "publications." . join("_", @{$self->req->params->pairs} );
-        # my $html;
-        # try{
-        #     # this must be done in a blocking manner due to try/catch
-        #     $html = $self->redis->get($key);
-        # }
-        # catch{
-        #     warn "Redis server is down. Err: $_";
-        # };
-        # if($html){
-        #     $self->render(data => $html);
-        #     # TODO: update cache in background - must be non-blocking to make sense!
-        #     return;
-        # }
-        # say "Cache key $key not found. Processing normally.";
-
 
         my @objs = Fget_publications_main_hashed_args( $self, { entry_type => $entry_type } );
 
-        use BibSpace::Model::StorageBase;
-        # StorageBase::init();
-        # StorageBase::load($self->app->db);
-        my @all_entries = StorageBase->get()->entries_all;
+        my $storage = StorageBase->get();
+        my @all_entries = $storage->entries_all;
         #my @objs = @all_entries; 
 
         $self->stash( entries => \@objs );
         my $html = $self->render_to_string( template => 'publications/all' );
-        # try{
-        #     $self->app->redis->set( $key => $html );
-        # }
-        # catch{
-        #     warn "Redis server is down. Err: $_";
-        # };
         $self->render(data => $html);
 
     }
@@ -397,31 +424,13 @@ sub all {
 sub all_read {
     my $self = shift;
 
-    # my $key = "publications.read." . join("_", @{$self->req->params->pairs} );
-    # my $html;
-    # try{
-    #     $html = $self->app->redis->get($key);
-    # }
-    # catch{
-    #     warn "Redis server is down. Err: $_";
-    # };
-    # if($html){
-    #     $self->render(data => $html);
-    #     # TODO: update cache in background - must be non-blocking to make sense!
-    #     return;
-    # }
 
+    my $storage = StorageBase->get();
+    my @objs = $storage->entries_filter( sub{ $_->{hidden} == 0 } );
 
-    my @objs = Fget_publications_main_hashed_args( $self,
-        { hidden => 0, entry_type => undef } );
 
     $self->stash( entries => \@objs );
     my $html = $self->render_to_string( template => 'publications/all_read' );
-    # try{
-    #     $self->app->redis->set($key => $html);
-    # }catch{
-    #         warn "Redis server is down. Err: $_";
-    # };
     $self->render( data => $html );
 }
 
@@ -431,10 +440,12 @@ sub single {
     my $self = shift;
     my $id   = $self->param('id');
 
-    my @objs = ();
-    my $e = MEntry->static_get( $self->app->db, $id );
-    if ( defined $e ) {
-        push @objs, $e;
+    my $storage = StorageBase->get();
+    my $entry = $storage->entries_find( sub{ $_->{id} == $id } );
+
+    my @objs; 
+    if ( defined $entry ) {
+        push @objs, $entry;
     }
     else {
         $self->stash(
@@ -453,10 +464,11 @@ sub single_read {
     my $id   = $self->param('id');
 
     my @objs = ();
-    my $e = MEntry->static_get( $self->app->db, $id );
+    my $storage = StorageBase->get();
+    my $entry = $storage->entries_find( sub{ $_->{id} == $id } );
 
-    if ( defined $e and $e->is_hidden == 0 ) {
-        push @objs, $e;
+    if ( defined $entry and $entry->is_hidden == 0 ) {
+        push @objs, $entry;
     }
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all_read' );
@@ -475,7 +487,8 @@ sub replace_urls_to_file_serving_function {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my @all_entries = MEntry->static_all($dbh);
+    my $storage = StorageBase->get();
+    my @all_entries = $storage->entries_all;
 
     my $str = "";
 
@@ -522,7 +535,8 @@ sub remove_attachment {
     my $filetype = $self->param('filetype') // 'paper';    # paper, slides
     my $dbh      = $self->app->db;
 
-    my $mentry = MEntry->static_get( $dbh, $id );
+    my $storage = StorageBase->get();
+    my $mentry = $storage->entries_find( sub{ $_->{id} == $id } );
 
     # no check as we want to have the files deleted anyway!
 
@@ -565,7 +579,8 @@ sub remove_attachment_do {    # refactor this - this is clutter
     my $filetype = shift;
     my $dbh      = $self->app->db;
 
-    my $mentry = MEntry->static_get( $dbh, $id );
+    my $storage = StorageBase->get();
+    my $mentry = $storage->entries_find( sub{ $_->{id} == $id } );
 
     my $file_path = get_paper_pdf_path( $self, $id, "$filetype" );
     my $num_deleted_files = 0;
@@ -906,73 +921,47 @@ sub show_authors_of_entry {
     my $dbh  = $self->app->db;
     $self->write_log("Showing authors of entry id $id");
 
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $id });
+
+    # my $entry = MEntry->static_get( $dbh, $id );
+    if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    my @authors = $mentry->authors($dbh);
-    my @teams   = $mentry->teams($dbh);
+    my @authors = $entry->authors_all;#($dbh);
+    my @teams   = $entry->teams($dbh);
 
-    $self->stash( entry => $mentry, authors => \@authors, teams => \@teams );
+    $self->stash( entry => $entry, authors => \@authors, teams => \@teams );
     $self->render( template => 'publications/show_authors' );
 }
 ####################################################################################
-sub manage_exceptions {
+####################################################################################
+####################################################################################
+sub manage_tags {
     my $self = shift;
-    my $id   = $self->param('id');
+    my $id  = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
+    $self->write_log("Manage tags of entry id $id");
+
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $id });
+
+    # my $entry = MEntry->static_get( $dbh, $id );
+    if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
         return;
     }
 
-    my @exceptions = $mentry->exceptions($dbh);
-    my @all_teams  = MTeam->static_all($dbh);
-    my @teams      = $mentry->teams($dbh);
-    my @authors    = $mentry->authors($dbh);
-
-    # cannot use objects as keysdue to stringification!
-    my %exceptions_hash = map { $_->{id} => 1 } @exceptions;
-    my @unassigned_teams
-        = grep { not $exceptions_hash{ $_->{id} } } @all_teams;
+    my @tags      = $entry->tags_all;#($dbh);
+    my @tag_types = $storage->tagtypes_all;#MTagType->static_all($dbh);
 
 
     $self->stash(
-        entry            => $mentry,
-        exceptions       => \@exceptions,
-        teams            => \@teams,
-        all_teams        => \@all_teams,
-        authors          => \@authors,
-        unassigned_teams => \@unassigned_teams
-    );
-    $self->render( template => 'publications/manage_exceptions' );
-}
-####################################################################################
-sub manage_tags {
-    my $self = shift;
-    my $eid  = $self->param('id');
-    my $dbh  = $self->app->db;
-
-    $self->write_log("Manage tags of entry eid $eid");
-
-    my $mentry = MEntry->static_get( $dbh, $eid );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $eid" );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
-
-    my @tags      = $mentry->tags($dbh);
-    my @tag_types = MTagType->static_all($dbh);
-
-
-    $self->stash(
-        entry     => $mentry,
+        entry     => $entry,
         tags      => \@tags,
         tag_types => \@tag_types
     );
@@ -986,11 +975,17 @@ sub remove_tag {
     my $tag_id   = $self->param('tid');
     my $dbh      = $self->app->db;
 
-    my $entry = MEntry->static_get( $dbh, $entry_id );
-    my $tag = MTag->static_get( $dbh, $tag_id );
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $entry_id });
+    my $tag     = $storage->tags_find( sub { $_->{id} == $tag_id });
+
+    # my $entry = MEntry->static_get( $dbh, $entry_id );
+    # my $tag = MTag->static_get( $dbh, $tag_id );
 
     if ( defined $entry and defined $tag ) {
-        $entry->remove_tag( $dbh, $tag );
+        # $entry->remove_tag( $dbh, $tag ); # for version without obj storage
+        $entry->remove_tag( $tag );
+        $entry->save($dbh);
         $self->write_log(
             "Removed tag $tag->{name} from entry id $entry->{id}. ");
     }
@@ -999,35 +994,89 @@ sub remove_tag {
 
 }
 ####################################################################################
-
 sub add_tag {
     my $self     = shift;
     my $entry_id = $self->param('eid');
     my $tag_id   = $self->param('tid');
     my $dbh      = $self->app->db;
 
-    my $entry = MEntry->static_get( $dbh, $entry_id );
-    my $tag = MTag->static_get( $dbh, $tag_id );
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $entry_id });
+    my $tag     = $storage->tags_find( sub { $_->{id} == $tag_id });
+    # my $entry = MEntry->static_get( $dbh, $entry_id );
+    # my $tag = MTag->static_get( $dbh, $tag_id );
 
     if ( defined $entry and defined $tag ) {
-        $entry->assign_tag( $dbh, $tag );
+        # $entry->assign_tag( $dbh, $tag );
+        $entry->assign_tag( $tag );
+        $entry->save($dbh);
         $self->write_log("Added tag $tag->{name} to entry id $entry->{id}. ");
     }
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
+####################################################################################
+####################################################################################
+sub manage_exceptions {
+    my $self = shift;
+    my $id   = $self->param('id');
+    my $dbh  = $self->app->db;
 
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $id });
+    
+
+    # my $entry = MEntry->static_get( $dbh, $id );
+    if ( !defined $entry ) {
+        $self->flash( msg => "There is no entry with id $id" );
+        $self->redirect_to( $self->get_referrer );
+        return;
+    } 
+
+    my @exceptions = $entry->exceptions_all;# ($dbh);
+    my @all_teams  = MTeam->static_all($dbh);
+    my @teams      = $entry->teams($dbh);
+    my @authors    = $entry->authors_all; #($dbh);
+
+    # cannot use objects as keysdue to stringification!
+    my %exceptions_hash = map { $_->{id} => 1 } @exceptions;
+    my @unassigned_teams
+        = grep { not $exceptions_hash{ $_->{id} } } @all_teams;
+
+
+    $self->stash(
+        entry            => $entry,
+        exceptions       => \@exceptions,
+        teams            => \@teams,
+        all_teams        => \@all_teams,
+        authors          => \@authors,
+        unassigned_teams => \@unassigned_teams
+    );
+    $self->render( template => 'publications/manage_exceptions' );
+}
+####################################################################################
 sub add_exception {
     my $self     = shift;
     my $entry_id = $self->param('eid');
     my $team_id  = $self->param('tid');
     my $dbh      = $self->app->db;
 
-    my $entry = MEntry->static_get( $dbh, $entry_id );
-    my $exception = MTeam->static_get( $dbh, $team_id );
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $entry_id });
+    my $exception   = $storage->teams_find( sub { $_->{id} == $team_id });
+
+    # my $entry = MEntry->static_get( $dbh, $entry_id );
+    # my $exception = MTeam->static_get( $dbh, $team_id );
 
     if ( defined $entry and defined $exception ) {
-        $entry->assign_exception( $dbh, $exception );
+        # $entry->assign_exception( $dbh, $exception );
+        warn "1 Entry has exceptions: \n". join ("\n", map { $_->toString } $entry->exceptions_all );
+        $entry->assign_exception( $exception );
+        
+        warn "2 Entry has exceptions: \n". join ("\n", map { $_->toString } $entry->exceptions_all );
+        $entry->save($dbh);
+        warn "3 Entry has exceptions: \n". join ("\n", map { $_->toString } $entry->exceptions_all );
+
         $self->write_log(
             "Added exception $exception->{name} to entry id $entry->{id}. ");
     }
@@ -1043,11 +1092,17 @@ sub remove_exception {
     my $team_id  = $self->param('tid');
     my $dbh      = $self->app->db;
 
-    my $entry = MEntry->static_get( $dbh, $entry_id );
-    my $exception = MTeam->static_get( $dbh, $team_id );
+    my $storage = StorageBase->get();
+    my $entry   = $storage->entries_find( sub { $_->{id} == $entry_id });
+    my $exception   = $storage->teams_find( sub { $_->{id} == $team_id });
+
+    # my $entry = MEntry->static_get( $dbh, $entry_id );
+    # my $exception = MTeam->static_get( $dbh, $team_id );
 
     if ( defined $entry and defined $exception ) {
-        $entry->remove_exception( $dbh, $exception );
+        # $entry->remove_exception( $dbh, $exception );
+        $entry->remove_exception( $exception );
+        $entry->save($dbh);
         $self->write_log(
             "Added exception $exception->{name} to entry id $entry->{id}. ");
     }
@@ -1055,7 +1110,8 @@ sub remove_exception {
     $self->redirect_to( $self->get_referrer );
 
 }
-
+####################################################################################
+####################################################################################
 ####################################################################################
 sub get_adding_editing_message_for_error_code {
     my $self        = shift;

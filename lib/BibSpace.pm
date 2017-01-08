@@ -406,7 +406,7 @@ sub setup_routes {
 
     ################ AUTHORS ################
 
-    $logged_user->get('/authors/')->to('authors#show')->name('all_authors');
+    $logged_user->get('/authors/')->to('authors#all_authors')->name('all_authors');
     $logged_user->get('/authors/add')->to('authors#add_author')
         ->name('add_author');
     $logged_user->post('/authors/add/')->to('authors#add_post');

@@ -19,6 +19,7 @@ sub load {
         init();
     }
     $storage->loadData($dbh);
+    $storage;
 }
 
 sub get {

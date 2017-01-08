@@ -6,10 +6,13 @@ use Text::BibTeX;    # parsing bib files
 use 5.010;           #because of ~~ and say
 use DBI;
 use Moose;
+use MooseX::Storage;
+with Storage( 'format' => 'JSON', 'io' => 'File' );
+with 'Persistent';
 
-has 'id'      => ( is => 'rw' );
-has 'name'    => ( is => 'rw' );
-has 'comment' => ( is => 'rw' );
+has 'id'      => ( is => 'rw', isa => 'Int' );
+has 'name'    => ( is => 'rw', isa => 'Str' );
+has 'comment' => ( is => 'rw', isa => 'Maybe[Str]' );
 
 ####################################################################################
 
@@ -25,6 +28,14 @@ sub equals {
     }
 
     return 0;
+}
+
+
+####################################################################################
+sub load {
+    my $self = shift;
+
+    # does nothing for now
 }
 ####################################################################################
 

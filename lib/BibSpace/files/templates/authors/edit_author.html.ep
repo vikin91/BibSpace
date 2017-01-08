@@ -9,7 +9,7 @@
             <H1 class="pull-right">Author: </H1>
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <h1> <%= $author->{master} %> </h1>
+            <h1> <%= $author->{uid} %> </h1>
         </div>
     </div>
 
@@ -60,17 +60,35 @@
         </div>
     </div>
 
+    <br/>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <H1 class="pull-right">Edit author </H1>
+        </div>
+        <div class="col-lg-10 col-md-10 col-xs-10">
+        </div>
+    </div>
+  
 
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <h1> Edit author </h1>
+              % if( $author->master_id == $author->id ){
+                <a  class="btn btn-success">
+                This author is master
+                </a>
+            % }
+            % else {
+                <a  class="btn btn-danger" href="<%= url_for('edit_author', id=>$author->master_id) %>">
+                This author is not master. Click to edit master: <%=$author->master%> 
+                </a>
+            % }
         </div>
     </div>
-  
-
   <!-- MUID -->
+
 
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">

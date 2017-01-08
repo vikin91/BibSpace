@@ -14,11 +14,24 @@ with Storage('format' => 'JSON', 'io' => 'File');
 
 with 'Persistent';
 
-has 'id'        => ( is => 'rw' );
-has 'name'      => ( is => 'rw' );
-has 'type'      => ( is => 'rw' );
-has 'permalink' => ( is => 'rw' );
+has 'id'        => ( is => 'rw', isa => 'Int' );
+has 'name'      => ( is => 'rw', isa => 'Str' );
+has 'type'      => ( is => 'rw', isa => 'Int', default => 1);
+has 'permalink' => ( is => 'rw', isa => 'Maybe[Str]' );
 
+
+####################################################################################
+sub toString {
+    my $self = shift;
+    $self->freeze;
+}
+####################################################################################
+sub equals {
+    my $self = shift;
+    my $obj  = shift;
+    my $result = $self->name cmp $obj->name;
+    return $result == 0;
+}
 ####################################################################################
 sub load {
     my $self = shift;

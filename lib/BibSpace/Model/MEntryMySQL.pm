@@ -162,8 +162,15 @@ sub static_all {
               need_html_regen
           FROM Entry";
     my @objs = ();
-    my $sth  = $dbh->prepare($qry);
-    $sth->execute();
+    my $sth;
+    try{
+        $sth= $dbh->prepare($qry);
+        $sth->execute();
+    }
+    catch{
+        my $trace = Devel::StackTrace->new;
+        print "\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n"; # like carp
+    };
 
     while ( my $row = $sth->fetchrow_hashref() ) {
         push @objs,

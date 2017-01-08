@@ -7,11 +7,56 @@ use Text::BibTeX;    # parsing bib files
 use 5.010;           #because of ~~ and say
 use DBI;
 use Moose;
+use MooseX::Storage;
+with Storage( 'format' => 'JSON', 'io' => 'File' );
 
-has 'id'     => ( is => 'rw' );
-has 'name'   => ( is => 'rw' );
+has 'id'     => ( is => 'rw', isa => 'Int');
+has 'name'   => ( is => 'rw', isa => 'Str');
 has 'parent' => ( is => 'rw' );
 
+has 'bteammemberships' => (
+    is      => 'rw',
+    isa     => 'ArrayRef[MTeamMembership]',
+    traits  => ['Array', 'DoNotSerialize'],
+    default => sub { [] },
+    handles => {
+        teams_all        => 'elements',
+        teams_add        => 'push',
+        teams_map        => 'map',
+        teams_filter     => 'grep',
+        teams_find       => 'first',
+        teams_find_index => 'first_index',
+        teams_delete     => 'delete',
+        teams_clear      => 'clear',
+        teams_get        => 'get',
+        teams_join       => 'join',
+        teams_count      => 'count',
+        teams_has        => 'count',
+        teams_has_no     => 'is_empty',
+        teams_sorted     => 'sort',
+    },
+);
+
+
+####################################################################################
+sub load {
+    my $self = shift;
+    my $dbh = shift;
+
+    # TODO
+}
+####################################################################################
+sub toString {
+    my $self = shift;
+    $self->freeze;
+}
+####################################################################################
+sub equals {
+    my $self = shift;
+    my $obj  = shift;
+    my $result = $self->name cmp $obj->name;
+    return $result == 0;
+}
 ####################################################################################
 sub static_all {
     my $self = shift;

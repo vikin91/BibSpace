@@ -18,14 +18,17 @@ my $dbh = $t_logged_in->app->db;
 use BibSpace::Model::MEntry;
 use BibSpace::Functions::FPublications;
 use BibSpace::Controller::Core;
+use BibSpace::Model::StorageBase;
 
 $dbh->do('DELETE FROM Entry;');
+my $storage = StorageBase->get();
+$storage->entries_clear;
 
 ####################################################################
 subtest 'MEntry; basics 1, new, static_all, populate_from_bib, save' => sub {
 
     # my $en = MEntry->new();
-    my @entries     = MEntry->static_all($dbh);
+    my @entries     = $storage->entries_all;
     my $num_entries = scalar(@entries);
     is( $num_entries, 0, "Got 0 entries" );
 
@@ -40,6 +43,7 @@ subtest 'MEntry; basics 1, new, static_all, populate_from_bib, save' => sub {
     year = {1999},
   }';
     $en3->populate_from_bib($dbh);
+    $storage->entries_add($en3);
     $en3->save($dbh);
 
     my $en4 = MEntry->new();
@@ -52,15 +56,16 @@ subtest 'MEntry; basics 1, new, static_all, populate_from_bib, save' => sub {
     year = {1999},
   }';
     $en4->populate_from_bib($dbh);
+    $storage->entries_add($en4);
     $en4->save($dbh);
 
-    @entries     = MEntry->static_all($dbh);
+    @entries     = $storage->entries_all;
     ok( scalar(@entries) > 0, "Got more than 0 entries" );
 };
 ####################################################################
 subtest 'MEntry; basics static_get, static_get_by_bibtex_key' => sub {
 
-    my @entries     = MEntry->static_all($dbh);
+    my @entries     = $storage->entries_all;
     ok( scalar(@entries) > 0, "Got more than 0 entries" );
 
     my $random_entry = $entries[ rand @entries ];
@@ -272,7 +277,7 @@ subtest 'MEntry; process_authors' => sub {
     year = {1999},
   }';
 
-    foreach my $num_authors ( map { int rand(40) } ( 1 .. 30 ) ) {
+    foreach my $num_authors ( map { int rand(40) } ( 1 .. 10 ) ) {
         $dbh->do('DELETE FROM Author;');
         my $tstr = '@misc{test, author = {';
         $tstr
@@ -294,6 +299,7 @@ subtest 'MEntry; process_authors' => sub {
 subtest 'MEntry; hide, unhide' => sub {
     my $random1 = random_string(64);
 
+
     my $en5 = MEntry->new();
     $en5->{bib} = '@mastersthesis{zzz' . $random1 . ',
     address = {World},
@@ -307,14 +313,18 @@ subtest 'MEntry; hide, unhide' => sub {
     is( $en5->get_bibtex_field_value('school'),
         $random1, "MEntry school has value $random1 (random1)" );
     $en5->populate_from_bib($dbh);
+    $storage->entries_add($en5);
     $en5->save($dbh);
-    $en5->unhide($dbh);
+    $en5->unhide();
 
-    $t_anyone = Test::Mojo->new('BibSpace');
+    print $en5->toString;
+
+    # $t_anyone = Test::Mojo->new('BibSpace');
     $t_anyone->get_ok('/r/b')->status_isnt(404)->status_isnt(500)
         ->content_like(qr/$random1/i);
 
-    $en5->hide($dbh);
+    $en5->hide();
+    $en5->save($dbh);
     $t_anyone->get_ok('/r/b')->status_isnt(404)->status_isnt(500)
         ->content_unlike(qr/$random1/i);
 
@@ -334,6 +344,9 @@ subtest 'MEntry; is_paper, is_talk, make_paper, make_talk' => sub {
     my $random1 = random_string(32);
     my $random2 = random_string(32);
 
+
+    
+
     my $en5 = MEntry->new();
     $en5->{bib} = '@mastersthesis{zzz' . $random1 . ',
     address = {World},
@@ -345,10 +358,12 @@ subtest 'MEntry; is_paper, is_talk, make_paper, make_talk' => sub {
   }';
     is( $en5->get_bibtex_field_value('school'),
         $random2, "MEntry school has value $random2 (random2)" );
-    $en5->populate_from_bib($dbh);
+    $en5->populate_from_bib();
+    $storage->entries_add($en5);
     $en5->save($dbh);
 
-    $en5->make_paper($dbh);
+    $en5->make_paper();
+    $en5->save($dbh);
     is( $en5->is_paper(), 1 );
     is( $en5->is_talk(),  0 );
     $t_anyone->get_ok('/r/b?entry_type=talk')->status_isnt(404)
@@ -356,7 +371,8 @@ subtest 'MEntry; is_paper, is_talk, make_paper, make_talk' => sub {
     $t_anyone->get_ok('/r/b?entry_type=paper')->status_isnt(404)
         ->status_isnt(500)->content_like(qr/$random2/i);
 
-    $en5->make_talk($dbh);
+    $en5->make_talk();
+    $en5->save($dbh);
     is( $en5->is_talk(),  1 );
     is( $en5->is_paper(), 0 );
 
@@ -524,10 +540,12 @@ subtest
     is( $en7->is_talk_in_DB($dbh),  0 );
     is( $en7->is_talk_in_tag($dbh), 0 );
     $en7->{entry_type} = 'paper';
-    $en7->make_talk($dbh);
+    $en7->make_talk();
+    $en7->save($dbh);
     is( $en7->is_talk_in_DB($dbh),  1 );
     is( $en7->is_talk_in_tag($dbh), 0 );
-    $en7->make_paper($dbh);
+    $en7->make_paper();
+    $en7->save($dbh);
     is( $en7->is_talk_in_DB($dbh),  0 );
     is( $en7->is_talk_in_tag($dbh), 0 );
     is( $en7->fix_entry_type_based_on_tag($dbh),
@@ -536,8 +554,8 @@ subtest
     is( $en7->is_talk_in_tag($dbh), 0 );
 
     # reset
-    $en7->populate_from_bib($dbh);
-    $en7->make_paper($dbh);
+    $en7->populate_from_bib();
+    $en7->make_paper();
     $en7->save($dbh);
     is( $en7->is_talk_in_DB($dbh),  0 );
     is( $en7->is_talk_in_tag($dbh), 0 );
@@ -551,11 +569,13 @@ subtest
     $en7->save($dbh);
     is( $en7->is_talk_in_DB($dbh),  1 );
     is( $en7->is_talk_in_tag($dbh), 1 );
-    $en7->make_paper($dbh);
+    $en7->make_paper();
+    $en7->save($dbh);
     is( $en7->is_talk_in_DB($dbh),  0 );
     is( $en7->is_talk_in_tag($dbh), 1 );    # tag remains!
     is( $en7->is_talk($dbh), 0 );    # tag remains, but this has no meaning
-    $en7->make_talk($dbh);
+    $en7->make_talk();
+    $en7->save($dbh);
     is( $en7->is_talk_in_DB($dbh),  1 );
     is( $en7->is_talk_in_tag($dbh), 1 );
     $en7->make_paper($dbh);

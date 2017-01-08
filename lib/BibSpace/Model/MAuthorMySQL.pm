@@ -5,6 +5,8 @@ use utf8;
 use Text::BibTeX;    # parsing bib files
 use 5.010;           # because of ~~ and say
 use DBI;
+use Try::Tiny;
+use Devel::StackTrace;
 
 use BibSpace::Model::MAuthorBase;
 use BibSpace::Model::Persistent;
@@ -17,33 +19,41 @@ sub load {
     my $self = shift;
     my $dbh  = shift;
 
-    $self->bteams( [ $self->load_teams($dbh) ] );
 
-    # TODO: implement me!
+    my @myMemberships = $self->load_memberships($dbh);
+
+    $self->bteamMemberships( [ @myMemberships ] );
+    # this will load author and team objects into memberships
+    map { $_->load($dbh) } $self->teamMemberships_all;    
+
+    # now, there are teams
+    my @myTeams = map{ $_->team } $self->teamMemberships_all;
+    $self->bteams( [ @myTeams ] );
+
 }
-################################################################################
-sub load_teams { # this must remain as SQL query or object calls only withing this class. Reason: methods form other classes use it.
+####################################################################################
+sub load_memberships {
     my $self = shift;
     my $dbh  = shift;
 
+    my $qry = "SELECT author_id, team_id, start, stop
+            FROM Author_to_Team
+            WHERE author_id = ?";
 
-    my $qry = "SELECT Team.id, Team.name, Team.parent, author_id, team_id, start, stop
-            FROM Author_to_Team 
-            LEFT JOIN Team ON Author_to_Team.author_id = Team.id
-            WHERE author_id=?";
-
-    my @objs;
     my $sth = $dbh->prepare($qry);
-    $sth->execute();
+    $sth->execute( $self->{id} );
 
+    my @memberships;
     while ( my $row = $sth->fetchrow_hashref() ) {
-        push @objs, MTeam->new(
-            id     => $row->{id},
-            name   => $row->{name},
-            parent => $row->{parent}
+        my $mem = MTeamMembership->new( 
+            team_id => $row->{team_id},
+            author_id => $row->{author_id},
+            start => $row->{start},
+            stop => $row->{stop}
         );
+        push @memberships, $mem;
     }
-    return @objs;
+    return @memberships;
 }
 ####################################################################################
 sub static_all {
@@ -69,6 +79,13 @@ sub static_all {
             master    => $row->{master},
             master_id => $row->{master_id}
         );
+        if( $obj->{master_id} != $obj->{id} ){
+            $obj->{masterObj} = MAuthor->static_get($dbh, $obj->{master_id});
+        }
+        else{
+            $obj->{masterObj} = $obj;
+        }
+
         push @objs, $obj;
     }
     return @objs;
@@ -97,6 +114,12 @@ sub static_all_masters {
             master    => $row->{master},
             master_id => $row->{master_id}
         );
+        if( $obj->{master_id} != $obj->{id} ){
+            $obj->{masterObj} = MAuthor->static_get($dbh, $obj->{master_id});
+        }
+        else{
+            $obj->{masterObj} = $obj;
+        }
         push @objs, $obj;
     }
     return @objs;
@@ -125,13 +148,20 @@ sub static_get {
         return undef;
     }
 
-    return MAuthor->new(
+    my $obj = MAuthor->new(
         id        => $row->{id},
         uid       => $row->{uid},
         display   => $row->{display},
         master    => $row->{master},
         master_id => $row->{master_id}
     );
+    if( $obj->{master_id} != $obj->{id} ){
+        $obj->{masterObj} = MAuthor->static_get($dbh, $obj->{master_id});
+    }
+    else{
+        $obj->{masterObj} = $obj;
+    }
+    return $obj;
 }
 ####################################################################################
 sub static_get_filter {
@@ -173,6 +203,12 @@ sub static_get_filter {
             master    => $row->{master},
             master_id => $row->{master_id}
         );
+        if( $obj->{master_id} != $obj->{id} ){
+            $obj->{masterObj} = MAuthor->static_get($dbh, $obj->{master_id});
+        }
+        else{
+            $obj->{masterObj} = $obj;
+        }
         push @objs, $obj;
     }
     return @objs;
@@ -201,6 +237,12 @@ sub all_author_user_ids {
             master    => $row->{master},
             master_id => $row->{master_id}
         );
+        if( $obj->{master_id} != $obj->{id} ){
+            $obj->{masterObj} = MAuthor->static_get($dbh, $obj->{master_id});
+        }
+        else{
+            $obj->{masterObj} = $obj;
+        }
         push @objs, $obj;
     }
     return @objs;
@@ -260,11 +302,19 @@ sub update {
                 master=?,
                 master_id=?
             WHERE id = ?";
-    my $sth = $dbh->prepare($qry);
-    $result = $sth->execute(
-        $self->{uid},       $self->{display}, $self->{master},
-        $self->{master_id}, $self->{id}
-    );
+
+    my $sth;
+    try{
+        $sth = $dbh->prepare($qry);
+        $result = $sth->execute(
+            $self->{uid},       $self->{display}, $self->{master},
+            $self->{master_id}, $self->{id}
+        );
+    }
+    catch{
+        my $trace = Devel::StackTrace->new;
+        print "\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n"; # like carp
+    };
     $sth->finish();
 
     return $result;
@@ -276,7 +326,7 @@ sub insert {
     my $result = "";
 
     my $qry = "
-        INSERT INTO Author(
+        INSERT IGNORE INTO Author(
             uid,
             display,
             master,
@@ -284,15 +334,21 @@ sub insert {
         ) 
         VALUES (?,?,?,?);";
     my $sth = $dbh->prepare($qry);
-    $result = $sth->execute(
-        $self->{uid},    $self->{display},
-        $self->{master}, $self->{master_id}
-    );
+    try{ 
+        $result = $sth->execute(
+            $self->{uid},    $self->{display},
+            $self->{master}, $self->{master_id}
+        );
+    }
+    catch{
+        my $trace = Devel::StackTrace->new;
+        print "\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n"; # like carp
+    };
     $self->{id} = $dbh->last_insert_id( '', '', 'Author', '' );
     $sth->finish();
 
     if ( !defined $self->{master} or $self->{master} eq '' ) {
-        $self->assign_master( $dbh, $self );
+        $self->set_master( $self );
     }
     return $self->{id};
 }

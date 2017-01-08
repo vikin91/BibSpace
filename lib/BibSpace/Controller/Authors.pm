@@ -23,20 +23,33 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
 ##############################################################################################################
-sub show {    # refactored
+sub all_authors {    # refactored
     my $self    = shift;
     my $dbh     = $self->app->db;
     my $visible = $self->param('visible');
     my $search  = $self->param('search') || '%';
     my $letter  = $self->param('letter') || '%';
 
+    my $letter_pattern = $letter;
     if ( $letter ne '%' ) {
-        $letter .= '%';
+        $letter_pattern .= '%';
     }
 
-    my @authors = MAuthor->static_get_filter( $dbh, $visible, $letter );
+    my $storage = StorageBase->get();
+    my @authors = $storage->authors_all;
+    if(defined $visible){
+        @authors = grep { $_->{display} == $visible } @authors;
+    }
+    if( $letter ne '%' ){
+        @authors = grep { ( substr($_->{master}, 0, 1) cmp $letter ) == 0 } @authors;
+    }
 
-    my @letters = $self->get_set_of_first_letters($visible);
+    # my @authors = MAuthor->static_get_filter( $dbh, $visible, $letter_pattern );
+
+    # my @letters = $self->get_set_of_first_letters($visible);
+    my @letters = map { substr($_->{master}, 0, 1) } $storage->authors_all;
+    @letters = uniq @letters;
+    @letters = sort @letters;
 
     $self->stash(
         authors => \@authors,
@@ -50,8 +63,6 @@ sub show {    # refactored
 sub add_author {
     my $self = shift;
 
-    my $dbh = $self->app->db;
-
     $self->stash( master => '', id => '' );
     $self->render( template => 'authors/add_author' );
 }
@@ -62,18 +73,24 @@ sub add_post {
     my $dbh        = $self->app->db;
     my $new_master = $self->param('new_master');
 
-    if ( defined $new_master ) {
+    if ( defined $new_master and length($new_master)>0 ) {
 
-        my $a = MAuthor->static_get_by_name( $dbh, $new_master );
+        my $storage = StorageBase->get();
+        my $a = $storage->authors_find( sub{ ($_->{master} cmp $new_master) ==0 } );
+
+        # my $a = MAuthor->static_get_by_name( $dbh, $new_master );
 
         if ( !defined $a ) {    # no such user exists yet
 
             $a = MAuthor->new( uid => $new_master );
+            $storage->authors_add($a);
             $a->save($dbh);
+
+            
 
             if ( !defined $a->{id} ) {
                 $self->flash(
-                    type => 'danger',
+                    msg_type => 'danger',
                     msg =>
                         "Error saving author. Saving to the database returned no insert row id."
                 );
@@ -84,7 +101,7 @@ sub add_post {
                 "Added new author with master: $new_master. Author id is "
                     . $a->{id} );
             $self->flash(
-                type => 'success',
+                msg_type => 'success',
                 msg  => "Author added successfully!"
             );
             $self->redirect_to(
@@ -104,6 +121,11 @@ sub add_post {
         }
     }
 
+    $self->flash(
+        msg_type => 'warning',
+        msg =>
+            "Bad input."
+    );
     $self->redirect_to( $self->url_for('add_author') );
 }
 ##############################################################################################################
@@ -112,12 +134,14 @@ sub edit_author {
     my $id   = $self->param('id');
 
     my $dbh = $self->app->db;
-    my $author = MAuthor->static_get( $dbh, $id );
+    my $storage = StorageBase->get();
+    my $author = $storage->authors_find( sub{ $_->{id} == $id } );
 
-    if( defined $author and $author->{id} != $author->{master_id} ){
-        $self->redirect_to( $self->url_for('edit_author', id=>$author->{master_id}) );
-        return;
-    }
+    # redirect to master if master is defined for this author
+    # if( defined $author and $author->{id} != $author->{master_id} ){
+    #     $self->redirect_to( $self->url_for('edit_author', id=>$author->{master_id}) );
+    #     return;
+    # }
 
 
     if ( !defined $author ) {
@@ -129,7 +153,7 @@ sub edit_author {
     }
     else {
 
-        my @all_teams    = MTeam->static_all($dbh);
+        my @all_teams    = $storage->teams_all;#MTeam->static_all($dbh);
         my @author_teams = $author->teams($dbh);
         my @author_tags  = $author->tags($dbh);
 
@@ -288,44 +312,39 @@ sub edit_post {
     my $id          = $self->param('id');
     my $new_master  = $self->param('new_master');
     my $new_user_id = $self->param('new_user_id');
-
     my $visibility = $self->param('visibility');
 
-    my $author = MAuthor->static_get( $dbh, $id );
+    my $storage = StorageBase->get();
+    my $author = $storage->authors_find( sub{ $_->{id} == $id } );
 
     if ( defined $author ) {
         if ( defined $new_master ) {
-            my $status = $author->update_master_name( $dbh, $new_master );
+            
+            my $existing = $storage->authors_find( sub{ ($_->{master} cmp $new_master) ==0 } );
 
-            # status = 0 OK
-            # status > 0 existing master id
-
-            if ( $status == 0 ) {
+            if( !defined $existing ){
+                $author->update_master_name( $new_master );
+                $author->save( $dbh );
                 $self->flash(
                     msg      => "Master name has been updated sucesfully.",
                     msg_type => "success"
                 );
                 $self->redirect_to(
-                    $self->url_for( 'edit_author', id => $status ) );
+                    $self->url_for( 'edit_author', id => $author->{id} ) );
             }
-            elsif ( $status != $id ) {
-                my $existing_author = MAuthor->static_get( $dbh, $status );
+            else{
+                
                 $self->flash(
                     msg => "This master name is already taken by <a href=\""
-                        . $self->url_for( 'edit_author', id => $status )
+                        . $self->url_for( 'edit_author', id => $existing->{id} )
                         . "\">"
-                        . $existing_author->{master} . "</a>.",
+                        . $existing->{master} . "</a>.",
                     msg_type => "danger"
                 );
                 $self->redirect_to(
                     $self->url_for( 'edit_author', id => $id ) );
             }
-            else {
-                $self->flash(
-                    msg      => "Master name has not changed.",
-                    msg_type => "info"
-                );
-            }
+            
 
         }
         elsif ( defined $visibility ) {
@@ -484,7 +503,7 @@ sub add_new_user_id_to_master {
 
         # author with new_user_id already exist
         # move all entries of candidate to this author
-        $author_obj->move_entries_from_author( $dbh, $author_candidate );
+        $author_obj->take_entries_from_author( $author_candidate );
 
         $author_candidate->{master}    = $author_obj->{master};
         $author_candidate->{master_id} = $author_obj->{master_id};

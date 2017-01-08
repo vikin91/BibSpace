@@ -23,9 +23,12 @@ sub index {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my @objs = MTagType->static_all($dbh);
+    my $storage = StorageBase->get();
+    my @tag_types = $storage->tagtypes_all;
 
-    $self->render( template => 'tagtypes/tagtypes', tagtypes => \@objs );
+    # my @tag_types = MTagType->static_all($dbh);
+
+    $self->render( template => 'tagtypes/tagtypes', tagtypes => \@tag_types );
 }
 
 ####################################################################################
@@ -43,17 +46,23 @@ sub add_post {
     my $name    = $self->param('new_name');
     my $comment = $self->param('new_comment');
 
-    my $tt = MTagType->static_get_by_name( $dbh, $name );
+    my $storage = StorageBase->get();
+    my $tt = $storage->tagtypes_find( sub { ($_->{name} cmp $name) == 0} );
+
+    # my $tt = MTagType->static_get_by_name( $dbh, $name );
     if ( defined $tt ) {
         $self->flash(
             msg_type => 'error',
             msg      => 'Tag type with such name already exists.'
         );
     }
-
-    $tt = MTagType->new( name => $name, comment => $comment );
-    $tt->save($dbh);
-    $self->flash( msg_type => 'success', msg => 'Tag type added.' );
+    else{
+        $tt = MTagType->new( name => $name, comment => $comment );
+        $storage->tagtypes_add($tt);
+        $tt->save($dbh);
+        $self->flash( msg_type => 'success', msg => 'Tag type added.' );    
+    }
+    
     $self->redirect_to( $self->url_for('all_tag_types') );
 }
 
@@ -62,6 +71,7 @@ sub delete {
     my $self = shift;
     my $dbh  = $self->app->db;
     my $id   = $self->param('id');
+
 
     # we do not allow to delete the two first tag types!
     if ( $id == 1 or $id == 2 ) {
@@ -73,12 +83,18 @@ sub delete {
         return;
     }
 
-    my $tt = MTagType->static_get( $dbh, $id );
+    my $storage = StorageBase->get();
+    my $tt = $storage->tagtypes_find( sub { $_->{id} == $id } );
+    # my $tt = MTagType->static_get( $dbh, $id );
 
+    my @tags_of_tag_type = $storage->tags_filter( sub { $_->{type} == $id } );
 
-    for my $t ( MTag->static_all_type( $dbh, $id ) ) {
+    for my $t ( @tags_of_tag_type ) {
+        $storage->deleteObj($t);
         $t->delete($dbh);
     }
+    
+    $storage->deleteObj($tt);
     $tt->delete($dbh);
 
     $self->flash( msg_type => 'success', msg => 'Tag type deleted.' );
@@ -96,7 +112,10 @@ sub edit {
     my $comment = $self->param('new_comment');
     my $saved   = 0;
 
-    my $tt = MTagType->static_get( $dbh, $id );
+    
+    my $storage = StorageBase->get();
+    my $tt = $storage->tagtypes_find( sub { $_->{id} == $id } );
+    # my $tt = MTagType->static_get( $dbh, $id );
 
     if ( !defined $tt ) {
         $self->flash(

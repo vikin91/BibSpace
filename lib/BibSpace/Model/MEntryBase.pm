@@ -116,7 +116,29 @@ has 'bst_file' => (
     traits  => ['DoNotSerialize']
 );
 
+####################################################################################
+sub toString {
+    my $self = shift;
+    my $str;
+    $str .= "MEntry id " . $self->id;
+    $str .= ", entry_type " . $self->entry_type;
+    $str .= ", bibtex_key " . $self->bibtex_key;
+    $str .= ", year " . $self->year;
+    $str .= ", \n";
+    $str .= "Authors: [\n";
+    map { $str .= "\t".$_->toString . "\n"} $self->authors_all;
+    $str .= "]\n";
 
+    $str .= "Tags: [\n";
+    map { $str .= "\t".$_->toString . "\n"} $self->tags_all;
+    $str .= "]\n";
+
+    $str .= "Exceptions: [\n";
+    map { $str .= "\t".$_->toString . "\n"} $self->exceptions_all;
+    $str .= "]\n";
+
+    return $str;
+}
 ####################################################################################
 
 sub equals {
@@ -133,8 +155,9 @@ sub equals_bibtex {
     my $self = shift;
     my $obj  = shift;
 
-    return 0 if !defined $obj or !defined $self;
-    return $self->{bib} eq $obj->{bib};
+    return 0 unless defined $obj;
+    my $result = $self->{bib} cmp $obj->{bib};
+    return $result == 0;
 }
 
 ####################################################################################
@@ -145,38 +168,38 @@ sub is_hidden {
 ####################################################################################
 sub hide {
     my $self = shift;
-    my $dbh  = shift;
+    # my $dbh  = shift;
 
     $self->{hidden} = 1;
-    $self->save($dbh);
+    # $self->save($dbh);
 }
 ####################################################################################
 sub unhide {
     my $self = shift;
-    my $dbh  = shift;
+    # my $dbh  = shift;
 
     $self->{hidden} = 0;
-    $self->save($dbh);
+    # $self->save($dbh);
 }
 ####################################################################################
 sub toggle_hide {
     my $self = shift;
-    my $dbh  = shift;
+    # my $dbh  = shift;
 
     if ( $self->{hidden} == 1 ) {
-        $self->unhide($dbh);
+        $self->unhide();
     }
     else {
-        $self->hide($dbh);
+        $self->hide();
     }
 }
 ####################################################################################
 sub make_paper {
     my $self = shift;
-    my $dbh  = shift;
+    # my $dbh  = shift;
 
     $self->{entry_type} = 'paper';
-    $self->save($dbh);
+    # $self->save($dbh);
 }
 ####################################################################################
 sub is_paper {
@@ -187,10 +210,10 @@ sub is_paper {
 ####################################################################################
 sub make_talk {
     my $self = shift;
-    my $dbh  = shift;
+    # my $dbh  = shift;
 
     $self->{entry_type} = 'talk';
-    $self->save($dbh);
+    # $self->save($dbh);
 }
 ####################################################################################
 sub is_talk {
@@ -485,14 +508,28 @@ sub assign_existing_authors {
 
 ####################################################################################
 sub process_authors {
-    my $self   = shift;
-    my $dbh    = shift;
+    my $self    = shift;
+    my $dbh     = shift;
+    
+    use BibSpace::Model::StorageBase;
+    my $storage = StorageBase->get();
 
-    ## here: source of the problem with reassignment
+    my @bibtex_authors = $self->get_authors_from_bibtex($dbh); 
 
-    my @authors = $self->get_authors_from_bibtex($dbh); # returns new objects
-    # TODO: make sure this above returns objects from DB if they exists. Otherwise, see below.
-    map {$_->save($dbh)} @authors; # inserts duplicates into DB
+    my @authors;
+    for my $a (@bibtex_authors){
+
+        my $author_form_storage = $storage->authors_find( sub { $_->equals($a) });
+
+        if( defined $author_form_storage ){
+            my $master = $author_form_storage->get_master;
+            push @authors, $author_form_storage;
+        }
+        else{
+            $storage->authors_add( $a );
+            push @authors, $a;
+        }
+    } 
 
     my $num_authors_created = $self->assign_author( @authors );
     $self->save($dbh);
@@ -564,7 +601,8 @@ sub get_authors_from_bibtex {
     my @authors;
 
     foreach my $name ( $self->author_names_from_bibtex() ) {
-        push @authors, MAuthor->new( uid => $name );
+        my $a = MAuthor->new( uid => $name );
+        push @authors, $a;
     }
     return @authors;
 }
@@ -605,11 +643,7 @@ sub remove_exception {
     my $exception = shift;
 
     my $index = $self->exceptions_find_index(
-        sub {
-            defined $_->{name}
-                and defined $exception->{name}
-                and $_->{name} eq $exception->{name};
-        }
+        sub { $_->equals( $exception ) }
     );
     return 0 if $index == -1;
     return 1 if $self->exceptions_delete($index);
@@ -620,13 +654,19 @@ sub assign_exception {
     my $self      = shift;
     my $exception = shift;
 
+
+
     return 0
         if !defined $self->{id}
         or $self->{id} < 0
         or !defined $exception
         or $exception->{id} <= 0;
 
-    return 1 if $self->exceptions_add($exception);
+    my $result = $self->exceptions_add($exception);
+    # say "adding excpetion ". $exception->toString;
+    # say "Entry has exceptions: \n". join ("\n", map { $_->toString } $self->exceptions_all );
+
+    return 1 if $result;
     return 0;
 }
 ####################################################################################
@@ -649,13 +689,19 @@ sub assign_tag {
     my $self = shift;
     my $tag  = shift;
 
+
     return 0
         if !defined $self->{id}
         or $self->{id} < 0
         or !defined $tag
         or $tag->{id} <= 0;
 
-    return 1 if $self->tags_add($tag);
+    # say "before Entry has tag: \n". join ("\n", map { $_->toString } $self->tags_all );
+    my $result = $self->tags_add($tag);
+    # say "adding tag ". $tag->toString;
+    # say "after Entry has tag: \n". join ("\n", map { $_->toString } $self->tags_all );
+
+    return 1 if $result;
     return 0;
 }
 ####################################################################################
@@ -663,13 +709,7 @@ sub remove_tag {
     my $self = shift;
     my $tag  = shift;
 
-    my $index = $self->tags_find_index(
-        sub {
-            defined $_->{name}
-                and defined $tag->{name}
-                and $_->{name} eq $tag->{name};
-        }
-    );
+    my $index = $self->tags_find_index( sub { $_->equals($tag) });
     return 0 if $index == -1;
     return 1 if $self->tags_delete($index);
     return 0;
@@ -679,11 +719,7 @@ sub remove_tag_by_id {
     my $self   = shift;
     my $tag_id = shift;
 
-    my $index = $self->tags_find_index(
-        sub {
-            defined $_->{id} and defined $tag_id and $_->{id} == $tag_id;
-        }
-    );
+    my $index = $self->tags_find_index( sub { $_->{id} == $tag_id } );
     return 0 if $index == -1;
     return 1 if $self->tags_delete($index);
     return 0;

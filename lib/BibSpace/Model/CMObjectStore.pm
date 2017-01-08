@@ -9,6 +9,10 @@ use BibSpace::Model::MEntry;
 use BibSpace::Model::MTag;
 use BibSpace::Model::MAuthor;
 use BibSpace::Model::MTeam;
+use BibSpace::Model::MTeamMembership;
+
+use List::MoreUtils qw(any uniq);
+
 
 use Moose;
 use MooseX::Storage;
@@ -20,17 +24,21 @@ has 'entries' => (
     traits  => ['Array'],
     default => sub { [] },
     handles => {
-        entries_all    => 'elements',
-        entries_add    => 'push',
-        entries_map    => 'map',
-        entries_filter => 'grep',
-        entries_find   => 'first',
-        entries_get    => 'get',
-        entries_join   => 'join',
-        entries_count  => 'count',
-        entries_has    => 'count',
-        entries_has_no => 'is_empty',
-        entries_sorted => 'sort',
+        entries_all        => 'elements',
+        entries_add        => 'push',
+        entries_map        => 'map',
+        entries_filter     => 'grep',
+        entries_find       => 'first',
+        entries_find_index => 'first_index',
+        entries_delete     => 'delete',
+        entries_clear      => 'clear',
+        entries_find       => 'first',
+        entries_get        => 'get',
+        entries_join       => 'join',
+        entries_count      => 'count',
+        entries_has        => 'count',
+        entries_has_no     => 'is_empty',
+        entries_sorted     => 'sort',
     },
 );
 
@@ -80,6 +88,29 @@ has 'tags' => (
     },
 );
 
+has 'tagtypes' => (
+    is      => 'rw',
+    isa     => 'ArrayRef[MTagType]',
+    traits  => ['Array'],
+    default => sub { [] },
+    handles => {
+        tagtypes_all        => 'elements',
+        tagtypes_add        => 'push',
+        tagtypes_map        => 'map',
+        tagtypes_filter     => 'grep',
+        tagtypes_find       => 'first',
+        tagtypes_get        => 'get',
+        tagtypes_find_index => 'first_index',
+        tagtypes_delete     => 'delete',
+        tagtypes_clear      => 'clear',
+        tagtypes_join       => 'join',
+        tagtypes_count      => 'count',
+        tagtypes_has        => 'count',
+        tagtypes_has_no     => 'is_empty',
+        tagtypes_sorted     => 'sort',
+    },
+);
+
 has 'teams' => (
     is      => 'rw',
     isa     => 'ArrayRef[MTeam]',
@@ -102,56 +133,168 @@ has 'teams' => (
         teams_sorted     => 'sort',
     },
 );
-
+has 'teamMemberships' => (
+    is      => 'rw',
+    isa     => 'ArrayRef[MTeamMembership]',
+    traits  => ['Array'],
+    default => sub { [] },
+    handles => {
+        teamMemberships_all        => 'elements',
+        teamMemberships_add        => 'push',
+        teamMemberships_map        => 'map',
+        teamMemberships_filter     => 'grep',
+        teamMemberships_find       => 'first',
+        teamMemberships_get        => 'get',
+        teamMemberships_find_index => 'first_index',
+        teamMemberships_delete     => 'delete',
+        teamMemberships_clear      => 'clear',
+        teamMemberships_join       => 'join',
+        teamMemberships_count      => 'count',
+        teamMemberships_has        => 'count',
+        teamMemberships_has_no     => 'is_empty',
+        teamMemberships_sorted     => 'sort',
+    },
+);
+####################################################################################################
+sub delete {
+    my $self = shift;
+    my $obj  = shift;
+    return $self->deleteObj($obj);
+}
 ####################################################################################################
 sub deleteObj {
     my $self = shift;
-    my $obj = shift;
+    my $obj  = shift;
 
-    if( !blessed( $obj ) ){
+    if ( !blessed($obj) ) {
         warn "Object not blessed!";
         return 0;
     }
-    if($obj->isa("MEntry") ){
-        my $index = $self->entries_find_index(
-            sub {
-                defined $_->{id} and defined $obj->{id} and $_->{id} eq $obj->{id};
-            }
-        );
-        $self->entries_delete($index) if $index > -1;
-        return 1 if $index > -1;
+
+    # warn "Deleting ".ref($obj);
+
+    if ( $obj->isa("MEntry") ) {
+        my $index = $self->entries_find_index( sub { $_->equals($obj) } );
+        if ( $index > -1 ) {
+            $self->entries_delete($index);
+            return 1;
+        }
     }
-    elsif( $obj->isa("MAuthor") ){
-        my $index = $self->authors_find_index(
-            sub {
-                defined $_->{id} and defined $obj->{id} and $_->{id} eq $obj->{id};
-            }
-        );
-        $self->authors_delete($index) if $index > -1;
-        return 1 if $index > -1;
+    elsif ( $obj->isa("MAuthor") ) {
+        my $index = $self->authors_find_index( sub { $_->equals($obj) } );
+        if ( $index > -1 ) {
+            $self->authors_delete($index);
+            return 1;
+        }
     }
-    elsif( $obj->isa("MTeam") ){
-        my $index = $self->teams_find_index(
-            sub {
-                defined $_->{id} and defined $obj->{id} and $_->{id} eq $obj->{id};
-            }
-        );
-        $self->teams_delete($index) if $index > -1;
-        return 1 if $index > -1;
+    elsif ( $obj->isa("MTeam") ) {
+        my $index = $self->teams_find_index( sub { $_->equals($obj) } );
+        if ( $index > -1 ) {
+            $self->teams_delete($index);
+            return 1;
+        }
     }
-    elsif( $obj->isa("MTag") ){
-        my $index = $self->tags_find_index(
-            sub {
-                defined $_->{id} and defined $obj->{id} and $_->{id} eq $obj->{id};
-            }
-        );
-        $self->tags_delete($index) if $index > -1;
-        return 1 if $index > -1;
+    elsif ( $obj->isa("MTag") ) {
+        my $index = $self->tags_find_index( sub { $_->equals($obj) } );
+        if ( $index > -1 ) {
+            $self->tags_delete($index);
+            return 1;
+        }
     }
-    else{
-        warn "I dont know how to delete ".$obj;
+    elsif ( $obj->isa("MTagType") ) {
+        my $index = $self->tagtypes_find_index( sub { $_->equals($obj) } );
+        if ( $index > -1 ) {
+            $self->tagtypes_delete($index);
+            return 1;
+        }
+    }
+    elsif ( $obj->isa("MTeamMembership") ) {
+        my $index
+            = $self->teamMemberships_find_index( sub { $_->equals($obj) } );
+        if ( $index > -1 ) {
+            $self->teamMemberships_delete($index);
+            return 1;
+        }
+    }
+    else {
+        warn "Cannot delete " . ref($obj) . " – unknown type!";
         return 0;
     }
+
+    warn "Cannot delete " . ref($obj) . " – object not found!";
+    return 0;
+}
+####################################################################################################
+sub add {
+    my $self = shift;
+    my $obj  = shift;
+    return $self->addObj($obj);
+}
+####################################################################################################
+sub addObj {
+    my $self = shift;
+    my $obj  = shift;
+
+    if ( !blessed($obj) ) {
+        warn "Object not blessed!";
+        return 0;
+    }
+
+    # warn "\tAdding ".ref($obj);
+    my $index = -1;
+
+    if ( $obj->isa("MEntry") ) {
+        $index = $self->entries_find_index( sub { $_->equals($obj) } );
+        if ( $index < 0 ) {
+            $self->entries_add($obj);
+            return 1;
+        }
+    }
+    elsif ( $obj->isa("MAuthor") ) {
+        $index = $self->authors_find_index( sub { $_->equals($obj) } );
+        if ( $index < 0 ) {
+            $self->authors_add($obj);
+            return 1;
+        }
+    }
+    elsif ( $obj->isa("MTeam") ) {
+        $index = $self->teams_find_index( sub { $_->equals($obj) } );
+        if ( $index < 0 ) {
+            $self->teams_add($obj);
+            return 1;
+        }
+    }
+    elsif ( $obj->isa("MTag") ) {
+        $index = $self->tags_find_index( sub { $_->equals($obj) } );
+        if ( $index < 0 ) {
+            $self->tags_add($obj);
+            return 1;
+        }
+    }
+    elsif ( $obj->isa("MTagType") ) {
+        $index = $self->tagtypes_find_index( sub { $_->equals($obj) } );
+        if ( $index < 0 ) {
+            $self->tagtypes_add($obj);
+            return 1;
+        }
+    }
+    elsif ( $obj->isa("MTeamMembership") ) {
+        my $index
+            = $self->teamMemberships_find_index( sub { $_->equals($obj) } );
+        if ( $index < 0 ) {
+            $self->tagtypes_add($obj);
+            return 1;
+        }
+    }
+    else {
+        warn "Cannot add " . ref($obj) . " – unknown type!";
+        return 0;
+    }
+
+    warn "Cannot add "
+        . ref($obj)
+        . " – object already exists on index $index!";
+    return 0;
 }
 
 ####################################################################################################
@@ -159,25 +302,52 @@ sub loadData {
     my $self = shift;
     my $dbh  = shift;
 
-    warn "CMObjectStore is loading data from DB...";
+    print "CMObjectStore is loading data from DB...\n";
 
-    my @allEntries = MEntry->static_all($dbh);
-    my @allAuthors = MAuthor->static_all($dbh);
-    my @allTags    = MTag->static_all($dbh);
-    my @allTeams   = MTeam->static_all($dbh);
+    # fetch objects from DB
+    my @allEntries     = MEntry->static_all($dbh);
+    my @allTagTypes    = MTagType->static_all($dbh);
+    my @allTags        = MTag->static_all($dbh);
+    my @allTeams       = MTeam->static_all($dbh);
+    my @allAuthors     = MAuthor->static_all($dbh);
+    my @allMemberships = MTeamMembership->static_all($dbh);
 
+    # discover relations between objects - based on data from DB
     map { $_->load($dbh) } @allEntries;
-    map { $_->load($dbh) } @allAuthors;
+    map { $_->load($dbh) } @allTagTypes;
     map { $_->load($dbh) } @allTags;
+    map { $_->load($dbh) } @allTeams;
+    map { $_->load($dbh) } @allAuthors;
+    map { $_->load($dbh) } @allMemberships;
+
+    # put into object storage
+    $self->entries( \@allEntries );
+    $self->tagtypes( \@allTagTypes );
+    $self->tags( \@allTags );
+    $self->teams( \@allTeams );
+    $self->authors( \@allAuthors );
+    $self->teamMemberships( \@allMemberships );
+ 
+
+    print "CMObjectStore finished loading data from DB.\n";
+
+    # my $entry   = $self->entries_find( sub { $_->{id} == 913 });
+    # print "\n" . $entry->toString;
+
+    
+    # map { print $_->toString . "\n" } @allMemberships;
+    # map { print $_->toString . "\n" } @allAuthors;
+    # map { print $_->toString . "\n" } @allEntries;
+    # map { print $_->toString . "\n" if $_->id == 913 } @allEntries;
+    # map { print $_->toString . "\n" } @allTags;
 
     # map { $_->load($dbh) } @allTeams;
 
     # push @{ $self->storage }, @allEntries;
-    $self->entries( \@allEntries );
-    $self->authors( \@allAuthors );
-    $self->tags( \@allTags );
-    $self->teams( \@allTeams );
+
+
 }
+
 ####################################################################################################
 no Moose;
 __PACKAGE__->meta->make_immutable;
