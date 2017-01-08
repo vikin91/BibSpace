@@ -14,11 +14,10 @@ use BibSpace::Model::MUser;
 
 
 use BibSpace::Model::CMUsers;
-# use BibSpace::Model::CMObjectStore;
+use BibSpace::Model::CMObjectStore;
 
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
-use BibSpace::Functions::RedisWrapper;
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -33,9 +32,7 @@ use Mojo::Home;
 use File::Spec;
 use Cwd;
 
-# use Mojo::Redis2;
 use Redis;
-use BibSpace::Functions::RedisConnectionProvider;
 use BibSpace::Functions::AppHandleProvider;
 
 # for Makemake. Needs to be removed for Dist::Zilla
@@ -146,39 +143,6 @@ sub startup {
 sub setup_cache {
     my $self = shift;
     my $app  = $self;
-    ######################## Redis part
-
-    # my $long_running_task_handler = sub {
-    #     my ( $message, $channel, $subscribedchannel ) = @_;
-    #     say "Received message: $message, on chanel $channel";
-    #     my $app = AppHandleProvider->instance;
-
-    #     if( $message eq 'regen_html'){
-    #         #sleep(14);
-    #         Fdo_regenerate_html_for_all_redis_test($app->dbh, $app->bst, 1);
-    #     }
-    # };
-
-    # $self->helper(
-    #     redisSub => sub {
-    #         RedisConnectionProvider->instance->redisSub;
-    #     }
-    # );
-    # $self->helper(
-    #     redisPub => sub {
-    #         RedisConnectionProvider->instance->redisPub;
-    #     }
-    # );
-
-    # try{
-    #     $self->redisSub->subscribe( 'CHAN', $long_running_task_handler );
-    # }
-    # catch{
-    #     warn "Redis server is down. Err: $_";
-    # };
-
-    ######################## Redis part END
-
 }
 ################################################################
 sub setup_config {

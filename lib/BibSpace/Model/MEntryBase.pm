@@ -156,6 +156,8 @@ sub equals_bibtex {
     my $obj  = shift;
 
     return 0 unless defined $obj;
+    # return 0 unless $obj->isa("MEntryBase");
+
     my $result = $self->{bib} cmp $obj->{bib};
     return $result == 0;
 }
@@ -309,7 +311,6 @@ sub has_tag_named {
 ########################################################################################################################
 sub is_talk_in_tag {
     my $self = shift;
-    my $dbh  = shift;
     my $sum
         = $self->has_tag_named("Talks")
         + $self->has_tag_named("Talk")
@@ -321,10 +322,9 @@ sub is_talk_in_tag {
 ########################################################################################################################
 sub fix_entry_type_based_on_tag {
     my $self = shift;
-    my $dbh  = shift;
 
     my $is_talk_db  = $self->is_talk();
-    my $is_talk_tag = $self->is_talk_in_tag($dbh);
+    my $is_talk_tag = $self->is_talk_in_tag();
 
     if ( $is_talk_tag and $is_talk_db ) {
 
@@ -334,7 +334,7 @@ sub fix_entry_type_based_on_tag {
     elsif ( $is_talk_tag and $is_talk_db == 0 ) {
 
         # say "tag true, DB false. Should write to DB";
-        $self->make_talk($dbh);
+        $self->make_talk();
         return 1;
     }
     elsif ( $is_talk_tag == 0 and $is_talk_db ) {

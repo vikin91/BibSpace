@@ -23,7 +23,6 @@ our @ISA = qw( Exporter );
 # these are exported by default.
 our @EXPORT = qw(
     Fdo_regenerate_html_for_all
-    Fdo_regenerate_html_for_all_redis_test
     Ffix_months
     FprintBibtexWarnings
     Fhandle_add_edit_publication
@@ -35,26 +34,6 @@ our @EXPORT = qw(
     Fclean_ugly_bibtex_fields_for_all_entries
     Fhandle_author_uids_change_for_all_entries
 );
-####################################################################################
-sub Fdo_regenerate_html_for_all_redis_test {
-    my $dbh = shift;
-    my $bst_file = shift;
-    my $force = shift // 1;
-
-    say "==== Regenerating all html codes ====";
-    
-    my @entries = MEntry->static_all($dbh);
-    @entries = @entries[0..50];
-    # warn "DEVEL MODE in do_regenerate_html_for_all - processing only 50 entries!";
-
-    for my $e (@entries) {
-        $e->{bst_file} = $bst_file;
-        $e->regenerate_html( $force, $bst_file );
-        $e->save($dbh);
-    }
-    say "==== Finished regenerating all html codes ====";
-    
-}
 ####################################################################################
 sub Fdo_regenerate_html_for_all {
     my $dbh = shift;

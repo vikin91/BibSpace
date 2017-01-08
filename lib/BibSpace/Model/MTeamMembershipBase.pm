@@ -42,10 +42,13 @@ sub toString {
 sub equals {
     my $self   = shift;
     my $obj    = shift;
+
+    # return 0 unless $obj->isa("MTeamMembershipBase");
+    
     my $result = $self->team->equals($obj->team) and
                     $self->author->equals($obj->author) and
-                    $self->start == $obj->start and
-                    $self->stop == $obj->stop;
+                    $self->{start} == $obj->{start} and
+                    $self->{stop} == $obj->{stop};
 
     return $result == 0;
 }

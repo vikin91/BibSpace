@@ -155,6 +155,7 @@ sub equals {
     my $obj  = shift;
 
     return 0 unless defined $obj;
+    # return 0 unless $obj->isa("MAuthorBase");
     my $result = $self->{uid} cmp $obj->{uid};
     return $result == 0;
 }
@@ -199,7 +200,7 @@ sub is_minion_of {
 
     return 1
         if defined $self->{masterObj} and $self->{masterObj}->equals($master);
-    return 1 if defined $master->{id} and $self->{master_id} == $master->{id};
+    return 1 if defined $master->{id} and defined $self->{master_id} and $self->{master_id} == $master->{id};
     return 1
         if defined $self->{master}
         and ( $self->{master} cmp $master->{uid} ) == 0;

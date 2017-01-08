@@ -62,14 +62,15 @@ sub fixMonths {
 ####################################################################################
 sub fixEntryType {
     my $self = shift;
+    my $dbh  = $self->app->db;
 
-    my @objs      = MEntry->static_all( $self->app->db );
+    my $storage = StorageBase->get();
+    my @objs   = $storage->entries_all;
+
     my $num_fixes = 0;
     for my $e (@objs) {
-
-       # $num_fixes = $num_fixes + $o->fixEntryTypeBasedOnTag($self->app->db);
-        $num_fixes
-            = $num_fixes + $e->fix_entry_type_based_on_tag( $self->app->db );
+        $num_fixes = $num_fixes + $e->fix_entry_type_based_on_tag();
+        $e->save($dbh); # change to $storage->store_all or sth;
     }
 
     $self->flash( msg =>
