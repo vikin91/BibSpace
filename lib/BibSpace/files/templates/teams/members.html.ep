@@ -75,8 +75,8 @@
             <tbody>
             % my $i = 0;
             % foreach my $author (@{$members}){
-                % my $start = $author->joined_team(app->db, $team);
-                % my $stop  = $author->left_team(app->db, $team);
+                % my $start = $author->joined_team($team);
+                % my $stop  = $author->left_team($team);
                 <tr>
                     <td>    
                         <a class="btn btn-danger btn-sm" href="<%= url_for('remove_author_from_team', id=>$author->{id}, tid=>$team->{id}) %>" data-toggle="tooltip" data-placement="right" title="Remove author <%= $author->{master} %> from team <%= $team->{name} %>"><i class="fa fa-users"></i> <span class="glyphicon glyphicon-minus"></span></a>

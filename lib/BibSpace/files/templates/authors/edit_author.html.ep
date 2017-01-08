@@ -209,10 +209,10 @@
                         <div data-toggle="tooltip" data-placement="right" title="Click to edit">
                             <div class="btn-group pull-right">
                                 <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Joined the group in year">
-                                    <i class="fa fa-sun-o"></i> <%= $author->joined_team( get_dbh(), $team ) %>
+                                    <i class="fa fa-sun-o"></i> <%= $author->joined_team( $team ) %>
                                 </span>
                                 <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Left the group in year">
-                                    <i class="fa fa-moon-o"></i> <%= $author->left_team( get_dbh(), $team ) || b('&#8734;') %>
+                                    <i class="fa fa-moon-o"></i> <%= $author->left_team( $team ) || b('&#8734;') %>
                                 </span>
                             </div>
                         </div>
@@ -234,10 +234,10 @@
                                             <input type="hidden" name="aid" value="<%= $author->{id} %>"></input>
                                             <div class="input-group input-group-lg">
                                                 <span class="input-group-addon"><i class="fa fa-sun-o"></i></span>
-                                                <input class="form-control" type="text" name="new_start" placeholder="new_start" value="<%= $author->joined_team( get_dbh(), $team ) %>"></input>
+                                                <input class="form-control" type="text" name="new_start" placeholder="new_start" value="<%= $author->joined_team( $team ) %>"></input>
                                             </div>
                                             <div class="input-group input-group-lg">
-                                                <input class="form-control" type="text" name="new_stop" placeholder="New stop. Type 0 for infinity" value="<%= $author->left_team( get_dbh(), $team ) %>"></input>
+                                                <input class="form-control" type="text" name="new_stop" placeholder="New stop. Type 0 for infinity" value="<%= $author->left_team( $team ) %>"></input>
                                                 <span class="input-group-addon"><i class="fa fa-moon-o"></i></span>
                                             </div>
                                         </div>
