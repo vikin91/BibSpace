@@ -34,7 +34,6 @@ use File::Spec;
 use Cwd;
 
 use Redis;
-use BibSpace::Functions::AppHandleProvider;
 
 # for Makemake. Needs to be removed for Dist::Zilla
 # our $VERSION = '0.4.4';
@@ -127,11 +126,6 @@ sub startup {
     # say Dumper $storage2->authors->[0];
 
 
-
-    # AppHandleProvider->initialize(app => $self->app,
-    #                               dbh => $self->app->db,
-    #                               bst => $self->app->bst);
-    # $self->setup_cache;
 
 
     say "Using CONFIG: " . $self->app->config_file;
