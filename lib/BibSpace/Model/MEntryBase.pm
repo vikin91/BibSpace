@@ -149,7 +149,7 @@ has 'warnings' => (
     traits => ['DoNotSerialize'] 
 );
 has 'bst_file' => (
-    is      => 'ro',
+    is      => 'rw',
     isa     => 'Maybe[Str]',
     default => './lib/descartes2.bst',
     traits  => ['DoNotSerialize']
