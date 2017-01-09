@@ -255,13 +255,13 @@ sub Fget_publications_core_storage {
         # map { say $_->id . " year ". $_->year } @entries  if $debug == 1;
         @entries = grep { (defined $_->year and $_->year == $year) } @entries;
     }
+
+    # $bibtex_type - is in fact query for OurType
     if(defined $bibtex_type){
 
-        # TODO: FIX THIS!
-        warn "TODO: filtering by bibtex_type incomplete! Missing mapping bibtex_type-to-our_type!!";
         # say "Comparing bibtex_type: $bibtex_type" if $debug == 1;
         # map { say $_->id . " type ". $_->get_type } @entries  if $debug == 1;
-        @entries = grep { ($_->get_type cmp $bibtex_type)==0 } @entries;
+        @entries = grep { $_->matches_our_type($bibtex_type, $storage) } @entries;
     }
     if(defined $entry_type){
         # say "Comparing entry_type: $entry_type" if $debug == 1;
@@ -308,9 +308,11 @@ sub Fget_publications_core_storage {
 ####################################################################################
 sub Fget_publications_core {
     my @input = @_;
-    Fget_publications_core_old(@input);
+    # this is good for tests - 
+    # with debug=>1, the number of returned entries should be identical
+    # Fget_publications_core_old(@input);
+    
     return Fget_publications_core_storage(@input);
-    # return Fget_publications_core_old(@_);
 }
 ####################################################################################
 sub Fget_publications_core_old {

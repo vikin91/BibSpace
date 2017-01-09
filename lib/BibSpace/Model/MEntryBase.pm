@@ -284,12 +284,31 @@ sub is_talk {
     return 0;
 }
 ####################################################################################
-sub get_type {
-    my $self = shift;
+sub matches_our_type {
+    my $self  = shift;
+    my $oType = shift;
+    my $storage = shift;
 
-    # warn "MEntry->get_type needs a fix!";
+    die "This method requires storage, sorry." unless $storage;
 
-    return $self->{_bibtex_type};
+    # example: ourType = inproceedings
+    # mathces bibtex types: inproceedings, incollection
+
+    use BibSpace::Model::MTypeMappingBase;
+
+    my $mapping = $storage->typeMappings_find( sub{
+        ($_->our_type cmp $oType)==0;
+    });
+
+    return if !defined $mapping;
+
+    my $match = $mapping->bibtexTypes_find( sub{
+        ($_ cmp $self->{_bibtex_type})==0;
+    });
+
+    return defined $match;
+
+    
 }
 ####################################################################################
 sub populate_from_bib {

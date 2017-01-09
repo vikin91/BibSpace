@@ -9,19 +9,21 @@ use Try::Tiny;
 use Data::Dumper;
 
 use BibSpace::Model::MUser;
+
 use BibSpace::Model::MEntry;
 use BibSpace::Model::MTag;
 use BibSpace::Model::MAuthor;
-
 use BibSpace::Model::MTeam;
 use BibSpace::Model::MTeamMembership;
+use BibSpace::Model::MTypeMapping;
 
 use List::MoreUtils qw(any uniq);
-
 
 use Moose;
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
+
+
 
 has 'entries' => (
     is      => 'rw',
@@ -161,6 +163,30 @@ has 'teamMemberships' => (
     },
 );
 
+has 'typeMappings' => (
+    is      => 'rw',
+    isa     => 'ArrayRef[MTypeMapping]',
+    traits  => ['Array'],
+    default => sub { [] },
+    handles => {
+        typeMappings_all        => 'elements',
+        typeMappings_add        => 'push',
+        typeMappings_map        => 'map',
+        typeMappings_filter     => 'grep',
+        typeMappings_find       => 'first',
+        typeMappings_find_index => 'first_index',
+        typeMappings_delete     => 'delete',
+        typeMappings_clear      => 'clear',
+        typeMappings_find       => 'first',
+        typeMappings_get        => 'get',
+        typeMappings_join       => 'join',
+        typeMappings_count      => 'count',
+        typeMappings_has        => 'count',
+        typeMappings_has_no     => 'is_empty',
+        typeMappings_sorted     => 'sort',
+    },
+);
+
 ####################################################################################################
 sub delete {
     my $self = shift;
@@ -219,6 +245,14 @@ sub deleteObj {
             = $self->teamMemberships_find_index( sub { $_->equals($obj) } );
         if ( $index > -1 ) {
             $self->teamMemberships_delete($index);
+            return 1;
+        }
+    }
+    elsif ( $obj->isa("MTypeMapping") ) {
+        my $index
+            = $self->typeMappings_find_index( sub { $_->equals($obj) } );
+        if ( $index > -1 ) {
+            $self->typeMappings_delete($index);
             return 1;
         }
     }
@@ -292,6 +326,14 @@ sub addObj {
             return 1;
         }
     }
+    elsif ( $obj->isa("MTypeMapping") ) {
+        my $index
+            = $self->typeMappings_find_index( sub { $_->equals($obj) } );
+        if ( $index < 0 ) {
+            $self->typeMappings_add($obj);
+            return 1;
+        }
+    }
     else {
         warn "Cannot add " . ref($obj) . " – unknown type!";
         return 0;
@@ -317,6 +359,7 @@ sub loadData {
     my @allTeams       = MTeam->static_all($dbh);
     my @allAuthors     = MAuthor->static_all($dbh);
     my @allMemberships = MTeamMembership->static_all($dbh);
+    my @allTypeMappings = MTypeMapping->static_all($dbh);
 
     # put into object storage
     $self->entries( \@allEntries );
@@ -325,6 +368,7 @@ sub loadData {
     $self->teams( \@allTeams );
     $self->authors( \@allAuthors );
     $self->teamMemberships( \@allMemberships );
+    $self->typeMappings( \@allTypeMappings );
 
     map { $_->init_storage } @allEntries;
     map { $_->init_storage } @allTagTypes;
@@ -332,6 +376,8 @@ sub loadData {
     map { $_->init_storage } @allAuthors;
     map { $_->init_storage } @allTeams;
     map { $_->init_storage } @allMemberships;
+    map { $_->init_storage } @allTypeMappings;
+    
 
     # this should be from storage, not from db!!
     # try{
@@ -352,6 +398,8 @@ sub loadData {
 
     # my $sam = $self->authors_find( sub { ($_->{uid} cmp 'KounevSamuel') == 0} );
     # say Dumper $sam;
+
+    # map{ say $_->toString} $self->typeMappings_all;
 
 # }
 # catch{
