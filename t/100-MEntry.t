@@ -588,11 +588,11 @@ subtest 'MEntry; bibtex_has_field, remove_bibtex_fields' => sub {
     ok( !$en2->bibtex_has_field('journal'), "MEntry hasn't field" );
     ok( $en2->bibtex_has_field('school'),   "MEntry has field school" );
 
-    is( $en2->remove_bibtex_fields( $dbh, ['school'] ),
+    is( $en2->remove_bibtex_fields( ['school'] ),
         1, "Remove field school" );
     ok( !$en2->bibtex_has_field('school'), "MEntry hasn't field" );
 
-    is( $en2->remove_bibtex_fields( $dbh, [ 'address', 'author' ] ),
+    is( $en2->remove_bibtex_fields( [ 'address', 'author' ] ),
         2, "Remove 2 fields" );
     ok( !$en2->bibtex_has_field('address'), "MEntry hasn't field" );
     ok( !$en2->bibtex_has_field('author'),  "MEntry hasn't field" );

@@ -878,16 +878,14 @@ sub decodeLatex {
 ####################################################################################
 sub clean_ugly_bibtex_fields {
     my $self = shift;
-    my $dbh  = shift;
 
     my @arr_default
         = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
-    return $self->remove_bibtex_fields( $dbh, \@arr_default );
+    return $self->remove_bibtex_fields( \@arr_default );
 }
 ####################################################################################
 sub remove_bibtex_fields {
     my $self                         = shift;
-    my $dbh                          = shift;
     my $arr_ref_bib_fields_to_delete = shift;
     my @bib_fields_to_delete         = @$arr_ref_bib_fields_to_delete;
 
@@ -914,7 +912,6 @@ sub remove_bibtex_fields {
         $new_bib =~ s/\\\\/\\/g;
 
         $self->bib($new_bib);
-        $self->save($dbh);
     }
     return $num_deleted;
 }

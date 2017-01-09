@@ -562,9 +562,9 @@ sub remove_attachment {
 
         $num_deleted_files = $self->remove_attachment_do( $id, $filetype );
         if ( defined $mentry and $num_deleted_files > 0 ) {
-            $mentry->remove_bibtex_fields( $dbh, ['pdf'] )
+            $mentry->remove_bibtex_fields( ['pdf'] )
                 if $filetype eq 'paper';
-            $mentry->remove_bibtex_fields( $dbh, ['slides'] )
+            $mentry->remove_bibtex_fields( ['slides'] )
                 if $filetype eq 'slides';
             $mentry->regenerate_html( 0, $self->app->bst );
             $mentry->save($dbh);

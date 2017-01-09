@@ -29,6 +29,11 @@ has object => (
 # my $tested_class = MyClass->new(request => $request, ...);
 
 
+# or maybe I should Inject the SQL classes into *Base?
+# Then, an SQL class (thet e.g. implements interface persistable) would provide methods for persistence
+# and the logic when to save an object would be placed in the base... this might be better than the idea above!
+
+
 ####################################################################################
 sub load {
     my $self = shift;
