@@ -114,7 +114,6 @@ sub hide {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    # my $mentry = MEntry->static_get( $self->app->db, $id );
     my $storage = StorageBase->get();
     my $entry = $storage->entries_find( sub { $_->{id} == $id } );
 
@@ -196,7 +195,7 @@ sub all_recently_added {
     my $storage = StorageBase->get();
     my @objs    = $storage->entries_all;
 
-    @objs = sort { $b->{creation_time} cmp $a->{creation_time} } @objs;
+    @objs = sort { $b->creation_time cmp $a->creation_time } @objs;
     @objs = @objs[ 0 .. $num ];
 
     # map {say $_->{creation_time}} @objs;
@@ -211,7 +210,6 @@ sub all_recently_modified {
     my $num  = $self->param('num') || 10;
     my $dbh  = $self->app->db;
 
-    # my @all_entries = MEntry->static_all( $self->app->db );
 
     my $storage = StorageBase->get();
     my @objs    = $storage->entries_all;
@@ -266,9 +264,6 @@ sub all_without_tag_for_author {
         return;
     }
 
-    # my $author = MAuthor->static_get_by_master( $dbh, $master_name );
-    # $author = MAuthor->static_get( $dbh, $master_name )
-
     # no such master. Assume, that author id was given
 
     my @all_author_entries = $author->entries();    #($dbh);
@@ -314,8 +309,7 @@ sub show_unrelated_to_team {
     my $end_set = $set_all_papers - $set_of_related_to_team;
 
     my $team_name = "";
-    my $mteam = $storage->teams_find( sub { $_->{id} == $team_id } )
-        ;    #MTeam->static_get( $dbh, $team_id );
+    my $mteam = $storage->teams_find( sub { $_->{id} == $team_id } ); 
     $team_name = $mteam->{name} if defined $mteam;
 
     my $msg = "This list contains papers, that are:
@@ -527,7 +521,7 @@ sub replace_urls_to_file_serving_function {
         my $pdf_path = $self->get_paper_pdf_path( $e->{id}, "paper" );
         if ( $pdf_path ne 0 ) {    # this means that file exists locally
             if ( $e->bibtex_has_field("pdf") ) {
-                add_field_to_bibtex_code( $dbh, $e->{id}, "pdf", "$url_pdf" );
+                $e->add_bibtex_field("pdf", "$url_pdf" );
                 $str .= "id $e->{id}, PDF: " . $url_pdf;
                 $str .= '<br/>';
             }
@@ -535,8 +529,7 @@ sub replace_urls_to_file_serving_function {
         my $slides_path = $self->get_paper_pdf_path( $e->{id}, "slides" );
         if ( $slides_path ne 0 ) {    # this means that file exists locally
             if ( $e->bibtex_has_field("slides") ) {
-                add_field_to_bibtex_code( $dbh, $e->{id}, "slides",
-                    "$url_slides" );
+                $e->add_bibtex_field("slides", "$url_slides" );
                 $str .= "id $e->{id}, SLI: " . $url_slides;
                 $str .= '<br/>';
             }
@@ -668,7 +661,9 @@ sub add_pdf {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $mentry = MEntry->static_get( $dbh, $id );
+    my $storage = StorageBase->get();
+    my $mentry = $storage->entries_find( sub { $_->{id} == $id } );
+
     if ( !defined $mentry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
@@ -809,15 +804,17 @@ sub add_pdf_post {
 
         $self->write_log(
             "Saving attachment for paper id $id under: $file_url");
-        add_field_to_bibtex_code( $self->app->db, $id, $bibtex_field,
-            "$file_url" );
+        
 
         my $msg
             = "Successfully uploaded the $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>.
         The file was renamed to: <em>$fname</em>. URL <a href=\""
             . $file_url . "\">$name</a>";
 
-        my $mentry = MEntry->static_get( $dbh, $id );
+        my $storage = StorageBase->get();
+        my $mentry = $storage->entries_find( sub { $_->{id} == $id } );
+        $mentry->add_bibtex_field($bibtex_field, "$file_url" );
+
         if ( !defined $mentry ) {
             $self->flash( msg => "There is no entry with id $id" );
             $self->redirect_to( $self->get_referrer );
@@ -933,7 +930,6 @@ sub show_authors_of_entry {
     my $storage = StorageBase->get();
     my $entry = $storage->entries_find( sub { $_->{id} == $id } );
 
-    # my $entry = MEntry->static_get( $dbh, $id );
     if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
@@ -961,15 +957,14 @@ sub manage_tags {
     my $storage = StorageBase->get();
     my $entry = $storage->entries_find( sub { $_->{id} == $id } );
 
-    # my $entry = MEntry->static_get( $dbh, $id );
     if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
         return;
     }
 
-    my @tags      = $entry->tags_all;          #($dbh);
-    my @tag_types = $storage->tagtypes_all;    #MTagType->static_all($dbh);
+    my @tags      = $entry->tags_all;
+    my @tag_types = $storage->tagtypes_all;
 
 
     $self->stash( entry => $entry, tags => \@tags, tag_types => \@tag_types );
@@ -986,9 +981,6 @@ sub remove_tag {
     my $storage = StorageBase->get();
     my $entry   = $storage->entries_find( sub { $_->{id} == $entry_id } );
     my $tag     = $storage->tags_find( sub { $_->{id} == $tag_id } );
-
-    # my $entry = MEntry->static_get( $dbh, $entry_id );
-    # my $tag = MTag->static_get( $dbh, $tag_id );
 
     if ( defined $entry and defined $tag ) {
 
@@ -1013,9 +1005,6 @@ sub add_tag {
     my $entry   = $storage->entries_find( sub { $_->{id} == $entry_id } );
     my $tag     = $storage->tags_find( sub { $_->{id} == $tag_id } );
 
-    # my $entry = MEntry->static_get( $dbh, $entry_id );
-    # my $tag = MTag->static_get( $dbh, $tag_id );
-
     if ( defined $entry and defined $tag ) {
 
         # $entry->assign_tag( $dbh, $tag );
@@ -1036,18 +1025,17 @@ sub manage_exceptions {
     my $storage = StorageBase->get();
     my $entry = $storage->entries_find( sub { $_->{id} == $id } );
 
-
-    # my $entry = MEntry->static_get( $dbh, $id );
     if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
         return;
     }
 
-    my @exceptions = $entry->exceptions_all;    # ($dbh);
-    my @all_teams  = MTeam->static_all($dbh);
-    my @teams      = $entry->teams($dbh);
-    my @authors    = $entry->authors_all;       #($dbh);
+
+    my @exceptions = $entry->exceptions_all;
+    my @all_teams  = $storage->teams_all;
+    my @teams      = $entry->teams;
+    my @authors    = $entry->authors_all;
 
     # cannot use objects as keysdue to stringification!
     my %exceptions_hash = map { $_->{id} => 1 } @exceptions;
@@ -1076,21 +1064,9 @@ sub add_exception {
     my $entry     = $storage->entries_find( sub { $_->{id} == $entry_id } );
     my $exception = $storage->teams_find( sub { $_->{id} == $team_id } );
 
-    # my $entry = MEntry->static_get( $dbh, $entry_id );
-    # my $exception = MTeam->static_get( $dbh, $team_id );
-
     if ( defined $entry and defined $exception ) {
-
-        # $entry->assign_exception( $dbh, $exception );
-        warn "1 Entry has exceptions: \n"
-            . join( "\n", map { $_->toString } $entry->exceptions_all );
         $entry->assign_exception($exception);
-
-        warn "2 Entry has exceptions: \n"
-            . join( "\n", map { $_->toString } $entry->exceptions_all );
         $entry->save($dbh);
-        warn "3 Entry has exceptions: \n"
-            . join( "\n", map { $_->toString } $entry->exceptions_all );
 
         $self->write_log(
             "Added exception $exception->{name} to entry id $entry->{id}. ");
@@ -1110,9 +1086,6 @@ sub remove_exception {
     my $storage   = StorageBase->get();
     my $entry     = $storage->entries_find( sub { $_->{id} == $entry_id } );
     my $exception = $storage->teams_find( sub { $_->{id} == $team_id } );
-
-    # my $entry = MEntry->static_get( $dbh, $entry_id );
-    # my $exception = MTeam->static_get( $dbh, $team_id );
 
     if ( defined $entry and defined $exception ) {
 
@@ -1181,24 +1154,22 @@ sub get_adding_editing_message_for_error_code {
 
 ####################################################################################
 sub publications_add_get {
-    say "CALL: publications_add_get ";
     my $self = shift;
     $self->write_log("Adding publication");
     my $dbh = $self->app->db;
 
 
     my $msg = "<strong>Adding mode</strong> You operate on an unsaved entry!";
-    my $e_dummy = MEntry->new();
-    $e_dummy->{id} = -1;
+    
     my $bib = '@article{key' . get_current_year() . ',
       author = {Johny Example},
       title = {{Selected aspects of some methods}},
       year = {' . get_current_year() . '},
       month = {' . $mons{ get_current_month() } . '},
       day = {1--31},
-  }';
-    $e_dummy->{bib}    = $bib;
-    $e_dummy->{hidden} = 0;      # new papers are not hidden by default
+    }';
+    my $e_dummy = MEntry->new(bib => $bib);
+
     $e_dummy->populate_from_bib();
     $e_dummy->generate_html( $self->app->bst );
 
@@ -1207,13 +1178,14 @@ sub publications_add_get {
 }
 ####################################################################################
 sub publications_add_post {
-    say "CALL: publications_add_post ";
     my $self            = shift;
     my $new_bib         = $self->param('new_bib');
     my $param_prev      = $self->param('preview');
     my $param_save      = $self->param('save');
     my $param_check_key = $self->param('check_key');
     my $dbh             = $self->app->db;
+
+    my $storage = StorageBase->get();
 
     my $action = 'default';
     $action = 'save'      if $param_save;         # user clicks save
@@ -1225,12 +1197,62 @@ sub publications_add_post {
     $new_bib =~ s/^\s+|\s+$//g;
     $new_bib =~ s/^\t//g;
 
-    my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-        = Fhandle_add_edit_publication( $dbh, $new_bib, -1, $action,
-        $self->app->bst );
+    my $status_code_str;
+    my $existing_id = -1;
+    my $added_under_id = -1;
+
+    my $entry = MEntry->new( bib=>$new_bib );
+
+    # say Dumper $entry->creation_time;
+
+    my $bibtex_code_valid = $entry->populate_from_bib();
+
+    if ( !$bibtex_code_valid ) {
+        $status_code_str = 'ERR_BIBTEX';
+    }
+    elsif( $action eq 'preview' ){
+        $status_code_str = 'PREVIEW';
+        $entry->generate_html($self->app->bst);
+    }
+    elsif( $action eq 'check_key' ){
+        $status_code_str = 'KEY_OK';
+        $entry->generate_html($self->app->bst);   
+
+        my $entry_conflicting_key = $storage->entries_find( sub { ($_->bibtex_key cmp $entry->bibtex_key)==0 } ); 
+        if( defined $entry_conflicting_key ){
+            $status_code_str = 'KEY_TAKEN';
+            $existing_id = $entry_conflicting_key->id;
+        }
+    }
+    elsif( $action eq 'save' ){
+        
+        $entry->generate_html($self->app->bst);   
+
+        # TODO: duplicated code
+        my $entry_conflicting_key = $storage->entries_find( sub { ($_->bibtex_key cmp $entry->bibtex_key)==0 } ); 
+        if( defined $entry_conflicting_key ){
+            $status_code_str = 'KEY_TAKEN';
+            $existing_id = $entry_conflicting_key->id;
+        }
+        else{
+            $status_code_str = 'ADD_OK';
+            $entry->fix_month();
+
+            $entry->save($dbh);    
+            $added_under_id = $entry->{id};
+            $storage->add_entry_authors( $entry, 1 );
+            $storage->add_entry_tags( $entry, 1 );
+            $storage->add( $entry );
+        }
+    }
+
+    # my ( $entry, $status_code_str, $existing_id, $added_under_id )
+    #     = Fhandle_add_edit_publication( $dbh, $new_bib, -1, $action,
+    #     $self->app->bst );
     my $adding_msg
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );
+
 
     $self->write_log(
         "Adding publication. Action: > $action <. Status code: $status_code_str."
@@ -1243,7 +1265,7 @@ sub publications_add_post {
     # 1 => EDIT_OK
     # 2 => KEY_OK
     # 3 => KEY_TAKEN
-    my $bibtex_warnings = FprintBibtexWarnings( $mentry->{warnings} );
+    my $bibtex_warnings = FprintBibtexWarnings( $entry->warnings );
     my $msg             = $adding_msg . $bibtex_warnings;
     my $msg_type        = 'success';
     $msg_type = 'warning' if $bibtex_warnings =~ m/Warning/;
@@ -1252,7 +1274,7 @@ sub publications_add_post {
         or $status_code_str eq 'KEY_TAKEN'
         or $bibtex_warnings =~ m/Error/;
 
-    $self->stash( mentry => $mentry, msg => $msg, msg_type => $msg_type );
+    $self->stash( mentry => $entry, msg => $msg, msg_type => $msg_type );
 
     if ( $status_code_str eq 'ADD_OK' ) {
         $self->flash( msg => $msg, msg_type => $msg_type );
@@ -1271,9 +1293,9 @@ sub publications_edit_get {
     $self->write_log("Editing publication entry id $id");
 
     my $dbh = $self->app->db;
-
-
-    my $mentry = MEntry->static_get( $dbh, $id );
+    my $storage = StorageBase->get();
+    my $mentry = $storage->entries_find( sub {$_->id == $id} );
+    
     if ( !defined $mentry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );

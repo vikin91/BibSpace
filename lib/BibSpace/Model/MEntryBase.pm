@@ -5,7 +5,13 @@ use BibSpace::Model::MTeam;
 use BibSpace::Model::MAuthor;
 use BibSpace::Model::MTagType;
 
+use List::MoreUtils qw(any uniq);
+
+
 use BibSpace::Model::StorageBase;
+
+use DateTime::Format::Strptime;
+use DateTime;
 
 use Data::Dumper;
 use utf8;
@@ -15,30 +21,59 @@ use DBI;
 use Try::Tiny;
 use TeX::Encode;
 use Encode;
+
 use Moose;
+use Moose::Util::TypeConstraints;
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
+my $dtPattern = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
 
-has 'id'              => ( is => 'rw' );
-has 'entry_type'      => ( is => 'rw', default => 'paper' );
-has 'bibtex_key'      => ( is => 'rw' );
-has 'bibtex_type'     => ( is => 'rw' );
-has 'bib'             => ( is => 'rw', isa => 'Str' );
-has 'html'            => ( is => 'rw' );
-has 'html_bib'        => ( is => 'rw' );
-has 'abstract'        => ( is => 'rw' );
-has 'title'           => ( is => 'rw' );
-has 'hidden'          => ( is => 'rw', default => 0 );
-has 'year'            => ( is => 'rw' );
-has 'month'           => ( is => 'rw', default => 0 );
-has 'sort_month'      => ( is => 'rw', default => 0 );
-has 'teams_str'       => ( is => 'rw' );
-has 'people_str'      => ( is => 'rw' );
-has 'tags_str'        => ( is => 'rw' );
-has 'creation_time'   => ( is => 'rw' );
-has 'modified_time'   => ( is => 'rw' );
-has 'need_html_regen' => ( is => 'rw', default => '1' );
+has 'id'              => ( is => 'rw', isa => 'Int', default => 1);
+has 'entry_type'      => ( is => 'rw', isa => 'Str', default => 'paper' );
+has 'bibtex_key'      => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'bibtex_type'     => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'bib'             => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'html'            => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'html_bib'        => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'abstract'        => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'title'           => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'hidden'          => ( is => 'rw', isa => 'Int', default => 0 );
+has 'year'            => ( is => 'rw', isa => 'Maybe[Int]', default => 0 );
+has 'month'           => ( is => 'rw', isa => 'Int', default => 0 );
+has 'sort_month'      => ( is => 'rw', isa => 'Int', default => 0 );
+has 'teams_str'       => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'people_str'      => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'tags_str'        => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'need_html_regen' => ( is => 'rw', isa => 'Int', default => 1 );
+
+# class_type 'DateTime';
+# coerce 'DateTime'
+#       => from 'Str'
+#       => via { $dtPattern->parse_datetime($_) };
+ 
+has 'creation_time'   => ( 
+    is => 'rw', 
+    isa => 'DateTime', 
+    default => sub {
+        my $dt = DateTime->now;
+        say "Setting default MEntry->creation_time";
+        $dt->set_formatter($dtPattern);
+        return $dt;
+    },
+    # coerce => 1
+);
+has 'modified_time'   => ( 
+    is => 'rw', 
+    isa => 'DateTime', 
+    default => sub {
+        my $dt = $dtPattern->parse_datetime('1970-01-01 00:00:00');
+        say "Setting default MEntry->modified_time";
+        return $dt;
+    },
+    # coerce => 1
+);
+
 
 has 'bauthors' => (
     is      => 'rw',
@@ -116,6 +151,20 @@ has 'bst_file' => (
     traits  => ['DoNotSerialize']
 );
 
+################################################################################
+sub init_storage {
+    my $self = shift;
+
+    if( $self->tags_count == 0){
+        $self->btags([]);
+    }
+    if( $self->authors_count == 0){
+        $self->bauthors([]);
+    }
+    if( $self->exceptions_count == 0){
+        $self->bexceptions([]);
+    }
+}
 ####################################################################################
 sub replaceFromStorage {
     my $self = shift;
@@ -172,21 +221,30 @@ sub equals_bibtex {
     my $result = $self->{bib} cmp $obj->{bib};
     return $result == 0;
 }
+####################################################################################
+=item is_visible
+    Entry is visible if at least one of its authors is visible
+=cut
+sub is_visible {
+    my $self = shift;
 
+    my $visible_author = $self->authors_find( sub{ $_->is_visible });
+    return defined $visible_author;
+}
 ####################################################################################
 sub is_hidden {
     my $self = shift;
-    return $self->{hidden} == 1;
+    return $self->hidden == 1;
 }
 ####################################################################################
 sub hide {
     my $self = shift;
-    $self->{hidden} = 1;
+    $self->hidden(1);
 }
 ####################################################################################
 sub unhide {
     my $self = shift;
-    $self->{hidden} = 0;
+    $self->hidden(0);
 }
 ####################################################################################
 sub toggle_hide {
@@ -244,6 +302,23 @@ sub populate_from_bib {
         return 1;
     }
     return 0;
+}
+####################################################################################
+sub add_bibtex_field {
+    my $self  = shift;
+    my $field = shift;
+    my $value = shift;
+
+    my $entry = new Text::BibTeX::Entry();
+    $entry->parse_s($self->bib);
+    return -1 unless $entry->parse_ok;
+    my $key = $entry->key;
+
+    $entry->set( $field, $value );
+    my $new_bib = $entry->print_s;
+
+    $self->bib($new_bib);
+    $self->populate_from_bib();
 }
 ####################################################################################
 sub bibtex_has_field {
@@ -319,10 +394,7 @@ sub has_tag_named {
     my $name = shift;
 
     my $found = $self->tags_find(
-        sub {
-            my $tag = $_;
-            $tag->{name} eq $name;
-        }
+        sub { ($_->name cmp $name)==0 }
     );
     return 1 if defined $found;
     return 0;
@@ -432,6 +504,17 @@ sub has_author {
     return $exists;
 }
 ####################################################################################
+sub has_master_author {
+    my $self = shift;
+    my $a = shift;
+
+    my $author = $self->authors_find( sub { $_->equals($a) } );
+    if($author){
+        return $author->is_master;
+    }
+    return 0;
+}
+####################################################################################
 sub assign_author {
     my ($self, @authors)   = @_;
 
@@ -527,6 +610,15 @@ sub teams {
         }
     }
     return values %final_teams;
+}
+####################################################################################
+sub has_team {
+    my $self = shift;
+    my $team = shift;
+
+    return 1 if any { $_->equals($team) } $self->teams;
+    return 0;
+
 }
 ####################################################################################
 sub exceptions {

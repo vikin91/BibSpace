@@ -7,9 +7,13 @@ use 5.010;    #because of ~~
 use File::Slurp;
 use Try::Tiny;
 
+use Data::Dumper;
+use BibSpace::Model::StorageBase;
+
 use Mojo::Base 'Mojolicious::Controller';
 use BibSpace::Controller::BackupFunctions;
 
+#################################################################################
 sub index {
     my $self = shift;
     if ( $self->app->is_demo ) {
@@ -17,6 +21,7 @@ sub index {
         $self->session( user_name => 'demouser' );
         $self->users->record_logging_in( 'demouser', $self->app->db );
     }
+
 
     $self->render( template => 'display/start' );
 }

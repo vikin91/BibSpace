@@ -29,12 +29,30 @@ with 'Persistent';
 # $request->mock(…);
 # my $tested_class = MyClass->new(request => $request, ...);
 
+use DateTime::Format::Strptime;
+my $dtPattern = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
+
 
 ####################################################################################
 sub load {
     my $self = shift;
     my $dbh  = shift;
     my $storage  = shift; # dependency injection
+
+    die "Cant load without DB handle" unless $dbh;
+    die "Cant load without Storage handle " unless $storage;
+
+    say "Loading ".ref($self)." ID ".$self->id;
+
+    # cant load it like this! Each entry will load all authors and each author will load all entries
+    # fazit: entries will be loaded multiple times!
+    
+    # my @authorEntries = $self->load_entries($dbh); # authors from DB
+    # map {$_->replaceFromStorage($storage) } @authorEntries;
+    # # should be already loaded!
+    # # map { $_->load($dbh, $storage) } @authorEntries;
+    # # put references to storage  in local array
+    # $self->bentries( [ @authorEntries ] );
 
     my @authorMemberships = $self->load_memberships($dbh); # authors from DB
     # in case there is a mess in DB
@@ -47,6 +65,79 @@ sub load {
     # now, there are teams loaded from storage
     my @myTeams = map{ $_->team } grep { defined $_->team } $self->teamMemberships_all;
     $self->bteams( [ @myTeams ] );
+    
+}
+####################################################################################
+
+sub load_entries {
+    my $self = shift;
+    my $dbh  = shift;
+
+    die "Undefined or empty author!"
+        if !defined $self->{id}
+        or $self->{id} < 0;
+    die "No database handle provided!"
+        unless defined $dbh;
+
+    my $qry = "SELECT
+              id,
+              entry_type,
+              bibtex_key,
+              bibtex_type,
+              bib,
+              html,
+              html_bib,
+              abstract,
+              title,
+              hidden,
+              year,
+              month,
+              sort_month,
+              teams_str,
+              people_str,
+              tags_str,
+              creation_time,
+              modified_time,
+              need_html_regen
+              FROM Entry
+            LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id 
+            WHERE Entry_to_Author.author_id = ? ";
+    my $sth = $dbh->prepare($qry);
+    $sth->execute($self->{id});
+
+    my @objs;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        my $ct = $dtPattern->parse_datetime($row->{creation_time});
+        my $mt = $dtPattern->parse_datetime($row->{modified_time});
+        # set defaults
+        $ct = DateTime->now unless $ct;
+        $mt = DateTime->now unless $mt;
+        # say "MEntry->static_all: parsing creation_ and mod_time";
+
+        push @objs,
+            MEntry->new(
+            id              => $row->{id},
+            entry_type      => $row->{entry_type},
+            bibtex_key      => $row->{bibtex_key},
+            bibtex_type     => $row->{bibtex_type},
+            bib             => $row->{bib},
+            html            => $row->{html},
+            html_bib        => $row->{html_bib},
+            abstract        => $row->{abstract},
+            title           => $row->{title},
+            hidden          => $row->{hidden},
+            year            => $row->{year},
+            month           => $row->{month},
+            sort_month      => $row->{sort_month},
+            teams_str       => $row->{teams_str},
+            people_str      => $row->{people_str},
+            tags_str        => $row->{tags_str},
+            creation_time   => $ct,
+            modified_time   => $mt, 
+            need_html_regen => $row->{need_html_regen},
+            );
+    }
+    return @objs;
 }
 ####################################################################################
 sub load_memberships {

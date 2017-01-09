@@ -29,7 +29,7 @@ sub metalist {
     my $self = shift;
 
     my @pubs = Fget_publications_main_hashed_args_only( $self,
-        { hidden => 0, entry_type => 'paper' } );
+        { hidden => 0, entry_type => 'paper', debug => 0 } );
     $self->stash( entries => \@pubs );
     $self->render( template => 'publicationsSEO/metalist' );
 }
@@ -40,14 +40,16 @@ sub meta {
     my $self = shift;
     my $id   = $self->param('id');
 
-    my $mentry = MEntry->static_get( $self->app->db, $id );
+    my $storage = StorageBase->get();
+    my $mentry = $storage->entries_find( sub{ $_->id==$id } );
+
     if ( !defined $mentry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
         return;
     }
 
-    if ( $mentry->{hidden} == 1 ) {
+    if ( $mentry->is_hidden) {
         $self->render(
             text   => 'Error 404: Cannot find entry id: ' . $id,
             status => 404
@@ -57,7 +59,7 @@ sub meta {
 
     # PARSING BIBTEX
 
-    my $entry_str = $mentry->{bib};
+    my $entry_str = $mentry->bib;
     my $entry     = new Text::BibTeX::Entry();
     $entry->parse_s($entry_str);
     unless ( $entry->parse_ok ) {
@@ -73,7 +75,7 @@ sub meta {
     # EXTRACTING IMPORTANT FIELDS
 
     # TITLE
-    my $title = $mentry->{title};
+    my $title = $mentry->title;
 
     my $citation_title = $title;
 

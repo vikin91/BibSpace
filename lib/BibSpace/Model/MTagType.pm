@@ -14,6 +14,11 @@ has 'id'      => ( is => 'rw', isa => 'Int' );
 has 'name'    => ( is => 'rw', isa => 'Str' );
 has 'comment' => ( is => 'rw', isa => 'Maybe[Str]' );
 
+################################################################################
+sub init_storage {
+    my $self = shift;
+    # nothing to do here
+}
 ####################################################################################
 sub replaceFromStorage {
     my $self = shift;

@@ -3,7 +3,7 @@
 
 
 % my $adding = -1;
-% $adding = 1 if $mentry->{id} < 0;
+% $adding = 1 if $mentry->{id} <= 0;
 % $adding = 0 if $mentry->{id} > 0;
 
 <div class="container">

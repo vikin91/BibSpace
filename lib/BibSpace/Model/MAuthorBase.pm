@@ -28,28 +28,6 @@ has 'masterObj' => (
     traits  => ['DoNotSerialize']    # due to cycyles
 );
 
-# has 'bminions' => (
-#     is      => 'rw',
-#     isa     => 'ArrayRef[MAuthor]',
-#     traits  => ['Array', 'DoNotSerialize'],
-#     default => sub { [] },
-#     handles => {
-#         minions_all        => 'elements',
-#         minions_add        => 'push',
-#         minions_map        => 'map',
-#         minions_filter     => 'grep',
-#         minions_find       => 'first',
-#         minions_find_index => 'first_index',
-#         minions_delete     => 'delete',
-#         minions_clear      => 'clear',
-#         minions_get        => 'get',
-#         minions_join       => 'join',
-#         minions_count      => 'count',
-#         minions_has        => 'count',
-#         minions_has_no     => 'is_empty',
-#         minions_sorted     => 'sort',
-#     },
-# );
 
 has 'bteamMemberships' => (
     is      => 'rw',
@@ -120,17 +98,29 @@ has 'bentries' => (
     },
 );
 
-
-
+################################################################################
+sub init_storage {
+    my $self = shift;
+    if( $self->teams_count == 0){
+        $self->bteams([]);
+    }
+    if( $self->entries_count == 0){
+        $self->bentries([]);
+    }
+    if( $self->teamMemberships_count == 0){
+        $self->bteamMemberships([]);
+    }
+}
 ####################################################################################
 sub replaceFromStorage {
-    my $self = shift;
-    my $storage  = shift; # dependency injection
-    # use BibSpace::Model::StorageBase;
+    my $self    = shift;
+    my $storage = shift;    # dependency injection
+                            # use BibSpace::Model::StorageBase;
 
-    my $storageItem = $storage->authors_find( sub{ $_->equals($self) } );
+    my $storageItem = $storage->authors_find( sub { $_->equals($self) } );
 
-    die "Cannot find ".ref($self).": ".Dumper($self)." in storage " unless $storageItem;
+    die "Cannot find " . ref($self) . ": " . Dumper($self) . " in storage "
+        unless $storageItem;
     return $storageItem;
 }
 
@@ -171,8 +161,9 @@ sub equals {
     my $obj  = shift;
 
     return 0 if !defined $obj;
+
     # return 0 unless $obj->isa("MAuthorBase");
-    my $result = $self->{uid} cmp $obj->{uid};
+    my $result = $self->uid cmp $obj->uid;
     return $result == 0;
 }
 ####################################################################################
@@ -214,7 +205,10 @@ sub is_minion_of {
 
     return 1
         if defined $self->{masterObj} and $self->{masterObj}->equals($master);
-    return 1 if defined $master->{id} and defined $self->{master_id} and $self->{master_id} == $master->{id};
+    return 1
+        if defined $master->{id}
+        and defined $self->{master_id}
+        and $self->{master_id} == $master->{id};
     return 1
         if defined $self->{master}
         and ( $self->{master} cmp $master->{uid} ) == 0;
@@ -274,7 +268,8 @@ sub merge_authors {
     my $self          = shift;
     my $source_author = shift;
 
-    if($source_author){
+    if ($source_author) {
+
         # author with new_user_id already exist
         # move all entries of candidate to this author
         $self->take_entries_from_author($source_author);
@@ -291,12 +286,18 @@ sub merge_authors {
 sub toggle_visibility {
     my $self = shift;
 
-    if ( $self->{display} == 0 ) {
-        $self->{display} = 1;
+    if ( $self->display == 0 ) {
+        $self->display(1);
     }
     else {
-        $self->{display} = 0;
+        $self->display(0);
     }
+}
+####################################################################################
+sub is_visible {
+    my $self = shift;
+
+    return $self->display == 1;
 }
 ####################################################################################
 sub can_be_deleted {
@@ -334,9 +335,10 @@ sub assign_entry {
         if ( !$self->has_entry($e) ) {
             $self->entries_add($e);
             ++$added;
-            if ( !$e->has_author($self) ) {
-                $e->assign_author($self);
-            }
+
+            # if ( !$e->has_author($self) ) {
+            #     $e->assign_author($self);
+            # }
         }
 
     }
@@ -356,7 +358,6 @@ sub remove_entry {
 ####################################################################################
 sub remove_all_entries {
     my $self = shift;
-
     $self->entries_clear;
 }
 ####################################################################################
@@ -374,8 +375,7 @@ sub take_entries_from_author {
 ################################################################################
 sub abandon_all_entries {
     my $self = shift;
-
-    $self->remove_all_entries;
+    $self->entries_clear;
 }
 ################################################################################
 ################################################################################ TEAMS
@@ -414,16 +414,16 @@ sub left_team {
 sub abandon_all_teams {
     my $self = shift;
 
-    $self->teams_clear;
     $self->teamMemberships_clear;
+    $self->teams_clear;
 
 }
 ################################################################################
 sub update_membership {
-    my $self = shift;
-    my $team = shift;
+    my $self  = shift;
+    my $team  = shift;
     my $start = shift;
-    my $stop = shift;
+    my $stop  = shift;
 
     my $mem = $self->teamMemberships_find(
         sub {
@@ -431,24 +431,25 @@ sub update_membership {
         }
     );
 
-    if ( $start < 0 ){
+    if ( $start < 0 ) {
         die "Invalid start $start: start must be 0 or greater";
     }
-    if ( $stop < 0 ){
+    if ( $stop < 0 ) {
         die "Invalid stop $stop: stop must be 0 or greater";
     }
-    if ( $stop > 0 and $start > 0 and $stop < $start){
+    if ( $stop > 0 and $start > 0 and $stop < $start ) {
         die "Invalid range: stop must me non-smaller than start";
     }
-    if( !$mem ){
+    if ( !$mem ) {
         die "Invalid team. Cannot find author membership in that team.";
     }
 
-    if( $mem ){
+    if ($mem) {
         $mem->start($start) if defined $start;
-        $mem->stop($stop) if defined $stop;
+        $mem->stop($stop)   if defined $stop;
     }
 }
+
 ################################################################################
 sub add_to_team {
     my $self = shift;
@@ -456,23 +457,41 @@ sub add_to_team {
 
 
     return 0 if !defined $team and $team->{id} <= 0;
-    $self->teams_add($team);
+
+
+
+    if ( !$self->is_member_of($team) ) {
+        $self->teams_add($team);
 
 # TODO:
 # not sure if I should have it here
 # how do I save it later, if it is not in the storage?
 # maybe I should remove memberships from the storage and leave them only in author and evtl. team?
 
-    $self->teamMemberships_add(
-        MTeamMembership->new(
-            author_id => $self->id,
-            team_id   => $team->id,
-            author    => $self,
-            team      => $team,
-            start     => 0,
-            stop      => 0
-        )
-    );
+        $self->teamMemberships_add(
+            MTeamMembership->new(
+                author_id => $self->id,
+                team_id   => $team->id,
+                author    => $self,
+                team      => $team,
+                start     => 0,
+                stop      => 0
+            )
+        );
+        return 1;
+    }
+    return 0;
+
+
+}
+################################################################################
+sub is_member_of {
+    my $self = shift;
+    my $team = shift;
+
+    my $found = $self->teams_find( sub { $_->equals($team) } );
+    return 1 if $found;
+    return 0;
 }
 ################################################################################
 sub remove_from_team {

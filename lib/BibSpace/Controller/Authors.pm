@@ -23,40 +23,7 @@ use BibSpace::Functions::FPublications;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
-##############################################################################################################
 
-=item find_author_by_id_or_name
-    Non-contorller function, but using it avoids code duplication.
-    TODO: refactor it to some AuthorHelpers
-=cut
-
-sub find_author_by_id_or_name {
-    my $self    = shift;    # controller obj
-    my $storage = shift;
-    my $query   = shift;
-
-    my $author = undef;
-
-    if ( $query =~ m/^\d+$/ ) {
-
-        # this must be ID as name should start with a letter
-        $author = $storage->authors_find( sub { $_->{id} == $query } );
-    }
-    else {
-        # additionally, search by master
-        $author
-            = $storage->authors_find( sub { ( $_->{master} cmp $query ) == 0 }
-            );
-
-        # additionally, search by uid
-        unless ($author) {
-            $author = $storage->authors_find(
-                sub { ( $_->{uid} cmp $query ) == 0 } );
-        }
-    }
-
-    return $author;
-}
 ##############################################################################################################
 sub all_authors {    # refactored
     my $self    = shift;
@@ -86,6 +53,7 @@ sub all_authors {    # refactored
     $self->stash(
         authors => \@authors,
         letters => \@letters,
+        letter  => $letter,
         visible => $visible
     );
 
@@ -233,6 +201,8 @@ sub add_to_team {
 
     if ( $author and $team ) {
         $author->add_to_team($team);
+        $team->add_author($author);
+        
         $author->save($dbh);
         $team->save($dbh);
 
@@ -265,6 +235,7 @@ sub remove_from_team {
 
     if ( $author and $team ) {
         $author->remove_from_team($team);
+    $team->remove_author($author);
         $author->save($dbh);
 
         $self->flash(
@@ -333,9 +304,9 @@ sub merge_authors {
 
     my $storage = StorageBase->get();
     my $author_destination
-        = $self->find_author_by_id_or_name( $storage, $destination_id );
+        = $storage->find_author_by_id_or_name( $destination_id );
     my $author_source
-        = $self->find_author_by_id_or_name( $storage, $source_id );
+        = $storage->find_author_by_id_or_name( $source_id );
 
     my $copy_name = $author_source->{uid};
 
@@ -513,8 +484,10 @@ sub delete_author_force {
             msg      => "Author ".$author->uid." ID $id removed successfully.",
             msg_type => "success"
         );
-        $author->delete($dbh);
+        $author->abandon_all_teams;
+        $author->abandon_all_entries;
         $storage->delete($author);
+        $author->delete($dbh);
 
         $self->write_log("Author ".$author->uid." ID $id has been deleted.");
     }
@@ -527,81 +500,6 @@ sub delete_author_force {
     
 
     $self->redirect_to( $self->url_for( 'all_authors' ) );
-
-}
-##############################################################################################################
-sub do_delete_author_force {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-    my $id   = shift;
-
-
-    if ( defined $id and $id != -1 ) {
-        my $sth = $dbh->prepare('DELETE FROM Author WHERE master_id=?');
-        $sth->execute($id);
-
-        my $sth2 = $dbh->prepare('DELETE FROM Author WHERE id=?');
-        $sth2->execute($id);
-
-        my $sth3
-            = $dbh->prepare('DELETE FROM Entry_to_Author WHERE author_id=?');
-        $sth3->execute($id);
-
-        my $sth4
-            = $dbh->prepare('DELETE FROM Author_to_Team WHERE author_id=?');
-        $sth4->execute($id);
-    }
-}
-##############################################################################################################
-
-sub get_set_of_first_letters {
-    my $self    = shift;
-    my $dbh     = $self->app->db;
-    my $visible = shift or undef;
-
-    my $sth = undef;
-    if ( defined $visible and $visible eq '1' ) {
-
-# $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 0, 2) as let FROM Author WHERE display=1 ORDER BY let ASC" );
-        $sth
-            = $dbh->prepare(
-            "SELECT DISTINCT substr(master, 1, 1) as let FROM Author WHERE display=1 ORDER BY let ASC"
-            );
-    }
-    else {
-# $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 0, 2) as let FROM Author ORDER BY let ASC" );
-        $sth
-            = $dbh->prepare(
-            "SELECT DISTINCT substr(master, 1, 1) as let FROM Author ORDER BY let ASC"
-            );
-    }
-    $sth->execute();
-
-    my @letters;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $letter = $row->{let} || "*";
-        push @letters, uc($letter);
-    }
-    @letters = uniq(@letters);
-    my @sorted_letters = sort(@letters);
-    return @sorted_letters;
-}
-##############################################################################################################
-sub get_visibility_by_name {
-    my $self = shift;
-    my $name = shift;
-
-    my $dbh = $self->app->db;
-
-    my $sth;
-    $sth = $dbh->prepare(
-        "SELECT display FROM Author WHERE master=? AND uid=?");
-    $sth->execute( $name, $name );
-
-    my $row  = $sth->fetchrow_hashref();
-    my $disp = $row->{display};
-
-    return $disp;
 
 }
 ##############################################################################################################
@@ -629,16 +527,15 @@ sub reassign_authors_to_entries_and_create_authors {
 
 ##############################################################################################################
 
-sub toggle_visibility {    # refactored
+sub toggle_visibility { 
     my $self = shift;
     my $dbh  = $self->app->db;
     my $id   = $self->param('id');
-
+    
     my $storage = StorageBase->get();
     my $author  = $storage->authors_find( sub { $_->{id} == $id } );
     $author->toggle_visibility();
     $author->save($dbh);
-
     $self->redirect_to( $self->get_referrer );
 }
 

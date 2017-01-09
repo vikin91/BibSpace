@@ -1,7 +1,5 @@
 package MEntry;
 
-
-
 use Moose;
 use BibSpace::Model::MEntryMySQL;
 extends 'MEntryMySQL';

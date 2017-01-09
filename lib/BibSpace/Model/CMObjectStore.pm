@@ -12,6 +12,7 @@ use BibSpace::Model::MUser;
 use BibSpace::Model::MEntry;
 use BibSpace::Model::MTag;
 use BibSpace::Model::MAuthor;
+
 use BibSpace::Model::MTeam;
 use BibSpace::Model::MTeamMembership;
 
@@ -159,6 +160,7 @@ has 'teamMemberships' => (
         teamMemberships_sorted     => 'sort',
     },
 );
+
 ####################################################################################################
 sub delete {
     my $self = shift;
@@ -324,16 +326,31 @@ sub loadData {
     $self->authors( \@allAuthors );
     $self->teamMemberships( \@allMemberships );
 
+    map { $_->init_storage } @allEntries;
+    map { $_->init_storage } @allTagTypes;
+    map { $_->init_storage } @allTags;
+    map { $_->init_storage } @allAuthors;
+    map { $_->init_storage } @allTeams;
+    map { $_->init_storage } @allMemberships;
+
     # this should be from storage, not from db!!
     # try{
     map { $_->load( $dbh, $self ) } @allEntries;
     map { $_->load( $dbh, $self ) } @allTagTypes;
     map { $_->load( $dbh, $self ) } @allTags;
-    map { $_->load( $dbh, $self ) } @allAuthors;
-    map { $_->load( $dbh, $self ) } @allTeams;
+    # map { $_->load( $dbh, $self ) } @allAuthors;
+    # map { $_->load( $dbh, $self ) } @allTeams;
     map { $_->load( $dbh, $self ) } @allMemberships;
 
-    my $sam = $self->authors_find( sub { ($_->{uid} cmp 'KounevSamuel') == 0} );
+    print "CMObjectStore has finished loading data from DB.\n";
+    print "CMObjectStore is linking objects...\n";
+
+    $self->link_entries_to_authors;
+    $self->link_teams_and_authors;
+
+    print "CMObjectStore has finished linking objects.\n";
+
+    # my $sam = $self->authors_find( sub { ($_->{uid} cmp 'KounevSamuel') == 0} );
     # say Dumper $sam;
 
 # }
@@ -351,7 +368,7 @@ sub loadData {
     # map { $_->load($dbh) } @allMemberships;
 
 
-    print "CMObjectStore finished loading data from DB.\n";
+    
 
     # my $entry   = $self->entries_find( sub { $_->{id} == 913 });
     # print "\n" . $entry->toString;
@@ -367,8 +384,49 @@ sub loadData {
 
     # push @{ $self->storage }, @allEntries;
 }
+####################################################################################################
+sub link_entries_to_authors {
+    my $self = shift;
+    # assume: entries have authors. Authors have no entries.
 
+    foreach my $author ($self->authors_all){
+        my @entries = $self->entries_filter( sub{
+            $_->has_author($author);
+        });
+        $author->bentries( \@entries );
+    }
+    # foreach my $entry ($self->entries_all){
+    #     foreach my $author ($entry->authors_all){
+    #         if ( !$author->has_entry($entry) ) {
+    #             say "Linking: e ".$entry->id." >> a ".$author->id."";
+    #             $author->assign_entry( ($entry) );
+    #         }
+    #         if ( !$entry->has_author($author) ) {
+    #             say "Linking: e ".$entry->id." << a ".$author->id."";
+    #             $entry->assign_author($author);
+    #         }
+    #     }
+    # }
+}
+####################################################################################################
+sub link_teams_and_authors {
+    my $self = shift;
+    # assume: entries have authors. Authors have no entries.
 
+    foreach my $mem ($self->teamMemberships_all){
+        my $author = $mem->author;
+        my $team = $mem->team;
+
+        die "Can't link_teams_and_authors with undefined values! " if !$author or !$team; 
+
+        # respecitve containers are initialized inside the functions
+        $author->add_to_team($team);
+        $team->add_author($author);
+    }
+}
+
+####################################################################################
+####################################################################################
 ####################################################################################
 sub add_entry_authors {
     my $self       = shift;
@@ -440,6 +498,74 @@ sub add_entry_tags {
         $num_tags_assigned = $entry->assign_tag(@tags);
     }
     return $num_tags_assigned;
+}
+##############################################################################################################
+# searching helpers
+##############################################################################################################
+sub find_author_by_id_or_name {
+    my $self    = shift;  
+    my $query   = shift;
+
+    return undef if !$query;
+
+    my $author = undef;
+
+    if ( $query =~ m/^\d+$/ ) {
+        $author = $self->authors_find( sub { $_->id == $query } );
+    }
+    else {
+        $author
+            = $self->authors_find( sub { ( $_->master cmp $query ) == 0 }
+            );
+
+        if (!$author) {
+            $author = $self->authors_find(
+                sub { ( $_->uid cmp $query ) == 0 } );
+        }
+    }
+
+    return $author;
+}
+##############################################################################################################
+sub find_team_by_id_or_name {
+    my $self    = shift;  
+    my $query   = shift;
+
+    return undef if !$query;
+
+    my $team = undef;
+
+    if ( $query =~ m/^\d+$/ ) {
+        $team = $self->teams_find( sub { $_->id == $query } );
+    }
+    else {
+        $team
+            = $self->teams_find( sub { ( $_->name cmp $query ) == 0 }
+            );
+    }
+
+    return $team;
+}
+##############################################################################################################
+sub find_tag_by_id_or_name {
+    my $self    = shift;  
+    my $query   = shift;
+
+    return undef if !$query;
+
+    my $tag = undef;
+
+    if ( $query =~ m/^\d+$/ ) {
+        $tag = $self->tags_find( sub { $_->id == $query } );
+    }
+    else {
+        $tag = $self->tags_find( sub { ( $_->name cmp $query ) == 0 });
+        if(!$tag){
+            $tag = $self->tags_find( sub { (defined $_->permalink and ( $_->permalink cmp $query ) == 0) });
+        }
+    }
+
+    return $tag;
 }
 ####################################################################################
 no Moose;

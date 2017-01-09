@@ -6,7 +6,7 @@
 <div class="container">
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
-            <h2>Tags of type <%= $ttobj->{name}  %> (ID=<%= $ttobj->{id} %>)</h2>
+            <h2>Tags of type "<%= $ttobj->{name}  %>" (ID=<%= $ttobj->{id} %>)</h2>
         </div>
     </div>
 
@@ -81,7 +81,7 @@
                 </td>
                 <td>
                     <a class="btn btn-default btn-sm" href="<%= url_for('publications')->query(tag=>$tag) %>">
-                        <span class="glyphicon glyphicon-list-alt"></span> Papers <span class="badge"> <%= num_pubs_for_tag($id) %></span>
+                        <span class="glyphicon glyphicon-list-alt"></span> Papers <span class="badge"> <%= num_pubs_for_tag($otag) %></span>
                     </a>
                 </td>
                 <td>

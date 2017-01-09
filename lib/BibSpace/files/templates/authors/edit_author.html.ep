@@ -21,13 +21,13 @@
             
 
             <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->{master}) %>">
-                <i class="fa fa-files-o"></i> Show entries <span class="badge"><%= num_entries_for_author($id)%></span>
+                <i class="fa fa-files-o"></i> Show entries <span class="badge"><%= num_entries_for_author($author)%></span>
             </a>
             <a class="btn btn-success" href="<%= url_for('publications')->query(author=>$author->{master}) %>">
-                <i class="fa fa-files-o"></i> Show papers <span class="badge"><%= num_papers_for_author($id)%></span>
+                <i class="fa fa-files-o"></i> Show papers <span class="badge"><%= num_papers_for_author($author)%></span>
             </a>
             <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->{master}, entry_type=>'talk')%>">
-                <i class="fa fa-microphone"></i> Show talks <span class="badge"><%= num_talks_for_author($id)%></span>
+                <i class="fa fa-microphone"></i> Show talks <span class="badge"><%= num_talks_for_author($author)%></span>
             </a>
             
         </div>
@@ -255,7 +255,7 @@
                 </td>
                 <td>
                     <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->{master}, team=>$team->{name}) %>">
-                        Show  <span class="badge"><%= num_pubs_for_author_and_team($author->{id}, $team->{id})%> <i class="fa fa-files-o"></i></span> of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i> 
+                        Show papers of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i> 
                     </a>
                 </td>
             </tr>

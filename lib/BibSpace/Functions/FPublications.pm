@@ -106,21 +106,30 @@ sub Fhandle_add_edit_publication {
     # 2 => KEY_OK
     # 3 => KEY_TAKEN
 
+    # Fhandle_preview
+    # Fhandle_preview
+
     my $e;
     
-    $e = MEntry->static_get( $dbh, $id ) if $id > 0;
-    $e = MEntry->new( id=>$id, bib=>$new_bib ) if $id < 0 or !defined $e;
+    if( $id > 0){
+        $e = $storage->entries_find( sub {$_->id == $id} ); 
+    }
+    else{
+        $e = MEntry->new( id=>$id, bib=>$new_bib );
+    }
+   
 
     $e->{bib} = $new_bib;
     my $bibtex_code_valid = $e->populate_from_bib();
 
     # We check Bibtex errors for all requests
-    if ( $bibtex_code_valid == 0 ) {
+    if ( !$bibtex_code_valid ) {
         $status_code_str = 'ERR_BIBTEX';
         return ( $e, $status_code_str, -1, -1 );
     }
 
-    my $tmp_e = grep { $_->{bibtex_key} eq $e->{bibtex_key} } MEntry->static_all( $dbh );
+    my $tmp_e = $storage->entries_find( sub { ($_->bibtex_key cmp $e->bibtex_key)==0 } ); 
+    # grep { $_->{bibtex_key} eq $e->{bibtex_key} } MEntry->static_all( $dbh );
     $existing_id = $tmp_e->{id} if defined $tmp_e;
 
     if ( $id > 0 and $existing_id == $e->{id} )
@@ -139,16 +148,8 @@ sub Fhandle_add_edit_publication {
         $e->generate_html($bst_file);
         return ( $e, $status_code_str, $existing_id, -1 );
     }
-    if ( $action eq 'check_key' )
+    if ( $action eq 'check_key' or $action eq 'preview' )
     {    # user wanted only to check key - we give him the preview as well
-        $e->generate_html($bst_file);
-        $e->populate_from_bib();
-        return ( $e, $status_code_str, $existing_id, -1 );
-    }
-
-    if ( $action eq 'preview' )
-    {    # user wanted only to check key and get preview
-        $status_code_str = 'PREVIEW';
         $e->generate_html($bst_file);
         $e->populate_from_bib();
         return ( $e, $status_code_str, $existing_id, -1 );
@@ -191,7 +192,7 @@ sub Fget_publications_main_hashed_args_only {
         $self,                $args->{author},     $args->{year},
         $args->{bibtex_type}, $args->{entry_type}, $args->{tag},
         $args->{team},        $args->{visible},    $args->{permalink},
-        $args->{hidden},
+        $args->{hidden}, $args->{debug},
     );
     return @dbg;
 }
@@ -212,6 +213,7 @@ sub Fget_publications_main_hashed_args {    #
         $args->{visible}     || 0,
         $args->{permalink}   || $self->param('permalink')   || undef,
         $args->{hidden},
+        $args->{debug},
     );
 }
 
@@ -246,7 +248,7 @@ sub Fget_publications_core_from_set {
 }
 ####################################################################################
 
-sub Fget_publications_core {
+sub Fget_publications_core_storage {
     my $self        = shift;
     my $author      = shift;
     my $year        = shift;
@@ -257,6 +259,109 @@ sub Fget_publications_core {
     my $visible     = shift // 0;
     my $permalink   = shift;
     my $hidden      = shift;
+    my $debug       = shift // 0;
+
+    my $storage = StorageBase->get();
+
+
+
+    my $team_obj   = $storage->find_team_by_id_or_name($team);
+    my $author_obj = $storage->find_author_by_id_or_name($author);
+    my $tag_obj    = $storage->find_tag_by_id_or_name($tag);
+    my $tag_obj_perm = $storage->find_tag_by_id_or_name($permalink);
+
+    
+    my $teamid = undef;
+    $teamid = $team_obj->id if defined $team_obj;    
+    my $master_id = undef;
+    $master_id = $author_obj->id if defined $author_obj;
+    my $tagid = undef;
+    $tagid = $tag_obj->id if defined $tag_obj;
+
+    # filtering
+    my @entries = $storage->entries_all;
+
+    # simple filters
+    if( defined $year and length($year)>0 ){
+        say "Comparing year: $year"  if $debug == 1;
+        map { say $_->id . " year ". $_->year } @entries  if $debug == 1;
+        @entries = grep { (defined $_->year and $_->year == $year) } @entries;
+    }
+    if(defined $bibtex_type){
+        say "Comparing bibtex_type: $bibtex_type" if $debug == 1;
+        map { say $_->id . " type ". $_->bibtex_type } @entries  if $debug == 1;
+
+        @entries = grep { ($_->bibtex_type cmp $bibtex_type)==0 } @entries;
+    }
+    if(defined $entry_type){
+        say "Comparing entry_type: $entry_type" if $debug == 1;
+        map { say $_->id . " type ". $_->entry_type } @entries  if $debug == 1;
+
+        @entries = grep { ($_->entry_type cmp $entry_type)==0;} @entries;
+    }
+    if(defined $permalink and defined $tag_obj_perm){
+        @entries = grep { $_->has_tag($tag_obj_perm) } @entries;
+    }
+    if(defined $hidden){
+        say "Comparing hidden: $hidden" if $debug == 1;
+        map { say $_->id . " hidden ". $_->hidden } @entries  if $debug == 1;
+        @entries = grep { $_->hidden == $hidden } @entries;
+    }
+    # complex filters
+    if(defined $visible){
+        @entries = grep { $_->is_visible } @entries;
+    }
+    if(defined $master_id and defined $author_obj){
+        @entries = grep { $_->has_master_author($author_obj) } @entries;
+    }
+    if(defined $tagid and defined $tag_obj){
+        @entries = grep { $_->has_tag($tag_obj) } @entries;
+    }
+    if(defined $teamid and defined $team_obj){
+        @entries = grep { $_->has_team($team_obj) } @entries;
+    }
+    if($debug == 1){
+        say "Input author = $author" if defined $author;
+        say "Input year = $year" if defined $year;
+        say "Input bibtex_type = $bibtex_type" if defined $bibtex_type;
+        say "Input entry_type = $entry_type" if defined $entry_type;
+        say "Input tag = $tag" if defined $tag;
+        say "Input team = $team" if defined $team;
+        say "Input visible = $visible" if defined $visible;
+        say "Input permalink = $permalink" if defined $permalink;
+        say "Input hidden = $hidden" if defined $hidden;
+        say "Input debug = $debug" if defined $debug;
+    }
+
+    return @entries;
+}
+####################################################################################
+sub Fget_publications_core {
+    return Fget_publications_core_storage(@_);
+}
+####################################################################################
+sub Fget_publications_core_old {
+    my $self        = shift;
+    my $author      = shift;
+    my $year        = shift;
+    my $bibtex_type = shift;
+    my $entry_type  = shift;
+    my $tag         = shift;
+    my $team        = shift;
+    my $visible     = shift // 0;
+    my $permalink   = shift;
+    my $hidden      = shift;
+
+    # my $storage = StorageBase->get();
+    # my @objs = $storage->entries_filter( sub { 
+    #     (
+    #             ($_->bibtex_type cmp $curr_bibtex_type)==0 
+    #         and ($_->entry_type  cmp $curr_entry_type)==0 
+    #         and  $_->year == $curr_year
+    #         and  $_->is_visible  
+    #         and !$_->is_hidden 
+    #     )
+    # });
 
 
     # say "CALL: get_publications_core author $author tag $tag";

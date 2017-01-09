@@ -6,6 +6,8 @@ use BibSpace::Model::MTagType;
 use BibSpace::Model::Persistent;
 use BibSpace::Model::StorageBase;
 
+use DateTime::Format::Strptime;
+
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
@@ -19,6 +21,8 @@ use Moose;
 extends 'MEntryBase';
 with 'Persistent';
 
+my $dtPattern = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
+
 ####################################################################################
 sub load {
     my $self = shift;
@@ -27,6 +31,8 @@ sub load {
 
     die "Cant load without DB handle" unless $dbh;
     die "Cant load without Storage handle " unless $storage;
+
+    say "Loading ".ref($self)." ID ".$self->id;
 
     # warn ref($self)." calls load";
 
@@ -185,7 +191,7 @@ sub static_all {
               modified_time,
               need_html_regen
           FROM Entry";
-    my @objs = ();
+    
     my $sth;
     try{
         $sth= $dbh->prepare($qry);
@@ -196,7 +202,15 @@ sub static_all {
         print "\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n"; # like carp
     };
 
+    my @objs;
     while ( my $row = $sth->fetchrow_hashref() ) {
+        my $ct = $dtPattern->parse_datetime($row->{creation_time});
+        my $mt = $dtPattern->parse_datetime($row->{modified_time});
+        # set defaults
+        $ct = DateTime->now unless $ct;
+        $mt = DateTime->now unless $mt;
+        # say "MEntry->static_all: parsing creation_ and mod_time";
+
         push @objs,
             MEntry->new(
             id              => $row->{id},
@@ -215,8 +229,8 @@ sub static_all {
             teams_str       => $row->{teams_str},
             people_str      => $row->{people_str},
             tags_str        => $row->{tags_str},
-            creation_time   => $row->{creation_time},
-            modified_time   => $row->{modified_time},
+            creation_time   => $ct,
+            modified_time   => $mt, 
             need_html_regen => $row->{need_html_regen},
             );
     }
@@ -258,7 +272,13 @@ sub static_get {
     if ( !defined $row ) {
         return undef;
     }
+    my $ct = $dtPattern->parse_datetime($row->{creation_time});
+    my $mt = $dtPattern->parse_datetime($row->{modified_time});
+    # set defaults
+    $ct = DateTime->now unless $ct;
+    $mt = DateTime->now unless $mt;
 
+    say "MEntry->static_get: parsing creation_ and mod_time";
     my $e = MEntry->new(
         id              => $id,
         entry_type      => $row->{entry_type},
@@ -276,8 +296,8 @@ sub static_get {
         teams_str       => $row->{teams_str},
         people_str      => $row->{people_str},
         tags_str        => $row->{tags_str},
-        creation_time   => $row->{creation_time},
-        modified_time   => $row->{modified_time},
+        creation_time   => $ct,
+        modified_time   => $mt,
         need_html_regen => $row->{need_html_regen}
     );
     $e->decodeLatex();
@@ -588,6 +608,14 @@ sub static_get_filter {
     my @objs;
 
     while ( my $row = $sth->fetchrow_hashref() ) {
+        my $ct = $dtPattern->parse_datetime($row->{creation_time});
+        my $mt = $dtPattern->parse_datetime($row->{modified_time});
+        # set defaults
+        $ct = DateTime->now unless $ct;
+        $mt = DateTime->now unless $mt;
+
+        say "MEntry->static_get_filter: parsing creation_ and mod_time";
+
         my $obj = MEntry->new(
             id              => $row->{id},
             entry_type      => $row->{entry_type},
@@ -605,8 +633,8 @@ sub static_get_filter {
             teams_str       => $row->{teams_str},
             people_str      => $row->{people_str},
             tags_str        => $row->{tags_str},
-            creation_time   => $row->{creation_time},
-            modified_time   => $row->{modified_time},
+            creation_time   => $ct,
+            modified_time   => $mt,
             need_html_regen => $row->{need_html_regen}
         );
         $obj->decodeLatex();

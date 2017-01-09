@@ -15,6 +15,7 @@ use BibSpace::Model::MUser;
 
 use BibSpace::Model::CMUsers;
 use BibSpace::Model::CMObjectStore;
+use BibSpace::Model::StorageBase;
 
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
@@ -93,19 +94,15 @@ sub startup {
     $self->setup_hooks;
 
     my $dbh = $self->app->db;
-
-    # $self->helper( storage => sub { state $storage = CMObjectStore->new } );
-    # $self->storage->loadData($self->app->db);
-
-    # use BibSpace::Model::MEntry;
-    # my @e = $self->storage->entries_all;
-    # my $en = $self->storage->entries_get(0);
-
-    use BibSpace::Model::StorageBase;
-
     StorageBase::init();
     StorageBase::load($self->app->db);
-    my @all_entries = StorageBase->get()->entries_all;
+
+
+
+    
+    # my $en = MEntry->new();
+
+    # say Dumper $en;
 
     # How I want to build the ***MySQL classes
     #
@@ -137,7 +134,7 @@ sub startup {
     # $self->setup_cache;
 
 
-    # say "Using CONFIG: " . $self->app->config_file;
+    say "Using CONFIG: " . $self->app->config_file;
     # say "App home is: " . $self->app->home;
     # say "Active bst file is: " . $self->app->bst;
 
@@ -445,10 +442,12 @@ sub setup_routes {
 
     $logged_user->get('/teams/edit/:teamid')->to('teams#edit')
         ->name('edit_team');
-    $logged_user->get('/teams/delete/:id_to_delete')->to('teams#delete_team')
+    $logged_user->get('/teams/delete/:id')
+        ->to('teams#delete_team')
         ->name('delete_team');
-    $logged_user->get('/teams/delete/:id_to_delete/force')
-        ->to('teams#delete_team_force');
+    $logged_user->get('/teams/delete/:id/force')
+        ->to('teams#delete_team_force')
+        ->name('delete_team_force');
     $logged_user->get('/teams/unrealted_papers/:teamid')
         ->to('publications#show_unrelated_to_team')
         ->name('unrelated_papers_for_team');

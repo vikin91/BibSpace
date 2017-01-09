@@ -31,6 +31,11 @@ has 'author_id' => ( is => 'rw', isa => 'Int' );
 has 'start' => ( is => 'rw', isa => 'Int', default => 0 );
 has 'stop'  => ( is => 'rw', isa => 'Int', default => 0 );
 
+################################################################################
+sub init_storage {
+    my $self = shift;
+    # nothing to do here
+}
 ####################################################################################
 sub replaceFromStorage {
     my $self    = shift;

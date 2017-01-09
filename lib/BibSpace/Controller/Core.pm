@@ -42,7 +42,6 @@ our @EXPORT = qw(
     get_landing_for_our_type
     toggle_landing_for_our_type
     nohtml
-    add_field_to_bibtex_code
     clean_tag_name
     prepare_backup_table
     get_month_numeric
@@ -320,25 +319,7 @@ sub get_type_description {    #TODO: refactor to MType
 
 ################################################################################
 
-sub add_field_to_bibtex_code {
-    my $dbh   = shift;
-    my $eid   = shift;
-    my $field = shift;
-    my $value = shift;
 
-    my $mentry = MEntry->static_get( $dbh, $eid );
-
-    my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s($mentry->{bib});
-    return -1 unless $entry->parse_ok;
-    my $key = $entry->key;
-    $entry->set( $field, $value );
-    my $new_bib = $entry->print_s;
-
-    $mentry->{bib} = $new_bib;
-    $mentry->populate_from_bib();
-    $mentry->save($dbh);
-}
 ################################################################################
 
 sub create_user_id {
