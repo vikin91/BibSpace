@@ -296,20 +296,6 @@ sub landing_types_obj {    # TODO: clean this mess!
     my @all_keys = get_types_for_landing_page( $self->app->db );
     my @keys_with_papers;
 
-# my $cache_key = "publications.landing.types." . join("_", @{$self->req->params->pairs} );
-# # $html = $self->render_to_string( template => 'publications/all' );
-# # $self->app->redis->set($cache_key => $html  );
-# my $html;
-# try{
-#     $html = $self->app->redis->get($cache_key);
-# }catch{
-#     warn "Redis server is down. Err: $_";
-# };
-
-    # if($html){
-    #     $self->render(data => $html);
-    #     return;
-    # }
 
     push @all_keys, "talk";
     $bibtex_type_to_label{'talk'} = "Talks";

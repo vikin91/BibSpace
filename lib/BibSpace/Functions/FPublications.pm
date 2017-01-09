@@ -28,8 +28,6 @@ our @EXPORT = qw(
     Fhandle_add_edit_publication
     Fget_publications_main_hashed_args_only
     Fget_publications_main_hashed_args
-    Fget_publications_core_from_array_ref
-    Fget_publications_core_from_set
     Fget_publications_core
     Fclean_ugly_bibtex_fields_for_all_entries
     Fhandle_author_uids_change_for_all_entries
@@ -41,7 +39,7 @@ sub Fdo_regenerate_html {
 
     my $num_fixes = 0;
     for my $e (@entries) {
-        $e->{bst_file} = $bst_file;
+        $e->bst_file($bst_file);
         $e->regenerate_html( $force, $bst_file );
         $e->save($dbh);    # change to $storage->store_all or sth;
     }
@@ -216,36 +214,6 @@ sub Fget_publications_main_hashed_args {    #
         $args->{debug},
     );
 }
-
-####################################################################################
-sub Fget_publications_core_from_array_ref {
-    say
-        "CALL: Fget_publications_core_from_array_ref. This function could be removed...";
-    my $self      = shift;
-    my $array_ref = shift;
-    my $sort      = shift;
-    $sort = 1 unless defined $sort;
-
-    my $dbh = $self->app->db;
-
-    my $keep_order = 0;
-    $keep_order = 1 if $sort == 0;
-
-    return MEntry->static_get_from_id_array( $dbh, $array_ref, $keep_order );
-}
-####################################################################################
-sub Fget_publications_core_from_set {
-    say "CALL: Fget_publications_core_from_set";
-    my $self = shift;
-    my $set  = shift;
-
-    my $dbh   = $self->app->db;
-    my @array = $set->elements;
-
-    # array may be empty here!
-
-    return Fget_publications_core_from_array_ref( $self, \@array );
-}
 ####################################################################################
 
 sub Fget_publications_core_storage {
@@ -282,33 +250,34 @@ sub Fget_publications_core_storage {
     my @entries = $storage->entries_all;
 
     # simple filters
-    if( defined $year and length($year)>0 ){
-        say "Comparing year: $year"  if $debug == 1;
-        map { say $_->id . " year ". $_->year } @entries  if $debug == 1;
+    if( defined $year and $year > 0 ){
+        # say "Comparing year: $year"  if $debug == 1;
+        # map { say $_->id . " year ". $_->year } @entries  if $debug == 1;
         @entries = grep { (defined $_->year and $_->year == $year) } @entries;
     }
     if(defined $bibtex_type){
-        say "Comparing bibtex_type: $bibtex_type" if $debug == 1;
-        map { say $_->id . " type ". $_->bibtex_type } @entries  if $debug == 1;
 
-        @entries = grep { ($_->bibtex_type cmp $bibtex_type)==0 } @entries;
+        # TODO: FIX THIS!
+        warn "TODO: filtering by bibtex_type incomplete! Missing mapping bibtex_type-to-our_type!!";
+        # say "Comparing bibtex_type: $bibtex_type" if $debug == 1;
+        # map { say $_->id . " type ". $_->get_type } @entries  if $debug == 1;
+        @entries = grep { ($_->get_type cmp $bibtex_type)==0 } @entries;
     }
     if(defined $entry_type){
-        say "Comparing entry_type: $entry_type" if $debug == 1;
-        map { say $_->id . " type ". $_->entry_type } @entries  if $debug == 1;
-
+        # say "Comparing entry_type: $entry_type" if $debug == 1;
+        # map { say $_->id . " type ". $_->entry_type } @entries  if $debug == 1;
         @entries = grep { ($_->entry_type cmp $entry_type)==0;} @entries;
     }
     if(defined $permalink and defined $tag_obj_perm){
         @entries = grep { $_->has_tag($tag_obj_perm) } @entries;
     }
     if(defined $hidden){
-        say "Comparing hidden: $hidden" if $debug == 1;
-        map { say $_->id . " hidden ". $_->hidden } @entries  if $debug == 1;
+        # say "Comparing hidden: $hidden" if $debug == 1;
+        # map { say $_->id . " hidden ". $_->hidden } @entries  if $debug == 1;
         @entries = grep { $_->hidden == $hidden } @entries;
     }
     # complex filters
-    if(defined $visible){
+    if(defined $visible and $visible == 1){
         @entries = grep { $_->is_visible } @entries;
     }
     if(defined $master_id and defined $author_obj){
@@ -321,23 +290,27 @@ sub Fget_publications_core_storage {
         @entries = grep { $_->has_team($team_obj) } @entries;
     }
     if($debug == 1){
-        say "Input author = $author" if defined $author;
-        say "Input year = $year" if defined $year;
-        say "Input bibtex_type = $bibtex_type" if defined $bibtex_type;
-        say "Input entry_type = $entry_type" if defined $entry_type;
-        say "Input tag = $tag" if defined $tag;
-        say "Input team = $team" if defined $team;
-        say "Input visible = $visible" if defined $visible;
-        say "Input permalink = $permalink" if defined $permalink;
-        say "Input hidden = $hidden" if defined $hidden;
-        say "Input debug = $debug" if defined $debug;
+        say "Stor Input author = $author" if defined $author;
+        say "Stor Input year = $year" if defined $year;
+        say "Stor Input bibtex_type = $bibtex_type" if defined $bibtex_type;
+        say "Stor Input entry_type = $entry_type" if defined $entry_type;
+        say "Stor Input tag = $tag" if defined $tag;
+        say "Stor Input team = $team" if defined $team;
+        say "Stor Input visible = $visible" if defined $visible;
+        say "Stor Input permalink = $permalink" if defined $permalink;
+        say "Stor Input hidden = $hidden" if defined $hidden;
+        say "Stor Input debug = $debug" if defined $debug;
+        say "Stor Found ".scalar(@entries)." entries";
     }
 
     return @entries;
 }
 ####################################################################################
 sub Fget_publications_core {
-    return Fget_publications_core_storage(@_);
+    my @input = @_;
+    Fget_publications_core_old(@input);
+    return Fget_publications_core_storage(@input);
+    # return Fget_publications_core_old(@_);
 }
 ####################################################################################
 sub Fget_publications_core_old {
@@ -351,20 +324,8 @@ sub Fget_publications_core_old {
     my $visible     = shift // 0;
     my $permalink   = shift;
     my $hidden      = shift;
+    my $debug       = shift // 0;
 
-    # my $storage = StorageBase->get();
-    # my @objs = $storage->entries_filter( sub { 
-    #     (
-    #             ($_->bibtex_type cmp $curr_bibtex_type)==0 
-    #         and ($_->entry_type  cmp $curr_entry_type)==0 
-    #         and  $_->year == $curr_year
-    #         and  $_->is_visible  
-    #         and !$_->is_hidden 
-    #     )
-    # });
-
-
-    # say "CALL: get_publications_core author $author tag $tag";
 
     my $dbh = $self->app->db;
 
@@ -400,12 +361,26 @@ sub Fget_publications_core_old {
     # $tagid     = undef unless defined $tag;
 
 
-    my @dbg = MEntry->static_get_filter(
+    my @entries = MEntry->static_get_filter(
         $dbh,   $master_id, $year,    $bibtex_type, $entry_type,
         $tagid, $teamid,    $visible, $permalink,   $hidden
     );
 
-    return @dbg;
+    if($debug == 1){
+        say "DB Input author = $author" if defined $author;
+        say "DB Input year = $year" if defined $year;
+        say "DB Input bibtex_type = $bibtex_type" if defined $bibtex_type;
+        say "DB Input entry_type = $entry_type" if defined $entry_type;
+        say "DB Input tag = $tag" if defined $tag;
+        say "DB Input team = $team" if defined $team;
+        say "DB Input visible = $visible" if defined $visible;
+        say "DB Input permalink = $permalink" if defined $permalink;
+        say "DB Input hidden = $hidden" if defined $hidden;
+        say "DB Input debug = $debug" if defined $debug;
+        say "DB Found ".scalar(@entries)." entries";
+    }
+
+    return @entries;
 }
 ####################################################################################
 sub Fclean_ugly_bibtex_fields_for_all_entries {

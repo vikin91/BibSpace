@@ -32,7 +32,7 @@ sub load {
     die "Cant load without DB handle" unless $dbh;
     die "Cant load without Storage handle " unless $storage;
 
-    say "Loading ".ref($self)." ID ".$self->id;
+    # say "Loading ".ref($self)." ID ".$self->id;
 
     # warn ref($self)." calls load";
 
@@ -216,7 +216,7 @@ sub static_all {
             id              => $row->{id},
             entry_type      => $row->{entry_type},
             bibtex_key      => $row->{bibtex_key},
-            bibtex_type     => $row->{bibtex_type},
+            _bibtex_type     => $row->{bibtex_type},
             bib             => $row->{bib},
             html            => $row->{html},
             html_bib        => $row->{html_bib},
@@ -278,12 +278,12 @@ sub static_get {
     $ct = DateTime->now unless $ct;
     $mt = DateTime->now unless $mt;
 
-    say "MEntry->static_get: parsing creation_ and mod_time";
+    # say "MEntry->static_get: parsing creation_ and mod_time";
     my $e = MEntry->new(
         id              => $id,
         entry_type      => $row->{entry_type},
         bibtex_key      => $row->{bibtex_key},
-        bibtex_type     => $row->{bibtex_type},
+        _bibtex_type     => $row->{bibtex_type},
         bib             => $row->{bib},
         html            => $row->{html},
         html_bib        => $row->{html_bib},
@@ -345,7 +345,7 @@ sub update {
     try {
         $result = $sth->execute(
             $self->{entry_type},  $self->{bibtex_key},
-            $self->{bibtex_type}, $self->{bib},
+            $self->{_bibtex_type}, $self->{bib},
             $self->{html},        $self->{html_bib},
             $self->{abstract},    $self->{title},
             $self->{hidden},      $self->{year},
@@ -392,7 +392,7 @@ sub insert {
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW(),?);";
     my $sth = $dbh->prepare($qry);
     $result = $sth->execute(
-        $self->{entry_type}, $self->{bibtex_key}, $self->{bibtex_type},
+        $self->{entry_type}, $self->{bibtex_key}, $self->{_bibtex_type},
         $self->{bib}, $self->{html}, $self->{html_bib}, $self->{abstract},
         $self->{title}, $self->{hidden}, $self->{year}, $self->{month},
         $self->{sort_month}, $self->{teams_str}, $self->{people_str},
@@ -614,7 +614,7 @@ sub static_get_filter {
         $ct = DateTime->now unless $ct;
         $mt = DateTime->now unless $mt;
 
-        say "MEntry->static_get_filter: parsing creation_ and mod_time";
+        # say "MEntry->static_get_filter: parsing creation_ and mod_time";
 
         my $obj = MEntry->new(
             id              => $row->{id},

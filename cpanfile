@@ -10,6 +10,7 @@ requires 'Crypt::Eksblowfish::Bcrypt' , '>= 0.0';
 requires 'Cwd' , '>= 0.0';
 requires 'File::Find' , '>= 0.0';
 requires 'DateTime' , '>= 0.0';
+requires 'DateTime::Format::Strptime' , '>= 0.0';
 requires 'File::Copy' , '>= 0.0';
 requires 'Scalar::Util' , '>= 0.0';
 requires 'utf8' , '>= 0.0';

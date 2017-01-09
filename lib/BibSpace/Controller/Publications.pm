@@ -297,20 +297,18 @@ sub show_unrelated_to_team {
     my $team_id = $self->param('teamid');
     my $dbh     = $self->app->db;
 
-    $self->write_log(
-        "Displaying entries unrelated to team with it $team_id.");
-
     my $storage = StorageBase->get();
-
-    my $set_all_papers
-        = Set::Scalar->new( map { $_->{id} } $storage->entries_all );
-    my $set_of_related_to_team
-        = Fget_set_of_papers_for_all_authors_of_team_id( $dbh, $team_id );
-    my $end_set = $set_all_papers - $set_of_related_to_team;
-
     my $team_name = "";
-    my $mteam = $storage->teams_find( sub { $_->{id} == $team_id } ); 
-    $team_name = $mteam->{name} if defined $mteam;
+    my $team = $storage->teams_find( sub { $_->{id} == $team_id } ); 
+    $team_name = $team->{name} if defined $team;
+
+
+    my @allEntres = $storage->entries_all;
+    my @teamEntres = $team->entries;
+
+    my %inTeam = map {$_ => 1} @teamEntres;
+    my @entriesUnrelated  = grep {not $inTeam{$_}} @allEntres;
+
 
     my $msg = "This list contains papers, that are:
         <ul>
@@ -320,9 +318,7 @@ sub show_unrelated_to_team {
         . $team_name . "</li>
         </ul>";
 
-    my @objs = Fget_publications_core_from_set( $self, $end_set );
-    $self->stash( msg_type => 'info', msg => $msg );
-    $self->stash( entries => \@objs );
+    $self->stash(  msg_type => 'info', msg => $msg, entries => \@entriesUnrelated );
     $self->render( template => 'publications/all' );
 }
 ####################################################################################

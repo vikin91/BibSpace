@@ -32,7 +32,7 @@ my $dtPattern = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' 
 has 'id'              => ( is => 'rw', isa => 'Int', default => 1);
 has 'entry_type'      => ( is => 'rw', isa => 'Str', default => 'paper' );
 has 'bibtex_key'      => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'bibtex_type'     => ( is => 'rw', isa => 'Maybe[Str]' );
+has '_bibtex_type'     => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'bib'             => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'html'            => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'html_bib'        => ( is => 'rw', isa => 'Maybe[Str]' );
@@ -143,7 +143,11 @@ has 'bexceptions' => (
 );
 
 # not DB fields
-has 'warnings' => ( is => 'ro', default => '', traits => ['DoNotSerialize'] );
+has 'warnings' => ( 
+    is => 'rw', 
+    isa => 'Maybe[Str]', 
+    traits => ['DoNotSerialize'] 
+);
 has 'bst_file' => (
     is      => 'ro',
     isa     => 'Maybe[Str]',
@@ -218,7 +222,7 @@ sub equals_bibtex {
     return 0 unless defined $obj;
     # return 0 unless $obj->isa("MEntryBase");
 
-    my $result = $self->{bib} cmp $obj->{bib};
+    my $result = $self->bib cmp $obj->bib;
     return $result == 0;
 }
 ####################################################################################
@@ -229,7 +233,8 @@ sub is_visible {
     my $self = shift;
 
     my $visible_author = $self->authors_find( sub{ $_->is_visible });
-    return defined $visible_author;
+    return 1 if defined $visible_author;
+    return;
 }
 ####################################################################################
 sub is_hidden {
@@ -259,46 +264,56 @@ sub toggle_hide {
 ####################################################################################
 sub make_paper {
     my $self = shift;
-    $self->{entry_type} = 'paper';
+    $self->entry_type('paper');
 }
 ####################################################################################
 sub is_paper {
     my $self = shift;
-    return 1 if $self->{entry_type} eq 'paper';
+    return 1 if $self->entry_type eq 'paper';
     return 0;
 }
 ####################################################################################
 sub make_talk {
     my $self = shift;
-    $self->{entry_type} = 'talk';
+    $self->entry_type('talk');
 }
 ####################################################################################
 sub is_talk {
     my $self = shift;
-    return 1 if $self->{entry_type} eq 'talk';
+    return 1 if $self->entry_type eq 'talk';
     return 0;
+}
+####################################################################################
+sub get_type {
+    my $self = shift;
+
+    # warn "MEntry->get_type needs a fix!";
+
+    return $self->{_bibtex_type};
 }
 ####################################################################################
 sub populate_from_bib {
     my $self = shift;
 
 
-    if ( defined $self->{bib} and $self->{bib} ne '' ) {
+    if ( defined $self->bib and $self->bib ne '' ) {
         my $bibtex_entry = new Text::BibTeX::Entry();
-        my $s            = $bibtex_entry->parse_s( $self->{bib} );
+        my $s            = $bibtex_entry->parse_s( $self->bib );
 
         unless ( $bibtex_entry->parse_ok ) {
             return 0;
         }
 
-        $self->{bibtex_key} = $bibtex_entry->key;
-        $self->{year}       = $bibtex_entry->get('year');
-        $self->{title}      = $bibtex_entry->get('booktitle')
-            if $bibtex_entry->exists('booktitle');
-        $self->{title} = $bibtex_entry->get('title')
-            if $bibtex_entry->exists('title');
-        $self->{abstract} = $bibtex_entry->get('abstract') || undef;
-        $self->{bibtex_type} = $bibtex_entry->type;
+        $self->bibtex_key($bibtex_entry->key);
+        $self->year( $bibtex_entry->get('year') );
+        if( $bibtex_entry->exists('booktitle') ){
+            $self->title($bibtex_entry->get('booktitle'));
+        }
+        if( $bibtex_entry->exists('title') ){
+            $self->title($bibtex_entry->get('title'));
+        }
+        $self->abstract( $bibtex_entry->get('abstract') || undef);
+        $self->_bibtex_type( $bibtex_entry->type );
         return 1;
     }
     return 0;
@@ -326,7 +341,7 @@ sub bibtex_has_field {
     # returns 1 if bibtex of this entry has filed
     my $self         = shift;
     my $bibtex_field = shift;
-    my $this_bib     = $self->{bib};
+    my $this_bib     = $self->bib;
 
     my $bibtex_entry = new Text::BibTeX::Entry();
     $bibtex_entry->parse_s($this_bib);
@@ -339,7 +354,7 @@ sub get_bibtex_field_value {
     # returns 1 if bibtex of this entry has filed
     my $self         = shift;
     my $bibtex_field = shift;
-    my $this_bib     = $self->{bib};
+    my $this_bib     = $self->bib;
 
     if ( $self->bibtex_has_field($bibtex_field) ) {
         my $bibtex_entry = new Text::BibTeX::Entry();
@@ -376,18 +391,6 @@ sub fix_month {
 
     return $num_fixes;
 }
-########################################################################################################################
-# sub is_talk_in_DB {
-#     my $self = shift;
-#     my $dbh  = shift;
-
-#     my $db_e = MEntry->static_get( $dbh, $self->{id} );
-#     return undef unless defined $db_e;
-#     if ( $db_e->{entry_type} eq 'talk' ) {
-#         return 1;
-#     }
-#     return 0;
-# }
 ########################################################################################################################
 sub has_tag_named {
     my $self = shift;
@@ -442,7 +445,7 @@ sub postprocess_updated {
     my $self     = shift;
     my $bst_file = shift;
 
-    $bst_file = $self->{bst_file} if !defined $bst_file;
+    $bst_file = $self->bst_file if !defined $bst_file;
 
     warn
         "Warning, you use Mentry->postprocess_updated without valid bst file!"
@@ -458,18 +461,21 @@ sub generate_html {
     my $self     = shift;
     my $bst_file = shift;
 
-    $bst_file = $self->{bst_file} if !defined $bst_file;
+    $bst_file = $self->bst_file if !defined $bst_file;
 
     $self->populate_from_bib();
 
     my $c = BibSpaceBibtexToHtml::BibSpaceBibtexToHtml->new();
-    $self->{html} = $c->convert_to_html(
-        { method => 'new', bib => $self->{bib}, bst => $bst_file } );
-    $self->{warnings} = join( ', ', @{ $c->{warnings_arr} } );
+    $self->html(
+        $c->convert_to_html(
+            { method => 'new', bib => $self->{bib}, bst => $bst_file } 
+        )
+    );
+    $self->warnings( join( ', ', @{ $c->{warnings_arr} } ) );
 
-    $self->{need_html_regen} = 0;
+    $self->need_html_regen(0);
 
-    return ( $self->{html}, $self->{bib} );
+    return ( $self->html, $self->bib );
 }
 ####################################################################################
 sub regenerate_html {
@@ -482,12 +488,12 @@ sub regenerate_html {
         unless defined $bst_file;
 
     if (   $force == 1
-        or $self->{need_html_regen} == 1
-        or $self->{html} =~ m/ERROR/ )
+        or $self->need_html_regen == 1
+        or $self->html =~ m/ERROR/ )
     {
         $self->populate_from_bib();
         $self->generate_html($bst_file);
-        $self->{need_html_regen} = 0;
+        $self->need_html_regen(0);
     }
 }
 ####################################################################################
@@ -557,8 +563,8 @@ sub author_names_from_bibtex {
     $self->populate_from_bib();
 
     my $bibtex_entry = new Text::BibTeX::Entry();
-    $bibtex_entry->parse_s( $self->{bib} );
-    my $entry_key = $self->{bibtex_key};
+    $bibtex_entry->parse_s( $self->bib );
+    my $entry_key = $self->bibtex_key;
 
     my @names;
     if ( $bibtex_entry->exists('author') ) {
@@ -599,13 +605,13 @@ sub teams {
     foreach my $author ( $self->authors ) {
 
         foreach my $team ( $author->teams ) {
-            if ($author->joined_team( $team ) <= $self->{year}
-                and (  $author->left_team( $team ) > $self->{year}
+            if ($author->joined_team( $team ) <= $self->year
+                and (  $author->left_team( $team ) > $self->year
                     or $author->left_team( $team ) == 0 )
                 )
             {
                 # $final_teams{$team}       = 1; # BAD: $team gets stringified
-                $final_teams{ $team->{id} } = $team;
+                $final_teams{ $team->id } = $team;
             }
         }
     }
@@ -645,10 +651,10 @@ sub assign_exception {
 
 
     return 0
-        if !defined $self->{id}
-        or $self->{id} < 0
+        if !defined $self->id
+        or $self->id < 0
         or !defined $exception
-        or $exception->{id} <= 0;
+        or $exception->id <= 0;
 
     my $result = $self->exceptions_add($exception);
     # say "adding excpetion ". $exception->toString;
@@ -665,7 +671,7 @@ sub tags {
     if ( defined $tag_type ) {
         return $self->tags_filter(
             sub {
-                $_->{type} == $tag_type;
+                $_->type == $tag_type;
             }
         );
     }
@@ -713,7 +719,7 @@ sub remove_tag_by_id {
     my $self   = shift;
     my $tag_id = shift;
 
-    my $index = $self->tags_find_index( sub { $_->{id} == $tag_id } );
+    my $index = $self->tags_find_index( sub { $_->id == $tag_id } );
     return 0 if $index == -1;
     return 1 if $self->tags_delete($index);
     return 0;
@@ -725,9 +731,9 @@ sub remove_tag_by_name {
 
     my $index = $self->tags_find_index(
         sub {
-                (defined $_->{name}
+                (defined $_->name
                 and defined $tag_name
-                and $_->{name} eq $tag_name);
+                and $_->name eq $tag_name);
         }
     );
     return 0 if $index == -1;
@@ -754,7 +760,7 @@ sub tag_names_from_bibtex {
     my @tag_names;
 
     my $bibtex_entry = new Text::BibTeX::Entry();
-    $bibtex_entry->parse_s( $self->{bib} );
+    $bibtex_entry->parse_s( $self->bib );
 
     if ( $bibtex_entry->exists('tags') ) {
         my $tags_str = $bibtex_entry->get('tags');
@@ -796,7 +802,7 @@ sub static_get_unique_years_array {
     my @pubs
         = MEntry->static_get_filter( $dbh, undef, undef, undef, undef, undef,
         undef, 1, undef, undef );
-    my @years = map { $_->{year} } @pubs;
+    my @years = map { $_->year } @pubs;
 
     my $set = Set::Scalar->new(@years);
     $set->delete('');
@@ -838,9 +844,11 @@ sub static_get_from_id_array {
 ####################################################################################
 sub decodeLatex {
     my $self = shift;
-    if ( defined $self->{title} ) {
-        $self->{title} =~ s/^\{//g;
-        $self->{title} =~ s/\}$//g;
+    if ( defined $self->title ) {
+        my $title = $self->title;
+        $title =~ s/^\{//g;
+        $title =~ s/\}$//g;
+        $self->title($title);
 
         # $self->{title} = decode( 'latex', $self->{title} );
         # $self->{title} = decode( 'latex', $self->{title} );
@@ -865,7 +873,7 @@ sub remove_bibtex_fields {
     my @bib_fields_to_delete         = @$arr_ref_bib_fields_to_delete;
 
     my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s( $self->{bib} );
+    $entry->parse_s( $self->bib );
     return -1 unless $entry->parse_ok;
     my $key = $entry->key;
 
@@ -886,7 +894,7 @@ sub remove_bibtex_fields {
         $new_bib =~ s/\\\\/\\/g;
         $new_bib =~ s/\\\\/\\/g;
 
-        $self->{bib} = $new_bib;
+        $self->bib($new_bib);
         $self->save($dbh);
     }
     return $num_deleted;

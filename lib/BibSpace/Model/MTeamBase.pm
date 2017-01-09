@@ -207,6 +207,19 @@ sub tags {
     return @myTags;
 }
 ####################################################################################
+sub entries {
+    my $self = shift;
+
+    my @myEntries;
+    my @members = $self->authors_all;
+    foreach my $author (@members) {
+        push @myEntries, $author->entries;
+    }
+    @myEntries = uniq @myEntries;
+
+    return @myEntries;
+}
+####################################################################################
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

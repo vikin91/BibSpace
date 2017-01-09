@@ -42,7 +42,7 @@ sub load {
     die "Cant load without DB handle" unless $dbh;
     die "Cant load without Storage handle " unless $storage;
 
-    say "Loading ".ref($self)." ID ".$self->id;
+    # say "Loading ".ref($self)." ID ".$self->id;
 
     # cant load it like this! Each entry will load all authors and each author will load all entries
     # fazit: entries will be loaded multiple times!
