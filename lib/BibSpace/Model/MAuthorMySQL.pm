@@ -16,6 +16,20 @@ use Moose;
 extends 'MAuthorBase';
 with 'Persistent';
 
+# has object => (
+#     is => 'ro',
+#     isa => 'MAuthorBase',
+#     default => sub {
+#         MAuthorBase->new(@_)
+#     }
+# );
+# In your test:
+
+# my $request = Test::MockObject->new;
+# $request->mock(…);
+# my $tested_class = MyClass->new(request => $request, ...);
+
+
 ####################################################################################
 sub load {
     my $self = shift;

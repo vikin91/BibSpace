@@ -107,6 +107,12 @@ sub startup {
     StorageBase::load($self->app->db);
     my @all_entries = StorageBase->get()->entries_all;
 
+    # How I want to build the ***MySQL classes
+    #
+    # use BibSpace::Model::MAuthorMySQL2;
+    # my $a1 = MAuthorMySQL->new(uid=>'sss');
+    # my $a2 = MAuthorMySQL2->new(object => $a1);
+
 
 
     # say "##############################";
