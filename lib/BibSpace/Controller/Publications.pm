@@ -1361,7 +1361,7 @@ sub clean_ugly_bibtex {
 
     $self->write_log("Cleaning ugly bibtex fields for all entries");
 
-    Fclean_ugly_bibtex_fields_for_all_entries($dbh);
+    Fclean_ugly_bibtex_fields_for_all_entries();
 
     $self->flash(
         msg_type => 'info',

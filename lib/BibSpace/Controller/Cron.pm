@@ -177,18 +177,12 @@ sub do_cron_week {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    # Fhandle_author_uids_change_for_all_entries($self->app->db, 0);
-    # Fclean_ugly_bibtex_fields_for_all_entries($dbh);
-
     $self->helper_do_delete_broken_or_old_backup();
 }
 ##########################################################################################
 sub do_cron_month {
     my $self = shift;
     my $dbh  = $self->app->db;
-
-    # Fhandle_author_uids_change_for_all_entries($self->app->db, 0);
-    # Fclean_ugly_bibtex_fields_for_all_entries($dbh);
 }
 ##########################################################################################
 ##########################################################################################

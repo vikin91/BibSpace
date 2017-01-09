@@ -77,10 +77,9 @@ sub Ffix_months {
 
 
 ####################################################################################
+# TODO: get rid of this ugly function!
 sub Fhandle_add_edit_publication {
     my ( $dbh, $new_bib, $id, $action, $bst_file ) = @_;
-
-    say "CALL Fhandle_add_edit_publication: id $id action $action";
 
     my $storage = StorageBase->get();
 
@@ -166,7 +165,7 @@ sub Fhandle_add_edit_publication {
         $e->save($dbh);    # so we save for sure
 
         # these functions require that the object is in the DB
-        $e->postprocess_updated($dbh, $bst_file);    # this has optional save
+        $e->postprocess_updated($bst_file);    # this function does almost nothing now...
 
         $storage->add_entry_authors( $e, 1 );
 
@@ -197,8 +196,6 @@ sub Fget_publications_main_hashed_args_only {
 ####################################################################################
 sub Fget_publications_main_hashed_args {    #
     my ( $self, $args ) = @_;
-
-
 
     return Fget_publications_core(
         $self,
@@ -311,93 +308,91 @@ sub Fget_publications_core {
     # this is good for tests - 
     # with debug=>1, the number of returned entries should be identical
     # Fget_publications_core_old(@input);
-    
+
     return Fget_publications_core_storage(@input);
 }
 ####################################################################################
-sub Fget_publications_core_old {
-    my $self        = shift;
-    my $author      = shift;
-    my $year        = shift;
-    my $bibtex_type = shift;
-    my $entry_type  = shift;
-    my $tag         = shift;
-    my $team        = shift;
-    my $visible     = shift // 0;
-    my $permalink   = shift;
-    my $hidden      = shift;
-    my $debug       = shift // 0;
+# Keep this for a while. Reason: see above (good for tests)
+# sub Fget_publications_core_old {
+#     my $self        = shift;
+#     my $author      = shift;
+#     my $year        = shift;
+#     my $bibtex_type = shift;
+#     my $entry_type  = shift;
+#     my $tag         = shift;
+#     my $team        = shift;
+#     my $visible     = shift // 0;
+#     my $permalink   = shift;
+#     my $hidden      = shift;
+#     my $debug       = shift // 0;
 
 
-    my $dbh = $self->app->db;
+#     my $dbh = $self->app->db;
 
-    my $team_obj = MTeam->static_get_by_name( $dbh, $team );
-    if ( !defined $team_obj ){
-        # no such master. Assume, that author id was given
-        $team_obj = MTeam->static_get( $dbh, $team );    
-    }
+#     my $team_obj = MTeam->static_get_by_name( $dbh, $team );
+#     if ( !defined $team_obj ){
+#         # no such master. Assume, that author id was given
+#         $team_obj = MTeam->static_get( $dbh, $team );    
+#     }
 
-    my $author_obj = MAuthor->static_get_by_master( $dbh, $author );
-    if ( !defined $author_obj ){
-        # no such master. Assume, that author id was given
-        $author_obj = MAuthor->static_get( $dbh, $author );    
-    }
+#     my $author_obj = MAuthor->static_get_by_master( $dbh, $author );
+#     if ( !defined $author_obj ){
+#         # no such master. Assume, that author id was given
+#         $author_obj = MAuthor->static_get( $dbh, $author );    
+#     }
 
-    my $tag_obj = MTag->static_get_by_name( $dbh, $tag );
-    if ( !defined $tag_obj ){
-        # no such master. Assume, that author id was given
-        $tag_obj = MTag->static_get( $dbh, $tag );    
-    }
+#     my $tag_obj = MTag->static_get_by_name( $dbh, $tag );
+#     if ( !defined $tag_obj ){
+#         # no such master. Assume, that author id was given
+#         $tag_obj = MTag->static_get( $dbh, $tag );    
+#     }
     
-    my $teamid = undef;
-    $teamid = $team_obj->{id} if defined $team_obj;    
+#     my $teamid = undef;
+#     $teamid = $team_obj->{id} if defined $team_obj;    
 
-    my $master_id = undef;
-    $master_id = $author_obj->{id} if defined $author_obj;
+#     my $master_id = undef;
+#     $master_id = $author_obj->{id} if defined $author_obj;
 
-    my $tagid = undef;
-    $tagid = $tag_obj->{id} if defined $tag_obj;
-
-    # $teamid    = undef unless defined $team;
-    # $master_id = undef unless defined $author or defined $author_obj;
-    # $tagid     = undef unless defined $tag;
+#     my $tagid = undef;
+#     $tagid = $tag_obj->{id} if defined $tag_obj;
 
 
-    my @entries = MEntry->static_get_filter(
-        $dbh,   $master_id, $year,    $bibtex_type, $entry_type,
-        $tagid, $teamid,    $visible, $permalink,   $hidden
-    );
+#     my @entries = MEntry->static_get_filter(
+#         $dbh,   $master_id, $year,    $bibtex_type, $entry_type,
+#         $tagid, $teamid,    $visible, $permalink,   $hidden
+#     );
 
-    if($debug == 1){
-        say "DB Input author = $author" if defined $author;
-        say "DB Input year = $year" if defined $year;
-        say "DB Input bibtex_type = $bibtex_type" if defined $bibtex_type;
-        say "DB Input entry_type = $entry_type" if defined $entry_type;
-        say "DB Input tag = $tag" if defined $tag;
-        say "DB Input team = $team" if defined $team;
-        say "DB Input visible = $visible" if defined $visible;
-        say "DB Input permalink = $permalink" if defined $permalink;
-        say "DB Input hidden = $hidden" if defined $hidden;
-        say "DB Input debug = $debug" if defined $debug;
-        say "DB Found ".scalar(@entries)." entries";
-    }
-
-    return @entries;
-}
+#     if($debug == 1){
+#         say "DB Input author = $author" if defined $author;
+#         say "DB Input year = $year" if defined $year;
+#         say "DB Input bibtex_type = $bibtex_type" if defined $bibtex_type;
+#         say "DB Input entry_type = $entry_type" if defined $entry_type;
+#         say "DB Input tag = $tag" if defined $tag;
+#         say "DB Input team = $team" if defined $team;
+#         say "DB Input visible = $visible" if defined $visible;
+#         say "DB Input permalink = $permalink" if defined $permalink;
+#         say "DB Input hidden = $hidden" if defined $hidden;
+#         say "DB Input debug = $debug" if defined $debug;
+#         say "DB Found ".scalar(@entries)." entries";
+#     }
+#     return @entries;
+# }
 ####################################################################################
 sub Fclean_ugly_bibtex_fields_for_all_entries {
-    my $dbh = shift;
 
-    my @entries = MEntry->static_all($dbh);
-    my $num_del = 0;
+    my $storage = StorageBase->get();
+    my @entries = $storage->entries_all;
+
+    my $num_cleaned_fields = 0;
     foreach my $e (@entries) {
-        $num_del = $num_del + $e->clean_ugly_bibtex_fields($dbh);
+        $num_cleaned_fields = $num_cleaned_fields + $e->clean_ugly_bibtex_fields();
     }
-    return $num_del;
+    return $num_cleaned_fields;
 }
 ####################################################################################
 sub Fhandle_author_uids_change_for_all_entries {
     my $dbh = shift;
+    my $create_authors = shift // 0;
 
     my $storage = StorageBase->get();
     my @all_entries = $storage->entries_all;
@@ -405,7 +400,7 @@ sub Fhandle_author_uids_change_for_all_entries {
     my $num_authors_created  = 0;
 
     foreach my $e (@all_entries) {
-        my $cre = $storage->add_entry_authors( $e, 0 );
+        my $cre = $storage->add_entry_authors( $e, $create_authors );
         $e->save($dbh);
 
         $num_authors_created  = $num_authors_created + $cre;
