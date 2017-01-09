@@ -73,34 +73,20 @@ sub register {
     );
 
 
-# TODO: Move all implementations to a separate files to avoid code redundancy! Here only function calls should be present, not theirs implementation
-
-    $app->helper(
-        get_rank_of_current_user => sub {
-            my $self = shift;
-            return 99 if $self->app->is_demo();
-
-            my $uname = shift || $app->session('user');
-            my $user_dbh = $app->db;
-
-            my $sth
-                = $user_dbh->prepare("SELECT rank FROM Login WHERE login=?");
-            $sth->execute($uname);
-            my $row  = $sth->fetchrow_hashref();
-            my $rank = $row->{rank};
-
-            $rank = 0 unless defined $rank;
-
-            return $rank;
-        }
-    );
-
     $app->helper(
         current_year => sub {
             my ($sec,  $min,  $hour, $mday, $mon,
                 $year, $wday, $yday, $isdst
             ) = localtime(time);
             return 1900 + $year;
+        }
+    );
+    $app->helper(
+        current_month => sub {
+            my ($sec,  $min,  $hour, $mday, $mon,
+                $year, $wday, $yday, $isdst
+            ) = localtime(time);
+            return $mon + 1;
         }
     );
 
@@ -119,14 +105,7 @@ sub register {
         }
     );
 
-    $app->helper(
-        current_month => sub {
-            my ($sec,  $min,  $hour, $mday, $mon,
-                $year, $wday, $yday, $isdst
-            ) = localtime(time);
-            return $mon + 1;
-        }
-    );
+
 
     $app->helper(
         can_delete_backup_helper => sub {
