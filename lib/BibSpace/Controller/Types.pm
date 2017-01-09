@@ -10,7 +10,6 @@ use 5.010;           #because of ~~
 use strict;
 use warnings;
 use DBI;
-use Set::Scalar;
 
 use BibSpace::Controller::Core;
 
@@ -63,13 +62,16 @@ sub manage {
     my $type = $self->param('type');
     my $dbh  = $self->app->db;
 
-    my @all_our_types      = get_all_our_types($dbh);
+    my @all_our_types        = get_all_our_types($dbh);
     my @all_bibtex_types      = get_all_bibtex_types($dbh);
     my @assigned_bibtex_types = get_bibtex_types_for_our_type( $dbh, $type );
 
-    my $set_unassigned_btypes
-        = Set::Scalar->new(@all_bibtex_types) - Set::Scalar->new(@assigned_bibtex_types);
-    my @unassigned_btypes = $set_unassigned_btypes->members;
+
+    # # cannot use objects as keysdue to stringification!
+    my %types_hash = map { $_ => 1 } @assigned_bibtex_types;
+    my @unassigned_btypes
+        = grep { not $types_hash{ $_ } } @all_bibtex_types;
+
 
     $self->stash(
         all_otypes        => \@all_our_types,

@@ -16,7 +16,6 @@ requires 'Scalar::Util' , '>= 0.0';
 requires 'utf8' , '>= 0.0';
 requires 'File::Slurp' , '>= 0.0';
 requires 'Exporter' , '>= 0.0';
-requires 'Set::Scalar' , '>= 0.0';
 requires 'Session::Token' , '>= 0.0';
 requires 'LWP::UserAgent' , '>= 0.0';
 requires 'Text::BibTeX' , '>= 0.0';

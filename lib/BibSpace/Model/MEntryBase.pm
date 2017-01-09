@@ -813,23 +813,6 @@ sub sort_by_year_month_modified_time {
 # $a->{modified_time} <=> $b->{modified_time}; # needs an extra lib, so we just compare ids as approximation
 }
 ####################################################################################
-sub static_get_unique_years_array {
-    my $self = shift;
-    my $dbh  = shift;
-
-#my @pubs = Fget_publications_main_hashed_args_only($self, {hidden => undef, visible => 1});
-    my @pubs
-        = MEntry->static_get_filter( $dbh, undef, undef, undef, undef, undef,
-        undef, 1, undef, undef );
-    my @years = map { $_->year } @pubs;
-
-    my $set = Set::Scalar->new(@years);
-    $set->delete('');
-    my @sorted_years = sort { $b <=> $a } $set->members;
-
-    return @sorted_years;
-}
-####################################################################################
 sub static_get_from_id_array {
     my $self             = shift;
     my $dbh              = shift;

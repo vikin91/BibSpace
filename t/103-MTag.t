@@ -9,9 +9,7 @@ my $dbh = $t_anyone->app->db;
 
 use BibSpace::Model::MTag;
 
-# use BibSpace::Controller::Set;
 use BibSpace::Controller::Core;
-use Set::Scalar;
 use Data::Dumper;
 use BibSpace::Model::MTagType;
 

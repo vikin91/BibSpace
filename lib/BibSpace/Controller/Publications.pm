@@ -22,10 +22,6 @@ use BibSpace::Model::MEntry;
 use BibSpace::Model::MTag;
 use BibSpace::Model::MTagType;
 
-# use BibSpace::Controller::Set;
-use BibSpace::Functions::FSet;
-
-use Set::Scalar;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

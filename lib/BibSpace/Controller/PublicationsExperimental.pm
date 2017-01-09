@@ -20,8 +20,6 @@ use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
 use BibSpace::Model::MEntry;
 
-# use BibSpace::Controller::Set
-    ;    # deprecated but needed so far. TODO: refactor this
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

@@ -11,7 +11,6 @@ use BibSpace::Controller::Core;
 use BibSpace::Controller::BackupFunctions;
 use BibSpace::Functions::FDB;
 
-use Set::Scalar;
 use Data::Dumper;
 
 my $t_anyone    = Test::Mojo->new('BibSpace');

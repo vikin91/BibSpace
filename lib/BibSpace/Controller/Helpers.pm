@@ -10,7 +10,6 @@ use 5.010;           #because of ~~
 use strict;
 use warnings;
 use DBI;
-use Set::Scalar;
 
 use Mojo::Redis2;
 

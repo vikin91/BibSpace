@@ -9,7 +9,6 @@ use BibSpace::Model::MTagType;
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FDB;
 use BibSpace::Controller::BackupFunctions;
-use Set::Scalar;
 use Data::Dumper;
 
 my $t_anyone    = Test::Mojo->new('BibSpace');
