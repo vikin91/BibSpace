@@ -75,32 +75,23 @@ sub register {
 
     $app->helper(
         current_year => sub {
-            my ($sec,  $min,  $hour, $mday, $mon,
-                $year, $wday, $yday, $isdst
-            ) = localtime(time);
-            return 1900 + $year;
+            return BibSpace::Controller::Core::get_current_year();
         }
     );
     $app->helper(
         current_month => sub {
-            my ($sec,  $min,  $hour, $mday, $mon,
-                $year, $wday, $yday, $isdst
-            ) = localtime(time);
-            return $mon + 1;
+            return BibSpace::Controller::Core::get_current_month();
         }
     );
 
     $app->helper(
         get_year_of_oldest_entry => sub {
             my $self = shift;
-            my $sth
-                = $self->app->db->prepare(
-                "SELECT MIN(year) as min FROM Entry")
-                or die $self->app->db->errstr;
-            $sth->execute();
-            my $row = $sth->fetchrow_hashref();
-            my $min = $row->{min};
-            return $min;
+
+            my @entryYears = map {$_->year} grep {defined $_->year} $self->storage->entries_all;
+            @entryYears = uniq @entryYears;
+            @entryYears = sort {$a <=> $b} @entryYears;
+            return $entryYears[0];
 
         }
     );

@@ -74,14 +74,14 @@ sub random_string {
 sub get_current_month {
     my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst )
         = localtime();
-    return $mon;
+    return ($mon + 1);
 }
 ################################################################################
 sub get_current_year {
     my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst )
         = localtime();
 
-    return $year + 1900;
+    return ($year + 1900);
 }
 ################################################################################
 sub get_month_numeric {
