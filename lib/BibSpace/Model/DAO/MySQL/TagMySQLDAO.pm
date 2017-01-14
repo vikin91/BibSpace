@@ -1,14 +1,14 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T17:18:02
-package BibSpace::Model::DAO::MySQL::TagMySQLDAO;
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:16
+package TagMySQLDAO;
 
 use namespace::autoclean;
 use Moose;
 use BibSpace::Model::DAO::Interface::ITagDAO;
 use BibSpace::Model::Tag;
-with 'BibSpace::Model::DAO::Interface::ITagDAO';
+with 'ITagDAO';
 
 # Inherited fields from BibSpace::Model::DAO::Interface::ITagDAO Mixin:
-# has 'logger' => ( is => 'ro', does => 'BibSpace::Model::ILogger', required => 1);
+# has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);
 
 =item all

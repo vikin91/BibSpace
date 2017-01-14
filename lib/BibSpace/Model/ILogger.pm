@@ -1,4 +1,4 @@
-package BibSpace::Model::ILogger;
+package ILogger;
 use Moose::Role;
 use DateTime;
 
@@ -49,3 +49,4 @@ sub error{
 }
 
 no Moose;
+1;

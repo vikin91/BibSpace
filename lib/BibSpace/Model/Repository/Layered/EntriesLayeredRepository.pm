@@ -1,9 +1,9 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T17:19:23
-package BibSpace::Model::Repository::Layered::EntriesLayeredRepository;
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:23
+package EntriesLayeredRepository;
 use namespace::autoclean;
 use Moose;
 require BibSpace::Model::Repository::Interface::IEntriesRepository;
-with 'BibSpace::Model::Repository::Interface::IEntriesRepository';
+with 'IEntriesRepository';
 use BibSpace::Model::Entry;
 use Try::Tiny; # for try/catch
 
@@ -21,7 +21,7 @@ sub _getReadBackend {
   my @backendsArray = $self->getBackendsArray;
   my $prioHash = shift @backendsArray;
   if( !$prioHash ){
-    die "".__PACKAGE__."->_getReadBackendType: backend confg hash for lowest prio (read) backend is not defined";
+    die "".__PACKAGE__."->_getReadBackendType: backend config hash for lowest prio (read) backend is not defined";
   }
   return $prioHash;
 }

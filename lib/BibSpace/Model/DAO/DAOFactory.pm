@@ -1,15 +1,16 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T17:18:02
-package BibSpace::Model::DAO::DAOFactory;
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:16
+package DAOFactory;
 
 use namespace::autoclean;
 use Moose;
+use BibSpace::Model::ILogger;
 use BibSpace::Model::DAO::MySQLDAOFactory;
 use BibSpace::Model::DAO::RedisDAOFactory;
 use BibSpace::Model::DAO::ArrayDAOFactory;
 
 # this class has logger, because it may want to log somethig as well 
 # thic code forces to instantiate the abstract factory first and then calling getInstance
-has 'logger' => ( is => 'ro', does => 'BibSpace::Model::ILogger', required => 1);
+has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 
 
 sub getInstance {

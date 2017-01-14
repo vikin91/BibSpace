@@ -97,8 +97,37 @@ sub startup {
     # StorageBase::load($self->app->db);
 
     use BibSpace::Model::DAO::DAOFactory;
+    use BibSpace::Model::Repository::RepositoryFactory;
+    use BibSpace::Model::SimpleLogger;
+    # this should be helper!
+    my $logger = SimpleLogger->new();
+    my %backendConfig = (
+        backends => [
+            { prio => 1, type => 'ArrayDAOFactory', handle => "NOHANDLE" },
+            # { prio => 2, type => 'RedisDAOFactory', handle => $redisHandle },
+            { prio => 2, type => 'MySQLDAOFactory', handle => $dbh },
+        ]
+    );
+    my $factory = RepositoryFactory->new(logger => $logger)->getInstance('LayeredRepositoryFactory',\%backendConfig);
 
+    my $erepo = $factory->getEntriesRepository();
+    $factory->getEntriesRepository();
+    $factory->getEntriesRepository();
+    $factory->getEntriesRepository();
 
+    my @allEntries = $erepo->all();
+
+    my $entry  = Entry->new( bib => "sth", year => 2012 );
+    my $entry2 = Entry->new( bib => "sth", year => 2011 );
+    my @entries = ( $entry, $entry2 );
+    $erepo->save(@entries);
+
+    my @someEntries = $erepo->filter( sub { $_->year == 2011 } );    #fake!
+    my $anEntry = $erepo->find( sub { $_->year == 2011 } );    #fake!
+
+    $logger->info("this is info");
+    $logger->warn("this is warning");
+    $logger->error("this is error");
     
     # my $en = MEntry->new();
 

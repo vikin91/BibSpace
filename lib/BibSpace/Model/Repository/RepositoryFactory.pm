@@ -1,5 +1,5 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T17:19:23
-package BibSpace::Model::Repository::RepositoryFactory;
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:23
+package RepositoryFactory;
 use namespace::autoclean;
 use Moose;
 use BibSpace::Model::ILogger;
@@ -7,7 +7,7 @@ require BibSpace::Model::Repository::LayeredRepositoryFactory;
 
 # this class has logger, because it may want to log somethig as well 
 # thic code forces to instantiate the abstract factory first and then calling getInstance
-has 'logger' => ( is => 'ro', does => 'BibSpace::Model::ILogger', required => 1);
+has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 
 =item _sortBackends 
     Sorts backends based on prio. Lower prio = more important for reading = probably faster backend.

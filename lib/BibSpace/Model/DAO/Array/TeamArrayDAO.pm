@@ -1,14 +1,14 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T17:18:02
-package BibSpace::Model::DAO::Array::TeamArrayDAO;
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:16
+package TeamArrayDAO;
 
 use namespace::autoclean;
 use Moose;
 use BibSpace::Model::DAO::Interface::ITeamDAO;
 use BibSpace::Model::Team;
-with 'BibSpace::Model::DAO::Interface::ITeamDAO';
+with 'ITeamDAO';
 
 # Inherited fields from BibSpace::Model::DAO::Interface::ITeamDAO Mixin:
-# has 'logger' => ( is => 'ro', does => 'BibSpace::Model::ILogger', required => 1);
+# has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);
 
 =item all

@@ -1,14 +1,14 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T17:18:02
-package BibSpace::Model::DAO::Redis::AuthorshipRedisDAO;
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:16
+package AuthorshipRedisDAO;
 
 use namespace::autoclean;
 use Moose;
 use BibSpace::Model::DAO::Interface::IAuthorshipDAO;
 use BibSpace::Model::Authorship;
-with 'BibSpace::Model::DAO::Interface::IAuthorshipDAO';
+with 'IAuthorshipDAO';
 
 # Inherited fields from BibSpace::Model::DAO::Interface::IAuthorshipDAO Mixin:
-# has 'logger' => ( is => 'ro', does => 'BibSpace::Model::ILogger', required => 1);
+# has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);
 
 =item all

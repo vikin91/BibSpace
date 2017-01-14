@@ -1,5 +1,5 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T17:18:02
-package BibSpace::Model::DAO::Interface::ILabelingDAO;
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:16
+package ILabelingDAO;
 
 use namespace::autoclean;
 use Moose::Role; # = this package (class) is an interface
@@ -15,7 +15,7 @@ requires 'filter';
 requires 'find';
 requires 'count';
 
-has 'logger' => ( is => 'ro', does => 'BibSpace::Model::ILogger', required => 1);
+has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # e.g. database connection handle
 has 'handle' => ( is => 'ro', required => 1);
 1;

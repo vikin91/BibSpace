@@ -1,5 +1,5 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T17:19:23
-package BibSpace::Model::Repository::Interface::IEntriesRepository;
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:23
+package IEntriesRepository;
 use namespace::autoclean;
 
 
@@ -20,15 +20,15 @@ use List::MoreUtils;
     }
 =cut
 has 'backendsConfigHash' => ( is => 'ro', isa => 'HashRef[ArrayRef[HashRef]]', coerce => 0, traits => [ 'Hash' ], required => 1 );
-has 'logger' => ( is => 'ro', does => 'BibSpace::Model::ILogger', required => 1);
+has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 
 # this parameter is lazy, because the builder routine depends on logger. Logger will be set as first (is non-lazy).
-has 'backendFactory'  => ( is => 'ro', isa => 'BibSpace::Model::DAO::DAOFactory', lazy => 1, builder => '_buildDAOFactory' );
+has 'backendFactory'  => ( is => 'ro', isa => 'DAOFactory', lazy => 1, builder => '_buildDAOFactory' );
 
 
 sub _buildDAOFactory{
     my $self = shift;
-    return BibSpace::Model::DAO::DAOFactory->new(logger => $self->logger);
+    return DAOFactory->new(logger => $self->logger);
 }
 
 sub getBackendsArray{
