@@ -6,6 +6,7 @@ use Moose;
 use BibSpace::Model::DAO::Interface::IEntryDAO;
 use BibSpace::Model::Entry;
 with 'IEntryDAO';
+use Try::Tiny;
 
 # Inherited fields from BibSpace::Model::DAO::Interface::IEntryDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
@@ -17,10 +18,74 @@ with 'IEntryDAO';
 sub all {
   my ($self) = @_;
   $self->logger->entering("","".__PACKAGE__."->all");
-  die "".__PACKAGE__."->all not implemented.";
+  my $dbh = $self->handle;
+  my $qry = "SELECT
+              id,
+              entry_type,
+              bibtex_key,
+              bibtex_type,
+              bib,
+              html,
+              html_bib,
+              abstract,
+              title,
+              hidden,
+              year,
+              month,
+              sort_month,
+              teams_str,
+              people_str,
+              tags_str,
+              creation_time,
+              modified_time,
+              need_html_regen
+          FROM Entry";
+    
+  my $sth;
+  try{
+      $sth= $dbh->prepare($qry);
+      $sth->execute();
+  }
+  catch{
+      my $trace = Devel::StackTrace->new;
+      $self->logger->error("\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n"); # like carp
+  };
+  my $dtPattern = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
 
-  # TODO: auto-generated method stub. Implement me!
+  my @objs;
+  while ( my $row = $sth->fetchrow_hashref() ) {
+      my $ct = $dtPattern->parse_datetime($row->{creation_time});
+      my $mt = $dtPattern->parse_datetime($row->{modified_time});
+      # set defaults
+      $ct = DateTime->now unless $ct;
+      $mt = DateTime->now unless $mt;
+      # say "MEntry->static_all: parsing creation_ and mod_time";
+
+      push @objs,
+          Entry->new(
+          id              => $row->{id},
+          entry_type      => $row->{entry_type},
+          bibtex_key      => $row->{bibtex_key},
+          _bibtex_type     => $row->{bibtex_type},
+          bib             => $row->{bib},
+          html            => $row->{html},
+          html_bib        => $row->{html_bib},
+          abstract        => $row->{abstract},
+          title           => $row->{title},
+          hidden          => $row->{hidden},
+          year            => $row->{year},
+          month           => $row->{month},
+          sort_month      => $row->{sort_month},
+          teams_str       => $row->{teams_str},
+          people_str      => $row->{people_str},
+          tags_str        => $row->{tags_str},
+          creation_time   => $ct,
+          modified_time   => $mt, 
+          need_html_regen => $row->{need_html_regen},
+          );
+  }
   $self->logger->exiting("","".__PACKAGE__."->all");
+  return @objs;
 }
 
 =item save

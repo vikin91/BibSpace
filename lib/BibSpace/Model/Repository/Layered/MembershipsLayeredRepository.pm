@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:23
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T19:21:59
 package MembershipsLayeredRepository;
 use namespace::autoclean;
 use Moose;
@@ -6,6 +6,7 @@ require BibSpace::Model::Repository::Interface::IMembershipsRepository;
 with 'IMembershipsRepository';
 use BibSpace::Model::Membership;
 use Try::Tiny; # for try/catch
+use List::MoreUtils qw(any uniq);
 
 
 =item _getReadBackend 
@@ -13,7 +14,6 @@ use Try::Tiny; # for try/catch
 =cut
 sub _getReadBackend {
   my $self = shift;
-  # here or before, the number of elements in $self->backendsConfigHash gets decreased
 
   if( !defined $self->backendsConfigHash ){
     die "".__PACKAGE__."->_getReadBackendType: backendsConfigHash is not defined";
@@ -24,6 +24,45 @@ sub _getReadBackend {
     die "".__PACKAGE__."->_getReadBackendType: backend config hash for lowest prio (read) backend is not defined";
   }
   return $prioHash;
+}
+
+=item _getBackendWithPrio 
+    Returns backend with given 'prio' value from $backendsConfigHash
+=cut
+sub _getBackendWithPrio {
+  my $self = shift;
+  my $prio = shift;
+
+  if( !defined $self->backendsConfigHash ){
+    die "".__PACKAGE__."->_getReadBackendType: backendsConfigHash is not defined";
+  }
+  my @backendsArray = $self->getBackendsArray;
+  my $prioHash = first {$_->prio == $prio} @backendsArray;
+  if( !$prioHash ){
+    die "".__PACKAGE__."->_getReadBackendType: backend config hash for prio '$prio' is not defined";
+  }
+  return $prioHash;
+}
+
+=item copy 
+    Copies all entries from backend with prio $fromLayer to backend with prio $toLayer
+=cut
+sub copy{
+    my ($self, $fromLayer, $toLayer) = @_;
+    $self->logger->entering("","".__PACKAGE__."->copy");
+    $self->logger->debug("Copying all data from layer $fromLayer to layer $toLayer.","".__PACKAGE__."->copy");
+
+    my @result = $self->backendFactory->getInstance( 
+        $self->_getBackendWithPrio($fromLayer)->{'type'},
+        $self->_getBackendWithPrio($fromLayer)->{'handle'} 
+    )->getEntryDao()->all();
+    
+    $self->backendFactory->getInstance( 
+        $self->_getBackendWithPrio($toLayer)->{'type'},
+        $self->_getBackendWithPrio($toLayer)->{'handle'}
+    )->getEntryDao()->save( @result );
+
+    $self->logger->exiting("","".__PACKAGE__."->copy");
 }
 
 
@@ -39,13 +78,15 @@ sub all {
 
     my $daoFactoryType = $self->_getReadBackend()->{'type'};
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
+    my @result;
     try{
-        $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getMembershipDao()->all();
+        @result = $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getMembershipDao()->all();
     }
     catch{
         print;
     };
     $self->logger->exiting("","".__PACKAGE__."->all");
+    return @result;
 }
 
 
@@ -158,16 +199,17 @@ sub filter {
     }
 
     # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
-
+    my @result;
     my $daoFactoryType = $self->_getReadBackend()->{'type'};
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
-        $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getMembershipDao()->filter( $coderef );
+        @result = $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getMembershipDao()->filter( $coderef );
     }
     catch{
         print;
     };
     $self->logger->exiting("","".__PACKAGE__."->filter");
+    return @result;
 }
 
 =item find
@@ -182,16 +224,17 @@ sub find {
     }
 
     # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
-
+    my @result;
     my $daoFactoryType = $self->_getReadBackend()->{'type'};
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
-        $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getMembershipDao()->find( $coderef );
+        @result = $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getMembershipDao()->find( $coderef );
     }
     catch{
         print;
     };
     $self->logger->exiting("","".__PACKAGE__."->find");
+    return @result;
 }
 
 =item count
@@ -206,16 +249,17 @@ sub count {
     }
 
     # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
-
+    my @result;
     my $daoFactoryType = $self->_getReadBackend()->{'type'};
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
-        $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getMembershipDao()->count( $coderef );
+        @result = $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getMembershipDao()->count( $coderef );
     }
     catch{
         print;
     };
     $self->logger->exiting("","".__PACKAGE__."->count");
+    return @result;
 }
 
 __PACKAGE__->meta->make_immutable;

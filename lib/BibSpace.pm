@@ -96,6 +96,8 @@ sub startup {
     # StorageBase::init();
     # StorageBase::load($self->app->db);
 
+    my @globalEntriesArray;
+
     use BibSpace::Model::DAO::DAOFactory;
     use BibSpace::Model::Repository::RepositoryFactory;
     use BibSpace::Model::SimpleLogger;
@@ -103,7 +105,7 @@ sub startup {
     my $logger = SimpleLogger->new();
     my %backendConfig = (
         backends => [
-            { prio => 1, type => 'ArrayDAOFactory', handle => "NOHANDLE" },
+            { prio => 1, type => 'ArrayDAOFactory', handle => \@globalEntriesArray },
             # { prio => 2, type => 'RedisDAOFactory', handle => $redisHandle },
             { prio => 2, type => 'MySQLDAOFactory', handle => $dbh },
         ]
@@ -111,23 +113,26 @@ sub startup {
     my $factory = RepositoryFactory->new(logger => $logger)->getInstance('LayeredRepositoryFactory',\%backendConfig);
 
     my $erepo = $factory->getEntriesRepository();
-    $factory->getEntriesRepository();
-    $factory->getEntriesRepository();
-    $factory->getEntriesRepository();
+    
+    $erepo->copy(2,1); # COPY from MySQL to Array
+    
 
     my @allEntries = $erepo->all();
+    $logger->debug( "ALL Entries: ".join(', ', map{$_->id} @allEntries ) );
+    @allEntries = $erepo->filter( sub{$_->id > 600} );
+    $logger->debug( "FILTERED Entries: ".join(', ', map{$_->id} @allEntries ) );
 
-    my $entry  = Entry->new( bib => "sth", year => 2012 );
-    my $entry2 = Entry->new( bib => "sth", year => 2011 );
-    my @entries = ( $entry, $entry2 );
-    $erepo->save(@entries);
+    # my $entry  = Entry->new( bib => "sth", year => 2012 );
+    # my $entry2 = Entry->new( bib => "sth", year => 2011 );
+    # my @entries = ( $entry, $entry2 );
+    # $erepo->save(@entries);
 
-    my @someEntries = $erepo->filter( sub { $_->year == 2011 } );    #fake!
-    my $anEntry = $erepo->find( sub { $_->year == 2011 } );    #fake!
+    # my @someEntries = $erepo->filter( sub { $_->year == 2011 } );    #fake!
+    # my $anEntry = $erepo->find( sub { $_->year == 2011 } );    #fake!
 
-    $logger->info("this is info");
-    $logger->warn("this is warning");
-    $logger->error("this is error");
+    # $logger->info("this is info");
+    # $logger->warn("this is warning");
+    # $logger->error("this is error");
     
     # my $en = MEntry->new();
 

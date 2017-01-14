@@ -11,16 +11,26 @@ with 'IEntryDAO';
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);
 
+
+sub BUILD {
+      my $self = shift;
+      # called after the default constructor
+      # $self->logger->error("CONSTRUCTOR","".__PACKAGE__."->BUILD");
+  }
+
 =item all
     Method documentation placeholder.
 =cut 
 sub all {
   my ($self) = @_;
   $self->logger->entering("","".__PACKAGE__."->all");
-  die "".__PACKAGE__."->all not implemented.";
+  
+  my @result = @{ $self->handle };
 
   # TODO: auto-generated method stub. Implement me!
   $self->logger->exiting("","".__PACKAGE__."->all");
+
+  return @result;
 }
 
 =item save
@@ -29,10 +39,13 @@ sub all {
 sub save {
   my ($self, @objects) = @_;
   $self->logger->entering("","".__PACKAGE__."->save");
-  die "".__PACKAGE__."->save not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+  
+  my $result = push $self->handle, @objects;
 
+  $self->logger->info("Saved $result objects.","".__PACKAGE__."->save");
   # TODO: auto-generated method stub. Implement me!
   $self->logger->exiting("","".__PACKAGE__."->save");
+  return $result;
 }
 
 =item update
@@ -73,15 +86,19 @@ sub exists {
 
 =item filter
     Method documentation placeholder.
+    It should be used like this:
+    @allEntries = $erepo->filter( sub{$_->id > 600} );
 =cut 
 sub filter {
   my ($self, $coderef) = @_;
   $self->logger->entering("","".__PACKAGE__."->filter");
   die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  die "".__PACKAGE__."->filter not implemented.";
+  
+  my @result = grep(&{ $coderef }, @{ $self->handle });
 
   # TODO: auto-generated method stub. Implement me!
   $self->logger->exiting("","".__PACKAGE__."->filter");
+  return @result;
 }
 
 =item find
@@ -91,10 +108,12 @@ sub find {
   my ($self, $coderef) = @_;
   $self->logger->entering("","".__PACKAGE__."->find");
   die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  die "".__PACKAGE__."->find not implemented.";
+  
+  my @result = first {$coderef} @{ $self->handle };
 
   # TODO: auto-generated method stub. Implement me!
   $self->logger->exiting("","".__PACKAGE__."->find");
+  return @result;
 }
 
 =item count
@@ -104,10 +123,12 @@ sub count {
   my ($self, $coderef) = @_;
   $self->logger->entering("","".__PACKAGE__."->count");
   die "".__PACKAGE__."->count incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  die "".__PACKAGE__."->count not implemented.";
+  
+  my @result = $self->filter($coderef);
 
   # TODO: auto-generated method stub. Implement me!
   $self->logger->exiting("","".__PACKAGE__."->count");
+  return scalar @result;
 }
 
 __PACKAGE__->meta->make_immutable;
