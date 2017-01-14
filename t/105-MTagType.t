@@ -3,8 +3,8 @@ use Test::More;
 use Test::Mojo;
 use Test::Exception;
 
-use BibSpace::Model::MTag;
-use BibSpace::Model::MTagType;
+use BibSpace::Model::M::MTag;
+use BibSpace::Model::M::MTagType;
 
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FDB;
@@ -29,8 +29,8 @@ $status
 is( $status, 1, "preparing DB for test" );
 
 
-require_ok "BibSpace::Model::MTagType";
-use_ok "BibSpace::Model::MTagType";
+require_ok "BibSpace::Model::M::MTagType";
+use_ok "BibSpace::Model::M::MTagType";
 
 
 subtest 'MTagType: basics 1' => sub {

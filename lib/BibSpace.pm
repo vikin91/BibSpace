@@ -10,12 +10,12 @@ use BibSpace::Controller::PublicationsExperimental;
 use BibSpace::Controller::PublicationsSEO;
 use BibSpace::Controller::Helpers;
 
-use BibSpace::Model::MUser;
+use BibSpace::Model::M::MUser;
 
 
-use BibSpace::Model::CMUsers;
-use BibSpace::Model::CMObjectStore;
-use BibSpace::Model::StorageBase;
+use BibSpace::Model::M::CMUsers;
+use BibSpace::Model::M::CMObjectStore;
+use BibSpace::Model::M::StorageBase;
 
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
@@ -93,9 +93,10 @@ sub startup {
     $self->setup_hooks;
 
     my $dbh = $self->app->db;
-    StorageBase::init();
-    StorageBase::load($self->app->db);
+    # StorageBase::init();
+    # StorageBase::load($self->app->db);
 
+    use BibSpace::Model::DAO::DAOFactory;
 
 
     
@@ -105,7 +106,7 @@ sub startup {
 
     # How I want to build the ***MySQL classes
     #
-    # use BibSpace::Model::MAuthorMySQL2;
+    # use BibSpace::Model::M::MAuthorMySQL2;
     # my $a1 = MAuthorMySQL->new(uid=>'sss');
     # my $a2 = MAuthorMySQL2->new(object => $a1);
 

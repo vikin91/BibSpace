@@ -7,14 +7,14 @@ my $self = $t_anyone->app;
 my $dbh = $t_anyone->app->db;
 
 
-use BibSpace::Model::MTag;
+use BibSpace::Model::M::MTag;
 
 use BibSpace::Controller::Core;
 use Data::Dumper;
-use BibSpace::Model::MTagType;
+use BibSpace::Model::M::MTagType;
 
-require_ok "BibSpace::Model::MTag";
-use_ok "BibSpace::Model::MTag";
+require_ok "BibSpace::Model::M::MTag";
+use_ok "BibSpace::Model::M::MTag";
 
 
 subtest 'MTag: basics 1: static_all' => sub {

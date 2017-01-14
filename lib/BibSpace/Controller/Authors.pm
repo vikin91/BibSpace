@@ -13,7 +13,7 @@ use strict;
 use warnings;
 use DBI;
 
-use BibSpace::Model::MAuthor;
+use BibSpace::Model::M::MAuthor;
 
 use BibSpace::Controller::Core;
 use BibSpace::Controller::Publications;

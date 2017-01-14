@@ -19,7 +19,7 @@ use BibSpace::Controller::BackupFunctions;
 
 use BibSpace::Functions::FPublications;
 
-use BibSpace::Model::MTagType;
+use BibSpace::Model::M::MTagType;
 
 use base 'Mojolicious::Plugin';
 

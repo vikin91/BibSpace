@@ -8,7 +8,7 @@ use File::Slurp;
 use Try::Tiny;
 
 use Data::Dumper;
-use BibSpace::Model::StorageBase;
+use BibSpace::Model::M::StorageBase;
 
 use Mojo::Base 'Mojolicious::Controller';
 use BibSpace::Controller::BackupFunctions;

@@ -15,10 +15,10 @@ my $self = $t_logged_in->app;
 
 my $dbh = $t_logged_in->app->db;
 
-use BibSpace::Model::MEntry;
+use BibSpace::Model::M::MEntry;
 use BibSpace::Functions::FPublications;
 use BibSpace::Controller::Core;
-use BibSpace::Model::StorageBase;
+use BibSpace::Model::M::StorageBase;
 
 $dbh->do('DELETE FROM Entry;');
 my $storage = StorageBase->get();

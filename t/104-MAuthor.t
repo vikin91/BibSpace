@@ -3,9 +3,9 @@ use Test::More;
 use Test::Mojo;
 use Test::Exception;
 
-use BibSpace::Model::MAuthor;
-use BibSpace::Model::MTeam;
-use BibSpace::Model::MEntry;
+use BibSpace::Model::M::MAuthor;
+use BibSpace::Model::M::MTeam;
+use BibSpace::Model::M::MEntry;
 
 use BibSpace::Controller::Core;
 use BibSpace::Controller::BackupFunctions;

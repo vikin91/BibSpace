@@ -12,7 +12,7 @@ use Time::Piece;
 use DBI;
 
 use BibSpace::Controller::Core;
-use BibSpace::Model::MEntry;
+use BibSpace::Model::M::MEntry;
 
 use Exporter;
 our @ISA = qw( Exporter );

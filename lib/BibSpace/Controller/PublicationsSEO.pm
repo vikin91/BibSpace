@@ -16,7 +16,7 @@ use Encode;
 
 use BibSpace::Controller::Core;            # ok
 use BibSpace::Functions::FPublications;    #ok
-use BibSpace::Model::MEntry;               # ok
+use BibSpace::Model::M::MEntry;               # ok
 use BibSpace::Controller::Publications;    # ok
 
 use Mojo::Base 'Mojolicious::Controller';

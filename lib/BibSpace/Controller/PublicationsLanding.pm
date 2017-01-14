@@ -19,8 +19,8 @@ use Mojo::Redis2;
 
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
-use BibSpace::Model::MEntry;
-use BibSpace::Model::MTag;
+use BibSpace::Model::M::MEntry;
+use BibSpace::Model::M::MTag;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

@@ -8,7 +8,7 @@ my $dbh = $t_anyone->app->db;
 
 
 
-use BibSpace::Model::MTagCloud;
+use BibSpace::Model::M::MTagCloud;
 use BibSpace::Controller::Core; # for random string
 use Data::Dumper;
 

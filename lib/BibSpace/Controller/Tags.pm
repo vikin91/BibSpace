@@ -17,9 +17,9 @@ use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
 use BibSpace::Functions::FTags;
 
-use BibSpace::Model::MTag;
-use BibSpace::Model::MTagType;
-use BibSpace::Model::MTagCloud;
+use BibSpace::Model::M::MTag;
+use BibSpace::Model::M::MTagType;
+use BibSpace::Model::M::MTagCloud;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

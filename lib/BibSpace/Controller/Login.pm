@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
 use BibSpace::Functions::FDB;
-use BibSpace::Model::MUser;
+use BibSpace::Model::M::MUser;
 
 use WWW::Mechanize;
 use Data::Dumper;

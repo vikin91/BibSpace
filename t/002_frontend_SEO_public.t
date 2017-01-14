@@ -20,11 +20,11 @@ $t_anyone->ua->max_redirects(10);
 $t_anyone->ua->inactivity_timeout(3600);
 my $dbh = $t_logged_in->app->db;
 
-use BibSpace::Model::MEntry;
+use BibSpace::Model::M::MEntry;
 use BibSpace::Functions::FPublications;
 use BibSpace::Controller::Core;
 
-use BibSpace::Model::StorageBase;
+use BibSpace::Model::M::StorageBase;
 ####################################################################
 subtest 'PublicationsSEO: public functions' => sub {
 

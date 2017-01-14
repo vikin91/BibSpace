@@ -5,7 +5,7 @@ use Test::Mojo;
 
 use BibSpace;
 use BibSpace::Controller::Core;
-use BibSpace::Model::MTagType;
+use BibSpace::Model::M::MTagType;
 
 
 my $t_anyone = Test::Mojo->new('BibSpace');

@@ -16,7 +16,7 @@ $t_anyone->ua->inactivity_timeout(3600);
 $t_anyone->ua->max_redirects(10);
 
 
-use BibSpace::Model::MTeam;
+use BibSpace::Model::M::MTeam;
 
 
 my @all_teams = MTeam->static_all($dbh);

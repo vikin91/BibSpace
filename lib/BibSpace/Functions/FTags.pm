@@ -12,8 +12,8 @@ use Time::Piece;
 use DBI;
 
 use BibSpace::Controller::Core;
-use BibSpace::Model::MEntry;
-use BibSpace::Model::MTag;
+use BibSpace::Model::M::MEntry;
+use BibSpace::Model::M::MTag;
 
 use Exporter;
 our @ISA = qw( Exporter );

@@ -6,7 +6,7 @@ my $t_anyone = Test::Mojo->new('BibSpace');
 my $self     = $t_anyone->app;
 my $dbh      = $t_anyone->app->db;
 
-use BibSpace::Model::MTeam;
+use BibSpace::Model::M::MTeam;
 
 use BibSpace::Controller::Core;
 use Data::Dumper;
