@@ -111,6 +111,16 @@ sub setup_repositories {
 
     use BibSpace::Model::SmartArray;
     my $globalEntriesArray = SmartArray->new;
+
+    # my $sa = SmartArray->new;
+
+    # $sa->add(Author->new(uid=>"henry", idProvider => IntegerUidProvider->new()) );
+    # $sa->add(Author->new(uid=>"john", idProvider => IntegerUidProvider->new()) );
+    # $app->logger->debug( Dumper $sa );
+    # $app->logger->debug( Dumper $sa->all("Author") );
+
+
+
     my %backendConfig = (
         idProviderType => 'IntegerUidProvider',
         backends => [ 
@@ -130,15 +140,18 @@ sub setup_repositories {
     # or maybe the repositories should be made global as helpers
     
     $erepo->copy(2,1); # COPY from MySQL to Array
+    my @allEntries = $erepo->all();
+    use Data::Dumper;
+    # $app->logger->debug( "ALL Entries: ". Dumper @allEntries );
+    $app->logger->debug( "ALL Entries: ".join(', ', map{$_->id} @allEntries ) );
 
-        # I don't like the approach with idProvider that comes from the factory
+    # I don't like the approach with idProvider that comes from the factory
     # But it is necessary, as the new IDs need to be registered once they are read from DB (or any other backend)
-    my $author = Author->new( idProvider=>$factory->idProviderAuthor, id => 5, uid => "sth", name => 'Henry' );
-    $arepo->save($author);
+    # my $author = Author->new( idProvider=>$factory->idProviderAuthor, id => 5, uid => "sth", name => 'Henry' );
+    # $arepo->save($author);
     
 
-    # my @allEntries = $erepo->all();
-    # # $logger->debug( "ALL Entries: ".join(', ', map{$_->uid} @allEntries ) );
+
     # # @allEntries = $erepo->filter( sub{$_->id > 600} ); 
     # # $logger->debug( "FILTERED Entries: ".join(', ', map{$_->id} @allEntries ) );
 
