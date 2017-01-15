@@ -1,5 +1,5 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
-package IExceptionsRepository;
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T14:12:39
+package IRepository;
 use namespace::autoclean;
 
 
@@ -19,11 +19,11 @@ use List::MoreUtils;
       ]
     }
 =cut
-has 'backendsConfigHash' => ( is => 'ro', isa => 'HashRef[ArrayRef[HashRef]]', coerce => 0, traits => [ 'Hash' ], required => 1 );
-has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
-
+has 'backendsConfigHash' => ( is => 'ro', isa => 'HashRef', coerce => 0, traits => [ 'Hash' ], required => 1 );
 # this parameter is lazy, because the builder routine depends on logger. Logger will be set as first (is non-lazy).
-has 'backendFactory'  => ( is => 'ro', isa => 'DAOFactory', lazy => 1, builder => '_buildDAOFactory' );
+has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
+has 'idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1, lazy => 0 );
+has 'backendDaoFactory'  => ( is => 'ro', isa => 'DAOFactory', lazy => 1, builder => '_buildDAOFactory' );
 
 requires 'all';
 requires 'count';

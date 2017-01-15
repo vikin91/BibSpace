@@ -34,18 +34,18 @@ my $dtPattern
 
 sub _generateUIDEntry {
     my $self = shift;
-
-# call here a general entity, that will give this object a nice, App-unique Integer ID
     if ( defined $self->dbid and $self->dbid > 0 ) {
         my $uid = $self->dbid;
-        IntegerUidProvider->registerUID(__PACKAGE__, $uid);
+        $self->idProvider->registerUID($uid);
         return $uid;
     }
     else {
-        return IntegerUidProvider->generateUID(__PACKAGE__);
+        return $self->idProvider->generateUID();
     }
 }
 
+# id deprecated - old mysql id
+has 'idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1, lazy => 0, traits  => ['DoNotSerialize'] );
 # id deprecated - old mysql id
 has 'id' => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
 
@@ -82,6 +82,7 @@ has 'shall_update_modified_time' =>
 has 'creation_time' => (
     is      => 'rw',
     isa     => 'DateTime',
+    traits  => ['DoNotSerialize'],
     default => sub {
         my $dt = DateTime->now;
         say "Setting default MEntry->creation_time";
@@ -94,10 +95,9 @@ has 'creation_time' => (
 has 'modified_time' => (
     is      => 'rw',
     isa     => 'DateTime',
+    traits  => ['DoNotSerialize'],
     default => sub {
-        my $dt = $dtPattern->parse_datetime('1970-01-01 00:00:00');
-        say "Setting default MEntry->modified_time";
-        return $dt;
+        $dtPattern->parse_datetime('1970-01-01 00:00:00');
     },
 
     # coerce => 1
@@ -209,6 +209,11 @@ sub replaceFromStorage {
 }
 ####################################################################################
 sub toString {
+    my $self = shift;
+    return $self->freeze();
+}
+####################################################################################
+sub toStringShort {
     my $self = shift;
     my $str;
     $str .= "MEntry id " . $self->id;

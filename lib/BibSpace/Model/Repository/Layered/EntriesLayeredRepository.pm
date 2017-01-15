@@ -1,9 +1,9 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T14:12:39
 package EntriesLayeredRepository;
 use namespace::autoclean;
 use Moose;
-require BibSpace::Model::Repository::Interface::IEntriesRepository;
-with 'IEntriesRepository';
+require BibSpace::Model::Repository::Interface::IRepository;
+with 'IRepository';
 use BibSpace::Model::Entry;
 use Try::Tiny; # for try/catch
 use List::Util qw(first);
@@ -51,21 +51,21 @@ sub _getBackendWithPrio {
 sub copy{
     my ($self, $fromLayer, $toLayer) = @_;
     $self->logger->entering("","".__PACKAGE__."->copy");
-    $self->logger->debug("Copying all data from layer $fromLayer to layer $toLayer.","".__PACKAGE__."->copy");
+    $self->logger->debug("Copying all Entry from layer $fromLayer to layer $toLayer.","".__PACKAGE__."->copy");
 
-    my @resultRead = $self->backendFactory->getInstance( 
+    my @resultRead = $self->backendDaoFactory->getInstance( 
         $self->_getBackendWithPrio($fromLayer)->{'type'},
         $self->_getBackendWithPrio($fromLayer)->{'handle'} 
-    )->getEntryDao()->all();
+    )->getEntryDao($self->idProvider)->all();
 
-    $self->logger->debug(scalar(@resultRead)." entries read from layer $fromLayer.","".__PACKAGE__."->copy");
+    $self->logger->debug(scalar(@resultRead)." Entry read from layer $fromLayer.","".__PACKAGE__."->copy");
     
-    my $resultSave = $self->backendFactory->getInstance( 
+    my $resultSave = $self->backendDaoFactory->getInstance( 
         $self->_getBackendWithPrio($toLayer)->{'type'},
         $self->_getBackendWithPrio($toLayer)->{'handle'}
-    )->getEntryDao()->save( @resultRead );
+    )->getEntryDao($self->idProvider)->save( @resultRead );
 
-    $self->logger->debug(" $resultSave entries saved to layer $toLayer.","".__PACKAGE__."->copy");
+    $self->logger->debug(" $resultSave Entry saved to layer $toLayer.","".__PACKAGE__."->copy");
 
     $self->logger->exiting("","".__PACKAGE__."->copy");
 }
@@ -84,9 +84,9 @@ sub all {
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     my $result;
     try{
-        return $self->backendFactory
+        return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getEntryDao()
+            ->getEntryDao($self->idProvider)
             ->all();
     }
     catch{
@@ -106,9 +106,9 @@ sub count {
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     my $result;
     try{
-        return $self->backendFactory
+        return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getEntryDao()
+            ->getEntryDao($self->idProvider)
             ->count();
     }
     catch{
@@ -128,9 +128,9 @@ sub empty {
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     my $result;
     try{
-        return $self->backendFactory
+        return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getEntryDao()
+            ->getEntryDao($self->idProvider)
             ->empty();
     }
     catch{
@@ -153,9 +153,9 @@ sub exists {
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     my $result;
     try{
-        return $self->backendFactory
+        return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getEntryDao()
+            ->getEntryDao($self->idProvider)
             ->exists($obj);
     }
     catch{
@@ -180,7 +180,9 @@ sub save {
         my $daoFactoryType = $backendDAO->{'type'};
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
-            $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getEntryDao()->save( @objects );
+            $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
+              ->getEntryDao($self->idProvider)
+              ->save( @objects );
         }
         catch{
             print;
@@ -202,7 +204,9 @@ sub update {
         my $daoFactoryType = $backendDAO->{'type'};
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
-            $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getEntryDao()->update( @objects );
+            $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
+              ->getEntryDao($self->idProvider)
+              ->update( @objects );
         }
         catch{
             print;
@@ -224,7 +228,9 @@ sub delete {
         my $daoFactoryType = $backendDAO->{'type'};
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
-            $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getEntryDao()->delete( @objects );
+            $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
+              ->getEntryDao($self->idProvider)
+              ->delete( @objects );
         }
         catch{
             print;
@@ -251,7 +257,9 @@ sub filter {
     my $daoFactoryType = $self->_getReadBackend()->{'type'};
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
-        return $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getEntryDao()->filter( $coderef );
+        return $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
+            ->getEntryDao($self->idProvider)
+            ->filter( $coderef );
     }
     catch{
         print;
@@ -274,7 +282,9 @@ sub find {
     my $daoFactoryType = $self->_getReadBackend()->{'type'};
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
-        return $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getEntryDao()->find( $coderef );
+        return $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
+            ->getEntryDao($self->idProvider)
+            ->find( $coderef );
     }
     catch{
         print;

@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T14:22:05
 package DAOFactory;
 
 use namespace::autoclean;

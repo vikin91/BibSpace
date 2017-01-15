@@ -27,6 +27,7 @@ my $vars = {
     header         => $header,
     app_prefix => 'BibSpace::Model::',
     logger_interface => 'ILogger',
+    idProvider_interface => 'IUidProvider',
     repo_package_prefix => 'BibSpace::Model::Repository::',
     dao_package_prefix => 'BibSpace::Model::DAO::',
     # plural and singular
@@ -135,7 +136,9 @@ has 'logger' => ( is => 'ro', does => '[% logger_interface %]', required => 1);
 [% FOREACH entity = business_entities_hash.keys -%]
 sub get[% entity %]Dao {
     my \$self = shift;
-    return [% entity %][% backend %]DAO->new( logger=>\$self->logger, handle => \$self->handle );
+    my \$idProvider = shift;
+    die "".__PACKAGE__."->get[% entity %]Dao MUST be called with valid idProvider!" if !defined \$idProvider;
+    return [% entity %][% backend %]DAO->new( idProvider=> \$idProvider, logger=>\$self->logger, handle => \$self->handle );
 }
 [% END -%]
 __PACKAGE__->meta->make_immutable;
@@ -149,11 +152,10 @@ printToFile( "$filePackage.pm", $backendDaoFactory, $vars );
 
 ################# DAO BUSINESS ENTITY DAO INTERFACE
 
-foreach my $entity ( keys %{ $vars->{business_entities_hash} } ){
-  my $package     = "I"."$entity"."DAO";
+{
+  my $package     = "IDAO";
   my $filePackage = "$vars->{dao_package_prefix}Interface::$package";
   my $entityDaoInterface = <<CUT;
-[% SET entity = '$entity' -%]
 [% SET package = '$package' -%]
 [% header %]
 package [% package %];
@@ -170,6 +172,7 @@ requires '[% method %]';
 has 'logger' => ( is => 'ro', does => '[% logger_interface %]', required => 1);
 # e.g. database connection handle
 has 'handle' => ( is => 'ro', required => 1);
+has 'idProvider' => ( is => 'ro', does => '[% idProvider_interface %]', required => 1);
 1;
 CUT
 
@@ -191,12 +194,12 @@ package [% package %];
 
 use namespace::autoclean;
 use Moose;
-use [% dao_package_prefix %]Interface::I[% entity %]DAO;
+use [% dao_package_prefix %]Interface::IDAO;
 use [% app_prefix %][% entity %];
-with 'I[% entity %]DAO';
+with 'IDAO';
 use Try::Tiny;
 
-# Inherited fields from [% dao_package_prefix %]Interface::I[% entity %]DAO Mixin:
+# Inherited fields from [% dao_package_prefix %]Interface::IDAO Mixin:
 # has 'logger' => ( is => 'ro', does => '[% logger_interface %]', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);
 
@@ -278,7 +281,7 @@ CUT
 
 
 
-################# ABSTRACT FACTORY
+################# ABSTRACT REPOSITORY FACTORY
 {
 my $package        = "RepositoryFactory";
 my $filePackage        = "$vars->{repo_package_prefix}$package";
@@ -320,13 +323,13 @@ sub getInstance {
 
     \$backendsConfigHash = \$self->_sortBackends(\$backendsConfigHash);
 
+    my \$concreteFactoryClass = \$factoryType;
     try{
-        my \$class = \$factoryType;
-        Class::Load::load_class(\$class);
-        return \$class->new(logger=> \$self->logger)->getInstance( \$backendsConfigHash );
+        Class::Load::load_class(\$concreteFactoryClass);
+        return \$concreteFactoryClass->new(logger=> \$self->logger)->getInstance( \$backendsConfigHash );
     }
     catch{
-        die "Requested unknown type of RepositoryFactory: '\$factoryType'.";
+        die "Requested unknown type of RepositoryFactory: '\$concreteFactoryClass'.";
     };
 }
 __PACKAGE__->meta->make_immutable;
@@ -335,7 +338,7 @@ no Moose;
 CUT
 printToFile( "$filePackage.pm", $absRepoFactory, $vars );
 }
-################# CONCRETE FACTORY
+################# CONCRETE REPOSITORY FACTORY
 
 foreach my $repoType ( @{ $vars->{repository_types} } ) {
     my $package        = "$repoType" . "RepositoryFactory";
@@ -348,10 +351,10 @@ package [% package %];
 use namespace::autoclean;
 use Moose;
 use MooseX::ClassAttribute;
+use Try::Tiny;
 
-[% FOREACH entityPair IN business_entities_hash.pairs -%]
-use [% repo_package_prefix %]Interface::I[% entityPair.value %]Repository;
-[% END -%]
+use [% app_prefix %]IUidProvider;
+use [% repo_package_prefix %]Interface::IRepository;
 [% FOREACH entityPair IN business_entities_hash.pairs -%]
 use [% repo_package_prefix %][% backend %]::[% entityPair.value %][% backend %]Repository;
 [% END -%]
@@ -365,7 +368,10 @@ has 'logger' => ( is => 'ro', does => '[% logger_interface %]', required => 1);
 # This is important to guanartee, that there is only one reposiotory per system.
 # Method getxxxRepostory guarantees that defined field will not be overwritten
 [% FOREACH entityPair IN business_entities_hash.pairs -%]
-class_has 'instance[% entityPair.value %]Repo' => ( is => 'rw', does => 'Maybe[I[% entityPair.value %]Repository]', default => undef);
+has 'instance[% entityPair.value %]Repo' => ( is => 'rw', does => 'Maybe[IRepository]', default => undef);
+[% END -%]
+[% FOREACH entityPair IN business_entities_hash.pairs -%]
+has 'idProvider[% entityPair.key %]' => ( is => 'rw', does => 'Maybe[IUidProvider]', default => undef);
 [% END -%]
 
 =item getInstance 
@@ -386,11 +392,24 @@ sub getInstance {
 [% FOREACH entityPair IN business_entities_hash.pairs -%]
 sub get[% entityPair.value %]Repository {
     my \$self = shift;
-
+    if( !defined \$self->idProvider[% entityPair.key %] ){
+        \$self->logger->debug("Initializing instance of idProvider[% entityPair.key %].", "".__PACKAGE__."->get[% entityPair.value %]Repository");
+        my \$idProviderTypeClass = \$self->backendsConfigHash->{'idProviderType'};
+        try{
+            Class::Load::load_class(\$idProviderTypeClass);
+            my \$providerInstance = \$idProviderTypeClass->new();
+            \$self->idProvider[% entityPair.key %](\$providerInstance);
+        }
+        catch{
+            \$self->logger->error("Requested unknown type of [% idProvider_interface %] : '\$idProviderTypeClass'.", "".__PACKAGE__."->get[% entityPair.value %]Repository");
+            die "Requested unknown type of [% idProvider_interface %] : '\$idProviderTypeClass'.";
+        };
+    }
     if( !defined \$self->instance[% entityPair.value %]Repo ){
-        \$self->logger->debug("Initializing filed instance[% entityPair.value %]Repo.", "".__PACKAGE__."->[% method %]");
+        \$self->logger->debug("Initializing field instance[% entityPair.value %]Repo.", "".__PACKAGE__."->get[% entityPair.value %]Repository");
         \$self->instance[% entityPair.value %]Repo(
             [% entityPair.value %][% backend %]Repository->new( 
+                idProvider => \$self->idProvider[% entityPair.key %],
                 logger => \$self->logger,
                 backendsConfigHash => \$self->backendsConfigHash 
             )
@@ -409,11 +428,11 @@ CUT
 
 #################  REPOSITORY INTERFACE
 
-foreach my $entity ( keys %{ $vars->{business_entities_hash} } ) {
-    my $package        = "I$vars->{business_entities_hash}->{$entity}Repository";
-    my $filePackage        = "$vars->{repo_package_prefix}Interface::$package";
-    my $entityRespositoryInterface = <<CUT;
-[% SET entity = '$entity' -%]
+# foreach my $entity ( keys %{ $vars->{business_entities_hash} } ) 
+{
+my $package        = "IRepository";
+my $filePackage        = "$vars->{repo_package_prefix}Interface::$package";
+my $entityRespositoryInterface = <<CUT;
 [% SET package = '$package' -%]
 [% SET DAOAbstractFactoryPackageName = '$DAOAbstractFactoryPackageName' -%]
 [% SET DAOAbstractFactoryPackagePath = '$DAOAbstractFactoryPackagePath' -%]
@@ -441,11 +460,11 @@ use List::MoreUtils;
       ]
     }
 =cut
-has 'backendsConfigHash' => ( is => 'ro', isa => 'HashRef[ArrayRef[HashRef]]', coerce => 0, traits => [ 'Hash' ], required => 1 );
-has 'logger' => ( is => 'ro', does => '[% logger_interface %]', required => 1);
-
+has 'backendsConfigHash' => ( is => 'ro', isa => 'HashRef', coerce => 0, traits => [ 'Hash' ], required => 1 );
 # this parameter is lazy, because the builder routine depends on logger. Logger will be set as first (is non-lazy).
-has 'backendFactory'  => ( is => 'ro', isa => '[% DAOAbstractFactoryPackageName %]', lazy => 1, builder => '_buildDAOFactory' );
+has 'logger' => ( is => 'ro', does => '[% logger_interface %]', required => 1);
+has 'idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1, lazy => 0 );
+has 'backendDaoFactory'  => ( is => 'ro', isa => '[% DAOAbstractFactoryPackageName %]', lazy => 1, builder => '_buildDAOFactory' );
 
 [% FOREACH method = methods_all -%]
 requires '[% method %]';
@@ -485,8 +504,8 @@ foreach my $backend ( @{ $vars->{repository_types} } ) {
 package [% package %];
 use namespace::autoclean;
 use Moose;
-require [% repo_package_prefix %]Interface::I[% business_entities_hash.$entity %]Repository;
-with 'I[% business_entities_hash.$entity %]Repository';
+require [% repo_package_prefix %]Interface::IRepository;
+with 'IRepository';
 use [% app_prefix %][% entity %];
 use Try::Tiny; # for try/catch
 use List::Util qw(first);
@@ -534,21 +553,21 @@ sub _getBackendWithPrio {
 sub copy{
     my (\$self, \$fromLayer, \$toLayer) = \@_;
     \$self->logger->entering("","".__PACKAGE__."->copy");
-    \$self->logger->debug("Copying all data from layer \$fromLayer to layer \$toLayer.","".__PACKAGE__."->copy");
+    \$self->logger->debug("Copying all [% entity %] from layer \$fromLayer to layer \$toLayer.","".__PACKAGE__."->copy");
 
-    my \@resultRead = \$self->backendFactory->getInstance( 
+    my \@resultRead = \$self->backendDaoFactory->getInstance( 
         \$self->_getBackendWithPrio(\$fromLayer)->{'type'},
         \$self->_getBackendWithPrio(\$fromLayer)->{'handle'} 
-    )->getEntryDao()->all();
+    )->get[% entity %]Dao(\$self->idProvider)->all();
 
-    \$self->logger->debug(scalar(\@resultRead)." entries read from layer \$fromLayer.","".__PACKAGE__."->copy");
+    \$self->logger->debug(scalar(\@resultRead)." [% entity %] read from layer \$fromLayer.","".__PACKAGE__."->copy");
     
-    my \$resultSave = \$self->backendFactory->getInstance( 
+    my \$resultSave = \$self->backendDaoFactory->getInstance( 
         \$self->_getBackendWithPrio(\$toLayer)->{'type'},
         \$self->_getBackendWithPrio(\$toLayer)->{'handle'}
-    )->getEntryDao()->save( \@resultRead );
+    )->get[% entity %]Dao(\$self->idProvider)->save( \@resultRead );
 
-    \$self->logger->debug(" \$resultSave entries saved to layer \$toLayer.","".__PACKAGE__."->copy");
+    \$self->logger->debug(" \$resultSave [% entity %] saved to layer \$toLayer.","".__PACKAGE__."->copy");
 
     \$self->logger->exiting("","".__PACKAGE__."->copy");
 }
@@ -568,9 +587,9 @@ sub [% method %] {
     my \$daoBackendHandle = \$self->_getReadBackend()->{'handle'};
     my \$result;
     try{
-        return \$self->backendFactory
+        return \$self->backendDaoFactory
             ->getInstance( \$daoFactoryType, \$daoBackendHandle )
-            ->get[% entity %]Dao()
+            ->get[% entity %]Dao(\$self->idProvider)
             ->[% method %]();
     }
     catch{
@@ -595,9 +614,9 @@ sub [% method %] {
     my \$daoBackendHandle = \$self->_getReadBackend()->{'handle'};
     my \$result;
     try{
-        return \$self->backendFactory
+        return \$self->backendDaoFactory
             ->getInstance( \$daoFactoryType, \$daoBackendHandle )
-            ->get[% entity %]Dao()
+            ->get[% entity %]Dao(\$self->idProvider)
             ->[% method %](\$obj);
     }
     catch{
@@ -624,7 +643,9 @@ sub [% method %] {
         my \$daoFactoryType = \$backendDAO->{'type'};
         my \$daoBackendHandle = \$backendDAO->{'handle'};
         try{
-            \$self->backendFactory->getInstance( \$daoFactoryType, \$daoBackendHandle )->get[% entity %]Dao()->[% method %]( \@objects );
+            \$self->backendDaoFactory->getInstance( \$daoFactoryType, \$daoBackendHandle )
+              ->get[% entity %]Dao(\$self->idProvider)
+              ->[% method %]( \@objects );
         }
         catch{
             print;
@@ -653,7 +674,9 @@ sub [% method %] {
     my \$daoFactoryType = \$self->_getReadBackend()->{'type'};
     my \$daoBackendHandle = \$self->_getReadBackend()->{'handle'};
     try{
-        return \$self->backendFactory->getInstance( \$daoFactoryType, \$daoBackendHandle )->get[% entity %]Dao()->[% method %]( \$coderef );
+        return \$self->backendDaoFactory->getInstance( \$daoFactoryType, \$daoBackendHandle )
+            ->get[% entity %]Dao(\$self->idProvider)
+            ->[% method %]( \$coderef );
     }
     catch{
         print;

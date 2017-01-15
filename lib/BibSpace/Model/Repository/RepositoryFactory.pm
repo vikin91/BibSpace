@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T14:12:39
 package RepositoryFactory;
 use namespace::autoclean;
 use Moose;
@@ -32,13 +32,13 @@ sub getInstance {
 
     $backendsConfigHash = $self->_sortBackends($backendsConfigHash);
 
+    my $concreteFactoryClass = $factoryType;
     try{
-        my $class = $factoryType;
-        Class::Load::load_class($class);
-        return $class->new(logger=> $self->logger)->getInstance( $backendsConfigHash );
+        Class::Load::load_class($concreteFactoryClass);
+        return $concreteFactoryClass->new(logger=> $self->logger)->getInstance( $backendsConfigHash );
     }
     catch{
-        die "Requested unknown type of RepositoryFactory: '$factoryType'.";
+        die "Requested unknown type of RepositoryFactory: '$concreteFactoryClass'.";
     };
 }
 __PACKAGE__->meta->make_immutable;

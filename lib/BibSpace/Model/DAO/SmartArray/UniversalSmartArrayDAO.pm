@@ -1,16 +1,13 @@
 # This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
-package EntrySmartArrayDAO;
+package UniversalSmartArrayDAO;
 
 use namespace::autoclean;
 use Moose;
-use BibSpace::Model::DAO::Interface::IEntryDAO;
-use BibSpace::Model::Entry;
-with 'IEntryDAO';
+use BibSpace::Model::DAO::Interface::IDAO;
+with 'IDAO';
 use Try::Tiny;
-use List::Util qw(first);
-use List::MoreUtils;
 
-# Inherited fields from BibSpace::Model::DAO::Interface::IEntryDAO Mixin:
+# Inherited fields from BibSpace::Model::DAO::Interface::IAuthorshipDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);
 

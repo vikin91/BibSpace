@@ -105,6 +105,7 @@ sub startup {
     # this should be helper!
     my $logger = SimpleLogger->new(); 
     my %backendConfig = (
+        idProviderType => 'IntegerUidProvider',
         backends => [ 
             { prio => 1, type => 'SmartArrayDAOFactory', handle => $globalEntriesArray },
             # { prio => 2, type => 'RedisDAOFactory', handle => $redisHandle },
@@ -112,20 +113,28 @@ sub startup {
         ]
     );
     my $factory = RepositoryFactory->new(logger => $logger)->getInstance('LayeredRepositoryFactory',\%backendConfig);
+    # this factory holds idProvider for each business entity (e.g. idProviderEntry, idProviderAuthor)
+    # this factory holds instances of repositories for each business entity (e.g. instanceEntriesRepo, instanceAuthorsRepo)
+    # there should be single factory in BibSpace!!!
+    
 
     my $erepo = $factory->getEntriesRepository();
+    my $arepo = $factory->getAuthorsRepository();
     
     $erepo->copy(2,1); # COPY from MySQL to Array
     
 
     my @allEntries = $erepo->all();
-    $logger->debug( "ALL Entries: ".join(', ', map{$_->uid} @allEntries ) );
-    # @allEntries = $erepo->filter( sub{$_->id > 600} );
+    # $logger->debug( "ALL Entries: ".join(', ', map{$_->uid} @allEntries ) );
+    # @allEntries = $erepo->filter( sub{$_->id > 600} ); 
     # $logger->debug( "FILTERED Entries: ".join(', ', map{$_->id} @allEntries ) );
 
-    my $entry  = Entry->new( id => 5, bib => "sth", year => 2012 );
-    my $entry2 = Entry->new( bib => "sth", year => 2011 );
+    my $entry  = Entry->new( idProvider=>$factory->idProviderEntry, id => 5, bib => "sth", year => 2012 );
+    $logger->debug( "NEW ENTRY: ". $entry->toString );
+    my $entry2 = Entry->new( idProvider=>$factory->idProviderEntry, bib => "sth", year => 2011 );
     my @entries = ( $entry, $entry2 );
+    
+
     $logger->debug( "COUNT Entries before saving: ". $erepo->count() );
     $erepo->save(@entries);
     $logger->debug( "COUNT Entries after saving: ". $erepo->count() );

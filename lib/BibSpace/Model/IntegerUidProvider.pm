@@ -3,14 +3,15 @@ use Moose;
 use BibSpace::Model::IUidProvider;
 with 'IUidProvider';
 use List::Util qw(max);
+use List::MoreUtils qw(any uniq);
 use BibSpace::Model::SimpleLogger;
 
-use MooseX::ClassAttribute;
+# use MooseX::ClassAttribute;
 
-class_has 'data' => (
+has 'data' => (
     traits    => ['Hash'],
     is        => 'ro',
-    isa       => 'HashRef[ArrayRef[Str]]',
+    isa       => 'HashRef[Int]',
     default   => sub { {} },
     handles   => {
         uid_set     => 'set',
@@ -23,33 +24,28 @@ class_has 'data' => (
 );
 
 sub registerUID{
-    my ($self, $entity, $uid) = @_;
+    my ($self, $uid) = @_;
 
-
-    if( !IntegerUidProvider->uid_defined($entity) ){
-        IntegerUidProvider->uid_set($entity => []);
+    if( !$self->uid_defined($uid) ){
+        $self->uid_set($uid => 1);
+        SimpleLogger->new()->debug("Registered uid $uid.");
     }
-    my $arrayref = IntegerUidProvider->uid_get($entity);
-    my $exists = any { $_ == $uid } @{$arrayref};
-    if( $exists ){
-        die "Cannot registerUID for $entity. It exists already!";
+    else{
+        die "Cannot registerUID. It exists already!";
     }
-    SimpleLogger->new()->debug("Registered uid $uid for $entity.");
-    push $arrayref, $uid;
-    IntegerUidProvider->uid_set($entity, $arrayref);
 }
 
 sub generateUID{
-    my ($self, $entity) = @_;
-    if( !IntegerUidProvider->uid_defined($entity) ){
-        IntegerUidProvider->uid_set($entity => []);
-    }
-    my $arrayref = IntegerUidProvider->uid_get($entity);
-    my $curr_max = max @{$arrayref} // 0;
-    my $new_uid = $curr_max + 1;
-    push $arrayref, $new_uid;
+    my ($self) = @_;
 
-    SimpleLogger->new()->debug("Generated uid $new_uid for $entity.");
+    my $curr_max = 1; # starting default id
+    my $curr_max_candidate = max keys $self->data;
+    if(defined $curr_max_candidate and $curr_max_candidate > 0){
+        $curr_max = $curr_max_candidate;
+    }
+    my $new_uid = $curr_max + 1;
+    $self->uid_set($new_uid => 1);
+    SimpleLogger->new()->debug("Generated uid $new_uid.");
     return $new_uid;
 }
 
