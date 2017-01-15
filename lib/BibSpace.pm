@@ -110,7 +110,7 @@ sub setup_repositories {
     
 
     use BibSpace::Model::SmartArray;
-    my $globalEntriesArray = SmartArray->new;
+    my $globalEntriesArray = SmartArray->new(logger => $app->logger);
 
     # my $sa = SmartArray->new;
 

@@ -1,6 +1,7 @@
 package ILogger;
-use Moose::Role;
+use namespace::autoclean;
 use DateTime;
+use Moose::Role;
 
 sub log{
     my $self=shift;
@@ -48,5 +49,4 @@ sub error{
     $self->log('erro', $msg, $origin);
 }
 
-no Moose;
 1;

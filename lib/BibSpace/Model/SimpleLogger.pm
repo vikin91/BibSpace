@@ -1,8 +1,13 @@
 package SimpleLogger;
+use namespace::autoclean;
+
+
+use DateTime;
 use Term::ANSIColor;
 use Moose;
-use Bibspace::Model::ILogger;
+require Bibspace::Model::ILogger;
 with 'ILogger';
+
 
 sub log{
     my $self=shift;
