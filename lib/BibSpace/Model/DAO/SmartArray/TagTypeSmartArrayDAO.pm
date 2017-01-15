@@ -1,5 +1,5 @@
 # This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
-package TagTypeMySQLDAO;
+package TagTypeSmartArrayDAO;
 
 use namespace::autoclean;
 use Moose;

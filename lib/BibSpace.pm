@@ -96,16 +96,17 @@ sub startup {
     # StorageBase::init();
     # StorageBase::load($self->app->db);
 
-    my @globalEntriesArray;
+    use BibSpace::Model::SmartArray;
+    my $globalEntriesArray = SmartArray->new;
 
     use BibSpace::Model::DAO::DAOFactory;
     use BibSpace::Model::Repository::RepositoryFactory;
     use BibSpace::Model::SimpleLogger;
     # this should be helper!
-    my $logger = SimpleLogger->new();
+    my $logger = SimpleLogger->new(); 
     my %backendConfig = (
-        backends => [
-            { prio => 1, type => 'ArrayDAOFactory', handle => \@globalEntriesArray },
+        backends => [ 
+            { prio => 1, type => 'SmartArrayDAOFactory', handle => $globalEntriesArray },
             # { prio => 2, type => 'RedisDAOFactory', handle => $redisHandle },
             { prio => 2, type => 'MySQLDAOFactory', handle => $dbh },
         ]
@@ -118,17 +119,34 @@ sub startup {
     
 
     my @allEntries = $erepo->all();
-    $logger->debug( "ALL Entries: ".join(', ', map{$_->id} @allEntries ) );
-    @allEntries = $erepo->filter( sub{$_->id > 600} );
-    $logger->debug( "FILTERED Entries: ".join(', ', map{$_->id} @allEntries ) );
+    $logger->debug( "ALL Entries: ".join(', ', map{$_->uid} @allEntries ) );
+    # @allEntries = $erepo->filter( sub{$_->id > 600} );
+    # $logger->debug( "FILTERED Entries: ".join(', ', map{$_->id} @allEntries ) );
 
-    # my $entry  = Entry->new( bib => "sth", year => 2012 );
-    # my $entry2 = Entry->new( bib => "sth", year => 2011 );
-    # my @entries = ( $entry, $entry2 );
-    # $erepo->save(@entries);
+    my $entry  = Entry->new( id => 5, bib => "sth", year => 2012 );
+    my $entry2 = Entry->new( bib => "sth", year => 2011 );
+    my @entries = ( $entry, $entry2 );
+    $logger->debug( "COUNT Entries before saving: ". $erepo->count() );
+    $erepo->save(@entries);
+    $logger->debug( "COUNT Entries after saving: ". $erepo->count() );
 
-    # my @someEntries = $erepo->filter( sub { $_->year == 2011 } );    #fake!
-    # my $anEntry = $erepo->find( sub { $_->year == 2011 } );    #fake!
+    # # my @someEntries = $erepo->filter( sub { $_->year == 2011 } );    #fake!
+    # my $code = sub{defined $_ and defined $_->year and $_->year == 2011};
+    # my $anEntry1 = $erepo->filter( $code ); 
+    # $logger->debug( "Filter found so many entries: ". $anEntry1 );
+    # my $anEntry2 = $erepo->find( $code );   
+
+    # my $anEntry61 = $erepo->find( sub{$_->id == 61} );   
+    # $logger->debug( "Filter found entry 61: ". $anEntry61->toString ) if defined $anEntry61;
+    # $anEntry61->year(2077);
+    # $logger->debug( "After edit 61: ". $anEntry61->toString );
+    # ## NO NEED TO CALL UPDATE!!
+    # $anEntry61 = $erepo->find( sub{$_->id == 61} );   
+    # $logger->debug( "Filter found entry 61: ". $anEntry61->toString );
+
+    # $logger->debug( "Exists 61?: ". $erepo->exists($anEntry61) );
+    # $logger->debug( "Delete 61: ". $erepo->delete($anEntry61) );
+    # $logger->debug( "Exists 61?: ". $erepo->exists($anEntry61) );
 
     # $logger->info("this is info");
     # $logger->warn("this is warning");

@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:16
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
 package TeamMySQLDAO;
 
 use namespace::autoclean;
@@ -6,6 +6,7 @@ use Moose;
 use BibSpace::Model::DAO::Interface::ITeamDAO;
 use BibSpace::Model::Team;
 with 'ITeamDAO';
+use Try::Tiny;
 
 # Inherited fields from BibSpace::Model::DAO::Interface::ITeamDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
@@ -13,103 +14,124 @@ with 'ITeamDAO';
 
 =item all
     Method documentation placeholder.
+    This method takes no arguments and returns array or scalar.
 =cut 
 sub all {
   my ($self) = @_;
-  $self->logger->entering("","".__PACKAGE__."->all");
+
   die "".__PACKAGE__."->all not implemented.";
-
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->all");
-}
 
-=item save
+}
+before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
+after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
+=item count
     Method documentation placeholder.
+    This method takes no arguments and returns array or scalar.
 =cut 
-sub save {
-  my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->save");
-  die "".__PACKAGE__."->save not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+sub count {
+  my ($self) = @_;
 
+  die "".__PACKAGE__."->count not implemented.";
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->save");
-}
 
-=item update
+}
+before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
+after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
+=item empty
     Method documentation placeholder.
+    This method takes no arguments and returns array or scalar.
 =cut 
-sub update {
-  my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->update");
-  die "".__PACKAGE__."->update not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+sub empty {
+  my ($self) = @_;
 
+  die "".__PACKAGE__."->empty not implemented.";
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->update");
-}
 
-=item delete
-    Method documentation placeholder.
-=cut 
-sub delete {
-  my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->delete");
-  die "".__PACKAGE__."->delete not implemented. Method was instructed to save ".scalar(@objects)." objects.";
-
-  # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->delete");
 }
+before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
+after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 
 =item exists
     Method documentation placeholder.
+    This method takes single object as argument and returns a scalar.
 =cut 
 sub exists {
-  my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->exists");
-  die "".__PACKAGE__."->exists not implemented. Method was instructed to save ".scalar(@objects)." objects.";
-
+  my ($self, $object) = @_;
+  
+  die "".__PACKAGE__."->exists not implemented.";
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->exists");
+
 }
+before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
+after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
+
+=item save
+    Method documentation placeholder.
+    This method takes single object or array of objects as argument and returns nothing.
+=cut 
+sub save {
+  my ($self, @objects) = @_;
+
+  die "".__PACKAGE__."->save not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+  # TODO: auto-generated method stub. Implement me!
+
+}
+before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
+after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
+=item update
+    Method documentation placeholder.
+    This method takes single object or array of objects as argument and returns nothing.
+=cut 
+sub update {
+  my ($self, @objects) = @_;
+
+  die "".__PACKAGE__."->update not implemented. Method was instructed to update ".scalar(@objects)." objects.";
+  # TODO: auto-generated method stub. Implement me!
+
+}
+before 'update' => sub { shift->logger->entering("","".__PACKAGE__."->update"); };
+after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); };
+=item delete
+    Method documentation placeholder.
+    This method takes single object or array of objects as argument and returns nothing.
+=cut 
+sub delete {
+  my ($self, @objects) = @_;
+
+  die "".__PACKAGE__."->delete not implemented. Method was instructed to delete ".scalar(@objects)." objects.";
+  # TODO: auto-generated method stub. Implement me!
+
+}
+before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
+after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };
 
 =item filter
     Method documentation placeholder.
 =cut 
 sub filter {
   my ($self, $coderef) = @_;
-  $self->logger->entering("","".__PACKAGE__."->filter");
   die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+
   die "".__PACKAGE__."->filter not implemented.";
-
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->filter");
+  
 }
-
+before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
+after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); };
 =item find
     Method documentation placeholder.
 =cut 
 sub find {
   my ($self, $coderef) = @_;
-  $self->logger->entering("","".__PACKAGE__."->find");
   die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+
   die "".__PACKAGE__."->find not implemented.";
-
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->find");
+  
 }
-
-=item count
-    Method documentation placeholder.
-=cut 
-sub count {
-  my ($self, $coderef) = @_;
-  $self->logger->entering("","".__PACKAGE__."->count");
-  die "".__PACKAGE__."->count incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  die "".__PACKAGE__."->count not implemented.";
-
-  # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->count");
-}
-
+before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };
+after 'find'  => sub { shift->logger->exiting("","".__PACKAGE__."->find"); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

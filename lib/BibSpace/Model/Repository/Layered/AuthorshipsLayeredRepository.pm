@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T19:21:59
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
 package AuthorshipsLayeredRepository;
 use namespace::autoclean;
 use Moose;
@@ -6,7 +6,8 @@ require BibSpace::Model::Repository::Interface::IAuthorshipsRepository;
 with 'IAuthorshipsRepository';
 use BibSpace::Model::Authorship;
 use Try::Tiny; # for try/catch
-use List::MoreUtils qw(any uniq);
+use List::Util qw(first);
+use List::MoreUtils;
 
 
 =item _getReadBackend 
@@ -37,7 +38,7 @@ sub _getBackendWithPrio {
     die "".__PACKAGE__."->_getReadBackendType: backendsConfigHash is not defined";
   }
   my @backendsArray = $self->getBackendsArray;
-  my $prioHash = first {$_->prio == $prio} @backendsArray;
+  my $prioHash = first {$_->{'prio'} == $prio} @backendsArray;
   if( !$prioHash ){
     die "".__PACKAGE__."->_getReadBackendType: backend config hash for prio '$prio' is not defined";
   }
@@ -52,15 +53,19 @@ sub copy{
     $self->logger->entering("","".__PACKAGE__."->copy");
     $self->logger->debug("Copying all data from layer $fromLayer to layer $toLayer.","".__PACKAGE__."->copy");
 
-    my @result = $self->backendFactory->getInstance( 
+    my @resultRead = $self->backendFactory->getInstance( 
         $self->_getBackendWithPrio($fromLayer)->{'type'},
         $self->_getBackendWithPrio($fromLayer)->{'handle'} 
     )->getEntryDao()->all();
+
+    $self->logger->debug(scalar(@resultRead)." entries read from layer $fromLayer.","".__PACKAGE__."->copy");
     
-    $self->backendFactory->getInstance( 
+    my $resultSave = $self->backendFactory->getInstance( 
         $self->_getBackendWithPrio($toLayer)->{'type'},
         $self->_getBackendWithPrio($toLayer)->{'handle'}
-    )->getEntryDao()->save( @result );
+    )->getEntryDao()->save( @resultRead );
+
+    $self->logger->debug(" $resultSave entries saved to layer $toLayer.","".__PACKAGE__."->copy");
 
     $self->logger->exiting("","".__PACKAGE__."->copy");
 }
@@ -73,22 +78,92 @@ sub copy{
 =cut 
 sub all {
     my ($self) = @_;
-    $self->logger->entering("","".__PACKAGE__."->all");
     # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
 
     my $daoFactoryType = $self->_getReadBackend()->{'type'};
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
-    my @result;
+    my $result;
     try{
-        @result = $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->all();
+        return $self->backendFactory
+            ->getInstance( $daoFactoryType, $daoBackendHandle )
+            ->getAuthorshipDao()
+            ->all();
     }
     catch{
         print;
     };
-    $self->logger->exiting("","".__PACKAGE__."->all");
-    return @result;
 }
+before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
+after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
+=item count
+    Method documentation placeholder.
+=cut 
+sub count {
+    my ($self) = @_;
+    # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
 
+    my $daoFactoryType = $self->_getReadBackend()->{'type'};
+    my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
+    my $result;
+    try{
+        return $self->backendFactory
+            ->getInstance( $daoFactoryType, $daoBackendHandle )
+            ->getAuthorshipDao()
+            ->count();
+    }
+    catch{
+        print;
+    };
+}
+before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
+after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
+=item empty
+    Method documentation placeholder.
+=cut 
+sub empty {
+    my ($self) = @_;
+    # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
+
+    my $daoFactoryType = $self->_getReadBackend()->{'type'};
+    my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
+    my $result;
+    try{
+        return $self->backendFactory
+            ->getInstance( $daoFactoryType, $daoBackendHandle )
+            ->getAuthorshipDao()
+            ->empty();
+    }
+    catch{
+        print;
+    };
+}
+before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
+after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
+
+### CKECK METHODS
+
+=item exists
+    Method documentation placeholder.
+=cut 
+sub exists {
+    my ($self, $obj) = @_;
+    # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
+
+    my $daoFactoryType = $self->_getReadBackend()->{'type'};
+    my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
+    my $result;
+    try{
+        return $self->backendFactory
+            ->getInstance( $daoFactoryType, $daoBackendHandle )
+            ->getAuthorshipDao()
+            ->exists($obj);
+    }
+    catch{
+        print;
+    };
+}
+before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
+after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
 
 ### WRITE METHODS
 
@@ -97,7 +172,6 @@ sub all {
 =cut 
 sub save {
     my ($self, @objects) = @_;
-    $self->logger->entering("","".__PACKAGE__."->save");
     die "".__PACKAGE__."->save argument 'objects' is undefined." unless @objects;
 
     # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
@@ -106,21 +180,20 @@ sub save {
         my $daoFactoryType = $backendDAO->{'type'};
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
-            $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->save( @objects );
+            return $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->save( @objects );
         }
         catch{
             print;
         };
     }
-    $self->logger->exiting("","".__PACKAGE__."->save");
 }
-
+before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
+after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
 =item update
     Method documentation placeholder.
 =cut 
 sub update {
     my ($self, @objects) = @_;
-    $self->logger->entering("","".__PACKAGE__."->update");
     die "".__PACKAGE__."->update argument 'objects' is undefined." unless @objects;
 
     # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
@@ -129,21 +202,20 @@ sub update {
         my $daoFactoryType = $backendDAO->{'type'};
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
-            $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->update( @objects );
+            return $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->update( @objects );
         }
         catch{
             print;
         };
     }
-    $self->logger->exiting("","".__PACKAGE__."->update");
 }
-
+before 'update' => sub { shift->logger->entering("","".__PACKAGE__."->update"); };
+after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); };
 =item delete
     Method documentation placeholder.
 =cut 
 sub delete {
     my ($self, @objects) = @_;
-    $self->logger->entering("","".__PACKAGE__."->delete");
     die "".__PACKAGE__."->delete argument 'objects' is undefined." unless @objects;
 
     # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
@@ -152,38 +224,15 @@ sub delete {
         my $daoFactoryType = $backendDAO->{'type'};
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
-            $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->delete( @objects );
+            return $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->delete( @objects );
         }
         catch{
             print;
         };
     }
-    $self->logger->exiting("","".__PACKAGE__."->delete");
 }
-
-=item exists
-    Method documentation placeholder.
-=cut 
-sub exists {
-    my ($self, @objects) = @_;
-    $self->logger->entering("","".__PACKAGE__."->exists");
-    die "".__PACKAGE__."->exists argument 'objects' is undefined." unless @objects;
-
-    # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
-
-    foreach my $backendDAO ( $self->getBackendsArray() ){
-        my $daoFactoryType = $backendDAO->{'type'};
-        my $daoBackendHandle = $backendDAO->{'handle'};
-        try{
-            $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->exists( @objects );
-        }
-        catch{
-            print;
-        };
-    }
-    $self->logger->exiting("","".__PACKAGE__."->exists");
-}
-
+before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
+after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };
 
 ### SEARCH METHODS
 
@@ -192,7 +241,6 @@ sub exists {
 =cut 
 sub filter {
     my ($self, $coderef) = @_;
-    $self->logger->entering("","".__PACKAGE__."->filter");
     die "".__PACKAGE__."->filter 'coderef' is undefined." unless defined $coderef;
     if( ref $coderef ne ref sub{} ){
         die "".__PACKAGE__."->filter incorrect type of argument. Got: ".ref($coderef).", expected: ".(ref sub{}).".";
@@ -203,21 +251,19 @@ sub filter {
     my $daoFactoryType = $self->_getReadBackend()->{'type'};
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
-        @result = $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->filter( $coderef );
+        return $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->filter( $coderef );
     }
     catch{
         print;
     };
-    $self->logger->exiting("","".__PACKAGE__."->filter");
-    return @result;
 }
-
+before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
+after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); };
 =item find
     Method documentation placeholder.
 =cut 
 sub find {
     my ($self, $coderef) = @_;
-    $self->logger->entering("","".__PACKAGE__."->find");
     die "".__PACKAGE__."->find 'coderef' is undefined." unless defined $coderef;
     if( ref $coderef ne ref sub{} ){
         die "".__PACKAGE__."->find incorrect type of argument. Got: ".ref($coderef).", expected: ".(ref sub{}).".";
@@ -228,40 +274,14 @@ sub find {
     my $daoFactoryType = $self->_getReadBackend()->{'type'};
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
-        @result = $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->find( $coderef );
+        return $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->find( $coderef );
     }
     catch{
         print;
     };
-    $self->logger->exiting("","".__PACKAGE__."->find");
-    return @result;
 }
-
-=item count
-    Method documentation placeholder.
-=cut 
-sub count {
-    my ($self, $coderef) = @_;
-    $self->logger->entering("","".__PACKAGE__."->count");
-    die "".__PACKAGE__."->count 'coderef' is undefined." unless defined $coderef;
-    if( ref $coderef ne ref sub{} ){
-        die "".__PACKAGE__."->count incorrect type of argument. Got: ".ref($coderef).", expected: ".(ref sub{}).".";
-    }
-
-    # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
-    my @result;
-    my $daoFactoryType = $self->_getReadBackend()->{'type'};
-    my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
-    try{
-        @result = $self->backendFactory->getInstance( $daoFactoryType, $daoBackendHandle )->getAuthorshipDao()->count( $coderef );
-    }
-    catch{
-        print;
-    };
-    $self->logger->exiting("","".__PACKAGE__."->count");
-    return @result;
-}
-
+before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };
+after 'find'  => sub { shift->logger->exiting("","".__PACKAGE__."->find"); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

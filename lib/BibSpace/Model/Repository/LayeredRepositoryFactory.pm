@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T19:21:59
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
 package LayeredRepositoryFactory;
 use namespace::autoclean;
 use Moose;

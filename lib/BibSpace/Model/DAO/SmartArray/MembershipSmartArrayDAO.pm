@@ -1,14 +1,14 @@
 # This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
-package TagTypeMySQLDAO;
+package MembershipSmartArrayDAO;
 
 use namespace::autoclean;
 use Moose;
-use BibSpace::Model::DAO::Interface::ITagTypeDAO;
-use BibSpace::Model::TagType;
-with 'ITagTypeDAO';
+use BibSpace::Model::DAO::Interface::IMembershipDAO;
+use BibSpace::Model::Membership;
+with 'IMembershipDAO';
 use Try::Tiny;
 
-# Inherited fields from BibSpace::Model::DAO::Interface::ITagTypeDAO Mixin:
+# Inherited fields from BibSpace::Model::DAO::Interface::IMembershipDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);
 

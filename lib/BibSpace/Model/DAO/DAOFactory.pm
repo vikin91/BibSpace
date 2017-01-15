@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:16
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
 package DAOFactory;
 
 use namespace::autoclean;
@@ -6,7 +6,7 @@ use Moose;
 use BibSpace::Model::ILogger;
 use BibSpace::Model::DAO::MySQLDAOFactory;
 use BibSpace::Model::DAO::RedisDAOFactory;
-use BibSpace::Model::DAO::ArrayDAOFactory;
+use BibSpace::Model::DAO::SmartArrayDAOFactory;
 
 # this class has logger, because it may want to log somethig as well 
 # thic code forces to instantiate the abstract factory first and then calling getInstance

@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T18:29:16
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
 package EntryMySQLDAO;
 
 use namespace::autoclean;
@@ -14,6 +14,7 @@ use Try::Tiny;
 
 =item all
     Method documentation placeholder.
+    This method takes no arguments and returns array or scalar.
 =cut 
 sub all {
   my ($self) = @_;
@@ -64,9 +65,10 @@ sub all {
       push @objs,
           Entry->new(
           id              => $row->{id},
+          dbid            => $row->{id},
           entry_type      => $row->{entry_type},
           bibtex_key      => $row->{bibtex_key},
-          _bibtex_type     => $row->{bibtex_type},
+          _bibtex_type    => $row->{bibtex_type},
           bib             => $row->{bib},
           html            => $row->{html},
           html_bib        => $row->{html_bib},
@@ -87,94 +89,229 @@ sub all {
   $self->logger->exiting("","".__PACKAGE__."->all");
   return @objs;
 }
-
-=item save
+before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
+after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
+=item count
     Method documentation placeholder.
+    This method takes no arguments and returns array or scalar.
 =cut 
-sub save {
-  my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->save");
-  die "".__PACKAGE__."->save not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+sub count {
+  my ($self) = @_;
 
+  die "".__PACKAGE__."->count not implemented.";
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->save");
-}
 
-=item update
+}
+before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
+after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
+=item empty
     Method documentation placeholder.
+    This method takes no arguments and returns array or scalar.
 =cut 
-sub update {
-  my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->update");
-  die "".__PACKAGE__."->update not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+sub empty {
+  my ($self) = @_;
 
+  die "".__PACKAGE__."->empty not implemented.";
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->update");
-}
 
-=item delete
-    Method documentation placeholder.
-=cut 
-sub delete {
-  my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->delete");
-  die "".__PACKAGE__."->delete not implemented. Method was instructed to save ".scalar(@objects)." objects.";
-
-  # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->delete");
 }
+before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
+after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 
 =item exists
     Method documentation placeholder.
+    This method takes single object as argument and returns a scalar.
 =cut 
 sub exists {
-  my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->exists");
-  die "".__PACKAGE__."->exists not implemented. Method was instructed to save ".scalar(@objects)." objects.";
-
+  my ($self, $object) = @_;
+  
+  die "".__PACKAGE__."->exists not implemented.";
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->exists");
+
 }
+before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
+after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
+
+=item save
+    Method documentation placeholder.
+    This method takes single object or array of objects as argument and returns nothing.
+=cut 
+sub save {
+  my ($self, @objects) = @_;
+  my $dbh = $self->handle;
+
+  foreach my $obj (@objects){
+    if ( !defined $obj->id or $obj->id <= 0 ) {
+        $self->_insert($obj);
+        $self->logger->info("Inserted object into DB.","".__PACKAGE__."->save");
+    }
+    elsif ( defined $obj->id and $obj->id > 0 ) {
+        $self->update($obj);
+        $self->logger->info("Updated object in DB.","".__PACKAGE__."->save");
+    }
+    else {
+      $self->logger->error("Save error, cannot neither insert nor update.","".__PACKAGE__."->save");
+    }
+  }
+}
+
+=item _insert
+    Method documentation placeholder.
+    This method takes single object or array of objects as argument and returns nothing.
+=cut 
+sub _insert {
+  my ($self, @objects) = @_;
+  my $dbh = $self->handle;
+  my $qry = "
+    INSERT INTO Entry(
+    entry_type,
+    bibtex_key,
+    bibtex_type,
+    bib,
+    html,
+    html_bib,
+    abstract,
+    title,
+    hidden,
+    year,
+    month,
+    sort_month,
+    teams_str,
+    people_str,
+    tags_str,
+    creation_time,
+    modified_time,
+    need_html_regen
+    ) 
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW(),?);";
+  
+  foreach my $obj (@objects){
+    my $sth = $dbh->prepare($qry);
+    try{
+      my $result = $sth->execute(
+          $obj->{entry_type}, $obj->{bibtex_key}, $obj->{_bibtex_type},
+          $obj->{bib}, $obj->{html}, $obj->{html_bib}, $obj->{abstract},
+          $obj->{title}, $obj->{hidden}, $obj->{year}, $obj->{month},
+          $obj->{sort_month}, $obj->{teams_str}, $obj->{people_str},
+          $obj->{tags_str},
+
+          # $obj->{creation_time},
+          # $obj->{modified_time},
+          $obj->{need_html_regen},
+      );
+      my $inserted_id = $dbh->last_insert_id( '', '', 'Entry', '' );
+      $obj->{id} = $inserted_id;
+      $sth->finish();
+    }
+    catch {
+      $self->logger->error("Insert exception: $_","".__PACKAGE__."->insert");
+    };
+  }
+}
+before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
+after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
+=item update
+    Method documentation placeholder.
+    This method takes single object or array of objects as argument and returns nothing.
+=cut 
+sub update {
+  my ($self, @objects) = @_;
+  my $dbh = $self->handle;
+
+  foreach my $obj (@objects){
+    next if !defined $obj->id;
+    # update field 'modified_time' only if needed
+    my $qry = "UPDATE Entry SET
+            entry_type=?,
+            bibtex_key=?,
+            bibtex_type=?,
+            bib=?,
+            html=?,
+            html_bib=?,
+            abstract=?,
+            title=?,
+            hidden=?,
+            year=?,
+            month=?,
+            sort_month=?,
+            teams_str=?,
+            people_str=?,
+            tags_str=?,
+            need_html_regen=?";
+    $qry .= ", modified_time=NOW()" if $obj->shall_update_modified_time == 1;
+    $qry .= "WHERE id = ?";
+
+    my $sth = $dbh->prepare($qry);
+    try {
+        my $result = $sth->execute(
+            $obj->{entry_type},  $obj->{bibtex_key},
+            $obj->{_bibtex_type}, $obj->{bib},
+            $obj->{html},        $obj->{html_bib},
+            $obj->{abstract},    $obj->{title},
+            $obj->{hidden},      $obj->{year},
+            $obj->{month},       $obj->{sort_month},
+            $obj->{teams_str},   $obj->{people_str},
+            $obj->{tags_str},    $obj->{need_html_regen},
+            $obj->{id}
+        );
+        $sth->finish();
+    }
+    catch {
+      $self->logger->error("Update exception: $_","".__PACKAGE__."->update");
+    };
+  }
+
+}
+before 'update' => sub { shift->logger->entering("","".__PACKAGE__."->update"); };
+after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); };
+=item delete
+    Method documentation placeholder.
+    This method takes single object or array of objects as argument and returns nothing.
+=cut 
+sub delete {
+  my ($self, @objects) = @_;
+  my $dbh = $self->handle;
+  foreach my $obj (@objects){
+    my $qry    = "DELETE FROM Entry WHERE id=?;";
+    my $sth    = $dbh->prepare($qry);
+    try{
+      my $result = $sth->execute( $obj->{id} );
+    }
+    catch {
+      $self->logger->error("Delete exception: $_","".__PACKAGE__."->delete");
+    };
+  }
+
+}
+before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
+after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };
 
 =item filter
     Method documentation placeholder.
 =cut 
 sub filter {
   my ($self, $coderef) = @_;
-  $self->logger->entering("","".__PACKAGE__."->filter");
   die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+
   die "".__PACKAGE__."->filter not implemented.";
-
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->filter");
+  
 }
-
+before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
+after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); };
 =item find
     Method documentation placeholder.
 =cut 
 sub find {
   my ($self, $coderef) = @_;
-  $self->logger->entering("","".__PACKAGE__."->find");
   die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+
   die "".__PACKAGE__."->find not implemented.";
-
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->find");
+  
 }
-
-=item count
-    Method documentation placeholder.
-=cut 
-sub count {
-  my ($self, $coderef) = @_;
-  $self->logger->entering("","".__PACKAGE__."->count");
-  die "".__PACKAGE__."->count incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  die "".__PACKAGE__."->count not implemented.";
-
-  # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->count");
-}
-
+before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };
+after 'find'  => sub { shift->logger->exiting("","".__PACKAGE__."->find"); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

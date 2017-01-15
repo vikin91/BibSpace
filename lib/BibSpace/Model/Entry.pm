@@ -6,7 +6,7 @@ use BibSpace::Model::Author;
 use BibSpace::Model::TagType;
 
 use List::MoreUtils qw(any uniq);
-
+use BibSpace::Model::IntegerUidProvider;
 
 use BibSpace::Model::M::StorageBase;
 
@@ -27,12 +27,37 @@ use Moose::Util::TypeConstraints;
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
-my $dtPattern = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
+my $dtPattern
+    = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
 
-has 'id'              => ( is => 'rw', isa => 'Int', default => 1);
-has 'entry_type'      => ( is => 'rw', isa => 'Str', default => 'paper' );
-has 'bibtex_key'      => ( is => 'rw', isa => 'Maybe[Str]' );
-has '_bibtex_type'     => ( is => 'rw', isa => 'Maybe[Str]' );
+
+
+sub _generateUIDEntry {
+    my $self = shift;
+
+# call here a general entity, that will give this object a nice, App-unique Integer ID
+    if ( defined $self->dbid and $self->dbid > 0 ) {
+        my $uid = $self->dbid;
+        IntegerUidProvider->registerUID(__PACKAGE__, $uid);
+        return $uid;
+    }
+    else {
+        return IntegerUidProvider->generateUID(__PACKAGE__);
+    }
+}
+
+# id deprecated - old mysql id
+has 'id' => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
+
+# old mysql id - for compatibility
+has 'dbid' => ( is => 'ro', isa => 'Int', required => 0 );
+
+# new bibspace id
+has 'uid' =>
+    ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy => 1 );
+has 'entry_type' => ( is => 'rw', isa => 'Str', default => 'paper' );
+has 'bibtex_key' => ( is => 'rw', isa => 'Maybe[Str]' );
+has '_bibtex_type'    => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'bib'             => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'html'            => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'html_bib'        => ( is => 'rw', isa => 'Maybe[Str]' );
@@ -46,31 +71,35 @@ has 'teams_str'       => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'people_str'      => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'tags_str'        => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'need_html_regen' => ( is => 'rw', isa => 'Int', default => 1 );
+has 'shall_update_modified_time' =>
+    ( is => 'rw', isa => 'Int', default => 0 );
 
 # class_type 'DateTime';
 # coerce 'DateTime'
 #       => from 'Str'
 #       => via { $dtPattern->parse_datetime($_) };
- 
-has 'creation_time'   => ( 
-    is => 'rw', 
-    isa => 'DateTime', 
+
+has 'creation_time' => (
+    is      => 'rw',
+    isa     => 'DateTime',
     default => sub {
         my $dt = DateTime->now;
         say "Setting default MEntry->creation_time";
         $dt->set_formatter($dtPattern);
         return $dt;
     },
+
     # coerce => 1
 );
-has 'modified_time'   => ( 
-    is => 'rw', 
-    isa => 'DateTime', 
+has 'modified_time' => (
+    is      => 'rw',
+    isa     => 'DateTime',
     default => sub {
         my $dt = $dtPattern->parse_datetime('1970-01-01 00:00:00');
         say "Setting default MEntry->modified_time";
         return $dt;
     },
+
     # coerce => 1
 );
 
@@ -143,11 +172,8 @@ has 'bexceptions' => (
 );
 
 # not DB fields
-has 'warnings' => ( 
-    is => 'rw', 
-    isa => 'Maybe[Str]', 
-    traits => ['DoNotSerialize'] 
-);
+has 'warnings' =>
+    ( is => 'rw', isa => 'Maybe[Str]', traits => ['DoNotSerialize'] );
 has 'bst_file' => (
     is      => 'rw',
     isa     => 'Maybe[Str]',
@@ -159,25 +185,26 @@ has 'bst_file' => (
 sub init_storage {
     my $self = shift;
 
-    if( $self->tags_count == 0){
-        $self->btags([]);
+    if ( $self->tags_count == 0 ) {
+        $self->btags( [] );
     }
-    if( $self->authors_count == 0){
-        $self->bauthors([]);
+    if ( $self->authors_count == 0 ) {
+        $self->bauthors( [] );
     }
-    if( $self->exceptions_count == 0){
-        $self->bexceptions([]);
+    if ( $self->exceptions_count == 0 ) {
+        $self->bexceptions( [] );
     }
 }
 ####################################################################################
 sub replaceFromStorage {
-    my $self = shift;
-    my $storage  = shift; # dependency injection
-    # use BibSpace::Model::M::StorageBase;
+    my $self    = shift;
+    my $storage = shift;    # dependency injection
+                            # use BibSpace::Model::M::StorageBase;
 
-    my $storageItem = $storage->entries_find( sub{ $_->equals($self) } );
+    my $storageItem = $storage->entries_find( sub { $_->equals($self) } );
 
-    die "Cannot find ".ref($self).": ".Dumper($self)." in storage " unless $storageItem;
+    die "Cannot find " . ref($self) . ": " . Dumper($self) . " in storage "
+        unless $storageItem;
     return $storageItem;
 }
 ####################################################################################
@@ -190,15 +217,15 @@ sub toString {
     $str .= ", year " . $self->year;
     $str .= ", \n";
     $str .= "Authors: [\n";
-    map { $str .= "\t".$_->toString . "\n"} $self->authors_all;
+    map { $str .= "\t" . $_->toString . "\n" } $self->authors_all;
     $str .= "]\n";
 
     $str .= "Tags: [\n";
-    map { $str .= "\t".$_->toString . "\n"} $self->tags_all;
+    map { $str .= "\t" . $_->toString . "\n" } $self->tags_all;
     $str .= "]\n";
 
     $str .= "Exceptions: [\n";
-    map { $str .= "\t".$_->toString . "\n"} $self->exceptions_all;
+    map { $str .= "\t" . $_->toString . "\n" } $self->exceptions_all;
     $str .= "]\n";
 
     return $str;
@@ -211,6 +238,7 @@ sub equals {
     return $self->equals_bibtex($obj);
 }
 ####################################################################################
+
 =item equals_bibtex
     Assumes that both objects are equal if the bibtex code is identical
 =cut
@@ -220,19 +248,22 @@ sub equals_bibtex {
     my $obj  = shift;
 
     return 0 unless defined $obj;
+
     # return 0 unless $obj->isa("MEntryBase");
 
     my $result = $self->bib cmp $obj->bib;
     return $result == 0;
 }
 ####################################################################################
+
 =item is_visible
     Entry is visible if at least one of its authors is visible
 =cut
+
 sub is_visible {
     my $self = shift;
 
-    my $visible_author = $self->authors_find( sub{ $_->is_visible });
+    my $visible_author = $self->authors_find( sub { $_->is_visible } );
     return 1 if defined $visible_author;
     return;
 }
@@ -285,8 +316,8 @@ sub is_talk {
 }
 ####################################################################################
 sub matches_our_type {
-    my $self  = shift;
-    my $oType = shift;
+    my $self    = shift;
+    my $oType   = shift;
     my $storage = shift;
 
     die "This method requires storage, sorry." unless $storage;
@@ -296,19 +327,23 @@ sub matches_our_type {
 
     use BibSpace::Model::M::MTypeMappingBase;
 
-    my $mapping = $storage->typeMappings_find( sub{
-        ($_->our_type cmp $oType)==0;
-    });
+    my $mapping = $storage->typeMappings_find(
+        sub {
+            ( $_->our_type cmp $oType ) == 0;
+        }
+    );
 
     return if !defined $mapping;
 
-    my $match = $mapping->bibtexTypes_find( sub{
-        ($_ cmp $self->{_bibtex_type})==0;
-    });
+    my $match = $mapping->bibtexTypes_find(
+        sub {
+            ( $_ cmp $self->{_bibtex_type} ) == 0;
+        }
+    );
 
     return defined $match;
 
-    
+
 }
 ####################################################################################
 sub populate_from_bib {
@@ -323,15 +358,15 @@ sub populate_from_bib {
             return 0;
         }
 
-        $self->bibtex_key($bibtex_entry->key);
+        $self->bibtex_key( $bibtex_entry->key );
         $self->year( $bibtex_entry->get('year') );
-        if( $bibtex_entry->exists('booktitle') ){
-            $self->title($bibtex_entry->get('booktitle'));
+        if ( $bibtex_entry->exists('booktitle') ) {
+            $self->title( $bibtex_entry->get('booktitle') );
         }
-        if( $bibtex_entry->exists('title') ){
-            $self->title($bibtex_entry->get('title'));
+        if ( $bibtex_entry->exists('title') ) {
+            $self->title( $bibtex_entry->get('title') );
         }
-        $self->abstract( $bibtex_entry->get('abstract') || undef);
+        $self->abstract( $bibtex_entry->get('abstract') || undef );
         $self->_bibtex_type( $bibtex_entry->type );
         return 1;
     }
@@ -344,7 +379,7 @@ sub add_bibtex_field {
     my $value = shift;
 
     my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s($self->bib);
+    $entry->parse_s( $self->bib );
     return -1 unless $entry->parse_ok;
     my $key = $entry->key;
 
@@ -395,18 +430,19 @@ sub fix_month {
         my $month_str = $bibtex_entry->get('month');
         $month_numeric
             = BibSpace::Controller::Core::get_month_numeric($month_str);
-        
+
     }
-    if($self->{month} != $month_numeric){
-        $self->{month} = $month_numeric; 
+    if ( $self->{month} != $month_numeric ) {
+        $self->{month} = $month_numeric;
         $num_fixes = 1;
     }
-    # ve leave changed 
-    if($self->{sort_month} == 0 and $self->{sort_month} != $month_numeric){
+
+    # ve leave changed
+    if ( $self->{sort_month} == 0 and $self->{sort_month} != $month_numeric )
+    {
         $self->{sort_month} = $month_numeric;
     }
-    
-    
+
 
     return $num_fixes;
 }
@@ -415,9 +451,7 @@ sub has_tag_named {
     my $self = shift;
     my $name = shift;
 
-    my $found = $self->tags_find(
-        sub { ($_->name cmp $name)==0 }
-    );
+    my $found = $self->tags_find( sub { ( $_->name cmp $name ) == 0 } );
     return 1 if defined $found;
     return 0;
 }
@@ -487,7 +521,7 @@ sub generate_html {
     my $c = BibSpaceBibtexToHtml::BibSpaceBibtexToHtml->new();
     $self->html(
         $c->convert_to_html(
-            { method => 'new', bib => $self->{bib}, bst => $bst_file } 
+            { method => 'new', bib => $self->{bib}, bst => $bst_file }
         )
     );
     $self->warnings( join( ', ', @{ $c->{warnings_arr} } ) );
@@ -523,7 +557,7 @@ sub authors {
 ####################################################################################
 sub has_author {
     my $self = shift;
-    my $a = shift;
+    my $a    = shift;
 
     my $exists = $self->authors_find_index( sub { $_->equals($a) } ) > -1;
     return $exists;
@@ -531,26 +565,26 @@ sub has_author {
 ####################################################################################
 sub has_master_author {
     my $self = shift;
-    my $a = shift;
+    my $a    = shift;
 
     my $author = $self->authors_find( sub { $_->equals($a) } );
-    if($author){
+    if ($author) {
         return $author->is_master;
     }
     return 0;
 }
 ####################################################################################
 sub assign_author {
-    my ($self, @authors)   = @_;
+    my ( $self, @authors ) = @_;
 
     return 0 if !@authors or scalar @authors == 0;
 
     my $added = 0;
-    foreach my $a ( @authors ){
-        if( defined $a and !$self->has_author( $a ) ){
-            $self->authors_add( $a );
+    foreach my $a (@authors) {
+        if ( defined $a and !$self->has_author($a) ) {
+            $self->authors_add($a);
             ++$added;
-            if( !$a->has_entry($self) ){
+            if ( !$a->has_entry($self) ) {
                 $a->assign_entry($self);
             }
         }
@@ -624,9 +658,9 @@ sub teams {
     foreach my $author ( $self->authors ) {
 
         foreach my $team ( $author->teams ) {
-            if ($author->joined_team( $team ) <= $self->year
-                and (  $author->left_team( $team ) > $self->year
-                    or $author->left_team( $team ) == 0 )
+            if ($author->joined_team($team) <= $self->year
+                and (  $author->left_team($team) > $self->year
+                    or $author->left_team($team) == 0 )
                 )
             {
                 # $final_teams{$team}       = 1; # BAD: $team gets stringified
@@ -655,9 +689,8 @@ sub remove_exception {
     my $self      = shift;
     my $exception = shift;
 
-    my $index = $self->exceptions_find_index(
-        sub { $_->equals( $exception ) }
-    );
+    my $index
+        = $self->exceptions_find_index( sub { $_->equals($exception) } );
     return 0 if $index == -1;
     return 1 if $self->exceptions_delete($index);
     return 0;
@@ -668,7 +701,6 @@ sub assign_exception {
     my $exception = shift;
 
 
-
     return 0
         if !defined $self->id
         or $self->id < 0
@@ -676,8 +708,9 @@ sub assign_exception {
         or $exception->id <= 0;
 
     my $result = $self->exceptions_add($exception);
-    # say "adding excpetion ". $exception->toString;
-    # say "Entry has exceptions: \n". join ("\n", map { $_->toString } $self->exceptions_all );
+
+# say "adding excpetion ". $exception->toString;
+# say "Entry has exceptions: \n". join ("\n", map { $_->toString } $self->exceptions_all );
 
     return 1 if $result;
     return 0;
@@ -700,22 +733,23 @@ sub tags {
 ####################################################################################
 sub has_tag {
     my $self = shift;
-    my $tag = shift;
+    my $tag  = shift;
 
     my $exists = $self->tags_find_index( sub { $_->equals($tag) } ) > -1;
     return $exists;
 }
 ####################################################################################
 sub assign_tag {
-    my ($self, @tags)   = @_; 
+    my ( $self, @tags ) = @_;
 
     return 0 if !@tags or scalar @tags == 0;
 
     my $added = 0;
-    foreach my $tag ( @tags ){
-        if( defined $tag and !$self->has_tag( $tag ) ){
-            $self->tags_add( $tag );
+    foreach my $tag (@tags) {
+        if ( defined $tag and !$self->has_tag($tag) ) {
+            $self->tags_add($tag);
             ++$added;
+
             # if( !$tag->has_entry($self) ){
             #     $tag->assign_entry($self);
             # }
@@ -728,7 +762,7 @@ sub remove_tag {
     my $self = shift;
     my $tag  = shift;
 
-    my $index = $self->tags_find_index( sub { $_->equals($tag) });
+    my $index = $self->tags_find_index( sub { $_->equals($tag) } );
     return 0 if $index == -1;
     return 1 if $self->tags_delete($index);
     return 0;
@@ -750,9 +784,9 @@ sub remove_tag_by_name {
 
     my $index = $self->tags_find_index(
         sub {
-                (defined $_->name
-                and defined $tag_name
-                and $_->name eq $tag_name);
+            (           defined $_->name
+                    and defined $tag_name
+                    and $_->name eq $tag_name );
         }
     );
     return 0 if $index == -1;
@@ -783,18 +817,22 @@ sub tag_names_from_bibtex {
 
     if ( $bibtex_entry->exists('tags') ) {
         my $tags_str = $bibtex_entry->get('tags');
-        if($tags_str){
+        if ($tags_str) {
+
             # change , into ;
-            $tags_str =~ s/\,/;/g;    
+            $tags_str =~ s/\,/;/g;
+
             # remove leading and trailing spaces
             $tags_str =~ s/^\s+|\s+$//g;
 
             @tag_names = split( ';', $tags_str );
+
             # remove leading and trailing spaces
-            map { s/^\s+|\s+$//g } @tag_names;
+            map {s/^\s+|\s+$//g} @tag_names;
+
             # change spaces into underscores
             map { $_ =~ s/\ /_/g } @tag_names;
-        }        
+        }
     }
     return @tag_names;
 }

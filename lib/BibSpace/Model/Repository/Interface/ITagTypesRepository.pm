@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T19:21:59
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T22:33:39
 package ITagTypesRepository;
 use namespace::autoclean;
 
@@ -25,6 +25,14 @@ has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # this parameter is lazy, because the builder routine depends on logger. Logger will be set as first (is non-lazy).
 has 'backendFactory'  => ( is => 'ro', isa => 'DAOFactory', lazy => 1, builder => '_buildDAOFactory' );
 
+requires 'all';
+requires 'count';
+requires 'save';
+requires 'update';
+requires 'delete';
+requires 'exists';
+requires 'filter';
+requires 'find';
 
 sub _buildDAOFactory{
     my $self = shift;
