@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T14:22:05
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T14:47:33
 package DAOFactory;
 
 use namespace::autoclean;
@@ -20,6 +20,7 @@ sub getInstance {
 
     die "Factory type not provided!" unless $factoryType;
     die "Connection handle not provided!" unless $handle;
+    $self->logger->debug("Requesting new concreteDOAFactory of type $factoryType.","".__PACKAGE__."->getInstance");
 
     try{
         my $class = $factoryType;
@@ -29,8 +30,9 @@ sub getInstance {
     catch{
         die "Requested unknown type of DaoFactory: '$factoryType'.";
     };
-
 }
+before 'getInstance' => sub { shift->logger->entering("","".__PACKAGE__."->getInstance"); };
+after 'getInstance'  => sub { shift->logger->exiting("","".__PACKAGE__."->getInstance"); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

@@ -10,9 +10,9 @@ use BibSpace::Controller::PublicationsExperimental;
 use BibSpace::Controller::PublicationsSEO;
 use BibSpace::Controller::Helpers;
 
+use BibSpace::Model::SimpleLogger;
+
 use BibSpace::Model::M::MUser;
-
-
 use BibSpace::Model::M::CMUsers;
 use BibSpace::Model::M::CMObjectStore;
 use BibSpace::Model::M::StorageBase;
@@ -73,11 +73,6 @@ has db => sub {
     );
 };
 
-# TODO: turn into helper if the option is changeable at run-time
-has cache_enabled => sub {
-    return 0;
-};
-
 has version => sub {
     my $self = shift;
     return $BibSpace::VERSION // "0.4.7";
@@ -91,53 +86,71 @@ sub startup {
     $self->setup_plugins;
     $self->setup_routes;
     $self->setup_hooks;
+    $self->setup_repositories;
 
+    
+    # $logger->info("this is info");
+    # $logger->warn("this is warning");
+    # $logger->error("this is error");
+    
+
+    say "Using CONFIG: " . $self->app->config_file;
+    # say "App home is: " . $self->app->home;
+    # say "Active bst file is: " . $self->app->bst;
+}
+################################################################
+sub setup_repositories {
+    my $self = shift;
+    my $app  = $self;
     my $dbh = $self->app->db;
-    # StorageBase::init();
-    # StorageBase::load($self->app->db);
-
-    use BibSpace::Model::SmartArray;
-    my $globalEntriesArray = SmartArray->new;
 
     use BibSpace::Model::DAO::DAOFactory;
     use BibSpace::Model::Repository::RepositoryFactory;
-    use BibSpace::Model::SimpleLogger;
-    # this should be helper!
-    my $logger = SimpleLogger->new(); 
+    
+    
+
+    use BibSpace::Model::SmartArray;
+    my $globalEntriesArray = SmartArray->new;
     my %backendConfig = (
         idProviderType => 'IntegerUidProvider',
         backends => [ 
-            { prio => 1, type => 'SmartArrayDAOFactory', handle => $globalEntriesArray },
+            { prio => 1, type => 'SmartArrayDAOFactory', handle => $globalEntriesArray }, # this is fucked-up! How do I pass SmartArrays for other entities??
             # { prio => 2, type => 'RedisDAOFactory', handle => $redisHandle },
             { prio => 2, type => 'MySQLDAOFactory', handle => $dbh },
         ]
     );
-    my $factory = RepositoryFactory->new(logger => $logger)->getInstance('LayeredRepositoryFactory',\%backendConfig);
+    my $factory = RepositoryFactory->new(logger => $app->logger)->getInstance('LayeredRepositoryFactory',\%backendConfig);
     # this factory holds idProvider for each business entity (e.g. idProviderEntry, idProviderAuthor)
     # this factory holds instances of repositories for each business entity (e.g. instanceEntriesRepo, instanceAuthorsRepo)
     # there should be single factory in BibSpace!!!
-    
+    # this should be helper with state!
 
     my $erepo = $factory->getEntriesRepository();
     my $arepo = $factory->getAuthorsRepository();
+    # or maybe the repositories should be made global as helpers
     
     $erepo->copy(2,1); # COPY from MySQL to Array
+
+        # I don't like the approach with idProvider that comes from the factory
+    # But it is necessary, as the new IDs need to be registered once they are read from DB (or any other backend)
+    my $author = Author->new( idProvider=>$factory->idProviderAuthor, id => 5, uid => "sth", name => 'Henry' );
+    $arepo->save($author);
     
 
-    my @allEntries = $erepo->all();
-    # $logger->debug( "ALL Entries: ".join(', ', map{$_->uid} @allEntries ) );
-    # @allEntries = $erepo->filter( sub{$_->id > 600} ); 
-    # $logger->debug( "FILTERED Entries: ".join(', ', map{$_->id} @allEntries ) );
+    # my @allEntries = $erepo->all();
+    # # $logger->debug( "ALL Entries: ".join(', ', map{$_->uid} @allEntries ) );
+    # # @allEntries = $erepo->filter( sub{$_->id > 600} ); 
+    # # $logger->debug( "FILTERED Entries: ".join(', ', map{$_->id} @allEntries ) );
 
-    my $entry  = Entry->new( idProvider=>$factory->idProviderEntry, id => 5, bib => "sth", year => 2012 );
-    $logger->debug( "NEW ENTRY: ". $entry->toString );
-    my $entry2 = Entry->new( idProvider=>$factory->idProviderEntry, bib => "sth", year => 2011 );
-    my @entries = ( $entry, $entry2 );
+    # my $entry  = Entry->new( idProvider=>$factory->idProviderEntry, id => 5, bib => "sth", year => 2012 );
+    # $logger->debug( "NEW ENTRY: ". $entry->toString );
+    # my $entry2 = Entry->new( idProvider=>$factory->idProviderEntry, bib => "sth", year => 2011 );
+    # my @entries = ( $entry, $entry2 );
     
 
-    $logger->debug( "COUNT Entries before saving: ". $erepo->count() );
-    $erepo->save(@entries);
-    $logger->debug( "COUNT Entries after saving: ". $erepo->count() );
+    # $logger->debug( "COUNT Entries before saving: ". $erepo->count() );
+    # $erepo->save(@entries);
+    # $logger->debug( "COUNT Entries after saving: ". $erepo->count() );
 
     # # my @someEntries = $erepo->filter( sub { $_->year == 2011 } );    #fake!
     # my $code = sub{defined $_ and defined $_->year and $_->year == 2011};
@@ -157,46 +170,7 @@ sub startup {
     # $logger->debug( "Delete 61: ". $erepo->delete($anEntry61) );
     # $logger->debug( "Exists 61?: ". $erepo->exists($anEntry61) );
 
-    # $logger->info("this is info");
-    # $logger->warn("this is warning");
-    # $logger->error("this is error");
-    
-    # my $en = MEntry->new();
-
-    # say Dumper $en;
-
-    # How I want to build the ***MySQL classes
-    #
-    # use BibSpace::Model::M::MAuthorMySQL2;
-    # my $a1 = MAuthorMySQL->new(uid=>'sss');
-    # my $a2 = MAuthorMySQL2->new(object => $a1);
-
-
-
-    # say "##############################";
-    # say "### entries count: ". $self->storage->entries_count;
-    # say "### authors count: ". $en->authors_count;
-    # $en->authors($dbh);
-    # say "### Authors : " . Dumper $en->authors_all;
-
-
-    # 
-    # 
-    # my $entriesJSONstring = $self->storage->freeze(); 
-    # # say "Serialized Entries have length of " . length($entriesJSONstring);
-    # my $storage2 = CMObjectStore->thaw($entriesJSONstring);
-    # say Dumper $storage2->authors->[0];
-
-
-
-
-    say "Using CONFIG: " . $self->app->config_file;
-    # say "App home is: " . $self->app->home;
-    # say "Active bst file is: " . $self->app->bst;
-
-
 }
-
 
 ################################################################
 sub setup_cache {
@@ -246,7 +220,7 @@ sub setup_plugins {
     $self->plugin('BibSpace::Controller::CronHelpers');
     $self->secrets( [ $self->config->{key_cookie} ] );
 
-
+    $self->helper( logger => sub { state $logger = SimpleLogger->new } );
     $self->helper( users => sub { state $users = CMUsers->new } );
     $self->helper( proxy_prefix => sub { $self->config->{proxy_prefix} } );
 

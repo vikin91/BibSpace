@@ -1,4 +1,4 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T14:12:39
+# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T15:07:35
 package TeamsLayeredRepository;
 use namespace::autoclean;
 use Moose;
@@ -50,26 +50,24 @@ sub _getBackendWithPrio {
 =cut
 sub copy{
     my ($self, $fromLayer, $toLayer) = @_;
-    $self->logger->entering("","".__PACKAGE__."->copy");
     $self->logger->debug("Copying all Team from layer $fromLayer to layer $toLayer.","".__PACKAGE__."->copy");
 
     my @resultRead = $self->backendDaoFactory->getInstance( 
         $self->_getBackendWithPrio($fromLayer)->{'type'},
         $self->_getBackendWithPrio($fromLayer)->{'handle'} 
-    )->getTeamDao($self->idProvider)->all();
+    )->getTeamDao($self->{_idProvider})->all();
 
     $self->logger->debug(scalar(@resultRead)." Team read from layer $fromLayer.","".__PACKAGE__."->copy");
     
     my $resultSave = $self->backendDaoFactory->getInstance( 
         $self->_getBackendWithPrio($toLayer)->{'type'},
         $self->_getBackendWithPrio($toLayer)->{'handle'}
-    )->getTeamDao($self->idProvider)->save( @resultRead );
+    )->getTeamDao($self->{_idProvider})->save( @resultRead );
 
     $self->logger->debug(" $resultSave Team saved to layer $toLayer.","".__PACKAGE__."->copy");
-
-    $self->logger->exiting("","".__PACKAGE__."->copy");
 }
-
+before 'copy' => sub { shift->logger->entering("","".__PACKAGE__."->copy"); };
+after 'copy'  => sub { shift->logger->exiting("","".__PACKAGE__."->copy"); };
 
 ### READ METHODS
 
@@ -86,7 +84,7 @@ sub all {
     try{
         return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getTeamDao($self->idProvider)
+            ->getTeamDao($self->{_idProvider})
             ->all();
     }
     catch{
@@ -108,7 +106,7 @@ sub count {
     try{
         return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getTeamDao($self->idProvider)
+            ->getTeamDao($self->{_idProvider})
             ->count();
     }
     catch{
@@ -130,7 +128,7 @@ sub empty {
     try{
         return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getTeamDao($self->idProvider)
+            ->getTeamDao($self->{_idProvider})
             ->empty();
     }
     catch{
@@ -155,7 +153,7 @@ sub exists {
     try{
         return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getTeamDao($self->idProvider)
+            ->getTeamDao($self->{_idProvider})
             ->exists($obj);
     }
     catch{
@@ -181,7 +179,7 @@ sub save {
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
             $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
-              ->getTeamDao($self->idProvider)
+              ->getTeamDao($self->{_idProvider})
               ->save( @objects );
         }
         catch{
@@ -205,7 +203,7 @@ sub update {
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
             $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
-              ->getTeamDao($self->idProvider)
+              ->getTeamDao($self->{_idProvider})
               ->update( @objects );
         }
         catch{
@@ -229,7 +227,7 @@ sub delete {
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
             $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
-              ->getTeamDao($self->idProvider)
+              ->getTeamDao($self->{_idProvider})
               ->delete( @objects );
         }
         catch{
@@ -258,7 +256,7 @@ sub filter {
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
         return $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getTeamDao($self->idProvider)
+            ->getTeamDao($self->{_idProvider})
             ->filter( $coderef );
     }
     catch{
@@ -283,7 +281,7 @@ sub find {
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
         return $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getTeamDao($self->idProvider)
+            ->getTeamDao($self->{_idProvider})
             ->find( $coderef );
     }
     catch{

@@ -21,6 +21,12 @@ my $header
 # = all layers: save update delete  
 # == array arg: save update delete  
 
+
+# WARNING: YOU MAY OVERWRITE BIBSPACE::MODEL::REPOSITORY WITH THE GENERATED CODE WITHOUT LOOSING ANYTHING
+# WARNING: YOU MAY __NOT__ OVERWRITE BIBSPACE::MODEL::DAO WITH THE GENERATED CODE. 
+#   IF YOU DO SO, YOU WILL LOOSE THE CODE THAT IS RESPONSIBLE FOR SAVING, READING, .. OF THE BUSINESS ENTITY ENTRIES
+#   YOU MAY HOWEVER OVERWRITE SELECTED PARTS OF IT (FACTORIES, NEW-BACKEND-RELATED CODE), E.G. IF YOU WANT TO ADD A NEW BACKEND
+
 my %be
     = qw(Entry Entries Author Authors Team Teams Tag Tags TagType TagTypes Authorship Authorships Membership Memberships Labeling Labellings Exception Exceptions);
 my $vars = {
@@ -92,6 +98,7 @@ sub getInstance {
 
     die "Factory type not provided!" unless \$factoryType;
     die "Connection handle not provided!" unless \$handle;
+    \$self->logger->debug("Requesting new concreteDOAFactory of type \$factoryType.","".__PACKAGE__."->getInstance");
 
     try{
         my \$class = \$factoryType;
@@ -101,8 +108,9 @@ sub getInstance {
     catch{
         die "Requested unknown type of DaoFactory: '\$factoryType'.";
     };
-
 }
+before 'getInstance' => sub { shift->logger->entering("","".__PACKAGE__."->getInstance"); };
+after 'getInstance'  => sub { shift->logger->exiting("","".__PACKAGE__."->getInstance"); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;
@@ -140,6 +148,8 @@ sub get[% entity %]Dao {
     die "".__PACKAGE__."->get[% entity %]Dao MUST be called with valid idProvider!" if !defined \$idProvider;
     return [% entity %][% backend %]DAO->new( idProvider=> \$idProvider, logger=>\$self->logger, handle => \$self->handle );
 }
+before 'get[% entity %]Dao' => sub { shift->logger->entering("","".__PACKAGE__."->get[% entity %]Dao"); };
+after 'get[% entity %]Dao'  => sub { shift->logger->exiting("","".__PACKAGE__."->get[% entity %]Dao"); };
 [% END -%]
 __PACKAGE__->meta->make_immutable;
 no Moose;
@@ -368,10 +378,11 @@ has 'logger' => ( is => 'ro', does => '[% logger_interface %]', required => 1);
 # This is important to guanartee, that there is only one reposiotory per system.
 # Method getxxxRepostory guarantees that defined field will not be overwritten
 [% FOREACH entityPair IN business_entities_hash.pairs -%]
-has 'instance[% entityPair.value %]Repo' => ( is => 'rw', does => 'Maybe[IRepository]', default => undef);
+has '_instance[% entityPair.value %]Repo' => ( is => 'rw', does => 'Maybe[IRepository]', default => undef);
 [% END -%]
+
 [% FOREACH entityPair IN business_entities_hash.pairs -%]
-has 'idProvider[% entityPair.key %]' => ( is => 'rw', does => 'Maybe[IUidProvider]', default => undef);
+has '_idProvider[% entityPair.key %]' => ( is => 'rw', does => 'Maybe[IUidProvider]', default => undef, reader => 'idProvider[% entityPair.key %]');
 [% END -%]
 
 =item getInstance 
@@ -392,30 +403,29 @@ sub getInstance {
 [% FOREACH entityPair IN business_entities_hash.pairs -%]
 sub get[% entityPair.value %]Repository {
     my \$self = shift;
-    if( !defined \$self->idProvider[% entityPair.key %] ){
+    if( !defined \$self->{_idProvider[% entityPair.key %]} ){
         \$self->logger->debug("Initializing instance of idProvider[% entityPair.key %].", "".__PACKAGE__."->get[% entityPair.value %]Repository");
         my \$idProviderTypeClass = \$self->backendsConfigHash->{'idProviderType'};
         try{
             Class::Load::load_class(\$idProviderTypeClass);
             my \$providerInstance = \$idProviderTypeClass->new();
-            \$self->idProvider[% entityPair.key %](\$providerInstance);
+            \$self->{_idProvider[% entityPair.key %]} = \$providerInstance;
         }
         catch{
             \$self->logger->error("Requested unknown type of [% idProvider_interface %] : '\$idProviderTypeClass'.", "".__PACKAGE__."->get[% entityPair.value %]Repository");
             die "Requested unknown type of [% idProvider_interface %] : '\$idProviderTypeClass'.";
         };
     }
-    if( !defined \$self->instance[% entityPair.value %]Repo ){
+    if( !defined \$self->{_instance[% entityPair.value %]Repo} ){
         \$self->logger->debug("Initializing field instance[% entityPair.value %]Repo.", "".__PACKAGE__."->get[% entityPair.value %]Repository");
-        \$self->instance[% entityPair.value %]Repo(
+        \$self->{_instance[% entityPair.value %]Repo} =
             [% entityPair.value %][% backend %]Repository->new( 
-                idProvider => \$self->idProvider[% entityPair.key %],
+                _idProvider => \$self->{_idProvider[% entityPair.key %]},
                 logger => \$self->logger,
                 backendsConfigHash => \$self->backendsConfigHash 
-            )
-        );
+            );
     }
-    return \$self->instance[% entityPair.value %]Repo;
+    return \$self->{_instance[% entityPair.value %]Repo};
 }
 [% END -%]
 __PACKAGE__->meta->make_immutable;
@@ -463,7 +473,7 @@ use List::MoreUtils;
 has 'backendsConfigHash' => ( is => 'ro', isa => 'HashRef', coerce => 0, traits => [ 'Hash' ], required => 1 );
 # this parameter is lazy, because the builder routine depends on logger. Logger will be set as first (is non-lazy).
 has 'logger' => ( is => 'ro', does => '[% logger_interface %]', required => 1);
-has 'idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1, lazy => 0 );
+has '_idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1, lazy => 0 );
 has 'backendDaoFactory'  => ( is => 'ro', isa => '[% DAOAbstractFactoryPackageName %]', lazy => 1, builder => '_buildDAOFactory' );
 
 [% FOREACH method = methods_all -%]
@@ -552,26 +562,24 @@ sub _getBackendWithPrio {
 =cut
 sub copy{
     my (\$self, \$fromLayer, \$toLayer) = \@_;
-    \$self->logger->entering("","".__PACKAGE__."->copy");
     \$self->logger->debug("Copying all [% entity %] from layer \$fromLayer to layer \$toLayer.","".__PACKAGE__."->copy");
 
     my \@resultRead = \$self->backendDaoFactory->getInstance( 
         \$self->_getBackendWithPrio(\$fromLayer)->{'type'},
         \$self->_getBackendWithPrio(\$fromLayer)->{'handle'} 
-    )->get[% entity %]Dao(\$self->idProvider)->all();
+    )->get[% entity %]Dao(\$self->{_idProvider})->all();
 
     \$self->logger->debug(scalar(\@resultRead)." [% entity %] read from layer \$fromLayer.","".__PACKAGE__."->copy");
     
     my \$resultSave = \$self->backendDaoFactory->getInstance( 
         \$self->_getBackendWithPrio(\$toLayer)->{'type'},
         \$self->_getBackendWithPrio(\$toLayer)->{'handle'}
-    )->get[% entity %]Dao(\$self->idProvider)->save( \@resultRead );
+    )->get[% entity %]Dao(\$self->{_idProvider})->save( \@resultRead );
 
     \$self->logger->debug(" \$resultSave [% entity %] saved to layer \$toLayer.","".__PACKAGE__."->copy");
-
-    \$self->logger->exiting("","".__PACKAGE__."->copy");
 }
-
+before 'copy' => sub { shift->logger->entering("","".__PACKAGE__."->copy"); };
+after 'copy'  => sub { shift->logger->exiting("","".__PACKAGE__."->copy"); };
 
 ### READ METHODS
 
@@ -589,7 +597,7 @@ sub [% method %] {
     try{
         return \$self->backendDaoFactory
             ->getInstance( \$daoFactoryType, \$daoBackendHandle )
-            ->get[% entity %]Dao(\$self->idProvider)
+            ->get[% entity %]Dao(\$self->{_idProvider})
             ->[% method %]();
     }
     catch{
@@ -616,7 +624,7 @@ sub [% method %] {
     try{
         return \$self->backendDaoFactory
             ->getInstance( \$daoFactoryType, \$daoBackendHandle )
-            ->get[% entity %]Dao(\$self->idProvider)
+            ->get[% entity %]Dao(\$self->{_idProvider})
             ->[% method %](\$obj);
     }
     catch{
@@ -644,7 +652,7 @@ sub [% method %] {
         my \$daoBackendHandle = \$backendDAO->{'handle'};
         try{
             \$self->backendDaoFactory->getInstance( \$daoFactoryType, \$daoBackendHandle )
-              ->get[% entity %]Dao(\$self->idProvider)
+              ->get[% entity %]Dao(\$self->{_idProvider})
               ->[% method %]( \@objects );
         }
         catch{
@@ -675,7 +683,7 @@ sub [% method %] {
     my \$daoBackendHandle = \$self->_getReadBackend()->{'handle'};
     try{
         return \$self->backendDaoFactory->getInstance( \$daoFactoryType, \$daoBackendHandle )
-            ->get[% entity %]Dao(\$self->idProvider)
+            ->get[% entity %]Dao(\$self->{_idProvider})
             ->[% method %]( \$coderef );
     }
     catch{

@@ -1,6 +1,7 @@
 package SimpleLogger;
 use Term::ANSIColor;
 use Moose;
+use Bibspace::Model::ILogger;
 with 'ILogger';
 
 sub log{
