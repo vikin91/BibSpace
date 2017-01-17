@@ -54,7 +54,7 @@ sub save {
     if(!$self->defined($type)){
         $self->set($type, []);
     }
-    push $self->get($type), @objects;
+    push @{$self->get($type)}, @objects;
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
 after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
