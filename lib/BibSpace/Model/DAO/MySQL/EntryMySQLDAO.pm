@@ -18,7 +18,6 @@ use Try::Tiny;
 =cut 
 sub all {
   my ($self) = @_;
-  $self->logger->entering("","".__PACKAGE__."->all");
   my $dbh = $self->handle;
   my $qry = "SELECT
               id,

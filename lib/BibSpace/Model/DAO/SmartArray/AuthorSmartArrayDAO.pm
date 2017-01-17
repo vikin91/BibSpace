@@ -69,9 +69,7 @@ after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); }
 =cut 
 sub save {
   my ($self, @objects) = @_;
-  foreach my $o (@objects){
-      $self->handle->add($o);
-  }
+  $self->handle->save(@objects);
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
 after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };

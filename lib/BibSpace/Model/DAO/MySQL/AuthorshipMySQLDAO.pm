@@ -18,10 +18,20 @@ use Try::Tiny;
 =cut 
 sub all {
   my ($self) = @_;
+  my $dbh = $self->handle;
+  my $qry = "SELECT author_id, entry_id
+            FROM Entry_to_Author";
 
-  die "".__PACKAGE__."->all not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  my $sth = $dbh->prepare($qry);
+  $sth->execute();
 
+  my @objects;
+
+  while ( my $row = $sth->fetchrow_hashref() ) {
+      my $authorship = Authorship->new( author_id => $row->{author_id}, entry_id => $row->{entry_id} );
+      push @objects, $authorship;
+    }
+  return @objects;
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
 after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };

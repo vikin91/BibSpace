@@ -18,9 +18,38 @@ use Try::Tiny;
 =cut 
 sub all {
   my ($self) = @_;
+  my $dbh  = $self->handle;
+  my $qry = "SELECT 
+          id,
+          uid,
+          display,
+          master,
+          master_id
+      FROM Author";
+  my @objs;
+  my $sth = $dbh->prepare($qry);
+  $sth->execute();
 
-  die "".__PACKAGE__."->all not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  while ( my $row = $sth->fetchrow_hashref() ) {
+      my $obj = Author->new(
+          id        => $row->{id},
+          uid       => $row->{uid},
+          display   => $row->{display},
+          master    => $row->{master},
+          master_id => $row->{master_id}
+      );
+      # if( $obj->{master_id} != $obj->{id} ){
+      #     $obj->{masterObj} = MAuthor->static_get($dbh, $obj->{master_id});
+      # }
+      # else{
+      #     $obj->{masterObj} = $obj;
+      # }
+      # FIXME: Temporary fix. This should be fixed with a join!
+      $obj->{masterObj} = undef;
+
+      push @objs, $obj;
+  }
+  return @objs;
 
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };

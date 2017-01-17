@@ -111,14 +111,15 @@ sub register {
     $app->helper(
         num_pubs => sub {
             my $self = shift;
-            return $self->storage->entries_count;
+            return $self->app->repo->getEntriesRepository()->all();
         }
     );
 
     $app->helper(
         get_all_tag_types => sub {
             my $self = shift;
-            return $self->storage->tagtypes_all;
+            # return $self->storage->tagtypes_all;
+            return $self->app->repo->getTagTypesRepository()->all();
         }
     );
 

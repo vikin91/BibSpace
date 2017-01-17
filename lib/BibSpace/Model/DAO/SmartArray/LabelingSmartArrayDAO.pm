@@ -19,8 +19,7 @@ use Try::Tiny;
 sub all {
   my ($self) = @_;
 
-  die "".__PACKAGE__."->all not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  return $self->handle->all("Labeling");
 
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
@@ -72,10 +71,7 @@ after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); }
 =cut 
 sub save {
   my ($self, @objects) = @_;
-
-  die "".__PACKAGE__."->save not implemented. Method was instructed to save ".scalar(@objects)." objects.";
-  # TODO: auto-generated method stub. Implement me!
-
+  $self->handle->save(@objects);
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
 after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };

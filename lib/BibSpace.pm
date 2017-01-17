@@ -33,7 +33,9 @@ use Mojo::Home;
 use File::Spec;
 use Cwd;
 
-use Redis;
+use BibSpace::Model::DAO::DAOFactory;
+use BibSpace::Model::Repository::RepositoryFactory;
+use BibSpace::Model::SmartArray;
 
 # for Makemake. Needs to be removed for Dist::Zilla
 # our $VERSION = '0.4.4';
@@ -74,8 +76,39 @@ has db => sub {
 };
 
 has version => sub {
-    my $self = shift;
     return $BibSpace::VERSION // "0.4.7";
+};
+
+
+
+has logger => sub { state $logger = SimpleLogger->new };
+
+has smatrArrayBackend => sub {
+    my $self = shift;
+    state $logger = SmartArray->new(logger => $self->logger);
+};
+
+has backendConfig => sub {
+    my $self = shift;
+    my %backendConfig = (
+        idProviderType => 'IntegerUidProvider',
+        backends => [ 
+            { prio => 1, type => 'SmartArrayDAOFactory', handle => $self->smatrArrayBackend }, # this is fucked-up! How do I pass SmartArrays for other entities??
+            # { prio => 2, type => 'RedisDAOFactory', handle => $redisHandle },
+            { prio => 2, type => 'MySQLDAOFactory', handle => $self->db },
+        ]
+    );
+    return \%backendConfig;
+};
+
+has repo => sub {
+    my $self = shift;
+    state $repo = RepositoryFactory->new(logger => $self->logger)
+        ->getInstance('LayeredRepositoryFactory', $self->backendConfig);
+    # I don't like the approach with idProvider that comes from the factory
+    # But it is necessary, as the new IDs need to be registered once they are read from DB (or any other backend)
+    # my $author = Author->new( idProvider=>$factory->idProviderAuthor, id => 5, uid => "sth", name => 'Henry' );
+    # $arepo->save($author);
 };
 
 ################################################################
@@ -88,10 +121,9 @@ sub startup {
     $self->setup_hooks;
     $self->setup_repositories;
 
-    
-    # $logger->info("this is info");
-    # $logger->warn("this is warning");
-    # $logger->error("this is error");
+    # $self->logger->info("this is info");
+    # $self->logger->warn("this is warning");
+    # $self->logger->error("this is error");
     
 
     say "Using CONFIG: " . $self->app->config_file;
@@ -104,51 +136,27 @@ sub setup_repositories {
     my $app  = $self;
     my $dbh = $self->app->db;
 
-    use BibSpace::Model::DAO::DAOFactory;
-    use BibSpace::Model::Repository::RepositoryFactory;
     
+    $self->repo->getAuthorsRepository->copy(2,1);
+    $self->repo->getAuthorshipsRepository->copy(2,1);
+    # $self->logger->debug( "Authorships: ".join(', ', map{$_->toString} $self->repo->getAuthorshipsRepository->all ) );
+    $self->repo->getEntriesRepository->copy(2,1);
+    $self->repo->getExceptionsRepository->copy(2,1);
+    $self->repo->getLabellingsRepository->copy(2,1);
+    # $self->repo->getMembershipsRepository->copy(2,1);
+    # $self->repo->getTagsRepository->copy(2,1);
+    # $self->repo->getTagTypesRepository->copy(2,1);
+    # $self->repo->getTeamsRepository->copy(2,1);
+
     
 
-    use BibSpace::Model::SmartArray;
-    my $globalEntriesArray = SmartArray->new(logger => $app->logger);
-
-    # my $sa = SmartArray->new;
-
-    # $sa->add(Author->new(uid=>"henry", idProvider => IntegerUidProvider->new()) );
-    # $sa->add(Author->new(uid=>"john", idProvider => IntegerUidProvider->new()) );
-    # $app->logger->debug( Dumper $sa );
-    # $app->logger->debug( Dumper $sa->all("Author") );
-
-
-
-    my %backendConfig = (
-        idProviderType => 'IntegerUidProvider',
-        backends => [ 
-            { prio => 1, type => 'SmartArrayDAOFactory', handle => $globalEntriesArray }, # this is fucked-up! How do I pass SmartArrays for other entities??
-            # { prio => 2, type => 'RedisDAOFactory', handle => $redisHandle },
-            { prio => 2, type => 'MySQLDAOFactory', handle => $dbh },
-        ]
-    );
-    my $factory = RepositoryFactory->new(logger => $app->logger)->getInstance('LayeredRepositoryFactory',\%backendConfig);
+    my $factory = $self->repo;
     # this factory holds idProvider for each business entity (e.g. idProviderEntry, idProviderAuthor)
     # this factory holds instances of repositories for each business entity (e.g. instanceEntriesRepo, instanceAuthorsRepo)
     # there should be single factory in BibSpace!!!
     # this should be helper with state!
 
-    my $erepo = $factory->getEntriesRepository();
-    my $arepo = $factory->getAuthorsRepository();
-    # or maybe the repositories should be made global as helpers
-    
-    $erepo->copy(2,1); # COPY from MySQL to Array
-    my @allEntries = $erepo->all();
-    use Data::Dumper;
-    # $app->logger->debug( "ALL Entries: ". Dumper @allEntries );
-    $app->logger->debug( "ALL Entries: ".join(', ', map{$_->id} @allEntries ) );
 
-    # I don't like the approach with idProvider that comes from the factory
-    # But it is necessary, as the new IDs need to be registered once they are read from DB (or any other backend)
-    # my $author = Author->new( idProvider=>$factory->idProviderAuthor, id => 5, uid => "sth", name => 'Henry' );
-    # $arepo->save($author);
     
 
 
@@ -233,7 +241,6 @@ sub setup_plugins {
     $self->plugin('BibSpace::Controller::CronHelpers');
     $self->secrets( [ $self->config->{key_cookie} ] );
 
-    $self->helper( logger => sub { state $logger = SimpleLogger->new } );
     $self->helper( users => sub { state $users = CMUsers->new } );
     $self->helper( proxy_prefix => sub { $self->config->{proxy_prefix} } );
 
