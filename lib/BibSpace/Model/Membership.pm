@@ -12,6 +12,7 @@ use Moose;
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
+
 has 'team' => (
     is     => 'rw',
     isa    => 'Maybe[MTeam]',
@@ -31,31 +32,6 @@ has 'author_id' => ( is => 'rw', isa => 'Int' );
 has 'start' => ( is => 'rw', isa => 'Int', default => 0 );
 has 'stop'  => ( is => 'rw', isa => 'Int', default => 0 );
 
-################################################################################
-sub init_storage {
-    my $self = shift;
-    # nothing to do here
-}
-####################################################################################
-sub replaceFromStorage {
-    my $self    = shift;
-    my $storage = shift;    # dependency injection
-
-    my $storageItem
-        = $storage->teamMemberships_find( sub { $_->equals($self) } );
-
-    die "Cannot find " . ref($self) . ": " . Dumper($self) . " in storage "
-        unless $storageItem;
-
-    if ( $storageItem->author_id != $self->author_id ) {
-        say "Found " . $storageItem->author_id . " for " . $self->author_id;
-    }
-    if ( $storageItem->team_id != $self->team_id ) {
-        say "Found " . $storageItem->author_id . " for " . $self->author_id;
-    }
-
-    return $storageItem;
-}
 ####################################################################################
 sub toString {
     my $self = shift;

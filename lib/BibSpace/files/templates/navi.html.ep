@@ -130,7 +130,11 @@
 
         <li class="divider"></li>
         <li role="presentation" class="dropdown-header">Visible authors</li>
-        % my @authors = sort {$a->{master} cmp $b->{master}} $self->storage->authors_filter( sub{ ($_->is_master and $_->display == 1)} );
+        % my @authors = sort {$a->{master} cmp $b->{master}} 
+        %    $self->app->repo->getAuthorsRepository->filter( sub{
+        %       $_->is_master and 
+        %       $_->display == 1
+        %    });
         % foreach my $author (@authors){
             <li>
                 <a href="<%= url_for('edit_author', id=>$author->{master_id})%>" >
@@ -159,7 +163,7 @@
 
         <li class="divider"></li>
         <li role="presentation" class="dropdown-header">Teams</li>
-        % my @all_teams = $self->storage->teams_all;
+        % my @all_teams = $self->app->repo->getTeamsRepository->all;
         % foreach my $team ( @all_teams ){
             <li>
                 <a href="<%= url_for('edit_team', teamid=>$team->{id} )%>">

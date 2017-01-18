@@ -408,8 +408,7 @@ sub all {
         my @objs = Fget_publications_main_hashed_args( $self,
             { entry_type => $entry_type } );
 
-        my $storage     = StorageBase->get();
-        my @all_entries = $storage->entries_all;
+        my @all_entries = $self->app->repo->getEntriesRepository->all;
 
         #my @objs = @all_entries;
 
@@ -428,9 +427,7 @@ sub all {
 sub all_read {
     my $self = shift;
 
-
-    my $storage = StorageBase->get();
-    my @objs = $storage->entries_filter( sub { $_->{hidden} == 0 } );
+    my @objs = $self->app->repo->getEntriesRepository->filter( sub { $_->{hidden} == 0 } );
 
 
     $self->stash( entries => \@objs );
@@ -444,8 +441,7 @@ sub single {
     my $self = shift;
     my $id   = $self->param('id');
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     my @objs;
     if ( defined $entry ) {
@@ -1284,9 +1280,7 @@ sub publications_edit_get {
 
     $self->write_log("Editing publication entry id $id");
 
-    my $dbh = $self->app->db;
-    my $storage = StorageBase->get();
-    my $mentry = $storage->entries_find( sub {$_->id == $id} );
+    my $mentry = $self->app->repo->getEntriesRepository->find( sub { $_->{uid} == $id } );
     
     if ( !defined $mentry ) {
         $self->flash( msg => "There is no entry with id $id" );

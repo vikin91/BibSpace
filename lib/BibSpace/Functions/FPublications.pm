@@ -226,14 +226,22 @@ sub Fget_publications_core_storage {
     my $hidden      = shift;
     my $debug       = shift // 0;
 
-    my $storage = StorageBase->get();
+    # my $storage = StorageBase->get();
 
 
 
-    my $team_obj   = $storage->find_team_by_id_or_name($team);
-    my $author_obj = $storage->find_author_by_id_or_name($author);
-    my $tag_obj    = $storage->find_tag_by_id_or_name($tag);
-    my $tag_obj_perm = $storage->find_tag_by_id_or_name($permalink);
+    my $team_obj     = $self->app->repo->getTeamsRepository->find( sub{ $_->id == $team } ) or
+                       $self->app->repo->getTeamsRepository->find( sub{ $_->name eq $team } )
+                          if defined $team;
+    my $author_obj   = $self->app->repo->getAuthorsRepository->find( sub{ $_->master_id == $author } ) or
+                       $self->app->repo->getAuthorsRepository->find( sub{ $_->master eq $author } )
+                          if defined $author;
+    my $tag_obj      = $self->app->repo->getTagsRepository->find( sub{ $_->id == $tag } ) or
+                       $self->app->repo->getTagsRepository->find( sub{ $_->name eq $tag } )
+                          if defined $tag;
+    my $tag_obj_perm = $self->app->repo->getTagsRepository->find( sub{ $_->id == $permalink } ) or
+                       $self->app->repo->getTagsRepository->find( sub{ $_->name eq $permalink } )
+                          if defined $permalink;
 
     
     my $teamid = undef;
@@ -244,7 +252,7 @@ sub Fget_publications_core_storage {
     $tagid = $tag_obj->id if defined $tag_obj;
 
     # filtering
-    my @entries = $storage->entries_all;
+    my @entries = $self->app->repo->getEntriesRepository()->all();
 
     # simple filters
     if( defined $year and $year > 0 ){
@@ -258,7 +266,7 @@ sub Fget_publications_core_storage {
 
         # say "Comparing bibtex_type: $bibtex_type" if $debug == 1;
         # map { say $_->id . " type ". $_->get_type } @entries  if $debug == 1;
-        @entries = grep { $_->matches_our_type($bibtex_type, $storage) } @entries;
+        @entries = grep { $_->matches_our_type($bibtex_type, $self->app->repo) } @entries;
     }
     if(defined $entry_type){
         # say "Comparing entry_type: $entry_type" if $debug == 1;

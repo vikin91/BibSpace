@@ -139,14 +139,13 @@ sub setup_repositories {
     
     $self->repo->getAuthorsRepository->copy(2,1);
     $self->repo->getAuthorshipsRepository->copy(2,1);
-    # $self->logger->debug( "Authorships: ".join(', ', map{$_->toString} $self->repo->getAuthorshipsRepository->all ) );
     $self->repo->getEntriesRepository->copy(2,1);
     $self->repo->getExceptionsRepository->copy(2,1);
     $self->repo->getLabellingsRepository->copy(2,1);
-    # $self->repo->getMembershipsRepository->copy(2,1);
-    # $self->repo->getTagsRepository->copy(2,1);
-    # $self->repo->getTagTypesRepository->copy(2,1);
-    # $self->repo->getTeamsRepository->copy(2,1);
+    $self->repo->getMembershipsRepository->copy(2,1);
+    $self->repo->getTagsRepository->copy(2,1);
+    $self->repo->getTagTypesRepository->copy(2,1);
+    $self->repo->getTeamsRepository->copy(2,1);
 
     
 

@@ -18,9 +18,25 @@ use Try::Tiny;
 =cut 
 sub all {
   my ($self) = @_;
+  my $dbh = $self->handle;
+  my $qry = "SELECT author_id, team_id, start, stop
+          FROM Author_to_Team
+          WHERE author_id = ?";
 
-  die "".__PACKAGE__."->all not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  my $sth = $dbh->prepare($qry);
+  $sth->execute( $self->{id} );
+
+  my @memberships;
+  while ( my $row = $sth->fetchrow_hashref() ) {
+      my $mem = Membership->new( 
+          team_id => $row->{team_id},
+          author_id => $row->{author_id},
+          start => $row->{start},
+          stop => $row->{stop}
+      );
+      push @memberships, $mem;
+  }
+  return @memberships;
 
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };

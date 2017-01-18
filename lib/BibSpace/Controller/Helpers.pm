@@ -156,7 +156,8 @@ sub register {
     $app->helper(
         num_authors => sub {
             my $self = shift;
-            return $self->storage->authors_all;
+            return $self->app->repo->getAuthorsRepository()->all();
+            # return $self->storage->authors_all;
 
         }
     );
@@ -165,7 +166,7 @@ sub register {
         num_visible_authors => sub {
             my $self = shift;
             return
-                scalar $self->storage->authors_filter( sub { $_->display == 1 } );
+                scalar grep { $_->display == 1 } $self->app->repo->getAuthorsRepository()->all();
         }
     );
 
@@ -182,7 +183,7 @@ sub register {
     $app->helper(
         get_num_teams => sub {
             my $self = shift;
-            return $self->storage->teams_count;
+            return $self->app->repo->getTeamsRepository()->count();
         }
     );
 
@@ -191,9 +192,7 @@ sub register {
         num_tags => sub {
             my $self = shift;
             my $type = shift || 1;
-            return
-                scalar $self->storage->tags_filter( sub { $_->type == $type }
-                );
+            return scalar $self->app->repo->getTagsRepository->filter(sub { $_->type == $type });
         }
     );
 
@@ -202,18 +201,9 @@ sub register {
             my $self = shift;
             my $year = shift;
 
-            return scalar $self->storage->entries_filter(
-                sub {
-                    (           defined $_->year
+            return scalar grep {defined $_->year
                             and $_->year == $year
-                            and $_->hidden == 0 );
-                }
-            );
-
-            # my @objs = Fget_publications_main_hashed_args_only( $self,
-            #     { hidden => 0, year => $year } );
-            # my $count = scalar @objs;
-            # return $count;
+                            and $_->hidden == 0} $self->app->repo->getEntriesRepository()->all();
         }
     );
 
@@ -289,7 +279,7 @@ sub register {
             my $self = shift;
 
             my @arr = map { $_->year }
-                grep { defined $_->year } $self->storage->entries_all;
+                grep { defined $_->year } $self->app->repo->getEntriesRepository()->all();
             @arr = uniq @arr;
             @arr = sort { $b <=> $a } @arr;
             my $max = scalar @arr;

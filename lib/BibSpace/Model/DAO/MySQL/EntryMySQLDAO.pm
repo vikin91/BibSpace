@@ -86,7 +86,6 @@ sub all {
           need_html_regen => $row->{need_html_regen},
           );
   }
-  $self->logger->exiting("","".__PACKAGE__."->all");
   return @objs;
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };

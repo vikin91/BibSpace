@@ -18,9 +18,7 @@ use Try::Tiny;
 =cut 
 sub all {
   my ($self) = @_;
-
   return $self->handle->all("Team");
-
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
 after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
@@ -30,10 +28,7 @@ after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
 =cut 
 sub count {
   my ($self) = @_;
-
-  die "".__PACKAGE__."->count not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  return scalar $self->handle->all("Team");
 }
 before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
 after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
@@ -43,10 +38,7 @@ after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
 =cut 
 sub empty {
   my ($self) = @_;
-
-  die "".__PACKAGE__."->empty not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  return scalar $self->handle->all("Team") == 0;
 }
 before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
 after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };

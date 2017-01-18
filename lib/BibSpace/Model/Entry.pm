@@ -1,12 +1,14 @@
 package Entry;
 
+use BibSpace::Model::IntegerUidProvider;
 use BibSpace::Model::Tag;
 use BibSpace::Model::Team;
 use BibSpace::Model::Author;
 use BibSpace::Model::TagType;
+use BibSpace::Model::Type;
 
 use List::MoreUtils qw(any uniq);
-use BibSpace::Model::IntegerUidProvider;
+
 
 use BibSpace::Model::M::StorageBase;
 
@@ -44,7 +46,7 @@ sub _generateUIDEntry {
     }
 }
 
-# id deprecated - old mysql id
+
 has 'idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1, lazy => 0, traits  => ['DoNotSerialize'] );
 # id deprecated - old mysql id
 has 'id' => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
@@ -323,16 +325,14 @@ sub is_talk {
 sub matches_our_type {
     my $self    = shift;
     my $oType   = shift;
-    my $storage = shift;
+    my $repo    = shift;
 
-    die "This method requires storage, sorry." unless $storage;
+    die "This method requires repo, sorry." unless $repo;
 
     # example: ourType = inproceedings
     # mathces bibtex types: inproceedings, incollection
 
-    use BibSpace::Model::M::MTypeMappingBase;
-
-    my $mapping = $storage->typeMappings_find(
+    my $mapping = $repo->getTypesRepository->find(
         sub {
             ( $_->our_type cmp $oType ) == 0;
         }
@@ -347,8 +347,6 @@ sub matches_our_type {
     );
 
     return defined $match;
-
-
 }
 ####################################################################################
 sub populate_from_bib {

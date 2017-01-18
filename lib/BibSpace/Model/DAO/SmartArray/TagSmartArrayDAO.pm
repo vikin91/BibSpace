@@ -109,8 +109,7 @@ sub filter {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
 
-  die "".__PACKAGE__."->filter not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  return grep {$coderef} $self->all();
   
 }
 before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
@@ -122,8 +121,7 @@ sub find {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
 
-  die "".__PACKAGE__."->find not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  return first {$coderef} $self->all();
   
 }
 before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };

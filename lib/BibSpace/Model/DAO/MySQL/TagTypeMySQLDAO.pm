@@ -18,10 +18,24 @@ use Try::Tiny;
 =cut 
 sub all {
   my ($self) = @_;
+  my $dbh = $self->handle;
+  my $qry = " SELECT id, name, comment 
+              FROM TagType 
+              ORDER BY id ASC";
+  my $sth = $dbh->prepare($qry);
+  $sth->execute();
 
-  die "".__PACKAGE__."->all not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  my @objs;
 
+  while ( my $row = $sth->fetchrow_hashref() ) {
+      push @objs,
+          TagType->new(
+          id      => $row->{id},
+          name    => $row->{name},
+          comment => $row->{comment},
+          );
+  }
+  return @objs;
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
 after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };

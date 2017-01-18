@@ -1,10 +1,10 @@
 # This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T16:44:28
-package AuthorSmartArrayDAO;
+package TypeSmartArrayDAO;
 
 use namespace::autoclean;
 use Moose;
 use BibSpace::Model::DAO::Interface::IDAO;
-use BibSpace::Model::Author;
+use BibSpace::Model::Type;
 with 'IDAO';
 use Try::Tiny;
 
@@ -18,7 +18,9 @@ use Try::Tiny;
 =cut 
 sub all {
   my ($self) = @_;
-  return $self->handle->all("Author");
+
+  return $self->handle->all("Type");
+
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
 after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
@@ -107,7 +109,8 @@ sub filter {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
 
-  return grep {$coderef} $self->all();
+  die "".__PACKAGE__."->filter not implemented.";
+  # TODO: auto-generated method stub. Implement me!
   
 }
 before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
@@ -119,7 +122,8 @@ sub find {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
 
-  return first {$coderef} $self->all();
+  die "".__PACKAGE__."->find not implemented.";
+  # TODO: auto-generated method stub. Implement me!
   
 }
 before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };

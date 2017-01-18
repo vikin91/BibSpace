@@ -11,9 +11,30 @@ use Moose;
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
+sub _generateUIDEntry {
+    my $self = shift;
+    if ( defined $self->dbid and $self->dbid > 0 ) {
+        my $uid = $self->dbid;
+        $self->idProvider->registerUID($uid);
+        return $uid;
+    }
+    else {
+        return $self->idProvider->generateUID();
+    }
+}
+
+
+has 'idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1, lazy => 0, traits  => ['DoNotSerialize'] );
+# id deprecated - old mysql id
+has 'id' => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
+# old mysql id - for compatibility
+has 'dbid' => ( is => 'ro', isa => 'Int', required => 0 );
+# new bibspace id
+has 'uid' => ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy => 1 );
 has 'id'   => ( is => 'rw', isa => 'Int' );
 has 'name' => ( is => 'rw', isa => 'Str' );
 has 'parent' => ( is => 'rw' );
+
 
 has 'bteamMemberships' => (
     is      => 'rw',
