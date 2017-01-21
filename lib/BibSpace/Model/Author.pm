@@ -11,11 +11,30 @@ use BibSpace::Model::Membership;
 use BibSpace::Model::M::StorageBase;
 
 use Moose;
+use BibSpace::Model::IEntity;
+with 'IEntity';
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
 
-has 'id'      => ( is => 'rw', isa     => 'Int' );
+# sub _generateUIDEntry {
+#     my $self = shift;
+  
+#     if ( defined $self->old_mysql_id and $self->old_mysql_id > 0 ) {
+#         $self->idProvider->registerUID( $self->old_mysql_id );
+#         return $self->old_mysql_id;
+#     }
+#     return $self->idProvider->generateUID();
+# }
+
+# has 'idProvider' => (
+#     is       => 'ro',
+#     does     => 'IUidProvider',
+#     required => 1,
+#     traits   => ['DoNotSerialize']
+# );
+# has 'old_mysql_id'    => ( is => 'ro', isa => 'Maybe[Int]', default => undef );
+# has 'id'              => ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy=>1, init_arg => undef );
 has 'uid'     => ( is => 'rw', isa     => 'Str' );
 has 'display' => ( is => 'rw', default => 0 );
 has 'master' =>
@@ -191,29 +210,32 @@ sub is_master {
 
     return 1 if !defined $self->masterObj;
     return 1 if $self->equals( $self->masterObj );
-    return 0;
+    return;
 }
 ####################################################################################
 sub is_minion {
     my $self = shift;
-    return $self->is_master == 0;
+    return not $self->is_master;
 }
 ####################################################################################
 sub is_minion_of {
     my $self   = shift;
     my $master = shift;
 
+    # master cannot be minion
+    return if $self->is_master;
+    
     return 1
-        if defined $self->{masterObj} and $self->{masterObj}->equals($master);
+        if defined $self->masterObj and $self->masterObj->equals($master);
+    # id matches master_id
     return 1
-        if defined $master->{id}
-        and defined $self->{master_id}
-        and $self->{master_id} == $master->{id};
+        if defined $master->id
+        and defined $self->master_id
+        and $self->master_id == $master->id;
+    # name (uid) matches master -- DEPRECTAED!!
     return 1
         if defined $self->master
         and ( $self->master cmp $master->uid ) == 0;
-    return if $self->is_master;
-
     return;
 }
 ####################################################################################

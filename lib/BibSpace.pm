@@ -151,9 +151,7 @@ sub setup_repositories {
     my @allEntries = $self->repo->getEntriesRepository->all;
     $self->app->logger->debug( "Entries: ".join(', ', map{$_->id} @allEntries ) );
     
-    $self->repo->getEntriesRepository->getIdProvider->generateUID();
-    $self->repo->getEntriesRepository->getIdProvider->generateUID();
-    $self->repo->getEntriesRepository->getIdProvider->generateUID();
+
 
     my $factory = $self->repo;
     # this factory holds idProvider for each business entity (e.g. idProviderEntry, idProviderAuthor)
@@ -161,6 +159,15 @@ sub setup_repositories {
     # there should be single factory in BibSpace!!!
     # this should be helper with state!
 
+    $self->repo->getAuthorsRepository->all;
+    $self->repo->getAuthorsRepository->getIdProvider->generateUID();
+    $self->repo->getAuthorsRepository->getIdProvider->generateUID();
+    $self->repo->getAuthorsRepository->getIdProvider->generateUID();
+    $self->repo->getAuthorsRepository->getIdProvider->generateUID();
+
+    $self->repo->getEntriesRepository->getIdProvider->generateUID();
+    $self->repo->getEntriesRepository->getIdProvider->generateUID();
+    $self->repo->getEntriesRepository->getIdProvider->generateUID();
 
     # my $idp = IntegerUidProvider->new;
     # $idp->registerUID(3);

@@ -75,7 +75,7 @@
         <div class="col-lg-2 col-md-2 col-xs-2">
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-              % if( $author->master_id == $author->id ){
+              % if( $author->is_master ){
                 <a  class="btn btn-success">
                 This author is master
                 </a>

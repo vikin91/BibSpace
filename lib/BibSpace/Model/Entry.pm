@@ -26,6 +26,8 @@ use Encode;
 
 use Moose;
 use Moose::Util::TypeConstraints;
+use BibSpace::Model::IEntity;
+with 'IEntity';
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
@@ -34,24 +36,24 @@ my $dtPattern
 
 
 
-sub _generateUIDEntry {
-    my $self = shift;
+# sub _generateUIDEntry {
+#     my $self = shift;
   
-    if ( defined $self->old_mysql_id and $self->old_mysql_id > 0 ) {
-        $self->idProvider->registerUID( $self->old_mysql_id );
-        return $self->old_mysql_id;
-    }
-    return $self->idProvider->generateUID();
-}
+#     if ( defined $self->old_mysql_id and $self->old_mysql_id > 0 ) {
+#         $self->idProvider->registerUID( $self->old_mysql_id );
+#         return $self->old_mysql_id;
+#     }
+#     return $self->idProvider->generateUID();
+# }
 
-has 'idProvider' => (
-    is       => 'ro',
-    does     => 'IUidProvider',
-    required => 1,
-    traits   => ['DoNotSerialize']
-);
-has 'old_mysql_id'    => ( is => 'ro', isa => 'Maybe[Int]', default => undef );
-has 'id'              => ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy=>1, init_arg => undef );
+# has 'idProvider' => (
+#     is       => 'ro',
+#     does     => 'IUidProvider',
+#     required => 1,
+#     traits   => ['DoNotSerialize']
+# );
+# has 'old_mysql_id'    => ( is => 'ro', isa => 'Maybe[Int]', default => undef );
+# has 'id'              => ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy=>1, init_arg => undef );
 has 'entry_type'      => ( is => 'rw', isa => 'Str', default => 'paper' );
 has 'bibtex_key'      => ( is => 'rw', isa => 'Maybe[Str]' );
 has '_bibtex_type'    => ( is => 'rw', isa => 'Maybe[Str]' );
@@ -557,21 +559,27 @@ sub authors {
 ####################################################################################
 sub has_author {
     my $self = shift;
-    my $a    = shift;
+    my $authorshipsRepo = shift;
+    my $author    = shift;
 
-    my $exists = $self->authors_find_index( sub { $_->equals($a) } ) > -1;
-    return $exists;
+    my $authorship = $authorshipsRepo->find(sub{
+        $_->author_id == $author->id 
+        and $_->author_id == $self->id 
+    });
+    return defined $authorship;
 }
 ####################################################################################
 sub has_master_author {
     my $self = shift;
-    my $a    = shift;
+    my $authorshipsRepo = shift;
+    my $author    = shift;
 
-    my $author = $self->authors_find( sub { $_->equals($a) } );
-    if ($author) {
-        return $author->is_master;
-    }
-    return 0;
+    $author = $author->get_master;
+    my $authorship = $authorshipsRepo->find(sub{
+        $_->author_id == $author->id 
+        and $_->author_id == $self->id 
+    });
+    return defined $authorship; 
 }
 ####################################################################################
 sub assign_author {

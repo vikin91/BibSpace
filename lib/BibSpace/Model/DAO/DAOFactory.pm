@@ -20,7 +20,7 @@ sub getInstance {
 
     die "Factory type not provided!" unless $factoryType;
     die "Connection handle not provided!" unless $handle;
-    $self->logger->debug("Requesting new concreteDOAFactory of type $factoryType.","".__PACKAGE__."->getInstance");
+    # $self->logger->debug("Requesting new concreteDOAFactory of type $factoryType.","".__PACKAGE__."->getInstance");
 
     try{
         my $class = $factoryType;

@@ -64,7 +64,7 @@ sub copy{
         $self->_getBackendWithPrio($toLayer)->{'handle'}
     )->getAuthorDao($self->getIdProvider)->save( @resultRead );
 
-    $self->logger->debug(" $resultSave Author saved to layer $toLayer.","".__PACKAGE__."->copy");
+    $self->logger->debug("$resultSave Author saved to layer $toLayer.","".__PACKAGE__."->copy");
 }
 before 'copy' => sub { shift->logger->entering("","".__PACKAGE__."->copy"); };
 after 'copy'  => sub { shift->logger->exiting("","".__PACKAGE__."->copy"); };

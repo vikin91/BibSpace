@@ -34,15 +34,15 @@ our @EXPORT = qw(
 );
 ####################################################################################
 sub Fdo_regenerate_html {
-    my ($dbh, $bst_file, $force, @entries) = @_;
+    my ($repo, $bst_file, $force, @entries) = @_;
 
 
     my $num_fixes = 0;
     for my $e (@entries) {
         $e->bst_file($bst_file);
         $e->regenerate_html( $force, $bst_file );
-        $e->save($dbh);    # change to $storage->store_all or sth;
     }
+    $repo->save(@entries);
 }
 ####################################################################################
 sub FprintBibtexWarnings {
@@ -219,22 +219,22 @@ sub Fget_publications_core_storage {
     my $debug       = shift // 0;
 
     # my $storage = StorageBase->get();
+    
 
 
 
     my $team_obj     = $self->app->repo->getTeamsRepository->find( sub{ $_->id == $team } ) or
                        $self->app->repo->getTeamsRepository->find( sub{ $_->name eq $team } )
                           if defined $team;
-    my $author_obj   = $self->app->repo->getAuthorsRepository->find( sub{ $_->master_id == $author } ) or
-                       $self->app->repo->getAuthorsRepository->find( sub{ $_->master eq $author } )
-                          if defined $author;
+    my $author_obj   = $self->app->repo->getAuthorsRepository->find( sub{ defined $_->master_id and $_->master_id == $author } )
+                            or $self->app->repo->getAuthorsRepository->find( sub{ defined $_->master and $_->master eq $author } )
+                                if defined $author;
     my $tag_obj      = $self->app->repo->getTagsRepository->find( sub{ $_->id == $tag } ) or
                        $self->app->repo->getTagsRepository->find( sub{ $_->name eq $tag } )
                           if defined $tag;
     my $tag_obj_perm = $self->app->repo->getTagsRepository->find( sub{ $_->id == $permalink } ) or
                        $self->app->repo->getTagsRepository->find( sub{ $_->name eq $permalink } )
                           if defined $permalink;
-
     
     my $teamid = undef;
     $teamid = $team_obj->id if defined $team_obj;    
@@ -243,8 +243,18 @@ sub Fget_publications_core_storage {
     my $tagid = undef;
     $tagid = $tag_obj->id if defined $tag_obj;
 
+
+    ### WARNING, always compare if something is null by searching by name OR id!!
+    # my $cmp1 = undef == 33;
+    # my $cmp2 = undef == 'dddd'; # this is 1!!!!!!!!!!!
+    # my $cmp3 = $cmp1 or $cmp2;
+    # my $cmp4 = undef eq 33;
+    # my $cmp5 = undef eq 'dddd'; 
+    # my $cmp6 = $cmp4 or $cmp5;
+    # $self->app->logger->warn("undef == id: 1 $cmp1 / 2 $cmp2 / 3 $cmp3 / 4 $cmp4 / 5 $cmp5 / 6 $cmp6 / " );    
+
     # filtering
-    my @entries = $self->app->repo->getEntriesRepository()->all();
+    my @entries = $self->app->repo->getEntriesRepository->all;
 
     # simple filters
     if( defined $year and $year > 0 ){
@@ -278,7 +288,7 @@ sub Fget_publications_core_storage {
         @entries = grep { $_->is_visible } @entries;
     }
     if(defined $master_id and defined $author_obj){
-        @entries = grep { $_->has_master_author($author_obj) } @entries;
+        @entries = grep { $_->has_author($self->app->repo->getAuthorshipsRepository, $author_obj) } @entries;
     }
     if(defined $tagid and defined $tag_obj){
         @entries = grep { $_->has_tag($tag_obj) } @entries;

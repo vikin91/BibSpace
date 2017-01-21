@@ -37,17 +37,21 @@ sub all_authors {    # refactored
         $letter_pattern .= '%';
     }
 
-    my @authors = $self->app->repo->getAuthorsRepository->all;
+    my @authors = $self->app->repo->getAuthorsRepository->filter(sub{$_->is_master});
     if ( defined $visible ) {
-        @authors = grep { $_->{display} == $visible } @authors;
+        @authors = grep { $_->display == $visible } @authors;
     }
+    @authors = grep { $_->is_master } @authors;
+
     if ( $letter ne '%' ) {
-        @authors = grep { ( substr( $_->{master}, 0, 1 ) cmp $letter ) == 0 }
+        @authors = grep { ( substr( $_->master, 0, 1 ) cmp $letter ) == 0 }
             @authors;
     }
-    my @letters = map { substr( $_->{master}, 0, 1 ) } @authors; 
+    my @letters = map { substr( $_->master, 0, 1 ) } @authors; 
     @letters = uniq @letters;
     @letters = sort @letters;
+
+    $self->app->logger->debug(Dumper \@authors);
 
     $self->stash(
         authors => \@authors,
@@ -74,18 +78,14 @@ sub add_post {
 
     if ( defined $new_master and length($new_master) > 0 ) {
 
-        my $storage = StorageBase->get();
-        my $a       = $storage->authors_find(
-            sub { ( $_->{master} cmp $new_master ) == 0 } );
+        my $author       = $self->app->repo->getAuthorsRepository->find(sub { $_->master eq $new_master } );
 
-        if ( !defined $a ) {    # no such user exists yet
+        if ( !defined $author ) {    # no such user exists yet
 
-            $a = MAuthor->new( uid => $new_master );
-            $storage->authors_add($a);
-            $a->save($dbh);
+            $author = Author->new( uid => $new_master, idProvider => $self->app->repo->getAuthorsRepository->getIdProvider );
+            $self->app->repo->getAuthorsRepository->save($author);
 
-
-            if ( !defined $a->{id} ) {
+            if ( !defined $author->id ) {
                 $self->flash(
                     msg_type => 'danger',
                     msg =>
@@ -96,13 +96,13 @@ sub add_post {
             }
             $self->write_log(
                 "Added new author with master: $new_master. Author id is "
-                    . $a->{id} );
+                    . $author->{id} );
             $self->flash(
                 msg_type => 'success',
                 msg      => "Author added successfully!"
             );
             $self->redirect_to(
-                $self->url_for( 'edit_author', id => $a->{id} ) );
+                $self->url_for( 'edit_author', id => $author->{id} ) );
             return;
         }
         else {    # such user already exists!
@@ -178,7 +178,7 @@ sub edit_author {
 #     my $id   = shift;
 #     my $dbh  = $self->app->db;
 
-#     my $author = $storage->authors_find( sub{ $_->{id} == $id } );
+#     my $author = $self->app->repo->getAuthorsRepository->find( sub{ $_->{id} == $id } );
 #     my $visibility = $author->{display};
 
 #     my $num_teams = scalar $author->teams($dbh);
@@ -193,16 +193,15 @@ sub add_to_team {
     my $master_id = $self->param('id');
     my $team_id   = $self->param('tid');
 
-    my $storage = StorageBase->get();
-    my $author  = $storage->authors_find( sub { $_->{id} == $master_id } );
-    my $team    = $storage->teams_find( sub { $_->{id} == $team_id } );
+    my $author  = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
+    my $team    = $self->app->repo->getTeamsRepository->find( sub { $_->id == $team_id } );
 
     if ( $author and $team ) {
         $author->add_to_team($team);
         $team->add_author($author);
         
-        $author->save($dbh);
-        $team->save($dbh);
+        $self->app->repo->getAuthorsRepository->save($author);
+        $self->app->repo->getTeamsRepository->save($team);
 
         $self->flash(
             msg => "Author <b>"
@@ -228,7 +227,7 @@ sub remove_from_team {
     my $team_id   = $self->param('tid');
 
     my $storage = StorageBase->get();
-    my $author  = $storage->authors_find( sub { $_->{id} == $master_id } );
+    my $author  = $self->app->repo->getAuthorsRepository->find( sub { $_->{id} == $master_id } );
     my $team    = $storage->teams_find( sub { $_->{id} == $team_id } );
 
     if ( $author and $team ) {
@@ -262,12 +261,18 @@ sub remove_uid {
     my $storage = StorageBase->get();
 
     my $author_master
-        = $storage->authors_find( sub { $_->{id} == $master_id } );
+        = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
     my $author_minor
-        = $storage->authors_find( sub { $_->{id} == $minor_id } );
+        = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $minor_id } );
 
-
-    if ( $author_minor->is_master ) {
+    if ( !defined $author_minor ){
+        $self->flash(
+            msg =>
+                "Cannot remove user_id $minor_id. Reason: such author deos not exist.",
+            msg_type => "danger"
+        );
+    }
+    elsif ( $author_minor->is_master ) {
         $self->flash(
             msg =>
                 "Cannot remove user_id $minor_id. Reason: it is a master_id.",
@@ -278,7 +283,7 @@ sub remove_uid {
 
         my @all_entries = $author_master->entries();
         $author_minor->remove_master();
-        $author_minor->save($dbh);
+        $self->app->repo->getAuthorsRepository->save($author_minor);
 
 # authors are uncnnected now
 # ON UPDATE CASCADE has removed all entreis from $author_master and assigned them to $author_minor
@@ -352,34 +357,33 @@ sub edit_post {
     my $new_user_id = $self->param('new_user_id');
     my $visibility  = $self->param('visibility');
 
-    my $storage = StorageBase->get();
-    my $author = $storage->authors_find( sub { $_->{id} == $id } );
+    my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $id } );
 
     if ( defined $author ) {
         if ( defined $new_master ) {
 
-            my $existing = $storage->authors_find(
-                sub { ( $_->{master} cmp $new_master ) == 0 } );
+            my $existing = $self->app->repo->getAuthorsRepository->find(
+                sub { ( $_->master cmp $new_master ) == 0 } );
 
             if ( !defined $existing ) {
                 $author->update_master_name($new_master);
-                $author->save($dbh);
+                $self->app->repo->getAuthorsRepository->save($author);
                 $self->flash(
                     msg      => "Master name has been updated sucesfully.",
                     msg_type => "success"
                 );
                 $self->redirect_to(
-                    $self->url_for( 'edit_author', id => $author->{id} ) );
+                    $self->url_for( 'edit_author', id => $author->id ) );
             }
             else {
 
                 $self->flash(
                     msg => "This master name is already taken by <a href=\""
                         . $self->url_for(
-                        'edit_author', id => $existing->{id}
+                        'edit_author', id => $existing->id
                         )
                         . "\">"
-                        . $existing->{master} . "</a>.",
+                        . $existing->master . "</a>.",
                     msg_type => "danger"
                 );
                 $self->redirect_to(
@@ -389,12 +393,13 @@ sub edit_post {
 
         }
         elsif ( defined $visibility ) {
-            $author->toggle_visibility($dbh);
+            $author->toggle_visibility;
+            $self->app->repo->getAuthorsRepository->save($author);
         }
         elsif ( defined $new_user_id ) {
 
-            my $existing_author = $storage->authors_find(
-                sub { ( $_->{uid} cmp $new_user_id ) == 0 } );
+            my $existing_author = $self->app->repo->getAuthorsRepository->find(
+                sub { $_->uid eq $new_user_id } );
 
             if ( defined $existing_author ) {
                 $self->flash(
@@ -404,11 +409,11 @@ sub edit_post {
                 );
             }
             else {
-                my $minion = MAuthor->new( uid => $new_user_id );
+                my $minion = Author->new( uid => $new_user_id, idProvider => $self->app->repo->getAuthorsRepository->getIdProvider );
+                $minion->id;
                 $author->add_minion($minion);
-                $storage->add($minion);
-                $minion->save($dbh);
-                $author->save($dbh);
+                $self->app->repo->getAuthorsRepository->save($author);
+                $self->app->repo->getAuthorsRepository->save($minion);
             }
         }
     }
@@ -424,7 +429,7 @@ sub post_edit_membership_dates {
     my $new_stop  = $self->param('new_stop');
 
     my $storage = StorageBase->get();
-    my $author  = $storage->authors_find( sub { $_->{id} == $aid } );
+    my $author  = $self->app->repo->getAuthorsRepository->find( sub { $_->{id} == $aid } );
     my $team    = $storage->teams_find( sub { $_->{id} == $tid } );
 
     if ($author) {
@@ -452,7 +457,7 @@ sub delete_author {
     my $id   = $self->param('id');
 
     my $storage = StorageBase->get();
-    my $author  = $storage->authors_find( sub { $_->{id} == $id } );
+    my $author  = $self->app->repo->getAuthorsRepository->find( sub { $_->{id} == $id } );
 
     if ( $author and $author->can_be_deleted() ) {
         $self->delete_author_force();
@@ -474,7 +479,7 @@ sub delete_author_force {
     my $id   = $self->param('id');
 
     my $storage = StorageBase->get();
-    my $author  = $storage->authors_find( sub { $_->{id} == $id } );
+    my $author  = $self->app->repo->getAuthorsRepository->find( sub { $_->{id} == $id } );
 
     if ( $author ) {
         

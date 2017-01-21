@@ -129,7 +129,6 @@ sub exists {
   my $row = $sth->fetchrow_hashref();
   my $num = $row->{num} // 0;
   return $num > 0;
-
 }
 before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
 after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
@@ -153,7 +152,8 @@ sub save {
     }
   }
 }
-
+before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
+after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
 =item _insert
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
@@ -206,8 +206,8 @@ sub _insert {
     };
   }
 }
-before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
-after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
+before '_insert' => sub { shift->logger->entering("","".__PACKAGE__."->_insert"); };
+after '_insert'  => sub { shift->logger->exiting("","".__PACKAGE__."->_insert"); };
 =item update
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
