@@ -5,7 +5,7 @@ use namespace::autoclean;
 use DateTime;
 use Term::ANSIColor;
 use Moose;
-require Bibspace::Model::ILogger;
+use Bibspace::Model::ILogger;
 with 'ILogger';
 
 
