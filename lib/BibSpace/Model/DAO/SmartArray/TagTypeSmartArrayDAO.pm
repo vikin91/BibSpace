@@ -7,7 +7,7 @@ use BibSpace::Model::DAO::Interface::IDAO;
 use BibSpace::Model::TagType;
 with 'IDAO';
 use Try::Tiny;
-
+use List::Util qw(first);
 # Inherited fields from BibSpace::Model::DAO::Interface::IDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);

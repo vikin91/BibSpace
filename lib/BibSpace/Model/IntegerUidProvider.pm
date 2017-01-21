@@ -19,10 +19,17 @@ has 'data' => (
         uid_has     => 'exists',
         uid_defined => 'defined',
         uid_num     => 'count',
-        uid_keys    => 'kv',
+        uid_keys    => 'keys',
         uid_pairs   => 'kv',
+        clear       => 'clear',
     },
 );
+
+sub reset {
+    my ($self) = @_;
+    SimpleLogger->new()->warn("Resetting UID record!");
+    $self->clear;
+}
 
 sub registerUID{
     my ($self, $uid) = @_;
@@ -32,7 +39,9 @@ sub registerUID{
         SimpleLogger->new()->debug("Registered uid $uid.");
     }
     else{
-        die "Cannot registerUID. It exists already!";
+        my $msg = "Cannot registerUID. It exists already! Wanted to reg: $uid. Existing: ". join(' ', sort $self->uid_keys);
+        SimpleLogger->new()->error($msg);
+        die $msg;
     }
 }
 

@@ -1,130 +1,107 @@
-    %   if ($entry_obj->is_hidden() == 1) {
-            <tr valign="top" class="hiddenrow"> 
-    %   }
-    %   else{
-            <tr valign="top">
-    %   }    
-                <td style="width: 120px;">
-                    <div class="btn-group">
-                        <a class="btn btn-warning" href="<%= url_for('manage_tags', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> T</a>
-                        <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
-                        <span class="glyphicon glyphicon-pencil"></span>
-                        <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu" role="menu">
-                            <li><a href="<%= url_for('toggle_hide_publication', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-eye-close"></span> Toggle hidden</a></li>
-                            <li><a href="<%= url_for('edit_publication', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-pencil" style="color: #5CB85C;"></span> Edit BibTeX</a></li>
-                            <li><a href="#modal-dialog-<%=$entry_obj->{id}%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span> Delete...</a></li>
-                            <li><a href="<%= url_for('show_authors_of_entry', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-user"></span> Show authors</a></li>
-                            <li><a href="<%= url_for('regenerate_publication', id=>$entry_obj->{id}) %>"><span class="glyphicon glyphicon-refresh" style="color: #5CB85C;"></span> Regenerate HTML</a></li>
-                            <li><a href="<%= url_for('manage_attachments', id=>$entry_obj->{id})%>"><i class="fa fa-upload"></i><i class="fa fa-file-pdf-o"></i><i class="fa fa-file-powerpoint-o"></i> Upload pdf/slides</a></li>
-                            <li><a href="<%= url_for('manage_tags', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> Manage tags</a></li>
-                            <li><a href="<%= url_for('manage_exceptions', id=>$entry_obj->{id})%>"><i class="fa fa-exclamation "></i> Manage exceptions</a></li>
-                        </ul>
-                    </div>
+%   if ($entry_obj->is_hidden() == 1) {
+<tr valign="top" class="hiddenrow"> 
+%   }
+%   else{
+<tr valign="top">
+%   }    
+    <td style="width: 120px;">
+        <div class="btn-group">
+            <a class="btn btn-warning" href="<%= url_for('manage_tags', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> T</a>
+            <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
+            <span class="glyphicon glyphicon-pencil"></span>
+            <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li><a href="<%= url_for('toggle_hide_publication', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-eye-close"></span> Toggle hidden</a></li>
+                <li><a href="<%= url_for('edit_publication', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-pencil" style="color: #5CB85C;"></span> Edit BibTeX</a></li>
+                <li><a href="<%= url_for('show_authors_of_entry', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-user"></span> Show authors</a></li>
+                <li><a href="<%= url_for('regenerate_publication', id=>$entry_obj->{id}) %>"><span class="glyphicon glyphicon-refresh" style="color: #5CB85C;"></span> Regenerate HTML</a></li>
+                <li><a href="<%= url_for('manage_attachments', id=>$entry_obj->{id})%>"><i class="fa fa-upload"></i><i class="fa fa-file-pdf-o"></i><i class="fa fa-file-powerpoint-o"></i> Upload pdf/slides</a></li>
+                <li><a href="<%= url_for('manage_tags', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> Manage tags</a></li>
+                <li><a href="<%= url_for('manage_exceptions', id=>$entry_obj->{id})%>"><i class="fa fa-exclamation "></i> Manage exceptions</a></li>
+            </ul>
+        </div>
+    </td>
 
+    <!-- TALK/PAPER switch -->
+    <td style="width: 80px;">
+        <div class="btn-group">
+            % my $t1 = "btn-success";
+            % my $t2 = "btn-default";  
+            % my $extra_msg = "";
+            % if ($entry_obj->is_talk) {
+                % $t1 = "btn-default";
+                % $t2 = "btn-success";
+                % if($entry_obj->bibtex_type ne 'misc') {
+                    % $t2="btn-danger";
+                    % $extra_msg = ". Talks should have bibtex_type set to 'misc'"; 
+                %}
+            %}
+            % if (defined $use_modal and $use_modal == 1){
+                <span data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER/TALK" data-container="body">
+                <a href="#modal-dialog-talk-<%=$entry_obj->{id}%>" data-toggle="modal" class="btn <%=$t1%> btn-sm">
+                        <span class="glyphicon glyphicon-file"></span>
+                </a>
 
-                    <!-- MODAL DIALOG FOR DELETE -->
-                    <div id="modal-dialog-<%=$entry_obj->{id}%>" class="modal">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
-                                    <h3>Are you sure?</h3>
-                                    <p>Are you sure you want to delete item <span class="btn btn-default btn-sm"><%= $j %></span> key <span class="badge"><%=$entry_obj->{key} %></span> ?</p>
-                                </div>
-                                <div class="modal-body">
-                                    %== $entry_obj->{html}
-                                    <div class="modal-footer">
-                                        <a href="<%= url_for('delete_publication_sure', id=>$entry_obj->{id} )%>" class="btn btn-danger"> Yes, delete it <span class="glyphicon glyphicon-trash"></span></a>
-                                        <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, I want to keep it <span class="glyphicon glyphicon-heart"></span> </button></a>
-                                    </div>
+                <a href="#modal-dialog-talk-<%=$entry_obj->{id}%>" data-toggle="modal" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
+                        <i class="fa fa-microphone"></i>
+                </a>
+                </span>
+                <!-- MODAL DIALOG FOR SWITCHIN PAPER/TALK -->
+                <div id="modal-dialog-talk-<%=$entry_obj->{id}%>" class="modal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+                                <h3>Are you sure?</h3>
+                            </div>
+                            <div class="modal-body">
+                                <p>Make sure that you first save your changes by clicking <button class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Push to DB</button></p>
+                                <p>If you forgot to save, all unsaved changes will be lost!</p>
+
+                                <div class="modal-footer">
+                                    <a href="<%= url_for('/publications/make_paper/')%><%= $entry_obj->{id} %>" class="btn btn-warning"> Change type to Paper <span class="glyphicon glyphicon-file"></span></a>
+                                    <a href="<%= url_for('/publications/make_talk/')%><%= $entry_obj->{id} %>" class="btn btn-warning"> Change type to Talk <i class="fa fa-microphone"></i></a>
+                                    <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-default">Cancel <span class="glyphicon glyphicon-remove"></span> </button></a>
                                 </div>
                             </div>
                         </div>
                     </div>
-                  <!-- END OF MODAL DIALOG FOR DELETE -->
-                </td>
+                </div>
+              <!-- MODAL DIALOG FOR SWITCHIN PAPER/TALK -->
+            % }
+            % else{
+                 <a href="<%= url_for('make_paper', id=>$entry_obj->{id} ) %>" class="btn <%=$t1%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
+                        <span class="glyphicon glyphicon-file"></span>
+                </a>
+                <a href="<%= url_for('make_talk', id=>$entry_obj->{id} ) %>" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
+                        <i class="fa fa-microphone"></i>
+                </a>
+            % }
+        </div>
 
-                <!-- TALK/PAPER switch -->
-                <td style="width: 80px;">
-                    <div class="btn-group">
-                        % my $t1 = "btn-success";
-                        % my $t2 = "btn-default";  
-                        % my $extra_msg = "";
-                        % if ($entry_obj->is_talk) {
-                            % $t1 = "btn-default";
-                            % $t2 = "btn-success";
-                            % if($entry_obj->{bibtex_type} ne 'misc') {
-                                % $t2="btn-danger";
-                                % $extra_msg = ". Talks should have bibtex_type set to 'misc'"; 
-                            %}
-                        %}
-                        % if (defined $use_modal and $use_modal == 1){
-                            <span data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER/TALK" data-container="body">
-                            <a href="#modal-dialog-talk-<%=$entry_obj->{id}%>" data-toggle="modal" class="btn <%=$t1%> btn-sm">
-                                    <span class="glyphicon glyphicon-file"></span>
-                            </a>
+        
 
-                            <a href="#modal-dialog-talk-<%=$entry_obj->{id}%>" data-toggle="modal" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
-                                    <i class="fa fa-microphone"></i>
-                            </a>
-                            </span>
-                            <!-- MODAL DIALOG FOR SWITCHIN PAPER/TALK -->
-                            <div id="modal-dialog-talk-<%=$entry_obj->{id}%>" class="modal">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
-                                            <h3>Are you sure?</h3>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p>Make sure that you first save your changes by clicking <button class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Push to DB</button></p>
-                                            <p>If you forgot to save, all unsaved changes will be lost!</p>
-
-                                            <div class="modal-footer">
-                                                <a href="<%= url_for('/publications/make_paper/')%><%= $entry_obj->{id} %>" class="btn btn-warning"> Change type to Paper <span class="glyphicon glyphicon-file"></span></a>
-                                                <a href="<%= url_for('/publications/make_talk/')%><%= $entry_obj->{id} %>" class="btn btn-warning"> Change type to Talk <i class="fa fa-microphone"></i></a>
-                                                <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-default">Cancel <span class="glyphicon glyphicon-remove"></span> </button></a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                          <!-- MODAL DIALOG FOR SWITCHIN PAPER/TALK -->
-                        % }
-                        % else{
-                             <a href="<%= url_for('make_paper', id=>$entry_obj->{id} ) %>" class="btn <%=$t1%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
-                                    <span class="glyphicon glyphicon-file"></span>
-                            </a>
-                            <a href="<%= url_for('make_talk', id=>$entry_obj->{id} ) %>" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">
-                                    <i class="fa fa-microphone"></i>
-                            </a>
-                        % }
-                    </div>
-
-                    
-
-                </td>
-                <!-- ID switch -->
-                <td>
-                  <button class="btn btn-default btn-sm" tooltip="Entry ID" data-toggle="tooltip" data-placement="top" title="Entry ID in the database." data-container="body"> <span class="glyphicon glyphicon-barcode"></span>  <%= $entry_obj->{id} %></button>
-                </td>
-                <td>
-                    <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Created: <%=$entry_obj->{creation_time}%>, Modified: <%=$entry_obj->{modified_time}%>">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                    </span>
-                </td>
-                <td>
-                    <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Month / Sorting priority (should be same as month)">
-                        <span class="glyphicon glyphicon-sort-by-attributes"> <%=  $entry_obj->{month} %>/<%= $entry_obj->{sort_month} %></span>
-                    </span>
-                </td>
-                <td>
-                  <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Running number on this list" data-container="body"><%= $j || 1 %></span>
-                </td>
-                
-                <td class="bibtexitem">
-                  %== $entry_obj->{html}
-                </td>
-            </tr>
+    </td>
+    <!-- ID switch -->
+    <td>
+      <button class="btn btn-default btn-sm" tooltip="Entry ID" data-toggle="tooltip" data-placement="top" title="Entry ID in the database." data-container="body"> <span class="glyphicon glyphicon-barcode"></span>  <%= $entry_obj->{id} %></button>
+    </td>
+    <td>
+        <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Created: <%=$entry_obj->{creation_time}%>, Modified: <%=$entry_obj->{modified_time}%>">
+            <span class="glyphicon glyphicon-calendar"></span>
+        </span>
+    </td>
+    <td>
+        <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Month / Sorting priority (should be same as month)">
+            <span class="glyphicon glyphicon-sort-by-attributes"> <%=  $entry_obj->{month} %>/<%= $entry_obj->{sort_month} %></span>
+        </span>
+    </td>
+    <td>
+      <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Running number on this list" data-container="body"><%= $j || 1 %></span>
+    </td>
+    
+    <td class="bibtexitem">
+      %== $entry_obj->{html}
+    </td>
+</tr>

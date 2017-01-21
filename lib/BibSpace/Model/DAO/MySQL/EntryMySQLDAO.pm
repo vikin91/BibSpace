@@ -63,9 +63,9 @@ sub all {
 
       push @objs,
           Entry->new(
+          old_mysql_id    => $row->{id},
           idProvider      => $self->idProvider,
           id              => $row->{id},
-          dbid            => $row->{id},
           entry_type      => $row->{entry_type},
           bibtex_key      => $row->{bibtex_key},
           _bibtex_type    => $row->{bibtex_type},
@@ -123,9 +123,12 @@ after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 =cut 
 sub exists {
   my ($self, $object) = @_;
-  
-  die "".__PACKAGE__."->exists not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  my $dbh = $self->handle;
+  my $sth = $dbh->prepare("SELECT COUNT(id) AS num FROM Entry WHERE id=?");
+  $sth->execute($object->id);
+  my $row = $sth->fetchrow_hashref();
+  my $num = $row->{num} // 0;
+  return $num > 0;
 
 }
 before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
@@ -140,16 +143,13 @@ sub save {
   my $dbh = $self->handle;
 
   foreach my $obj (@objects){
-    if ( !defined $obj->id or $obj->id <= 0 ) {
-        $self->_insert($obj);
-        $self->logger->info("Inserted object into DB.","".__PACKAGE__."->save");
-    }
-    elsif ( defined $obj->id and $obj->id > 0 ) {
-        $self->update($obj);
-        $self->logger->info("Updated object in DB.","".__PACKAGE__."->save");
+    if ( $self->exists($obj) ) {
+      $self->update($obj);
+      $self->logger->info("Updated object ID ".$obj->id." in DB.","".__PACKAGE__."->save");
     }
     else {
-      $self->logger->error("Save error, cannot neither insert nor update.","".__PACKAGE__."->save");
+      $self->_insert($obj);
+      $self->logger->info("Inserted object ID ".$obj->id." into DB.","".__PACKAGE__."->save");
     }
   }
 }
@@ -163,6 +163,7 @@ sub _insert {
   my $dbh = $self->handle;
   my $qry = "
     INSERT INTO Entry(
+    id,
     entry_type,
     bibtex_key,
     bibtex_type,
@@ -182,13 +183,13 @@ sub _insert {
     modified_time,
     need_html_regen
     ) 
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW(),?);";
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW(),?);";
   
   foreach my $obj (@objects){
     my $sth = $dbh->prepare($qry);
     try{
       my $result = $sth->execute(
-          $obj->{entry_type}, $obj->{bibtex_key}, $obj->{_bibtex_type},
+          $obj->{id}, $obj->{entry_type}, $obj->{bibtex_key}, $obj->{_bibtex_type},
           $obj->{bib}, $obj->{html}, $obj->{html_bib}, $obj->{abstract},
           $obj->{title}, $obj->{hidden}, $obj->{year}, $obj->{month},
           $obj->{sort_month}, $obj->{teams_str}, $obj->{people_str},
@@ -198,8 +199,6 @@ sub _insert {
           # $obj->{modified_time},
           $obj->{need_html_regen},
       );
-      my $inserted_id = $dbh->last_insert_id( '', '', 'Entry', '' );
-      $obj->{id} = $inserted_id;
       $sth->finish();
     }
     catch {

@@ -102,6 +102,8 @@ my ( $entriesRepo, $new_bib, $id, $action, $bst_file ) = @_;
     # Fhandle_preview
 
     my $e;
+
+    say "Fhandle_add_edit_publication_Repo: id $id";
     
     if( $id > 0){
         $e = $entriesRepo->find( sub {$_->id == $id} ); 
@@ -159,7 +161,7 @@ my ( $entriesRepo, $new_bib, $id, $action, $bst_file ) = @_;
         $e->fix_month();
         $entriesRepo->save($e);
 
-        $added_under_id = $e->uid;
+        $added_under_id = $e->id;
     }
     else {
         warn

@@ -6,7 +6,7 @@ use Moose;
 use BibSpace::Model::DAO::Interface::IDAO;
 with 'IDAO';
 use Try::Tiny;
-
+use List::Util qw(first);
 # Inherited fields from BibSpace::Model::DAO::Interface::IAuthorshipDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);

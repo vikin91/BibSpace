@@ -28,8 +28,15 @@ use Mojo::Log;
 sub metalist {
     my $self = shift;
 
-    my @pubs = Fget_publications_main_hashed_args_only( $self,
-        { hidden => 0, entry_type => 'paper', debug => 0 } );
+    my @pubs = $self->app->repo->getEntriesRepository->filter(sub{
+        $_->is_paper==1 and not $_->is_hidden
+    });
+
+    map { say "HIDDEN ".$_->id if $_->is_hidden} @pubs;
+    map { say "TALK ".$_->id if $_->is_talk} @pubs;
+
+    # my @pubs = Fget_publications_main_hashed_args_only( $self,
+    #     { hidden => 0, entry_type => 'paper', debug => 0 } );
     $self->stash( entries => \@pubs );
     $self->render( template => 'publicationsSEO/metalist' );
 }
@@ -40,8 +47,7 @@ sub meta {
     my $self = shift;
     my $id   = $self->param('id');
 
-    my $storage = StorageBase->get();
-    my $mentry = $storage->entries_find( sub{ $_->id==$id } );
+    my $mentry = $self->app->repo->getEntriesRepository->find(sub{ $_->id==$id } );
 
     if ( !defined $mentry ) {
         $self->flash( msg => "There is no entry with id $id" );

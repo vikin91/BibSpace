@@ -55,14 +55,14 @@ sub copy{
     my @resultRead = $self->backendDaoFactory->getInstance( 
         $self->_getBackendWithPrio($fromLayer)->{'type'},
         $self->_getBackendWithPrio($fromLayer)->{'handle'} 
-    )->getExceptionDao($self->{_idProvider})->all();
+    )->getExceptionDao($self->getIdProvider)->all();
 
     $self->logger->debug(scalar(@resultRead)." Exception read from layer $fromLayer.","".__PACKAGE__."->copy");
     
     my $resultSave = $self->backendDaoFactory->getInstance( 
         $self->_getBackendWithPrio($toLayer)->{'type'},
         $self->_getBackendWithPrio($toLayer)->{'handle'}
-    )->getExceptionDao($self->{_idProvider})->save( @resultRead );
+    )->getExceptionDao($self->getIdProvider)->save( @resultRead );
 
     $self->logger->debug(" $resultSave Exception saved to layer $toLayer.","".__PACKAGE__."->copy");
 }
@@ -84,7 +84,7 @@ sub all {
     try{
         return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getExceptionDao($self->{_idProvider})
+            ->getExceptionDao($self->getIdProvider)
             ->all();
     }
     catch{
@@ -106,7 +106,7 @@ sub count {
     try{
         return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getExceptionDao($self->{_idProvider})
+            ->getExceptionDao($self->getIdProvider)
             ->count();
     }
     catch{
@@ -128,7 +128,7 @@ sub empty {
     try{
         return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getExceptionDao($self->{_idProvider})
+            ->getExceptionDao($self->getIdProvider)
             ->empty();
     }
     catch{
@@ -153,7 +153,7 @@ sub exists {
     try{
         return $self->backendDaoFactory
             ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getExceptionDao($self->{_idProvider})
+            ->getExceptionDao($self->getIdProvider)
             ->exists($obj);
     }
     catch{
@@ -179,7 +179,7 @@ sub save {
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
             $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
-              ->getExceptionDao($self->{_idProvider})
+              ->getExceptionDao($self->getIdProvider)
               ->save( @objects );
         }
         catch{
@@ -203,7 +203,7 @@ sub update {
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
             $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
-              ->getExceptionDao($self->{_idProvider})
+              ->getExceptionDao($self->getIdProvider)
               ->update( @objects );
         }
         catch{
@@ -227,7 +227,7 @@ sub delete {
         my $daoBackendHandle = $backendDAO->{'handle'};
         try{
             $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
-              ->getExceptionDao($self->{_idProvider})
+              ->getExceptionDao($self->getIdProvider)
               ->delete( @objects );
         }
         catch{
@@ -256,7 +256,7 @@ sub filter {
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
         return $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getExceptionDao($self->{_idProvider})
+            ->getExceptionDao($self->getIdProvider)
             ->filter( $coderef );
     }
     catch{
@@ -281,7 +281,7 @@ sub find {
     my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
     try{
         return $self->backendDaoFactory->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getExceptionDao($self->{_idProvider})
+            ->getExceptionDao($self->getIdProvider)
             ->find( $coderef );
     }
     catch{

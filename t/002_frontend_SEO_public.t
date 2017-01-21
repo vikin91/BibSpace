@@ -28,8 +28,7 @@ use BibSpace::Model::M::StorageBase;
 ####################################################################
 subtest 'PublicationsSEO: public functions' => sub {
 
-    my $storage = StorageBase->get();
-    my @entries   = $storage->entries_all;
+    my @entries   = $self->app->repo->getEntriesRepository->all;
     my $main_SEOpage = $self->url_for('metalist_all_entries');
     $t_anyone->get_ok($main_SEOpage)
         ->status_isnt( 404, "Checking: 404 $main_SEOpage" )
@@ -38,7 +37,7 @@ subtest 'PublicationsSEO: public functions' => sub {
     for my $e (@entries) {
         note
             "============ Testing SEO page for entry id $e->{id} ============";
-        my $entry_id = $e->{id};
+        my $entry_id = $e->id;
         my $page = $self->url_for( 'metalist_entry', id => $entry_id );
 
         if ( !$e->is_hidden() ) {

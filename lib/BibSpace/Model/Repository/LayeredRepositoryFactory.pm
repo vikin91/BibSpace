@@ -99,6 +99,35 @@ has '_idProviderTeam' => (
     reader  => 'idProviderTeam'
 );
 
+=item hardReset
+    Hard reset repomoves all instances of repositories and resets all id providers. 
+    Use only for overwriting whole data set, e.g., during backup restore.
+=cut
+
+sub hardReset {
+    my $self = shift;
+    $self->logger->warn( "Conducting HARD RESET of all repositories and ID Providers!",
+        "" . __PACKAGE__ . "->hardReset" );
+    $self->_idProviderAuthor->reset if defined $self->_idProviderAuthor;
+    $self->_idProviderAuthorship->reset if defined $self->_idProviderAuthorship;
+    $self->_idProviderEntry->reset if defined $self->_idProviderEntry;
+    $self->_idProviderException->reset if defined $self->_idProviderException;
+    $self->_idProviderLabeling->reset if defined $self->_idProviderLabeling;
+    $self->_idProviderMembership->reset if defined $self->_idProviderMembership;
+    $self->_idProviderTag->reset if defined $self->_idProviderTag;
+    $self->_idProviderTagType->reset if defined $self->_idProviderTagType;
+    $self->_idProviderTeam->reset if defined $self->_idProviderTeam;
+    $self->{_instanceAuthorsRepo} = undef;
+    $self->{_instanceAuthorshipsRepo} = undef;
+    $self->{_instanceEntriesRepo} = undef;
+    $self->{_instanceExceptionsRepo} = undef;
+    $self->{_instanceLabellingsRepo} = undef;
+    $self->{_instanceMembershipsRepo} = undef;
+    $self->{_instanceTagsRepo} = undef;
+    $self->{_instanceTagTypesRepo} = undef;
+    $self->{_instanceTeamsRepo} = undef;
+}
+
 =item getInstance 
     This is supposed to be static constructor (factory) method.
     Unfortunately, the default constructor has not been disabled yet.

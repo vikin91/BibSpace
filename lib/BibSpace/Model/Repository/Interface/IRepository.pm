@@ -22,7 +22,7 @@ use List::MoreUtils;
 has 'backendsConfigHash' => ( is => 'ro', isa => 'HashRef', coerce => 0, traits => [ 'Hash' ], required => 1 );
 # this parameter is lazy, because the builder routine depends on logger. Logger will be set as first (is non-lazy).
 has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
-has '_idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1, lazy => 0 );
+has '_idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1 );
 has 'backendDaoFactory'  => ( is => 'ro', isa => 'DAOFactory', lazy => 1, builder => '_buildDAOFactory' );
 
 requires 'all';

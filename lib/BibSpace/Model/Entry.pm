@@ -36,29 +36,24 @@ my $dtPattern
 
 sub _generateUIDEntry {
     my $self = shift;
-    if ( defined $self->dbid and $self->dbid > 0 ) {
-        my $uid = $self->dbid;
-        $self->idProvider->registerUID($uid);
-        return $uid;
+  
+    if ( defined $self->old_mysql_id and $self->old_mysql_id > 0 ) {
+        $self->idProvider->registerUID( $self->old_mysql_id );
+        return $self->old_mysql_id;
     }
-    else {
-        return $self->idProvider->generateUID();
-    }
+    return $self->idProvider->generateUID();
 }
 
-
-has 'idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1, lazy => 0, traits  => ['DoNotSerialize'] );
-# id deprecated - old mysql id
-has 'id' => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
-
-# old mysql id - for compatibility
-has 'dbid' => ( is => 'ro', isa => 'Int', required => 0 );
-
-# new bibspace id
-has 'uid' =>
-    ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy => 1 );
-has 'entry_type' => ( is => 'rw', isa => 'Str', default => 'paper' );
-has 'bibtex_key' => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'idProvider' => (
+    is       => 'ro',
+    does     => 'IUidProvider',
+    required => 1,
+    traits   => ['DoNotSerialize']
+);
+has 'old_mysql_id'    => ( is => 'ro', isa => 'Maybe[Int]', default => undef );
+has 'id'              => ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy=>1, init_arg => undef );
+has 'entry_type'      => ( is => 'rw', isa => 'Str', default => 'paper' );
+has 'bibtex_key'      => ( is => 'rw', isa => 'Maybe[Str]' );
 has '_bibtex_type'    => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'bib'             => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'html'            => ( is => 'rw', isa => 'Maybe[Str]' );
@@ -75,6 +70,8 @@ has 'tags_str'        => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'need_html_regen' => ( is => 'rw', isa => 'Int', default => 1 );
 has 'shall_update_modified_time' =>
     ( is => 'rw', isa => 'Int', default => 0 );
+
+
 
 # class_type 'DateTime';
 # coerce 'DateTime'
@@ -308,7 +305,7 @@ sub make_paper {
 sub is_paper {
     my $self = shift;
     return 1 if $self->entry_type eq 'paper';
-    return 0;
+    return;
 }
 ####################################################################################
 sub make_talk {
@@ -319,13 +316,13 @@ sub make_talk {
 sub is_talk {
     my $self = shift;
     return 1 if $self->entry_type eq 'talk';
-    return 0;
+    return;
 }
 ####################################################################################
 sub matches_our_type {
-    my $self    = shift;
-    my $oType   = shift;
-    my $repo    = shift;
+    my $self  = shift;
+    my $oType = shift;
+    my $repo  = shift;
 
     die "This method requires repo, sorry." unless $repo;
 

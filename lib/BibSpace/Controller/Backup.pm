@@ -168,7 +168,7 @@ sub restore_backup {
 
     do_backup_current_state( $self, "pre-restore" );
     $self->write_log("Restoring backup from file $backup_file_path");
-    my $return_value = do_restore_backup_from_file( $dbh, $backup_file_path,
+    my $return_value = do_restore_backup_from_file( $self->app, $dbh, $backup_file_path,
         $self->app->config );
 
     if ( $return_value == 1 ) {

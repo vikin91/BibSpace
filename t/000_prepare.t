@@ -14,12 +14,12 @@ use BibSpace::Controller::BackupFunctions;
 use BibSpace::Functions::FDB;
 
 BEGIN{
-  my $a = Test::Mojo->new('BibSpace');
-  $ENV{BIBSPACE_CONFIG} = $a->app->home->rel_dir('fixture/default.conf');
+  # my $a = Test::Mojo->new('BibSpace');
+  # $ENV{BIBSPACE_CONFIG} = $a->app->home->rel_dir('fixture/default.conf');
 }
 
+our $fixture_name = "db_new.sql";
 
-my $t_anyone = Test::Mojo->new('BibSpace');
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
@@ -30,7 +30,7 @@ my $self = $t_logged_in->app;
 my $dbh = $self->app->db;
 my $app_config = $t_logged_in->app->config;
 
-
+$self->logger->warn("TEST");
 ####################################################################
 subtest '00: checking if DB runs' => sub {
   my $db_host     = $self->config->{db_host};
@@ -52,31 +52,13 @@ note "============ BACKING FILE: $db_backup_file ============";
 my $fixture_dir = "./fixture/";
 SKIP: {
 	note "============ APPLY DATABASE FIXTURE ============";
-	skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir."db.sql";
+	skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir.$fixture_name;
 
 	my $status = 0;
-	$status = do_restore_backup_from_file($dbh, "./fixture/db.sql", $app_config);
+  $self->repo->hardReset;
+	$status = do_restore_backup_from_file($self, $dbh, "./fixture/".$fixture_name, $app_config);
 	is($status, 1, "preparing DB for test");
 }
-
-note "============ CHECK /cron/night ============";
-
-# my $c = BibSpace::Controller::Cron->new(app => Mojolicious->new);
-$t_anyone->ua->inactivity_timeout(3600);
-# Mojo::IOLoop->stream($self->tx->connection)->timeout(3600);
-$t_anyone->get_ok("/cron/night")->status_isnt(404, "Checking: 404 /cron/night")->status_isnt(500, "Checking: 500 /cron/night");
-
-note "============ Testing cron day ============";
-BibSpace::Controller::Cron::do_cron_day($self);
-note "============ Testing cron night ============";
-BibSpace::Controller::Cron::do_cron_night($self);
-note "============ Testing cron week ============";
-BibSpace::Controller::Cron::do_cron_week($self);
-note "============ Testing cron month ============";
-BibSpace::Controller::Cron::do_cron_month($self);
-
-
-note "============ END OF TEST 00 ============";
 
 done_testing();
 

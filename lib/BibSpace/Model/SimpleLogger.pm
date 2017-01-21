@@ -52,7 +52,7 @@ sub warn{
     my $self=shift;
     my $msg = shift;
     my $origin = shift // 'unknown';
-    print color('yellow');
+    print color('black on_yellow');
     $self->log('WARNING', $msg, $origin);
 }
 sub error{

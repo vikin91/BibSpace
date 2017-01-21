@@ -240,6 +240,7 @@ sub get_backup_filename_by_id {
 }
 ####################################################################################
 sub do_restore_backup_from_file {
+    my $app       = shift;
     my $dbh       = shift;
     my $file_path = shift;
     my $config    = shift;
@@ -257,6 +258,7 @@ sub do_restore_backup_from_file {
         return 0;
     }
 
+    $app->repo->hardReset;
     #$dbh->disconnect() if defined $dbh;
 
     my $db_host     = $config->{db_host};

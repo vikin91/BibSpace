@@ -136,7 +136,8 @@ sub setup_repositories {
     my $app  = $self;
     my $dbh = $self->app->db;
 
-    
+    $self->logger->warn("setup_repositories");
+    $self->repo->hardReset;
     $self->repo->getAuthorsRepository->copy(2,1);
     $self->repo->getAuthorshipsRepository->copy(2,1);
     $self->repo->getEntriesRepository->copy(2,1);
@@ -147,7 +148,12 @@ sub setup_repositories {
     $self->repo->getTagTypesRepository->copy(2,1);
     $self->repo->getTeamsRepository->copy(2,1);
 
+    my @allEntries = $self->repo->getEntriesRepository->all;
+    $self->app->logger->debug( "Entries: ".join(', ', map{$_->id} @allEntries ) );
     
+    $self->repo->getEntriesRepository->getIdProvider->generateUID();
+    $self->repo->getEntriesRepository->getIdProvider->generateUID();
+    $self->repo->getEntriesRepository->getIdProvider->generateUID();
 
     my $factory = $self->repo;
     # this factory holds idProvider for each business entity (e.g. idProviderEntry, idProviderAuthor)
@@ -155,6 +161,13 @@ sub setup_repositories {
     # there should be single factory in BibSpace!!!
     # this should be helper with state!
 
+
+    # my $idp = IntegerUidProvider->new;
+    # $idp->registerUID(3);
+    # $idp->generateUID();
+    # $idp->generateUID();
+    # $idp->generateUID();
+    # $idp->generateUID();
 
     
     # $self->logger->debug( "Visible Authors: " . Dumper $self->app->repo->getAuthorsRepository->filter(sub{ $_->display==1 }) );

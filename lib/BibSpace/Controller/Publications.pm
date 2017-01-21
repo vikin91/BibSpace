@@ -46,8 +46,8 @@ our %mons = (
 sub fixMonths {
     my $self = shift;
 
-    my $storage = StorageBase->get();
-    my @entries = $storage->entries_all;
+    
+    my @entries = $self->app->repo->getEntriesRepository->all;
 
     my ( $processed_entries, $fixed_entries )
         = Ffix_months( $self->app->db, @entries );
@@ -65,14 +65,14 @@ sub fixEntryType {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my @entries = $storage->entries_all;
+    
+    my @entries = $self->app->repo->getEntriesRepository->all;
 
     my $num_fixes = 0;
     for my $e (@entries) {
         $num_fixes = $num_fixes + $e->fix_entry_type_based_on_tag();
-        $e->save($dbh);    # change to $storage->store_all or sth;
     }
+    $self->app->repo->getEntriesRepository->save(@entries);
 
     $self->flash(
         msg =>
@@ -88,13 +88,13 @@ sub unhide {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( defined $entry ) {
 
         $entry->unhide();
-        $entry->save($dbh);
+        $self->app->repo->getEntriesRepository->save($entry);
     }
     else {
         $self->flash( msg => "There is no entry with id $id" );
@@ -110,12 +110,12 @@ sub hide {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( defined $entry ) {
         $entry->hide();
-        $entry->save($dbh);
+        $self->app->repo->getEntriesRepository->save($entry);
     }
     else {
         $self->flash( msg => "There is no entry with id $id" );
@@ -128,12 +128,12 @@ sub toggle_hide {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( defined $entry ) {
         $entry->toggle_hide();
-        $entry->save($dbh);
+        $self->app->repo->getEntriesRepository->save($entry);
     }
     else {
         $self->flash( msg => "There is no entry with id $id" );
@@ -148,12 +148,12 @@ sub make_paper {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( defined $entry ) {
         $entry->make_paper();
-        $entry->save($dbh);
+        $self->app->repo->getEntriesRepository->save($entry);
     }
     else {
         $self->flash( msg => "There is no entry with id $id" );
@@ -168,12 +168,12 @@ sub make_talk {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( defined $entry ) {
         $entry->make_talk();
-        $entry->save($dbh);
+        $self->app->repo->getEntriesRepository->save($entry);
     }
     else {
         $self->flash( msg => "There is no entry with id $id" );
@@ -236,12 +236,12 @@ sub all_without_tag_for_author {
     my $master_name = $self->param('author');
     my $tagtype     = $self->param('tagtype');
 
-    my $storage = StorageBase->get();
-    my $author  = $storage->authors_find(
+    
+    my $author  = $self->app->repo->getAuthorsRepository->find(
         sub { ( $_->{master} cmp $master_name ) == 0 } );
     if ( !defined $author ) {
         $author
-            = $storage->authors_find( sub { $_->{master_id} == $master_name }
+            = $self->app->repo->getAuthorsRepository->find( sub { $_->{master_id} == $master_name }
             );
     }
     if ( !defined $author ) {
@@ -270,8 +270,8 @@ sub all_without_author {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my @objs = $storage->entries_filter( sub { $_->authors_count == 0 } );
+    
+    my @objs = $self->app->repo->getEntriesRepository->filter( sub { $_->authors_count == 0 } );
 
 
     my $msg
@@ -286,13 +286,13 @@ sub show_unrelated_to_team {
     my $team_id = $self->param('teamid');
     my $dbh     = $self->app->db;
 
-    my $storage = StorageBase->get();
+    
     my $team_name = "";
-    my $team = $storage->teams_find( sub { $_->{id} == $team_id } ); 
+    my $team = $self->app->repo->getTeamsRepository->find( sub { $_->{id} == $team_id } ); 
     $team_name = $team->{name} if defined $team;
 
 
-    my @allEntres = $storage->entries_all;
+    my @allEntres = $self->app->repo->getEntriesRepository->all;
     my @teamEntres = $team->entries;
 
     my %inTeam = map {$_ => 1} @teamEntres;
@@ -317,12 +317,12 @@ sub all_with_missing_month {
 
     $self->write_log("Displaying entries without month");
 
-    my $storage = StorageBase->get();
+    
 
 
     my @objs
         = grep { !defined $_->{month} or $_->{month} < 1 or $_->{month} > 12 }
-        $storage->entries_all;
+        $self->app->repo->getEntriesRepository->all;
 
     my $msg
         = "This list contains entries with missing BibTeX field 'month'. ";
@@ -340,9 +340,9 @@ sub all_candidates_to_delete {
     $self->write_log("Displaying entries that are candidates_to_delete");
 
 
-    my $storage = StorageBase->get();
+    
 
-    my @objs = $storage->entries_all;
+    my @objs = $self->app->repo->getEntriesRepository->all;
     @objs = grep { scalar $_->tags($dbh) == 0 } @objs;  # no tags
     @objs = grep { scalar $_->teams($dbh) == 0 } @objs; # no relation to teams
     @objs = grep { scalar $_->exceptions($dbh) == 0 } @objs;   # no exceptions
@@ -372,8 +372,8 @@ sub all_bibtex {
     # this includes papers+talks by default
     $entry_type = $self->param('entry_type');
 
-    my $storage = StorageBase->get();
-    my @objs = $storage->entries_filter( sub { $_->{hidden} == 0 } );
+    
+    my @objs = $self->app->repo->getEntriesRepository->filter( sub { $_->{hidden} == 0 } );
 
     @objs = grep { ( $_->{entry_type} cmp $entry_type ) == 0 } @objs
         if defined $entry_type;
@@ -457,8 +457,8 @@ sub single_read {
     my $id   = $self->param('id');
 
     my @objs    = ();
-    my $storage = StorageBase->get();
-    my $entry   = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $entry   = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( defined $entry and $entry->is_hidden == 0 ) {
         push @objs, $entry;
@@ -480,8 +480,8 @@ sub replace_urls_to_file_serving_function {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my $storage     = StorageBase->get();
-    my @all_entries = $storage->entries_all;
+    
+    my @all_entries = $self->app->repo->getEntriesRepository->all;
 
     my $str = "";
 
@@ -527,8 +527,8 @@ sub remove_attachment {
     my $filetype = $self->param('filetype') // 'paper';    # paper, slides
     my $dbh      = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $mentry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $mentry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     # no check as we want to have the files deleted anyway!
 
@@ -552,7 +552,7 @@ sub remove_attachment {
             $mentry->remove_bibtex_fields( ['slides'] )
                 if $filetype eq 'slides';
             $mentry->regenerate_html( 0, $self->app->bst );
-            $mentry->save($dbh);
+            $self->app->repo->getEntriesRepository->save($mentry);
         }
 
         $msg
@@ -641,8 +641,8 @@ sub add_pdf {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $mentry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $mentry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( !defined $mentry ) {
         $self->flash( msg => "There is no entry with id $id" );
@@ -791,8 +791,8 @@ sub add_pdf_post {
         The file was renamed to: <em>$fname</em>. URL <a href=\""
             . $file_url . "\">$name</a>";
 
-        my $storage = StorageBase->get();
-        my $mentry = $storage->entries_find( sub { $_->{id} == $id } );
+        
+        my $mentry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
         $mentry->add_bibtex_field($bibtex_field, "$file_url" );
 
         if ( !defined $mentry ) {
@@ -801,7 +801,7 @@ sub add_pdf_post {
             return;
         }
         $mentry->regenerate_html( 0, $self->app->bst );
-        $mentry->save($dbh);
+        $self->app->repo->getEntriesRepository->save($mentry);
 
         $self->flash( message => $msg );
         $self->redirect_to( $self->get_referrer );
@@ -815,8 +815,8 @@ sub regenerate_html_for_all {
     $self->inactivity_timeout(3000);
     my $dbh = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my @entries = $storage->entries_all;
+    
+    my @entries = $self->app->repo->getEntriesRepository->all;
 
     $self->write_log("regenerate_html_for_all is running");
 
@@ -836,8 +836,8 @@ sub regenerate_html_for_all_force {
 
     $self->write_log("regenerate_html_for_all_force is running");
 
-    my $storage = StorageBase->get();
-    my @entries = $storage->entries_all;
+    
+    my @entries = $self->app->repo->getEntriesRepository->all;
     Fdo_regenerate_html( $dbh, $self->app->bst, 1, @entries );
 
 
@@ -855,8 +855,8 @@ sub regenerate_html {
     my $dbh  = $self->app->db;
     my $id   = $self->param('id');
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( !defined $entry ) {
         $self->flash(
@@ -868,7 +868,7 @@ sub regenerate_html {
     }
     $entry->{bst_file} = $self->app->bst;
     $entry->regenerate_html(1);
-    $entry->save($dbh);
+    $self->app->repo->getEntriesRepository->save($entry);
 
     $self->redirect_to( $self->get_referrer );
 }
@@ -905,8 +905,8 @@ sub show_authors_of_entry {
     my $dbh  = $self->app->db;
     $self->write_log("Showing authors of entry id $id");
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
@@ -932,8 +932,8 @@ sub manage_tags {
 
     $self->write_log("Manage tags of entry id $id");
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
@@ -942,7 +942,7 @@ sub manage_tags {
     }
 
     my @tags      = $entry->tags_all;
-    my @tag_types = $storage->tagtypes_all;
+    my @tag_types = $self->app->repo->getTagTypesRepository->all; 
 
 
     $self->stash( entry => $entry, tags => \@tags, tag_types => \@tag_types );
@@ -956,15 +956,15 @@ sub remove_tag {
     my $tag_id   = $self->param('tid');
     my $dbh      = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $entry   = $storage->entries_find( sub { $_->{id} == $entry_id } );
-    my $tag     = $storage->tags_find( sub { $_->{id} == $tag_id } );
+    
+    my $entry   = $self->app->repo->getEntriesRepository->find( sub { $_->id == $entry_id } );
+    my $tag     = $self->app->repo->getTagsRepository->find( sub { $_->id == $tag_id } );
 
     if ( defined $entry and defined $tag ) {
 
         # $entry->remove_tag( $dbh, $tag ); # for version without obj storage
         $entry->remove_tag($tag);
-        $entry->save($dbh);
+        $self->app->repo->getEntriesRepository->save($entry);
         $self->write_log(
             "Removed tag $tag->{name} from entry id $entry->{id}. ");
     }
@@ -979,15 +979,15 @@ sub add_tag {
     my $tag_id   = $self->param('tid');
     my $dbh      = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $entry   = $storage->entries_find( sub { $_->{id} == $entry_id } );
-    my $tag     = $storage->tags_find( sub { $_->{id} == $tag_id } );
+    
+    my $entry   = $self->app->repo->getEntriesRepository->find( sub { $_->id == $entry_id } );
+    my $tag     = $self->app->repo->getTagsRepository->find( sub { $_->id == $tag_id } );
 
     if ( defined $entry and defined $tag ) {
 
         # $entry->assign_tag( $dbh, $tag );
         $entry->assign_tag($tag);
-        $entry->save($dbh);
+        $self->app->repo->getEntriesRepository->save($entry);
         $self->write_log("Added tag $tag->{name} to entry id $entry->{id}. ");
     }
     $self->redirect_to( $self->get_referrer );
@@ -1000,8 +1000,8 @@ sub manage_exceptions {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
@@ -1010,8 +1010,9 @@ sub manage_exceptions {
     }
 
 
+
     my @exceptions = $entry->exceptions_all;
-    my @all_teams  = $storage->teams_all;
+    my @all_teams  = $self->app->repo->getTeamsRepository->all;
     my @teams      = $entry->teams;
     my @authors    = $entry->authors_all;
 
@@ -1038,13 +1039,13 @@ sub add_exception {
     my $team_id  = $self->param('tid');
     my $dbh      = $self->app->db;
 
-    my $storage   = StorageBase->get();
-    my $entry     = $storage->entries_find( sub { $_->{id} == $entry_id } );
-    my $exception = $storage->teams_find( sub { $_->{id} == $team_id } );
+    
+    my $entry     = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $entry_id } );
+    my $exception = $self->app->repo->getTeamsRepository->find( sub { $_->{id} == $team_id } );
 
     if ( defined $entry and defined $exception ) {
         $entry->assign_exception($exception);
-        $entry->save($dbh);
+        $self->app->repo->getEntriesRepository->save($entry);
 
         $self->write_log(
             "Added exception $exception->{name} to entry id $entry->{id}. ");
@@ -1061,15 +1062,15 @@ sub remove_exception {
     my $team_id  = $self->param('tid');
     my $dbh      = $self->app->db;
 
-    my $storage   = StorageBase->get();
-    my $entry     = $storage->entries_find( sub { $_->{id} == $entry_id } );
-    my $exception = $storage->teams_find( sub { $_->{id} == $team_id } );
+    
+    my $entry     = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $entry_id } );
+    my $exception = $self->app->repo->getTeamsRepository->find( sub { $_->{id} == $team_id } );
 
     if ( defined $entry and defined $exception ) {
 
         # $entry->remove_exception( $dbh, $exception );
         $entry->remove_exception($exception);
-        $entry->save($dbh);
+        $self->app->repo->getEntriesRepository->save($entry);
         $self->write_log(
             "Added exception $exception->{name} to entry id $entry->{id}. ");
     }
@@ -1133,7 +1134,7 @@ sub get_adding_editing_message_for_error_code {
 ####################################################################################
 sub publications_add_get {
     my $self = shift;
-    $self->write_log("Adding publication");
+    $self->app->logger->info("Open Add Publication");
     my $dbh = $self->app->db;
 
 
@@ -1146,13 +1147,13 @@ sub publications_add_get {
       month = {' . $mons{ get_current_month() } . '},
       day = {1--31},
     }';
-    my $e_dummy = MEntry->new(bib => $bib);
+    my $e_dummy = Entry->new( idProvider => $self->app->repo->getEntriesRepository->getIdProvider, bib=>$bib );
 
     $e_dummy->populate_from_bib();
     $e_dummy->generate_html( $self->app->bst );
 
-    $self->stash( mentry => $e_dummy, msg => $msg );
-    $self->render( template => 'publications/edit_entry' );
+    $self->stash( entry => $e_dummy, msg => $msg );
+    $self->render( template => 'publications/add_entry' );
 }
 ####################################################################################
 sub publications_add_post {
@@ -1162,8 +1163,6 @@ sub publications_add_post {
     my $param_save      = $self->param('save');
     my $param_check_key = $self->param('check_key');
     my $dbh             = $self->app->db;
-
-    my $storage = StorageBase->get();
 
     my $action = 'default';
     $action = 'save'      if $param_save;         # user clicks save
@@ -1179,7 +1178,8 @@ sub publications_add_post {
     my $existing_id = -1;
     my $added_under_id = -1;
 
-    my $entry = MEntry->new( bib=>$new_bib );
+
+    my $entry = Entry->new( idProvider => $self->app->repo->getEntriesRepository->getIdProvider, bib=>$new_bib );
 
     # say Dumper $entry->creation_time;
 
@@ -1196,7 +1196,7 @@ sub publications_add_post {
         $status_code_str = 'KEY_OK';
         $entry->generate_html($self->app->bst);   
 
-        my $entry_conflicting_key = $storage->entries_find( sub { ($_->bibtex_key cmp $entry->bibtex_key)==0 } ); 
+        my $entry_conflicting_key = $self->app->repo->getEntriesRepository->find( sub { ($_->bibtex_key cmp $entry->bibtex_key)==0 } ); 
         if( defined $entry_conflicting_key ){
             $status_code_str = 'KEY_TAKEN';
             $existing_id = $entry_conflicting_key->id;
@@ -1207,7 +1207,7 @@ sub publications_add_post {
         $entry->generate_html($self->app->bst);   
 
         # TODO: duplicated code
-        my $entry_conflicting_key = $storage->entries_find( sub { ($_->bibtex_key cmp $entry->bibtex_key)==0 } ); 
+        my $entry_conflicting_key = $self->app->repo->getEntriesRepository->find( sub { ($_->bibtex_key cmp $entry->bibtex_key)==0 } ); 
         if( defined $entry_conflicting_key ){
             $status_code_str = 'KEY_TAKEN';
             $existing_id = $entry_conflicting_key->id;
@@ -1215,12 +1215,12 @@ sub publications_add_post {
         else{
             $status_code_str = 'ADD_OK';
             $entry->fix_month();
+            $self->app->repo->getEntriesRepository->save($entry);
 
-            $entry->save($dbh);    
-            $added_under_id = $entry->{id};
-            $storage->add_entry_authors( $entry, 1 );
-            $storage->add_entry_tags( $entry, 1 );
-            $storage->add( $entry );
+            $added_under_id = $entry->id;
+            # $storage->add_entry_authors( $entry, 1 );
+            # $storage->add_entry_tags( $entry, 1 );
+            # $storage->add( $entry );
         }
     }
 
@@ -1249,7 +1249,7 @@ sub publications_add_post {
         or $status_code_str eq 'KEY_TAKEN'
         or $bibtex_warnings =~ m/Error/;
 
-    $self->stash( mentry => $entry, msg => $msg, msg_type => $msg_type );
+    $self->stash( entry => $entry, msg => $msg, msg_type => $msg_type );
 
     if ( $status_code_str eq 'ADD_OK' ) {
         $self->flash( msg => $msg, msg_type => $msg_type );
@@ -1257,7 +1257,7 @@ sub publications_add_post {
             $self->url_for( 'edit_publication', id => $added_under_id ) );
     }
     else {
-        $self->render( template => 'publications/edit_entry' );
+        $self->render( template => 'publications/add_entry' );
     }
 }
 ####################################################################################
@@ -1267,23 +1267,23 @@ sub publications_edit_get {
 
     $self->write_log("Editing publication entry id $id");
 
-    my $mentry = $self->app->repo->getEntriesRepository->find( sub { $_->{uid} == $id } );
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->id == $id } );
     
-    if ( !defined $mentry ) {
+    if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    $mentry->populate_from_bib();
-    $mentry->generate_html( $self->app->bst );
+    $entry->populate_from_bib();
+    $entry->generate_html( $self->app->bst );
 
-    $self->stash( mentry => $mentry );
+    $self->stash( entry => $entry );
     $self->render( template => 'publications/edit_entry' );
 }
 ####################################################################################
 sub publications_edit_post {
     my $self            = shift;
-    my $id              = $self->param('id') || -1;
+    my $id              = $self->param('id') // -1;
     my $new_bib         = $self->param('new_bib');
     my $param_prev      = $self->param('preview');
     my $param_save      = $self->param('save');
@@ -1294,7 +1294,7 @@ sub publications_edit_post {
     $action = 'check_key'
         if $self->param('check_key');                  # user clicks check key
 
-    $self->write_log("Editing publication id $id. Action: > $action <.");
+    $self->app->logger->info("Editing publication id $id. Action: > $action <.");
 
     $new_bib =~ s/^\s+|\s+$//g;
     $new_bib =~ s/^\t//g;
@@ -1309,10 +1309,7 @@ sub publications_edit_post {
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );
 
-
-    $self->write_log(
-        "Editing publication id $id. Action: > $action <. Status code: $status_code_str."
-    );
+    $self->app->logger->info("Editing publication id $id. Action: > $action <. Status code: $status_code_str.");
 
     # status_code_strings
     # -2 => PREVIEW
@@ -1331,7 +1328,7 @@ sub publications_edit_post {
         or $status_code_str eq 'KEY_TAKEN'
         or $bibtex_warnings =~ m/Error/;
 
-    $self->stash( mentry => $mentry, msg => $msg, msg_type => $msg_type );
+    $self->stash( entry => $mentry, msg => $msg, msg_type => $msg_type );
     $self->render( template => 'publications/edit_entry' );
 }
 ####################################################################################
