@@ -7,6 +7,8 @@ use BibSpace::Model::DAO::Interface::IDAO;
 use BibSpace::Model::Authorship;
 with 'IDAO';
 use Try::Tiny;
+use List::MoreUtils qw(any uniq);
+use List::Util qw(first);
 
 # Inherited fields from BibSpace::Model::DAO::Interface::IDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
@@ -108,8 +110,7 @@ sub filter {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
 
-  die "".__PACKAGE__."->filter not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  return grep &{$coderef}, $self->all();
   
 }
 before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
@@ -121,8 +122,7 @@ sub find {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
 
-  die "".__PACKAGE__."->find not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  return first \&{$coderef}, $self->all; 
   
 }
 before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };

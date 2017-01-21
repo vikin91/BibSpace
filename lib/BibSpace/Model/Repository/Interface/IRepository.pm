@@ -45,4 +45,9 @@ sub getBackendsArray{
     return @{ $self->backendsConfigHash->{'backends'} };
 }
 
+sub getIdProvider{
+    my $self = shift;
+    return $self->{_idProvider};
+}
+
 1;

@@ -188,9 +188,7 @@ sub all_recently_added {
     my $num  = $self->param('num') || 10;
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my @objs    = $storage->entries_all;
-
+    my @objs    = $self->app->repo->getEntriesRepository->all;
     @objs = sort { $b->creation_time cmp $a->creation_time } @objs;
     @objs = @objs[ 0 .. $num ];
 
@@ -204,13 +202,9 @@ sub all_recently_added {
 sub all_recently_modified {
     my $self = shift;
     my $num  = $self->param('num') || 10;
-    my $dbh  = $self->app->db;
 
-
-    my $storage = StorageBase->get();
-    my @objs    = $storage->entries_all;
-
-    @objs = sort { $b->{modified_time} cmp $a->{modified_time} } @objs;
+    my @objs    = $self->app->repo->getEntriesRepository->all;
+    @objs = sort { $b->modified_time cmp $a->modified_time } @objs;
     @objs = @objs[ 0 .. $num ];
 
     # map {say $_->{modified_time}} @objs;
@@ -223,10 +217,9 @@ sub all_recently_modified {
 sub all_without_tag {
     my $self    = shift;
     my $tagtype = $self->param('tagtype') || 1;
-    my $dbh     = $self->app->db;
+    my $dbh         = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my @all     = $storage->entries_all;
+    my @all     = $self->app->repo->getEntriesRepository->all;
     my @objs    = grep { scalar $_->tags( $dbh, $tagtype ) == 0 } @all;
 
 
@@ -578,8 +571,7 @@ sub remove_attachment_do {    # refactor this - this is clutter
     my $filetype = shift;
     my $dbh      = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $mentry = $storage->entries_find( sub { $_->{id} == $id } );
+    my $mentry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     my $file_path = get_paper_pdf_path( $self, $id, "$filetype" );
     my $num_deleted_files = 0;
@@ -887,8 +879,7 @@ sub delete_sure {
     my $id   = $self->param('id');
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $entry = $storage->entries_find( sub { $_->{id} == $id } );
+    my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
     if ( !defined $entry ) {
         $self->flash(
@@ -901,8 +892,7 @@ sub delete_sure {
 
     remove_attachment_do( $self, $id, 'paper' );
     remove_attachment_do( $self, $id, 'slides' );
-    $storage->delete($entry);
-    $entry->delete($dbh);
+    $self->app->repo->getEntriesRepository->delete($entry);
 
     $self->write_log("Entry id $id has been deleted.");
 
@@ -1234,9 +1224,6 @@ sub publications_add_post {
         }
     }
 
-    # my ( $entry, $status_code_str, $existing_id, $added_under_id )
-    #     = Fhandle_add_edit_publication( $dbh, $new_bib, -1, $action,
-    #     $self->app->bst );
     my $adding_msg
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );
@@ -1312,8 +1299,11 @@ sub publications_edit_post {
     $new_bib =~ s/^\s+|\s+$//g;
     $new_bib =~ s/^\t//g;
 
+    # my ( $mentry, $status_code_str, $existing_id, $added_under_id )
+    #     = Fhandle_add_edit_publication( $dbh, $new_bib, $id, $action,
+    #     $self->app->bst );
     my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-        = Fhandle_add_edit_publication( $dbh, $new_bib, $id, $action,
+        = Fhandle_add_edit_publication_Repo( $self->app->repo->getEntriesRepository, $new_bib, $id, $action,
         $self->app->bst );
     my $adding_msg
         = get_adding_editing_message_for_error_code( $self, $status_code_str,

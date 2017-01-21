@@ -157,7 +157,10 @@ sub setup_repositories {
 
 
     
+    # $self->logger->debug( "Visible Authors: " . Dumper $self->app->repo->getAuthorsRepository->filter(sub{ $_->display==1 }) );
 
+    
+ 
 
     # # @allEntries = $erepo->filter( sub{$_->id > 600} ); 
     # # $logger->debug( "FILTERED Entries: ".join(', ', map{$_->id} @allEntries ) );

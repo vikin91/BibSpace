@@ -25,7 +25,7 @@ our @EXPORT = qw(
     Fdo_regenerate_html
     Ffix_months
     FprintBibtexWarnings
-    Fhandle_add_edit_publication
+    Fhandle_add_edit_publication_Repo
     Fget_publications_main_hashed_args_only
     Fget_publications_main_hashed_args
     Fget_publications_core
@@ -74,14 +74,9 @@ sub Ffix_months {
 
     return ( $num_checks, $num_fixes );
 }
-
-
 ####################################################################################
-# TODO: get rid of this ugly function!
-sub Fhandle_add_edit_publication {
-    my ( $dbh, $new_bib, $id, $action, $bst_file ) = @_;
-
-    my $storage = StorageBase->get();
+sub Fhandle_add_edit_publication_Repo {
+my ( $entriesRepo, $new_bib, $id, $action, $bst_file ) = @_;
 
     # var that will be returned
     my $mentry;         # the entry object
@@ -109,14 +104,14 @@ sub Fhandle_add_edit_publication {
     my $e;
     
     if( $id > 0){
-        $e = $storage->entries_find( sub {$_->id == $id} ); 
+        $e = $entriesRepo->find( sub {$_->id == $id} ); 
     }
-    else{
-        $e = MEntry->new( id=>$id, bib=>$new_bib );
+    if(!$e){
+        $e = Entry->new( idProvider => $entriesRepo->getIdProvider, id=>$id, bib=>$new_bib );
     }
-   
+    $e->bib($new_bib);
 
-    $e->{bib} = $new_bib;
+    
     my $bibtex_code_valid = $e->populate_from_bib();
 
     # We check Bibtex errors for all requests
@@ -125,7 +120,7 @@ sub Fhandle_add_edit_publication {
         return ( $e, $status_code_str, -1, -1 );
     }
 
-    my $tmp_e = $storage->entries_find( sub { ($_->bibtex_key cmp $e->bibtex_key)==0 } ); 
+    my $tmp_e = $entriesRepo->find( sub { ($_->bibtex_key cmp $e->bibtex_key)==0 } ); 
     # grep { $_->{bibtex_key} eq $e->{bibtex_key} } MEntry->static_all( $dbh );
     $existing_id = $tmp_e->{id} if defined $tmp_e;
 
@@ -162,23 +157,18 @@ sub Fhandle_add_edit_publication {
         $e->generate_html($bst_file);
         $e->populate_from_bib();
         $e->fix_month();
-        $e->save($dbh);    # so we save for sure
+        $entriesRepo->save($e);
 
-        # these functions require that the object is in the DB
-        $e->postprocess_updated($bst_file);    # this function does almost nothing now...
-
-        $storage->add_entry_authors( $e, 1 );
-
-        $e->save($dbh);    # so we save for sure
-        $added_under_id = $e->{id};
+        $added_under_id = $e->uid;
     }
     else {
         warn
-            "Fhandle_add_edit_publication action $action does not match the known actions: save, preview, check_key.";
+            "Fhandle_add_edit_publication_repo action $action does not match the known actions: save, preview, check_key.";
     }    # action save
     return ( $e, $status_code_str, $existing_id, $added_under_id );
 }
 
+####################################################################################
 ####################################################################################
 # this function ignores the parameters given in the $self object
 sub Fget_publications_main_hashed_args_only {

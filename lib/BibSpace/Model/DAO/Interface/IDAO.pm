@@ -6,6 +6,7 @@ use Moose::Role; # = this package (class) is an interface
 # Perl interfaces (Roles) can contain attributes =)
 # In Java this interface would differ from other DAO::ENTITY interfaces.
 # classes that implement this interface must provide the following functions
+
 requires 'all';
 requires 'count';
 requires 'save';

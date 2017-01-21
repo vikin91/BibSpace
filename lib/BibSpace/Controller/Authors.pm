@@ -37,8 +37,7 @@ sub all_authors {    # refactored
         $letter_pattern .= '%';
     }
 
-    my $storage = StorageBase->get();
-    my @authors = $storage->authors_all;
+    my @authors = $self->app->repo->getAuthorsRepository->all;
     if ( defined $visible ) {
         @authors = grep { $_->{display} == $visible } @authors;
     }
@@ -46,7 +45,7 @@ sub all_authors {    # refactored
         @authors = grep { ( substr( $_->{master}, 0, 1 ) cmp $letter ) == 0 }
             @authors;
     }
-    my @letters = map { substr( $_->{master}, 0, 1 ) } $storage->authors_all;
+    my @letters = map { substr( $_->{master}, 0, 1 ) } @authors; 
     @letters = uniq @letters;
     @letters = sort @letters;
 
@@ -128,8 +127,7 @@ sub edit_author {
     my $id   = $self->param('id');
 
     my $dbh     = $self->app->db;
-    my $storage = StorageBase->get();
-    my $author  = $storage->authors_find( sub { $_->{id} == $id } );
+    my $author  = $self->app->repo->getAuthorsRepository->find(sub { $_->id == $id });
 
 # redirect to master if master is defined for this author
 # if( defined $author and $author->{id} != $author->{master_id} ){
@@ -147,7 +145,7 @@ sub edit_author {
     }
     else {
 
-        my @all_teams    = $storage->teams_all;
+        my @all_teams    = $self->app->repo->getTeamsRepository->all;
         my @author_teams = $author->teams();
         my @author_tags  = $author->tags();
 
@@ -158,7 +156,7 @@ sub edit_author {
 
 
         my @minor_authors
-            = $storage->authors_filter( sub { $_->is_minion_of($author) } );
+            = $self->app->repo->getAuthorsRepository->filter( sub { $_->is_minion_of($author) } );
 
         # $author->all_author_user_ids($dbh);
 
@@ -531,11 +529,11 @@ sub toggle_visibility {
     my $self = shift;
     my $dbh  = $self->app->db;
     my $id   = $self->param('id');
-    
-    my $storage = StorageBase->get();
-    my $author  = $storage->authors_find( sub { $_->{id} == $id } );
+
+    my $author  = $self->app->repo->getAuthorsRepository->find(sub { $_->id == $id });
+    $self->app->logger->debug(Dumper $author);
     $author->toggle_visibility();
-    $author->save($dbh);
+    # $self->app->repo->getAuthorsRepository->save($author);
     $self->redirect_to( $self->get_referrer );
 }
 

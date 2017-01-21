@@ -31,15 +31,15 @@ sub entering{
     my $self=shift;
     my $msg = shift;
     my $origin = shift // 'unknown';
-    print color('black on_yellow');
-    $self->log('ENTER', $msg, $origin);
+    # print color('black on_yellow');
+    # $self->log('ENTER', $msg, $origin);
 }
 sub exiting{
     my $self=shift;
     my $msg = shift;
     my $origin = shift // 'unknown';
-    print color('black on_yellow');
-    $self->log('EXIT', $msg, $origin);
+    # print color('black on_yellow');
+    # $self->log('EXIT', $msg, $origin);
 }
 sub info{
     my $self=shift;

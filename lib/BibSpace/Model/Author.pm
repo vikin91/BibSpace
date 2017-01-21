@@ -210,11 +210,11 @@ sub is_minion_of {
         and defined $self->{master_id}
         and $self->{master_id} == $master->{id};
     return 1
-        if defined $self->{master}
-        and ( $self->{master} cmp $master->{uid} ) == 0;
-    return 0 if $self->is_master;
+        if defined $self->master
+        and ( $self->master cmp $master->uid ) == 0;
+    return if $self->is_master;
 
-    return 0;
+    return;
 }
 ####################################################################################
 sub update_master_name {

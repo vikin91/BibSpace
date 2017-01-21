@@ -163,10 +163,16 @@ sub register {
     );
 
     $app->helper(
+        get_visible_authors => sub {
+            my $self = shift;
+            return  $self->app->repo->getAuthorsRepository->filter( sub{$_->is_visible } );
+        }
+    );
+
+    $app->helper(
         num_visible_authors => sub {
             my $self = shift;
-            return
-                scalar grep { $_->display == 1 } $self->app->repo->getAuthorsRepository()->all();
+            return scalar $self->get_visible_authors();
         }
     );
 
