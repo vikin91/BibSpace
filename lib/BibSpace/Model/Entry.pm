@@ -419,40 +419,6 @@ sub has_master_author {
     return $self->has_author($author->get_master);
 }
 ####################################################################################
-sub assign_author {
-    my ( $self, @authors ) = @_;
-
-    return 0 if !@authors or scalar @authors == 0;
-
-    my $added = 0;
-    foreach my $a (@authors) {
-        if ( defined $a and !$self->has_author($a) ) {
-            $self->authors_add($a);
-            ++$added;
-            if ( !$a->has_entry($self) ) {
-                $a->assign_entry($self);
-            }
-        }
-    }
-    return $added;
-}
-####################################################################################
-sub remove_author {
-    my $self   = shift;
-    my $author = shift;
-
-    my $index = $self->authors_find_index( sub { $_->equals($author) } );
-    return 0 if $index == -1;
-    return 1 if $self->authors_delete($index);
-    return 0;
-}
-####################################################################################
-sub remove_all_authors {
-    my $self = shift;
-
-    $self->authors_clear;
-}
-####################################################################################
 ####################################################################################
 ####################################################################################
 sub author_names_from_bibtex {
@@ -513,20 +479,6 @@ sub has_team {
 }
 ####################################################################################
 ####################################################################################
-
-####################################################################################
-####################################################################################
-####################################################################################
-sub get_tags_from_bibtex {
-    my $self = shift;
-
-    my @tags;
-
-    foreach my $name ( $self->tag_names_from_bibtex() ) {
-        push @tags, MTag->new( name => $name );
-    }
-    return @tags;
-}
 ####################################################################################
 sub tag_names_from_bibtex {
     my $self = shift;
@@ -572,43 +524,12 @@ sub sort_by_year_month_modified_time {
 # $a->{modified_time} <=> $b->{modified_time}; # needs an extra lib, so we just compare ids as approximation
 }
 ####################################################################################
-sub static_get_from_id_array {
-    my $self             = shift;
-    my $dbh              = shift;
-    my $input_id_arr_ref = shift;
-    my $keep_order       = shift // 0
-        ; # if set to 1, it keeps the order of the output_arr exactly as in the input_id_arr
-
-    my @input_id_arr = @$input_id_arr_ref;
-
-    unless ( grep { defined($_) } @input_id_arr ) {    # if array is empty
-        return ();
-    }
-
-    my $sort = 1 if $keep_order == 0 or !defined $keep_order;
-    my @output_arr = ();
-
-    # the performance here can be optimized
-    for my $wanted_id (@input_id_arr) {
-        my $e = MEntry->static_get( $dbh, $wanted_id );
-        push @output_arr, $e if defined $e;
-    }
-
-    if ( $keep_order == 0 ) {
-        return sort sort_by_year_month_modified_time @output_arr;
-    }
-    return @output_arr;
-}
-####################################################################################
-####################################################################################
-
-####################################################################################
 sub decodeLatex {
     my $self = shift;
     if ( defined $self->title ) {
         my $title = $self->title;
-        $title =~ s/^\{//g;
-        $title =~ s/\}$//g;
+        $title =~ s/^\{+//g;
+        $title =~ s/\}+$//g;
         $self->title($title);
 
         # $self->{title} = decode( 'latex', $self->{title} );

@@ -65,6 +65,7 @@ sub toString {
 sub equals {
   my $self = shift;
   my $obj  = shift;
+  return if !defined $obj;
   die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj) unless ref($self) eq ref($obj);
   if ( $self->team and $self->author and $obj->team and $obj->author ) {
     return $self->equals_obj($obj);

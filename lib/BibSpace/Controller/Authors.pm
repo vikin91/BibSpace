@@ -205,12 +205,8 @@ sub remove_from_team {
   my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
   my $team   = $self->app->repo->getTeamsRepository->find( sub   { $_->id == $team_id } );
 
-  if ( $author and $team ) {
-    my $membership = $self->app->repo->getMembershipsRepository->find(
-      sub {
-        $_->author->equals($author) and $_->team->equals($team);
-      }
-    );
+  if ( defined $author and defined $team ) {
+    my $membership = $author->memberships_find(sub { $_->team->equals($team) });
     $author->remove_membership($membership);
     $team->remove_membership($membership);
     $self->app->repo->getMembershipsRepository->delete($membership);
@@ -231,8 +227,7 @@ sub remove_uid {
   my $dbh       = $self->app->db;
   my $master_id = $self->param('masterid');
   my $minor_id  = $self->param('uid');
-
-  my $storage = StorageBase->get();
+ 
 
   my $author_master = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
   my $author_minor  = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $minor_id } );
@@ -254,6 +249,7 @@ sub remove_uid {
 # All entries of the $author_master from before seperation needs be updated
 # The $author_minor comes back to the list of all authors and it keeps its entries.
 
+    my $storage = StorageBase->get();
     foreach my $e (@all_entries) {
 
       # 0 = no creation of new authors

@@ -29,7 +29,7 @@ sub metalist {
     my $self = shift;
 
     my @pubs = $self->app->repo->getEntriesRepository->filter(sub{
-        $_->is_paper==1 and not $_->is_hidden
+        $_->is_paper and not $_->is_hidden
     });
 
     map { say "HIDDEN ".$_->id if $_->is_hidden} @pubs;
