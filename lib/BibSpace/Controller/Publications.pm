@@ -18,9 +18,6 @@ use Encode;
 
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
-use BibSpace::Model::M::MEntry;
-use BibSpace::Model::M::MTag;
-use BibSpace::Model::M::MTagType;
 
 
 use Mojo::Base 'Mojolicious::Controller';

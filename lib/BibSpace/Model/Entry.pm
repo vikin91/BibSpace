@@ -28,7 +28,10 @@ use Encode;
 use Moose;
 use Moose::Util::TypeConstraints;
 use BibSpace::Model::IEntity;
-with 'IEntity';
+use BibSpace::Model::ILabeled;
+use BibSpace::Model::IAuthored;
+use BibSpace::Model::IHavingException;
+with 'IEntity', 'ILabeled', 'IAuthored', 'IHavingException';
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
@@ -95,54 +98,12 @@ has 'bst_file' => (
 );
 
 
-has 'authorships' => (
-    is      => 'rw',
-    isa     => 'ArrayRef[Authorship]',
-    traits  => ['Array'],
-    default => sub { [] },
-    handles => {
-        authorships_all        => 'elements',
-        authorships_add        => 'push',
-        authorships_count      => 'count',
-        authorships_find       => 'first',
-        authorships_find_index => 'first_index',
-        authorships_filter     => 'grep',
-        authorships_delete     => 'delete',
-        authorships_clear      => 'clear',
-    },  
-);
 
-has 'labelings' => (
-    is      => 'rw',
-    isa     => 'ArrayRef[Labeling]',
-    traits  => ['Array'],
-    default => sub { [] },
-    handles => {
-        labelings_all        => 'elements',
-        labelings_add        => 'push',
-        labelings_count      => 'count',
-        labelings_find       => 'first',
-        labelings_find_index => 'first_index',
-        labelings_filter     => 'grep',
-        labelings_delete     => 'delete',
-    },  
-);
 
-has 'exceptions' => (
-    is      => 'rw',
-    isa     => 'ArrayRef[Exception]',
-    traits  => ['Array'],
-    default => sub { [] },
-    handles => {
-        exceptions_all        => 'elements',
-        exceptions_add        => 'push',
-        exceptions_count      => 'count',
-        exceptions_find       => 'first',
-        exceptions_find_index => 'first_index',
-        exceptions_filter     => 'grep',
-        exceptions_delete     => 'delete',
-    },  
-);
+####################################################################################
+####################################################################################
+
+
 
 
 
@@ -161,11 +122,11 @@ sub toStringShort {
     $str .= ", year " . $self->year;
     $str .= ", \n";
     $str .= "Authors: [\n";
-    map { $str .= "\t" . $_->toString . "\n" } $self->authors_all;
+    map { $str .= "\t" . $_->toString . "\n" } $self->authors;
     $str .= "]\n";
 
     $str .= "Tags: [\n";
-    map { $str .= "\t" . $_->toString . "\n" } $self->tags_all;
+    map { $str .= "\t" . $_->toString . "\n" } $self->tags;
     $str .= "]\n";
 
     $str .= "Exceptions: [\n";
@@ -382,53 +343,6 @@ sub fix_month {
 
     return $num_fixes;
 }
-########################################################################################################################
-sub has_tag_named {
-    my $self = shift;
-    my $name = shift;
-
-    my $found = $self->labelings_find( sub { ( $_->tag->name cmp $name ) == 0 } );
-    return 1 if defined $found;
-    return;
-}
-########################################################################################################################
-sub is_talk_in_tag {
-    my $self = shift;
-    my $sum
-        = $self->has_tag_named("Talks")
-        + $self->has_tag_named("Talk")
-        + $self->has_tag_named("talks")
-        + $self->has_tag_named("talk");
-    return 1 if $sum > 0;
-    return;
-}
-########################################################################################################################
-sub fix_entry_type_based_on_tag {
-    my $self = shift;
-
-    my $is_talk_db  = $self->is_talk();
-    my $is_talk_tag = $self->is_talk_in_tag();
-
-    if ( $is_talk_tag and $is_talk_db ) {
-
-        # say "both true: OK";
-        return 0;
-    }
-    elsif ( $is_talk_tag and $is_talk_db == 0 ) {
-
-        # say "tag true, DB false. Should write to DB";
-        $self->make_talk();
-        return 1;
-    }
-    elsif ( $is_talk_tag == 0 and $is_talk_db ) {
-
-        # say "tag false, DB true. do nothing";
-        return 0;
-    }
-
-    # say "both false. Do nothing";
-    return 0;
-}
 ####################################################################################
 sub postprocess_updated {
     my $self     = shift;
@@ -485,11 +399,7 @@ sub regenerate_html {
         $self->need_html_regen(0);
     }
 }
-####################################################################################
-sub authors {
-    my $self = shift;
-    return map {$_->author} $self->authorships_all;
-}
+
 ####################################################################################
 sub has_author {
     my $self            = shift;
@@ -574,42 +484,6 @@ sub author_names_from_bibtex {
     return @author_names;
 }
 ####################################################################################
-# sub get_authors_from_bibtex {
-#     my $self = shift;
-
-#     my @authors;
-
-#     foreach my $name ( $self->author_names_from_bibtex() ) {
-#         my $a = Author->new( uid => $name );
-#         push @authors, $a;
-#     }
-#     return @authors;
-# }
-####################################################################################
-sub has_authorship {
-    my ( $self, $authorship ) = @_;
-    my $idx = $self->authorships_find_index( sub { $_->equals($authorship) } );
-    return $idx >= 0;
-}
-####################################################################################
-sub add_authorship {
-    my ( $self, $authorship ) = @_;
-    
-    if( !$self->has_authorship($authorship) ){
-      $self->authorships_add($authorship);  
-    }
-}
-####################################################################################
-sub remove_authorship {
-    my ( $self, $authorship ) = @_;
-    # $authorship->validate;
-    
-    my $index = $self->authorships_find_index( sub { $_->equals($authorship) } );
-    return if $index == -1;
-    return 1 if $self->authorships_delete($index);
-    return ;
-}
-####################################################################################
 sub teams {
     my $self = shift;
 
@@ -638,73 +512,8 @@ sub has_team {
     return ;
 }
 ####################################################################################
-sub get_exceptions {
-    my $self = shift;
-    return $self->exceptions_all;
-}
 ####################################################################################
-sub remove_exception {
-    my $self      = shift;
-    my $exception = shift;
 
-    my $index
-        = $self->exceptions_find_index( sub { $_->equals($exception) } );
-    return 0 if $index == -1;
-    return 1 if $self->exceptions_delete($index);
-    return 0;
-}
-####################################################################################
-sub assign_exception {
-    my $self      = shift;
-    my $exception = shift;
-
-
-    return 0
-        if !defined $self->id
-        or $self->id < 0
-        or !defined $exception
-        or $exception->id <= 0;
-
-    my $result = $self->exceptions_add($exception);
-
-# say "adding excpetion ". $exception->toString;
-# say "Entry has exceptions: \n". join ("\n", map { $_->toString } $self->exceptions_all );
-
-    return 1 if $result;
-    return 0;
-}
-####################################################################################
-####################################################################################
-####################################################################################
-sub tags {
-    my $self     = shift;
-    my $tag_type = shift;
-
-    return grep {$_->type == $tag_type} map {$_->tag} $self->labelings_all;
-}
-####################################################################################
-sub has_tag {
-    my $self = shift;
-    my $tag  = shift;
-
-    return defined $self->labelings_find( sub { $_->tag->equals($tag) } );
-}
-####################################################################################
-sub add_labeling {
-    my ( $self, $label ) = @_;
-    $label->validate;
-    $self->labelings_add($label);
-}
-####################################################################################
-sub remove_labeling {
-    my ( $self, $label ) = @_;
-    $label->validate;
-    
-    my $index = $self->labelings_find_index( sub { $_->equals($label) } );
-    return if $index == -1;
-    return 1 if $self->labelings_delete($index);
-    return ;
-}
 ####################################################################################
 ####################################################################################
 ####################################################################################
