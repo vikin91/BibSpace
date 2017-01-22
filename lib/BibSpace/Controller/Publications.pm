@@ -1113,7 +1113,6 @@ sub publications_add_post {
 
   my $entry = Entry->new( idProvider => $self->app->repo->getEntriesRepository->getIdProvider, bib => $new_bib );
 
-  # say Dumper $entry->creation_time;
 
   my $bibtex_code_valid = $entry->populate_from_bib();
 

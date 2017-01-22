@@ -108,6 +108,7 @@ has 'authorships' => (
         authorships_find_index => 'first_index',
         authorships_filter     => 'grep',
         authorships_delete     => 'delete',
+        authorships_clear      => 'clear',
     },  
 );
 

@@ -1,4 +1,4 @@
-package SmartArray;
+package SmartHash;
 
 use 5.010;    #because of ~~ and say
 use Try::Tiny;
@@ -10,8 +10,7 @@ use BibSpace::Model::IBibSpaceBackend;
 require BibSpace::Model::IEntity;
 with 'IBibSpaceBackend';
 use List::Util qw(first);
-use List::MoreUtils qw(first_index);
-
+use List::MoreUtils qw(any uniq first_index);
 
 =item
     This is a in-memory data structure (hash) to hold all objects of BibSpace.
@@ -26,7 +25,7 @@ has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 has 'data' => (
     traits    => ['Hash'],
     is        => 'ro',
-    isa       => 'HashRef[ArrayRef[BibSpace::Model::IEntity]]',
+    isa       => 'HashRef[HashRef[BibSpace::Model::IEntity]]',
     default   => sub { {} },
     handles   => {
         set     => 'set',
@@ -51,7 +50,7 @@ sub _init {
     my $type = shift;
     die "_init requires a type!" unless $type;
     if(!$self->defined($type)){
-        $self->set($type, []);
+        $self->set($type, {});
     }
 }
 before '_init' => sub { shift->logger->entering("","".__PACKAGE__."->_init"); };
@@ -62,8 +61,9 @@ sub all {
     my $type = shift;
     die "all requires a type!" unless $type;
     $self->_init($type);
-    my $aref = $self->get($type);
-    return @{ $aref };
+    my $href = $self->get($type);
+    return () if !%{ $href };
+    return values %{ $href };
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
 after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
@@ -72,7 +72,11 @@ sub _add {
     my ($self, @objects) = @_;
     my $type = ref($objects[0]);
     $self->_init($type);
-    push @{$self->get($type)}, @objects;
+    my $href = $self->get($type);
+    
+    foreach my $obj (@objects){
+        $href->{$obj->id} = $obj;
+    }
 }
 before '_add' => sub { shift->logger->entering("","".__PACKAGE__."->_add"); };
 after '_add'  => sub { shift->logger->exiting("","".__PACKAGE__."->_add"); };
@@ -97,7 +101,10 @@ after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
 sub count { 
     my ($self, $type) = @_;
     die "all requires a type!" unless $type;
-    return scalar $self->all($type);
+    $self->_init($type);
+    my $href = $self->get($type);
+    return 0 if !$href->{$type};
+    return scalar keys %{ $href->{$type} };
 }
 before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
 after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
@@ -112,15 +119,15 @@ after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 sub exists { 
     my ($self, $object) = @_;
     my $type = ref($object);
-    my $found = first {$_->equals($object)} $self->all($type);
-    return defined $found;
+    my $href = $self->get($type);
+    return exists $href->{$object->id};
 }
 before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
 after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
 
 sub update { 
     my ($self, @objects) = @_;
-    # should happen automatically beacuser array keeps references to objects
+    return $self->_add(@objects);
 }
 before 'update' => sub { shift->logger->entering("","".__PACKAGE__."->update"); };
 after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); };
@@ -128,11 +135,10 @@ after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); }
 sub delete { 
     my ($self, @objects) = @_; 
     my $type = ref($objects[0]);
-    my $aref = $self->get($type);
+    my $href = $self->get($type);
 
     foreach my $obj (@objects){
-        my $idx = first_index { $_ == $obj } @{$aref};
-        splice( @{$aref}, $idx, 1) if $idx > -1;
+        delete $href->{$obj->id};
     }
 }
 before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
@@ -142,7 +148,7 @@ sub filter {
     my ($self, $type, $coderef) = @_;
     # $self->logger->warn("Calling ".__PACKAGE__."->filter with param $type");
     return () if $self->empty($type);
-    return grep &{$coderef}, $self->all($type); 
+    return grep \&{$coderef}, $self->all($type); 
 }
 before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
 after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); };

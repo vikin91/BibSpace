@@ -37,7 +37,7 @@ sub all_authors {    # refactored
     $letter_pattern .= '%';
   }
 
-  my @authors = $self->app->repo->getAuthorsRepository->filter( sub { $_->is_master } );
+  my @authors = $self->app->repo->getAuthorsRepository->all;
   if ( defined $visible ) {
     @authors = grep { $_->display == $visible } @authors;
   }
@@ -174,12 +174,16 @@ sub add_to_team {
   my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
   my $team   = $self->app->repo->getTeamsRepository->find( sub   { $_->id == $team_id } );
 
-  if ( $author and $team ) {
-    $author->add_to_team($team);
-    $team->add_author($author);
-
-    $self->app->repo->getAuthorsRepository->save($author);
-    $self->app->repo->getTeamsRepository->save($team);
+  if ( defined $author and defined $team ) {
+    my $membership = Membership->new(
+      author    => $author->get_master,
+      team      => $team,
+      author_id => $author->get_master->id,
+      team_id   => $team->id
+    );
+    $self->app->repo->getMembershipsRepository->save($membership);
+    $team->add_membership($membership);
+    $author->add_membership($membership);
 
     $self->flash(
       msg      => "Author <b>" . $author->uid . "</b> has just joined team <b>" . $team->name . "</b>",
@@ -198,14 +202,18 @@ sub remove_from_team {
   my $master_id = $self->param('id');
   my $team_id   = $self->param('tid');
 
-  my $storage = StorageBase->get();
-  my $author  = $self->app->repo->getAuthorsRepository->find( sub { $_->{id} == $master_id } );
-  my $team    = $storage->teams_find( sub { $_->{id} == $team_id } );
+  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
+  my $team   = $self->app->repo->getTeamsRepository->find( sub   { $_->id == $team_id } );
 
   if ( $author and $team ) {
-    $author->remove_from_team($team);
-    $team->remove_author($author);
-    $author->save($dbh);
+    my $membership = $self->app->repo->getMembershipsRepository->find(
+      sub {
+        $_->author->equals($author) and $_->team->equals($team);
+      }
+    );
+    $author->remove_membership($membership);
+    $team->remove_membership($membership);
+    $self->app->repo->getMembershipsRepository->delete($membership);
 
     $self->flash(
       msg      => "Author <b>" . $author->uid . "</b> has just left team <b>" . $team->name . "</b>",
@@ -360,27 +368,33 @@ sub edit_post {
 sub post_edit_membership_dates {
   my $self      = shift;
   my $dbh       = $self->app->db;
-  my $aid       = $self->param('aid');
-  my $tid       = $self->param('tid');
+  my $master_id = $self->param('aid');
+  my $team_id   = $self->param('tid');
   my $new_start = $self->param('new_start');
   my $new_stop  = $self->param('new_stop');
 
-  my $storage = StorageBase->get();
-  my $author  = $self->app->repo->getAuthorsRepository->find( sub { $_->{id} == $aid } );
-  my $team    = $storage->teams_find( sub { $_->{id} == $tid } );
+  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
+  my $team   = $self->app->repo->getTeamsRepository->find( sub   { $_->id == $team_id } );
 
-  if ($author) {
-    try {
-      $author->update_membership( $team, $new_start, $new_stop );
-      $author->save($dbh);
-      $self->flash( msg => "Membership updated successfully.", msg_type => "success" );
-    }
-    catch {
-      $self->flash( msg => $_, msg_type => "danger" );
-    };
+  if ( $author and $team ) {
+    my $membership = $self->app->repo->getMembershipsRepository->find(
+      sub {
+        $_->author->equals($author) and $_->team->equals($team);
+      }
+    );
+    $membership->start($new_start);
+    $membership->stop($new_stop);
+    $self->app->repo->getMembershipsRepository->update($membership);
+
+    # $author->remove_membership($membership);
+    # $team->remove_membership($membership);
+
+    $self->flash( msg => "Membership updated successfully.", msg_type => "success" );
     $self->redirect_to( $self->url_for( 'edit_author', id => $author->id ) );
     return;
   }
+  
+  $self->flash( msg => "Cannot update membership: author or team not found.", msg_type => "danger" );
   $self->redirect_to( $self->get_referrer );
 
 }
@@ -412,16 +426,33 @@ sub delete_author_force {
 
   if ($author) {
 
-    $self->flash( msg => "Author " . $author->uid . " ID $id removed successfully.", msg_type => "success" );
-    $author->abandon_all_teams;
-    $author->abandon_all_entries;
-    my @membershipsToDelete = $self->app->repo->getMembershipsRepository->filter(sub{$_->author->equals($author)});
-    $self->app->repo->getMembershipsRepository->delete(@membershipsToDelete);
-    my @authorshipsToDelete = $self->app->repo->getAuthorshipsRepository->filter(sub{$_->author->equals($author)});
-    $self->app->repo->getAuthorshipsRepository->delete(@authorshipsToDelete);
+    ## TODO: refactor these blocks nicely!
+
+    ## Deleting memberships
+    my @memberships = $author->memberships_all;
+    # for each team, remove membership in this team
+    foreach my $membership ( @memberships ){
+        $membership->team->remove_membership($membership);
+    }
+    $self->app->repo->getMembershipsRepository->delete(@memberships);
+    # remove all memberships for this team
+    $author->memberships_clear;
+
+    ## Deleting authorships
+    my @authorships = $author->authorships_all;
+    # for each team, remove authorship in this team
+    foreach my $authorship ( @authorships ){
+        $authorship->entry->remove_authorship($authorship);
+    }
+    $self->app->repo->getAuthorshipsRepository->delete(@authorships);
+    # remove all authorships for this team
+    $author->authorships_clear;
+
+    # finally delete author
     $self->app->repo->getAuthorsRepository->delete($author);
 
     $self->write_log( "Author " . $author->uid . " ID $id has been deleted." );
+    $self->flash( msg => "Author " . $author->uid . " ID $id removed successfully.", msg_type => "success" );
   }
   else {
     $self->flash( msg => "Cannot delete author ID $id.", msg_type => "danger" );
@@ -440,24 +471,24 @@ sub reassign_authors_to_entries {
   my $num_authors_created = 0;
   foreach my $entry (@all_entries) {
     next unless defined $entry;
-    $self->app->logger->debug( "Reassignning authors for entry ".$entry->id);
+    $self->app->logger->debug( "Reassignning authors for entry " . $entry->id );
 
     my @bibtex_author_name = $entry->author_names_from_bibtex();
 
     for my $author_name (@bibtex_author_name) {
 
       my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->uid eq $author_name } );
-      $self->app->logger->debug( "\t found ".$author->uid) if defined $author;
-      $self->app->logger->debug( "\t NOT found ".$author_name) unless defined $author;
+      $self->app->logger->debug( "\t found " . $author->uid ) if defined $author;
+      $self->app->logger->debug( "\t NOT found " . $author_name ) unless defined $author;
 
       if ( $create_new == 1 and !defined $author ) {
         $author
           = Author->new( idProvider => $self->app->repo->getAuthorsRepository->getIdProvider, uid => $author_name );
         $self->app->repo->getAuthorsRepository->save($author);
-        $self->app->logger->debug( "\t CREATED ".$author->uid);
+        $self->app->logger->debug( "\t CREATED " . $author->uid );
         ++$num_authors_created;
       }
-      if( defined $author ){
+      if ( defined $author ) {
         my $authorship = Authorship->new(
           author    => $author->get_master,
           entry     => $entry,
@@ -484,14 +515,11 @@ sub reassign_authors_to_entries_and_create_authors {
 
 sub toggle_visibility {
   my $self = shift;
-  my $dbh  = $self->app->db;
   my $id   = $self->param('id');
 
   my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $id } );
-  $self->app->logger->debug( Dumper $author);
   $author->toggle_visibility();
-
-  # $self->app->repo->getAuthorsRepository->save($author);
+  $self->app->repo->getAuthorsRepository->update($author);
   $self->redirect_to( $self->get_referrer );
 }
 

@@ -30,7 +30,7 @@ has 'tag' => (
 sub id {
     my $self = shift;
     return "(".$self->entry_id."-".$self->tag->name.")" if defined $self->tag;
-    return "(".$_->entry_id."-".$_->tag_id.")";
+    return "(".$self->entry_id."-".$self->tag_id.")";
 }
 ####################################################################################
 sub validate {

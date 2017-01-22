@@ -105,9 +105,7 @@ after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); }
 sub filter {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-
-  return grep &{$coderef}, $self->all();
-  
+  return $self->handle->filter("TagType", $coderef);
 }
 before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
 after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); };
@@ -117,9 +115,7 @@ after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); }
 sub find {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-
-  return first \&{$coderef}, $self->all; 
-  
+  return $self->handle->find("TagType", $coderef);
 }
 before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };
 after 'find'  => sub { shift->logger->exiting("","".__PACKAGE__."->find"); };

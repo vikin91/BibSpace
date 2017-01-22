@@ -131,7 +131,7 @@ sub _insert {
   foreach my $obj (@objects) {
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute( $obj->name, $obj->parent, $obj->id );
+      my $result = $sth->execute( $obj->id, $obj->name, $obj->parent );
       $sth->finish();
     }
     catch {

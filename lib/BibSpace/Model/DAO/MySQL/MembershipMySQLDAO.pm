@@ -147,11 +147,26 @@ after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_inse
 
 sub update {
   my ( $self, @objects ) = @_;
+  my $dbh = $self->handle;
 
-  die "" . __PACKAGE__ . "->update not implemented. Method was instructed to update " . scalar(@objects) . " objects.";
+  foreach my $obj (@objects) {
+    next if !defined $obj->id;
 
-  # TODO: auto-generated method stub. Implement me!
+    # update field 'modified_time' only if needed
+    my $qry = "UPDATE Author_to_Team SET
+                      start=?,
+                      stop=? 
+              WHERE author_id = ? AND team_id = ?";
 
+    my $sth = $dbh->prepare($qry);
+    try {
+      my $result = $sth->execute( $obj->start, $obj->stop, $obj->author_id, $obj->team_id );
+      $sth->finish();
+    }
+    catch {
+      $self->logger->error( "Update exception: $_", "" . __PACKAGE__ . "->update" );
+    };
+  }
 }
 before 'update' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->update" ); };
 after 'update' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update" ); };
@@ -164,11 +179,18 @@ after 'update' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update
 sub delete {
   my ( $self, @objects ) = @_;
   my $dbh = $self->handle;
+
   foreach my $obj (@objects) {
+    next if !defined $obj;
     my $qry = "DELETE FROM Author_to_Team WHERE author_id=? AND team_id=?;";
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute( $obj->author_id, $obj->team_id );
+      if( defined $obj->author and defined $obj->team ){
+        $sth->execute( $obj->author->id, $obj->team->id );
+      }
+      else{
+        $sth->execute( $obj->author_id, $obj->team_id );
+      }
     }
     catch {
       $self->logger->error( "Delete exception: $_", "" . __PACKAGE__ . "->delete" );

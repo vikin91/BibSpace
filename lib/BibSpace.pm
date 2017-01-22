@@ -93,9 +93,9 @@ has backendConfig => sub {
     my %backendConfig = (
         idProviderType => 'IntegerUidProvider',
         backends => [ 
-            { prio => 1, type => 'SmartArrayDAOFactory', handle => $self->smatrArrayBackend }, # this is fucked-up! How do I pass SmartArrays for other entities??
+            { prio => 1, type => 'SmartArrayDAOFactory', handle => $self->smatrArrayBackend },
             # { prio => 2, type => 'RedisDAOFactory', handle => $redisHandle },
-            { prio => 2, type => 'MySQLDAOFactory', handle => $self->db },
+            { prio => 99, type => 'MySQLDAOFactory', handle => $self->db },
         ]
     );
     return \%backendConfig;
@@ -136,17 +136,20 @@ sub setup_repositories {
     my $app  = $self;
     my $dbh = $self->app->db;
 
+    my $backendFrom = 99;
+    my $backendTo = 1;
+
     $self->logger->warn("setup_repositories");
     $self->repo->hardReset;
-    $self->repo->getAuthorsRepository->copy(2,1);
-    $self->repo->getAuthorshipsRepository->copy(2,1);
-    $self->repo->getEntriesRepository->copy(2,1);
-    $self->repo->getExceptionsRepository->copy(2,1);
-    $self->repo->getLabellingsRepository->copy(2,1);
-    $self->repo->getMembershipsRepository->copy(2,1);
-    $self->repo->getTagsRepository->copy(2,1);
-    $self->repo->getTagTypesRepository->copy(2,1);
-    $self->repo->getTeamsRepository->copy(2,1);
+    $self->repo->getAuthorsRepository->copy( $backendFrom, $backendTo );
+    $self->repo->getAuthorshipsRepository->copy( $backendFrom, $backendTo );
+    $self->repo->getEntriesRepository->copy( $backendFrom, $backendTo );
+    $self->repo->getExceptionsRepository->copy( $backendFrom, $backendTo );
+    $self->repo->getLabellingsRepository->copy( $backendFrom, $backendTo );
+    $self->repo->getMembershipsRepository->copy( $backendFrom, $backendTo );
+    $self->repo->getTagsRepository->copy( $backendFrom, $backendTo );
+    $self->repo->getTagTypesRepository->copy( $backendFrom, $backendTo );
+    $self->repo->getTeamsRepository->copy( $backendFrom, $backendTo );
 
     $self->app->logger->debug( "Linking Authors (N) to (1) Authors."); 
     foreach my $author ($self->repo->getAuthorsRepository->filter(sub{$_->id != $_->master_id})){
@@ -198,7 +201,7 @@ sub setup_repositories {
     foreach my $membership ($self->repo->getMembershipsRepository->all){
         my $author = $self->repo->getAuthorsRepository->find(sub{ $_->id == $membership->author_id});
         my $team = $self->repo->getTeamsRepository->find(sub{ $_->id == $membership->team_id});
-        if( $author and $team ){
+        if( defined $author and defined $team ){
             $membership->author($author);
             $membership->team($team);
             $author->memberships_add($membership);
@@ -213,9 +216,13 @@ sub setup_repositories {
             $tag->tagtype($tagtype);
         }
     }
+    $self->app->logger->debug( "Linking Finished.");
     # my @allEntries = $self->repo->getEntriesRepository->all;
     # $self->app->logger->debug( "Entries: ".join(', ', map{$_->id} @allEntries ) );
     
+    my @membershipsToDelete = $self->app->repo->getMembershipsRepository->all;
+    my $str = join("\n", map {$_->toString} @membershipsToDelete);
+    $self->logger->warn( "Found memberships: \n".$str  );
 
 
     my $factory = $self->repo;
@@ -241,10 +248,7 @@ sub setup_repositories {
     # $idp->generateUID();
     # $idp->generateUID();
 
-    
-    # $self->logger->debug( "Visible Authors: " . Dumper $self->app->repo->getAuthorsRepository->filter(sub{ $_->display==1 }) );
 
-    
  
 
     # # @allEntries = $erepo->filter( sub{$_->id > 600} ); 

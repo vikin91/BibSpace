@@ -42,6 +42,7 @@ has 'authorships' => (
         authorships_find_index => 'first_index',
         authorships_filter     => 'grep',
         authorships_delete     => 'delete',
+        authorships_clear      => 'clear',
     },  
 );
 
@@ -51,11 +52,14 @@ has 'memberships' => (
   traits  => [ 'Array', 'DoNotSerialize' ],
   default => sub { [] },
   handles => {
-    memberships_all    => 'elements',
-    memberships_add    => 'push',
-    memberships_count  => 'count',
-    memberships_find   => 'first',
-    memberships_filter => 'grep',
+      memberships_all        => 'elements',
+      memberships_add        => 'push',
+      memberships_count      => 'count',
+      memberships_find       => 'first',
+      memberships_find_index => 'first_index',
+      memberships_filter     => 'grep',
+      memberships_delete     => 'delete',
+      memberships_clear      => 'clear',
   },
 );
 
@@ -95,7 +99,7 @@ sub equals {
   my $self = shift;
   my $obj  = shift;
 
-  return undef if !defined $obj;
+  return undef if !defined $obj;  
   die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj) unless ref($self) eq ref($obj);
 
 
@@ -127,6 +131,32 @@ sub remove_authorship {
     my $index = $self->authorships_find_index( sub { $_->equals($authorship) } );
     return if $index == -1;
     return 1 if $self->authorships_delete($index);
+    return ;
+}
+####################################################################################
+####################################################################################
+####################################################################################
+sub has_membership {
+    my ( $self, $membership ) = @_;
+    my $idx = $self->memberships_find_index( sub { $_->equals($membership) } );
+    return $idx >= 0;
+}
+####################################################################################
+sub add_membership {
+    my ( $self, $membership ) = @_;
+    
+    if( !$self->has_membership($membership) ){
+      $self->memberships_add($membership);  
+    }
+}
+####################################################################################
+sub remove_membership {
+    my ( $self, $membership ) = @_;
+    # $membership->validate;
+    
+    my $index = $self->memberships_find_index( sub { $_->equals($membership) } );
+    return if $index == -1;
+    return 1 if $self->memberships_delete($index);
     return ;
 }
 ####################################################################################
@@ -316,11 +346,6 @@ sub remove_entry {
   return 0;
 }
 ####################################################################################
-sub remove_all_entries {
-  my $self = shift;
-  $self->entries_clear;
-}
-####################################################################################
 sub take_entries_from_author {
   my $self        = shift;
   my $from_author = shift;
@@ -334,7 +359,7 @@ sub take_entries_from_author {
 ################################################################################
 sub abandon_all_entries {
   my $self = shift;
-  $self->entries_clear;
+  $self->authorships_clear; 
 }
 ################################################################################
 ################################################################################ TEAMS

@@ -94,12 +94,9 @@ after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); }
 =cut 
 sub delete {
   my ($self, @objects) = @_;
-
   my %toDelete = map {$_ => 1} @objects;
   my @diff = grep {not $toDelete{$_} } $self->all;
   $self->handle->data->{'Author'} = \@diff;
-
-
 }
 before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
 after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };
@@ -110,9 +107,7 @@ after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); }
 sub filter {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  
-  return grep &{$coderef}, $self->all();
-  
+  return $self->handle->filter("Author", $coderef);
 }
 before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
 after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); };
@@ -122,9 +117,7 @@ after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); }
 sub find {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  my $obj = first \&{$coderef}, $self->all;  
-  die "find returned wrong type of object" if defined $obj and !$obj->isa('Author');
-  return $obj;
+  return $self->handle->find("Author", $coderef);
 }
 before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };
 after 'find'  => sub { shift->logger->exiting("","".__PACKAGE__."->find"); };

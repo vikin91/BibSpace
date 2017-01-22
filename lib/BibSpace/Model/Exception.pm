@@ -28,6 +28,12 @@ has 'team' => (
     traits => ['DoNotSerialize']    # due to cycyles
 );
 ####################################################################################
+sub id {
+  my $self = shift;
+  return "(" . $self->entry_id . "-" . $self->team->uid . ")" if defined $self->team;
+  return "(" . $self->entry_id . "-" . $self->team_id . ")";
+}
+####################################################################################
 sub toString {
     my $self = shift;
     my $str  = $self->freeze;

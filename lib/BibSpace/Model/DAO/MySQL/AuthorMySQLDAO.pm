@@ -195,7 +195,6 @@ sub update {
       $self->logger->error( "Update exception: $_", "" . __PACKAGE__ . "->update" );
     };
   }
-
 }
 before 'update' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->update" ); };
 after 'update' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update" ); };

@@ -218,7 +218,8 @@ after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); }
 =cut 
 sub delete {
     my ($self, @objects) = @_;
-    die "".__PACKAGE__."->delete argument 'objects' is undefined." unless @objects;
+    $self->logger->info("Nothing to delete","".__PACKAGE__."->delete") unless @objects;
+return unless @objects;
 
     # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
 

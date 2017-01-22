@@ -5,15 +5,12 @@ use utf8;
 use 5.010;    #because of ~~ and say
 use BibSpace::Model::Author;
 use BibSpace::Model::Entry;
-
 use Try::Tiny;
 use Moose;
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
-
-# the fileds below are crucial, beacuse static_all has access only to team/author ids and not to objects
-# MTeamMembership->load($dbh) should then fill the objects based on ids
+# the fileds below are used for linking process
 has 'entry_id'  => ( is => 'ro', isa => 'Int' );
 has 'author_id' => ( is => 'ro', isa => 'Int' );
 has 'entry'     => (
@@ -29,24 +26,30 @@ has 'author' => (
 
 ####################################################################################
 sub id {
-    my $self = shift;
-    return "(".$self->entry_id."-".$self->author->uid.")" if defined $self->author;
-    return "(".$_->entry_id."-".$_->author_id.")";
+  my $self = shift;
+  return "(" . $self->entry_id . "-" . $self->author->uid . ")" if defined $self->author;
+  return "(" . $self->entry_id . "-" . $self->author_id . ")";
 }
 ####################################################################################
 sub validate {
-    my $self = shift;
-    if(defined $self->author and defined $self->entry){
-        if($self->author->id != $self->author_id){
-            die "Label has been built wrongly author->id and author_id differs.\n"
-            ."label->author->id: ".$self->author->id.", label->author_id: ".$self->author_id;
-        }
-        if($self->entry->id != $self->entry_id){
-            die "Label has been built wrongly entry->id and entry_id differs.\n"
-            ."label->entry->id: ".$self->entry->id.", label->entry_id: ".$self->entry_id;
-        }
+  my $self = shift;
+  if ( defined $self->author and defined $self->entry ) {
+    if ( $self->author->id != $self->author_id ) {
+      die "Label has been built wrongly author->id and author_id differs.\n"
+        . "label->author->id: "
+        . $self->author->id
+        . ", label->author_id: "
+        . $self->author_id;
     }
-    return 1;
+    if ( $self->entry->id != $self->entry_id ) {
+      die "Label has been built wrongly entry->id and entry_id differs.\n"
+        . "label->entry->id: "
+        . $self->entry->id
+        . ", label->entry_id: "
+        . $self->entry_id;
+    }
+  }
+  return 1;
 }
 ####################################################################################
 sub toString {
@@ -58,17 +61,10 @@ sub toString {
   $str;
 }
 ####################################################################################
-
-=item equals
-    In case of any strange problems: this must return 1 or 0! 
-=cut
-
 sub equals {
   my $self = shift;
   my $obj  = shift;
-
   die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj) unless ref($self) eq ref($obj);
-
   if ( $self->entry and $self->author and $obj->entry and $obj->author ) {
     return $self->equals_obj($obj);
   }

@@ -31,10 +31,7 @@ after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
 =cut 
 sub count {
   my ($self) = @_;
-
-  die "".__PACKAGE__."->count not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  return $self->handle->count("Authorship");
 }
 before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
 after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
@@ -44,10 +41,7 @@ after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
 =cut 
 sub empty {
   my ($self) = @_;
-
-  die "".__PACKAGE__."->empty not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  return $self->count == 0;
 }
 before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
 after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
@@ -58,10 +52,10 @@ after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 =cut 
 sub exists {
   my ($self, $object) = @_;
-  
-  die "".__PACKAGE__."->exists not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  my @all = $self->handle->all("Authorship");
+  return if $self->empty;
+  my $matching = first {$_->equals($object)} @all; 
+  return defined $matching;
 }
 before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
 after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
@@ -82,10 +76,6 @@ after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
 =cut 
 sub update {
   my ($self, @objects) = @_;
-
-  die "".__PACKAGE__."->update not implemented. Method was instructed to update ".scalar(@objects)." objects.";
-  # TODO: auto-generated method stub. Implement me!
-
 }
 before 'update' => sub { shift->logger->entering("","".__PACKAGE__."->update"); };
 after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); };
@@ -95,10 +85,9 @@ after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); }
 =cut 
 sub delete {
   my ($self, @objects) = @_;
-
-  die "".__PACKAGE__."->delete not implemented. Method was instructed to delete ".scalar(@objects)." objects.";
-  # TODO: auto-generated method stub. Implement me!
-
+  my %toDelete = map {$_->id => 1} @objects;
+  my @diff = grep {not $toDelete{$_} } $self->all;
+  $self->handle->data->{'Authorship'} = \@diff;
 }
 before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
 after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };
@@ -109,9 +98,7 @@ after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); }
 sub filter {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-
-  return grep &{$coderef}, $self->all();
-  
+  return $self->handle->filter("Authorship", $coderef); 
 }
 before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
 after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); };
@@ -121,9 +108,7 @@ after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); }
 sub find {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-
-  return first \&{$coderef}, $self->all; 
-  
+  return $self->handle->find("Authorship", $coderef);
 }
 before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };
 after 'find'  => sub { shift->logger->exiting("","".__PACKAGE__."->find"); };
