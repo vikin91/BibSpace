@@ -11,6 +11,8 @@ use File::Slurp;
 use Time::Piece;
 use DBI;
 
+use Scalar::Util;
+
 use BibSpace::Controller::Core;
 use BibSpace::Model::M::MEntry;
 
@@ -223,18 +225,36 @@ sub Fget_publications_core_storage {
 
 
 
-    my $team_obj     = $self->app->repo->getTeamsRepository->find( sub{ $_->id == $team } ) or
-                       $self->app->repo->getTeamsRepository->find( sub{ $_->name eq $team } )
-                          if defined $team;
-    my $author_obj   = $self->app->repo->getAuthorsRepository->find( sub{ defined $_->master_id and $_->master_id == $author } )
-                            or $self->app->repo->getAuthorsRepository->find( sub{ defined $_->master and $_->master eq $author } )
-                                if defined $author;
-    my $tag_obj      = $self->app->repo->getTagsRepository->find( sub{ $_->id == $tag } ) or
-                       $self->app->repo->getTagsRepository->find( sub{ $_->name eq $tag } )
-                          if defined $tag;
-    my $tag_obj_perm = $self->app->repo->getTagsRepository->find( sub{ $_->id == $permalink } ) or
-                       $self->app->repo->getTagsRepository->find( sub{ $_->name eq $permalink } )
-                          if defined $permalink;
+    my $team_obj;     
+    if(defined $team){
+        $team_obj = $self->app->repo->getTeamsRepository->find( sub{ $_->name eq $team } );
+        if( !$team_obj ){
+            $team_obj = $self->app->repo->getTeamsRepository->find( sub{ $_->id == $team } );
+        }
+    }
+    my $author_obj;
+    if(defined $author){
+        if( Scalar::Util::looks_like_number($author) ){
+            $author_obj = $self->app->repo->getAuthorsRepository->find(sub{ $_->master_id == $author });
+        }
+        else{
+            $author_obj = $self->app->repo->getAuthorsRepository->find(sub{ $_->master eq $author });
+        }
+    }   
+    my $tag_obj;
+    if(defined $tag){
+        $tag_obj = $self->app->repo->getTagsRepository->find( sub{ $_->name eq $tag } );
+        if( !$tag_obj ){
+            $tag_obj = $self->app->repo->getTagsRepository->find( sub{ $_->id == $tag } );    
+        }
+    }
+    my $tag_obj_perm;
+    if(defined $permalink){
+        $tag_obj_perm = $self->app->repo->getTagsRepository->find( sub{ $_->name eq $permalink } );
+        if( !$tag_obj_perm ){
+            $self->app->repo->getTagsRepository->find( sub{ $_->id == $permalink } );
+        }
+    }
     
     my $teamid = undef;
     $teamid = $team_obj->id if defined $team_obj;    
@@ -273,7 +293,7 @@ sub Fget_publications_core_storage {
     if(defined $entry_type){
         # say "Comparing entry_type: $entry_type" if $debug == 1;
         # map { say $_->id . " type ". $_->entry_type } @entries  if $debug == 1;
-        @entries = grep { ($_->entry_type cmp $entry_type)==0;} @entries;
+        @entries = grep { $_->entry_type eq $entry_type } @entries;
     }
     if(defined $permalink and defined $tag_obj_perm){
         @entries = grep { $_->has_tag($tag_obj_perm) } @entries;
@@ -288,7 +308,7 @@ sub Fget_publications_core_storage {
         @entries = grep { $_->is_visible } @entries;
     }
     if(defined $master_id and defined $author_obj){
-        @entries = grep { $_->has_author($self->app->repo->getAuthorshipsRepository, $author_obj) } @entries;
+        @entries = grep { $_->has_master_author($author_obj) } @entries;
     }
     if(defined $tagid and defined $tag_obj){
         @entries = grep { $_->has_tag($tag_obj) } @entries;

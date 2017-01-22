@@ -13,10 +13,6 @@ use BibSpace::Controller::BackupFunctions;
 
 use BibSpace::Functions::FDB;
 
-BEGIN{
-  # my $a = Test::Mojo->new('BibSpace');
-  # $ENV{BIBSPACE_CONFIG} = $a->app->home->rel_dir('fixture/default.conf');
-}
 
 our $fixture_name = "db_new.sql";
 

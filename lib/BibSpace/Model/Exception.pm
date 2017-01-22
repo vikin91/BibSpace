@@ -16,6 +16,7 @@ with Storage( 'format' => 'JSON', 'io' => 'File' );
 # MTeamMembership->load($dbh) should then fill the objects based on ids
 has 'entry_id'   => ( is => 'ro', isa => 'Int' );
 has 'team_id' => ( is => 'ro', isa => 'Int' );
+
 has 'entry' => (
     is     => 'rw',
     isa    => 'Maybe[Entry]',
@@ -45,11 +46,11 @@ sub toString {
 sub equals {
     my $self = shift;
     my $obj  = shift;
-
-    if (    $self->{entry}
-        and $self->{team}
-        and $obj->{entry}
-        and $obj->{team} )
+    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
+    if (    $self->entry
+        and $self->team
+        and $obj->entry
+        and $obj->team )
     {
         return $self->equals_obj($obj);
     }
@@ -59,16 +60,18 @@ sub equals {
 sub equals_id {
     my $self = shift;
     my $obj  = shift;
-    return 0 if $self->{entry_id} != $obj->{entry_id};
-    return 0 if $self->{team_id} != $obj->{team_id};
+    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
+    return if $self->entry_id != $obj->entry_id;
+    return if $self->team_id != $obj->team_id;
     return 1;
 }
 ####################################################################################
 sub equals_obj {
     my $self = shift;
     my $obj  = shift;
-    return 0 if !$self->{entry}->equals( $obj->{entry} );
-    return 0 if !$self->{team}->equals( $obj->{team} );
+    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
+    return if !$self->entry->equals( $obj->entry );
+    return if !$self->team->equals( $obj->team );
     return 1;
 }
 ####################################################################################

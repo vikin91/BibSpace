@@ -122,7 +122,9 @@ after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); }
 sub find {
   my ($self, $coderef) = @_;
   die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  return first \&{$coderef}, $self->all;  
+  my $obj = first \&{$coderef}, $self->all;  
+  die "find returned wrong type of object" if defined $obj and !$obj->isa('Author');
+  return $obj;
 }
 before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };
 after 'find'  => sub { shift->logger->exiting("","".__PACKAGE__."->find"); };

@@ -249,34 +249,11 @@ sub register {
 
     $app->helper(
         num_pubs_for_author_and_tag => sub {
-            my $self      = shift;
-            my $master_id = shift;
-            my $tag_id    = shift;
+            my $self   = shift;
+            my $author = shift;
+            my $tag    = shift;
 
-            my $author = $self->storage->authors_find(
-                sub {
-                    $_->master_id == $master_id;
-                }
-            );
-            my $tag = $self->storage->tags_find(
-                sub {
-                    $_->id == $tag_id;
-                }
-            );
-            return 0 if !defined $author;
-
-            my @tagged_author_entries = $self->storage->entries_filter(
-                sub {
-                    ( $_->has_master_author($author) and $_->has_tag($tag) );
-                }
-            );
-            return scalar @tagged_author_entries;
-
-            # my @objs = Fget_publications_main_hashed_args_only( $self,
-            #     { hidden => 0, author => $master_id, tag => $tag_id } );
-
-            # my $count = scalar @objs;
-            # return $count;
+            return scalar $author->authorships_filter( sub{ defined $_ and defined $_->entry and $_->entry->has_tag($tag) } );
         }
     );
 
@@ -299,7 +276,7 @@ sub register {
             my $self   = shift;
             my $author = shift;
 
-            return $author->entries_count;
+            return $author->authorships_count;
         }
     );
 
@@ -308,13 +285,7 @@ sub register {
             my $self   = shift;
             my $author = shift;
 
-            return -1 if !defined $author;
-
-            return scalar $author->entries_filter(
-                sub {
-                    $_->is_talk;
-                }
-            );
+            return scalar $author->authorships_filter(sub{$_->entry->is_talk}) // 0;
         }
     );
 
@@ -322,12 +293,7 @@ sub register {
         num_papers_for_author => sub {
             my $self   = shift;
             my $author = shift;
-
-            return scalar $author->entries_filter(
-                sub {
-                    $_->is_paper;
-                }
-            );
+            return scalar $author->authorships_filter(sub{$_->entry->is_paper}) // 0;
         }
     );
 
@@ -336,12 +302,7 @@ sub register {
         num_pubs_for_tag => sub {
             my $self = shift;
             my $tag  = shift;
-
-            return scalar $self->storage->entries_filter(
-                sub {
-                    $_->has_tag($tag);
-                }
-            );
+            return $tag->labellings_count // 0;
         }
     );
 

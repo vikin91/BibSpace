@@ -34,29 +34,9 @@ with Storage( 'format' => 'JSON', 'io' => 'File' );
 my $dtPattern
     = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
 
-
-
-# sub _generateUIDEntry {
-#     my $self = shift;
-  
-#     if ( defined $self->old_mysql_id and $self->old_mysql_id > 0 ) {
-#         $self->idProvider->registerUID( $self->old_mysql_id );
-#         return $self->old_mysql_id;
-#     }
-#     return $self->idProvider->generateUID();
-# }
-
-# has 'idProvider' => (
-#     is       => 'ro',
-#     does     => 'IUidProvider',
-#     required => 1,
-#     traits   => ['DoNotSerialize']
-# );
-# has 'old_mysql_id'    => ( is => 'ro', isa => 'Maybe[Int]', default => undef );
-# has 'id'              => ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy=>1, init_arg => undef );
-has 'entry_type'      => ( is => 'rw', isa => 'Str', default => 'paper' );
-has 'bibtex_key'      => ( is => 'rw', isa => 'Maybe[Str]' );
-has '_bibtex_type'    => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'entry_type' => ( is => 'rw', isa => 'Str', default => 'paper' );
+has 'bibtex_key' => ( is => 'rw', isa => 'Maybe[Str]' );
+has '_bibtex_type'    => ( is => 'rw', isa => 'Maybe[Str]', reader=>'bibtex_type' );
 has 'bib'             => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'html'            => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'html_bib'        => ( is => 'rw', isa => 'Maybe[Str]' );
@@ -72,7 +52,6 @@ has 'tags_str'        => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'need_html_regen' => ( is => 'rw', isa => 'Int', default => 1 );
 has 'shall_update_modified_time' =>
     ( is => 'rw', isa => 'Int', default => 0 );
-
 
 
 # class_type 'DateTime';
@@ -104,74 +83,6 @@ has 'modified_time' => (
     # coerce => 1
 );
 
-
-has 'bauthors' => (
-    is      => 'rw',
-    isa     => 'ArrayRef[MAuthor]',
-    traits  => ['Array'],
-    default => sub { [] },
-    handles => {
-        authors_all        => 'elements',
-        authors_add        => 'push',
-        authors_map        => 'map',
-        authors_filter     => 'grep',
-        authors_find       => 'first',
-        authors_find_index => 'first_index',
-        authors_delete     => 'delete',
-        authors_clear      => 'clear',
-        authors_get        => 'get',
-        authors_join       => 'join',
-        authors_count      => 'count',
-        authors_has        => 'count',
-        authors_has_no     => 'is_empty',
-        authors_sorted     => 'sort',
-    },
-);
-has 'btags' => (
-    is      => 'rw',
-    isa     => 'ArrayRef[MTag]',
-    traits  => ['Array'],
-    default => sub { [] },
-    handles => {
-        tags_all        => 'elements',
-        tags_add        => 'push',
-        tags_map        => 'map',
-        tags_filter     => 'grep',
-        tags_find       => 'first',
-        tags_find_index => 'first_index',
-        tags_delete     => 'delete',
-        tags_clear      => 'clear',
-        tags_get        => 'get',
-        tags_join       => 'join',
-        tags_count      => 'count',
-        tags_has        => 'count',
-        tags_has_no     => 'is_empty',
-        tags_sorted     => 'sort',
-    },
-);
-has 'bexceptions' => (
-    is      => 'rw',
-    isa     => 'ArrayRef[MTeam]',
-    traits  => ['Array'],
-    default => sub { [] },
-    handles => {
-        exceptions_all        => 'elements',
-        exceptions_add        => 'push',
-        exceptions_map        => 'map',
-        exceptions_filter     => 'grep',
-        exceptions_find       => 'first',
-        exceptions_find_index => 'first_index',
-        exceptions_delete     => 'delete',
-        exceptions_clear      => 'clear',
-        exceptions_get        => 'get',
-        exceptions_join       => 'join',
-        exceptions_count      => 'count',
-        exceptions_has        => 'count',
-        exceptions_has_no     => 'is_empty',
-        exceptions_sorted     => 'sort',
-    },
-);
-
 # not DB fields
 has 'warnings' =>
     ( is => 'rw', isa => 'Maybe[Str]', traits => ['DoNotSerialize'] );
@@ -181,6 +92,51 @@ has 'bst_file' => (
     default => './lib/descartes2.bst',
     traits  => ['DoNotSerialize']
 );
+
+
+has 'authorships' => (
+    is      => 'rw',
+    isa     => 'ArrayRef[Authorship]',
+    traits  => ['Array'],
+    default => sub { [] },
+    handles => {
+        authorships_all        => 'elements',
+        authorships_add        => 'push',
+        authorships_count      => 'count',
+        authorships_find       => 'first',
+        authorships_filter     => 'grep',
+    },  
+);
+
+has 'labellings' => (
+    is      => 'rw',
+    isa     => 'ArrayRef[Labeling]',
+    traits  => ['Array'],
+    default => sub { [] },
+    handles => {
+        labellings_all        => 'elements',
+        labellings_add        => 'push',
+        labellings_count      => 'count',
+        labellings_find       => 'first',
+        labellings_filter     => 'grep',
+    },  
+);
+
+has 'exceptions' => (
+    is      => 'rw',
+    isa     => 'ArrayRef[Labeling]',
+    traits  => ['Array'],
+    default => sub { [] },
+    handles => {
+        exceptions_all        => 'elements',
+        exceptions_add        => 'push',
+        exceptions_count      => 'count',
+        exceptions_find       => 'first',
+        exceptions_filter     => 'grep',
+    },  
+);
+
+
 
 ################################################################################
 sub init_storage {
@@ -241,6 +197,7 @@ sub toStringShort {
 sub equals {
     my $self = shift;
     my $obj  = shift;
+    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
     return $self->equals_bibtex($obj);
 }
 ####################################################################################
@@ -252,13 +209,8 @@ sub equals {
 sub equals_bibtex {
     my $self = shift;
     my $obj  = shift;
-
-    return 0 unless defined $obj;
-
-    # return 0 unless $obj->isa("MEntryBase");
-
-    my $result = $self->bib cmp $obj->bib;
-    return $result == 0;
+    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
+    return $self->bib eq $obj->bib;
 }
 ####################################################################################
 
@@ -453,9 +405,9 @@ sub has_tag_named {
     my $self = shift;
     my $name = shift;
 
-    my $found = $self->tags_find( sub { ( $_->name cmp $name ) == 0 } );
+    my $found = $self->labellings_find( sub { ( $_->tag->name cmp $name ) == 0 } );
     return 1 if defined $found;
-    return 0;
+    return;
 }
 ########################################################################################################################
 sub is_talk_in_tag {
@@ -466,7 +418,7 @@ sub is_talk_in_tag {
         + $self->has_tag_named("talks")
         + $self->has_tag_named("talk");
     return 1 if $sum > 0;
-    return 0;
+    return;
 }
 ########################################################################################################################
 sub fix_entry_type_based_on_tag {
@@ -554,32 +506,26 @@ sub regenerate_html {
 ####################################################################################
 sub authors {
     my $self = shift;
-    return $self->authors_all;
+    return map {$_->author} $self->authorships_all;
 }
 ####################################################################################
 sub has_author {
-    my $self = shift;
-    my $authorshipsRepo = shift;
-    my $author    = shift;
+    my $self            = shift;
+    my $author          = shift;
 
-    my $authorship = $authorshipsRepo->find(sub{
-        $_->author_id == $author->id 
-        and $_->author_id == $self->id 
-    });
+    my $authorship = $self->authorships_find(
+        sub {
+            $_->author_id == $author->id and $_->entry_id == $self->id;
+        }
+    );
     return defined $authorship;
 }
 ####################################################################################
 sub has_master_author {
-    my $self = shift;
-    my $authorshipsRepo = shift;
-    my $author    = shift;
+    my $self            = shift;
+    my $author          = shift;
 
-    $author = $author->get_master;
-    my $authorship = $authorshipsRepo->find(sub{
-        $_->author_id == $author->id 
-        and $_->author_id == $self->id 
-    });
-    return defined $authorship; 
+    return $self->has_author($author->get_master);
 }
 ####################################################################################
 sub assign_author {
@@ -688,7 +634,7 @@ sub has_team {
 
 }
 ####################################################################################
-sub exceptions {
+sub get_exceptions {
     my $self = shift;
     return $self->exceptions_all;
 }
@@ -728,23 +674,14 @@ sub tags {
     my $self     = shift;
     my $tag_type = shift;
 
-    if ( defined $tag_type ) {
-        return $self->tags_filter(
-            sub {
-                $_->type == $tag_type;
-            }
-        );
-    }
-
-    return $self->tags_all;
+    return grep {$_->type == $tag_type} map {$_->tag} $self->labellings_all;
 }
 ####################################################################################
 sub has_tag {
     my $self = shift;
     my $tag  = shift;
 
-    my $exists = $self->tags_find_index( sub { $_->equals($tag) } ) > -1;
-    return $exists;
+    return defined $self->labellings_find( sub { $_->tag->equals($tag) } );
 }
 ####################################################################################
 sub assign_tag {

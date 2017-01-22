@@ -920,7 +920,7 @@ sub show_authors_of_entry {
 
 
 
-    my @authors = $entry->authors_all;    #($dbh);
+    my @authors = map {$_->author} $entry->authorships_all;
     my @teams   = $entry->teams;
 
     $self->stash( entry => $entry, authors => \@authors, teams => \@teams );
@@ -945,7 +945,7 @@ sub manage_tags {
         return;
     }
 
-    my @tags      = $entry->tags_all;
+    my @tags      = map {$_->tag} $entry->labellings_all;
     my @tag_types = $self->app->repo->getTagTypesRepository->all; 
 
 

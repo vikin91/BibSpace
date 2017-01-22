@@ -3,6 +3,6 @@
 <div class="bibtexitem">
 <%= $tag->{name} %>: 
 %foreach my $author (@$authors){
-    <a href="<%= url_for('lyp')->query( author=>$author->{master}, tag=>$tag->{name} ) %>"> <%= $author->{master} %> (<%=num_pubs_for_author_and_tag($author->{id}, $tag->{id})%>)</a>,  
+    <a href="<%= url_for('lyp')->query( author=>$author->{master}, tag=>$tag->{name} ) %>"> <%= $author->{master} %> (<%=num_pubs_for_author_and_tag($author, $tag)%>)</a>,  
 %}
 </div>

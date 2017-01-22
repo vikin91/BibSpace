@@ -150,9 +150,9 @@ sub edit_author {
         my @author_tags  = $author->tags();
 
         # cannot use objects as keys due to hash stringification!
-        my %author_teams_hash = map { $_->{id} => 1 } @author_teams;
+        my %author_teams_hash = map { $_->id => 1 } @author_teams;
         my @unassigned_teams
-            = grep { not $author_teams_hash{ $_->{id} } } @all_teams;
+            = grep { not $author_teams_hash{ $_->id } } @all_teams;
 
 
         my @minor_authors

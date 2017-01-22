@@ -22,8 +22,7 @@ sub show {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my @teams   = $storage->teams_all;
+    my @teams   = $self->app->repo->getTeamsRepository->all;
 
 
     $self->stash( teams => \@teams );
@@ -35,8 +34,7 @@ sub edit {
     my $id   = $self->param('teamid');
     my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my $team = $storage->teams_find( sub { $_->id == $id } );
+    my $team = $self->app->repo->getTeamsRepository->find( sub { $_->id == $id } );
 
     if ( !defined $team ) {
         $self->flash(

@@ -36,7 +36,7 @@ sub registerUID{
 
     if( !$self->uid_defined($uid) ){
         $self->uid_set($uid => 1);
-        SimpleLogger->new()->debug("Registered uid $uid.");
+        # SimpleLogger->new()->debug("Registered uid $uid.");
     }
     else{
         my $msg = "Cannot registerUID. It exists already! Wanted to reg: $uid. Existing: ". join(' ', sort $self->uid_keys);

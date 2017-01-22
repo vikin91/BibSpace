@@ -148,8 +148,73 @@ sub setup_repositories {
     $self->repo->getTagTypesRepository->copy(2,1);
     $self->repo->getTeamsRepository->copy(2,1);
 
-    my @allEntries = $self->repo->getEntriesRepository->all;
-    $self->app->logger->debug( "Entries: ".join(', ', map{$_->id} @allEntries ) );
+    $self->app->logger->debug( "Linking Authors (N) to (1) Authors."); 
+    foreach my $author ($self->repo->getAuthorsRepository->filter(sub{$_->id != $_->master_id})){
+        my $master = $self->repo->getAuthorsRepository->find(sub{ $_->id == $author->master_id});
+        if( $master and $author ){
+            $author->set_master($master);
+        }
+    }
+
+
+    $self->app->logger->debug( "Linking Authors (N) to (M) Entries.");
+    foreach my $auth ($self->repo->getAuthorshipsRepository->all){
+        my $entry = $self->repo->getEntriesRepository->find(sub{ $_->id == $auth->entry_id});
+        my $author = $self->repo->getAuthorsRepository->find(sub{ $_->id == $auth->author_id});
+        if( $entry and $author ){
+            $auth->entry($entry);
+            $auth->author($author);
+            $entry->authorships_add($auth);
+            $author->authorships_add($auth);
+        }
+    }
+
+    $self->app->logger->debug( "Linking Tags (N) to (M) Entries.");
+    foreach my $labeling ($self->repo->getLabellingsRepository->all){
+        my $entry = $self->repo->getEntriesRepository->find(sub{ $_->id == $labeling->entry_id});
+        my $tag = $self->repo->getTagsRepository->find(sub{ $_->id == $labeling->tag_id});
+        if( $entry and $tag ){
+            $labeling->entry($entry);
+            $labeling->tag($tag);
+            $entry->labellings_add($labeling);
+            $tag->labellings_add($labeling);
+        }
+    }
+
+    $self->app->logger->debug( "Linking Teams (Exceptions) (N) to (M) Entries.");
+    foreach my $exception ($self->repo->getExceptionsRepository->all){
+        my $entry = $self->repo->getEntriesRepository->find(sub{ $_->id == $exception->entry_id});
+        my $team = $self->repo->getTeamsRepository->find(sub{ $_->id == $exception->team_id});
+        if( $entry and $team ){
+            $exception->entry($entry);
+            $exception->team($team);
+            $entry->exceptions_add($exception);
+            $team->exceptions_add($exception);
+        }
+    }
+
+    
+    $self->app->logger->debug( "Linking Teams (N) to (M) Authors.");
+    foreach my $membership ($self->repo->getMembershipsRepository->all){
+        my $author = $self->repo->getAuthorsRepository->find(sub{ $_->id == $membership->author_id});
+        my $team = $self->repo->getTeamsRepository->find(sub{ $_->id == $membership->team_id});
+        if( $author and $team ){
+            $membership->author($author);
+            $membership->team($team);
+            $author->memberships_add($membership);
+            $team->memberships_add($membership);
+        }
+    }
+
+    $self->app->logger->debug( "Linking TagTypes (N) to (1) Tags.");
+    foreach my $tag ($self->repo->getTagsRepository->all){
+        my $tagtype = $self->repo->getTagTypesRepository->find(sub{ $_->id == $tag->type});
+        if( $tag and $tagtype ){
+            $tag->tagtype($tagtype);
+        }
+    }
+    # my @allEntries = $self->repo->getEntriesRepository->all;
+    # $self->app->logger->debug( "Entries: ".join(', ', map{$_->id} @allEntries ) );
     
 
 
@@ -159,15 +224,15 @@ sub setup_repositories {
     # there should be single factory in BibSpace!!!
     # this should be helper with state!
 
-    $self->repo->getAuthorsRepository->all;
-    $self->repo->getAuthorsRepository->getIdProvider->generateUID();
-    $self->repo->getAuthorsRepository->getIdProvider->generateUID();
-    $self->repo->getAuthorsRepository->getIdProvider->generateUID();
-    $self->repo->getAuthorsRepository->getIdProvider->generateUID();
+    # $self->repo->getAuthorsRepository->all;
+    # $self->repo->getAuthorsRepository->getIdProvider->generateUID();
+    # $self->repo->getAuthorsRepository->getIdProvider->generateUID();
+    # $self->repo->getAuthorsRepository->getIdProvider->generateUID();
+    # $self->repo->getAuthorsRepository->getIdProvider->generateUID();
 
-    $self->repo->getEntriesRepository->getIdProvider->generateUID();
-    $self->repo->getEntriesRepository->getIdProvider->generateUID();
-    $self->repo->getEntriesRepository->getIdProvider->generateUID();
+    # $self->repo->getEntriesRepository->getIdProvider->generateUID();
+    # $self->repo->getEntriesRepository->getIdProvider->generateUID();
+    # $self->repo->getEntriesRepository->getIdProvider->generateUID();
 
     # my $idp = IntegerUidProvider->new;
     # $idp->registerUID(3);
@@ -235,7 +300,7 @@ sub setup_plugins {
     $self->app->plugin('InstallablePaths');
     $self->app->plugin('RenderFile');
 
-    push @{ $self->app->static->paths }, $self->app->home->rel_dir('public');
+    push @{ $self->app->static->paths }, $self->app->home->rel_file('public');
 
     # push @{$self->app->static->paths}, $self->config->{backups_dir};
 

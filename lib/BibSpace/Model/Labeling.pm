@@ -46,10 +46,11 @@ sub equals {
     my $self = shift;
     my $obj  = shift;
 
-    if (    $self->{entry}
-        and $self->{tag}
-        and $obj->{entry}
-        and $obj->{tag} )
+    die "Comparing apples to peaches!!" unless ref($self) eq ref($obj);
+    if (    $self->entry
+        and $self->tag
+        and $obj->entry
+        and $obj->tag )
     {
         return $self->equals_obj($obj);
     }
@@ -59,16 +60,16 @@ sub equals {
 sub equals_id {
     my $self = shift;
     my $obj  = shift;
-    return 0 if $self->{entry_id} != $obj->{entry_id};
-    return 0 if $self->{tag_id} != $obj->{tag_id};
+    return if $self->entry_id != $obj->entry_id;
+    return if $self->tag_id != $obj->tag_id;
     return 1;
 }
 ####################################################################################
 sub equals_obj {
     my $self = shift;
     my $obj  = shift;
-    return 0 if !$self->{entry}->equals( $obj->{entry} );
-    return 0 if !$self->{tag}->equals( $obj->{tag} );
+    return 0 if !$self->entry->equals( $obj->entry );
+    return 0 if !$self->tag->equals( $obj->tag );
     return 1;
 }
 ####################################################################################

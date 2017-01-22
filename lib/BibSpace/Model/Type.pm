@@ -50,7 +50,8 @@ sub toString {
 sub equals {
     my $self = shift;
     my $obj  = shift;
-    return ($self->our_type cmp $obj->our_type) == 0;
+    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
+    return $self->our_type eq $obj->our_type;
 }
 ####################################################################################
 

@@ -33,15 +33,11 @@ sub replaceFromStorage {
 ####################################################################################
 sub equals {
     my $self  = shift;
-    my $other = shift;
+    my $obj = shift;
 
-    if ( $self->{name} eq $other->{name}
-        and $self->{comment} eq $other->{comment} )
-    {
-        return 1;
-    }
-
-    return 0;
+    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
+    return 1 if $self->name eq $obj->name;
+    return ;
 }
 
 

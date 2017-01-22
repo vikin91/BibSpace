@@ -19,6 +19,28 @@ has 'name'      => ( is => 'rw', isa => 'Str' );
 has 'type'      => ( is => 'rw', isa => 'Int', default => 1);
 has 'permalink' => ( is => 'rw', isa => 'Maybe[Str]' );
 
+has 'tagtype' => (
+    is     => 'rw',
+    isa    => 'Maybe[TagType]',
+    traits => ['DoNotSerialize'],
+);
+
+has 'labellings' => (
+    is      => 'rw',
+    isa     => 'ArrayRef[Labeling]',
+    traits  => ['Array'],
+    default => sub { [] },
+    handles => {
+        labellings_all        => 'elements',
+        labellings_add        => 'push',
+        labellings_count      => 'count',
+        labellings_find       => 'first',
+        labellings_filter     => 'grep',
+    },  
+);
+
+
+
 ################################################################################
 sub init_storage {
     my $self = shift;
@@ -44,8 +66,8 @@ sub toString {
 sub equals {
     my $self = shift;
     my $obj  = shift;
-    my $result = $self->name cmp $obj->name;
-    return $result == 0;
+    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
+    return $self->name eq $obj->name;
 }
 ####################################################################################
 sub load {

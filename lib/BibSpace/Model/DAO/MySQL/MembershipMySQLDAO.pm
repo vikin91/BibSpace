@@ -20,11 +20,10 @@ sub all {
   my ($self) = @_;
   my $dbh = $self->handle;
   my $qry = "SELECT author_id, team_id, start, stop
-          FROM Author_to_Team
-          WHERE author_id = ?";
+          FROM Author_to_Team";
 
   my $sth = $dbh->prepare($qry);
-  $sth->execute( $self->{id} );
+  $sth->execute();
 
   my @memberships;
   while ( my $row = $sth->fetchrow_hashref() ) {

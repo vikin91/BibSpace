@@ -8,103 +8,42 @@ use BibSpace::Model::Author;
 use 5.010;    #because of ~~ and say
 use List::MoreUtils qw(any uniq);
 use Moose;
+use BibSpace::Model::IEntity;
+with 'IEntity';
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
-sub _generateUIDEntry {
-    my $self = shift;
-    if ( defined $self->dbid and $self->dbid > 0 ) {
-        my $uid = $self->dbid;
-        $self->idProvider->registerUID($uid);
-        return $uid;
-    }
-    else {
-        return $self->idProvider->generateUID();
-    }
-}
 
-
-has 'idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1, lazy => 0, traits  => ['DoNotSerialize'] );
-# id deprecated - old mysql id
-has 'id' => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
-# old mysql id - for compatibility
-has 'dbid' => ( is => 'ro', isa => 'Int', required => 0 );
-# new bibspace id
-has 'uid' => ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy => 1 );
-has 'id'   => ( is => 'rw', isa => 'Int' );
 has 'name' => ( is => 'rw', isa => 'Str' );
 has 'parent' => ( is => 'rw' );
 
-
-has 'bteamMemberships' => (
+has 'exceptions' => (
     is      => 'rw',
-    isa     => 'ArrayRef[MTeamMembership]',
-    traits  => [ 'Array', 'DoNotSerialize' ],
-    default => sub { [] },
-    handles => {
-        teamMemberships_all        => 'elements',
-        teamMemberships_add        => 'push',
-        teamMemberships_map        => 'map',
-        teamMemberships_filter     => 'grep',
-        teamMemberships_find       => 'first',
-        teamMemberships_get        => 'get',
-        teamMemberships_find_index => 'first_index',
-        teamMemberships_delete     => 'delete',
-        teamMemberships_clear      => 'clear',
-        teamMemberships_join       => 'join',
-        teamMemberships_count      => 'count',
-        teamMemberships_has        => 'count',
-        teamMemberships_has_no     => 'is_empty',
-        teamMemberships_sorted     => 'sort',
-    },
-);
-
-has 'bauthors' => (
-    is      => 'rw',
-    isa     => 'ArrayRef[MAuthor]',
+    isa     => 'ArrayRef[Labeling]',
     traits  => ['Array'],
     default => sub { [] },
     handles => {
-        authors_all        => 'elements',
-        authors_add        => 'push',
-        authors_map        => 'map',
-        authors_filter     => 'grep',
-        authors_find       => 'first',
-        authors_find_index => 'first_index',
-        authors_delete     => 'delete',
-        authors_clear      => 'clear',
-        authors_get        => 'get',
-        authors_join       => 'join',
-        authors_count      => 'count',
-        authors_has        => 'count',
-        authors_has_no     => 'is_empty',
-        authors_sorted     => 'sort',
-    },
+        exceptions_all        => 'elements',
+        exceptions_add        => 'push',
+        exceptions_count      => 'count',
+        exceptions_find       => 'first',
+        exceptions_filter     => 'grep',
+    },  
 );
 
-################################################################################
-sub init_storage {
-    my $self = shift;
-    
-    if( $self->authors_count == 0){
-        $self->bauthors([]);
-    }
-    if( $self->teamMemberships_count == 0){
-        $self->bteamMemberships([]);
-    }
-}
-####################################################################################
-sub replaceFromStorage {
-    my $self    = shift;
-    my $storage = shift;    # dependency injection
-                            # use BibSpace::Model::M::StorageBase;
-
-    my $storageItem = $storage->teams_find( sub { $_->equals($self) } );
-
-    die "Cannot find " . ref($self) . ": " . Dumper($self) . " in storage "
-        unless $storageItem;
-    return $storageItem;
-}
+has 'memberships' => (
+    is      => 'rw',
+    isa     => 'ArrayRef[Membership]',
+    traits  => ['Array'],
+    default => sub { [] },
+    handles => {
+        memberships_all        => 'elements',
+        memberships_add        => 'push',
+        memberships_count      => 'count',
+        memberships_find       => 'first',
+        memberships_filter     => 'grep',
+    },  
+);
 ####################################################################################
 sub toString {
     my $self = shift;
@@ -114,16 +53,14 @@ sub toString {
 sub equals {
     my $self = shift;
     my $obj  = shift;
-
-    my $result = 1;    # default not-equal
-    $result = $self->{name} cmp $obj->{name};
-    return $result == 0;
+    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
+    return $self->name eq $obj->name;
 }
 ####################################################################################
 sub can_be_deleted {
     my $self = shift;
 
-    return 0 if $self->teamMemberships_count > 0;
+    return if $self->memberships_count > 0;
     return 1;
 }
 ################################################################################
@@ -193,7 +130,7 @@ sub remove_author {
 ################################################################################
 sub members {
     my $self = shift;
-    return $self->authors_all;
+    return map {$_->author} $self->memberships_all;
 }
 ####################################################################################
 sub get_membership_beginning {
