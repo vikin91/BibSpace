@@ -142,7 +142,7 @@ sub setup_repositories {
 sub link_data {
     my $self = shift;
 
-    $self->app->logger->debug( "Linking Authors (N) to (1) Authors."); 
+    $self->app->logger->info( "Linking Authors (N) to (1) Authors."); 
     foreach my $author ($self->repo->getAuthorsRepository->filter(sub{$_->id != $_->master_id})){
         my $master = $self->repo->getAuthorsRepository->find(sub{ $_->id == $author->master_id});
         if( $master and $author ){
@@ -151,7 +151,7 @@ sub link_data {
     }
 
 
-    $self->app->logger->debug( "Linking Authors (N) to (M) Entries.");
+    $self->app->logger->info( "Linking Authors (N) to (M) Entries.");
     foreach my $auth ($self->repo->getAuthorshipsRepository->all){
         my $entry = $self->repo->getEntriesRepository->find(sub{ $_->id == $auth->entry_id});
         my $author = $self->repo->getAuthorsRepository->find(sub{ $_->id == $auth->author_id});
@@ -163,7 +163,7 @@ sub link_data {
         }
     }
 
-    $self->app->logger->debug( "Linking Tags (N) to (M) Entries.");
+    $self->app->logger->info( "Linking Tags (N) to (M) Entries.");
     foreach my $labeling ($self->repo->getLabelingsRepository->all){
         my $entry = $self->repo->getEntriesRepository->find(sub{ $_->id == $labeling->entry_id});
         my $tag = $self->repo->getTagsRepository->find(sub{ $_->id == $labeling->tag_id});
@@ -175,7 +175,7 @@ sub link_data {
         }
     }
 
-    $self->app->logger->debug( "Linking Teams (Exceptions) (N) to (M) Entries.");
+    $self->app->logger->info( "Linking Teams (Exceptions) (N) to (M) Entries.");
     foreach my $exception ($self->repo->getExceptionsRepository->all){
         my $entry = $self->repo->getEntriesRepository->find(sub{ $_->id == $exception->entry_id});
         my $team = $self->repo->getTeamsRepository->find(sub{ $_->id == $exception->team_id});
@@ -188,7 +188,7 @@ sub link_data {
     }
 
     
-    $self->app->logger->debug( "Linking Teams (N) to (M) Authors.");
+    $self->app->logger->info( "Linking Teams (N) to (M) Authors.");
     foreach my $membership ($self->repo->getMembershipsRepository->all){
         my $author = $self->repo->getAuthorsRepository->find(sub{ $_->id == $membership->author_id});
         my $team = $self->repo->getTeamsRepository->find(sub{ $_->id == $membership->team_id});
@@ -200,7 +200,7 @@ sub link_data {
         }
     }
 
-    $self->app->logger->debug( "Linking TagTypes (N) to (1) Tags.");
+    $self->app->logger->info( "Linking TagTypes (N) to (1) Tags.");
     foreach my $tag ($self->repo->getTagsRepository->all){
         my $tagtype = $self->repo->getTagTypesRepository->find(sub{ $_->id == $tag->type});
         if( $tag and $tagtype ){
@@ -208,9 +208,9 @@ sub link_data {
         }
     }
 
-    $self->app->logger->debug( "TODO: Linking OurTypes (N) to (1) Entries.");
+    $self->app->logger->info( "TODO: Linking OurTypes (N) to (1) Entries.");
 
-    $self->app->logger->debug( "Linking Finished.");
+    $self->app->logger->info( "Linking Finished.");
 }
 ################################################################
 sub setup_cache {

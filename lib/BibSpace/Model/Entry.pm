@@ -164,7 +164,7 @@ sub equals_bibtex {
 sub is_visible {
     my $self = shift;
 
-    my $visible_author = $self->authors_find( sub { $_->is_visible } );
+    my $visible_author = any { $_->is_visible } $self->get_authors;
     return 1 if defined $visible_author;
     return;
 }

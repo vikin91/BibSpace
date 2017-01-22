@@ -19,7 +19,17 @@ has 'memberships' => (
       memberships_clear      => 'clear',
   },
 );
-
+################################################################################
+sub teams {
+  my $self = shift;
+  return map { $_->team } $self->memberships_all;
+}
+####################################################################################
+sub has_team {
+    my $self = shift;
+    my $team  = shift;
+    return defined $self->memberships_find( sub { $_->team->equals($team) } );
+}
 ####################################################################################
 sub has_membership {
     my ( $self, $membership ) = @_;

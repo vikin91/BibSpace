@@ -127,17 +127,14 @@ sub get_authors_for_tag_read {
   my $tag_id  = $self->param('tid');
   my $team_id = $self->param('team');
 
-  my $team_by_name = MTeam->static_get_by_name( $dbh, $team_id );
-  my $team_by_id = MTeam->static_get( $dbh, $team_id );
-  my $team = undef;
-  $team = $team_by_name if defined $team_by_name;
-  $team = $team_by_id   if defined $team_by_id;
-
-  my $tag_by_name = MTag->static_get_by_name( $dbh, $tag_id );
-  my $tag_by_id = MTag->static_get( $dbh, $tag_id );
-  my $tag = undef;
-  $tag = $tag_by_name if defined $tag_by_name;
-  $tag = $tag_by_id   if defined $tag_by_id;
+  my $tag = $self->app->repo->getTagsRepository->find( sub { $_->id == $tag_id } );
+  if( !$tag ){
+    $tag  = $self->app->repo->getTagsRepository->find( sub { $_->name eq $tag_id } );
+  }
+  my $team = $self->app->repo->getTeamsRepository->find( sub { $_->id == $team_id } );
+  if( !$team ){
+    $team = $self->app->repo->getTeamsRepository->find( sub { $_->name eq $team_id } );
+  }
 
   if ( !defined $tag ) {
     $self->render( text => "Tag $tag_id does not exist", status => 404 );
@@ -149,26 +146,25 @@ sub get_authors_for_tag_read {
   }
 
   my @authors = $tag->get_authors($dbh);
-  if ( defined $team ) {
-    @authors = MAuthor->static_all_with_tag_and_team( $dbh, $tag, $team );
-  }
+  @authors = grep {$_->has_team($team)} @authors;
 
   $self->stash( tag => $tag, authors => \@authors );
   $self->render( template => 'tags/authors_having_tag_read' );
 }
 ####################################################################################
 sub get_tags_for_author_read {
-
   my $self      = shift;
-  my $dbh       = $self->app->db;
   my $author_id = $self->param('author_id');
 
-  my $author;
-  $author = MAuthor->static_get_by_name( $dbh, $author_id );
-  $author = MAuthor->static_get( $dbh, $author_id ) if !defined $author;    # given master id instead of name
+  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $author_id } );
+  if( !$author ){
+    $author  = $self->app->repo->getAuthorsRepository->find( sub { $_->get_master->uid eq $author_id } );
+  }
+  if( !$author ){
+    $author  = $self->app->repo->getAuthorsRepository->find( sub { $_->uid eq $author_id } );
+  }
 
-  my @author_tags = ();
-  @author_tags = $author->tags($dbh) if defined $author;
+  my @author_tags = $author->tags;
 
 
   ### here list of objects should be created

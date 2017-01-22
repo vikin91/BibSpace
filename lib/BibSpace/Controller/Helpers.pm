@@ -85,7 +85,7 @@ sub register {
     get_year_of_oldest_entry => sub {
       my $self = shift;
 
-      my @entryYears = map { $_->year } grep { defined $_->year } $self->storage->entries_all;
+      my @entryYears = map { $_->year } grep { defined $_->year } $self->app->repo->getEntriesRepository->all;
       @entryYears = uniq @entryYears;
       @entryYears = sort { $a <=> $b } @entryYears;
       return $entryYears[0];
