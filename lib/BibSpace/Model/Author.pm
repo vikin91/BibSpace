@@ -17,29 +17,32 @@ use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
 
-has 'uid'       => ( is => 'rw', isa     => 'Str' );
-has 'display'   => ( is => 'rw', default => 0 );
-has 'master'    => ( is => 'rw', isa     => 'Maybe[Str]', default => sub { shift->{uid} } );
-has 'master_id' => ( is => 'rw', isa     => 'Maybe[Int]' );
+has 'uid'       => ( is => 'rw', isa     => 'Str', documentation => q{Author name});
+has 'display'   => ( is => 'rw', default => 0, , documentation => q{If 1, the author will be displayed in menu.});
+has 'master'    => ( is => 'rw', isa     => 'Maybe[Str]', default => sub { shift->{uid} }, , documentation => q{Author master name. Redundant field.});
+has 'master_id' => ( is => 'rw', isa     => 'Maybe[Int]', , documentation => q{Id of author's master object});
 has 'masterObj' => (
   is      => 'rw',
   isa     => 'Maybe[Author]',
   default => sub {undef},
-  traits  => ['DoNotSerialize']    # due to cycyles
+  traits  => ['DoNotSerialize'],
+  documentation => q{Author's master author object.}
 );
 
 has 'authorships' => (
-  is      => 'rw',
-  isa     => 'ArrayRef[Authorship]',
-  traits  => [ 'Array', 'DoNotSerialize' ],
-  default => sub { [] },
-  handles => {
-    authorships_all    => 'elements',
-    authorships_add    => 'push',
-    authorships_count  => 'count',
-    authorships_find   => 'first',
-    authorships_filter => 'grep',
-  },
+    is      => 'rw',
+    isa     => 'ArrayRef[Authorship]',
+    traits  => ['Array'],
+    default => sub { [] },
+    handles => {
+        authorships_all        => 'elements',
+        authorships_add        => 'push',
+        authorships_count      => 'count',
+        authorships_find       => 'first',
+        authorships_find_index => 'first_index',
+        authorships_filter     => 'grep',
+        authorships_delete     => 'delete',
+    },  
 );
 
 has 'memberships' => (
@@ -103,6 +106,32 @@ sub equals {
 ####################################################################################
 ####################################################################################
 ####################################################################################
+sub has_authorship {
+    my ( $self, $authorship ) = @_;
+    my $idx = $self->authorships_find_index( sub { $_->equals($authorship) } );
+    return $idx >= 0;
+}
+####################################################################################
+sub add_authorship {
+    my ( $self, $authorship ) = @_;
+    
+    if( !$self->has_authorship($authorship) ){
+      $self->authorships_add($authorship);  
+    }
+}
+####################################################################################
+sub remove_authorship {
+    my ( $self, $authorship ) = @_;
+    # $authorship->validate;
+    
+    my $index = $self->authorships_find_index( sub { $_->equals($authorship) } );
+    return if $index == -1;
+    return 1 if $self->authorships_delete($index);
+    return ;
+}
+####################################################################################
+####################################################################################
+####################################################################################
 sub set_master {
   my $self          = shift;
   my $master_author = shift;
@@ -144,10 +173,10 @@ sub is_minion_of {
     SimpleLogger->new->debug( $self->uid . " is_minion_of " . $master->uid . " due to 1" );
     return 1;
   }
-  if ( defined $master->id and defined $self->master_id and $self->master_id == $master->id ) {
-    SimpleLogger->new->debug( $self->uid . " is_minion_of " . $master->uid . " due to 2" );
-    return 1;
-  }
+  # if ( defined $master->id and defined $self->master_id and $self->master_id == $master->id ) {
+  #   SimpleLogger->new->debug( $self->uid . " is_minion_of " . $master->uid . " due to 2" );
+  #   return 1;
+  # }
 
   return;
 }

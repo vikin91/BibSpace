@@ -494,11 +494,10 @@ sub has_author {
     my $self            = shift;
     my $author          = shift;
 
-    my $authorship = $self->authorships_find(
-        sub {
-            $_->author_id == $author->id and $_->entry_id == $self->id;
-        }
-    );
+    # SimpleLogger->new->warn("Checking if entry ".$self->id." has author ".$author->uid." (master ".$author->master.")");
+    # SimpleLogger->new->warn("Entry ".$self->id." authorships: ".join(',', map{$_->id} grep {$_->author_id == $author->id } $self->authorships_all));
+
+    my $authorship = $self->authorships_find( sub { $_->author->equals($author) and $_->entry->equals($self)});
     return defined $authorship;
 }
 ####################################################################################
@@ -574,16 +573,40 @@ sub author_names_from_bibtex {
     return @author_names;
 }
 ####################################################################################
-sub get_authors_from_bibtex {
-    my $self = shift;
+# sub get_authors_from_bibtex {
+#     my $self = shift;
 
-    my @authors;
+#     my @authors;
 
-    foreach my $name ( $self->author_names_from_bibtex() ) {
-        my $a = MAuthor->new( uid => $name );
-        push @authors, $a;
+#     foreach my $name ( $self->author_names_from_bibtex() ) {
+#         my $a = Author->new( uid => $name );
+#         push @authors, $a;
+#     }
+#     return @authors;
+# }
+####################################################################################
+sub has_authorship {
+    my ( $self, $authorship ) = @_;
+    my $idx = $self->authorships_find_index( sub { $_->equals($authorship) } );
+    return $idx >= 0;
+}
+####################################################################################
+sub add_authorship {
+    my ( $self, $authorship ) = @_;
+    
+    if( !$self->has_authorship($authorship) ){
+      $self->authorships_add($authorship);  
     }
-    return @authors;
+}
+####################################################################################
+sub remove_authorship {
+    my ( $self, $authorship ) = @_;
+    # $authorship->validate;
+    
+    my $index = $self->authorships_find_index( sub { $_->equals($authorship) } );
+    return if $index == -1;
+    return 1 if $self->authorships_delete($index);
+    return ;
 }
 ####################################################################################
 sub teams {

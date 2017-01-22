@@ -3,6 +3,7 @@ use namespace::autoclean;
 
 use BibSpace::Model::IntegerUidProvider;
 use Moose::Role;
+use MooseX::StrictConstructor;
 
 sub _generateUIDEntry {
     my $self = shift;
@@ -23,6 +24,7 @@ has 'idProvider' => (
 has 'old_mysql_id'    => ( is => 'ro', isa => 'Maybe[Int]', default => undef );
 has 'id'              => ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy=>1, init_arg => undef );
 
+requires 'equals';
 ####################################################################################
 # called after the default constructor
 sub BUILD {

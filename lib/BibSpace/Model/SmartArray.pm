@@ -7,6 +7,7 @@ use namespace::autoclean;
 use Moose;
 use Moose::Util::TypeConstraints;
 use BibSpace::Model::IBibSpaceBackend;
+require BibSpace::Model::IEntity;
 with 'IBibSpaceBackend';
 use List::Util qw(first);
 use List::MoreUtils qw(first_index);
@@ -25,7 +26,7 @@ has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 has 'data' => (
     traits    => ['Hash'],
     is        => 'ro',
-    isa       => 'HashRef[ArrayRef[Object]]',
+    isa       => 'HashRef[ArrayRef[BibSpace::Model::IEntity]]',
     default   => sub { {} },
     handles   => {
         set     => 'set',
@@ -39,26 +40,56 @@ has 'data' => (
     },
 );
 
+
+sub dump {
+    my $self = shift;
+    $self->logger->debug("SmartArray keys: ".join(', ', $self->keys));
+}
+
+sub _init {
+    my $self = shift;
+    my $type = shift;
+    die "_init requires a type!" unless $type;
+    if(!$self->defined($type)){
+        $self->set($type, []);
+    }
+}
+before '_init' => sub { shift->logger->entering("","".__PACKAGE__."->_init"); };
+after '_init'  => sub { shift->logger->exiting("","".__PACKAGE__."->_init"); };
+
 sub all {
     my $self = shift;
     my $type = shift;
     die "all requires a type!" unless $type;
-    if(!$self->defined($type)){
-        $self->set($type, []);
-    }
+    $self->_init($type);
     my $aref = $self->get($type);
     return @{ $aref };
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
 after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
 
-sub save {
+sub _add {
     my ($self, @objects) = @_;
     my $type = ref($objects[0]);
-    if(!$self->defined($type)){
-        $self->set($type, []);
-    }
+    $self->_init($type);
     push @{$self->get($type)}, @objects;
+}
+before '_add' => sub { shift->logger->entering("","".__PACKAGE__."->_add"); };
+after '_add'  => sub { shift->logger->exiting("","".__PACKAGE__."->_add"); };
+
+sub save {
+    my ($self, @objects) = @_;
+    my $added = 0;
+    foreach my $obj(@objects){
+        if( !$self->exists($obj)){
+            ++$added;
+            $self->_add($obj);
+        }
+        else{
+            $self->update($obj);
+        }
+    }
+    return $added;
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
 after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
@@ -81,7 +112,7 @@ after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 sub exists { 
     my ($self, $object) = @_;
     my $type = ref($object);
-    my $found = first {$_ == $object} $self->all($type);
+    my $found = first {$_->equals($object)} $self->all($type);
     return defined $found;
 }
 before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };

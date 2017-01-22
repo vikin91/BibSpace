@@ -35,6 +35,7 @@ requires 'JSON' , '>= 0.0';
 requires 'MooseX::Storage' , '>= 0.0';
 requires 'MooseX::Singleton' , '>= 0.0';
 requires 'MooseX::ClassAttribute' , '>= 0.0';
+requires 'MooseX::StrictConstructor' , '>= 0.0';
 
 
 on 'test' => sub {

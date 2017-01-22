@@ -31,7 +31,27 @@ has 'author_id' => ( is => 'ro', isa => 'Int' );
 
 has 'start' => ( is => 'rw', isa => 'Int', default => 0 );
 has 'stop'  => ( is => 'rw', isa => 'Int', default => 0 );
-
+####################################################################################
+sub id {
+    my $self = shift;
+    return "(".$self->team->name."-".$self->author->uid.")" if defined $self->author and defined $self->team;
+    return "(".$_->team_id."-".$_->author_id.")";
+}
+####################################################################################
+sub validate {
+    my $self = shift;
+    if(defined $self->author and defined $self->team){
+        if($self->author->id != $self->author_id){
+            die "Label has been built wrongly author->id and author_id differs.\n"
+            ."label->author->id: ".$self->author->id.", label->author_id: ".$self->author_id;
+        }
+        if($self->team->id != $self->team_id){
+            die "Label has been built wrongly team->id and team_id differs.\n"
+            ."label->team->id: ".$self->team->id.", label->team_id: ".$self->team_id;
+        }
+    }
+    return 1;
+}
 ####################################################################################
 sub toString {
     my $self = shift;

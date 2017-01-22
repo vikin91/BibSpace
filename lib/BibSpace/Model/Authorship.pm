@@ -27,7 +27,27 @@ has 'author' => (
   traits => ['DoNotSerialize']    # due to cycyles
 );
 
-
+####################################################################################
+sub id {
+    my $self = shift;
+    return "(".$self->entry_id."-".$self->author->uid.")" if defined $self->author;
+    return "(".$_->entry_id."-".$_->author_id.")";
+}
+####################################################################################
+sub validate {
+    my $self = shift;
+    if(defined $self->author and defined $self->entry){
+        if($self->author->id != $self->author_id){
+            die "Label has been built wrongly author->id and author_id differs.\n"
+            ."label->author->id: ".$self->author->id.", label->author_id: ".$self->author_id;
+        }
+        if($self->entry->id != $self->entry_id){
+            die "Label has been built wrongly entry->id and entry_id differs.\n"
+            ."label->entry->id: ".$self->entry->id.", label->entry_id: ".$self->entry_id;
+        }
+    }
+    return 1;
+}
 ####################################################################################
 sub toString {
   my $self = shift;
