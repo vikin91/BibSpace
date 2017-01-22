@@ -23,7 +23,7 @@
             <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->{master}) %>">
                 <i class="fa fa-files-o"></i> Show entries <span class="badge"><%= num_entries_for_author($author)%></span>
             </a>
-            <a class="btn btn-success" href="<%= url_for('publications')->query(author=>$author->{master}) %>">
+            <a class="btn btn-success" href="<%= url_for('publications')->query(author=>$author->{master}, entry_type=>'paper') %>">
                 <i class="fa fa-files-o"></i> Show papers <span class="badge"><%= num_papers_for_author($author)%></span>
             </a>
             <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->{master}, entry_type=>'talk')%>">

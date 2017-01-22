@@ -45,10 +45,7 @@ after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
 =cut 
 sub empty {
   my ($self) = @_;
-
-  die "".__PACKAGE__."->empty not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  return $self->handle->count("Labeling") == 0;
 }
 before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
 after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
@@ -59,10 +56,10 @@ after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 =cut 
 sub exists {
   my ($self, $object) = @_;
-  
-  die "".__PACKAGE__."->exists not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  my @all = $self->handle->all("Labeling");
+  return if $self->empty;
+  my $matching = first {$_->equals($object)} @all; 
+  return defined $matching;
 }
 before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
 after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
@@ -73,7 +70,9 @@ after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); }
 =cut 
 sub save {
   my ($self, @objects) = @_;
-  $self->handle->save(@objects);
+  my %existing = map { $_->id =>1} $self->all;
+  my @new_objects = grep { not $existing{$_->id} } @objects;
+  $self->handle->save( @new_objects );
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
 after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
@@ -96,10 +95,7 @@ after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); }
 =cut 
 sub delete {
   my ($self, @objects) = @_;
-
-  die "".__PACKAGE__."->delete not implemented. Method was instructed to delete ".scalar(@objects)." objects.";
-  # TODO: auto-generated method stub. Implement me!
-
+  $self->handle->delete( @objects );
 }
 before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
 after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };

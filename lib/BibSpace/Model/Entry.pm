@@ -10,6 +10,7 @@ use BibSpace::Model::Type;
 use List::MoreUtils qw(any uniq);
 
 
+
 use BibSpace::Model::M::StorageBase;
 
 use DateTime::Format::Strptime;
@@ -104,7 +105,9 @@ has 'authorships' => (
         authorships_add        => 'push',
         authorships_count      => 'count',
         authorships_find       => 'first',
+        authorships_find_index => 'first_index',
         authorships_filter     => 'grep',
+        authorships_delete     => 'delete',
     },  
 );
 
@@ -118,13 +121,15 @@ has 'labellings' => (
         labellings_add        => 'push',
         labellings_count      => 'count',
         labellings_find       => 'first',
+        labellings_find_index => 'first_index',
         labellings_filter     => 'grep',
+        labellings_delete     => 'delete',
     },  
 );
 
 has 'exceptions' => (
     is      => 'rw',
-    isa     => 'ArrayRef[Labeling]',
+    isa     => 'ArrayRef[Exception]',
     traits  => ['Array'],
     default => sub { [] },
     handles => {
@@ -132,38 +137,14 @@ has 'exceptions' => (
         exceptions_add        => 'push',
         exceptions_count      => 'count',
         exceptions_find       => 'first',
+        exceptions_find_index => 'first_index',
         exceptions_filter     => 'grep',
+        exceptions_delete     => 'delete',
     },  
 );
 
 
 
-################################################################################
-sub init_storage {
-    my $self = shift;
-
-    if ( $self->tags_count == 0 ) {
-        $self->btags( [] );
-    }
-    if ( $self->authors_count == 0 ) {
-        $self->bauthors( [] );
-    }
-    if ( $self->exceptions_count == 0 ) {
-        $self->bexceptions( [] );
-    }
-}
-####################################################################################
-sub replaceFromStorage {
-    my $self    = shift;
-    my $storage = shift;    # dependency injection
-                            # use BibSpace::Model::M::StorageBase;
-
-    my $storageItem = $storage->entries_find( sub { $_->equals($self) } );
-
-    die "Cannot find " . ref($self) . ": " . Dumper($self) . " in storage "
-        unless $storageItem;
-    return $storageItem;
-}
 ####################################################################################
 sub toString {
     my $self = shift;
@@ -630,8 +611,7 @@ sub has_team {
     my $team = shift;
 
     return 1 if any { $_->equals($team) } $self->teams;
-    return 0;
-
+    return ;
 }
 ####################################################################################
 sub get_exceptions {
@@ -670,6 +650,8 @@ sub assign_exception {
     return 0;
 }
 ####################################################################################
+####################################################################################
+####################################################################################
 sub tags {
     my $self     = shift;
     my $tag_type = shift;
@@ -684,62 +666,23 @@ sub has_tag {
     return defined $self->labellings_find( sub { $_->tag->equals($tag) } );
 }
 ####################################################################################
-sub assign_tag {
-    my ( $self, @tags ) = @_;
-
-    return 0 if !@tags or scalar @tags == 0;
-
-    my $added = 0;
-    foreach my $tag (@tags) {
-        if ( defined $tag and !$self->has_tag($tag) ) {
-            $self->tags_add($tag);
-            ++$added;
-
-            # if( !$tag->has_entry($self) ){
-            #     $tag->assign_entry($self);
-            # }
-        }
-    }
-    return $added;
+sub add_labelling {
+    my ( $self, $label ) = @_;
+    $label->validate;
+    $self->labellings_add($label);
 }
 ####################################################################################
-sub remove_tag {
-    my $self = shift;
-    my $tag  = shift;
-
-    my $index = $self->tags_find_index( sub { $_->equals($tag) } );
-    return 0 if $index == -1;
-    return 1 if $self->tags_delete($index);
-    return 0;
+sub remove_labelling {
+    my ( $self, $label ) = @_;
+    $label->validate;
+    
+    my $index = $self->labellings_find_index( sub { $_->equals($label) } );
+    return if $index == -1;
+    return 1 if $self->labellings_delete($index);
+    return ;
 }
 ####################################################################################
-sub remove_tag_by_id {
-    my $self   = shift;
-    my $tag_id = shift;
-
-    my $index = $self->tags_find_index( sub { $_->id == $tag_id } );
-    return 0 if $index == -1;
-    return 1 if $self->tags_delete($index);
-    return 0;
-}
 ####################################################################################
-sub remove_tag_by_name {
-    my $self     = shift;
-    my $tag_name = shift;
-
-    my $index = $self->tags_find_index(
-        sub {
-            (           defined $_->name
-                    and defined $tag_name
-                    and $_->name eq $tag_name );
-        }
-    );
-    return 0 if $index == -1;
-    return 1 if $self->tags_delete($index);
-    return 0;
-}
-
-
 ####################################################################################
 sub get_tags_from_bibtex {
     my $self = shift;

@@ -569,8 +569,7 @@ sub setup_routes {
     $logged_user->get('/tags/authors/:tid/:type')
         ->to( 'tags#get_authors_for_tag', type => 1 )
         ->name('get_authors_for_tag');
-    $superadmin->any('/tags/add_and_assign/:eid')->to('tags#add_and_assign');
-    $superadmin->get('/tags/delete/:id_to_delete')->to('tags#delete');
+    $superadmin->get('/tags/delete/:id')->to('tags#delete')->name('delete_tag');
     $manager->get('/tags/edit/:id')->to('tags#edit');
 
     ################ TEAMS ################

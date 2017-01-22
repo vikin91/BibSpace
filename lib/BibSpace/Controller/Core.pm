@@ -22,6 +22,7 @@ use BibSpace::Functions::FPublications;
 
 use Exporter;
 our @ISA = qw( Exporter );
+use List::MoreUtils qw(any uniq);
 
 # these CAN be exported.
 # our @EXPORT_OK = qw( export_me export_me_too );
@@ -30,7 +31,6 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw(
     random_string
     create_user_id
-    uniq
     uniqlc
     get_all_our_types
     get_all_bibtex_types
@@ -116,10 +116,10 @@ sub clean_tag_name {
 
     return ucfirst($tag);
 }
-################################################################################
-sub uniq {
-    return keys %{ { map { $_ => 1 } @_ } };
-}
+# ################################################################################
+# sub uniq {
+#     return keys %{ { map { $_ => 1 } @_ } };
+# }
 ################################################################################
 sub uniqlc {
     return keys %{ { map { lc $_ => 1 } @_ } };

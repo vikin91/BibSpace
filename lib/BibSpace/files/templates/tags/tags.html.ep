@@ -38,8 +38,8 @@
             <table class="table table-hover table-condensed">
             <tbody>
             % foreach my $otag (@{$otags}){
-              % my $id = $otag->{id};
-              % my $tag = $otag->{name};
+              % my $id = $otag->id;
+              % my $tag = $otag->name;
               
               <tr>
                 <td>
@@ -60,11 +60,11 @@
                           </div>
                           <div class="modal-body">
 
-                              <p>Are you sure you want to delete tag: <i><%= $tag %></i>?</p>
-                              <p>There are <span class="badge"> <%= num_pubs_for_tag($id) %></span> papers tagged with this tag. They will be untagged if you continue.</p>
+                              <p>Are you sure you want to delete tag: <i><%= $otag->name %></i>?</p>
+                              <p>There are <span class="badge"> <%= num_pubs_for_tag($otag) %></span> papers tagged with this tag. They will be untagged if you continue.</p>
                             
                               <div class="modal-footer">
-                                <a class="btn btn-danger" href="<%= url_for('/tags/delete/')%><%=$id%>"><i class="fa fa-trash"></i> Yes, delete this tag</a>
+                                <a class="btn btn-danger" href="<%= url_for('delete_tag', id=>$otag->id)%>"><i class="fa fa-trash"></i> Yes, delete this tag</a>
                                 <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, leave <i><%= $tag %></i> alone</a>
                               </div>
                           </div>

@@ -54,10 +54,12 @@ after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
 =cut 
 sub empty {
   my ($self) = @_;
-
-  die "".__PACKAGE__."->empty not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  my $dbh = $self->handle;
+  my $sth = $dbh->prepare("SELECT 1 as num FROM Entry_to_Author LIMIT 1");
+  $sth->execute();
+  my $row = $sth->fetchrow_hashref();
+  my $num = $row->{num} // 0;
+  return $num == 0;
 }
 before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
 after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
@@ -68,10 +70,12 @@ after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 =cut 
 sub exists {
   my ($self, $object) = @_;
-  
-  die "".__PACKAGE__."->exists not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  my $dbh = $self->handle;
+  my $sth = $dbh->prepare("SELECT EXISTS(SELECT 1 FROM Entry_to_Author WHERE author_id=? AND entry_id=? LIMIT 1) as num ");
+  $sth->execute($object->author_id, $object->entry_id,);
+  my $row = $sth->fetchrow_hashref();
+  my $num = $row->{num} // 0;
+  return $num > 0;
 }
 before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
 after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
@@ -81,14 +85,46 @@ after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); }
     This method takes single object or array of objects as argument and returns nothing.
 =cut 
 sub save {
-  my ($self, @objects) = @_;
-
-  die "".__PACKAGE__."->save not implemented. Method was instructed to save ".scalar(@objects)." objects.";
-  # TODO: auto-generated method stub. Implement me!
-
+  my ( $self, @objects ) = @_;
+  my $dbh = $self->handle;
+  foreach my $obj (@objects) {
+    if ( $self->exists($obj) ) {
+      $self->update($obj);
+      $self->logger->info( "Updated object ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+    }
+    else {
+      $self->_insert($obj);
+      $self->logger->info( "Inserted object ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+    }
+  }
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
 after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
+
+=item _insert
+    Method documentation placeholder.
+    This method takes single object or array of objects as argument and returns nothing.
+=cut 
+sub _insert {
+  my ( $self, @objects ) = @_;
+  my $dbh = $self->handle;
+  my $qry = "
+    INSERT INTO Entry_to_Author(author_id, entry_id) VALUES (?,?);";
+
+  foreach my $obj (@objects) {
+    my $sth = $dbh->prepare($qry);
+    try {
+      my $result = $sth->execute( $obj->author_id, $obj->entry_id );
+      $sth->finish();
+    }
+    catch {
+      $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
+    };
+  }
+}
+before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
+after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };
+
 =item update
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
@@ -107,11 +143,18 @@ after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); }
     This method takes single object or array of objects as argument and returns nothing.
 =cut 
 sub delete {
-  my ($self, @objects) = @_;
-
-  die "".__PACKAGE__."->delete not implemented. Method was instructed to delete ".scalar(@objects)." objects.";
-  # TODO: auto-generated method stub. Implement me!
-
+  my ( $self, @objects ) = @_;
+  my $dbh = $self->handle;
+  foreach my $obj (@objects) {
+    my $qry = "DELETE FROM Entry_to_Author WHERE entry_id=? AND author_id=?;";
+    my $sth = $dbh->prepare($qry);
+    try {
+      my $result = $sth->execute( $obj->entry_id, $obj->author_id );
+    }
+    catch {
+      $self->logger->error( "Delete exception: $_", "" . __PACKAGE__ . "->delete" );
+    };
+  }
 }
 before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
 after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };

@@ -23,6 +23,11 @@ has 'idProvider' => (
 has 'old_mysql_id'    => ( is => 'ro', isa => 'Maybe[Int]', default => undef );
 has 'id'              => ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy=>1, init_arg => undef );
 
-
-
+####################################################################################
+# called after the default constructor
+sub BUILD {
+    my $self = shift;
+    $self->id; # trigger lazy execution of idProvider
+}
+####################################################################################
 1;

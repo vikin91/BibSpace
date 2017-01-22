@@ -8,8 +8,9 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use BibSpace::Model::IBibSpaceBackend;
 with 'IBibSpaceBackend';
-# use MooseX::Storage;
-# with Storage( 'format' => 'JSON', 'io' => 'File' );
+use List::Util qw(first);
+use List::MoreUtils qw(first_index);
+
 
 =item
     This is a in-memory data structure (hash) to hold all objects of BibSpace.
@@ -42,6 +43,9 @@ sub all {
     my $self = shift;
     my $type = shift;
     die "all requires a type!" unless $type;
+    if(!$self->defined($type)){
+        $self->set($type, []);
+    }
     my $aref = $self->get($type);
     return @{ $aref };
 }
@@ -60,36 +64,45 @@ before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
 after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
 
 sub count { 
-    my ($self) = @_;
-    die "Method unimplemented!";
+    my ($self, $type) = @_;
+    die "all requires a type!" unless $type;
+    return scalar $self->all($type);
 }
 before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
 after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
 
 sub empty { 
-    my ($self) = @_;
-    die "Method unimplemented!";
+    my ($self, $type) = @_;
+    return $self->count($type) == 0;
 }
 before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
 after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 
 sub exists { 
     my ($self, $object) = @_;
-    die "Method unimplemented!";
+    my $type = ref($object);
+    my $found = first {$_ == $object} $self->all($type);
+    return defined $found;
 }
 before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
 after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
 
 sub update { 
     my ($self, @objects) = @_;
-    die "Method unimplemented!";
+    # should happen automatically beacuser array keeps references to objects
 }
 before 'update' => sub { shift->logger->entering("","".__PACKAGE__."->update"); };
 after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); };
 
 sub delete { 
     my ($self, @objects) = @_; 
-    die "Method unimplemented!";
+    my $type = ref($objects[0]);
+    my $aref = $self->get($type);
+
+    foreach my $obj (@objects){
+        my $idx = first_index { $_ == $obj } @{$aref};
+        splice( @{$aref}, $idx, 1);
+    }
 }
 before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
 after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };

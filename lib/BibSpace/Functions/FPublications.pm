@@ -221,9 +221,6 @@ sub Fget_publications_core_storage {
     my $debug       = shift // 0;
 
     # my $storage = StorageBase->get();
-    
-
-
 
     my $team_obj;     
     if(defined $team){
@@ -273,6 +270,7 @@ sub Fget_publications_core_storage {
     # my $cmp6 = $cmp4 or $cmp5;
     # $self->app->logger->warn("undef == id: 1 $cmp1 / 2 $cmp2 / 3 $cmp3 / 4 $cmp4 / 5 $cmp5 / 6 $cmp6 / " );    
 
+    $self->app->logger->warn("==== START new Filtering ====", "Fget_publications_core_storage" );
     # filtering
     my @entries = $self->app->repo->getEntriesRepository->all;
 
@@ -293,7 +291,9 @@ sub Fget_publications_core_storage {
     if(defined $entry_type){
         # say "Comparing entry_type: $entry_type" if $debug == 1;
         # map { say $_->id . " type ". $_->entry_type } @entries  if $debug == 1;
+        $self->app->logger->debug("BEFORE Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
         @entries = grep { $_->entry_type eq $entry_type } @entries;
+        $self->app->logger->debug("Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
     }
     if(defined $permalink and defined $tag_obj_perm){
         @entries = grep { $_->has_tag($tag_obj_perm) } @entries;
@@ -308,10 +308,15 @@ sub Fget_publications_core_storage {
         @entries = grep { $_->is_visible } @entries;
     }
     if(defined $master_id and defined $author_obj){
+        $self->app->logger->debug("BEFORE Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
         @entries = grep { $_->has_master_author($author_obj) } @entries;
+        $self->app->logger->debug("Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
     }
     if(defined $tagid and defined $tag_obj){
         @entries = grep { $_->has_tag($tag_obj) } @entries;
+
+        # my $str = join( ", ", map {"T".$_->tag_id."E".$_->entry_id} $self->app->repo->getLabellingsRepository->all);
+        # $self->app->logger->warn( $str );
     }
     if(defined $teamid and defined $team_obj){
         @entries = grep { $_->has_team($team_obj) } @entries;

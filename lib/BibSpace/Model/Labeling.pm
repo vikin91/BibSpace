@@ -27,6 +27,27 @@ has 'tag' => (
     traits => ['DoNotSerialize']    # due to cycyles
 );
 ####################################################################################
+sub id {
+    my $self = shift;
+    return "(".$self->entry_id."-".$self->tag->name.")" if defined $self->tag;
+    return "(".$_->entry_id."-".$_->tag_id.")";
+}
+####################################################################################
+sub validate {
+    my $self = shift;
+    if(defined $self->entry and defined $self->tag){
+        if($self->entry->id != $self->entry_id){
+            die "Label has been built wrongly entry->id and entry_id differs.\n"
+            ."label->entry->id: ".$self->entry->id.", label->entry_id: ".$self->entry_id;
+        }
+        if($self->tag->id != $self->tag_id){
+            die "Label has been built wrongly tag->id and tag_id differs.\n"
+            ."label->tag->id: ".$self->tag->id.", label->tag_id: ".$self->tag_id;
+        }
+    }
+    return 1;
+}
+####################################################################################
 sub toString {
     my $self = shift;
     my $str  = $self->freeze;
