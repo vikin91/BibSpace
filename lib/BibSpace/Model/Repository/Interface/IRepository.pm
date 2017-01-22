@@ -9,7 +9,7 @@ use Moose::Role; # = this package (class) is an interface
 # classes that implement this interface must provide the following functions
 use BibSpace::Model::DAO::DAOFactory;
 use List::MoreUtils;
-
+use List::Util qw(first);
 =item backendsConfigHash 
     The backendsConfigHash should look like:
     {
@@ -48,6 +48,41 @@ sub getBackendsArray{
 sub getIdProvider{
     my $self = shift;
     return $self->{_idProvider};
+}
+
+=item _getReadBackend 
+    Returns backend with lowest 'prio' value from $backendsConfigHash
+=cut
+sub _getReadBackend {
+  my $self = shift;
+
+  if( !defined $self->backendsConfigHash ){
+    die "".__PACKAGE__."->_getReadBackendType: backendsConfigHash is not defined";
+  }
+  my @backendsArray = $self->getBackendsArray;
+  my $prioHash = shift @backendsArray;
+  if( !$prioHash ){
+    die "".__PACKAGE__."->_getReadBackendType: backend config hash for lowest prio (read) backend is not defined";
+  }
+  return $prioHash;
+}
+
+=item _getBackendWithPrio 
+    Returns backend with given 'prio' value from $backendsConfigHash
+=cut
+sub _getBackendWithPrio {
+  my $self = shift;
+  my $prio = shift;
+
+  if( !defined $self->backendsConfigHash ){
+    die "".__PACKAGE__."->_getReadBackendType: backendsConfigHash is not defined";
+  }
+  my @backendsArray = $self->getBackendsArray;
+  my $prioHash = first {$_->{'prio'} == $prio} @backendsArray;
+  if( !$prioHash ){
+    die "".__PACKAGE__."->_getReadBackendType: backend config hash for prio '$prio' is not defined";
+  }
+  return $prioHash;
 }
 
 1;

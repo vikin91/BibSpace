@@ -112,19 +112,19 @@ has 'authorships' => (
     },  
 );
 
-has 'labellings' => (
+has 'labelings' => (
     is      => 'rw',
     isa     => 'ArrayRef[Labeling]',
     traits  => ['Array'],
     default => sub { [] },
     handles => {
-        labellings_all        => 'elements',
-        labellings_add        => 'push',
-        labellings_count      => 'count',
-        labellings_find       => 'first',
-        labellings_find_index => 'first_index',
-        labellings_filter     => 'grep',
-        labellings_delete     => 'delete',
+        labelings_all        => 'elements',
+        labelings_add        => 'push',
+        labelings_count      => 'count',
+        labelings_find       => 'first',
+        labelings_find_index => 'first_index',
+        labelings_filter     => 'grep',
+        labelings_delete     => 'delete',
     },  
 );
 
@@ -387,7 +387,7 @@ sub has_tag_named {
     my $self = shift;
     my $name = shift;
 
-    my $found = $self->labellings_find( sub { ( $_->tag->name cmp $name ) == 0 } );
+    my $found = $self->labelings_find( sub { ( $_->tag->name cmp $name ) == 0 } );
     return 1 if defined $found;
     return;
 }
@@ -680,29 +680,29 @@ sub tags {
     my $self     = shift;
     my $tag_type = shift;
 
-    return grep {$_->type == $tag_type} map {$_->tag} $self->labellings_all;
+    return grep {$_->type == $tag_type} map {$_->tag} $self->labelings_all;
 }
 ####################################################################################
 sub has_tag {
     my $self = shift;
     my $tag  = shift;
 
-    return defined $self->labellings_find( sub { $_->tag->equals($tag) } );
+    return defined $self->labelings_find( sub { $_->tag->equals($tag) } );
 }
 ####################################################################################
-sub add_labelling {
+sub add_labeling {
     my ( $self, $label ) = @_;
     $label->validate;
-    $self->labellings_add($label);
+    $self->labelings_add($label);
 }
 ####################################################################################
-sub remove_labelling {
+sub remove_labeling {
     my ( $self, $label ) = @_;
     $label->validate;
     
-    my $index = $self->labellings_find_index( sub { $_->equals($label) } );
+    my $index = $self->labelings_find_index( sub { $_->equals($label) } );
     return if $index == -1;
-    return 1 if $self->labellings_delete($index);
+    return 1 if $self->labelings_delete($index);
     return ;
 }
 ####################################################################################

@@ -873,7 +873,7 @@ sub manage_tags {
 
 
 
-  my @tags = map { $_->tag } $entry->labellings_all;
+  my @tags = map { $_->tag } $entry->labelings_all;
   my @tag_types = $self->app->repo->getTagTypesRepository->all;
 
 
@@ -895,12 +895,12 @@ sub remove_tag {
   if ( defined $entry and defined $tag ) {
 
     my $label
-      = $self->app->repo->getLabellingsRepository->find( sub { $_->tag->equals($tag) and $_->entry->equals($entry) } );
+      = $self->app->repo->getLabelingsRepository->find( sub { $_->tag->equals($tag) and $_->entry->equals($entry) } );
 
     # you should always execute all those three commands together - smells like command pattern...
-    $self->app->repo->getLabellingsRepository->delete($label);
-    $entry->remove_labelling($label);
-    $tag->remove_labelling($label);
+    $self->app->repo->getLabelingsRepository->delete($label);
+    $entry->remove_labeling($label);
+    $tag->remove_labeling($label);
 
     $self->app->logger->info( "Removed tag " . $tag->name . " from entry ID " . $entry->id . ". " );
   }
@@ -924,9 +924,9 @@ sub add_tag {
     my $label = Labeling->new( entry => $entry, tag => $tag, entry_id => $entry->id, tag_id => $tag->id );
 
     # you should always execute all those three commands together - smells like command pattern...
-    $self->app->repo->getLabellingsRepository->save($label);
-    $entry->add_labelling($label);
-    $tag->add_labelling($label);
+    $self->app->repo->getLabelingsRepository->save($label);
+    $entry->add_labeling($label);
+    $tag->add_labeling($label);
   }
   $self->redirect_to( $self->get_referrer );
 }

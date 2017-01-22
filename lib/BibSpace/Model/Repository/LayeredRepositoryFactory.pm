@@ -11,11 +11,12 @@ use BibSpace::Model::Repository::Layered::AuthorsLayeredRepository;
 use BibSpace::Model::Repository::Layered::AuthorshipsLayeredRepository;
 use BibSpace::Model::Repository::Layered::EntriesLayeredRepository;
 use BibSpace::Model::Repository::Layered::ExceptionsLayeredRepository;
-use BibSpace::Model::Repository::Layered::LabellingsLayeredRepository;
+use BibSpace::Model::Repository::Layered::LabelingsLayeredRepository;
 use BibSpace::Model::Repository::Layered::MembershipsLayeredRepository;
 use BibSpace::Model::Repository::Layered::TagsLayeredRepository;
 use BibSpace::Model::Repository::Layered::TagTypesLayeredRepository;
 use BibSpace::Model::Repository::Layered::TeamsLayeredRepository;
+use BibSpace::Model::Repository::Layered::TypesLayeredRepository;
 require BibSpace::Model::Repository::RepositoryFactory;
 extends 'RepositoryFactory';
 
@@ -33,7 +34,7 @@ has '_instanceEntriesRepo' =>
     ( is => 'rw', does => 'Maybe[IRepository]', default => undef );
 has '_instanceExceptionsRepo' =>
     ( is => 'rw', does => 'Maybe[IRepository]', default => undef );
-has '_instanceLabellingsRepo' =>
+has '_instanceLabelingsRepo' =>
     ( is => 'rw', does => 'Maybe[IRepository]', default => undef );
 has '_instanceMembershipsRepo' =>
     ( is => 'rw', does => 'Maybe[IRepository]', default => undef );
@@ -42,6 +43,8 @@ has '_instanceTagsRepo' =>
 has '_instanceTagTypesRepo' =>
     ( is => 'rw', does => 'Maybe[IRepository]', default => undef );
 has '_instanceTeamsRepo' =>
+    ( is => 'rw', does => 'Maybe[IRepository]', default => undef );
+has '_instanceTypesRepo' =>
     ( is => 'rw', does => 'Maybe[IRepository]', default => undef );
 
 has '_idProviderAuthor' => (
@@ -98,9 +101,15 @@ has '_idProviderTeam' => (
     default => undef,
     reader  => 'idProviderTeam'
 );
+has '_idProviderType' => (
+    is      => 'rw',
+    does    => 'Maybe[IUidProvider]',
+    default => undef,
+    reader  => 'idProviderType'
+);
 
 =item hardReset
-    Hard reset repomoves all instances of repositories and resets all id providers. 
+    Hard reset removes all instances of repositories and resets all id providers. 
     Use only for overwriting whole data set, e.g., during backup restore.
 =cut
 
@@ -117,15 +126,42 @@ sub hardReset {
     $self->_idProviderTag->reset if defined $self->_idProviderTag;
     $self->_idProviderTagType->reset if defined $self->_idProviderTagType;
     $self->_idProviderTeam->reset if defined $self->_idProviderTeam;
+    $self->_idProviderType->reset if defined $self->_idProviderType;
     $self->{_instanceAuthorsRepo} = undef;
     $self->{_instanceAuthorshipsRepo} = undef;
     $self->{_instanceEntriesRepo} = undef;
     $self->{_instanceExceptionsRepo} = undef;
-    $self->{_instanceLabellingsRepo} = undef;
+    $self->{_instanceLabelingsRepo} = undef;
     $self->{_instanceMembershipsRepo} = undef;
     $self->{_instanceTagsRepo} = undef;
     $self->{_instanceTagTypesRepo} = undef;
     $self->{_instanceTeamsRepo} = undef;
+    $self->{_instanceTypesRepo} = undef;
+}
+
+=item copy_data
+    Copy data copies data between layers of repositories
+=cut
+sub copy_data {
+    my $self = shift;
+    my $config  = shift;
+
+    my $backendFrom = $config->{from};
+    my $backendTo = $config->{to};
+
+    ## TODO: check if backends with given prios exist
+
+    $self->hardReset;
+    $self->getAuthorsRepository->copy( $backendFrom, $backendTo );
+    $self->getAuthorshipsRepository->copy( $backendFrom, $backendTo );
+    $self->getEntriesRepository->copy( $backendFrom, $backendTo );
+    $self->getExceptionsRepository->copy( $backendFrom, $backendTo );
+    $self->getLabelingsRepository->copy( $backendFrom, $backendTo );
+    $self->getMembershipsRepository->copy( $backendFrom, $backendTo );
+    $self->getTagsRepository->copy( $backendFrom, $backendTo );
+    $self->getTagTypesRepository->copy( $backendFrom, $backendTo );
+    $self->getTeamsRepository->copy( $backendFrom, $backendTo );
+    $self->getTypesRepository->copy( $backendFrom, $backendTo );
 }
 
 =item getInstance 
@@ -272,7 +308,7 @@ sub getExceptionsRepository {
     return $self->{_instanceExceptionsRepo};
 }
 
-sub getLabellingsRepository {
+sub getLabelingsRepository {
     my $self = shift;
     if ( !defined $self->{_idProviderLabeling} ) {
         my $idProviderTypeClass
@@ -285,20 +321,20 @@ sub getLabellingsRepository {
         catch {
             $self->logger->error(
                 "Requested unknown type of IUidProvider : '$idProviderTypeClass'.",
-                "" . __PACKAGE__ . "->getLabellingsRepository"
+                "" . __PACKAGE__ . "->getLabelingsRepository"
             );
             die
                 "Requested unknown type of IUidProvider : '$idProviderTypeClass'.";
         };
     }
-    if ( !defined $self->{_instanceLabellingsRepo} ) {
-        $self->{_instanceLabellingsRepo} = LabellingsLayeredRepository->new(
+    if ( !defined $self->{_instanceLabelingsRepo} ) {
+        $self->{_instanceLabelingsRepo} = LabelingsLayeredRepository->new(
             _idProvider        => $self->{_idProviderLabeling},
             logger             => $self->logger,
             backendsConfigHash => $self->backendsConfigHash
         );
     }
-    return $self->{_instanceLabellingsRepo};
+    return $self->{_instanceLabelingsRepo};
 }
 
 sub getMembershipsRepository {
@@ -416,6 +452,35 @@ sub getTeamsRepository {
         );
     }
     return $self->{_instanceTeamsRepo};
+}
+
+sub getTypesRepository {
+    my $self = shift;
+    if ( !defined $self->{_idProviderTeam} ) {
+        my $idProviderTypeClass
+            = $self->backendsConfigHash->{'idProviderType'};
+        try {
+            Class::Load::load_class($idProviderTypeClass);
+            my $providerInstance = $idProviderTypeClass->new();
+            $self->{_idProviderTeam} = $providerInstance;
+        }
+        catch {
+            $self->logger->error(
+                "Requested unknown type of IUidProvider : '$idProviderTypeClass'.",
+                "" . __PACKAGE__ . "->getTypesRepository"
+            );
+            die
+                "Requested unknown type of IUidProvider : '$idProviderTypeClass'.";
+        };
+    }
+    if ( !defined $self->{_instanceTypesRepo} ) {
+        $self->{_instanceTypesRepo} = TypesLayeredRepository->new(
+            _idProvider        => $self->{_idProviderTeam},
+            logger             => $self->logger,
+            backendsConfigHash => $self->backendsConfigHash
+        );
+    }
+    return $self->{_instanceTypesRepo};
 }
 
 __PACKAGE__->meta->make_immutable;

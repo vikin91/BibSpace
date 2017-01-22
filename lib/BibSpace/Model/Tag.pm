@@ -19,19 +19,20 @@ has 'permalink' => ( is => 'rw', isa => 'Maybe[Str]' );
 
 has 'tagtype' => ( is => 'rw', isa => 'Maybe[TagType]', traits => ['DoNotSerialize'], );
 
-has 'labellings' => (
+has 'labelings' => (
   is      => 'rw',
   isa     => 'ArrayRef[Labeling]',
   traits  => ['Array'],
   default => sub { [] },
   handles => {
-    labellings_all        => 'elements',
-    labellings_add        => 'push',
-    labellings_count      => 'count',
-    labellings_find       => 'first',
-    labellings_find_index => 'first_index',
-    labellings_filter     => 'grep',
-    labellings_delete     => 'delete',
+    labelings_all        => 'elements',
+    labelings_add        => 'push',
+    labelings_count      => 'count',
+    labelings_find       => 'first',
+    labelings_find_index => 'first_index',
+    labelings_filter     => 'grep',
+    labelings_delete     => 'delete',
+    labelings_clear      => 'clear',
   },
 );
 
@@ -49,18 +50,18 @@ sub equals {
   return $self->name eq $obj->name;
 }
 ####################################################################################
-sub add_labelling {
+sub add_labeling {
   my ( $self, $label ) = @_;
   $label->validate;
-  $self->labellings_add($label);
+  $self->labelings_add($label);
 }
 ####################################################################################
-sub remove_labelling {
+sub remove_labeling {
   my ( $self, $label ) = @_;
   $label->validate;
-  my $index = $self->labellings_find_index( sub { $_->equals($label) } );
+  my $index = $self->labelings_find_index( sub { $_->equals($label) } );
   return   if $index == -1;
-  return 1 if $self->labellings_delete($index);
+  return 1 if $self->labelings_delete($index);
   return;
 }
 ####################################################################################

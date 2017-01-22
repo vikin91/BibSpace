@@ -1,5 +1,5 @@
 # This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T15:07:35
-package LabellingsLayeredRepository;
+package LabelingsLayeredRepository;
 use namespace::autoclean;
 use Moose;
 require BibSpace::Model::Repository::Interface::IRepository;
@@ -10,40 +10,6 @@ use List::Util qw(first);
 use List::MoreUtils;
 
 
-=item _getReadBackend 
-    Returns backend with lowest 'prio' value from $backendsConfigHash
-=cut
-sub _getReadBackend {
-  my $self = shift;
-
-  if( !defined $self->backendsConfigHash ){
-    die "".__PACKAGE__."->_getReadBackendType: backendsConfigHash is not defined";
-  }
-  my @backendsArray = $self->getBackendsArray;
-  my $prioHash = shift @backendsArray;
-  if( !$prioHash ){
-    die "".__PACKAGE__."->_getReadBackendType: backend config hash for lowest prio (read) backend is not defined";
-  }
-  return $prioHash;
-}
-
-=item _getBackendWithPrio 
-    Returns backend with given 'prio' value from $backendsConfigHash
-=cut
-sub _getBackendWithPrio {
-  my $self = shift;
-  my $prio = shift;
-
-  if( !defined $self->backendsConfigHash ){
-    die "".__PACKAGE__."->_getReadBackendType: backendsConfigHash is not defined";
-  }
-  my @backendsArray = $self->getBackendsArray;
-  my $prioHash = first {$_->{'prio'} == $prio} @backendsArray;
-  if( !$prioHash ){
-    die "".__PACKAGE__."->_getReadBackendType: backend config hash for prio '$prio' is not defined";
-  }
-  return $prioHash;
-}
 
 =item copy 
     Copies all entries from backend with prio $fromLayer to backend with prio $toLayer

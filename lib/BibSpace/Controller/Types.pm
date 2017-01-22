@@ -23,11 +23,13 @@ use Mojo::Log;
 ####################################################################################
 sub all_our {
     my $self = shift;
-    my $dbh  = $self->app->db;
+    
 
-    my @otypes = get_all_our_types($dbh);
+    my @types = $self->app->repo->getTypesRepository->all;
 
-    $self->stash( otypes => \@otypes );
+    map {say $_->toString} @types;
+    
+    $self->stash( otypes => \@types );
     $self->render( template => 'types/types' );
 }
 ####################################################################################

@@ -18,9 +18,7 @@ use List::Util qw(first);
 =cut 
 sub all {
   my ($self) = @_;
-
   return $self->handle->all("Type");
-
 }
 before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
 after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
@@ -30,10 +28,7 @@ after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
 =cut 
 sub count {
   my ($self) = @_;
-
-  die "".__PACKAGE__."->count not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  return scalar $self->handle->all("Type");
 }
 before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
 after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
@@ -43,10 +38,7 @@ after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
 =cut 
 sub empty {
   my ($self) = @_;
-
-  die "".__PACKAGE__."->empty not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  return scalar $self->handle->all("Type") == 0;
 }
 before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
 after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
@@ -94,10 +86,9 @@ after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); }
 =cut 
 sub delete {
   my ($self, @objects) = @_;
-
-  die "".__PACKAGE__."->delete not implemented. Method was instructed to delete ".scalar(@objects)." objects.";
-  # TODO: auto-generated method stub. Implement me!
-
+  my %toDelete = map {$_ => 1} @objects;
+  my @diff = grep {not $toDelete{$_} } $self->all;
+  $self->handle->data->{'Type'} = \@diff;
 }
 before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
 after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };

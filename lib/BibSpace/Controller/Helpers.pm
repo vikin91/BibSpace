@@ -294,7 +294,7 @@ sub register {
     num_pubs_for_tag => sub {
       my $self = shift;
       my $tag  = shift;
-      return $tag->labellings_count // 0;
+      return $tag->labelings_count // 0;
     }
   );
 

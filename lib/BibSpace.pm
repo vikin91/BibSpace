@@ -130,26 +130,17 @@ sub startup {
     # say "App home is: " . $self->app->home;
     # say "Active bst file is: " . $self->app->bst;
 }
+
 ################################################################
 sub setup_repositories {
     my $self = shift;
-    my $app  = $self;
-    my $dbh = $self->app->db;
 
-    my $backendFrom = 99;
-    my $backendTo = 1;
-
-    $self->logger->warn("setup_repositories");
-    $self->repo->hardReset;
-    $self->repo->getAuthorsRepository->copy( $backendFrom, $backendTo );
-    $self->repo->getAuthorshipsRepository->copy( $backendFrom, $backendTo );
-    $self->repo->getEntriesRepository->copy( $backendFrom, $backendTo );
-    $self->repo->getExceptionsRepository->copy( $backendFrom, $backendTo );
-    $self->repo->getLabellingsRepository->copy( $backendFrom, $backendTo );
-    $self->repo->getMembershipsRepository->copy( $backendFrom, $backendTo );
-    $self->repo->getTagsRepository->copy( $backendFrom, $backendTo );
-    $self->repo->getTagTypesRepository->copy( $backendFrom, $backendTo );
-    $self->repo->getTeamsRepository->copy( $backendFrom, $backendTo );
+    $self->repo->copy_data( {from=>99, to=>1} );
+    $self->link_data;
+}
+################################################################
+sub link_data {
+    my $self = shift;
 
     $self->app->logger->debug( "Linking Authors (N) to (1) Authors."); 
     foreach my $author ($self->repo->getAuthorsRepository->filter(sub{$_->id != $_->master_id})){
@@ -173,14 +164,14 @@ sub setup_repositories {
     }
 
     $self->app->logger->debug( "Linking Tags (N) to (M) Entries.");
-    foreach my $labeling ($self->repo->getLabellingsRepository->all){
+    foreach my $labeling ($self->repo->getLabelingsRepository->all){
         my $entry = $self->repo->getEntriesRepository->find(sub{ $_->id == $labeling->entry_id});
         my $tag = $self->repo->getTagsRepository->find(sub{ $_->id == $labeling->tag_id});
         if( $entry and $tag ){
             $labeling->entry($entry);
             $labeling->tag($tag);
-            $entry->labellings_add($labeling);
-            $tag->labellings_add($labeling);
+            $entry->labelings_add($labeling);
+            $tag->labelings_add($labeling);
         }
     }
 
@@ -216,74 +207,11 @@ sub setup_repositories {
             $tag->tagtype($tagtype);
         }
     }
+
+    $self->app->logger->debug( "TODO: Linking OurTypes (N) to (1) Entries.");
+
     $self->app->logger->debug( "Linking Finished.");
-    # my @allEntries = $self->repo->getEntriesRepository->all;
-    # $self->app->logger->debug( "Entries: ".join(', ', map{$_->id} @allEntries ) );
-    
-    my @membershipsToDelete = $self->app->repo->getMembershipsRepository->all;
-    my $str = join("\n", map {$_->toString} @membershipsToDelete);
-    $self->logger->warn( "Found memberships: \n".$str  );
-
-
-    my $factory = $self->repo;
-    # this factory holds idProvider for each business entity (e.g. idProviderEntry, idProviderAuthor)
-    # this factory holds instances of repositories for each business entity (e.g. instanceEntriesRepo, instanceAuthorsRepo)
-    # there should be single factory in BibSpace!!!
-    # this should be helper with state!
-
-    # $self->repo->getAuthorsRepository->all;
-    # $self->repo->getAuthorsRepository->getIdProvider->generateUID();
-    # $self->repo->getAuthorsRepository->getIdProvider->generateUID();
-    # $self->repo->getAuthorsRepository->getIdProvider->generateUID();
-    # $self->repo->getAuthorsRepository->getIdProvider->generateUID();
-
-    # $self->repo->getEntriesRepository->getIdProvider->generateUID();
-    # $self->repo->getEntriesRepository->getIdProvider->generateUID();
-    # $self->repo->getEntriesRepository->getIdProvider->generateUID();
-
-    # my $idp = IntegerUidProvider->new;
-    # $idp->registerUID(3);
-    # $idp->generateUID();
-    # $idp->generateUID();
-    # $idp->generateUID();
-    # $idp->generateUID();
-
-
- 
-
-    # # @allEntries = $erepo->filter( sub{$_->id > 600} ); 
-    # # $logger->debug( "FILTERED Entries: ".join(', ', map{$_->id} @allEntries ) );
-
-    # my $entry  = Entry->new( idProvider=>$factory->idProviderEntry, id => 5, bib => "sth", year => 2012 );
-    # $logger->debug( "NEW ENTRY: ". $entry->toString );
-    # my $entry2 = Entry->new( idProvider=>$factory->idProviderEntry, bib => "sth", year => 2011 );
-    # my @entries = ( $entry, $entry2 );
-    
-
-    # $logger->debug( "COUNT Entries before saving: ". $erepo->count() );
-    # $erepo->save(@entries);
-    # $logger->debug( "COUNT Entries after saving: ". $erepo->count() );
-
-    # # my @someEntries = $erepo->filter( sub { $_->year == 2011 } );    #fake!
-    # my $code = sub{defined $_ and defined $_->year and $_->year == 2011};
-    # my $anEntry1 = $erepo->filter( $code ); 
-    # $logger->debug( "Filter found so many entries: ". $anEntry1 );
-    # my $anEntry2 = $erepo->find( $code );   
-
-    # my $anEntry61 = $erepo->find( sub{$_->id == 61} );   
-    # $logger->debug( "Filter found entry 61: ". $anEntry61->toString ) if defined $anEntry61;
-    # $anEntry61->year(2077);
-    # $logger->debug( "After edit 61: ". $anEntry61->toString );
-    # ## NO NEED TO CALL UPDATE!!
-    # $anEntry61 = $erepo->find( sub{$_->id == 61} );   
-    # $logger->debug( "Filter found entry 61: ". $anEntry61->toString );
-
-    # $logger->debug( "Exists 61?: ". $erepo->exists($anEntry61) );
-    # $logger->debug( "Delete 61: ". $erepo->delete($anEntry61) );
-    # $logger->debug( "Exists 61?: ". $erepo->exists($anEntry61) );
-
 }
-
 ################################################################
 sub setup_cache {
     my $self = shift;

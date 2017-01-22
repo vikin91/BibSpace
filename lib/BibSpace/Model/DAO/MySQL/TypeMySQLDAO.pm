@@ -1,11 +1,12 @@
 # This code was auto-generated using ArchitectureGenerator.pl on 2017-01-14T17:02:11
-package BibSpace::Model::DAO::MySQL::TypeMySQLDAO;
+package TypeMySQLDAO;
 
 use namespace::autoclean;
 use Moose;
-use BibSpace::Model::DAO::Interface::ITypeDAO;
+use BibSpace::Model::DAO::Interface::IDAO;
 use BibSpace::Model::Type;
-with 'BibSpace::Model::DAO::Interface::ITypeDAO';
+with 'IDAO';
+use Try::Tiny;
 
 # Inherited fields from BibSpace::Model::DAO::Interface::ITypeDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'BibSpace::Model::ILogger', required => 1);
@@ -18,7 +19,7 @@ with 'BibSpace::Model::DAO::Interface::ITypeDAO';
 sub all {
   my ($self) = @_;
 
-  my $dbh = shift;
+   my $dbh    = $self->handle;
 
   my $qry = "SELECT bibtex_type, our_type, landing, description
          FROM OurType_to_Type";
