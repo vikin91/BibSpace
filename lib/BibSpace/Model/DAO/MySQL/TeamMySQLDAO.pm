@@ -127,9 +127,8 @@ sub _insert {
   my $dbh = $self->handle;
   my $qry = "
     INSERT INTO Team (id, name, parent) VALUES (?,?,?);";
-
+  my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
-    my $sth = $dbh->prepare($qry);
     try {
       my $result = $sth->execute( $obj->id, $obj->name, $obj->parent );
       $sth->finish();
@@ -138,6 +137,7 @@ sub _insert {
       $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
     };
   }
+  $dbh->commit();
 }
 before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
 after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };
@@ -151,14 +151,14 @@ after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_inse
 sub update {
   my ( $self, @objects ) = @_;
   my $dbh = $self->handle;
-  foreach my $obj (@objects) {
-    next if !defined $obj->id;
-    my $qry = "UPDATE Team SET
+
+  my $qry = "UPDATE Team SET
                       name=?,
                       parent=?";
     $qry .= " WHERE id = ?";
-
-    my $sth = $dbh->prepare($qry);
+  my $sth = $dbh->prepare($qry);
+  foreach my $obj (@objects) {
+    next if !defined $obj->id;
     try {
       my $result = $sth->execute( $obj->name, $obj->parent, $obj->id );
       $sth->finish();
@@ -167,6 +167,7 @@ sub update {
       $self->logger->error( "Update exception: $_", "" . __PACKAGE__ . "->update" );
     };
   }
+  $dbh->commit();
 }
 before 'update' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->update" ); };
 after 'update' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update" ); };

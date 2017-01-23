@@ -251,51 +251,49 @@ sub Fget_publications_core_storage {
     # my $cmp6 = $cmp4 or $cmp5;
     # $self->app->logger->warn("undef == id: 1 $cmp1 / 2 $cmp2 / 3 $cmp3 / 4 $cmp4 / 5 $cmp5 / 6 $cmp6 / " );    
 
-    $self->app->logger->warn("==== START new Filtering ====", "Fget_publications_core_storage" );
+    # $self->app->logger->debug("==== START new Filtering ====", "Fget_publications_core_storage" );
     # filtering
     my @entries = $self->app->repo->getEntriesRepository->all;
 
     # simple filters
     if( defined $year and $year > 0 ){
-        $self->app->logger->debug("BEFORE Filtering year. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering year. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
         @entries = grep { (defined $_->year and $_->year == $year) } @entries;
-        $self->app->logger->debug("AFTER Filtering year. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering year. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
     }
 
     # $bibtex_type - is in fact query for OurType
     if(defined $bibtex_type){
-        $self->app->logger->debug("BEFORE Filtering bibtex_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering bibtex_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
         @entries = grep { $_->matches_our_type($bibtex_type, $self->app->repo) } @entries;
-        $self->app->logger->debug("AFTER Filtering bibtex_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering bibtex_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
     }
     if(defined $entry_type){
-        # say "Comparing entry_type: $entry_type" if $debug == 1;
-        # map { say $_->id . " type ". $_->entry_type } @entries  if $debug == 1;
-        $self->app->logger->debug("BEFORE Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
         @entries = grep { $_->entry_type eq $entry_type } @entries;
-        $self->app->logger->debug("AFTER Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
     }
     if(defined $permalink and defined $tag_obj_perm){
         @entries = grep { $_->has_tag($tag_obj_perm) } @entries;
     }
     if(defined $hidden){
-        $self->app->logger->debug("BEFORE Filtering hidden. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering hidden. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
         @entries = grep { $_->hidden == $hidden } @entries;
-        $self->app->logger->debug("AFTER Filtering hidden. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering hidden. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
     }
     # complex filters
     if(defined $visible and $visible == 1){
         @entries = grep { $_->is_visible } @entries;
     }
     if(defined $master_id and defined $author_obj){
-        $self->app->logger->debug("BEFORE Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
         @entries = grep { $_->has_master_author($author_obj) } @entries;
-        $self->app->logger->debug("AFTER Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
     }
     if(defined $tagid and defined $tag_obj){
-        $self->app->logger->debug("BEFORE Filtering tag. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering tag. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
         @entries = grep { $_->has_tag($tag_obj) } @entries;
-        $self->app->logger->debug("AFTER Filtering tag. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering tag. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
     }
     if(defined $teamid and defined $team_obj){
         @entries = grep { $_->has_team($team_obj) } @entries;

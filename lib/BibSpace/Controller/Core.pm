@@ -29,287 +29,283 @@ use List::MoreUtils qw(any uniq);
 
 # these are exported by default.
 our @EXPORT = qw(
-    random_string
-    create_user_id
-    uniqlc
-    get_all_our_types
-    get_all_bibtex_types
-    get_all_existing_bibtex_types
-    get_types_for_landing_page
-    get_bibtex_types_for_our_type
-    get_description_for_our_type
-    get_type_description
-    get_landing_for_our_type
-    toggle_landing_for_our_type
-    nohtml
-    clean_tag_name
-    prepare_backup_table
-    get_month_numeric
-    get_current_year
-    get_current_month
+  random_string
+  create_user_id
+  uniqlc
+  get_all_our_types
+  get_all_bibtex_types
+  get_all_existing_bibtex_types
+  get_types_for_landing_page
+  get_bibtex_types_for_our_type
+  get_description_for_our_type
+  get_type_description
+  get_landing_for_our_type
+  toggle_landing_for_our_type
+  nohtml
+  clean_tag_name
+  prepare_backup_table
+  get_month_numeric
+  get_current_year
+  get_current_month
 );
 
 our $bibtex2html_tmp_dir = "./tmp";
 ################################################################################
 sub get_all_existing_bibtex_types {
 
-    ## defined by bibtex and constant
+  ## defined by bibtex and constant
 
-    return (
-        'article',       'book',         'booklet',       'conference',
-        'inbook',        'incollection', 'inproceedings', 'manual',
-        'mastersthesis', 'misc',         'phdthesis',     'proceedings',
-        'techreport',    'unpublished'
-    );
+  return (
+    'article',      'book',          'booklet',    'conference',    'inbook',
+    'incollection', 'inproceedings', 'manual',     'mastersthesis', 'misc',
+    'phdthesis',    'proceedings',   'techreport', 'unpublished'
+  );
 }
 ####################################################################################
 sub random_string {
-    my $len = shift;
+  my $len = shift;
 
-    my @set = ( '0' .. '9', 'A' .. 'Y' );
-    my $str = join '' => map $set[ rand @set ], 1 .. $len;
-    $str;
+  my @set = ( '0' .. '9', 'A' .. 'Y' );
+  my $str = join '' => map $set[ rand @set ], 1 .. $len;
+  $str;
 }
 ################################################################################
 sub get_current_month {
-    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst )
-        = localtime();
-    return ($mon + 1);
+  my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) = localtime();
+  return ( $mon + 1 );
 }
 ################################################################################
 sub get_current_year {
-    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst )
-        = localtime();
+  my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) = localtime();
 
-    return ($year + 1900);
+  return ( $year + 1900 );
 }
 ################################################################################
 sub get_month_numeric {
-    my $str = shift;
-    $str = lc($str);
-    $_   = $str;
+  my $str = shift;
+  $str = lc($str);
+  $_   = $str;
 
-    return 1  if /jan/ or /january/   or /januar/   or /1/  or /01/;
-    return 2  if /feb/ or /february/  or /februar/  or /2/  or /02/;
-    return 3  if /mar/ or /march/     or /3/        or /03/;
-    return 4  if /apr/ or /april/     or /4/        or /04/;
-    return 5  if /may/ or /mai/       or /maj/      or /5/  or /05/;
-    return 6  if /jun/ or /june/      or /juni/     or /6/  or /06/;
-    return 7  if /jul/ or /july/      or /juli/     or /7/  or /07/;
-    return 8  if /aug/ or /august/    or /8/        or /08/;
-    return 9  if /sep/ or /september/ or /sept/     or /9/  or /09/;
-    return 10 if /oct/ or /october/   or /oktober/  or /10/ or /010/;
-    return 11 if /nov/ or /november/  or /11/       or /011/;
-    return 12 if /dec/ or /december/  or /dezember/ or /12/ or /012/;
+  return 1  if /jan/ or /january/   or /januar/   or /1/  or /01/;
+  return 2  if /feb/ or /february/  or /februar/  or /2/  or /02/;
+  return 3  if /mar/ or /march/     or /3/        or /03/;
+  return 4  if /apr/ or /april/     or /4/        or /04/;
+  return 5  if /may/ or /mai/       or /maj/      or /5/  or /05/;
+  return 6  if /jun/ or /june/      or /juni/     or /6/  or /06/;
+  return 7  if /jul/ or /july/      or /juli/     or /7/  or /07/;
+  return 8  if /aug/ or /august/    or /8/        or /08/;
+  return 9  if /sep/ or /september/ or /sept/     or /9/  or /09/;
+  return 10 if /oct/ or /october/   or /oktober/  or /10/ or /010/;
+  return 11 if /nov/ or /november/  or /11/       or /011/;
+  return 12 if /dec/ or /december/  or /dezember/ or /12/ or /012/;
 
-    return 0;
+  return 0;
 }
 ################################################################################
 sub clean_tag_name {
-    my $tag = shift;
-    $tag =~ s/^\s+|\s+$//g;
-    $tag =~ s/\s/_/g;
-    $tag =~ s/\./_/g;
-    $tag =~ s/_$//g;
-    $tag =~ s/\///g;
-    $tag =~ s/\?/_/g;
+  my $tag = shift;
+  $tag =~ s/^\s+|\s+$//g;
+  $tag =~ s/\s/_/g;
+  $tag =~ s/\./_/g;
+  $tag =~ s/_$//g;
+  $tag =~ s/\///g;
+  $tag =~ s/\?/_/g;
 
-    return ucfirst($tag);
+  return ucfirst($tag);
 }
+
 # ################################################################################
 # sub uniq {
 #     return keys %{ { map { $_ => 1 } @_ } };
 # }
 ################################################################################
 sub uniqlc {
-    return keys %{ { map { lc $_ => 1 } @_ } };
+  return keys %{ { map { lc $_ => 1 } @_ } };
 }
 ################################################################################
 sub nohtml {
-    my $key  = shift // "key-unknown";
-    my $type = shift // "no-type";
-    return
-          "<span class=\"label label-danger\">"
-        . "NO HTML "
-        . "</span><span class=\"label label-default\">"
-        . "($type) $key</span>" . "<BR>";
+  my $key  = shift // "key-unknown";
+  my $type = shift // "no-type";
+  return
+      "<span class=\"label label-danger\">"
+    . "NO HTML "
+    . "</span><span class=\"label label-default\">"
+    . "($type) $key</span>" . "<BR>";
 }
-
 
 
 ################################################################################
 ################################################################################
 sub get_types_for_landing_page {    #TODO: refactor to MType
-    my $dbh = shift;
+  my $dbh = shift;
 
-    my $qry
-        = "SELECT DISTINCT our_type FROM OurType_to_Type WHERE landing=1 ORDER BY our_type ASC";
-    my $sth = $dbh->prepare($qry) or die $dbh->errstr;
-    $sth->execute();
+  my $qry = "SELECT DISTINCT our_type FROM OurType_to_Type WHERE landing=1 ORDER BY our_type ASC";
+  my $sth = $dbh->prepare($qry) or die $dbh->errstr;
+  $sth->execute();
 
-    my @otypes;
+  my @otypes;
 
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $otype = $row->{our_type};
-        push @otypes, $otype if defined $otype;
-    }
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    my $otype = $row->{our_type};
+    push @otypes, $otype if defined $otype;
+  }
 
-    # @otypes = uniq @otypes;
-    return @otypes;
+  # @otypes = uniq @otypes;
+  return @otypes;
 
 # my @otypes = ('article', 'volumes', 'inproceedings', 'techreport', 'misc', 'theses');
 
-    # return @otypes;
+  # return @otypes;
 }
 ################################################################################
 sub get_bibtex_types_for_our_type {
-    my $dbh  = shift;
-    my $type = shift;
+  my $dbh  = shift;
+  my $type = shift;
 
-    my $qry = "SELECT bibtex_type
+  my $qry = "SELECT bibtex_type
            FROM OurType_to_Type
            WHERE our_type=?
            ORDER BY bibtex_type ASC";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($type);
+  my $sth = $dbh->prepare($qry);
+  $sth->execute($type);
 
-    my @btypes;
+  my @btypes;
 
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $btype = $row->{bibtex_type};
-        push @btypes, $btype if defined $btype;
-    }
-    return @btypes;
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    my $btype = $row->{bibtex_type};
+    push @btypes, $btype if defined $btype;
+  }
+  return @btypes;
 }
 ################################################################################
 sub get_description_for_our_type {    #TODO: refactor to MType
-    my $dbh  = shift;
-    my $type = shift;
+  my $dbh  = shift;
+  my $type = shift;
 
-    my $qry = "SELECT description
+  my $qry = "SELECT description
            FROM OurType_to_Type
            WHERE our_type=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($type);
+  my $sth = $dbh->prepare($qry);
+  $sth->execute($type);
 
-    my $row = $sth->fetchrow_hashref();
-    my $description
-        = $row->{description} || get_type_description( $dbh, $type );
-    return $description;
+  my $row = $sth->fetchrow_hashref();
+  my $description = $row->{description} || get_type_description( $dbh, $type );
+  return $description;
 }
 ################################################################################
 sub get_landing_for_our_type {    #TODO: refactor to MType
-    my $dbh  = shift;
-    my $type = shift;
+  my $dbh  = shift;
+  my $type = shift;
 
-    my $qry = "SELECT landing
+  my $qry = "SELECT landing
            FROM OurType_to_Type
            WHERE our_type=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($type);
+  my $sth = $dbh->prepare($qry);
+  $sth->execute($type);
 
-    my $row = $sth->fetchrow_hashref();
-    my $landing = $row->{landing} || 0;
-    return $landing;
+  my $row = $sth->fetchrow_hashref();
+  my $landing = $row->{landing} || 0;
+  return $landing;
 }
 ################################################################################
 sub set_landing_for_our_type {    #TODO: refactor to MType
 
-    my $dbh  = shift;
-    my $type = shift;
-    my $val  = shift;
+  my $dbh  = shift;
+  my $type = shift;
+  my $val  = shift;
 
-    say "set type $type val $val";
+  say "set type $type val $val";
 
-    if ( defined $val and ( $val == 0 or $val == 1 ) ) {
-        my $qry = "UPDATE OurType_to_Type SET landing=? WHERE our_type=?";
-        my $sth = $dbh->prepare($qry);
-        $sth->execute( $val, $type );
-    }
+  if ( defined $val and ( $val == 0 or $val == 1 ) ) {
+    my $qry = "UPDATE OurType_to_Type SET landing=? WHERE our_type=?";
+    my $sth = $dbh->prepare($qry);
+    $sth->execute( $val, $type );
+  }
 }
 
 ################################################################################
 sub toggle_landing_for_our_type {    #TODO: document this or make clearer
-    my $dbh  = shift;
-    my $type = shift;
+  my $dbh  = shift;
+  my $type = shift;
 
-    my $curr = get_landing_for_our_type( $dbh, $type );
+  my $curr = get_landing_for_our_type( $dbh, $type );
 
-    if ( $curr == 0 ) {
-        set_landing_for_our_type( $dbh, $type, '1' );
-    }
-    elsif ( $curr == 1 ) {
-        set_landing_for_our_type( $dbh, $type, '0' );
-    }
+  if ( $curr == 0 ) {
+    set_landing_for_our_type( $dbh, $type, '1' );
+  }
+  elsif ( $curr == 1 ) {
+    set_landing_for_our_type( $dbh, $type, '0' );
+  }
 }
 ################################################################################
 sub get_DB_description_for_our_type {    #TODO: refactor to MType
-    my $dbh  = shift;
-    my $type = shift;
+  my $dbh  = shift;
+  my $type = shift;
 
-    my $qry = "SELECT description
+  my $qry = "SELECT description
            FROM OurType_to_Type
            WHERE our_type=?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($type);
+  my $sth = $dbh->prepare($qry);
+  $sth->execute($type);
 
-    my $row = $sth->fetchrow_hashref();
-    my $description = $row->{description} || undef;
-    return $description;
+  my $row = $sth->fetchrow_hashref();
+  my $description = $row->{description} || undef;
+  return $description;
 }
 
 ################################################################################
 sub get_all_bibtex_types {    #TODO: refactor to MType
-    my $dbh = shift;
+  my $dbh = shift;
 
-    my $qry = "SELECT DISTINCT bibtex_type, our_type
+  my $qry = "SELECT DISTINCT bibtex_type, our_type
            FROM OurType_to_Type
            ORDER BY our_type ASC";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute();
+  my $sth = $dbh->prepare($qry);
+  $sth->execute();
 
-    my @btypes;
+  my @btypes;
 
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $btype = $row->{bibtex_type};
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    my $btype = $row->{bibtex_type};
 
-        push @btypes, $btype if defined $btype;
-    }
+    push @btypes, $btype if defined $btype;
+  }
 
-    return @btypes;
+  return @btypes;
 }
 ################################################################################
 sub get_all_our_types {    #TODO: refactor to MType
-    my $dbh = shift;
+  my $dbh = shift;
 
-    my $qry = "SELECT DISTINCT our_type
+  my $qry = "SELECT DISTINCT our_type
            FROM OurType_to_Type
            ORDER BY our_type ASC";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute();
+  my $sth = $dbh->prepare($qry);
+  $sth->execute();
 
-    my @otypes;
+  my @otypes;
 
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $otype = $row->{our_type};
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    my $otype = $row->{our_type};
 
-        push @otypes, $otype if defined $otype;
-    }
+    push @otypes, $otype if defined $otype;
+  }
 
-    return @otypes;
+  return @otypes;
 }
 
 ################################################################################
 sub get_type_description {    #TODO: refactor to MType
-    my $dbh  = shift;
-    my $type = shift;
+  my $dbh  = shift;
+  my $type = shift;
 
-    my $db_type = get_DB_description_for_our_type( $dbh, $type );
-    return $db_type if defined $db_type;
+  my $db_type = get_DB_description_for_our_type( $dbh, $type );
+  return $db_type if defined $db_type;
 
-    return "Talks " if $type eq 'talk';
-    # in case of no description (and not being a talk), the description is the type itself
-    return "Publications of type " . $type;
+  return "Talks " if $type eq 'talk';
+
+  # in case of no description (and not being a talk), the description is the type itself
+  return "Publications of type " . $type;
 }
 
 ##########################################################################
@@ -323,64 +319,55 @@ sub get_type_description {    #TODO: refactor to MType
 ################################################################################
 
 sub create_user_id {
-    my ($name) = @_;
+  my ($name) = @_;
 
-    my @first_arr = $name->part('first');
-    my $first = join( ' ', @first_arr );
+  my @first_arr = $name->part('first');
+  @first_arr = grep {defined $_ } @first_arr;
+  my $first = join( ' ', @first_arr );
 
-    #print "$first\n";
+  my @von_arr = $name->part('von');
+  my $von     = $von_arr[0];
 
-    my @von_arr = $name->part('von');
-    my $von     = $von_arr[0];
+  my @last_arr = $name->part('last');
+  my $last     = $last_arr[0];
 
-    #print "$von\n" if defined $von;
+  my @jr_arr = $name->part('jr');
+  my $jr     = $jr_arr[0];
 
-    my @last_arr = $name->part('last');
-    my $last     = $last_arr[0];
+  my $userID;
+  $userID .= $von   if defined $von;
+  $userID .= $last;
+  $userID .= $first if defined $first;
+  $userID .= $jr    if defined $jr;
 
-    #print "$last\n";
+  $userID =~ s/\\k\{a\}/a/g;    # makes \k{a} -> a
+  $userID =~ s/\\l/l/g;         # makes \l -> l
+  $userID =~ s/\\r\{u\}/u/g;    # makes \r{u} -> u # FIXME: make sure that the letter is caught
+                                # $userID =~ s/\\r{u}/u/g;   # makes \r{u} -> u # the same but not escaped
 
-    my @jr_arr = $name->part('jr');
-    my $jr     = $jr_arr[0];
+  $userID =~ s/\{(.)\}/$1/g;         # makes {x} -> x
+  $userID =~ s/\{\\\"(.)\}/$1e/g;    # makes {\"x} -> xe
+  $userID =~ s/\{\"(.)\}/$1e/g;      # makes {"x} -> xe
+  $userID =~ s/\\\"(.)/$1e/g;        # makes \"{x} -> xe
+  $userID =~ s/\{\\\'(.)\}/$1/g;     # makes {\'x} -> x
+  $userID =~ s/\\\'(.)/$1/g;         # makes \'x -> x
+  $userID =~ s/\'\'(.)/$1/g;         # makes ''x -> x
+  $userID =~ s/\"(.)/$1e/g;          # makes "x -> xe
+  $userID =~ s/\{\\ss\}/ss/g;        # makes {\ss}-> ss
+  $userID =~ s/\{(.*)\}/$1/g;        # makes {abc..def}-> abc..def
+  $userID =~ s/\\\^(.)(.)/$1$2/g;    # makes \^xx-> xx
+                                     # I am not sure if the next one is necessary
+  $userID =~ s/\\\^(.)/$1/g;         # makes \^x-> x
+  $userID =~ s/\\\~(.)/$1/g;         # makes \~x-> x
+  $userID =~ s/\\//g;                # removes \
 
-    #print "$jr\n";
+  $userID =~ s/\{//g;                # removes {
+  $userID =~ s/\}//g;                # removes }
 
-    my $userID;
-    $userID .= $von   if defined $von;
-    $userID .= $last;
-    $userID .= $first if defined $first;
-    $userID .= $jr    if defined $jr;
+  $userID =~ s/\(.*\)//g;            # removes everything between the brackets and the brackets also
 
-    $userID =~ s/\\k\{a\}/a/g;    # makes \k{a} -> a
-    $userID =~ s/\\l/l/g;         # makes \l -> l
-    $userID =~ s/\\r\{u\}/u/g
-        ;    # makes \r{u} -> u # FIXME: make sure that the letter is caught
-     # $userID =~ s/\\r{u}/u/g;   # makes \r{u} -> u # the same but not escaped
-
-    $userID =~ s/\{(.)\}/$1/g;         # makes {x} -> x
-    $userID =~ s/\{\\\"(.)\}/$1e/g;    # makes {\"x} -> xe
-    $userID =~ s/\{\"(.)\}/$1e/g;      # makes {"x} -> xe
-    $userID =~ s/\\\"(.)/$1e/g;        # makes \"{x} -> xe
-    $userID =~ s/\{\\\'(.)\}/$1/g;     # makes {\'x} -> x
-    $userID =~ s/\\\'(.)/$1/g;         # makes \'x -> x
-    $userID =~ s/\'\'(.)/$1/g;         # makes ''x -> x
-    $userID =~ s/\"(.)/$1e/g;          # makes "x -> xe
-    $userID =~ s/\{\\ss\}/ss/g;        # makes {\ss}-> ss
-    $userID =~ s/\{(.*)\}/$1/g;        # makes {abc..def}-> abc..def
-    $userID =~ s/\\\^(.)(.)/$1$2/g;    # makes \^xx-> xx
-                                  # I am not sure if the next one is necessary
-    $userID =~ s/\\\^(.)/$1/g;    # makes \^x-> x
-    $userID =~ s/\\\~(.)/$1/g;    # makes \~x-> x
-    $userID =~ s/\\//g;           # removes \
-
-    $userID =~ s/\{//g;           # removes {
-    $userID =~ s/\}//g;           # removes }
-
-    $userID =~ s/\(.*\)//g
-        ;    # removes everything between the brackets and the brackets also
-
-    # print "$userID \n";
-    return $userID;
+  # print "$userID \n";
+  return $userID;
 }
 ################################################################################
 

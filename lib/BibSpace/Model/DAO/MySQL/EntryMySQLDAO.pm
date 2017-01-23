@@ -197,9 +197,9 @@ sub _insert {
     need_html_regen
     ) 
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW(),?);";
-
+  my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
-    my $sth = $dbh->prepare($qry);
+    
     try {
       my $result = $sth->execute(
         $obj->{id},       $obj->{entry_type}, $obj->{bibtex_key}, $obj->{_bibtex_type}, $obj->{bib},  $obj->{html},
@@ -216,6 +216,7 @@ sub _insert {
       $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
     };
   }
+  $dbh->commit();
 }
 before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
 after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };

@@ -126,6 +126,7 @@ sub do_mysql_db_backup {
             "REPLACE INTO Backup(creation_time, filename) VALUES (NOW(), ?)");
         $sth->execute($dbfname);
         $sth->finish();
+        $dbh->commit();
         return $dbfname;
     }
 
@@ -157,6 +158,7 @@ sub do_delete_backup {    # added 22.08.14
 
     my $sth2 = $dbh->prepare("DELETE FROM Backup WHERE id=?");
     $sth2->execute($id);
+    $dbh->commit();
     unlink $file_path;
 }
 ####################################################################################
@@ -259,7 +261,7 @@ sub do_restore_backup_from_file {
     }
 
     $app->repo->hardReset;
-    #$dbh->disconnect() if defined $dbh;
+    $dbh->disconnect() if defined $dbh;
 
     my $db_host     = $config->{db_host};
     my $db_user     = $config->{db_user};
@@ -284,6 +286,9 @@ sub do_restore_backup_from_file {
 
     if ( $? == 0 ) {
         say "Restoring backup succeeded from file $file_path";
+        db_connect(
+            $config->{db_host},     $config->{db_user},
+            $config->{db_database}, $config->{db_pass});
         return 1;
     }
     else {
@@ -304,7 +309,7 @@ sub do_backup_current_state {
 
 }
 ################################################################################
-
+ 
 sub get_dir_size {
     my $dir  = shift;
     my $size = 0;

@@ -37,10 +37,9 @@ sub db_is_up {
 ##########################################################################################
 sub db_connect {
   my ( $db_host, $db_user, $db_database, $db_pass ) = @_;
-  my $dbh = 0;
+  my $dbh = undef;
+  my %attr = (RaiseError=>1, AutoCommit=>0); 
   if ( db_is_up( $db_host, $db_user, $db_database, $db_pass ) == 1 ) {
-    my %attr = (RaiseError=>1, AutoCommit=>0); 
-
     $dbh
       = DBI->connect( "DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
     $dbh->{mysql_auto_reconnect} = 1;
@@ -249,7 +248,7 @@ sub create_main_db {
   prepare_token_table_mysql($dbh);
   prepare_user_table_mysql($dbh);
   populate_tables($dbh);
-
+  $dbh->commit();
 }
 
 ####################################################################################################
@@ -312,6 +311,7 @@ sub prepare_user_table_mysql {
     );
   };
   prepare_token_table_mysql($dbh);
+  $dbh->commit();
 }
 
 
@@ -351,6 +351,7 @@ sub populate_tables {
   catch {
     say "Data already exist. Doing nothing.";
   };
+  $dbh->commit();
 }
 
 1;

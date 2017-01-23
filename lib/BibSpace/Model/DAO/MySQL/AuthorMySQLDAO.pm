@@ -151,9 +151,8 @@ sub _insert {
     display
     ) 
     VALUES (?,?,?,?,?);";
-
+  my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
-    my $sth = $dbh->prepare($qry);
     try {
       my $result = $sth->execute( $obj->id, $obj->uid, $obj->master_id, $obj->master, $obj->display );
       $sth->finish();
@@ -162,6 +161,7 @@ sub _insert {
       $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
     };
   }
+  $dbh->commit();
 }
 before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
 after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };

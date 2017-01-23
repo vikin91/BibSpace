@@ -16,21 +16,21 @@ use List::MoreUtils;
 =cut
 sub copy{
     my ($self, $fromLayer, $toLayer) = @_;
-    $self->logger->debug("Copying all Entry from layer $fromLayer to layer $toLayer.","".__PACKAGE__."->copy");
+    $self->logger->info("Copying all Entry from layer $fromLayer to layer $toLayer.","".__PACKAGE__."->copy");
 
     my @resultRead = $self->backendDaoFactory->getInstance( 
         $self->_getBackendWithPrio($fromLayer)->{'type'},
         $self->_getBackendWithPrio($fromLayer)->{'handle'} 
     )->getEntryDao($self->getIdProvider)->all();
 
-    $self->logger->debug(scalar(@resultRead)." Entry read from layer $fromLayer.","".__PACKAGE__."->copy");
+    $self->logger->info(scalar(@resultRead)." Entry read from layer $fromLayer.","".__PACKAGE__."->copy");
     
     my $resultSave = $self->backendDaoFactory->getInstance( 
         $self->_getBackendWithPrio($toLayer)->{'type'},
         $self->_getBackendWithPrio($toLayer)->{'handle'}
     )->getEntryDao($self->getIdProvider)->save( @resultRead );
 
-    $self->logger->debug("$resultSave Entries saved to layer $toLayer.","".__PACKAGE__."->copy");
+    $self->logger->info("$resultSave Entries saved to layer $toLayer.","".__PACKAGE__."->copy");
 }
 before 'copy' => sub { shift->logger->entering("","".__PACKAGE__."->copy"); };
 after 'copy'  => sub { shift->logger->exiting("","".__PACKAGE__."->copy"); };

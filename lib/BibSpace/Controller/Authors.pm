@@ -453,21 +453,16 @@ sub reassign_authors_to_entries {
   my $num_authors_created = 0;
   foreach my $entry (@all_entries) {
     next unless defined $entry;
-    $self->app->logger->debug( "Reassignning authors for entry " . $entry->id );
 
     my @bibtex_author_name = $entry->author_names_from_bibtex();
 
     for my $author_name (@bibtex_author_name) {
 
       my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->uid eq $author_name } );
-      $self->app->logger->debug( "\t found " . $author->uid ) if defined $author;
-      $self->app->logger->debug( "\t NOT found " . $author_name ) unless defined $author;
-
       if ( $create_new == 1 and !defined $author ) {
         $author
           = Author->new( idProvider => $self->app->repo->getAuthorsRepository->getIdProvider, uid => $author_name );
         $self->app->repo->getAuthorsRepository->save($author);
-        $self->app->logger->debug( "\t CREATED " . $author->uid );
         ++$num_authors_created;
       }
       if ( defined $author ) {

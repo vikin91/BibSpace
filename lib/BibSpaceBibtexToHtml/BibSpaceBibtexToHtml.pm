@@ -343,18 +343,10 @@ my $s = shift;
 
     # say "str_replace_as_pod_latex: tex before escaping: '$tex'.";
     # escaping the stuff 
-    $tex =~ s!\{!\\\{!g;
-    # say "str_replace_as_pod_latex: escaping 1: '$tex'.";
-    $tex =~ s!\}!\\\}!g;
-    # say "str_replace_as_pod_latex: escaping 2: '$tex'.";
     $tex =~ s!\\!\\\\!g;
-    # say "str_replace_as_pod_latex: escaping 3: '$tex'.";
-    $tex =~ s!\\\\{!\\\{!g;
-    # say "str_replace_as_pod_latex: escaping 4: '$tex'.";
-    $tex =~ s!\\\\}!\\\}!g;
-    # say "str_replace_as_pod_latex: escaping 5: '$tex'.";
-
-
+    $tex =~ s!\{!\\\{!g;
+    $tex =~ s!\}!\\\}!g;
+    
     $s =~ s![{}]!!g; # you need to remove this before decoding...
 
     # say "tex $tex -> $html" if $html =~ /ouml/;
