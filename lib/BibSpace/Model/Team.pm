@@ -106,9 +106,14 @@ sub remove_author {
 
 }
 ####################################################################################
-sub members {
+sub get_members {
   my $self = shift;
   return map { $_->author } $self->memberships_all;
+}
+####################################################################################
+sub members {
+  my $self = shift;
+  return $self->get_members; 
 }
 ####################################################################################
 sub get_membership_beginning {

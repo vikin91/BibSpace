@@ -32,12 +32,7 @@ sub register {
     }
   );
 
-  $app->helper(
-    get_dbh => sub {
-      my $self = shift;
-      return $self->app->db;
-    }
-  );
+
   $app->helper(
     bst => sub {
       my $self = shift;
@@ -46,13 +41,11 @@ sub register {
 
       if ( defined $self->app->config->{bst_file} ) {
         $bst_candidate_file = $self->app->config->{bst_file};
-        say "BST candidate 1: $bst_candidate_file";
         return File::Spec->rel2abs($bst_candidate_file)
           if File::Spec->file_name_is_absolute($bst_candidate_file)
           and -e File::Spec->rel2abs($bst_candidate_file);
 
         $bst_candidate_file = $self->app->home . $self->app->config->{bst_file};
-        say "BST candidate 2: $bst_candidate_file";
 
         return File::Spec->rel2abs($bst_candidate_file)
           if File::Spec->file_name_is_absolute($bst_candidate_file)
@@ -60,11 +53,10 @@ sub register {
       }
 
       $bst_candidate_file = $self->app->home . '/lib/descartes2.bst';
-      say "BST candidate 3: $bst_candidate_file";
 
       return File::Spec->rel2abs($bst_candidate_file) if -e File::Spec->rel2abs($bst_candidate_file);
 
-      say "All BST candidates failed";
+      $self->app->logger->error("Cannot find any valid bst file!");
       return './bst-not-found.bst';
     }
   );

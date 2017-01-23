@@ -33,8 +33,7 @@ subtest '00: checking if DB runs' => sub {
   my $db_user     = $self->config->{db_user};
   my $db_database = $self->config->{db_database};
   my $db_pass     = $self->config->{db_pass};
-  my $is_up       = db_is_up($db_host, $db_user, $db_database, $db_pass);
-  is($is_up, 1, "MySQL Server is up and the credentials are ok");
+  
   ok(db_connect($db_host, $db_user, $db_database, $db_pass), "Can connect to database");
 };
 

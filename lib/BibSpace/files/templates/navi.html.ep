@@ -165,7 +165,7 @@
                 <a href="<%= url_for('edit_team', teamid=>$team->{id} )%>">
                     <i class="fa fa-users"></i> <%= $team->{name} %> 
                     <span class="badge">
-                        <%= scalar $team->members( get_dbh() ) %>
+                        <%= scalar $team->get_members %>
                         <span class="glyphicon glyphicon-user"></span>
                     </span>
                     

@@ -14,7 +14,6 @@ our @ISA = qw( Exporter );
 
 
 our @EXPORT = qw(
-  db_is_up
   db_connect
   create_main_db
   prepare_token_table_mysql
@@ -24,30 +23,20 @@ our @EXPORT = qw(
 );
 
 ##########################################################################################
-sub db_is_up {
-  my ( $db_host, $db_user, $db_database, $db_pass ) = @_;
-  my $dbh
-    = DBI->connect( "DBI:mysql:database=$db_database;host=$db_host", "$db_user", "$db_pass", { 'RaiseError' => 0 } );
-
-  return 0 unless defined $dbh;
-
-  $dbh->disconnect();
-  return 1;
-}
-##########################################################################################
 sub db_connect {
   my ( $db_host, $db_user, $db_database, $db_pass ) = @_;
+
   my $dbh = undef;
-  my %attr = (RaiseError=>1, AutoCommit=>1); 
-  if ( db_is_up( $db_host, $db_user, $db_database, $db_pass ) == 1 ) {
-    $dbh
-      = DBI->connect( "DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
-    $dbh->{mysql_auto_reconnect} = 1;
-
-    die "db_connect could not connect although it should... Will quit and cry." unless defined $dbh;
-
-    create_main_db($dbh);
+  my %attr = (RaiseError=>1, AutoCommit=>0, mysql_auto_reconnect => 1); 
+  try{
+    $dbh = DBI->connect( "DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
   }
+  catch{
+    # we catch and throw...
+    # die "db_connect could not connect to the database.";
+  };
+  return if !$dbh;
+  create_main_db($dbh);
   return $dbh;
 }
 ##########################################################################################

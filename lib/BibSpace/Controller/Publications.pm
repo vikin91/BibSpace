@@ -1141,10 +1141,6 @@ sub publications_add_post {
       $self->app->repo->getEntriesRepository->save($entry);
 
       $added_under_id = $entry->id;
-
-      # $storage->add_entry_authors( $entry, 1 );
-      # $storage->add_entry_tags( $entry, 1 );
-      # $storage->add( $entry );
     }
   }
 
