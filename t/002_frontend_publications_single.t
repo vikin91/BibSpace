@@ -9,7 +9,6 @@ use BibSpace::Controller::Core;
 my $num_publications_limit = 10;
 plan tests => 1 + 9 * 3 * $num_publications_limit;
 
-my $t_anyone    = Test::Mojo->new('BibSpace');
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
@@ -26,7 +25,7 @@ my $dbh = $t_logged_in->app->db;
 TODO: {
     local $TODO = "Testing gets for single publications";
 
-    my @entries     = MEntry->static_all($dbh);
+    my @entries     = $t_logged_in->app->repo->getEntriesRepository->all;
     my $size = $#entries;
     my $num_done = 0;
 
@@ -34,7 +33,7 @@ TODO: {
     while($num_done < $num_publications_limit){
         my $rand = int(rand($size));
         my $e = $entries[$rand];
-        my $id = $e->{id};
+        my $id = $e->id;
 
         my @pages = (
             $self->url_for('get_single_publication', id=>$id),

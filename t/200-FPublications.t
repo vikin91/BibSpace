@@ -102,20 +102,9 @@ $storage->add($en4);
 $num_entries = scalar(@entries);
 
 
-#### all entries
-my ($numChecks, $numFixes) = Ffix_months($dbh, @entries);
-is($numChecks, $num_entries, "fix_months processed all entries");
-ok(($numFixes > 0), "fix_months fixed some entries");
 
 
 
-ok(Fclean_ugly_bibtex_fields_for_all_entries() >= 0, "Fclean_ugly_bibtex_fields_for_all_entries");
-
-my $num_authors_created = Fhandle_author_uids_change_for_all_entries($dbh, 0);
-ok( $num_authors_created  >= 0, "Fhandle_author_uids_change_for_all_entries create 0");
-
-$num_authors_created = Fhandle_author_uids_change_for_all_entries($dbh, 1);
-ok( $num_authors_created  >= 0, "Fhandle_author_uids_change_for_all_entries create 1");
 
 
 

@@ -25,14 +25,11 @@ our @ISA = qw( Exporter );
 # these are exported by default.
 our @EXPORT = qw(
     Fdo_regenerate_html
-    Ffix_months
     FprintBibtexWarnings
     Fhandle_add_edit_publication_Repo
     Fget_publications_main_hashed_args_only
     Fget_publications_main_hashed_args
     Fget_publications_core
-    Fclean_ugly_bibtex_fields_for_all_entries
-    Fhandle_author_uids_change_for_all_entries
 );
 ####################################################################################
 sub Fdo_regenerate_html {
@@ -59,22 +56,6 @@ sub FprintBibtexWarnings {
         $msg .= "<strong>BibTeX Warnings</strong>: $str";
     }
     return $msg;
-}
-####################################################################################
-sub Ffix_months {
-    my ($dbh, @entries) = @_;
-
-    my $num_checks = 0;
-    my $num_fixes  = 0;
-
-    for my $o (@entries) {
-        # say " checking fix month $num_checks";
-        $num_fixes = $num_fixes + $o->fix_month();
-        $o->save($dbh);
-        ++$num_checks;
-    }
-
-    return ( $num_checks, $num_fixes );
 }
 ####################################################################################
 sub Fhandle_add_edit_publication_Repo {
@@ -320,17 +301,17 @@ sub Fget_publications_core_storage {
         @entries = grep { $_->has_team($team_obj) } @entries;
     }
     if($debug == 1){
-        say "Stor Input author = $author" if defined $author;
-        say "Stor Input year = $year" if defined $year;
-        say "Stor Input bibtex_type = $bibtex_type" if defined $bibtex_type;
-        say "Stor Input entry_type = $entry_type" if defined $entry_type;
-        say "Stor Input tag = $tag" if defined $tag;
-        say "Stor Input team = $team" if defined $team;
-        say "Stor Input visible = $visible" if defined $visible;
-        say "Stor Input permalink = $permalink" if defined $permalink;
-        say "Stor Input hidden = $hidden" if defined $hidden;
-        say "Stor Input debug = $debug" if defined $debug;
-        say "Stor Found ".scalar(@entries)." entries";
+        say "Fget_publications_core_storage Input author = $author" if defined $author;
+        say "Fget_publications_core_storage Input year = $year" if defined $year;
+        say "Fget_publications_core_storage Input bibtex_type = $bibtex_type" if defined $bibtex_type;
+        say "Fget_publications_core_storage Input entry_type = $entry_type" if defined $entry_type;
+        say "Fget_publications_core_storage Input tag = $tag" if defined $tag;
+        say "Fget_publications_core_storage Input team = $team" if defined $team;
+        say "Fget_publications_core_storage Input visible = $visible" if defined $visible;
+        say "Fget_publications_core_storage Input permalink = $permalink" if defined $permalink;
+        say "Fget_publications_core_storage Input hidden = $hidden" if defined $hidden;
+        say "Fget_publications_core_storage Input debug = $debug" if defined $debug;
+        say "Fget_publications_core_storage Found ".scalar(@entries)." entries";
     }
 
     return @entries;
@@ -410,34 +391,4 @@ sub Fget_publications_core {
 #     }
 #     return @entries;
 # }
-####################################################################################
-sub Fclean_ugly_bibtex_fields_for_all_entries {
-
-    my $storage = StorageBase->get();
-    my @entries = $storage->entries_all;
-
-    my $num_cleaned_fields = 0;
-    foreach my $e (@entries) {
-        $num_cleaned_fields = $num_cleaned_fields + $e->clean_ugly_bibtex_fields();
-    }
-    return $num_cleaned_fields;
-}
-####################################################################################
-sub Fhandle_author_uids_change_for_all_entries {
-    my $dbh = shift;
-    my $create_authors = shift // 0;
-
-    my $storage = StorageBase->get();
-    my @all_entries = $storage->entries_all;
-
-    my $num_authors_created  = 0;
-
-    foreach my $e (@all_entries) {
-        my $cre = $storage->add_entry_authors( $e, $create_authors );
-        $e->save($dbh);
-
-        $num_authors_created  = $num_authors_created + $cre;
-    }
-    return $num_authors_created;
-}
 ####################################################################################

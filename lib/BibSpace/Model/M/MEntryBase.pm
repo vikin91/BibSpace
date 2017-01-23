@@ -432,33 +432,6 @@ sub is_talk_in_tag {
     return 1 if $sum > 0;
     return 0;
 }
-########################################################################################################################
-sub fix_entry_type_based_on_tag {
-    my $self = shift;
-
-    my $is_talk_db  = $self->is_talk();
-    my $is_talk_tag = $self->is_talk_in_tag();
-
-    if ( $is_talk_tag and $is_talk_db ) {
-
-        # say "both true: OK";
-        return 0;
-    }
-    elsif ( $is_talk_tag and $is_talk_db == 0 ) {
-
-        # say "tag true, DB false. Should write to DB";
-        $self->make_talk();
-        return 1;
-    }
-    elsif ( $is_talk_tag == 0 and $is_talk_db ) {
-
-        # say "tag false, DB true. do nothing";
-        return 0;
-    }
-
-    # say "both false. Do nothing";
-    return 0;
-}
 ####################################################################################
 sub postprocess_updated {
     my $self     = shift;

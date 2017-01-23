@@ -516,7 +516,7 @@ subtest 'MEntry; has_tag_named, add_entry_tags' => sub {
 };
 ####################################################################
 subtest
-    'MEntry; is_talk_in_tag, fix_entry_type_based_on_tag, make_paper, make_talk'
+    'MEntry; is_talk_in_tag, make_paper, make_talk'
     => sub {
     my $random1 = random_string(16);
     my $random2 = random_string(8);
@@ -544,9 +544,6 @@ subtest
     $en7->make_paper();
     $en7->save($dbh);
     is( $en7->is_talk_in_tag($dbh), 0 );
-    is( $en7->fix_entry_type_based_on_tag($dbh),
-        0, "Entry fix_entry_type_based_on_tag" );
-    is( $en7->is_talk_in_tag($dbh), 0 );
 
     # reset
     $en7->populate_from_bib();
@@ -555,18 +552,6 @@ subtest
     is( $en7->is_talk_in_tag($dbh), 0 );
 
     is( $storage->add_entry_tags($en7), 3, "Should add 3 tags" );
-    is( $en7->is_talk_in_tag($dbh), 1 );
-
-    is( $en7->fix_entry_type_based_on_tag($dbh),
-        1, "Entry fix_entry_type_based_on_tag" );
-    $en7->save($dbh);
-    is( $en7->is_talk_in_tag($dbh), 1 );
-    $en7->make_paper();
-    $en7->save($dbh);
-    is( $en7->is_talk_in_tag($dbh), 1 );    # tag remains!
-    is( $en7->is_talk($dbh), 0 );    # tag remains, but this has no meaning
-    $en7->make_talk();
-    $en7->save($dbh);
     is( $en7->is_talk_in_tag($dbh), 1 );
     $en7->make_paper($dbh);
     };

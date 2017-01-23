@@ -33,7 +33,7 @@ addons:
     - tree # just for debugging dir structure
 
 git:
-  depth: 1
+  depth: 3
 
 before_install:
     # - sudo apt-get update -qq

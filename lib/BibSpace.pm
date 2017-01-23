@@ -384,8 +384,6 @@ sub setup_routes {
         ->name('make_admin');
 
     $manager->get('/log')->to('display#show_log');
-    $superadmin->get('/settings/fix_entry_types')
-        ->to('publications#fixEntryType');
     $superadmin->get('/settings/fix_months')->to('publications#fixMonths');
 
     $manager->get('/settings/clean_all')

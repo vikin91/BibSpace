@@ -263,14 +263,6 @@
                 </a>
             </li>
             <li class="divider"></li>
-            <li role="presentation" class="dropdown-header">Sets entry_type to talk if the entry has tag 'talk'.</li>
-            <li>
-                <a href="<%= url_for('/settings/fix_entry_types')%>">
-                    <i class="fa fa-magic"></i> Fix entry_type <i class="fa fa-microphone"></i> <span class="glyphicon glyphicon-file"></span> based on Tag
-                    <span class="badge">for all</span>
-                </a>
-            </li>
-            <li class="divider"></li>
             <li role="presentation" class="dropdown-header">Calculates integer month field in DB based on bibtex field 'month' .</li>
             <li>
                 <a href="<%= url_for('/settings/fix_months')%>">

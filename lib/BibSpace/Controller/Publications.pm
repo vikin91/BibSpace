@@ -115,31 +115,13 @@ sub fixMonths {
 
   my @entries = $self->app->repo->getEntriesRepository->all;
 
-  my ( $processed_entries, $fixed_entries ) = Ffix_months( $self->app->db, @entries );
-  $self->flash(
-    msg => 'Fixing entries month field finished. Number of entries checked/fixed: '
-      . $processed_entries . "/"
-      . $fixed_entries,
-    msg_type => 'info'
-  );
-  $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
-sub fixEntryType {
-  my $self = shift;
-  my $dbh  = $self->app->db;
-
-
-  my @entries = $self->app->repo->getEntriesRepository->all;
-
-  my $num_fixes = 0;
-  for my $e (@entries) {
-    $num_fixes = $num_fixes + $e->fix_entry_type_based_on_tag();
+  foreach my $entry(@entries){
+    $entry->fix_month();
   }
-  $self->app->repo->getEntriesRepository->update(@entries);
+  $self->app->repo->getEntriesRepository->save(@entries);
 
   $self->flash(
-    msg      => 'All entries have now their paper/talk type fixed. Number of fixes: ' . $num_fixes,
+    msg => 'Fixing entries month field finished.',
     msg_type => 'info'
   );
   $self->redirect_to( $self->get_referrer );
@@ -1272,7 +1254,10 @@ sub clean_ugly_bibtex {
 
   $self->app->logger->info("Cleaning ugly bibtex fields for all entries");
 
-  Fclean_ugly_bibtex_fields_for_all_entries();
+  my @entries = $self->app->repo->getEntriesRepository->all;
+  foreach my $e (@entries) {
+    $e->clean_ugly_bibtex_fields();
+  }
 
   $self->flash( msg_type => 'info', msg => 'All entries have now their Bibtex cleaned.' );
 

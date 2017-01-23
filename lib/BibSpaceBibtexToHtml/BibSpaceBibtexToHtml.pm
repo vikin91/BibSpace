@@ -341,18 +341,28 @@ my $s = shift;
     next if $tex eq '"';  # we want our html to stay
     next if $tex eq '\''; # we want our html to stay
 
+    # say "str_replace_as_pod_latex: tex before escaping: '$tex'.";
     # escaping the stuff 
     $tex =~ s!\{!\\\{!g;
+    # say "str_replace_as_pod_latex: escaping 1: '$tex'.";
     $tex =~ s!\}!\\\}!g;
+    # say "str_replace_as_pod_latex: escaping 2: '$tex'.";
     $tex =~ s!\\!\\\\!g;
+    # say "str_replace_as_pod_latex: escaping 3: '$tex'.";
+    $tex =~ s!\\\\{!\\\{!g;
+    # say "str_replace_as_pod_latex: escaping 4: '$tex'.";
+    $tex =~ s!\\\\}!\\\}!g;
+    # say "str_replace_as_pod_latex: escaping 5: '$tex'.";
 
 
     $s =~ s![{}]!!g; # you need to remove this before decoding...
 
     # say "tex $tex -> $html" if $html =~ /ouml/;
     # say "BEFORE $s" if $html =~ /ouml/;
+    # say "str_replace_as_pod_latex: changing: '$tex' to '&$html;'";
     $s =~ s!$tex!&$html;!g;
     # say "AFTER $s" if $html =~ /ouml/;
+    # m/\\texttwosuperior\\{ <-- HERE \\}/ at
 
   } 
 

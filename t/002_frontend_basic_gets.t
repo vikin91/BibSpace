@@ -8,25 +8,42 @@ use BibSpace::Controller::Core;
 use BibSpace::Model::M::MTagType;
 
 
-my $t_anyone = Test::Mojo->new('BibSpace');
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
     form        => { user   => 'pub_admin', pass => 'asdf' }
 );
+
+
 my $self = $t_logged_in->app;
+my $dbh = $t_logged_in->app->db;
+my $app_config = $t_logged_in->app->config;
+my $fixture_name = "db_new.sql";
+my $fixture_dir = "./fixture/";
+SKIP: {
+	note "============ APPLY DATABASE FIXTURE ============";
+	skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir.$fixture_name;
+
+	my $status = 0;
+	$status = BibSpace::Controller::BackupFunctions::do_restore_backup_from_file($self, $dbh, "./fixture/".$fixture_name, $app_config);
+	is($status, 1, "Fixture read correctly");
+	$self->repo->hardReset;
+	$self->setup_repositories;
+}
+
 
 $t_logged_in->ua->max_redirects(10);
 $t_logged_in->ua->inactivity_timeout(3600);
 
-my $dbh = $t_logged_in->app->db;
 
-my @all_tag_type_objs = MTagType->static_all($dbh);
+
+my @all_tag_type_objs = $t_logged_in->app->repo->getTagTypesRepository->all;
 my $some_tag_type_obj = $all_tag_type_objs[0];
-my @tags = MTag->static_all($dbh);
+
+my @tags = $t_logged_in->app->repo->getTagsRepository->all;
 my $some_tag = $tags[0];
 
-my @teams = MTeam->static_all($dbh);
+my @teams = $t_logged_in->app->repo->getTeamsRepository->all;
 my $some_team = $teams[0];
 
 # generated with: ./script/bibspace routes | grep GET | grep -v : 
