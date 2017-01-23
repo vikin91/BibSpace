@@ -125,7 +125,7 @@ sub do_mysql_db_backup {
             "REPLACE INTO Backup(creation_time, filename) VALUES (NOW(), ?)");
         $sth->execute($dbfname);
         $sth->finish();
-        $dbh->commit();
+        # $dbh->commit();
         return $dbfname;
     }
 
@@ -157,7 +157,7 @@ sub do_delete_backup {    # added 22.08.14
 
     my $sth2 = $dbh->prepare("DELETE FROM Backup WHERE id=?");
     $sth2->execute($id);
-    $dbh->commit();
+    # $dbh->commit();
     unlink $file_path;
 }
 ####################################################################################

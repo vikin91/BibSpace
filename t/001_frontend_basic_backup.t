@@ -20,7 +20,7 @@ my $backup_id = get_backup_id( $self, $db_backup_file );
 
 my $status = $t_logged_in->app->do_restore_backup_from_file(
     "./fixture/thisdoesnotexist.txt");
-is( $status, 0, "preparing DB for test" );
+ok( !$status, "preparing DB for test" );
 
 my @pages;
 my $page = "";

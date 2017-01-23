@@ -5,7 +5,6 @@ use Test::Mojo;
 
 use BibSpace;
 use BibSpace::Controller::Core;
-use BibSpace::Model::M::MTagType;
 
 
 my $t_logged_in = Test::Mojo->new('BibSpace');
@@ -48,7 +47,7 @@ my $some_team = $teams[0];
 
 # generated with: ./script/bibspace routes | grep GET | grep -v : 
 my @pages = (
-	"/",
+	# $self->url_for('start'),
 	"/test",
 	"/forgot",
 	"/login_form",
@@ -66,7 +65,6 @@ my @pages = (
 	$self->url_for('recently_changed', num=>10),
 	$self->url_for('recently_added', num=>10),
 	"/manage_users",
-	"/settings/fix_entry_types",
 	"/settings/fix_months",
 	"/publications/fix_urls",
 	"/profile",
@@ -119,7 +117,9 @@ my @pages = (
 
 for my $page (@pages){
     note "============ Testing page $page ============";
-    $t_logged_in->get_ok($page)->status_isnt(404, "Checking: 404 $page")->status_isnt(500, "Checking: 500 $page");
+    $t_logged_in->get_ok($page, "Get for page $page")
+    	->status_isnt(404, "Checking: 404 $page")
+    	->status_isnt(500, "Checking: 500 $page");
 }
 
 done_testing();

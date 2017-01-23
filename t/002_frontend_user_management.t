@@ -6,7 +6,7 @@ use Test::Mojo;
 
 use BibSpace;
 use BibSpace::Controller::Core;
-use BibSpace::Model::CMUsers;
+use BibSpace::Model::M::CMUsers;
 
 
 ### Problem with this test suite is that the token for mailgun returns error because it is not correct in the default config

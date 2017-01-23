@@ -243,7 +243,7 @@ sub create_main_db {
   prepare_token_table_mysql($dbh);
   prepare_user_table_mysql($dbh);
   populate_tables($dbh);
-  $dbh->commit();
+  # $dbh->commit();
 }
 
 ####################################################################################################
@@ -306,7 +306,7 @@ sub prepare_user_table_mysql {
     );
   };
   prepare_token_table_mysql($dbh);
-  $dbh->commit();
+  # $dbh->commit();
 }
 
 
@@ -346,7 +346,7 @@ sub populate_tables {
   catch {
     say "Data already exist. Doing nothing.";
   };
-  $dbh->commit();
+  # $dbh->commit();
 }
 
 1;

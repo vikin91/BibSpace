@@ -127,7 +127,7 @@ sub _insert {
       $dbh->rollback();
     };
   }
-  $dbh->commit();
+  # $dbh->commit();
 }
 before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
 after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };

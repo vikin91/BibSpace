@@ -6,17 +6,12 @@ use Test::Mojo;
 use BibSpace;
 use BibSpace::Controller::Core;
 
-my $t_logged_in = Test::Mojo->new('BibSpace');
-$t_logged_in->post_ok(
-    '/do_login' => { Accept => '*/*' },
-    form        => { user   => 'pub_admin', pass => 'asdf' }
-);
-my $self = $t_logged_in->app;
 
-$t_logged_in->ua->max_redirects(10);
+my $t_anyone = Test::Mojo->new('BibSpace');
 $t_anyone->ua->max_redirects(10);
 $t_anyone->ua->inactivity_timeout(3600);
-my $dbh = $t_logged_in->app->db;
+my $self = $t_anyone->app;
+my $dbh = $t_anyone->app->db;
 
 use BibSpace::Functions::FPublications;
 use BibSpace::Controller::Core;

@@ -161,7 +161,7 @@ sub _insert {
       $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
     };
   }
-  $dbh->commit();
+  # $dbh->commit();
 }
 before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
 after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };
