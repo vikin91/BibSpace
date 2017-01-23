@@ -10,11 +10,10 @@ perl:
 
 # dist: trusty
 # sudo: require # ubuntu
-sudo: required
-sudo: required
+# sudo: required
 
-services:
-  - docker
+# services:
+#   - docker
 
 addons:
   apt:
