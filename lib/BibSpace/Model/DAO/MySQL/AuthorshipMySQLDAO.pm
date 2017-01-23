@@ -87,16 +87,21 @@ after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); }
 sub save {
   my ( $self, @objects ) = @_;
   my $dbh = $self->handle;
-  foreach my $obj (@objects) {
-    if ( $self->exists($obj) ) {
-      $self->update($obj);
-      $self->logger->info( "Updated object ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
-    }
-    else {
-      $self->_insert($obj);
-      $self->logger->info( "Inserted object ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
-    }
-  }
+
+  # we risk duplicates to optimize performance
+  # duplicates are covered through INSERT IGNORE INTO ...
+  $self->_insert(@objects);
+
+  # foreach my $obj (@objects) {
+  #   if ( $self->exists($obj) ) {
+  #     $self->update($obj);
+  #     $self->logger->info( "Updated object ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+  #   }
+  #   else {
+  #     $self->_insert($obj);
+  #     $self->logger->info( "Inserted object ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+  #   }
+  # }
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
 after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
@@ -109,7 +114,7 @@ sub _insert {
   my ( $self, @objects ) = @_;
   my $dbh = $self->handle;
   my $qry = "
-    INSERT INTO Entry_to_Author(author_id, entry_id) VALUES (?,?);";
+    INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES (?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
     
