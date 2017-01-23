@@ -38,7 +38,7 @@ sub db_is_up {
 sub db_connect {
   my ( $db_host, $db_user, $db_database, $db_pass ) = @_;
   my $dbh = undef;
-  my %attr = (RaiseError=>1, AutoCommit=>0); 
+  my %attr = (RaiseError=>1, AutoCommit=>1); 
   if ( db_is_up( $db_host, $db_user, $db_database, $db_pass ) == 1 ) {
     $dbh
       = DBI->connect( "DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
