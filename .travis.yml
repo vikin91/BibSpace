@@ -84,7 +84,7 @@ notifications:
 
 script: 
     # works! # 
-    - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lvr t/
+    - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr t/
     # - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf cover -report coveralls # runs ./Build test that does not work
 
 # after_failure:

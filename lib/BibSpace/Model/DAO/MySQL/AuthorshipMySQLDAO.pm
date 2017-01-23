@@ -110,9 +110,9 @@ sub _insert {
   my $dbh = $self->handle;
   my $qry = "
     INSERT INTO Entry_to_Author(author_id, entry_id) VALUES (?,?);";
-
+  my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
-    my $sth = $dbh->prepare($qry);
+    
     try {
       my $result = $sth->execute( $obj->author_id, $obj->entry_id );
       $sth->finish();
