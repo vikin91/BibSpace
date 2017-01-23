@@ -16,7 +16,7 @@ perl:
 #   - docker
 services:
   - mysql
-  
+
 addons:
   apt:
     packages:
@@ -64,12 +64,8 @@ install:
     - cpanm --quiet --notest --skip-satisfied Dist::Zilla
     - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
     - cpanm --quiet --notest --skip-satisfied Module::Build::Mojolicious Module::CPANfile
-    # - dzil listdeps | grep -vP '[^\w:]' | cpanm --notest --skip-satisfied  --verbose # does almost nothing
     - dzil authordeps --missing | cpanm --notest --skip-satisfied 
     - cpanm -nq --no-interactive --installdeps .
-    # - cpanm -nq --skip-satisfied --no-interactive Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent Text::BibTeX HTML::TagCloud::Sortable Crypt::Random WWW::Mechanize Test::Differences Test::MockModule Mojolicious::Plugin::RenderFile Path::Tiny 
-    # - cpanm -nq --skip-satisfied --no-interactive Moose Test::Pod::Coverage TeX::Encode Array::Utils File::Spec
-    # - cpanm -nq --skip-satisfied --no-interactive Text::ASCIIMathML Mojo::Redis2
 before_script:
     - mysql --version
     - mysql -u root -e "SELECT VERSION();"
@@ -88,7 +84,7 @@ notifications:
 
 script: 
     # works! # 
-    - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr t/
+    - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lvr t/
     # - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf cover -report coveralls # runs ./Build test that does not work
 
 # after_failure:
