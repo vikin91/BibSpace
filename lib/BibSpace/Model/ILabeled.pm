@@ -49,7 +49,7 @@ sub remove_labeling {
     return ;
 }
 ####################################################################################
-sub tags {
+sub get_tags {
     my $self     = shift;
     my $tag_type = shift;
 
@@ -58,12 +58,6 @@ sub tags {
         return grep {$_->type == $tag_type} @tags;
     }
     return @tags;
-}
-####################################################################################
-sub get_entries {
-    my $self     = shift;
-
-    return map {$_->entry} $self->labelings_all; 
 }
 ####################################################################################
 1;

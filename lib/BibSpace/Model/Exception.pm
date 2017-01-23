@@ -12,8 +12,7 @@ use Moose;
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
-# the fileds below are crucial, beacuse static_all has access only to team/author ids and not to objects
-# MTeamMembership->load($dbh) should then fill the objects based on ids
+# the two fields below are crucial for linking
 has 'entry_id'   => ( is => 'ro', isa => 'Int' );
 has 'team_id' => ( is => 'ro', isa => 'Int' );
 
@@ -30,7 +29,7 @@ has 'team' => (
 ####################################################################################
 sub id {
   my $self = shift;
-  return "(" . $self->entry_id . "-" . $self->team->uid . ")" if defined $self->team;
+  return "(" . $self->entry_id . "-" . $self->team->name . ")" if defined $self->team;
   return "(" . $self->entry_id . "-" . $self->team_id . ")";
 }
 ####################################################################################

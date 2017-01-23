@@ -216,7 +216,7 @@ sub can_be_deleted {
 
   return 0 if $self->{display} == 1;
 
-  my @teams = $self->teams();
+  my @teams = $self->get_teams;
 
   return 1 if scalar @teams == 0 and $self->{display} == 0;
   return 0;
@@ -351,39 +351,39 @@ sub update_membership {
   }
 }
 
-################################################################################
-sub add_to_team {
-  my $self = shift;
-  my $team = shift;
+# ################################################################################
+# sub add_to_team {
+#   my $self = shift;
+#   my $team = shift;
 
 
-  return 0 if !defined $team and $team->{id} <= 0;
+#   return 0 if !defined $team and $team->{id} <= 0;
 
 
-  if ( !$self->is_member_of($team) ) {
-    $self->teams_add($team);
+#   if ( !$self->is_member_of($team) ) {
+#     $self->teams_add($team);
 
-# TODO:
-# not sure if I should have it here
-# how do I save it later, if it is not in the storage?
-# maybe I should remove memberships from the storage and leave them only in author and evtl. team?
+# # TODO:
+# # not sure if I should have it here
+# # how do I save it later, if it is not in the storage?
+# # maybe I should remove memberships from the storage and leave them only in author and evtl. team?
 
-    $self->teamMemberships_add(
-      MTeamMembership->new(
-        author_id => $self->id,
-        team_id   => $team->id,
-        author    => $self,
-        team      => $team,
-        start     => 0,
-        stop      => 0
-      )
-    );
-    return 1;
-  }
-  return 0;
+#     $self->teamMemberships_add(
+#       MTeamMembership->new(
+#         author_id => $self->id,
+#         team_id   => $team->id,
+#         author    => $self,
+#         team      => $team,
+#         start     => 0,
+#         stop      => 0
+#       )
+#     );
+#     return 1;
+#   }
+#   return 0;
 
 
-}
+# }
 ################################################################################
 sub is_member_of {
   my $self = shift;
@@ -418,14 +418,14 @@ sub remove_from_team {
 ####################################################################################
 #################################################################################### TAGS
 ####################################################################################
-sub tags {
+sub get_tags {
 
   my $self = shift;
   my $type = shift // 1;
 
   my @myTags;
 
-  map { push @myTags, $_->tags($type) } $self->entries;
+  map { push @myTags, $_->get_tags($type) } $self->get_entries;
   @myTags = uniq @myTags;
 
   return @myTags;

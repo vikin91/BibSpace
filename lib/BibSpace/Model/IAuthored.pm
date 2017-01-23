@@ -44,13 +44,24 @@ sub remove_authorship {
 ####################################################################################
 sub authors {
     my $self = shift;
-    SimpleLogger->new->warn("entry->authors is deprecated in favor of entry->get_authors");
+    SimpleLogger->new->warn("IAuthored->authors is deprecated in favor of IAuthored->get_authors");
     return $self->get_authors;
 }
 ####################################################################################
 sub get_authors {
     my $self = shift;
     return map {$_->author} $self->authorships_all;
+}
+####################################################################################
+sub entries {
+    my $self = shift;
+    SimpleLogger->new->warn("IAuthored->entries is deprecated in favor of IAuthored->get_entries");
+    return $self->get_entries;
+}
+####################################################################################
+sub get_entries {
+    my $self = shift;
+    return map {$_->entry} $self->authorships_all;
 }
 ####################################################################################
 1;

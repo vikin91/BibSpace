@@ -126,8 +126,8 @@ sub edit_author {
   else {
 
     my @all_teams    = $self->app->repo->getTeamsRepository->all;
-    my @author_teams = $author->teams();
-    my @author_tags  = $author->tags();
+    my @author_teams = $author->get_teams;
+    my @author_tags  = $author->get_tags;
 
     # cannot use objects as keys due to hash stringification!
     my %author_teams_hash = map { $_->id => 1 } @author_teams;
@@ -150,20 +150,6 @@ sub edit_author {
     $self->render( template => 'authors/edit_author' );
   }
 }
-##############################################################################################################
-# sub can_be_deleted {
-#     my $self = shift;
-#     my $id   = shift;
-#     my $dbh  = $self->app->db;
-
-#     my $author = $self->app->repo->getAuthorsRepository->find( sub{ $_->{id} == $id } );
-#     my $visibility = $author->{display};
-
-#     my $num_teams = scalar $author->teams($dbh);
-
-#     return 1 if $num_teams == 0 and $visibility == 0;
-#     return 0;
-# }
 ##############################################################################################################
 sub add_to_team {
   my $self      = shift;

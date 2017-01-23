@@ -389,9 +389,9 @@ sub all_candidates_to_delete {
 
 
   my @objs = $self->app->repo->getEntriesRepository->all;
-  @objs = grep { scalar $_->tags($dbh) == 0 } @objs;          # no tags
-  @objs = grep { scalar $_->teams($dbh) == 0 } @objs;         # no relation to teams
-  @objs = grep { scalar $_->exceptions($dbh) == 0 } @objs;    # no exceptions
+  @objs = grep { scalar $_->get_tags($dbh) == 0 } @objs;          # no tags
+  @objs = grep { scalar $_->get_teams($dbh) == 0 } @objs;         # no relation to teams
+  @objs = grep { scalar $_->get_exceptions($dbh) == 0 } @objs;    # no exceptions
 
 
   my $msg = "<p>This list contains papers, that are:</p>
@@ -895,9 +895,9 @@ sub remove_tag {
       = $self->app->repo->getLabelingsRepository->find( sub { $_->tag->equals($tag) and $_->entry->equals($entry) } );
 
     # you should always execute all those three commands together - smells like command pattern...
-    $self->app->repo->getLabelingsRepository->delete($label);
     $entry->remove_labeling($label);
     $tag->remove_labeling($label);
+    $self->app->repo->getLabelingsRepository->delete($label);
 
     $self->app->logger->info( "Removed tag " . $tag->name . " from entry ID " . $entry->id . ". " );
   }
@@ -947,12 +947,12 @@ sub manage_exceptions {
 
   my @exceptions = $entry->exceptions_all;
   my @all_teams  = $self->app->repo->getTeamsRepository->all;
-  my @teams      = $entry->teams;
-  my @authors    = $entry->authors_all;
+  my @teams      = $entry->get_teams;
+  my @authors    = $entry->get_authors;
 
   # cannot use objects as keysdue to stringification!
-  my %exceptions_hash = map { $_->{id} => 1 } @exceptions;
-  my @unassigned_teams = grep { not $exceptions_hash{ $_->{id} } } @all_teams;
+  my %exceptions_hash = map { $_->team->id => 1 } @exceptions;
+  my @unassigned_teams = grep { not $exceptions_hash{ $_->id } } @all_teams;
 
 
   $self->stash(
@@ -974,11 +974,15 @@ sub add_exception {
 
 
   my $entry     = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $entry_id } );
-  my $exception = $self->app->repo->getTeamsRepository->find( sub   { $_->{id} == $team_id } );
+  my $team = $self->app->repo->getTeamsRepository->find( sub   { $_->{id} == $team_id } );
 
-  if ( defined $entry and defined $exception ) {
-    $entry->assign_exception($exception);
-    $self->app->repo->getEntriesRepository->save($entry);
+  if ( defined $entry and defined $team ) {
+
+    my $exception = Exception->new( entry => $entry, team => $team, entry_id => $entry->id, team_id => $team->id );
+
+    $entry->add_exception($exception);
+    $team->add_exception($exception);
+    $self->app->repo->getExceptionsRepository->save($exception);
 
     $self->app->logger->info("Added exception $exception->{name} to entry id $entry->{id}. ");
   }
@@ -996,14 +1000,21 @@ sub remove_exception {
 
 
   my $entry     = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $entry_id } );
-  my $exception = $self->app->repo->getTeamsRepository->find( sub   { $_->{id} == $team_id } );
+  my $team = $self->app->repo->getTeamsRepository->find( sub   { $_->{id} == $team_id } );
 
-  if ( defined $entry and defined $exception ) {
+  if ( defined $entry and defined $team ) {
 
-    # $entry->remove_exception( $dbh, $exception );
+    my $exception = $self->app->repo->getExceptionsRepository->find(
+        sub{
+          $_->team->equals($team) and $_->entry->equals($entry)
+        }
+    );
+
     $entry->remove_exception($exception);
-    $self->app->repo->getEntriesRepository->save($entry);
-    $self->app->logger->info("Added exception $exception->{name} to entry id $entry->{id}. ");
+    $team->remove_exception($exception);
+    $self->app->repo->getExceptionsRepository->delete($exception);
+    
+    $self->app->logger->info("Removed exception ".$team->name." from entry ID ".$entry->id.". ");
   }
 
   $self->redirect_to( $self->get_referrer );

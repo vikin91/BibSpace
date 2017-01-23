@@ -163,10 +163,8 @@ sub do_cron_day {
 ##########################################################################################
 sub do_cron_night {
     my $self = shift;
-    my $dbh  = $self->app->db;
 
-    my $storage = StorageBase->get();
-    my @entries = $storage->entries_all;
+    my @entries = $self->app->repo->getEntriesRepository->all;
 
     for my $e (@entries) {
         $e->regenerate_html(0);

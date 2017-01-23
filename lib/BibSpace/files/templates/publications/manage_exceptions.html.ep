@@ -69,17 +69,17 @@
                     <a class="btn btn-default" type="button" href="<%= url_for('edit_team', teamid=>$exception->{id} )%>">
                         <i class="fa fa-exclamation " style="color: red;"></i>
                         <i class="fa fa-users " style="color: #5CB85C;"></i> 
-                        <%= $exception->{name} %>
+                        <%= $exception->team->name %>
                         <i class="fa fa-external-link"></i>
                     </a>
-                    <a class="btn btn-default" href="<%= url_for('remove_exception_from_publication', eid=>$entry->{id}, tid=>$exception->{id})%>"><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
+                    <a class="btn btn-default" href="<%= url_for('remove_exception_from_publication', eid=>$entry->id, tid=>$exception->team->id)%>"><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
                 </div>
             % }
             % if (scalar @$exceptions == 0){
                 <div class="alert alert-warning">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                     <i class="fa fa-exclamation " style="color: red;"></i>
-                    Detected teams will be ignored after adding any exception (at least should be...). But temporairly they are not. Teams = teams + exceptions.
+                    Detected teams will be ignored after adding any exception (at least should be...). But temporarily they are not. Teams = teams + exceptions.
                     <i class="fa fa-exclamation " style="color: red;"></i>
                 </div> 
             % }
@@ -96,7 +96,7 @@
             % foreach my $team (@$unassigned_teams){
                 <div class="btn-group">
                     <a class="btn btn-default" type="button" href="<%= url_for('edit_team', teamid=>$team->{id})%>">
-                        <i class="fa fa-users " style="color: #5CB85C;"></i> <%= $team->{name} %>
+                        <i class="fa fa-users " style="color: #5CB85C;"></i> <%= $team->name %>
                     </a>
                     <a class="btn btn-default" href="<%= url_for('add_exception_to_publication', eid=>$entry->{id}, tid=>$team->{id} )%>">
                         <span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><i class="fa fa-exclamation " style="color: #5CB85C;"></i>

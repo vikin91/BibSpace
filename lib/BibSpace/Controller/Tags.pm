@@ -164,7 +164,17 @@ sub get_tags_for_author_read {
     $author  = $self->app->repo->getAuthorsRepository->find( sub { $_->uid eq $author_id } );
   }
 
-  my @author_tags = $author->tags;
+  if ( !$author ) {
+    $self->render( text => "Cannot find author $author_id.", status => 404 );
+    return;
+  }
+
+  my @author_tags = $author->get_tags;
+
+  if ( !@author_tags ) {
+    $self->render( text => "Author $author_id has no tagged papers.", status => 200 );
+    return;
+  }
 
 
   ### here list of objects should be created
@@ -210,7 +220,7 @@ sub get_tags_for_team_read {
     $team = $self->app->repo->getTeamsRepository->filter( sub { $_->name eq $team_id } );
   }
   if ( !defined $team ) {
-    $self->render( text => 'Team does not exist.', status => 404 );
+    $self->render( text => "Team $team_id does not exist.", status => 404 );
     return;
   }
 
@@ -222,6 +232,11 @@ sub get_tags_for_team_read {
       my @subset_tags = map { $_->tag } $paper->labelings_all;
       push @subset_tags, @team_tags;
     }
+  }
+
+  if ( !@team_tags ) {
+    $self->render( text => "Team $team_id has no tagged papers.", status => 200 );
+    return;
   }
 
 
@@ -254,11 +269,11 @@ sub get_tags_for_team_read {
 ####################################################################################
 sub get_authors_for_tag {
   my $self = shift;
-  my $id   = $self->param('tid');
+  my $tag_id   = $self->param('tid');
 
-  my $tag = $self->app->repo->getTagsRepository->find( sub { $_->id == $id } );
+  my $tag = $self->app->repo->getTagsRepository->find( sub { $_->id == $tag_id } );
   if ( !defined $tag ) {
-    $self->render( text => 'Tag does not exist.', status => 404 );
+    $self->render( text => "Tag $tag_id does not exist.", status => 404 );
     return;
   }
 
@@ -267,6 +282,10 @@ sub get_authors_for_tag {
   foreach my $paper (@papers) {
     my @subset_authors = map { $_->author } $paper->authorships_all;
     push @subset_authors, @authors;
+  }
+  if ( !@authors ) {
+    $self->render( text => "There are no authors having papers with tag $tag_id.", status => 200 );
+    return;
   }
 
   $self->stash( tag => $tag, authors => \@authors );

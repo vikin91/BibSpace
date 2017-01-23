@@ -452,11 +452,17 @@ sub author_names_from_bibtex {
 ####################################################################################
 sub teams {
     my $self = shift;
+    SimpleLogger->new->warn("entry->teams is deprecated in favor of entry->get_teams");
+    return $self->get_teams;
+}
+####################################################################################
+sub get_teams {
+    my $self = shift;
 
     my %final_teams;
-    foreach my $author ( $self->authors ) {
+    foreach my $author ( $self->get_authors ) {
 
-        foreach my $team ( $author->teams ) {
+        foreach my $team ( $author->get_teams ) {
             if ($author->joined_team($team) <= $self->year
                 and (  $author->left_team($team) > $self->year
                     or $author->left_team($team) == 0 )
@@ -474,7 +480,7 @@ sub has_team {
     my $self = shift;
     my $team = shift;
 
-    return 1 if any { $_->equals($team) } $self->teams;
+    return 1 if any { $_->equals($team) } $self->get_teams;
     return ;
 }
 ####################################################################################

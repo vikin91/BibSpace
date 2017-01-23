@@ -44,6 +44,11 @@ sub get_authors {
   return uniq @authors;
 }
 ####################################################################################
+sub get_entries {
+    my $self     = shift;
+    return map {$_->entry} $self->labelings_all; 
+}
+####################################################################################
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;
