@@ -50,7 +50,7 @@ our $bibtex2html_tmp_dir = "./tmp";
 
 has is_demo => sub {
   return 1 if shift->config->{demo_mode};
-  return ;
+  return;
 };
 
 
@@ -64,15 +64,15 @@ has config_file => sub {
     if -e $self->app->home->rel_file('config/default.conf');
 };
 
-has db => sub {
-  my $self = shift;
-  state $db = db_connect(
-    $self->config->{db_host},
-    $self->config->{db_user},
-    $self->config->{db_database},
-    $self->config->{db_pass}
-  );
-};
+# has db => sub {
+#   my $self = shift;
+#   state $db = db_connect(
+#     $self->config->{db_host},
+#     $self->config->{db_user},
+#     $self->config->{db_database},
+#     $self->config->{db_pass}
+#   );
+# };
 
 has version => sub {
   return $BibSpace::VERSION // "0.4.7";
@@ -116,8 +116,22 @@ sub startup {
   my $self = shift;
   $self->app->logger->info("*** Starting BibSpace ***");
 
+
   $self->app->logger->info("Setup config...");
   $self->setup_config;
+
+  $self->helper(
+    db => sub {
+      my $self = shift;
+      my $db = db_connect(
+        $self->config->{db_host},
+        $self->config->{db_user},
+        $self->config->{db_database},
+        $self->config->{db_pass}
+      );
+      return $db;
+    }
+  );
 
   $self->app->logger->info("Setup plugins...");
   $self->setup_plugins;

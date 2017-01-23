@@ -15,8 +15,6 @@ my $self = $t_logged_in->app;
 my $dbh = $t_logged_in->app->db;
 my $storage = StorageBase::get();
 
-
-use BibSpace::Model::M::MEntry;
 use BibSpace::Functions::FPublications;
 
 $dbh->do('DELETE FROM Entry;');

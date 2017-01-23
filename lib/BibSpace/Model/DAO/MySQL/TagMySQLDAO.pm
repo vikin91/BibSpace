@@ -4,6 +4,7 @@ package TagMySQLDAO;
 use namespace::autoclean;
 use Moose;
 use DBI;
+use DBIx::Connector;
 use BibSpace::Model::DAO::Interface::IDAO;
 use BibSpace::Model::Tag;
 with 'IDAO';

@@ -10,11 +10,7 @@ use Data::Dumper;
 
 use BibSpace::Model::M::MUser;
 
-use BibSpace::Model::M::MEntry;
-use BibSpace::Model::M::MTag;
-use BibSpace::Model::M::MAuthor;
-use BibSpace::Model::M::MTeam;
-use BibSpace::Model::M::MTeamMembership;
+
 use BibSpace::Model::M::MTypeMapping;
 
 use List::MoreUtils qw(any uniq);

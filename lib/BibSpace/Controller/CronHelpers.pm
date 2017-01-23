@@ -9,6 +9,7 @@ use Time::Piece;
 use 5.010;    #because of ~~
 
 use DBI;
+use DBIx::Connector;
 use File::Copy qw(copy);
 
 use BibSpace::Controller::Core;

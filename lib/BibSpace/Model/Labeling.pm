@@ -6,6 +6,7 @@ use 5.010;    #because of ~~ and say
 use BibSpace::Model::Author;
 
 use DBI;
+use DBIx::Connector;
 use Try::Tiny;
 use Devel::StackTrace;
 use Moose;

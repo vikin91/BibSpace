@@ -4,6 +4,7 @@ package MembershipMySQLDAO;
 use namespace::autoclean;
 use Moose;
 use DBI;
+use DBIx::Connector;
 use BibSpace::Model::DAO::Interface::IDAO;
 use BibSpace::Model::Membership;
 with 'IDAO';

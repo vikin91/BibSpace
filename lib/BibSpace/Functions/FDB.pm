@@ -10,6 +10,8 @@ use Try::Tiny;
 use Data::Dumper;
 use Exporter;
 use DBI;
+use DBIx::Connector;
+use DBIx::Connector;
 our @ISA = qw( Exporter );
 
 
@@ -25,16 +27,20 @@ our @EXPORT = qw(
 ##########################################################################################
 sub db_connect {
   my ( $db_host, $db_user, $db_database, $db_pass ) = @_;
-
-  my $dbh = undef;
-  my %attr = (RaiseError=>1, AutoCommit=>0, mysql_auto_reconnect => 1); 
+  
+  my $conn = undef;
+  # my %attr = (RaiseError=>1, AutoCommit=>0, mysql_auto_reconnect => 0); 
+  my %attr = (RaiseError=>1, AutoCommit=>1); 
   try{
-    $dbh = DBI->connect( "DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
+    # $conn = DBIx::Connector->new("DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr);
+    $conn = DBI->connect( "DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
   }
   catch{
     # we catch and throw...
-    # die "db_connect could not connect to the database.";
+    warn "db_connect could not connect to the database: $_";
   };
+  my $dbh = $conn;
+  
   return if !$dbh;
   create_main_db($dbh);
   return $dbh;

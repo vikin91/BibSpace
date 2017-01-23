@@ -6,10 +6,12 @@ use Text::BibTeX;    # parsing bib files
 use DateTime;
 use File::Slurp;
 use Time::Piece;
-use 5.010;           #because of ~~
+use 5.010; 
+use Try::Tiny;
 use strict;
 use warnings;
 use DBI;
+use DBIx::Connector;
 use File::Copy qw(copy);
 
 use BibSpace::Controller::Core;
@@ -50,10 +52,10 @@ sub cleanup {
 
 sub index {
     my $self       = shift;
-    my $backup_dbh = $self->app->db;
+    my $dbh = $self->app->db;
 
     my $sth
-        = $backup_dbh->prepare(
+        = $dbh->prepare(
         "SELECT id, creation_time, filename FROM Backup ORDER BY creation_time DESC"
         );
     $sth->execute();
@@ -74,7 +76,7 @@ sub index {
     while ( my $row = $sth->fetchrow_hashref() ) {
         my $id = $row->{id};
 
-        can_delete_backup($backup_dbh, $id, $self->app->config);
+        can_delete_backup($dbh, $id, $self->app->config);
 
         my $backup_file_name = $row->{filename};
         my $exists           = 0;
@@ -168,10 +170,12 @@ sub restore_backup {
 
     do_backup_current_state( $self, "pre-restore" );
     $self->write_log("Restoring backup from file $backup_file_path");
-    my $return_value = do_restore_backup_from_file( $self->app, $dbh, $backup_file_path,
+    my $restore_ok = do_restore_backup_from_file( $self->app, $dbh, $backup_file_path,
         $self->app->config );
 
-    if ( $return_value == 1 ) {
+    $self->app->db; #reconnect
+
+    if ( $restore_ok ) {
         $self->flash( msg_type=>'success', msg => "Backup restored successfully" );
     }
     else {

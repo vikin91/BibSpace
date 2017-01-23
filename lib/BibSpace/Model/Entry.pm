@@ -21,6 +21,7 @@ use utf8;
 use Text::BibTeX;    # parsing bib files
 use 5.010;           #because of ~~ and say
 use DBI;
+use DBIx::Connector;
 use Try::Tiny;
 use TeX::Encode;
 use Encode;

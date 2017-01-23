@@ -6,8 +6,6 @@ use Test::Mojo;
 use BibSpace;
 use BibSpace::Controller::Core;
 
-
-my $t_anyone    = Test::Mojo->new('BibSpace');
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
@@ -20,11 +18,9 @@ $t_anyone->ua->max_redirects(10);
 $t_anyone->ua->inactivity_timeout(3600);
 my $dbh = $t_logged_in->app->db;
 
-use BibSpace::Model::M::MEntry;
 use BibSpace::Functions::FPublications;
 use BibSpace::Controller::Core;
 
-use BibSpace::Model::M::StorageBase;
 ####################################################################
 subtest 'PublicationsSEO: public functions' => sub {
 

@@ -10,11 +10,11 @@ use DateTime;
 use File::Slurp;
 use Time::Piece;
 use DBI;
+use DBIx::Connector;
 
 use Scalar::Util;
 
 use BibSpace::Controller::Core;
-use BibSpace::Model::M::MEntry;
 
 use Exporter;
 our @ISA = qw( Exporter );

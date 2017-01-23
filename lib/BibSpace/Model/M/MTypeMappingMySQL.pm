@@ -8,15 +8,14 @@ use utf8;
 
 use 5.010;    #because of ~~ and say
 use DBI;
+use DBIx::Connector;
 use Try::Tiny;
 
 use Moose;
 use MooseX::Storage;
 use BibSpace::Model::M::MTypeMappingBase;
-use BibSpace::Model::M::Persistent;
 
 extends 'MTypeMappingBase';
-with 'Persistent';
 
 ####################################################################################
 sub load {

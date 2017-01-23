@@ -8,6 +8,7 @@ use 5.010;    #because of ~~
 use strict;
 use warnings;
 use DBI;
+use DBIx::Connector;
 use Data::Dumper;
 
 use BibSpace::Controller::Core;

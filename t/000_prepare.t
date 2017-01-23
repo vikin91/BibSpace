@@ -4,6 +4,7 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 use Mojo::IOLoop;
+use Try::Tiny;
 
 use BibSpace;
 use BibSpace::Controller::Core;
@@ -26,16 +27,14 @@ my $self = $t_logged_in->app;
 my $dbh = $self->app->db;
 my $app_config = $t_logged_in->app->config;
 
-$self->logger->warn("TEST");
-####################################################################
-subtest '00: checking if DB runs' => sub {
-  my $db_host     = $self->config->{db_host};
-  my $db_user     = $self->config->{db_user};
-  my $db_database = $self->config->{db_database};
-  my $db_pass     = $self->config->{db_pass};
-  
-  ok(db_connect($db_host, $db_user, $db_database, $db_pass), "Can connect to database");
-};
+
+my $db_host     = $self->config->{db_host};
+my $db_user     = $self->config->{db_user};
+my $db_database = $self->config->{db_database};
+my $db_pass     = $self->config->{db_pass};
+
+ok(db_connect($db_host, $db_user, $db_database, $db_pass), "Can connect to database");
+$dbh = $self->app->db;
 
 
 
@@ -50,10 +49,18 @@ SKIP: {
 	note "============ APPLY DATABASE FIXTURE ============";
 	skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir.$fixture_name;
 
-	my $status = 0;
-  $self->repo->hardReset;
-	$status = do_restore_backup_from_file($self, $dbh, "./fixture/".$fixture_name, $app_config);
-	is($status, 1, "preparing DB for test");
+  try{
+	 ok(do_restore_backup_from_file($self, $dbh, "./fixture/".$fixture_name, $app_config), "preparing DB for test");
+  }
+  catch{
+    my $db_host     = $self->config->{db_host};
+    my $db_user     = $self->config->{db_user};
+    my $db_database = $self->config->{db_database};
+    my $db_pass     = $self->config->{db_pass};
+
+    ok(db_connect($db_host, $db_user, $db_database, $db_pass), "Can connect to database");
+    $dbh = $self->app->db;
+  };
 }
 
 done_testing();

@@ -30,7 +30,6 @@ our @EXPORT = qw(
     do_delete_backup
     do_delete_broken_or_old_backup
     get_backup_filename_by_id
-    do_restore_backup_by_id
     do_restore_backup_from_file
     do_backup_current_state
     get_dir_size
@@ -96,11 +95,13 @@ sub do_mysql_db_backup_silent {
 
     # say $ignored_tables_string;
 
+    my $command_prefix = "mysqldump --skip-comments --no-autocommit";
+
     if ( $db_pass =~ /^\s*$/ ) {    # password empty
-        `mysqldump -u $db_user $db_database $ignored_tables_string > $db_fname_path`;
+        `$command_prefix -u $db_user $db_database $ignored_tables_string > $db_fname_path`;
     }
     else {
-        `mysqldump -u $db_user -p$db_pass $db_database $ignored_tables_string > $db_fname_path`;
+        `$command_prefix -u $db_user -p$db_pass $db_database $ignored_tables_string > $db_fname_path`;
     }
     if ( $? == 0 ) {
         return $db_fname;
@@ -112,8 +113,6 @@ sub do_mysql_db_backup_silent {
 sub do_mysql_db_backup {
     my $self = shift;
     my $fname_prefix = shift || "normal";
-
-    say "call: BackupFunctions::do_mysql_db_backup";
 
     my $dbh = $self->app->db;
     my $dbfname = do_mysql_db_backup_silent( $self, $fname_prefix );
@@ -247,8 +246,6 @@ sub do_restore_backup_from_file {
     my $file_path = shift;
     my $config    = shift;
 
-    say "CALL: do_restore_backup_from_file";
-
     # I assume that $file_path is the SQL dump that I want to restore
 
     my $file_exists = 0;
@@ -256,12 +253,18 @@ sub do_restore_backup_from_file {
         $file_exists = 1;
     }
     else {
-        warn "Cannot restore database from file $file_exists. I stop now.";
-        return 0;
+        $app->logger->warn("Cannot restore database from file $file_path. I stop now.",__PACKAGE__." do_restore_backup_from_file ");
+        return;
     }
 
-    $app->repo->hardReset;
-    $dbh->disconnect() if defined $dbh;
+    
+    try{
+        $dbh->{mysql_auto_reconnect} = 0;
+        $dbh->disconnect();
+    }
+    catch{
+        $app->logger->error("Cannot disconnect: $_",__PACKAGE__." do_restore_backup_from_file ");
+    };
 
     my $db_host     = $config->{db_host};
     my $db_user     = $config->{db_user};
@@ -277,36 +280,35 @@ sub do_restore_backup_from_file {
         $command_output = `$cmd`;
     }
     catch {
-        say
-            "Restoring DB failed from file $file_path. Reason: $_. Status? $?. Command_output: $command_output.";
-
-        # say "Command was: $cmd";
-        return 0;
+        $app->logger->error("Restoring DB failed from file $file_path. Reason: $_. Status? $?. Command_output: $command_output.",
+            __PACKAGE__." do_restore_backup_from_file ");
+        db_connect($db_host, $db_user, $db_database, $db_pass);
+        $app->db; # this will reconnect
+        $app->db->{mysql_auto_reconnect} = 1;
     };
 
+    $app->db(); # this will reconnect
+    $app->db->{mysql_auto_reconnect} = 1;
+
     if ( $? == 0 ) {
-        say "Restoring backup succeeded from file $file_path";
-        db_connect(
-            $config->{db_host},     $config->{db_user},
-            $config->{db_database}, $config->{db_pass});
+        $app->repo->hardReset;
+        $app->setup_repositories;
+
+        $app->logger->info("Restoring backup succeeded from file $file_path");
         return 1;
     }
     else {
-        say "Restoring backup FAILED from file $file_path";
-        return 0;
+        $app->logger->error("Restoring backup FAILED from file $file_path");
+        return;
     }
 }
 ####################################################################################
 sub do_backup_current_state {
     my $self = shift;
-    my $fname_prefix = shift || "normal";
+    my $fname_prefix = shift // "normal";
 
-    say "call: Backup::do_backup_current_state";
-    say "creating backup with prefix $fname_prefix";
-
-    $self->write_log("creating backup with prefix $fname_prefix");
+    $self->app->logger->info("creating backup with prefix $fname_prefix");
     return do_mysql_db_backup( $self, $fname_prefix );
-
 }
 ################################################################################
  

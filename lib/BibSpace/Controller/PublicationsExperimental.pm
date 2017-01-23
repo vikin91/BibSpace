@@ -12,13 +12,13 @@ use 5.010;           #because of ~~
 use strict;
 use warnings;
 use DBI;
+use DBIx::Connector;
 
 use TeX::Encode;
 use Encode;
 
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
-use BibSpace::Model::M::MEntry;
 
 
 use Mojo::Base 'Mojolicious::Controller';

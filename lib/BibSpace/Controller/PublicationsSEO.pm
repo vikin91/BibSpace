@@ -14,10 +14,9 @@ use 5.010;           #because of ~~
 use TeX::Encode;
 use Encode;
 
-use BibSpace::Controller::Core;            # ok
-use BibSpace::Functions::FPublications;    #ok
-use BibSpace::Model::M::MEntry;               # ok
-use BibSpace::Controller::Publications;    # ok
+use BibSpace::Controller::Core;           
+use BibSpace::Functions::FPublications;   
+use BibSpace::Controller::Publications;   
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';

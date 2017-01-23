@@ -38,14 +38,13 @@ subtest 'login: pub_admin bad password' => sub {
 ####################################################################
 subtest 'login: pub_admin login' => sub {
 
-	my $t_logged_in = Test::Mojo->new('BibSpace');
-	$t_logged_in->ua->max_redirects(10);
-	$t_logged_in->post_ok(
+	$t_anyone->ua->max_redirects(10);
+	$t_anyone->post_ok(
 	    '/do_login' => { Accept => '*/*' },
 	    form        => { user   => 'pub_admin', pass => 'asdf' }
 	);
 
-	$t_logged_in->get_ok('/')
+	$t_anyone->get_ok('/')
 	    ->status_isnt(404)->status_isnt(500)
 	    ->content_like(qr/Nice to see you here/i);
 };

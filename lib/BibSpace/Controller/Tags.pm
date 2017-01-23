@@ -10,12 +10,13 @@ use File::Slurp;
 use Time::Piece;
 use 5.010;           #because of ~~
 use DBI;
+use DBIx::Connector;
 use Scalar::Util qw(looks_like_number);
 use List::MoreUtils qw(any uniq);
 
 use BibSpace::Controller::Core;
 use BibSpace::Functions::FPublications;
-use BibSpace::Model::M::MTagCloud;
+use BibSpace::Model::TagCloud;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -193,8 +194,7 @@ sub get_tags_for_author_read {
     my $url
       = $self->url_for('lyp')->query( author => $author->{master}, tag => $tag_name, title => '1', navbar => '1' );
 
-    my $tag_cloud_obj = MTagCloud->new();
-    $tag_cloud_obj->{tag}   = $tag->{name};
+    my $tag_cloud_obj = TagCloud->new();
     $tag_cloud_obj->{url}   = $url;
     $tag_cloud_obj->{count} = $count;
     $tag_cloud_obj->{name}  = $tag_name;
@@ -215,26 +215,30 @@ sub get_tags_for_team_read {
   my $self    = shift;
   my $team_id = $self->param('tid');
 
-  my $team = $self->app->repo->getTeamsRepository->filter( sub { $_->id == $team_id } );
-  if ( !defined $team ) {
-    $team = $self->app->repo->getTeamsRepository->filter( sub { $_->name eq $team_id } );
-  }
-  if ( !defined $team ) {
+  my $team = $self->app->repo->getTeamsRepository->find( sub { $_->id == $team_id } );
+  $team ||= $self->app->repo->getTeamsRepository->find( sub { $_->name eq $team_id } );
+
+  
+  if ( !$team ) {
     $self->render( text => "Team $team_id does not exist.", status => 404 );
     return;
   }
 
-  my @members = map { $_->author } $team->memberships_all;
-  my @team_tags;
+  my @members = $team->get_members;
+  
+  
+  my %tt;
   foreach my $member (@members) {
-    my @papers = map { $_->entry } $member->authorships_all;
+    my @papers = $member->get_entries;
     foreach my $paper (@papers) {
-      my @subset_tags = map { $_->tag } $paper->labelings_all;
-      push @subset_tags, @team_tags;
+      # merge two hashes
+      %tt = (%tt, map { "".$_->name => 1} $paper->get_tags );
     }
   }
+  my @team_tag_names = keys %tt;
+  
 
-  if ( !@team_tags ) {
+  if ( !@team_tag_names ) {
     $self->render( text => "Team $team_id has no tagged papers.", status => 200 );
     return;
   }
@@ -243,14 +247,12 @@ sub get_tags_for_team_read {
   my @tagc_cloud_arr;
   my @sorted_tagc_cloud_arr;
 
-  foreach my $tag (@team_tags) {
-    my $tag_name = $tag->name;
+  foreach my $tag_name (@team_tag_names) {
     $tag_name =~ s/_/\ /g;
 
-    my $url = $self->url_for('lyp')->query( team => $team->name, tag => $tag_name, title => '1', navbar => '1' );
+    my $url = "".$self->url_for('lyp')->query( team => $team->name, tag => $tag_name, title => '1', navbar => '1' );
 
-    my $tag_cloud_obj = MTagCloud->new(
-      tag   => $tag->name,
+    my $tag_cloud_obj = TagCloud->new(
       url   => $url,
       count => "-1",         # FIXME!
       name  => $tag_name,
@@ -258,11 +260,12 @@ sub get_tags_for_team_read {
     push @tagc_cloud_arr, $tag_cloud_obj;
   }
 
-  @sorted_tagc_cloud_arr = reverse sort { $a->{count} <=> $b->{count} } @tagc_cloud_arr;
+  @sorted_tagc_cloud_arr = reverse sort { 
+    $a->count <=> $b->count 
+    or $b->name cmp $a->name 
+  } @tagc_cloud_arr;
 
-  ### old code
-
-  $self->stash( tags => \@team_tags, author => $team, tcarr => \@sorted_tagc_cloud_arr );
+  $self->stash( tcarr => \@sorted_tagc_cloud_arr );
   $self->render( template => 'tags/author_tags_read' );
 
 }
