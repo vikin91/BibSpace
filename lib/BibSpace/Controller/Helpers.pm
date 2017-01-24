@@ -199,6 +199,7 @@ sub register {
     num_pubs_for_year => sub {
       my $self = shift;
       my $year = shift;
+      return 0 unless defined $year;
 
       return
         scalar grep { defined $_->year and $_->year == $year and $_->hidden == 0 }
@@ -255,12 +256,12 @@ sub register {
     get_recent_years_arr => sub {
       my $self = shift;
 
-      my @arr = map { $_->year } grep { defined $_->year } $self->app->repo->getEntriesRepository()->all();
+      my @arr = grep { defined $_ } map { $_->year } $self->app->repo->getEntriesRepository()->all();
       @arr = uniq @arr;
       @arr = sort { $b <=> $a } @arr;
       my $max = scalar @arr;
       $max = 10 if $max > 10;
-      return @arr[ 0 .. $max ];
+      return @arr[ 0 .. $max-1 ];
     }
   );
 

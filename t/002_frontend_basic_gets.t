@@ -17,7 +17,7 @@ $t_logged_in->post_ok(
 my $self = $t_logged_in->app;
 my $dbh = $t_logged_in->app->db;
 my $app_config = $t_logged_in->app->config;
-my $fixture_name = "db_new.sql";
+my $fixture_name = "small_fixture.sql";
 my $fixture_dir = "./fixture/";
 
 # uncommentig this causes "premature connection close"
