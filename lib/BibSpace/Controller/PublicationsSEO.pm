@@ -101,7 +101,7 @@ sub meta {
 
         my $name_clean = "";
         $name_clean = decode( 'latex', $name_clean );
-        my $firstname = join( ' ', $name->part('first') );
+        my $firstname = join( ' ', grep {defined $_} $name->part('first') ) if defined $name->part('first');
         my $von       = join( ' ', $name->part('von') )
             if defined $name->part('von');
         my $lastname = join( ' ', $name->part('last') );

@@ -2,31 +2,28 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 
-
-
-my $t_anyone = Test::Mojo->new('BibSpace');
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
     form        => { user   => 'pub_admin', pass => 'asdf' }
 );
 my $self = $t_logged_in->app;
-
 my $dbh = $t_logged_in->app->db;
-my $storage = StorageBase::get();
+
 
 use BibSpace::Functions::FPublications;
 
 $dbh->do('DELETE FROM Entry;');
-$storage->entries_clear;
+$t_logged_in->app->repo->getEntriesRepository->delete($t_logged_in->app->repo->getEntriesRepository->all);
 
 # my $en = MEntry->new();
-my @entries = $storage->entries_all;
+my @entries = $t_logged_in->app->repo->getEntriesRepository->all;
 my $num_entries = scalar(@entries);
 is($num_entries, 0, "Got 0 entries");
 
 #### adding some fixtures. TODO: this needs to be done automatically at the beginning of the test suite
-my $en3 = MEntry->new();
+my $idProvider = $t_logged_in->app->repo->getEntriesRepository->getIdProvider;
+my $en3 = Entry->new(idProvider => $idProvider);
 $en3->{bib} = '@mastersthesis{zzzzz1,
   address = {World},
   author = {James Bond},
@@ -36,10 +33,9 @@ $en3->{bib} = '@mastersthesis{zzzzz1,
   year = {1999},
 }';
 $en3->populate_from_bib($dbh);
-$en3->save($dbh);
-$storage->add($en3);
+$t_logged_in->app->repo->getEntriesRepository->save($en3);
 
-my $en4 = MEntry->new();
+my $en4 = Entry->new(idProvider => $idProvider);
 $en4->{bib} = '@mastersthesis{zzzzz2,
   address = {World},
   author = {James Bond},
@@ -49,15 +45,14 @@ $en4->{bib} = '@mastersthesis{zzzzz2,
   year = {1999},
 }';
 $en4->populate_from_bib($dbh);
-$en4->save($dbh);
-$storage->add($en4);
+$t_logged_in->app->repo->getEntriesRepository->save($en4);
 
 
 
-@entries = $storage->entries_all;
+@entries = $t_logged_in->app->repo->getEntriesRepository->all;
 $num_entries = scalar(@entries);
 
-my $en = MEntry->new();
+my $en = Entry->new(idProvider => $idProvider);
 ok(defined $en, "MEntry initialized correctly");
 ok($num_entries > 0, "Got more than 0 entries");
 
@@ -67,11 +62,10 @@ ok($num_entries > 0, "Got more than 0 entries");
 
 #### single entry
 
-$dbh->do('DELETE FROM Entry;');
-$storage->entries_clear;
+$t_logged_in->app->repo->getEntriesRepository->delete($t_logged_in->app->repo->getEntriesRepository->all);
 
 ### adding some entries for the next test
-$en3 = MEntry->new();
+$en3 = Entry->new(idProvider => $idProvider);
 $en3->{bib} = '@mastersthesis{xxx1,
   address = {World},
   author = {James Bond},
@@ -81,10 +75,9 @@ $en3->{bib} = '@mastersthesis{xxx1,
   year = {1999},
 }';
 $en3->populate_from_bib($dbh);
-$en3->save($dbh);
-$storage->add($en3);
+$t_logged_in->app->repo->getEntriesRepository->save($en3);
 
-$en4 = MEntry->new();
+$en4 = Entry->new(idProvider => $idProvider);
 $en4->{bib} = '@mastersthesis{xxx2,
   address = {World},
   author = {James Bond},
@@ -94,9 +87,8 @@ $en4->{bib} = '@mastersthesis{xxx2,
   year = {1999},
 }';
 $en4->populate_from_bib($dbh);
-$en4->save($dbh);
-$storage->add($en4);
-@entries = $storage->entries_all;
+$t_logged_in->app->repo->getEntriesRepository->save($en4);
+@entries = $t_logged_in->app->repo->getEntriesRepository->all;
 $num_entries = scalar(@entries);
 
 

@@ -83,20 +83,21 @@ sub test {
     };
     #### only one location is the correct one!
     my $test_backup_path = $bfname;
-    if ( -e $bfname ) {
-        $test_backup_path = $bfname;
-    }
-    elsif ( -e $backup_dir_absolute . $test_backup_path ) {
-        $test_backup_path = $backup_dir_absolute . $test_backup_path;
-    }
-    elsif ( -e $backup_dir_absolute . "\\" . $test_backup_path ) {
-        $test_backup_path = $backup_dir_absolute . "\\" . $test_backup_path;
-    }
-    else {
-        $msg .= "WARNING: test backup file cannot be removed: Wrong path.";
-    }
+    # if ( -e $bfname ) {
+    #     $test_backup_path = $bfname;
+    # }
+    # elsif ( -e $backup_dir_absolute . $test_backup_path ) {
+    #     $test_backup_path = $backup_dir_absolute . $test_backup_path;
+    # }
+    # elsif ( -e $backup_dir_absolute . "\\" . $test_backup_path ) {
+    #     $test_backup_path = $backup_dir_absolute . "\\" . $test_backup_path;
+    # }
+    # else {
+    #     $msg .= "WARNING: test backup file cannot be removed: Wrong path.";
+    # }
 
     try {
+        say "Removing: $test_backup_path ";
         unlink $test_backup_path;
     }
     catch {

@@ -30,7 +30,7 @@ $t_logged_in->ua->max_redirects(10);
 
 my $token = CMUsers->generate_token();
 ok(defined $token);
-is($token =~ y///c, 32);
+is(length($token), 32);
 
 ########################################################
 
@@ -67,7 +67,7 @@ subtest 'Setting new password' => sub {
     $t_anyone->post_ok('/forgot/gen' => { Accept => '*/*' }, form => { user   => 'pub_admin' });
 
     my $token2 = $t_anyone->app->users->get_token_for_email("your_email\@email.com", $dbh);
-    ok(defined $token2 and $token2 =~ y===c = 32, "Chacking token length");
+    ok(defined $token2 and length($token2) == 32, "Checking token length");
 
     $t_anyone->get_ok("/forgot/reset/$token2")->status_is(200);
 

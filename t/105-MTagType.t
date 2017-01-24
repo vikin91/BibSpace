@@ -4,22 +4,19 @@ use Test::Mojo;
 use Test::Exception;
 
 
-use BibSpace::Controller::Core;
-use BibSpace::Functions::FDB;
-use BibSpace::Controller::BackupFunctions;
-use Data::Dumper;
+# use BibSpace::Controller::Core;
+# use BibSpace::Functions::FDB;
+# use BibSpace::Controller::BackupFunctions;
+# use Data::Dumper;
 
-my $t_anyone    = Test::Mojo->new('BibSpace');
-my $t_logged_in = Test::Mojo->new('BibSpace');
-$t_logged_in->post_ok(
-    '/do_login' => { Accept => '*/*' },
-    form        => { user   => 'pub_admin', pass => 'asdf' }
-);
-my $self       = $t_anyone->app;
-my $dbh        = $t_anyone->app->db;
-my $app_config = $t_logged_in->app->config;
-
-my $storage = StorageBase::get();
+# my $t_logged_in = Test::Mojo->new('BibSpace');
+# $t_logged_in->post_ok(
+#     '/do_login' => { Accept => '*/*' },
+#     form        => { user   => 'pub_admin', pass => 'asdf' }
+# );
+# my $self       = $t_logged_in->app;
+# my $dbh        = $t_logged_in->app->db;
+# my $app_config = $t_logged_in->app->config;
 
 # my $status = 0;
 # $status
@@ -94,5 +91,5 @@ my $storage = StorageBase::get();
 
 
 
-
+ok(1);
 done_testing();

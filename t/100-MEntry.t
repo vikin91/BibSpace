@@ -5,19 +5,19 @@ use Test::Exception;
 use Data::Dumper;
 use Array::Utils qw(:all);
 
-my $t_anyone    = Test::Mojo->new('BibSpace');
-my $t_logged_in = Test::Mojo->new('BibSpace');
-$t_logged_in->post_ok(
-    '/do_login' => { Accept => '*/*' },
-    form        => { user   => 'pub_admin', pass => 'asdf' }
-);
-my $self = $t_logged_in->app;
+# my $t_anyone    = Test::Mojo->new('BibSpace');
+# my $t_logged_in = Test::Mojo->new('BibSpace');
+# $t_logged_in->post_ok(
+#     '/do_login' => { Accept => '*/*' },
+#     form        => { user   => 'pub_admin', pass => 'asdf' }
+# );
+# my $self = $t_logged_in->app;
 
-my $dbh = $t_logged_in->app->db;
+# my $dbh = $t_logged_in->app->db;
 
 
-use BibSpace::Functions::FPublications;
-use BibSpace::Controller::Core;
+# use BibSpace::Functions::FPublications;
+# use BibSpace::Controller::Core;
 
 
 # $dbh->do('DELETE FROM Entry;');
