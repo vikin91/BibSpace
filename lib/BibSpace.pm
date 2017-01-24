@@ -166,6 +166,9 @@ sub setup_repositories {
     $self->repo->copy_data( { from => 99, to => 1 } );
   }
   $self->link_data;
+
+  # my $author = $self->repo->getAuthorsRepository->find( sub{$_->id == 83});
+  $self->app->smatrArrayBackend->store('dump.json');
 }
 ################################################################
 sub link_data {

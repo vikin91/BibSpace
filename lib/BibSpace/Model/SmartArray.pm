@@ -11,7 +11,8 @@ require BibSpace::Model::IEntity;
 with 'IBibSpaceBackend';
 use List::Util qw(first);
 use List::MoreUtils qw(first_index);
-
+use MooseX::Storage;
+with Storage( 'format' => 'JSON', 'io' => 'File' );
 
 =item
     This is a in-memory data structure (hash) to hold all objects of BibSpace.
@@ -21,7 +22,7 @@ use List::MoreUtils qw(first_index);
     String "TypeName" => { Integer UID => Object with type TypeName}.
 =cut
 
-has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
+has 'logger' => ( is => 'ro', does => 'ILogger', required => 1, traits  => ['DoNotSerialize']);
 
 has 'data' => (
     traits    => ['Hash'],

@@ -22,7 +22,7 @@ $t_logged_in->ua->inactivity_timeout(3600);
 my $dbh = $t_logged_in->app->db;
 
 ####################################################################
-TODO: {
+subtest 'Checking pages for single publication' => sub {
     local $TODO = "Testing gets for single publications";
 
     my @entries     = $t_logged_in->app->repo->getEntriesRepository->all;
@@ -48,7 +48,7 @@ TODO: {
         );
         for my $page (@pages){
             note "============ Testing page $page for paper id $id ============";
-            $t_logged_in->get_ok($page)->status_isnt(404, "Checking: 404 $page")->status_isnt(500, "Checking: 500 $page");
+            $t_logged_in->get_ok($page, "Checking: OK $page")->status_isnt(404, "Checking: 404 $page")->status_isnt(500, "Checking: 500 $page");
         }
         $num_done = $num_done + 1;
     }
