@@ -3,6 +3,7 @@ package ILabeled;
 use namespace::autoclean;
 use Moose::Role;
 
+
 has 'labelings' => (
     is      => 'rw',
     isa     => 'ArrayRef[Labeling]',

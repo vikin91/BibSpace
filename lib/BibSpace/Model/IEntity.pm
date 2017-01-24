@@ -5,6 +5,7 @@ use BibSpace::Model::IntegerUidProvider;
 use Moose::Role;
 use MooseX::StrictConstructor;
 
+
 sub _generateUIDEntry {
     my $self = shift;
   

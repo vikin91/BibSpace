@@ -26,7 +26,7 @@ has 'masterObj' => (
   is      => 'rw',
   isa     => 'Maybe[Author]',
   default => sub {undef},
-  traits  => ['DoNotSerialize'],
+  # traits  => ['DoNotSerialize'],
   documentation => q{Author's master author object.}
 );
 

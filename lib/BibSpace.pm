@@ -37,6 +37,8 @@ use BibSpace::Model::DAO::DAOFactory;
 use BibSpace::Model::Repository::RepositoryFactory;
 use BibSpace::Model::SmartArray;
 
+use Storable;
+
 # for Makemake. Needs to be removed for Dist::Zilla
 # our $VERSION = '0.4.4';
 
@@ -78,12 +80,20 @@ has version => sub {
   return $BibSpace::VERSION // "0.4.7";
 };
 
+has appStateDumpFile => sub {
+  return 'bibspace.dat';
+};
 
 has logger => sub { state $logger = SimpleLogger->new };
 
-has smatrArrayBackend => sub {
+
+has smartArrayBackend => sub {
   my $self = shift;
-  state $logger = SmartArray->new( logger => $self->logger );
+  if( -e $self->appStateDumpFile ){
+    $self->logger->info('App state available in '.$self->appStateDumpFile);
+    return retrieve($self->appStateDumpFile);
+  }
+  return SmartArray->new( logger => $self->logger );
 };
 
 has backendConfig => sub {
@@ -91,7 +101,7 @@ has backendConfig => sub {
   my %backendConfig = (
     idProviderType => 'IntegerUidProvider',
     backends       => [
-      { prio => 1, type => 'SmartArrayDAOFactory', handle => $self->smatrArrayBackend },
+      { prio => 1, type => 'SmartArrayDAOFactory', handle => $self->smartArrayBackend },
 
       # { prio => 2, type => 'RedisDAOFactory', handle => $redisHandle },
       { prio => 99, type => 'MySQLDAOFactory', handle => $self->db },
@@ -162,13 +172,15 @@ sub startup {
 ################################################################
 sub setup_repositories {
   my $self = shift;
-  if ( $self->app->db ) {
-    $self->repo->copy_data( { from => 99, to => 1 } );
-  }
-  $self->link_data;
 
-  # my $author = $self->repo->getAuthorsRepository->find( sub{$_->id == 83});
-  # $self->app->smatrArrayBackend->store('dump.json');
+
+  if( ! -e $self->appStateDumpFile ){
+    if ( $self->app->db ) {
+      $self->repo->copy_data( { from => 99, to => 1 } );
+    }
+    $self->link_data;
+    store $self->app->smartArrayBackend, $self->appStateDumpFile;
+  }
 }
 ################################################################
 sub link_data {

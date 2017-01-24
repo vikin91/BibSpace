@@ -12,7 +12,8 @@ with 'IBibSpaceBackend';
 use List::Util qw(first);
 use List::MoreUtils qw(first_index);
 use MooseX::Storage;
-with Storage( 'format' => 'JSON', 'io' => 'File' );
+with Storage( format => 'JSON', 'io' => 'File' );
+
 
 =item
     This is a in-memory data structure (hash) to hold all objects of BibSpace.

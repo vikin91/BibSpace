@@ -3,7 +3,6 @@ package IHavingException;
 use namespace::autoclean;
 use Moose::Role;
 
-
 has 'exceptions' => (
     is      => 'rw',
     isa     => 'ArrayRef[Exception]',
