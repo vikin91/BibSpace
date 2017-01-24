@@ -6,7 +6,7 @@ use Test::Mojo;
 use BibSpace;
 use BibSpace::Controller::Core;
 
-my $num_publications_limit = 10;
+my $num_publications_limit = 5;
 
 # plan tests => 1 + 9 * 3 * $num_publications_limit;
 
@@ -15,7 +15,7 @@ $t_logged_in->post_ok( '/do_login' => { Accept => '*/*' }, form => { user => 'pu
 my $self = $t_logged_in->app;
 
 # this is crucial for the test to pass as there are redirects here!
-$t_logged_in->ua->max_redirects(10);
+$t_logged_in->ua->max_redirects(3);
 $t_logged_in->ua->inactivity_timeout(3600);
 my $dbh = $t_logged_in->app->db;
 
