@@ -174,7 +174,7 @@ sub setup_repositories {
   my $self = shift;
 
 
-  if( ! -e $self->appStateDumpFile ){
+  if( ! -e $self->appStateDumpFile or $self->repo->getEntriesRepository->empty ){
     if ( $self->app->db ) {
       $self->repo->copy_data( { from => 99, to => 1 } );
     }
