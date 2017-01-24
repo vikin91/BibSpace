@@ -24,13 +24,13 @@ subtest 'Checking pages for single publication' => sub {
   # local $TODO = "Testing gets for single publications";
 
   my @entries  = $t_logged_in->app->repo->getEntriesRepository->all;
-  my $size     = $#entries;
+  my $size     = scalar(@entries);
+  $num_publications_limit = $size if $size < $num_publications_limit;
   my $num_done = 0;
 
 
   while ( $num_done < $num_publications_limit ) {
-    my $rand = int( rand($size) );
-    my $e    = $entries[$rand];
+    my $e    = $entries[$num_done];
     my $id   = $e->id;
 
     my @pages = (
@@ -53,7 +53,7 @@ subtest 'Checking pages for single publication' => sub {
   }
 };
 
-
+ok(1);
 done_testing();
 
 
