@@ -16,6 +16,7 @@ requires 'File::Spec' , '>= 0.0';
 requires 'HTML::TagCloud::Sortable' , '>= 0.0';
 requires 'JSON' , '>= 0.0';
 requires 'LWP::UserAgent' , '>= 0.0';
+requires 'LWP::Protocol::https' , '>= 0.0';
 requires 'Module::Build::Mojolicious' , '>= 0.0';
 requires 'Module::Build::Mojolicious' , '>= 0.0';
 requires 'Module::CPANfile' , '>= 0.0';

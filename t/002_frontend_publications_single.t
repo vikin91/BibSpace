@@ -46,7 +46,8 @@ subtest 'Checking pages for single publication' => sub {
     );
     for my $page (@pages) {
       note "============ Testing page $page for paper id $id ============";
-      $t_logged_in->get_ok( $page, "Checking: OK $page" )->status_isnt( 404, "Checking: 404 $page" )
+      $t_logged_in->get_ok( $page, "Checking: OK $page" )
+        ->status_isnt( 404, "Checking: 404 $page" )
         ->status_isnt( 500, "Checking: 500 $page" );
     }
     ++$num_done;
