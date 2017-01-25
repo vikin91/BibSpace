@@ -123,15 +123,15 @@ sub toStringShort {
     $str .= ", year " . $self->year;
     $str .= ", \n";
     $str .= "Authors: [\n";
-    map { $str .= "\t" . $_->toString . "\n" } $self->authors;
+    map { $str .= "\t" . $_->toString . "\n" } $self->get_authors;
     $str .= "]\n";
 
     $str .= "Tags: [\n";
-    map { $str .= "\t" . $_->toString . "\n" } $self->tags;
+    map { $str .= "\t" . $_->toString . "\n" } $self->get_tags;
     $str .= "]\n";
 
     $str .= "Exceptions: [\n";
-    map { $str .= "\t" . $_->toString . "\n" } $self->exceptions_all;
+    map { $str .= "\t" . $_->toString . "\n" } $self->get_exceptions;
     $str .= "]\n";
 
     return $str;
