@@ -445,7 +445,7 @@ sub replace_urls_to_file_serving_function {
     # check if the entry has pdf
     my $pdf_path = $self->get_paper_pdf_path( $e->{id}, "paper" );
     if ( $pdf_path ne 0 ) {    # this means that file exists locally
-      if ( $e->bibtex_has_field("pdf") ) {
+      if ( $e->has_bibtex_field("pdf") ) {
         $e->add_bibtex_field( "pdf", "$url_pdf" );
         $str .= "id $e->{id}, PDF: " . $url_pdf;
         $str .= '<br/>';
@@ -453,7 +453,7 @@ sub replace_urls_to_file_serving_function {
     }
     my $slides_path = $self->get_paper_pdf_path( $e->{id}, "slides" );
     if ( $slides_path ne 0 ) {    # this means that file exists locally
-      if ( $e->bibtex_has_field("slides") ) {
+      if ( $e->has_bibtex_field("slides") ) {
         $e->add_bibtex_field( "slides", "$url_slides" );
         $str .= "id $e->{id}, SLI: " . $url_slides;
         $str .= '<br/>';

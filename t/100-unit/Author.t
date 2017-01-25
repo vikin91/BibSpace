@@ -311,7 +311,6 @@ use Test::Exception;
 #     $e->save($dbh);
 #     $storage->add_entry_authors($e);
 #     $storage->add_entry_tags($e);
-#     $e->postprocess_updated($dbh); # deprecated
 
 #     my @authors = $e->authors();
 #     is( scalar @authors, 1, "Got 1 author" );

@@ -252,9 +252,7 @@ sub populate_from_bib {
         my $bibtex_entry = new Text::BibTeX::Entry();
         my $s            = $bibtex_entry->parse_s( $self->bib );
 
-        unless ( $bibtex_entry->parse_ok ) {
-            return 0;
-        }
+        return if !$bibtex_entry->parse_ok;
 
         $self->bibtex_key( $bibtex_entry->key );
         $self->year( $bibtex_entry->get('year') );
@@ -268,7 +266,7 @@ sub populate_from_bib {
         $self->_bibtex_type( $bibtex_entry->type );
         return 1;
     }
-    return 0;
+    return;
 }
 ####################################################################################
 sub add_bibtex_field {
@@ -278,7 +276,7 @@ sub add_bibtex_field {
 
     my $entry = new Text::BibTeX::Entry();
     $entry->parse_s( $self->bib );
-    return -1 unless $entry->parse_ok;
+    return unless $entry->parse_ok;
     my $key = $entry->key;
 
     $entry->set( $field, $value );
@@ -288,7 +286,7 @@ sub add_bibtex_field {
     $self->populate_from_bib();
 }
 ####################################################################################
-sub bibtex_has_field {
+sub has_bibtex_field {
 
     # returns 1 if bibtex of this entry has filed
     my $self         = shift;
@@ -298,7 +296,7 @@ sub bibtex_has_field {
     my $bibtex_entry = new Text::BibTeX::Entry();
     $bibtex_entry->parse_s($this_bib);
     return 1 if $bibtex_entry->exists($bibtex_field);
-    return 0;
+    return;
 }
 ####################################################################################
 sub get_bibtex_field_value {
@@ -308,12 +306,44 @@ sub get_bibtex_field_value {
     my $bibtex_field = shift;
     my $this_bib     = $self->bib;
 
-    if ( $self->bibtex_has_field($bibtex_field) ) {
+    if ( $self->has_bibtex_field($bibtex_field) ) {
         my $bibtex_entry = new Text::BibTeX::Entry();
         $bibtex_entry->parse_s($this_bib);
         return $bibtex_entry->get($bibtex_field);
     }
     return undef;
+}
+####################################################################################
+sub remove_bibtex_fields {
+    my $self                         = shift;
+    my $arr_ref_bib_fields_to_delete = shift;
+    my @bib_fields_to_delete         = @$arr_ref_bib_fields_to_delete;
+
+    my $entry = new Text::BibTeX::Entry();
+    $entry->parse_s( $self->bib );
+    return -1 unless $entry->parse_ok;
+    my $key = $entry->key;
+
+    my $num_deleted = 0;
+
+    for my $field (@bib_fields_to_delete) {
+        $entry->delete($field) if defined $entry->exists($field);
+        $num_deleted++ if defined $entry->exists($field);
+    }
+
+    if ( $num_deleted > 0 ) {
+        my $new_bib = $entry->print_s;
+
+# cleaning errors caused by sqlite - mysql import # FIXME: do we still need this?
+        $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
+        $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
+
+        $new_bib =~ s/\\\\/\\/g;
+        $new_bib =~ s/\\\\/\\/g;
+
+        $self->bib($new_bib);
+    }
+    return $num_deleted;
 }
 ####################################################################################
 sub fix_month {
@@ -324,7 +354,7 @@ sub fix_month {
     my $num_fixes     = 0;
     my $month_numeric = 0;
 
-    if ( $self->bibtex_has_field('month') ) {
+    if ( $self->has_bibtex_field('month') ) {
         my $month_str = $bibtex_entry->get('month');
         $month_numeric
             = BibSpace::Controller::Core::get_month_numeric($month_str);
@@ -343,22 +373,6 @@ sub fix_month {
 
 
     return $num_fixes;
-}
-####################################################################################
-sub postprocess_updated {
-    my $self     = shift;
-    my $bst_file = shift;
-
-    $bst_file = $self->bst_file if !defined $bst_file;
-
-    warn
-        "Warning, you use Mentry->postprocess_updated without valid bst file!"
-        unless defined $bst_file;
-
-    $self->populate_from_bib();
-    $self->fix_month();
-    $self->regenerate_html( 0, $bst_file );
-
 }
 ####################################################################################
 sub generate_html {
@@ -553,38 +567,7 @@ sub clean_ugly_bibtex_fields {
         = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
     return $self->remove_bibtex_fields( \@arr_default );
 }
-####################################################################################
-sub remove_bibtex_fields {
-    my $self                         = shift;
-    my $arr_ref_bib_fields_to_delete = shift;
-    my @bib_fields_to_delete         = @$arr_ref_bib_fields_to_delete;
 
-    my $entry = new Text::BibTeX::Entry();
-    $entry->parse_s( $self->bib );
-    return -1 unless $entry->parse_ok;
-    my $key = $entry->key;
-
-    my $num_deleted = 0;
-
-    for my $field (@bib_fields_to_delete) {
-        $entry->delete($field) if defined $entry->exists($field);
-        $num_deleted++ if defined $entry->exists($field);
-    }
-
-    if ( $num_deleted > 0 ) {
-        my $new_bib = $entry->print_s;
-
-# cleaning errors caused by sqlite - mysql import # FIXME: do we still need this?
-        $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
-        $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
-
-        $new_bib =~ s/\\\\/\\/g;
-        $new_bib =~ s/\\\\/\\/g;
-
-        $self->bib($new_bib);
-    }
-    return $num_deleted;
-}
 ####################################################################################
 
 no Moose;
