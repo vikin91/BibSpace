@@ -14,10 +14,14 @@ my $repo = $self->app->repo;
 
 my @all_entries = $repo->getEntriesRepository->all;
 
+my $limit_test_entries = 20;
+
 note "============ Testing ".scalar(@all_entries)." entries ============";
 
 foreach my $entry(@all_entries){
+  last if $limit_test_entries < 0;
   note ">> Testing Entry ID ".$entry->id.".";
+
 
   ok( length($entry->toString) > 0);
   ok( length($entry->toStringShort) > 0);
@@ -72,6 +76,7 @@ foreach my $entry(@all_entries){
   # just call
   $entry->decodeLatex;
 
+  $limit_test_entries = $limit_test_entries -1;
 }
 
 # my $t_logged_in = Test::Mojo->new('BibSpace');

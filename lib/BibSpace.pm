@@ -180,6 +180,9 @@ sub setup_repositories {
     }
     $self->link_data;
     store $self->app->smartArrayBackend, $self->appStateDumpFile;
+
+    # so can you overwrite the current state of the app by reading the dump into smartAraay backend
+    # $self->app->smartArrayBackend( retrieve($self->appStateDumpFile) );
   }
 }
 ################################################################
