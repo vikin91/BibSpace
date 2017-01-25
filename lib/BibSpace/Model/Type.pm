@@ -13,6 +13,7 @@ use Try::Tiny;
 
 use Moose;
 use Moose::Util::TypeConstraints;
+with 'IEntity';
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

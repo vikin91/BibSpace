@@ -34,14 +34,15 @@ sub all {
   my %data_landing;
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    if ( $data_bibtex{ $row->{our_type} } ) {
-      push @{ $data_bibtex{ $row->{our_type} } }, $row->{bibtex_type};
+    my $our_type = $row->{our_type};
+    if ( $data_bibtex{ "$our_type" } ) {
+      push @{ $data_bibtex{ "$our_type" } }, $row->{bibtex_type};
     }
     else {
-      $data_bibtex{ $row->{our_type} } = [ $row->{bibtex_type} ];
+      $data_bibtex{ "$our_type" } = [ $row->{bibtex_type} ];
     }
-    $data_desc{ $row->{our_type} }    = $row->{decription};
-    $data_landing{ $row->{our_type} } = $row->{landing};
+    $data_desc{ "$our_type" }    = $row->{decription};
+    $data_landing{ "$our_type" } = $row->{landing};
   }
 
   my @mappings;
@@ -50,7 +51,7 @@ sub all {
     my $desc         = $data_desc{$k};
     my $landing      = $data_landing{$k};
 
-    my $obj = MTypeMapping->new( our_type => $k, description => $desc, landing => $landing );
+    my $obj = Type->new( idProvider => $self->idProvider, our_type => $k, description => $desc, landing => $landing );
     $obj->bibtexTypes_add(@bibtex_types);
     push @mappings, $obj;
   }

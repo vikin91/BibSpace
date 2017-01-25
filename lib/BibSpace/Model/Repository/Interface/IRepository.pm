@@ -19,7 +19,7 @@ use List::Util qw(first);
       ]
     }
 =cut
-has 'backendsConfigHash' => ( is => 'ro', isa => 'HashRef', coerce => 0, traits => [ 'Hash' ], required => 1 );
+has 'backendsConfigHash' => ( is => 'rw', isa => 'Maybe[HashRef]', coerce => 0, traits => [ 'DoNotSerialize'], required => 1 );
 # this parameter is lazy, because the builder routine depends on logger. Logger will be set as first (is non-lazy).
 has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 has '_idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1 );
@@ -33,6 +33,11 @@ requires 'delete';
 requires 'exists';
 requires 'filter';
 requires 'find';
+
+sub removeBackendHandles{
+  my $self = shift;
+  $self->backendsConfigHash(undef);
+}
 
 sub _buildDAOFactory{
     my $self = shift;

@@ -19,6 +19,8 @@
                 <li><a href="<%= url_for('manage_attachments', id=>$entry_obj->{id})%>"><i class="fa fa-upload"></i><i class="fa fa-file-pdf-o"></i><i class="fa fa-file-powerpoint-o"></i> Upload pdf/slides</a></li>
                 <li><a href="<%= url_for('manage_tags', id=>$entry_obj->{id})%>"><span class="glyphicon glyphicon-tags"></span> Manage tags</a></li>
                 <li><a href="<%= url_for('manage_exceptions', id=>$entry_obj->{id})%>"><i class="fa fa-exclamation "></i> Manage exceptions</a></li>
+                <li><a class="btn btn-danger btn-sm" href="<%= url_for('delete_publication_sure', id=>$entry_obj->{id})%>"><i class="fa fa-trash "></i> Force delete</a></li>
+                
             </ul>
         </div>
     </td>

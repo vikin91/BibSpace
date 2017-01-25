@@ -17,7 +17,7 @@ use BibSpace::Model::DAO::MySQL::TypeMySQLDAO;
 use BibSpace::Model::DAO::DAOFactory;
 extends 'DAOFactory';
 
-has 'handle' => ( is => 'ro', required => 1 );
+has 'handle' => ( is => 'ro', required => 1, traits => ['DoNotSerialize']);
 has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
 
 

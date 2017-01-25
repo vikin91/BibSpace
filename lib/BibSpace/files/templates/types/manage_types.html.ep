@@ -16,7 +16,7 @@
             <a class="btn btn-default" href="<%= url_for('types') %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to all Types</a>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            <span class="btn btn-info" ><span class="glyphicon glyphicon-book"></span> Managing type <strong><%= $type %></strong></span>
+            <span class="btn btn-info" ><span class="glyphicon glyphicon-book"></span> Managing type <strong><%= $type->our_type %></strong></span>
         </div>
     </div>
 
@@ -43,13 +43,13 @@
             </button>
         </div>
         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-            <span class="btn btn-info" ><span class="glyphicon glyphicon-book"></span> <strong><%= $type %></strong> = </span>
-            % foreach my $a_type (@assigned_btypes){
+            <span class="btn btn-info" ><span class="glyphicon glyphicon-book"></span> <strong><%= $type->our_type %></strong> = </span>
+            % foreach my $a_type_str (@assigned_btypes){
                 <div class="btn-group">
                     <span type="button" class="btn btn-default">
-                        <span class="glyphicon glyphicon-book"></span> <%= $a_type %>
+                        <span class="glyphicon glyphicon-book"></span> <%= $a_type_str %>
                     </span>
-                    <a class="btn btn-default" href="<%= url_for('typesour_typeunmapbibtex_type', our_type=>$type, bibtex_type=>$a_type)%>"><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
+                    <a class="btn btn-default" href="<%= url_for('unmap_bibtex_type', our_type=>$type, bibtex_type=>$a_type_str)%>"><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
                 </div>
             % }
         </div>

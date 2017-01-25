@@ -23,9 +23,6 @@ foreach my $entry(@all_entries){
   note ">> Testing Entry ID ".$entry->id.".";
 
 
-  ok( length($entry->toString) > 0);
-  ok( length($entry->toStringShort) > 0);
-
   $entry->make_paper;
   ok($entry->is_paper);
   $entry->make_talk;

@@ -102,41 +102,6 @@ has 'bst_file' => (
 
 
 ####################################################################################
-####################################################################################
-
-
-
-
-
-####################################################################################
-sub toString {
-    my $self = shift;
-    return $self->freeze();
-}
-####################################################################################
-sub toStringShort {
-    my $self = shift;
-    my $str;
-    $str .= "MEntry id " . $self->id;
-    $str .= ", entry_type " . $self->entry_type;
-    $str .= ", bibtex_key " . $self->bibtex_key;
-    $str .= ", year " . $self->year;
-    $str .= ", \n";
-    $str .= "Authors: [\n";
-    map { $str .= "\t" . $_->toString . "\n" } $self->get_authors;
-    $str .= "]\n";
-
-    $str .= "Tags: [\n";
-    map { $str .= "\t" . $_->toString . "\n" } $self->get_tags;
-    $str .= "]\n";
-
-    $str .= "Exceptions: [\n";
-    map { $str .= "\t" . $_->toString . "\n" } $self->get_exceptions;
-    $str .= "]\n";
-
-    return $str;
-}
-####################################################################################
 
 sub equals {
     my $self = shift;

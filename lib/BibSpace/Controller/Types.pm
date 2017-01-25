@@ -12,6 +12,7 @@ use warnings;
 use DBI;
 use DBIx::Connector;
 
+use List::MoreUtils qw(any uniq);
 use BibSpace::Controller::Core;
 
 use Mojo::Base 'Mojolicious::Controller';
@@ -27,8 +28,6 @@ sub all_our {
     
 
     my @types = $self->app->repo->getTypesRepository->all;
-
-    map {say $_->toString} @types;
     
     $self->stash( otypes => \@types );
     $self->render( template => 'types/types' );
@@ -36,9 +35,6 @@ sub all_our {
 ####################################################################################
 sub add_type {
     my $self = shift;
-    my $dbh  = $self->app->db;
-
-    $self->stash();
     $self->render( template => 'types/add' );
 }
 ####################################################################################
@@ -46,28 +42,31 @@ sub post_add_type {
     my $self     = shift;
     my $new_type = $self->param('new_type');
 
-    my $dbh = $self->app->db;
+    my $type = Type->new(our_type => $new_type);
 
-    if ( defined $new_type and length($new_type) > 0 ) {
-        my $sth
-            = $dbh->prepare(
-            "INSERT IGNORE INTO OurType_to_Type (our_type, bibtex_type, description, landing) VALUES(?,?,?,?)"
-            );
-        $sth->execute( $new_type, "misc",
-            "Publications of type " . $new_type, 0 );
-    }
+    $self->app->repo->getTypesRepository->save($type);
 
     $self->redirect_to( $self->url_for('types') );
 }
 ####################################################################################
 sub manage {
     my $self = shift;
-    my $type = $self->param('type');
-    my $dbh  = $self->app->db;
+    my $type_id = $self->param('type');
 
-    my @all_our_types        = get_all_our_types($dbh);
-    my @all_bibtex_types      = get_all_bibtex_types($dbh);
-    my @assigned_bibtex_types = get_bibtex_types_for_our_type( $dbh, $type );
+    my @all = $self->app->repo->getTypesRepository->all;
+    my $type = $self->app->repo->getTypesRepository->find( sub {$_->id == $type_id});
+
+    my %bibtex_types = {};
+
+    foreach my $t (@all){
+        foreach my $bib_t ($t->bibtexTypes){
+            $bibtex_types{"$bib_t"} = 1;
+        }
+    }
+
+    my @all_our_types        = uniq map{$_->our_type} @all;
+    my @all_bibtex_types      = keys %bibtex_types;
+    my @assigned_bibtex_types = $type->bibtexTypes_all;
 
 
     # # cannot use objects as keysdue to stringification!

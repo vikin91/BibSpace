@@ -113,7 +113,6 @@ sub single_read {
 sub fixMonths {
   my $self = shift;
 
-
   my @entries = $self->app->repo->getEntriesRepository->all;
 
   foreach my $entry(@entries){
@@ -131,8 +130,6 @@ sub fixMonths {
 sub unhide {
   my $self = shift;
   my $id   = $self->param('id');
-  my $dbh  = $self->app->db;
-
 
   my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
@@ -153,8 +150,6 @@ sub unhide {
 sub hide {
   my $self = shift;
   my $id   = $self->param('id');
-  my $dbh  = $self->app->db;
-
 
   my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
@@ -171,8 +166,6 @@ sub hide {
 sub toggle_hide {
   my $self = shift;
   my $id   = $self->param('id');
-  my $dbh  = $self->app->db;
-
 
   my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
@@ -191,8 +184,6 @@ sub toggle_hide {
 sub make_paper {
   my $self = shift;
   my $id   = $self->param('id');
-  my $dbh  = $self->app->db;
-
 
   my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
@@ -211,8 +202,6 @@ sub make_paper {
 sub make_talk {
   my $self = shift;
   my $id   = $self->param('id');
-  my $dbh  = $self->app->db;
-
 
   my $entry = $self->app->repo->getEntriesRepository->find( sub { $_->{id} == $id } );
 
@@ -230,12 +219,11 @@ sub make_talk {
 ####################################################################################
 sub all_recently_added {
   my $self = shift;
-  my $num  = $self->param('num') || 10;
-  my $dbh  = $self->app->db;
+  my $num  = $self->param('num') // 10;
 
   my @objs = $self->app->repo->getEntriesRepository->all;
   @objs = sort { $b->creation_time cmp $a->creation_time } @objs;
-  @objs = @objs[ 0 .. $num ];
+  @objs = @objs[ 0 .. $num-1 ];
 
   # map {say $_->{creation_time}} @objs;
 
@@ -246,11 +234,11 @@ sub all_recently_added {
 
 sub all_recently_modified {
   my $self = shift;
-  my $num = $self->param('num') || 10;
+  my $num = $self->param('num') // 10;
 
   my @objs = $self->app->repo->getEntriesRepository->all;
   @objs = sort { $b->modified_time cmp $a->modified_time } @objs;
-  @objs = @objs[ 0 .. $num ];
+  @objs = @objs[ 0 .. $num-1 ];
 
   # map {say $_->{modified_time}} @objs;
 
@@ -262,10 +250,9 @@ sub all_recently_modified {
 sub all_without_tag {
   my $self    = shift;
   my $tagtype = $self->param('tagtype') || 1;
-  my $dbh     = $self->app->db;
 
   my @all = $self->app->repo->getEntriesRepository->all;
-  my @objs = grep { scalar $_->tags( $dbh, $tagtype ) == 0 } @all;
+  my @objs = grep { scalar $_->get_tags( $tagtype ) == 0 } @all;
 
 
   my $msg = "This list contains papers that have no tags of type $tagtype. Use this list to tag the untagged papers! ";
@@ -276,14 +263,13 @@ sub all_without_tag {
 ####################################################################################
 sub all_without_tag_for_author {
   my $self        = shift;
-  my $dbh         = $self->app->db;
   my $master_name = $self->param('author');
   my $tagtype     = $self->param('tagtype');
 
 
-  my $author = $self->app->repo->getAuthorsRepository->find( sub { ( $_->{master} cmp $master_name ) == 0 } );
+  my $author = $self->app->repo->getAuthorsRepository->find( sub { ( $_->master cmp $master_name ) == 0 } );
   if ( !defined $author ) {
-    $author = $self->app->repo->getAuthorsRepository->find( sub { $_->{master_id} == $master_name } );
+    $author = $self->app->repo->getAuthorsRepository->find( sub { $_->master_id == $master_name } );
   }
   if ( !defined $author ) {
     $self->flash( msg => "Author $master_name does not exist!", msg_type => "danger" );
@@ -293,8 +279,8 @@ sub all_without_tag_for_author {
 
   # no such master. Assume, that author id was given
 
-  my @all_author_entries = $author->entries();                                      #($dbh);
-  my @objs = grep { scalar $_->tags( $dbh, $tagtype ) == 0 } @all_author_entries;
+  my @all_author_entries = $author->entries();                                    
+  my @objs = grep { scalar $_->get_tags( $tagtype ) == 0 } @all_author_entries;
 
 
   my $msg = "This list contains papers of $author->{master} that miss tags of type $tagtype. ";
@@ -304,10 +290,8 @@ sub all_without_tag_for_author {
 ####################################################################################
 sub all_without_author {
   my $self = shift;
-  my $dbh  = $self->app->db;
 
-
-  my @objs = $self->app->repo->getEntriesRepository->filter( sub { $_->authors_count == 0 } );
+  my @objs = $self->app->repo->getEntriesRepository->filter( sub { scalar($_->get_authors) == 0 } );
 
 
   my $msg = "This list contains papers, that are currently not assigned to any of authors.";
@@ -319,7 +303,6 @@ sub all_without_author {
 sub show_unrelated_to_team {
   my $self    = shift;
   my $team_id = $self->param('teamid');
-  my $dbh     = $self->app->db;
 
 
   my $team_name = "";
@@ -348,7 +331,6 @@ sub show_unrelated_to_team {
 ####################################################################################
 sub all_with_missing_month {
   my $self = shift;
-  my $dbh  = $self->app->db;
 
   $self->app->logger->info("Displaying entries without month");
 

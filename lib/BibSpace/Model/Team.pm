@@ -134,14 +134,19 @@ sub get_membership_end {
   return $author->left_team($self);
 }
 ####################################################################################
+sub get_authors {
+  my $self = shift;
+  return map { $_->author } $self->memberships_all;
+}
+####################################################################################
 sub tags {
   my $self = shift;
   my $type = shift // 1;
 
   my @myTags;
-  my @members = $self->authors_all;
+  my @members = $self->get_authors;
   foreach my $author (@members) {
-    push @myTags, $author->tags($type);
+    push @myTags, $author->get_tags($type);
   }
   @myTags = uniq @myTags;
 
@@ -152,9 +157,9 @@ sub entries {
   my $self = shift;
 
   my @myEntries;
-  my @members = $self->authors_all;
+  my @members = $self->get_authors;
   foreach my $author (@members) {
-    push @myEntries, $author->entries;
+    push @myEntries, $author->get_entries;
   }
   @myEntries = uniq @myEntries;
 

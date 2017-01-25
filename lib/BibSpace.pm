@@ -80,7 +80,7 @@ has version => sub {
   return $BibSpace::VERSION // "0.4.7";
 };
 
-has appStateDumpFile => sub {
+has appStateDumpFileName => sub {
   return 'bibspace.dat';
 };
 
@@ -89,10 +89,6 @@ has logger => sub { state $logger = SimpleLogger->new };
 
 has smartArrayBackend => sub {
   my $self = shift;
-  if( -e $self->appStateDumpFile ){
-    $self->logger->info('App state available in '.$self->appStateDumpFile);
-    return retrieve($self->appStateDumpFile);
-  }
   return SmartArray->new( logger => $self->logger );
 };
 
@@ -110,10 +106,21 @@ has backendConfig => sub {
   return \%backendConfig;
 };
 
+# has storableRepo => sub {
+#   my $self = shift;
+#   if( -e $self->appStateDumpFileName ){
+#     $self->logger->info('App state available in '.$self->appStateDumpFileName);
+#     my $repo = retrieve($self->appStateDumpFileName);
+#     # $repo->setBackendHandles($self->backendConfig);
+#     return $repo;
+#   }
+#   return;
+# };
+
+
 has repo => sub {
   my $self = shift;
-  state $repo = RepositoryFactory->new( logger => $self->logger )
-    ->getInstance( 'LayeredRepositoryFactory', $self->backendConfig );
+  return state $repo = RepositoryFactory->new->getInstance('LayeredRepositoryFactory', $self->logger, $self->backendConfig );
 
   # I don't like the approach with idProvider that comes from the factory
   # But it is necessary, as the new IDs need to be registered once they are read from DB (or any other backend)
@@ -167,23 +174,31 @@ sub startup {
   # $self->logger->info("this is info");
   # $self->logger->warn("this is warning");
   # $self->logger->error("this is error");
+  # foreach (0..1){
+  #   my $testEntry = Entry->new(bib=>'@article{title={xyz'.$_.'}, year={2099}}');
+  #   $self->repo->getEntriesRepository->save($testEntry);
+  # }
 }
 
 ################################################################
 sub setup_repositories {
   my $self = shift;
 
+  # if($self->storableRepo){
+  #   $self->repo($self->storableRepo);
+  #   $self->repo->setBackendHandles($self->backendConfig);
+  # }
 
-  if( ! -e $self->appStateDumpFile or $self->repo->getEntriesRepository->empty ){
+  # if( ! -e $self->appStateDumpFileName or $self->repo->getEntriesRepository->empty ){
     if ( $self->app->db ) {
       $self->repo->copy_data( { from => 99, to => 1 } );
     }
     $self->link_data;
-    store $self->app->smartArrayBackend, $self->appStateDumpFile;
 
-    # so can you overwrite the current state of the app by reading the dump into smartAraay backend
-    # $self->app->smartArrayBackend( retrieve($self->appStateDumpFile) );
-  }
+    # $self->repo->removeBackendHandles;
+    # store $self->repo, $self->appStateDumpFileName;
+    # $self->repo->setBackendHandles($self->backendConfig);
+  # }
 }
 ################################################################
 sub link_data {
@@ -454,7 +469,7 @@ sub setup_routes {
   $logged_user->get('/types/toggle/:type')->to('types#toggle_landing');
 
   $logged_user->get('/types/:our_type/map/:bibtex_type')->to('types#map_types');
-  $logged_user->get('/types/:our_type/unmap/:bibtex_type')->to('types#unmap_types');
+  $logged_user->get('/types/:our_type/unmap/:bibtex_type')->to('types#unmap_types')->name('unmap_bibtex_type');
 
   ################ AUTHORS ################
 
