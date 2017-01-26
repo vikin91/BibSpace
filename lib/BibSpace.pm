@@ -120,7 +120,11 @@ has backendConfig => sub {
 
 has repo => sub {
   my $self = shift;
-  return state $repo = RepositoryFactory->new->getInstance('LayeredRepositoryFactory', $self->logger, $self->backendConfig );
+  return state $repo = RepositoryFactory->new->getInstance(
+      'NonStorableLayeredRepositoryFactory', 
+      $self->logger, 
+      $self->backendConfig 
+  );
 
   # I don't like the approach with idProvider that comes from the factory
   # But it is necessary, as the new IDs need to be registered once they are read from DB (or any other backend)

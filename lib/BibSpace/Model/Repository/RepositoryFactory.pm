@@ -4,7 +4,7 @@ use namespace::autoclean;
 use Moose;
 use BibSpace::Model::ILogger;
 require BibSpace::Model::Repository::LayeredRepositoryFactory;
-
+require BibSpace::Model::Repository::NonStorableLayeredRepositoryFactory;
 
 sub getInstance {
   my $self               = shift;

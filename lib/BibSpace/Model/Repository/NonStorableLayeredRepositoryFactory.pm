@@ -15,15 +15,26 @@ has 'backendsConfigHash' => ( is => 'rw', isa => 'Maybe[HashRef]', traits => ['D
 has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
 has 'LRF' => ( is => 'ro', isa => 'StorableLayeredRepositoryFactory', builder => '_buildStorableLRF', lazy =>0 );
 
-sub BUILD{
-    my $self = shift;
-    $self->logger->debug("constructor of ".__PACKAGE__);
-}
 sub _buildStorableLRF {
     my $self = shift;
     return StorableLayeredRepositoryFactory->new(logger => SimpleLogger->new);
 }
 
+sub getInstance {
+    my $self               = shift;
+    my $backendsConfigHash = shift;
+
+
+    die ""
+        . __PACKAGE__
+        . "->getInstance: repo backends not provided or not of type 'Hash', but '".ref($backendsConfigHash)."'"
+        unless ( ref $backendsConfigHash eq ref {} );
+
+    if ( !defined $self->backendsConfigHash ) {
+        $self->backendsConfigHash($backendsConfigHash);
+    }
+    return $self;
+}
 
 sub hardReset {
     my $self = shift;
