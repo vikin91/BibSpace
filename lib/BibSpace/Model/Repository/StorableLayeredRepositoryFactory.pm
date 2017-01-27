@@ -145,26 +145,25 @@ sub copy_data {
     my $backendsConfigHash = shift;
     my $config  = shift;
 
-    use Data::Dumper;
-    print __PACKAGE__."copy_data".Dumper $backendsConfigHash;
-
     my $backendFrom = $config->{from};
     my $backendTo = $config->{to};
 
     ## TODO: check if backends with given prios exist
 
     $self->hardReset;
-    $self->getAuthorsRepository->copy( $backendFrom, $backendTo );
-    $self->getAuthorshipsRepository->copy( $backendFrom, $backendTo );
-    $self->getEntriesRepository->copy( $backendFrom, $backendTo );
-    $self->getExceptionsRepository->copy( $backendFrom, $backendTo );
-    $self->getLabelingsRepository->copy( $backendFrom, $backendTo );
-    $self->getMembershipsRepository->copy( $backendFrom, $backendTo );
-    $self->getTagsRepository->copy( $backendFrom, $backendTo );
-    $self->getTagTypesRepository->copy( $backendFrom, $backendTo );
-    $self->getTeamsRepository->copy( $backendFrom, $backendTo );
-    $self->getTypesRepository->copy( $backendFrom, $backendTo );
+    $self->getAuthorsRepository($backendsConfigHash)->copy( $backendFrom, $backendTo );
+    $self->getAuthorshipsRepository($backendsConfigHash)->copy( $backendFrom, $backendTo );
+    $self->getEntriesRepository($backendsConfigHash)->copy( $backendFrom, $backendTo );
+    $self->getExceptionsRepository($backendsConfigHash)->copy( $backendFrom, $backendTo );
+    $self->getLabelingsRepository($backendsConfigHash)->copy( $backendFrom, $backendTo );
+    $self->getMembershipsRepository($backendsConfigHash)->copy( $backendFrom, $backendTo );
+    $self->getTagsRepository($backendsConfigHash)->copy( $backendFrom, $backendTo );
+    $self->getTagTypesRepository($backendsConfigHash)->copy( $backendFrom, $backendTo );
+    $self->getTeamsRepository($backendsConfigHash)->copy( $backendFrom, $backendTo );
+    $self->getTypesRepository($backendsConfigHash)->copy( $backendFrom, $backendTo );
 }
+# before 'copy_data' => sub { shift->logger->debug("entering","".__PACKAGE__."->copy_data"); };
+# after 'copy_data'  => sub { shift->logger->debug("exiting","".__PACKAGE__."->copy_data"); };
 
 
 
@@ -207,8 +206,6 @@ sub getAuthorsRepository {
     }
     return $self->{_instanceAuthorsRepo};
 }
-before 'getAuthorsRepository' => sub { shift->logger->debug("entering","".__PACKAGE__."->getAuthorsRepository"); };
-after 'getAuthorsRepository'  => sub { shift->logger->debug("exiting","".__PACKAGE__."->getAuthorsRepository"); };
 
 sub getAuthorshipsRepository {
     my $self = shift; 

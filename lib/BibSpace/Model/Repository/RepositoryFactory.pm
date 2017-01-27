@@ -23,7 +23,7 @@ sub getInstance {
   my $concreteFactoryClass = $factoryType;
   try {
     Class::Load::load_class($concreteFactoryClass);
-    return $concreteFactoryClass->new( logger => $logger )->getInstance($backendsConfigHash);
+    return $concreteFactoryClass->new( logger => $logger, backendsConfigHash => $backendsConfigHash );
   }
   catch {
     die "Requested unknown type of RepositoryFactory: '$concreteFactoryClass'.";

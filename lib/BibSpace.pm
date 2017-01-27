@@ -194,10 +194,14 @@ sub setup_repositories {
   # }
 
   # if( ! -e $self->appStateDumpFileName or $self->repo->getEntriesRepository->empty ){
+
+    say "self->repo is: ".ref($self->repo);
+    say "self->repo->get_storable is: ".ref($self->repo->get_storable);
     if ( $self->app->db ) {
       $self->repo->copy_data( { from => 99, to => 1 } );
     }
     $self->link_data;
+    store $self->repo->get_storable, $self->appStateDumpFileName;
 
     # $self->repo->removeBackendHandles;
     # store $self->repo, $self->appStateDumpFileName;
