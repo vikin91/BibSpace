@@ -82,11 +82,7 @@ sub getDao {
     my $self = shift;
     my $type = shift;
     my $daoAbstractFactory = DAOFactory->new(logger => $self->logger);
-    my $daoFactory = $daoAbstractFactory->getInstance($self->backendFactoryName, handle => $self->handle);
-
-    use Data::Dumper;
-    print Dumper $daoFactory;
-
+    my $daoFactory = $daoAbstractFactory->getInstance($self->backendFactoryName, $self->handle);
     return $self->dispatcher($daoFactory, $type);
 }
 

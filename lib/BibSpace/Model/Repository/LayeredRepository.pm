@@ -7,10 +7,11 @@ use Try::Tiny;
 
 use BibSpace::Model::IUidProvider;
 use BibSpace::Model::SmartUidProvider;
+use BibSpace::Model::Repository::RepositoryLayer;
 
 has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
 # layer_name => RepositoryLayer
-has 'layers' => ( is => 'rw', isa => 'Maybe[HashRef[Str]]', traits => ['DoNotSerialize'], default => sub{ {} } );
+has 'layers' => ( is => 'ro', isa => 'HashRef[RepositoryLayer]', traits => ['DoNotSerialize'], default => sub{ {} } );
 has 'uidProvider' => ( is => 'rw', isa => 'SmartUidProvider', required => 1 );
 
 
@@ -43,8 +44,7 @@ sub get_write_layers {
 sub add_read_layer {
     my $self = shift;
     my $layer = shift;
-    $layer->uidProvider($self->uidProvider);
-    $self->layers->{'read'} = $layer;
+    $self->_add_layer('read', $layer);
 }
 
 sub replace_layer {
@@ -57,8 +57,15 @@ sub replace_layer {
 sub add_write_layer {
     my $self = shift;
     my $layer = shift;
-    $layer->uidProvider($self->uidProvider);
     my $layer_name = $self->generate_write_layer_key;
+    $self->_add_layer($layer_name, $layer);
+}
+
+sub _add_layer {
+    my $self = shift;
+    my $layer_name = shift;
+    my $layer = shift;
+    $layer->uidProvider($self->uidProvider);
     $self->layers->{$layer_name} = $layer;
 }
 
@@ -118,7 +125,8 @@ sub all {
     my $self = shift;
     my $type = shift;
 
-    return $self->get_read_layer->getDao($type)->all;
+    my $dao = $self->get_read_layer->getDao($type);
+    return $dao->all;
 }
 
 
