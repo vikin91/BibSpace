@@ -1,4 +1,4 @@
-package BibSpace v0.4.7;
+package BibSpace v0.5.0;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
@@ -81,7 +81,7 @@ has config_file => sub {
 # };
 
 has version => sub {
-  return $BibSpace::VERSION // "0.4.7";
+  return $BibSpace::VERSION // "0.5.0";
 };
 
 has appStateDumpFileName => sub {
@@ -197,7 +197,8 @@ sub setup_repositories {
     my $layer = retrieve($self->appStateDumpFileName);
     $self->repo->lr->replace_layer('smart', $layer);
   }
-  else{
+  # no data no fun...
+  if( $self->repo->entries_empty ){
     $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
     $self->link_data;
     store $self->repo->lr->get_read_layer, $self->appStateDumpFileName;  
@@ -213,7 +214,7 @@ sub setup_repositories {
   #   $self->repo->entries_save($testEntry);
   # }
 
-  $self->app->logger->debug($self->repo->lr->get_summary_string);
+  # $self->app->logger->debug($self->repo->lr->get_summary_string);
 
 
   # my $rf = $self->repo;
