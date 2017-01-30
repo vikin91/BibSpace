@@ -12,7 +12,7 @@ my $self = $t_anyone->app;
 my $repo = $self->app->repo;
 
 
-my @all_entries = $repo->getEntriesRepository->all;
+my @all_entries = $repo->entries_all;
 
 my $limit_test_entries = 20;
 
