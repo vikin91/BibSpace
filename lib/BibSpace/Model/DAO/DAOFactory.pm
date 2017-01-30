@@ -7,7 +7,6 @@ use BibSpace::Model::ILogger;
 use BibSpace::Model::DAO::MySQLDAOFactory;
 use BibSpace::Model::DAO::RedisDAOFactory;
 use BibSpace::Model::DAO::SmartArrayDAOFactory;
-use BibSpace::Model::DAO::GeneralDAOFactory;
 
 # this class has logger, because it may want to log somethig as well 
 # thic code forces to instantiate the abstract factory first and then calling getInstance

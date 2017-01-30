@@ -34,7 +34,6 @@ use File::Spec;
 use Cwd;
 
 use BibSpace::Model::DAO::DAOFactory;
-use BibSpace::Model::Repository::RepositoryFactory;
 use BibSpace::Model::SmartArray;
 
 use BibSpace::Model::SmartUidProvider;
@@ -100,18 +99,6 @@ has logger => sub { state $logger = SimpleLogger->new };
 has smartArrayBackend => sub {
   my $self = shift;
   return SmartArray->new( logger => $self->logger );
-};
-
-has backendConfig => sub {
-  my $self          = shift;
-  my %backendConfig = (
-    idProviderType => 'IntegerUidProvider',
-    backends       => [
-      { prio => 1, type => 'GeneralDAOFactory', short_type => 'SmartArray', handle => $self->smartArrayBackend },
-      { prio => 99, type => 'GeneralDAOFactory', short_type => 'MySQL', handle => $self->db },
-    ]
-  );
-  return \%backendConfig;
 };
 
 
@@ -219,12 +206,12 @@ sub setup_repositories {
   $self->app->logger->debug($self->repo->lr->get_summary_string);
 
 
-  my $eidP = $self->repo->entries_idProvider;
-  foreach (0..100){
-    my $testEntry = Entry->new(idProvider => $eidP, bib=>'@article{key'.$_.', title={xyz'.$_.'}, year={2099}}');
-    say "testEntry:".$testEntry->id;
-    $self->repo->entries_save($testEntry);
-  }
+  # my $eidP = $self->repo->entries_idProvider;
+  # foreach (0..100){
+  #   my $testEntry = Entry->new(idProvider => $eidP, bib=>'@article{key'.$_.', title={xyz'.$_.'}, year={2099}}');
+  #   say "testEntry:".$testEntry->id;
+  #   $self->repo->entries_save($testEntry);
+  # }
 
   $self->app->logger->debug($self->repo->lr->get_summary_string);
 

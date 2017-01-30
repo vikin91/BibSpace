@@ -4,8 +4,6 @@ use namespace::autoclean;
 use Moose;
 use Try::Tiny;
 
-use BibSpace::Model::Repository::Interface::IRepository;
-
 has 'lr' => ( is => 'ro', isa => 'LayeredRepository', required => 1 );
 
 
