@@ -17,24 +17,24 @@ use List::MoreUtils;
 sub copy{
     my ($self, $fromLayer, $toLayer) = @_;
     $self->logger->info("Copying all Author from layer $fromLayer to layer $toLayer.","".__PACKAGE__."->copy");
-
-    my @resultRead = $self->backendDaoFactory->getInstance( 
-        $self->_getBackendWithPrio($fromLayer)->{'type'},
-        $self->_getBackendWithPrio($fromLayer)->{'handle'} 
-    )->getAuthorDao($self->getIdProvider)->all();
-
+    my @resultRead = $self->all();
     $self->logger->info(scalar(@resultRead)." Author read from layer $fromLayer.","".__PACKAGE__."->copy");
-    
-    my $resultSave = $self->backendDaoFactory->getInstance( 
-        $self->_getBackendWithPrio($toLayer)->{'type'},
-        $self->_getBackendWithPrio($toLayer)->{'handle'}
-    )->getAuthorDao($self->getIdProvider)->save( @resultRead );
-
+    my $resultSave = $self->save( @resultRead );
     $self->logger->info("$resultSave Author saved to layer $toLayer.","".__PACKAGE__."->copy");
 }
 before 'copy' => sub { shift->logger->entering("","".__PACKAGE__."->copy"); };
 after 'copy'  => sub { shift->logger->exiting("","".__PACKAGE__."->copy"); };
 
+
+sub build_dao{
+    my ($self, $backendName, $handle) = @_;
+    return GeneralDAOFactory::getDao(
+            $backendName, 
+            'Author', 
+            $self->logger,
+            $self->getIdProvider,
+            $handle);
+}
 ### READ METHODS
 
 =item all
@@ -44,14 +44,11 @@ sub all {
     my ($self) = @_;
     # WARNING! Design assumption: write to all backends, but read and search from the one with the lowest 'prio' value
 
-    my $daoFactoryType = $self->_getReadBackend()->{'type'};
-    my $daoBackendHandle = $self->_getReadBackend()->{'handle'};
-    my $result;
     try{
-        return $self->backendDaoFactory
-            ->getInstance( $daoFactoryType, $daoBackendHandle )
-            ->getAuthorDao($self->getIdProvider)
-            ->all();
+        return $self->build_dao(
+                    $self->_getReadBackend()->{'short_type'},
+                    $self->_getReadBackend()->{'handle'}
+                    )->all();
     }
     catch{
         print;

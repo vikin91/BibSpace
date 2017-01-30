@@ -97,10 +97,8 @@ has backendConfig => sub {
   my %backendConfig = (
     idProviderType => 'IntegerUidProvider',
     backends       => [
-      { prio => 1, type => 'SmartArrayDAOFactory', handle => $self->smartArrayBackend },
-
-      # { prio => 2, type => 'RedisDAOFactory', handle => $redisHandle },
-      { prio => 99, type => 'MySQLDAOFactory', handle => $self->db },
+      { prio => 1, type => 'GeneralDAOFactory', short_type => 'SmartArray', handle => $self->smartArrayBackend },
+      { prio => 99, type => 'GeneralDAOFactory', short_type => 'MySQL', handle => $self->db },
     ]
   );
   return \%backendConfig;
@@ -188,20 +186,50 @@ sub startup {
 sub setup_repositories {
   my $self = shift;
 
+  use BibSpace::Model::SmartUidProvider;
+  my $sup = SmartUidProvider->new(logger=> $self->logger, idProviderClassName => 'IntegerUidProvider');
+
+
+  use BibSpace::Model::Repository::LayeredRepository;
+  use BibSpace::Model::Repository::RepositoryLayer;
+  my $LR = LayeredRepository->new(logger => $self->logger, uidProvider => $sup);
+
+
+  my $smartArrayLayer = RepositoryLayer->new( 
+    backendFactoryName => "SmartArrayDAOFactory", 
+    logger => $self->logger,
+    handle => $self->smartArrayBackend);
+
+  my $mySQLLayer = RepositoryLayer->new( 
+    backendFactoryName => "MySQLDAOFactory", 
+    logger => $self->logger,
+    handle => $self->db);
+
+  $LR->add_read_layer($smartArrayLayer);
+  $LR->add_write_layer($mySQLLayer);
+
+  store $LR->get_read_layer, $self->appStateDumpFileName;
+
+  my @authors = $LR->all('Author');
+
+
+  
+
   # if($self->storableRepo){
   #   $self->repo($self->storableRepo);
   #   $self->repo->setBackendHandles($self->backendConfig);
   # }
 
-  # if( ! -e $self->appStateDumpFileName or $self->repo->getEntriesRepository->empty ){
+  # say "Accessing all authors: ".join('',$self->repo->getAuthorsRepository->all);
+  # # if( ! -e $self->appStateDumpFileName or $self->repo->getEntriesRepository->empty ){
 
-    say "self->repo is: ".ref($self->repo);
-    say "self->repo->get_storable is: ".ref($self->repo->get_storable);
-    if ( $self->app->db ) {
-      $self->repo->copy_data( { from => 99, to => 1 } );
-    }
-    $self->link_data;
-    store $self->repo->get_storable, $self->appStateDumpFileName;
+  #   say "self->repo is: ".ref($self->repo);
+  #   say "self->repo->get_storable is: ".ref($self->repo->get_storable);
+  #   if ( $self->app->db ) {
+  #     $self->repo->copy_data( { from => 99, to => 1 } );
+  #   }
+  #   $self->link_data;
+    # store $self->repo->get_storable, $self->appStateDumpFileName;
 
     # $self->repo->removeBackendHandles;
     # store $self->repo, $self->appStateDumpFileName;

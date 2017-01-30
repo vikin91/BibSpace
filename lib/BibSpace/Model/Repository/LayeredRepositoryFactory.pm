@@ -184,44 +184,6 @@ sub getInstance {
     }
     return $self;
 }
-# =item removeBackendHandles
-#      removes the DB connections so that the whole repo can be stored using Storable
-# =cut
-
-# sub removeBackendHandles {
-#   my $self = shift;
-#   $self->backendsConfigHash(undef);
-#   $self->{_instanceAuthorsRepo}->removeBackendHandles;
-#   $self->{_instanceAuthorshipsRepo}->removeBackendHandles;
-#   $self->{_instanceEntriesRepo}->removeBackendHandles;
-#   $self->{_instanceExceptionsRepo}->removeBackendHandles;
-#   $self->{_instanceLabelingsRepo}->removeBackendHandles;
-#   $self->{_instanceMembershipsRepo}->removeBackendHandles;
-#   $self->{_instanceTagsRepo}->removeBackendHandles;
-#   $self->{_instanceTagTypesRepo}->removeBackendHandles;
-#   $self->{_instanceTeamsRepo}->removeBackendHandles;
-#   $self->{_instanceTypesRepo}->removeBackendHandles;
-# }
-
-
-# =item setBackendHandles
-#      resets the DB connections after retrieving of the repo from disk using Storable
-# =cut
-# sub setBackendHandles {
-#   my $self               = shift;
-#   my $backendsConfigHash = shift;
-#   $self->backendsConfigHash($backendsConfigHash);
-#   $self->{_instanceAuthorsRepo}->backendsConfigHash($backendsConfigHash);
-#   $self->{_instanceAuthorshipsRepo}->backendsConfigHash($backendsConfigHash);
-#   $self->{_instanceEntriesRepo}->backendsConfigHash($backendsConfigHash);
-#   $self->{_instanceExceptionsRepo}->backendsConfigHash($backendsConfigHash);
-#   $self->{_instanceLabelingsRepo}->backendsConfigHash($backendsConfigHash);
-#   $self->{_instanceMembershipsRepo}->backendsConfigHash($backendsConfigHash);
-#   $self->{_instanceTagsRepo}->backendsConfigHash($backendsConfigHash);
-#   $self->{_instanceTagTypesRepo}->backendsConfigHash($backendsConfigHash);
-#   $self->{_instanceTeamsRepo}->backendsConfigHash($backendsConfigHash);
-#   $self->{_instanceTypesRepo}->backendsConfigHash($backendsConfigHash);
-# }
 
 
 sub getAuthorsRepository {
