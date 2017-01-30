@@ -197,7 +197,7 @@ sub setup_repositories {
     my $layer = retrieve($self->appStateDumpFileName);
     $self->repo->lr->replace_layer('smart', $layer);
   }
-  # no data no fun...
+  # no data, no fun = no need copy, link, and store
   if( $self->repo->entries_empty ){
     $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
     $self->link_data;
