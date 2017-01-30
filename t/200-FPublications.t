@@ -14,15 +14,15 @@ my $dbh = $t_logged_in->app->db;
 use BibSpace::Functions::FPublications;
 
 $dbh->do('DELETE FROM Entry;');
-$t_logged_in->app->repo->getEntriesRepository->delete($t_logged_in->app->repo->getEntriesRepository->all);
+$t_logged_in->app->repo->entries_delete($t_logged_in->app->repo->entries_all);
 
 # my $en = MEntry->new();
-my @entries = $t_logged_in->app->repo->getEntriesRepository->all;
+my @entries = $t_logged_in->app->repo->entries_all;
 my $num_entries = scalar(@entries);
 is($num_entries, 0, "Got 0 entries");
 
 #### adding some fixtures. TODO: this needs to be done automatically at the beginning of the test suite
-my $idProvider = $t_logged_in->app->repo->getEntriesRepository->getIdProvider;
+my $idProvider = $t_logged_in->app->repo->entries_idProvider;
 my $en3 = Entry->new(idProvider => $idProvider);
 $en3->{bib} = '@mastersthesis{zzzzz1,
   address = {World},
@@ -33,7 +33,7 @@ $en3->{bib} = '@mastersthesis{zzzzz1,
   year = {1999},
 }';
 $en3->populate_from_bib($dbh);
-$t_logged_in->app->repo->getEntriesRepository->save($en3);
+$t_logged_in->app->repo->entries_save($en3);
 
 my $en4 = Entry->new(idProvider => $idProvider);
 $en4->{bib} = '@mastersthesis{zzzzz2,
@@ -45,11 +45,11 @@ $en4->{bib} = '@mastersthesis{zzzzz2,
   year = {1999},
 }';
 $en4->populate_from_bib($dbh);
-$t_logged_in->app->repo->getEntriesRepository->save($en4);
+$t_logged_in->app->repo->entries_save($en4);
 
 
 
-@entries = $t_logged_in->app->repo->getEntriesRepository->all;
+@entries = $t_logged_in->app->repo->entries_all;
 $num_entries = scalar(@entries);
 
 my $en = Entry->new(idProvider => $idProvider);
@@ -62,7 +62,7 @@ ok($num_entries > 0, "Got more than 0 entries");
 
 #### single entry
 
-$t_logged_in->app->repo->getEntriesRepository->delete($t_logged_in->app->repo->getEntriesRepository->all);
+$t_logged_in->app->repo->entries_delete($t_logged_in->app->repo->entries_all);
 
 ### adding some entries for the next test
 $en3 = Entry->new(idProvider => $idProvider);
@@ -75,7 +75,7 @@ $en3->{bib} = '@mastersthesis{xxx1,
   year = {1999},
 }';
 $en3->populate_from_bib($dbh);
-$t_logged_in->app->repo->getEntriesRepository->save($en3);
+$t_logged_in->app->repo->entries_save($en3);
 
 $en4 = Entry->new(idProvider => $idProvider);
 $en4->{bib} = '@mastersthesis{xxx2,
@@ -87,8 +87,8 @@ $en4->{bib} = '@mastersthesis{xxx2,
   year = {1999},
 }';
 $en4->populate_from_bib($dbh);
-$t_logged_in->app->repo->getEntriesRepository->save($en4);
-@entries = $t_logged_in->app->repo->getEntriesRepository->all;
+$t_logged_in->app->repo->entries_save($en4);
+@entries = $t_logged_in->app->repo->entries_all;
 $num_entries = scalar(@entries);
 
 

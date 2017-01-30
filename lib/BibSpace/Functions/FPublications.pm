@@ -205,32 +205,32 @@ sub Fget_publications_core_storage {
 
     my $team_obj;     
     if(defined $team){
-        $team_obj = $self->app->repo->getTeamsRepository->find( sub{ $_->name eq $team } );
+        $team_obj = $self->app->repo->teams_find( sub{ $_->name eq $team } );
         if( !$team_obj ){
-            $team_obj = $self->app->repo->getTeamsRepository->find( sub{ $_->id == $team } );
+            $team_obj = $self->app->repo->teams_find( sub{ $_->id == $team } );
         }
     }
     my $author_obj;
     if(defined $author){
         if( Scalar::Util::looks_like_number($author) ){
-            $author_obj = $self->app->repo->getAuthorsRepository->find(sub{ $_->master_id == $author });
+            $author_obj = $self->app->repo->authors_find(sub{ $_->master_id == $author });
         }
         else{
-            $author_obj = $self->app->repo->getAuthorsRepository->find(sub{ $_->master eq $author });
+            $author_obj = $self->app->repo->authors_find(sub{ $_->master eq $author });
         }
     }   
     my $tag_obj;
     if(defined $tag){
-        $tag_obj = $self->app->repo->getTagsRepository->find( sub{ $_->name eq $tag } );
+        $tag_obj = $self->app->repo->tags_find( sub{ $_->name eq $tag } );
         if( !$tag_obj ){
-            $tag_obj = $self->app->repo->getTagsRepository->find( sub{ $_->id == $tag } );    
+            $tag_obj = $self->app->repo->tags_find( sub{ $_->id == $tag } );    
         }
     }
     my $tag_obj_perm;
     if(defined $permalink){
-        $tag_obj_perm = $self->app->repo->getTagsRepository->find( sub{ $_->name eq $permalink } );
+        $tag_obj_perm = $self->app->repo->tags_find( sub{ $_->name eq $permalink } );
         if( !$tag_obj_perm ){
-            $self->app->repo->getTagsRepository->find( sub{ $_->id == $permalink } );
+            $self->app->repo->tags_find( sub{ $_->id == $permalink } );
         }
     }
     
@@ -253,7 +253,7 @@ sub Fget_publications_core_storage {
 
     # $self->app->logger->debug("==== START new Filtering ====", "Fget_publications_core_storage" );
     # filtering
-    my @entries = $self->app->repo->getEntriesRepository->all;
+    my @entries = $self->app->repo->entries_all;
 
     # simple filters
     if( defined $year and $year > 0 ){

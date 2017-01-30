@@ -19,7 +19,7 @@ use BibSpace::Controller::Core;
 ####################################################################
 subtest 'PublicationsSEO: public functions' => sub {
 
-    my @entries   = $self->app->repo->getEntriesRepository->all;
+    my @entries   = $self->app->repo->entries_all;
     my $main_SEOpage = $self->url_for('metalist_all_entries');
     $t_anyone->get_ok($main_SEOpage)
         ->status_isnt( 404, "Checking: 404 $main_SEOpage" )

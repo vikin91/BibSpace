@@ -78,7 +78,7 @@ sub register {
     get_year_of_oldest_entry => sub {
       my $self = shift;
 
-      my @entryYears = map { $_->year } grep { defined $_->year } $self->app->repo->getEntriesRepository->all;
+      my @entryYears = map { $_->year } grep { defined $_->year } $self->app->repo->entries_all;
       @entryYears = uniq @entryYears;
       @entryYears = sort { $a <=> $b } @entryYears;
       return $entryYears[0];
@@ -99,14 +99,14 @@ sub register {
   $app->helper(
     num_pubs => sub {
       my $self = shift;
-      return $self->app->repo->getEntriesRepository->all;
+      return $self->app->repo->entries_all;
     }
   );
 
   $app->helper(
     get_all_tag_types => sub {
       my $self = shift;
-      return $self->app->repo->getTagTypesRepository->all;
+      return $self->app->repo->tagTypes_all;
     }
   );
 
@@ -114,7 +114,7 @@ sub register {
     get_tag_type_obj => sub {
       my $self = shift;
       my $type = shift || 1;
-      return $self->app->repo->getTagTypesRepository->find( sub { $_->id == $type } );
+      return $self->app->repo->tagtypes_find( sub { $_->id == $type } );
     }
   );
 
@@ -124,7 +124,7 @@ sub register {
       my $eid  = shift;
       my $type = shift // 1;
 
-      my $paper = $self->app->repo->getEntriesRepository->find( sub { $_->id == $eid } );
+      my $paper = $self->app->repo->entries_find( sub { $_->id == $eid } );
       my @tags = $paper->get_tags($type);
       @tags = sort {$a->name cmp $b->name} @tags;
       return @tags;
@@ -137,9 +137,9 @@ sub register {
       my $eid  = shift;
       my $type = shift // 1;
 
-      my $paper = $self->app->repo->getEntriesRepository->find( sub { $_->id == $eid } );
+      my $paper = $self->app->repo->entries_find( sub { $_->id == $eid } );
       my %has_tags = map {$_ => 1} $paper->get_tags($type);
-      my @all_tags = $self->app->repo->getTagsRepository->filter( sub{$_->type == $type} );
+      my @all_tags = $self->app->repo->tags_filter( sub{$_->type == $type} );
       my @unassigned = grep { not $has_tags{$_} } @all_tags;
       @unassigned = sort {$a->name cmp $b->name} @unassigned;
       return @unassigned;
@@ -149,7 +149,7 @@ sub register {
   $app->helper(
     num_authors => sub {
       my $self = shift;
-      return $self->app->repo->getAuthorsRepository()->all();
+      return $self->app->repo->authors_all;
 
       # return $self->storage->authors_all;
 
@@ -159,7 +159,7 @@ sub register {
   $app->helper(
     get_visible_authors => sub {
       my $self = shift;
-      return $self->app->repo->getAuthorsRepository->filter( sub { $_->is_visible } );
+      return $self->app->repo->authors_filter( sub { $_->is_visible } );
     }
   );
 
@@ -182,7 +182,7 @@ sub register {
   $app->helper(
     get_num_teams => sub {
       my $self = shift;
-      return $self->app->repo->getTeamsRepository()->count();
+      return $self->app->repo->teams_count;
     }
   );
 
@@ -191,7 +191,7 @@ sub register {
     num_tags => sub {
       my $self = shift;
       my $type = shift || 1;
-      return scalar $self->app->repo->getTagsRepository->filter( sub { $_->type == $type } );
+      return scalar $self->app->repo->tags_filter( sub { $_->type == $type } );
     }
   );
 
@@ -203,7 +203,7 @@ sub register {
 
       return
         scalar grep { defined $_->year and $_->year == $year and $_->hidden == 0 }
-        $self->app->repo->getEntriesRepository()->all();
+        $self->app->repo->entries_all;
     }
   );
 
@@ -256,7 +256,7 @@ sub register {
     get_recent_years_arr => sub {
       my $self = shift;
 
-      my @arr = grep { defined $_ } map { $_->year } $self->app->repo->getEntriesRepository()->all();
+      my @arr = grep { defined $_ } map { $_->year } $self->app->repo->entries_all;
       @arr = uniq @arr;
       @arr = sort { $b <=> $a } @arr;
       my $max = scalar @arr;

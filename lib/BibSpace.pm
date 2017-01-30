@@ -195,7 +195,7 @@ sub startup {
   # $self->logger->error("this is error");
   # foreach (0..1){
   #   my $testEntry = Entry->new(bib=>'@article{title={xyz'.$_.'}, year={2099}}');
-  #   $self->repo->getEntriesRepository->save($testEntry);
+  #   $self->repo->entries_save($testEntry);
   # }
 }
 
@@ -219,7 +219,7 @@ sub setup_repositories {
   $self->app->logger->debug($self->repo->lr->get_summary_string);
 
 
-  my $eidP = $self->repo->lr->get_read_layer->uidProvider->get_provider('Entry');
+  my $eidP = $self->repo->entries_idProvider;
   foreach (0..100){
     my $testEntry = Entry->new(idProvider => $eidP, bib=>'@article{key'.$_.', title={xyz'.$_.'}, year={2099}}');
     say "testEntry:".$testEntry->id;

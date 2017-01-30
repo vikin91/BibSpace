@@ -165,7 +165,7 @@ sub do_cron_day {
 sub do_cron_night {
     my $self = shift;
 
-    my @entries = $self->app->repo->getEntriesRepository->all;
+    my @entries = $self->app->repo->entries_all;
 
     for my $e (@entries) {
         $e->regenerate_html(0);
