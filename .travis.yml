@@ -64,7 +64,7 @@ install:
     - cpanm --quiet --notest --skip-satisfied Dist::Zilla
     - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
     - cpanm --quiet --notest --skip-satisfied Module::Build::Mojolicious Module::CPANfile
-    - dzil authordeps --missing | cpanm --notest --skip-satisfied 
+    # - dzil authordeps --missing | cpanm --notest --skip-satisfied 
     - cpanm -nq --no-interactive --installdeps .
 before_script:
     - mysql --version
