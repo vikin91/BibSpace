@@ -14,7 +14,7 @@ use 5.010;           #because of ~~
 use TeX::Encode;
 use Encode;
 
-use BibSpace::Controller::Core;           
+use BibSpace::Functions::Core;           
 use BibSpace::Functions::FPublications;   
 use BibSpace::Controller::Publications;   
 

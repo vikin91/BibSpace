@@ -4,7 +4,7 @@ use Test::More;
 use Test::Mojo;
 
 use BibSpace;
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 
 my $t_anyone    = Test::Mojo->new('BibSpace');
 my $t_logged_in = Test::Mojo->new('BibSpace');

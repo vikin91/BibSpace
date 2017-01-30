@@ -17,7 +17,7 @@ use DBIx::Connector;
 use TeX::Encode;
 use Encode;
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Functions::FPublications;
 
 

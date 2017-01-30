@@ -100,7 +100,7 @@ pre {
 
 
 
-% foreach my $type (@keys) {
+% foreach my $type (reverse sort @keys) {
     % if(defined $type and defined $hash_d{$type}){
         % $size = scalar(@{$hash_v{$type}});
         % if($size > 0){

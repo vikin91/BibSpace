@@ -6,7 +6,7 @@ use Test::Mojo;
 use Mojo::IOLoop;
 
 use BibSpace;
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Controller::Cron;
 
 my $t_anyone    = Test::Mojo->new('BibSpace');

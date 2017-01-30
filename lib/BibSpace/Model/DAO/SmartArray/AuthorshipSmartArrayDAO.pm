@@ -76,6 +76,7 @@ after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
 =cut 
 sub update {
   my ($self, @objects) = @_;
+  # smart array does not require updating! Objects are direct references!
 }
 before 'update' => sub { shift->logger->entering("","".__PACKAGE__."->update"); };
 after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); };

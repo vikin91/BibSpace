@@ -14,8 +14,8 @@ use DBI;
 use DBIx::Connector;
 use File::Copy qw(copy);
 
-use BibSpace::Controller::Core;
-use BibSpace::Controller::BackupFunctions;
+use BibSpace::Functions::Core;
+use BibSpace::Functions::BackupFunctions;
 use BibSpace::Functions::FDB;
 
 use Mojo::Base 'Mojolicious::Controller';

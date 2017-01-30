@@ -1,7 +1,7 @@
-package BibSpace::Controller::BackupFunctions;
+package BibSpace::Functions::BackupFunctions;
 
 use BibSpace::Functions::FDB;
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 
 use Data::Dumper;
 use utf8;

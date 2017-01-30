@@ -4,9 +4,9 @@ use Test::Mojo;
 use Test::Exception;
 
 
-# use BibSpace::Controller::Core;
+# use BibSpace::Functions::Core;
 # use BibSpace::Functions::FDB;
-# use BibSpace::Controller::BackupFunctions;
+# use BibSpace::Functions::BackupFunctions;
 # use Data::Dumper;
 
 # my $t_logged_in = Test::Mojo->new('BibSpace');

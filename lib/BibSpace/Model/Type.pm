@@ -56,7 +56,29 @@ sub equals {
     return $self->our_type eq $obj->our_type;
 }
 ####################################################################################
+sub num_bibtex_types {
+    my $self = shift;
+    return $self->bibtexTypes_count;
+}
+####################################################################################
+sub get_first_bibtex_type {
+    my $self = shift;
+    my @all = $self->bibtexTypes_all;
+    if ($self->num_bibtex_types > 0){
+        return shift @all;
+    }
+    return;
+}
+####################################################################################
+sub can_be_deleted {
+    my $self = shift;
+    if( $self->num_bibtex_types == 1 and $self->our_type eq $self->get_first_bibtex_type ){
+        return;
+    }
+    return 1;
+}
 
+####################################################################################
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

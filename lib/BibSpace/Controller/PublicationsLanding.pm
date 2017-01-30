@@ -17,7 +17,7 @@ use DBIx::Connector;
 use TeX::Encode;
 use Encode;
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Functions::FPublications;
 
 use Mojo::Base 'Mojolicious::Controller';
@@ -139,16 +139,20 @@ sub get_filtering_navbar_types {
   my $curr_entry_type  = $self->req->param('entry_type')  // "";
   my $curr_year        = $self->req->param('year')        // "";
 
-  my @all_keys = get_types_for_landing_page( $self->app->db );
-  my %bibtex_type_to_label;
-  foreach my $key ( reverse sort @all_keys ) {
-    $bibtex_type_to_label{$key} = get_type_description( $self->app->db, $key );
+  my @landingTypes = $self->app->repo->types_filter( sub { $_->onLanding == 1 } );
+
+  my %bibtex_type_to_label = map { $_->our_type => $_->description } @landingTypes;
+  foreach my $k ( keys %bibtex_type_to_label ){
+    if( !$bibtex_type_to_label{$k} ){
+      $bibtex_type_to_label{$k} = get_generic_type_description($k);
+    }
   }
 
   ############### TYPE
   my $str .= '<br/><button type="button" class="btn btn-primary btn-xs">Types:</button>&nbsp;';
 
-  foreach my $key ( sort @all_keys ) {
+  foreach my $type ( sort {$a->our_type cmp $b->our_type} @landingTypes ) {
+    my $key = $type->our_type;
 
     $self->req->url->query->param( year => $curr_year ) if defined $curr_year;
     $self->req->url->query->remove('year') if !defined $curr_year;
@@ -222,7 +226,7 @@ sub get_filtering_navbar_years {
 
   $str;
 }
-
+############################################################################################################
 sub num_pubs_filtering {
   my $self             = shift;
   my $curr_bibtex_type = shift;
@@ -244,21 +248,22 @@ sub landing_types_obj {    # TODO: clean this mess!
   my $bibtex_type = $self->param('bibtex_type') || undef;
   my $entry_type  = $self->param('entry_type') || undef;
 
+  my @all_types = $self->app->repo->types_filter( sub { $_->onLanding == 1 } );
+
   # key: bibtex_type
   # value: description of type
-  my %bibtex_type_to_label;
+  my %bibtex_type_to_label = map { $_->our_type => $_->description } grep {defined $_->description} @all_types;
+  $bibtex_type_to_label{'talk'} = "Talks";
+
 
   # key: bibtex_type
   # value: ref to array of entry objects
   my %bibtex_type_to_entries;
-  my @all_keys = get_types_for_landing_page( $self->app->db );
+
   my @keys_with_papers;
 
 
-  push @all_keys, "talk";
-  $bibtex_type_to_label{'talk'} = "Talks";
-  my @keys = @all_keys;
-
+  my @keys = keys %bibtex_type_to_label;
   if ( defined $bibtex_type ) {
     @keys = ($bibtex_type);
   }
@@ -268,7 +273,6 @@ sub landing_types_obj {    # TODO: clean this mess!
   }
 
   foreach my $key (@keys) {
-    my @paper_objs;
 
     my $bibtexType = undef;    # union of all bibtex types
     my $entryType  = undef;    # union of both types papers+talks
@@ -286,12 +290,15 @@ sub landing_types_obj {    # TODO: clean this mess!
       $entryType  = undef;
     }
 
-    @paper_objs = Fget_publications_main_hashed_args( $self,
+
+    my @paper_objs = Fget_publications_main_hashed_args( $self,
       { bibtex_type => $bibtexType, entry_type => $entryType, visible => 0, hidden => 0, debug => 1 } );
 
     if ( scalar @paper_objs > 0 ) {
-      $bibtex_type_to_label{$key} = get_type_description( $self->app->db, $key );
       $bibtex_type_to_entries{$key} = \@paper_objs;
+      if ( !$bibtex_type_to_label{$key} ) {
+        $bibtex_type_to_label{$key} = get_generic_type_description($key);
+      }
       push @keys_with_papers, $key;
     }
   }
@@ -358,17 +365,18 @@ sub landing_years_obj {
 }
 ############################################################################################################
 sub display_landing {
-  my $self            = shift;
-  my $hash_values_ref = shift;
-  my $hash_dict_ref   = shift;
-  my $keys_ref        = shift;
-  my $switchlink      = shift || "";
-  my $navbar_html     = shift || "";
-  my $cache_key       = shift // "";
+  my $self                      = shift;
+  my $hash_group_to_entries     = shift;
+  my $hash_group_to_description = shift;
+  my $keys_ref                  = shift;
+  my $switchlink                = shift;
+  my $navbar_html               = shift;
 
   my $navbar     = $self->param('navbar') || 0;
   my $show_title = $self->param('title')  || 0;
-  my $show_switch = $self->param('switchlink');
+  my $show_switch     = $self->param('switchlink');
+  my $query_permalink = $self->param('permalink');
+  my $query_tag_name  = $self->param('tag');
 
   # if you ommit the switchlink param, assume default = enabled
   # by 0, do not show
@@ -380,16 +388,11 @@ sub display_landing {
 
   $navbar_html = "" unless $navbar == 1;
 
-  my $query_permalink = $self->param('permalink');
-  my $query_tag_name  = $self->param('tag');
-
-  my $storage = StorageBase->get();
-
 
   my $display_tag_name;
   if ( defined $query_permalink ) {
 
-    my $tag_obj_with_permalink = $storage->tags_find(
+    my $tag_obj_with_permalink = $self->app->repo->tags_find(
       sub {
         ( defined $_->permalink and ( $_->permalink cmp $query_permalink ) == 0 );
       }
@@ -435,8 +438,8 @@ sub display_landing {
   # my @objs = @{ $hash_values{$year} };
   # foreach my $obj (@objs){
   $self->stash(
-    hash_values => $hash_values_ref,
-    hash_dict   => $hash_dict_ref,
+    hash_values => $hash_group_to_entries,
+    hash_dict   => $hash_group_to_description,
     keys        => $keys_ref,
     navbar      => $navbar_html,
     show_title  => $show_title,

@@ -7,10 +7,10 @@ use Mojo::IOLoop;
 use Try::Tiny;
 
 use BibSpace;
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Controller::Cron;
 use BibSpace::Controller::Backup;
-use BibSpace::Controller::BackupFunctions;
+use BibSpace::Functions::BackupFunctions;
 
 use BibSpace::Functions::FDB;
 

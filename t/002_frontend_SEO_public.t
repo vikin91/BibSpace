@@ -4,7 +4,7 @@ use Test::More;
 use Test::Mojo;
 
 use BibSpace;
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 
 
 my $t_anyone = Test::Mojo->new('BibSpace');
@@ -14,7 +14,7 @@ my $self = $t_anyone->app;
 my $dbh = $t_anyone->app->db;
 
 use BibSpace::Functions::FPublications;
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 
 ####################################################################
 subtest 'PublicationsSEO: public functions' => sub {

@@ -12,7 +12,7 @@ use warnings;
 use DBI;
 use DBIx::Connector;
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Model::M::MTagType;
 
 use Mojo::Base 'Mojolicious::Controller';

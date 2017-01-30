@@ -79,10 +79,7 @@ after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
 =cut 
 sub update {
   my ($self, @objects) = @_;
-
-  die "".__PACKAGE__."->update not implemented. Method was instructed to update ".scalar(@objects)." objects.";
-  # TODO: auto-generated method stub. Implement me!
-
+  # smart array does not require updating! Objects are direct references!
 }
 before 'update' => sub { shift->logger->entering("","".__PACKAGE__."->update"); };
 after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); };

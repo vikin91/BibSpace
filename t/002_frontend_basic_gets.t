@@ -4,7 +4,7 @@ use Test::More;
 use Test::Mojo;
 
 use BibSpace;
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 
 
 my $t_logged_in = Test::Mojo->new('BibSpace');
@@ -26,7 +26,7 @@ my $fixture_dir = "./fixture/";
 # 	skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir.$fixture_name;
 
 # 	my $status = 0;
-# 	$status = BibSpace::Controller::BackupFunctions::do_restore_backup_from_file($self, $dbh, "./fixture/".$fixture_name, $app_config);
+# 	$status = BibSpace::Functions::BackupFunctions::do_restore_backup_from_file($self, $dbh, "./fixture/".$fixture_name, $app_config);
 # 	is($status, 1, "Fixture read correctly");
 # 	$self->repo->hardReset;
 # 	$self->setup_repositories;

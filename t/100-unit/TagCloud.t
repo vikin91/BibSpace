@@ -9,7 +9,7 @@ use Test::Mojo;
 
 
 use BibSpace::Model::TagCloud;
-use BibSpace::Controller::Core; # for random string
+use BibSpace::Functions::Core; # for random string
 use Data::Dumper;
 
 

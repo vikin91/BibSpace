@@ -14,9 +14,9 @@ use DBIx::Connector;
 
 use List::MoreUtils qw(any uniq);
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Controller::Publications;
-use BibSpace::Controller::BackupFunctions;
+use BibSpace::Functions::BackupFunctions;
 
 use BibSpace::Functions::FPublications;
 
@@ -65,12 +65,12 @@ sub register {
 
   $app->helper(
     current_year => sub {
-      return BibSpace::Controller::Core::get_current_year();
+      return BibSpace::Functions::Core::get_current_year();
     }
   );
   $app->helper(
     current_month => sub {
-      return BibSpace::Controller::Core::get_current_month();
+      return BibSpace::Functions::Core::get_current_month();
     }
   );
 
@@ -207,39 +207,8 @@ sub register {
     }
   );
 
-  $app->helper(
-    get_bibtex_types_aggregated_for_type => sub {
-      my $self = shift;
-      my $type = shift;
-
-      return get_bibtex_types_for_our_type( $self->app->db, $type );
-    }
-  );
-
-  $app->helper(
-    helper_get_description_for_our_type => sub {
-      my $self = shift;
-      my $type = shift;
-      return get_description_for_our_type( $self->app->db, $type );
-    }
-  );
-
-  $app->helper(
-    helper_get_landing_for_our_type => sub {
-      my $self = shift;
-      my $type = shift;
-      return get_landing_for_our_type( $self->app->db, $type );
-    }
-  );
 
 
-  $app->helper(
-    num_bibtex_types_aggregated_for_type => sub {
-      my $self = shift;
-      my $type = shift;
-      return scalar $self->get_bibtex_types_aggregated_for_type($type);
-    }
-  );
 
   $app->helper(
     num_pubs_for_author_and_tag => sub {

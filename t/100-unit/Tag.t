@@ -7,7 +7,7 @@ use Test::Mojo;
 # my $dbh = $t_anyone->app->db;
 
 
-# use BibSpace::Controller::Core;
+# use BibSpace::Functions::Core;
 # use Data::Dumper;
 
 

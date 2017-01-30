@@ -14,7 +14,7 @@ use DBIx::Connector;
 
 use Scalar::Util;
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 
 use Exporter;
 our @ISA = qw( Exporter );

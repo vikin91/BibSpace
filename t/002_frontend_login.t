@@ -4,7 +4,7 @@ use Test::More;
 use Test::Mojo;
 
 use BibSpace;
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 
 
 

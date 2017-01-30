@@ -318,7 +318,7 @@ sub fix_month {
     if ( $self->has_bibtex_field('month') ) {
         my $month_str = $bibtex_entry->get('month');
         $month_numeric
-            = BibSpace::Controller::Core::get_month_numeric($month_str);
+            = BibSpace::Functions::Core::get_month_numeric($month_str);
 
     }
     if ( $self->{month} != $month_numeric ) {
@@ -421,7 +421,7 @@ sub author_names_from_bibtex {
 
     my @author_names;
     foreach my $name (@names) {
-        push @author_names, BibSpace::Controller::Core::create_user_id($name);
+        push @author_names, BibSpace::Functions::Core::create_user_id($name);
     }
     return @author_names;
 }

@@ -16,7 +16,7 @@ use DBIx::Connector;
 
 use List::MoreUtils qw(any uniq);
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Controller::Publications;
 
 use BibSpace::Functions::FPublications;

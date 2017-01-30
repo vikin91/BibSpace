@@ -2,8 +2,8 @@ package BibSpace v0.5.0;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
-use BibSpace::Controller::Core;
-use BibSpace::Controller::BackupFunctions;
+use BibSpace::Functions::Core;
+use BibSpace::Functions::BackupFunctions;
 use BibSpace::Controller::Publications;
 use BibSpace::Controller::PublicationsLanding;
 use BibSpace::Controller::PublicationsExperimental;
@@ -485,14 +485,14 @@ sub setup_routes {
   # RESTIfied end
 
   ################ TYPES ################
-  $logged_user->get('/types')->to('types#all_our');
-  $logged_user->get('/types/add')->to('types#add_type');
-  $logged_user->post('/types/add')->to('types#post_add_type');
-  $logged_user->get('/types/manage/:type')->to('types#manage');
-  $logged_user->get('/types/delete/:type_to_delete')->to('types#delete_type');
+  $logged_user->get('/types')->to('types#all_our')->name('all_types');
+  $logged_user->get('/types/add')->to('types#add_type')->name('add_type_get');
+  $logged_user->post('/types/add')->to('types#post_add_type')->name('add_type_post');
+  $logged_user->get('/types/manage/:name')->to('types#manage')->name('edit_type');
+  $logged_user->get('/types/delete/:name')->to('types#delete_type')->name('delete_type');
 
-  $logged_user->post('/types/store_description')->to('types#post_store_description');
-  $logged_user->get('/types/toggle/:type')->to('types#toggle_landing');
+  $logged_user->post('/types/store_description')->to('types#post_store_description')->name('update_type_description');
+  $logged_user->get('/types/toggle/:name')->to('types#toggle_landing')->name('toggle_landing_type');
 
   $logged_user->get('/types/:our_type/map/:bibtex_type')->to('types#map_types');
   $logged_user->get('/types/:our_type/unmap/:bibtex_type')->to('types#unmap_types')->name('unmap_bibtex_type');
@@ -721,7 +721,7 @@ sub setup_routes {
   $anyone->get('/r/publications')->to('publications#all_read');    #ALIAS
   $anyone->get('/r/p')->to('publications#all_read');               #ALIAS
 
-  $anyone->get('/read/bibtex')->to('publications#all_bibtex');
+  $anyone->get('/read/bibtex')->to('publications#all_bibtex')->name('readbibtex');
   $anyone->get('/r/bibtex')->to('publications#all_bibtex');        #ALIAS
   $anyone->get('/r/b')->to('publications#all_bibtex');             #ALIAS
 

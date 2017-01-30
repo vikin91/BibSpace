@@ -41,7 +41,7 @@ sub all {
     else {
       $data_bibtex{ "$our_type" } = [ $row->{bibtex_type} ];
     }
-    $data_desc{ "$our_type" }    = $row->{decription};
+    $data_desc{ "$our_type" }    = $row->{description};
     $data_landing{ "$our_type" } = $row->{landing};
   }
 
@@ -51,7 +51,7 @@ sub all {
     my $desc         = $data_desc{$k};
     my $landing      = $data_landing{$k};
 
-    my $obj = Type->new( idProvider => $self->idProvider, our_type => $k, description => $desc, landing => $landing );
+    my $obj = Type->new( idProvider => $self->idProvider, our_type => $k, description => $desc, onLanding => $landing );
     $obj->bibtexTypes_add(@bibtex_types);
     push @mappings, $obj;
   }
@@ -68,7 +68,7 @@ after 'all' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->all" ); }
 sub count {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $sth    = $dbh->prepare("SELECT COUNT(*) as num FROM OurType_to_Type LIMIT 1");
+  my $sth    = $dbh->prepare("SELECT COUNT(our_type) as num FROM OurType_to_Type LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
   my $num = $row->{num} // 0;
@@ -84,12 +84,7 @@ after 'count' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->count" 
 
 sub empty {
   my ($self) = @_;
-  my $dbh    = $self->handle;
-  my $sth    = $dbh->prepare("SELECT 1 as num FROM OurType_to_Type LIMIT 1");
-  $sth->execute();
-  my $row = $sth->fetchrow_hashref();
-  my $num = $row->{num} // 0;
-  return $num == 0;
+  return $self->count == 0;
 }
 
 before 'empty' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->empty" ); };
@@ -102,14 +97,42 @@ after 'empty' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->empty" 
 
 sub exists {
   my ( $self, $object ) = @_;
-
-  die "" . __PACKAGE__ . "->exists not implemented.";
-
-  # TODO: auto-generated method stub. Implement me!
-
+  my $dbh = $self->handle;
+  my $sth = $dbh->prepare("SELECT EXISTS(SELECT 1 FROM OurType_to_Type WHERE our_type=? LIMIT 1) as num ");
+  $sth->execute( $object->our_type );
+  my $row = $sth->fetchrow_hashref();
+  my $num = $row->{num} // 0;
+  return $num > 0;
 }
 before 'exists' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->exists" ); };
 after 'exists' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->exists" ); };
+
+=item _insert
+    Method documentation placeholder.
+    This method takes single object or array of objects as argument and returns nothing.
+=cut 
+sub _insert {
+  my ( $self, @objects ) = @_;
+  my $dbh = $self->handle;
+  my $qry = "
+    INSERT INTO OurType_to_Type(bibtex_type, our_type, landing, description) VALUES (?,?,?,?);";
+  my $sth = $dbh->prepare($qry);
+  foreach my $obj (@objects) {
+    foreach my $bibtex_type ($obj->bibtexTypes_all) {
+      try {
+        my $result = $sth->execute( $bibtex_type, $obj->our_type, $obj->onLanding, $obj->description);
+        $sth->finish();
+      }
+      catch {
+        $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
+      };
+    }
+  }
+  # $dbh->commit();
+}
+before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
+after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };
+
 
 =item save
     Method documentation placeholder.
@@ -140,11 +163,9 @@ after 'save' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->save" );
 
 sub update {
   my ( $self, @objects ) = @_;
-
-  die "" . __PACKAGE__ . "->update not implemented. Method was instructed to update " . scalar(@objects) . " objects.";
-
-  # TODO: auto-generated method stub. Implement me!
-
+  # we have no ID here, so we may delete all and reinsert
+  $self->delete(@objects);
+  $self->_insert(@objects);
 }
 before 'update' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->update" ); };
 after 'update' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update" ); };
@@ -156,11 +177,20 @@ after 'update' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update
 
 sub delete {
   my ( $self, @objects ) = @_;
-
-  die "" . __PACKAGE__ . "->delete not implemented. Method was instructed to delete " . scalar(@objects) . " objects.";
-
-  # TODO: auto-generated method stub. Implement me!
-
+  my $dbh = $self->handle;
+  my $qry = "
+    DELETE FROM OurType_to_Type WHERE our_type=?;";
+  my $sth = $dbh->prepare($qry);
+  foreach my $obj (@objects) {
+    try {
+      my $result = $sth->execute( $obj->our_type );
+      $sth->finish();
+    }
+    catch {
+      $self->logger->error( "Delete exception: $_", "" . __PACKAGE__ . "->delete" );
+    };
+  }
+  # $dbh->commit();
 }
 before 'delete' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->delete" ); };
 after 'delete' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->delete" ); };

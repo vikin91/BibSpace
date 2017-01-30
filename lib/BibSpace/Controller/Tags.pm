@@ -14,7 +14,7 @@ use DBIx::Connector;
 use Scalar::Util qw(looks_like_number);
 use List::MoreUtils qw(any uniq);
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Functions::FPublications;
 use BibSpace::Model::TagCloud;
 

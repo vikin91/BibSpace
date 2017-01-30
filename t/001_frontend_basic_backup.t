@@ -2,7 +2,7 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 
-use BibSpace::Controller::BackupFunctions;
+use BibSpace::Functions::BackupFunctions;
 
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(

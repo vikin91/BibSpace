@@ -11,7 +11,7 @@ use Data::Dumper;
 use BibSpace::Model::M::StorageBase;
 
 use Mojo::Base 'Mojolicious::Controller';
-use BibSpace::Controller::BackupFunctions;
+use BibSpace::Functions::BackupFunctions;
 
 #################################################################################
 sub index {

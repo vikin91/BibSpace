@@ -11,7 +11,7 @@ use DBI;
 use DBIx::Connector;
 use Data::Dumper;
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Model::Team;
 
 use Mojo::Base 'Mojolicious::Controller';

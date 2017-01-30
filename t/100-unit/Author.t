@@ -4,8 +4,8 @@ use Test::Mojo;
 use Test::Exception;
 
 
-# use BibSpace::Controller::Core;
-# use BibSpace::Controller::BackupFunctions;
+# use BibSpace::Functions::Core;
+# use BibSpace::Functions::BackupFunctions;
 # use BibSpace::Functions::FDB;
 
 # use Data::Dumper;
