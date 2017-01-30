@@ -27,7 +27,7 @@ has 'data' => (
 
 sub reset {
     my ($self) = @_;
-    SimpleLogger->new()->warn("Resetting UID record!");
+    SimpleLogger->new()->warn("Resetting UID record!","".__PACKAGE__."->reset");
     $self->clear;
 }
 
@@ -40,7 +40,7 @@ sub registerUID{
     }
     else{
         my $msg = "Cannot registerUID. It exists already! Wanted to reg: $uid. Existing: ". join(' ', sort $self->uid_keys);
-        SimpleLogger->new()->error($msg);
+        SimpleLogger->new()->error($msg,"".__PACKAGE__."->registerUID");
         die $msg;
     }
 }
@@ -55,7 +55,7 @@ sub generateUID{
     }
     my $new_uid = $curr_max + 1;
     $self->uid_set($new_uid => 1);
-    SimpleLogger->new()->debug("Generated uid $new_uid.");
+    SimpleLogger->new()->debug("Generated uid $new_uid.","".__PACKAGE__."->generateUID");
     return $new_uid;
 }
 

@@ -44,7 +44,7 @@ sub post_add_type {
 
     my $type = Type->new(our_type => $new_type);
 
-    $self->app->repo->getTypesRepository->save($type);
+    $self->app->repo->types_save($type);
 
     $self->redirect_to( $self->url_for('types') );
 }
@@ -54,7 +54,7 @@ sub manage {
     my $type_id = $self->param('type');
 
     my @all = $self->app->repo->getTypesRepository->all;
-    my $type = $self->app->repo->getTypesRepository->find( sub {$_->id == $type_id});
+    my $type = $self->app->repo->types_find( sub {$_->id == $type_id});
 
     my %bibtex_types = {};
 

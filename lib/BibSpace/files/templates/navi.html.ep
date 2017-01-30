@@ -159,7 +159,7 @@
 
         <li class="divider"></li>
         <li role="presentation" class="dropdown-header">Teams</li>
-        % my @all_teams = $self->app->repo->getTeamsRepository->all;
+        % my @all_teams = $self->app->repo->teams_all;
         % foreach my $team ( @all_teams ){
             <li>
                 <a href="<%= url_for('edit_team', teamid=>$team->{id} )%>">

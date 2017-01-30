@@ -17,7 +17,7 @@ $t_anyone->ua->max_redirects(10);
 
 
 
-my @all_teams = $self->app->repo->getTeamsRepository->all;
+my @all_teams = $self->app->repo->teams_all;
 
 ####################################################################
 subtest 'FRONTEND Tag Clouds TEAMS' => sub {

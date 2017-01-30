@@ -38,13 +38,13 @@ $t_logged_in->ua->max_redirects(3);
 
 
 
-my @all_tag_type_objs = $t_logged_in->app->repo->getTagTypesRepository->all;
+my @all_tag_type_objs = $t_logged_in->app->repo->tagTypes_all;
 my $some_tag_type_obj = $all_tag_type_objs[0];
 
-my @tags = $t_logged_in->app->repo->getTagsRepository->all;
+my @tags = $t_logged_in->app->repo->tags_all;
 my $some_tag = $tags[0];
 
-my @teams = $t_logged_in->app->repo->getTeamsRepository->all;
+my @teams = $t_logged_in->app->repo->teams_all;
 my $some_team = $teams[0];
 
 # generated with: ./script/bibspace routes | grep GET | grep -v : 

@@ -38,7 +38,7 @@ sub all_authors {    # refactored
     $letter_pattern .= '%';
   }
 
-  my @authors = $self->app->repo->getAuthorsRepository->all;
+  my @authors = $self->app->repo->authors_all;
   if ( defined $visible ) {
     @authors = grep { $_->display == $visible } @authors;
   }
@@ -71,12 +71,11 @@ sub add_post {
 
   if ( defined $new_master and length($new_master) > 0 ) {
 
-    my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->master eq $new_master } );
+    my $author = $self->app->repo->authors_find( sub { $_->master eq $new_master } );
 
     if ( !defined $author ) {    # no such user exists yet
-
-      $author = Author->new( uid => $new_master, idProvider => $self->app->repo->getAuthorsRepository->getIdProvider );
-      $self->app->repo->getAuthorsRepository->save($author);
+      $author = Author->new( uid => $new_master, idProvider => $self->app->repo->authors_idProvider );
+      $self->app->repo->authors_save($author);
 
       if ( !defined $author->id ) {
         $self->flash(
@@ -111,7 +110,7 @@ sub edit_author {
   my $id   = $self->param('id');
 
   my $dbh = $self->app->db;
-  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $id } );
+  my $author = $self->app->repo->authors_find( sub { $_->id == $id } );
 
 # redirect to master if master is defined for this author
 # if( defined $author and $author->{id} != $author->{master_id} ){
@@ -126,7 +125,7 @@ sub edit_author {
   }
   else {
 
-    my @all_teams    = $self->app->repo->getTeamsRepository->all;
+    my @all_teams    = $self->app->repo->teams_all;
     my @author_teams = $author->get_teams;
     my @author_tags  = $author->get_tags;
 
@@ -135,7 +134,7 @@ sub edit_author {
     my @unassigned_teams = grep { not $author_teams_hash{ $_->id } } @all_teams;
 
 
-    my @minor_authors = $self->app->repo->getAuthorsRepository->filter( sub { $_->is_minion_of($author) } );
+    my @minor_authors = $self->app->repo->authors_filter( sub { $_->is_minion_of($author) } );
 
     # $author->all_author_user_ids($dbh);
 
@@ -158,8 +157,8 @@ sub add_to_team {
   my $master_id = $self->param('id');
   my $team_id   = $self->param('tid');
 
-  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
-  my $team   = $self->app->repo->getTeamsRepository->find( sub   { $_->id == $team_id } );
+  my $author = $self->app->repo->authors_find( sub { $_->id == $master_id } );
+  my $team   = $self->app->repo->teams_find( sub   { $_->id == $team_id } );
 
   if ( defined $author and defined $team ) {
     my $membership = Membership->new(
@@ -168,7 +167,7 @@ sub add_to_team {
       author_id => $author->get_master->id,
       team_id   => $team->id
     );
-    $self->app->repo->getMembershipsRepository->save($membership);
+    $self->app->repo->memberships_save($membership);
     $team->add_membership($membership);
     $author->add_membership($membership);
 
@@ -189,14 +188,14 @@ sub remove_from_team {
   my $master_id = $self->param('id');
   my $team_id   = $self->param('tid');
 
-  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
-  my $team   = $self->app->repo->getTeamsRepository->find( sub   { $_->id == $team_id } );
+  my $author = $self->app->repo->authors_find( sub { $_->id == $master_id } );
+  my $team   = $self->app->repo->teams_find( sub   { $_->id == $team_id } );
 
   if ( defined $author and defined $team ) {
     my $membership = $author->memberships_find(sub { $_->team->equals($team) });
     $author->remove_membership($membership);
     $team->remove_membership($membership);
-    $self->app->repo->getMembershipsRepository->delete($membership);
+    $self->app->repo->memberships_delete($membership);
 
     $self->flash(
       msg      => "Author <b>" . $author->uid . "</b> has just left team <b>" . $team->name . "</b>",
@@ -216,8 +215,8 @@ sub remove_uid {
   my $minor_id  = $self->param('uid');
  
 
-  my $author_master = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
-  my $author_minor  = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $minor_id } );
+  my $author_master = $self->app->repo->authors_find( sub { $_->id == $master_id } );
+  my $author_minor  = $self->app->repo->authors_find( sub { $_->id == $minor_id } );
 
   if ( !defined $author_minor ) {
     $self->flash( msg => "Cannot remove user_id $minor_id. Reason: such author deos not exist.", msg_type => "danger" );
@@ -229,7 +228,7 @@ sub remove_uid {
 
     my @all_entries = $author_master->entries();
     $author_minor->remove_master();
-    $self->app->repo->getAuthorsRepository->save($author_minor);
+    $self->app->repo->authors_save($author_minor);
 
 # authors are uncnnected now
 # ON UPDATE CASCADE has removed all entreis from $author_master and assigned them to $author_minor
@@ -295,16 +294,16 @@ sub edit_post {
   my $new_user_id = $self->param('new_user_id');
   my $visibility  = $self->param('visibility');
 
-  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $id } );
+  my $author = $self->app->repo->authors_find( sub { $_->id == $id } );
 
   if ( defined $author ) {
     if ( defined $new_master ) {
 
-      my $existing = $self->app->repo->getAuthorsRepository->find( sub { ( $_->master cmp $new_master ) == 0 } );
+      my $existing = $self->app->repo->authors_find( sub { ( $_->master cmp $new_master ) == 0 } );
 
       if ( !defined $existing ) {
         $author->update_master_name($new_master);
-        $self->app->repo->getAuthorsRepository->save($author);
+        $self->app->repo->authors_save($author);
         $self->flash( msg => "Master name has been updated sucesfully.", msg_type => "success" );
         $self->redirect_to( $self->url_for( 'edit_author', id => $author->id ) );
       }
@@ -323,11 +322,11 @@ sub edit_post {
     }
     elsif ( defined $visibility ) {
       $author->toggle_visibility;
-      $self->app->repo->getAuthorsRepository->save($author);
+      $self->app->repo->authors_save($author);
     }
     elsif ( defined $new_user_id ) {
 
-      my $existing_author = $self->app->repo->getAuthorsRepository->find( sub { $_->uid eq $new_user_id } );
+      my $existing_author = $self->app->repo->authors_find( sub { $_->uid eq $new_user_id } );
 
       if ( defined $existing_author ) {
         $self->flash(
@@ -337,11 +336,11 @@ sub edit_post {
       }
       else {
         my $minion
-          = Author->new( uid => $new_user_id, idProvider => $self->app->repo->getAuthorsRepository->getIdProvider );
+          = Author->new( uid => $new_user_id, idProvider => $self->app->repo->authors_idProvider );
         $minion->id;
         $author->add_minion($minion);
-        $self->app->repo->getAuthorsRepository->save($author);
-        $self->app->repo->getAuthorsRepository->save($minion);
+        $self->app->repo->authors_save($author);
+        $self->app->repo->authors_save($minion);
       }
     }
   }
@@ -356,18 +355,18 @@ sub post_edit_membership_dates {
   my $new_start = $self->param('new_start');
   my $new_stop  = $self->param('new_stop');
 
-  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $master_id } );
-  my $team   = $self->app->repo->getTeamsRepository->find( sub   { $_->id == $team_id } );
+  my $author = $self->app->repo->authors_find( sub { $_->id == $master_id } );
+  my $team   = $self->app->repo->teams_find( sub   { $_->id == $team_id } );
 
   if ( $author and $team ) {
-    my $membership = $self->app->repo->getMembershipsRepository->find(
+    my $membership = $self->app->repo->memberships_find(
       sub {
         $_->author->equals($author) and $_->team->equals($team);
       }
     );
     $membership->start($new_start);
     $membership->stop($new_stop);
-    $self->app->repo->getMembershipsRepository->update($membership);
+    $self->app->repo->memberships_update($membership);
 
     # $author->remove_membership($membership);
     # $team->remove_membership($membership);
@@ -387,7 +386,7 @@ sub delete_author {
   my $dbh  = $self->app->db;
   my $id   = $self->param('id');
 
-  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->{id} == $id } );
+  my $author = $self->app->repo->authors_find( sub { $_->{id} == $id } );
 
   if ( $author and $author->can_be_deleted() ) {
     $self->delete_author_force();
@@ -405,7 +404,7 @@ sub delete_author_force {
   my $dbh  = $self->app->db;
   my $id   = $self->param('id');
 
-  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->{id} == $id } );
+  my $author = $self->app->repo->authors_find( sub { $_->{id} == $id } );
 
   if ($author) {
 
@@ -417,7 +416,7 @@ sub delete_author_force {
     foreach my $membership ( @memberships ){
         $membership->team->remove_membership($membership);
     }
-    $self->app->repo->getMembershipsRepository->delete(@memberships);
+    $self->app->repo->memberships_delete(@memberships);
     # remove all memberships for this team
     $author->memberships_clear;
 
@@ -427,12 +426,12 @@ sub delete_author_force {
     foreach my $authorship ( @authorships ){
         $authorship->entry->remove_authorship($authorship);
     }
-    $self->app->repo->getAuthorshipsRepository->delete(@authorships);
+    $self->app->repo->authorships_delete(@authorships);
     # remove all authorships for this team
     $author->authorships_clear;
 
     # finally delete author
-    $self->app->repo->getAuthorsRepository->delete($author);
+    $self->app->repo->authors_delete($author);
 
     $self->write_log( "Author " . $author->uid . " ID $id has been deleted." );
     $self->flash( msg => "Author " . $author->uid . " ID $id removed successfully.", msg_type => "success" );
@@ -450,7 +449,7 @@ sub reassign_authors_to_entries {
   my $self = shift;
   my $create_new = shift // 0;
 
-  my @all_entries         = $self->app->repo->getEntriesRepository->all;
+  my @all_entries         = $self->app->repo->entries_all;
   my $num_authors_created = 0;
   foreach my $entry (@all_entries) {
     next unless defined $entry;
@@ -459,11 +458,11 @@ sub reassign_authors_to_entries {
 
     for my $author_name (@bibtex_author_name) {
 
-      my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->uid eq $author_name } );
+      my $author = $self->app->repo->authors_find( sub { $_->uid eq $author_name } );
       if ( $create_new == 1 and !defined $author ) {
         $author
-          = Author->new( idProvider => $self->app->repo->getAuthorsRepository->getIdProvider, uid => $author_name );
-        $self->app->repo->getAuthorsRepository->save($author);
+          = Author->new( idProvider => $self->app->repo->authors_idProvider, uid => $author_name );
+        $self->app->repo->authors_save($author);
         ++$num_authors_created;
       }
       if ( defined $author ) {
@@ -473,7 +472,7 @@ sub reassign_authors_to_entries {
           author_id => $author->get_master->id,
           entry_id  => $entry->id
         );
-        $self->app->repo->getAuthorshipsRepository->save($authorship);
+        $self->app->repo->authorships_save($authorship);
         $entry->add_authorship($authorship);
         $author->add_authorship($authorship);
       }
@@ -495,9 +494,9 @@ sub toggle_visibility {
   my $self = shift;
   my $id   = $self->param('id');
 
-  my $author = $self->app->repo->getAuthorsRepository->find( sub { $_->id == $id } );
+  my $author = $self->app->repo->authors_find( sub { $_->id == $id } );
   $author->toggle_visibility();
-  $self->app->repo->getAuthorsRepository->update($author);
+  $self->app->repo->authors_update($author);
   $self->redirect_to( $self->get_referrer );
 }
 

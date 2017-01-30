@@ -21,7 +21,7 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 
 sub show {
   my $self  = shift;
-  my @teams = $self->app->repo->getTeamsRepository->all;
+  my @teams = $self->app->repo->teams_all;
   $self->stash( teams => \@teams );
   $self->render( template => 'teams/teams', layout => 'admin' );
 }
@@ -30,7 +30,7 @@ sub edit {
   my $self = shift;
   my $id   = $self->param('teamid');
 
-  my $team = $self->app->repo->getTeamsRepository->find( sub { $_->id == $id } );
+  my $team = $self->app->repo->teams_find( sub { $_->id == $id } );
 
   if ( !defined $team ) {
     $self->flash( msg => "There is no team with id $id", msg_type => 'danger' );
@@ -55,7 +55,7 @@ sub add_team_post {
   my $new_team_name = $self->param('new_team');
 
 
-  my $existing_mteam = $self->app->repo->getTeamsRepository->find( sub { $_->name eq $new_team_name } );
+  my $existing_mteam = $self->app->repo->teams_find( sub { $_->name eq $new_team_name } );
 
   if ( defined $existing_mteam ) {
     $self->write_log( "add new team: team with proposed name ($new_team_name) exists!!" );
@@ -63,8 +63,8 @@ sub add_team_post {
     $self->redirect_to( $self->url_for('add_team_get') );
     return;
   }
-  my $new_mteam = Team->new( name => $new_team_name, idProvider => $self->app->repo->getTeamsRepository->getIdProvider );
-  $self->app->repo->getTeamsRepository->save($new_mteam);
+  my $new_mteam = Team->new( name => $new_team_name, idProvider => $self->app->repo->teams_idProvider );
+  $self->app->repo->teams_save($new_mteam);
   my $new_team_id = $new_mteam->id;
   if ( !defined $new_team_id or $new_team_id <= 0 ) {
     $self->flash( msg => "Something went wrong. The Team $new_team_name has not been added." );
@@ -80,7 +80,7 @@ sub delete_team {
   my $self = shift;
   my $id   = $self->param('id');
 
-  my $team = $self->app->repo->getTeamsRepository->find( sub { $_->id == $id } );
+  my $team = $self->app->repo->teams_find( sub { $_->id == $id } );
 
   if ( $team and $team->can_be_deleted ) {
     my $msg = "Team " . $team->name . " ID " . $team->id . " has been deleted";
@@ -101,7 +101,7 @@ sub delete_team_force {
   my $dbh  = $self->app->db;
   my $id   = $self->param('id');
 
-  my $team = $self->app->repo->getTeamsRepository->find( sub { $_->id == $id } );
+  my $team = $self->app->repo->teams_find( sub { $_->id == $id } );
   if ($team) {
     my $msg = "Team " . $team->name . " ID " . $team->id . " has been deleted";
     $self->write_log( $msg );
@@ -126,10 +126,10 @@ sub do_delete_team {
   foreach my $membership ( @memberships ){
       $membership->author->remove_membership($membership);
   }
-  $self->app->repo->getMembershipsRepository->delete(@memberships);
+  $self->app->repo->memberships_delete(@memberships);
   # remove all memberships for this team
   $team->memberships_clear;
-  $self->app->repo->getTeamsRepository->delete($team);
+  $self->app->repo->teams_delete($team);
 }
 ##############################################################################################################
 

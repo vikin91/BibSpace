@@ -39,9 +39,15 @@ has 'data' => (
         # values  => 'values',
         num     => 'count',
         pairs   => 'kv',
+        _clear   => 'clear',
     },
 );
 
+sub hardReset {
+    my $self = shift;
+    $self->logger->warning("Resetting SmartArray","".__PACKAGE__."->hardReset");
+    $self->_clear;
+}
 
 sub dump {
     my $self = shift;
@@ -62,7 +68,7 @@ after '_init'  => sub { shift->logger->exiting("","".__PACKAGE__."->_init"); };
 sub all {
     my $self = shift;
     my $type = shift;
-    die "all requires a type!" unless $type;
+    $self->logger->error("SmartArray->all requires a type! Type: $type.") unless $type;
     $self->_init($type);
     my $aref = $self->get($type);
     return @{ $aref };
@@ -114,6 +120,7 @@ after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 sub exists { 
     my ($self, $object) = @_;
     my $type = ref($object);
+    $self->logger->error("SmartArray->exists requires a type! Object: $object, type: $type.") unless $type;
     my $found = first {$_->equals($object)} $self->all($type);
     return defined $found;
 }

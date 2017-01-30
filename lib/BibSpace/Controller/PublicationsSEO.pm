@@ -27,7 +27,7 @@ use Mojo::Log;
 sub metalist {
     my $self = shift;
 
-    my @pubs = $self->app->repo->getEntriesRepository->filter(sub{
+    my @pubs = $self->app->repo->entries_filter(sub{
         $_->is_paper and not $_->is_hidden
     });
 
@@ -46,7 +46,7 @@ sub meta {
     my $self = shift;
     my $id   = $self->param('id');
 
-    my $mentry = $self->app->repo->getEntriesRepository->find(sub{ $_->id==$id } );
+    my $mentry = $self->app->repo->entries_find(sub{ $_->id==$id } );
 
     if ( !defined $mentry ) {
         $self->flash( msg => "There is no entry with id $id" );

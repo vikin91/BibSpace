@@ -23,7 +23,7 @@ my $dbh = $t_logged_in->app->db;
 subtest 'Checking pages for single publication' => sub {
   # local $TODO = "Testing gets for single publications";
 
-  my @entries  = $t_logged_in->app->repo->getEntriesRepository->all;
+  my @entries  = $t_logged_in->app->repo->entries_all;
   my $size     = scalar(@entries);
   $num_publications_limit = $size if $size < $num_publications_limit;
   my $num_done = 0;

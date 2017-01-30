@@ -192,7 +192,7 @@ sub matches_our_type {
     # example: ourType = inproceedings
     # mathces bibtex types: inproceedings, incollection
 
-    my $mapping = $repo->getTypesRepository->find(
+    my $mapping = $repo->types_find(
         sub {
             ( $_->our_type cmp $oType ) == 0;
         }
@@ -200,11 +200,7 @@ sub matches_our_type {
 
     return if !defined $mapping;
 
-    my $match = $mapping->bibtexTypes_find(
-        sub {
-            ( $_ cmp $self->{_bibtex_type} ) == 0;
-        }
-    );
+    my $match = $mapping->bibtexTypes_find( sub { $_ eq $self->{_bibtex_type} } );
 
     return defined $match;
 }
