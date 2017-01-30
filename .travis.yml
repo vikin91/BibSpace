@@ -55,17 +55,17 @@ before_install:
     - touch tmp/out.html
     - touch tmp/out_bib.html
     - chmod -R 777 tmp
-
-
-install:
     - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
-    - cpan-install --deps # this works well!
-    - cpan-install --coverage
-    - cpanm --quiet --notest --skip-satisfied Dist::Zilla
-    - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
-    - cpanm --quiet --notest --skip-satisfied Module::Build::Mojolicious Module::CPANfile
-    # - dzil authordeps --missing | cpanm --notest --skip-satisfied 
-    - cpanm -nq --no-interactive --installdeps .
+
+
+# install:
+#     - cpan-install --deps # this works well!
+#     - cpan-install --coverage
+#     - cpanm --quiet --notest --skip-satisfied Dist::Zilla
+#     - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
+#     - cpanm --quiet --notest --skip-satisfied Module::Build::Mojolicious Module::CPANfile
+#     # - dzil authordeps --missing | cpanm --notest --skip-satisfied 
+#     - cpanm -nq --no-interactive --installdeps .
 before_script:
     - mysql --version
     - mysql -u root -e "SELECT VERSION();"
@@ -83,14 +83,10 @@ notifications:
         on_failure: always
 
 script: 
-    # works! # 
-    - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr t/
-    # - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf cover -report coveralls # runs ./Build test that does not work
-
-# after_failure:
-    # - coverage-report
+    - export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
+    - export BIBSPACE_USE_DUMP=1
+    - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr t/
 
 after_success:
     - cover -report coveralls
-    # - coverage-report
 
