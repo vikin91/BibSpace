@@ -4,6 +4,7 @@ use namespace::autoclean;
 use Moose;
 use MooseX::ClassAttribute;
 use Try::Tiny;
+use List::Util qw(first);
 
 use BibSpace::Model::IUidProvider;
 use BibSpace::Model::SmartUidProvider;
@@ -22,7 +23,8 @@ has 'uidProvider' => ( is => 'rw', isa => 'SmartUidProvider', required => 1 );
 =cut
 sub get_read_layer {
     my $self = shift;
-    return $self->layers->{'read'};
+    my $readLayer = first {$_->is_read} $self->get_all_layers;
+    return $readLayer;
 }
 
 =item get_all_layers
@@ -30,7 +32,7 @@ sub get_read_layer {
 =cut
 sub get_all_layers {
     my $self = shift;
-    return values $self->layers;
+    return sort {$a->priority <=> $b->priority} values %{ $self->layers };
 }
 
 =item get_write_layers
@@ -38,52 +40,48 @@ sub get_all_layers {
 =cut
 sub get_write_layers {
     my $self = shift;
-    return values $self->layers;
+    my @all = $self->get_all_layers;
+    my @writeLayers = sort {$a->priority <=> $b->priority} grep {not $_->is_read} @all;
+    return @writeLayers;
 }
 
-sub add_read_layer {
+sub get_layer {
     my $self = shift;
-    my $layer = shift;
-    $self->_add_layer('read', $layer);
+    my $name = shift;
+    return $self->layers->{$name};
 }
+
 
 sub replace_layer {
     my $self = shift;
-    my $layer_name = shift;
+    my $name = shift;
     my $layer = shift;
-    $self->layers->{$layer_name} = $layer;
+    $self->layers->{$name} = $layer;
 }
 
-sub add_write_layer {
-    my $self = shift;
-    my $layer = shift;
-    my $layer_name = $self->generate_write_layer_key;
-    $self->_add_layer($layer_name, $layer);
-}
 
-sub _add_layer {
+sub add_layer {
     my $self = shift;
-    my $layer_name = shift;
     my $layer = shift;
     $layer->uidProvider($self->uidProvider);
-    $self->layers->{$layer_name} = $layer;
+    $self->layers->{$layer->name} = $layer;
 }
 
-sub generate_write_layer_key {
-    my $self = shift;
-    my $layer_id = 1;
-    my $layer_name = "write_$layer_id";
-    while( exists($self->layers->{$layer_name}) ){
-        ++$layer_id;
-        $layer_name = "write_$layer_id";
-    }
-    return $layer_name;
-}
 
 sub set_uid_provider {
     my $self = shift;
     my $uidProvider = shift;
     $self->uidProvider($uidProvider);
+}
+
+sub get_summary_string {
+    my $self = shift;
+    my $str = "\n";
+    foreach my $layer ($self->get_all_layers){
+        $str .= $layer->get_summary_string;
+        $str .= "\n";
+    }
+    return $str;
 }
 
 =item hardReset
@@ -93,7 +91,7 @@ sub set_uid_provider {
 
 sub hardReset {
     my $self = shift;
-    $self->read->hardReset if defined $self->read;
+    $self->get_read_layer->hardReset if defined $self->get_read_layer;
 }
 
 =item copy_data
@@ -106,27 +104,74 @@ sub copy_data {
     my $backendFrom = $config->{from};
     my $backendTo = $config->{to};
 
-    ## TODO: check if backends with given prios exist
+    my @types = qw(TagType Team Author Authorship Membership Entry Labeling Tag Exception Type);
 
     $self->hardReset;
-    $self->getAuthorsRepository->copy( $backendFrom, $backendTo );
-    $self->getAuthorshipsRepository->copy( $backendFrom, $backendTo );
-    $self->getEntriesRepository->copy( $backendFrom, $backendTo );
-    $self->getExceptionsRepository->copy( $backendFrom, $backendTo );
-    $self->getLabelingsRepository->copy( $backendFrom, $backendTo );
-    $self->getMembershipsRepository->copy( $backendFrom, $backendTo );
-    $self->getTagsRepository->copy( $backendFrom, $backendTo );
-    $self->getTagTypesRepository->copy( $backendFrom, $backendTo );
-    $self->getTeamsRepository->copy( $backendFrom, $backendTo );
-    $self->getTypesRepository->copy( $backendFrom, $backendTo );
+    my $srcLayer = $self->get_layer($backendFrom);
+    my $destLayer = $self->get_layer($backendTo);
+    foreach my $type (@types){
+        $self->logger->info("Copying all objects of type '".$type."' from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+        my @resultRead = $srcLayer->all($type);
+        $self->logger->info(scalar(@resultRead)." objects of type '".$type."' read from layer '$backendFrom'.","".__PACKAGE__."->copy_data");
+        my $resultSave = $destLayer->save($type, @resultRead);
+        $self->logger->info("$resultSave objects of type '".$type."' saved to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+        
+    }
 }
+
+# logic of the layered repository = read from one layer, write to all layer
 
 sub all {
     my $self = shift;
     my $type = shift;
+    return $self->get_read_layer->all($type);
+}
 
-    my $dao = $self->get_read_layer->getDao($type);
-    return $dao->all;
+sub count {
+    my ($self, $type) = @_;
+    return $self->get_read_layer->count($type);
+}
+
+sub empty {
+    my ($self, $type) = @_;
+    return $self->get_read_layer->empty($type);
+}
+
+sub exists {
+    my ($self, $type, $obj) = @_;
+    return $self->get_read_layer->exists($type, $obj);
+}
+
+sub save {
+    my ($self, $type, @objects) = @_;
+    foreach my $layer ($self->get_all_layers){
+        $layer->save($type, @objects);
+    }
+}
+
+sub update {
+    my ($self, $type, @objects) = @_;
+    foreach my $layer ($self->get_all_layers){
+        $layer->update($type, @objects);
+    }
+}
+
+sub delete {
+    my ($self, $type, @objects) = @_;
+    foreach my $layer ($self->get_all_layers){
+        $layer->delete($type, @objects);
+    }
+}
+
+
+sub filter {
+    my ($self, $type, $coderef) = @_;
+    return $self->get_read_layer->filter($type, $coderef);
+}
+
+sub find {
+    my ($self, $type, $coderef) = @_;
+    return $self->get_read_layer->find($type, $coderef);
 }
 
 

@@ -101,11 +101,12 @@ after 'all' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->all" ); }
 
 sub count {
   my ($self) = @_;
-
-  die "" . __PACKAGE__ . "->count not implemented.";
-
-  # TODO: auto-generated method stub. Implement me!
-
+  my $dbh    = $self->handle;
+  my $sth    = $dbh->prepare("SELECT COUNT(*) as num FROM Entry LIMIT 1");
+  $sth->execute();
+  my $row = $sth->fetchrow_hashref();
+  my $num = $row->{num} // 0;
+  return $num;
 }
 before 'count' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->count" ); };
 after 'count' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->count" ); };
@@ -118,7 +119,7 @@ after 'count' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->count" 
 sub empty {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $sth    = $dbh->prepare("SELECT 1 as num FROM Author_to_Team LIMIT 1");
+  my $sth    = $dbh->prepare("SELECT 1 as num FROM Entry LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
   my $num = $row->{num} // 0;

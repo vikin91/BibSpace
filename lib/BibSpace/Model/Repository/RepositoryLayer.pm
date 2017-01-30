@@ -11,10 +11,15 @@ use BibSpace::Model::DAO::MySQLDAOFactory;
 use BibSpace::Model::DAO::RedisDAOFactory;
 use BibSpace::Model::SmartUidProvider;
 
-has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
-has 'handle' => ( is => 'ro', isa => 'Maybe[Object]', required => 1 );
+has 'name' => ( is => 'ro', isa => 'Str', required => 1 );
 
-=item backendType
+# lower number = higher priority = will be saved before layers with lower priority
+has 'priority' => ( is => 'ro', isa => 'Int', default => 99 );
+has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
+has 'handle' => ( is => 'ro', isa => 'Object', required => 1 );
+has 'is_read' => ( is => 'ro', isa => 'Bool', default => undef );
+
+=item backendFactoryName
     Stores the name of the DAO Factory for this layer. E.g. SmartArrayDaoFactory
 =cut
 has 'backendFactoryName' => ( is => 'ro', isa => 'Str', required => 1);
@@ -34,6 +39,14 @@ sub hardReset {
     $self->logger->warn( "Conducting HARD RESET of all repositories and ID Providers!",
         "" . __PACKAGE__ . "->hardReset" );
     $self->uidProvider->reset if defined $self->uidProvider;
+    try{
+        $self->handle->hardReset;
+    }
+    catch{
+        # we ignore if the handle cannot be reset 
+        # e.g. MySQL database should not be reset - it does persistence, 
+        # but our SmartArray should - it does caching
+    };
 }
 
 sub dispatcher {
@@ -41,7 +54,7 @@ sub dispatcher {
     my $factory = shift;
     my $type = shift;
 
-    $self->logger->debug("Dispatcher searches for: '$type' using factory '$factory'", "" . __PACKAGE__ . "->dispatcher");
+    # $self->logger->debug("Dispatcher searches for: '$type' using factory '$factory'", "" . __PACKAGE__ . "->dispatcher");
 
     if( $type eq 'TagType' ) { 
         return $factory->getTagTypeDao($self->uidProvider->get_provider($type)); 
@@ -84,6 +97,70 @@ sub getDao {
     my $daoAbstractFactory = DAOFactory->new(logger => $self->logger);
     my $daoFactory = $daoAbstractFactory->getInstance($self->backendFactoryName, $self->handle);
     return $self->dispatcher($daoFactory, $type);
+}
+
+sub get_summary_string {
+    my $self = shift;
+
+    # TODO: this line is duplicated code
+    my @types = qw(TagType Team Author Authorship Membership Entry Labeling Tag Exception Type);
+    my $str;
+    $str .= "Layer '".$self->name."'->";
+    foreach my $type (@types){
+        my $cnt = $self->count($type);
+        $str .= "'$type'";
+        $str .= sprintf "#'%-5s',", $cnt;
+    }
+    return $str;
+}
+
+
+sub all {
+    my ($self, $type) = @_;
+    # $self->logger->debug("Calling all for type '$type' on layer '".$self->name."'", "".__PACKAGE__."->all");
+    return $self->getDao($type)->all;
+}
+
+sub count {
+    my ($self, $type) = @_;
+    return $self->getDao($type)->count;
+}
+
+sub empty {
+    my ($self, $type) = @_;
+    return $self->getDao($type)->empty;
+}
+
+sub exists {
+    my ($self, $type, $obj) = @_;
+    return $self->getDao($type)->exists($obj);
+}
+
+sub save {
+    my ($self, $type, @objects) = @_;
+    # $self->logger->debug("Calling save for type '$type' on layer '".$self->name."'", "".__PACKAGE__."->save");
+    # $self->logger->debug("Calling save for objects '@objects' on layer '".$self->name."'", "".__PACKAGE__."->save");
+    return $self->getDao($type)->save(@objects);
+}
+
+sub update {
+    my ($self, $type, @objects) = @_;
+    return $self->getDao($type)->update(@objects);
+}
+
+sub delete {
+    my ($self, $type, @objects) = @_;
+    return $self->getDao($type)->delete(@objects);
+}
+
+sub filter {
+    my ($self, $type, $coderef) = @_;
+    return $self->getDao($type)->filter($coderef);
+}
+
+sub find {
+    my ($self, $type, $coderef) = @_;
+    return $self->getDao($type)->find($coderef);
 }
 
 __PACKAGE__->meta->make_immutable;

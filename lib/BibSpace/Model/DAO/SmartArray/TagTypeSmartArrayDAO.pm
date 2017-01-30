@@ -30,7 +30,7 @@ after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
 =cut 
 sub count {
   my ($self) = @_;
-  return scalar $self->handle->all("TagType");
+  return $self->handle->count("TagType");
 }
 before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
 after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };

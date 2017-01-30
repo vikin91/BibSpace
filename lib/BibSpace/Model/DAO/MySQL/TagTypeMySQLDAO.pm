@@ -51,11 +51,12 @@ after 'all' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->all" ); }
 
 sub count {
   my ($self) = @_;
-
-  die "" . __PACKAGE__ . "->count not implemented.";
-
-  # TODO: auto-generated method stub. Implement me!
-
+  my $dbh    = $self->handle;
+  my $sth    = $dbh->prepare("SELECT COUNT(*) as num FROM TagType LIMIT 1");
+  $sth->execute();
+  my $row = $sth->fetchrow_hashref();
+  my $num = $row->{num} // 0;
+  return $num;
 }
 before 'count' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->count" ); };
 after 'count' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->count" ); };

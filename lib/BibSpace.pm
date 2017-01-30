@@ -37,6 +37,11 @@ use BibSpace::Model::DAO::DAOFactory;
 use BibSpace::Model::Repository::RepositoryFactory;
 use BibSpace::Model::SmartArray;
 
+use BibSpace::Model::SmartUidProvider;
+use BibSpace::Model::Repository::LayeredRepository;
+use BibSpace::Model::Repository::RepositoryLayer;
+use BibSpace::Model::Repository::RepositoryFacade;
+
 use Storable;
 
 # for Makemake. Needs to be removed for Dist::Zilla
@@ -84,6 +89,11 @@ has appStateDumpFileName => sub {
   return 'bibspace.dat';
 };
 
+has useDumpFixture => sub {
+  return $ENV{BIBSPACE_USE_DUMP} if $ENV{BIBSPACE_USE_DUMP};
+  return;
+};
+
 has logger => sub { state $logger = SimpleLogger->new };
 
 
@@ -104,30 +114,37 @@ has backendConfig => sub {
   return \%backendConfig;
 };
 
-# has storableRepo => sub {
-#   my $self = shift;
-#   if( -e $self->appStateDumpFileName ){
-#     $self->logger->info('App state available in '.$self->appStateDumpFileName);
-#     my $repo = retrieve($self->appStateDumpFileName);
-#     # $repo->setBackendHandles($self->backendConfig);
-#     return $repo;
-#   }
-#   return;
-# };
 
+has layeredRepository => sub {
+  my $self = shift;
+  $self->app->logger->warn("Calling layeredRepository");
+  my $sup = SmartUidProvider->new(logger=> $self->logger, idProviderClassName => 'IntegerUidProvider');
+  my $LR = LayeredRepository->new(logger => $self->logger, uidProvider => $sup);
+
+  my $smartArrayLayer = RepositoryLayer->new(
+    name => 'smart',
+    priority => 1,
+    backendFactoryName => "SmartArrayDAOFactory", 
+    logger => $self->logger,
+    handle => $self->smartArrayBackend,
+    is_read => 1);
+
+  my $mySQLLayer = RepositoryLayer->new( 
+    name => 'mysql',
+    priority => 99,
+    backendFactoryName => "MySQLDAOFactory", 
+    logger => $self->logger,
+    handle => $self->db);
+
+  $LR->add_layer($smartArrayLayer);
+  $LR->add_layer($mySQLLayer);
+  return $LR;
+};
 
 has repo => sub {
   my $self = shift;
-  return state $repo = RepositoryFactory->new->getInstance(
-      'NonStorableLayeredRepositoryFactory', 
-      $self->logger, 
-      $self->backendConfig 
-  );
+  return RepositoryFacade->new(lr => $self->layeredRepository);
 
-  # I don't like the approach with idProvider that comes from the factory
-  # But it is necessary, as the new IDs need to be registered once they are read from DB (or any other backend)
-  # my $author = Author->new( idProvider=>$factory->idProviderAuthor, id => 5, uid => "sth", name => 'Henry' );
-  # $arepo->save($author);
 };
 
 ################################################################
@@ -186,55 +203,40 @@ sub startup {
 sub setup_repositories {
   my $self = shift;
 
-  use BibSpace::Model::SmartUidProvider;
-  my $sup = SmartUidProvider->new(logger=> $self->logger, idProviderClassName => 'IntegerUidProvider');
+
+  $self->app->logger->debug($self->repo->lr->get_summary_string);
+
+  if( -e $self->appStateDumpFileName and $self->useDumpFixture ){
+    my $layer = retrieve($self->appStateDumpFileName);
+    $self->repo->lr->replace_layer('smart', $layer);
+  }
+  else{
+    $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
+    $self->link_data;
+    store $self->repo->lr->get_read_layer, $self->appStateDumpFileName;  
+  }
+
+  $self->app->logger->debug($self->repo->lr->get_summary_string);
 
 
-  use BibSpace::Model::Repository::LayeredRepository;
-  use BibSpace::Model::Repository::RepositoryLayer;
-  my $LR = LayeredRepository->new(logger => $self->logger, uidProvider => $sup);
+  my $eidP = $self->repo->lr->get_read_layer->uidProvider->get_provider('Entry');
+  foreach (0..100){
+    my $testEntry = Entry->new(idProvider => $eidP, bib=>'@article{key'.$_.', title={xyz'.$_.'}, year={2099}}');
+    say "testEntry:".$testEntry->id;
+    $self->repo->entries_save($testEntry);
+  }
+
+  $self->app->logger->debug($self->repo->lr->get_summary_string);
 
 
-  my $smartArrayLayer = RepositoryLayer->new( 
-    backendFactoryName => "SmartArrayDAOFactory", 
-    logger => $self->logger,
-    handle => $self->smartArrayBackend);
+  # my $rf = $self->repo;
 
-  my $mySQLLayer = RepositoryLayer->new( 
-    backendFactoryName => "MySQLDAOFactory", 
-    logger => $self->logger,
-    handle => $self->db);
+  # my @allAuthors = $rf->authors_filter(sub{$_->is_visible}); #good!!
 
-  $LR->add_read_layer($smartArrayLayer);
-  $LR->add_write_layer($mySQLLayer);
-
-  store $LR->get_read_layer, $self->appStateDumpFileName;
-
-  my @authors = $LR->all('Author');
-
-
-  
-
-  # if($self->storableRepo){
-  #   $self->repo($self->storableRepo);
-  #   $self->repo->setBackendHandles($self->backendConfig);
+  # for my $e (@allAuthors) {
+  #   say $e->uid;    
   # }
 
-  # say "Accessing all authors: ".join('',$self->repo->getAuthorsRepository->all);
-  # # if( ! -e $self->appStateDumpFileName or $self->repo->getEntriesRepository->empty ){
-
-  #   say "self->repo is: ".ref($self->repo);
-  #   say "self->repo->get_storable is: ".ref($self->repo->get_storable);
-  #   if ( $self->app->db ) {
-  #     $self->repo->copy_data( { from => 99, to => 1 } );
-  #   }
-  #   $self->link_data;
-    # store $self->repo->get_storable, $self->appStateDumpFileName;
-
-    # $self->repo->removeBackendHandles;
-    # store $self->repo, $self->appStateDumpFileName;
-    # $self->repo->setBackendHandles($self->backendConfig);
-  # }
 }
 ################################################################
 sub link_data {
@@ -242,8 +244,8 @@ sub link_data {
   $self->app->logger->info("Linking data...");
 
   $self->app->logger->info("Linking Authors (N) to (1) Authors.");
-  foreach my $author ( $self->repo->getAuthorsRepository->filter( sub { $_->id != $_->master_id } ) ) {
-    my $master = $self->repo->getAuthorsRepository->find( sub { $_->id == $author->master_id } );
+  foreach my $author ( $self->repo->authors_filter( sub { $_->id != $_->master_id } ) ) {
+    my $master = $self->repo->authors_find( sub { $_->id == $author->master_id } );
     if ( $master and $author ) {
       $author->set_master($master);
     }
@@ -251,9 +253,9 @@ sub link_data {
 
 
   $self->app->logger->info("Linking Authors (N) to (M) Entries.");
-  foreach my $auth ( $self->repo->getAuthorshipsRepository->all ) {
-    my $entry  = $self->repo->getEntriesRepository->find( sub { $_->id == $auth->entry_id } );
-    my $author = $self->repo->getAuthorsRepository->find( sub { $_->id == $auth->author_id } );
+  foreach my $auth ( $self->repo->authorships_all ) {
+    my $entry  = $self->repo->entries_find( sub { $_->id == $auth->entry_id } );
+    my $author = $self->repo->authors_find( sub { $_->id == $auth->author_id } );
     if ( $entry and $author ) {
       $auth->entry($entry);
       $auth->author($author);
@@ -263,9 +265,9 @@ sub link_data {
   }
 
   $self->app->logger->info("Linking Tags (N) to (M) Entries.");
-  foreach my $labeling ( $self->repo->getLabelingsRepository->all ) {
-    my $entry = $self->repo->getEntriesRepository->find( sub { $_->id == $labeling->entry_id } );
-    my $tag   = $self->repo->getTagsRepository->find( sub    { $_->id == $labeling->tag_id } );
+  foreach my $labeling ( $self->repo->labelings_all ) {
+    my $entry = $self->repo->entries_find( sub { $_->id == $labeling->entry_id } );
+    my $tag   = $self->repo->tags_find( sub    { $_->id == $labeling->tag_id } );
     if ( $entry and $tag ) {
       $labeling->entry($entry);
       $labeling->tag($tag);
@@ -275,9 +277,9 @@ sub link_data {
   }
 
   $self->app->logger->info("Linking Teams (Exceptions) (N) to (M) Entries.");
-  foreach my $exception ( $self->repo->getExceptionsRepository->all ) {
-    my $entry = $self->repo->getEntriesRepository->find( sub { $_->id == $exception->entry_id } );
-    my $team  = $self->repo->getTeamsRepository->find( sub   { $_->id == $exception->team_id } );
+  foreach my $exception ( $self->repo->exceptions_all ) {
+    my $entry = $self->repo->entries_find( sub { $_->id == $exception->entry_id } );
+    my $team  = $self->repo->teams_find( sub   { $_->id == $exception->team_id } );
     if ( $entry and $team ) {
       $exception->entry($entry);
       $exception->team($team);
@@ -288,9 +290,9 @@ sub link_data {
 
 
   $self->app->logger->info("Linking Teams (N) to (M) Authors.");
-  foreach my $membership ( $self->repo->getMembershipsRepository->all ) {
-    my $author = $self->repo->getAuthorsRepository->find( sub { $_->id == $membership->author_id } );
-    my $team   = $self->repo->getTeamsRepository->find( sub   { $_->id == $membership->team_id } );
+  foreach my $membership ( $self->repo->memberships_all ) {
+    my $author = $self->repo->authors_find( sub { $_->id == $membership->author_id } );
+    my $team   = $self->repo->teams_find( sub   { $_->id == $membership->team_id } );
     if ( defined $author and defined $team ) {
       $membership->author($author);
       $membership->team($team);
@@ -300,8 +302,8 @@ sub link_data {
   }
 
   $self->app->logger->info("Linking TagTypes (N) to (1) Tags.");
-  foreach my $tag ( $self->repo->getTagsRepository->all ) {
-    my $tagtype = $self->repo->getTagTypesRepository->find( sub { $_->id == $tag->type } );
+  foreach my $tag ( $self->repo->tags_all ) {
+    my $tagtype = $self->repo->tagTypes_find( sub { $_->id == $tag->type } );
     if ( $tag and $tagtype ) {
       $tag->tagtype($tagtype);
     }

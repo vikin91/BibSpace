@@ -79,7 +79,7 @@ sub _init {
 sub reset {
     my $self = shift;
     $self->logger->warn("Resetting UID record!");
-    foreach my $type (keys $self->_keys){
+    foreach my $type ($self->_keys){
         $self->_get($type)->clear;    
     }
     
