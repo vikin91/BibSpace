@@ -14,8 +14,6 @@ use BibSpace::Model::SimpleLogger;
 
 use BibSpace::Model::M::MUser;
 use BibSpace::Model::M::CMUsers;
-use BibSpace::Model::M::CMObjectStore;
-use BibSpace::Model::M::StorageBase;
 
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;

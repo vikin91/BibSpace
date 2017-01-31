@@ -1,7 +1,6 @@
 package Type;
 
 use List::MoreUtils qw(any uniq);
-use BibSpace::Model::M::StorageBase;
 
 use Data::Dumper;
 use utf8;

@@ -20,6 +20,7 @@ has 'idProvider' => (
     is       => 'ro',
     does     => 'IUidProvider',
     required => 1,
+    traits  => ['DoNotSerialize'],
 );
 has 'old_mysql_id'    => ( is => 'ro', isa => 'Maybe[Int]', default => undef );
 has 'id'              => ( is => 'ro', isa => 'Int', builder => '_generateUIDEntry', lazy=>1, init_arg => undef );

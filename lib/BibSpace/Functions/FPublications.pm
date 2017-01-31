@@ -201,8 +201,6 @@ sub Fget_publications_core_storage {
     my $hidden      = shift;
     my $debug       = shift // 0;
 
-    # my $storage = StorageBase->get();
-
     my $team_obj;     
     if(defined $team){
         $team_obj = $self->app->repo->teams_find( sub{ $_->name eq $team } );

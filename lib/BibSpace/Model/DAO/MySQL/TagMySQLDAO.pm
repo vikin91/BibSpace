@@ -193,7 +193,6 @@ sub delete {
       $self->logger->error( "Delete exception: $_", "" . __PACKAGE__ . "->delete" );
     };
   }
-
 }
 before 'delete' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->delete" ); };
 after 'delete' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->delete" ); };

@@ -160,7 +160,7 @@ sub add_minion {
   my $self   = shift;
   my $minion = shift;
 
-  return 0 unless defined $minion;
+  return unless defined $minion;
   $minion->set_master($self);
   return 1;
 }
@@ -170,10 +170,10 @@ sub can_merge_authors {
   my $source_author = shift;
 
 
-  if ( defined $source_author and $source_author->{id} != $self->{id} and !$self->equals($source_author) ) {
+  if ( defined $source_author and $source_author->id != $self->id and !$self->equals($source_author) ) {
     return 1;
   }
-  return 0;
+  return;
 }
 ##############################################################################################################
 sub merge_authors {
@@ -225,12 +225,6 @@ sub can_be_deleted {
 ####################################################################################
 ####################################################################################
 ####################################################################################
-sub entries {
-  my $self = shift;
-  return map { $_->entry } $self->authorships_all;
-}
-
-####################################################################################
 sub has_entry {
   my $self = shift;
   my $e    = shift;
@@ -238,41 +232,13 @@ sub has_entry {
   return defined $self->authorships_find( sub { $_->equals($e) } );
 }
 ####################################################################################
-sub assign_entry {
-  my ( $self, @entries ) = @_;
-
-  my $added = 0;
-  foreach my $e (@entries) {
-    if ( !$self->has_entry($e) ) {
-      $self->entries_add($e);
-      ++$added;
-
-      # if ( !$e->has_author($self) ) {
-      #     $e->assign_author($self);
-      # }
-    }
-
-  }
-  return $added;
-
-}
-####################################################################################
-sub remove_entry {
-  my $self  = shift;
-  my $entry = shift;
-
-  my $index = $self->entries_find_index( sub { $_->equals($entry) } );
-  return 0 if $index == -1;
-  return 1 if $self->entries_delete($index);
-  return 0;
-}
-####################################################################################
 sub take_entries_from_author {
   my $self        = shift;
   my $from_author = shift;
 
-  warn "This function may cause entries to be duplicated for author " . $self->toString;
-  $self->entries_add( $from_author->entries );
+  die "this function must be called from controller-level!";
+
+  # $self->entries_add( $from_author->entries );
   $from_author->abandon_all_entries;
 }
 
@@ -280,6 +246,7 @@ sub take_entries_from_author {
 ################################################################################
 sub abandon_all_entries {
   my $self = shift;
+  die "this function must be called from controller-level!";
   $self->authorships_clear; 
 }
 ################################################################################
@@ -294,7 +261,7 @@ sub joined_team {
 
   my $mem = $self->memberships_find(
     sub {
-      $_->{team_id} == $team->id and $_->{author_id} == $self->id;
+      $_->team_id == $team->id and $_->author_id == $self->id;
     }
   );
   return -1 if !defined $mem;
@@ -352,39 +319,6 @@ sub update_membership {
   }
 }
 
-# ################################################################################
-# sub add_to_team {
-#   my $self = shift;
-#   my $team = shift;
-
-
-#   return 0 if !defined $team and $team->{id} <= 0;
-
-
-#   if ( !$self->is_member_of($team) ) {
-#     $self->teams_add($team);
-
-# # TODO:
-# # not sure if I should have it here
-# # how do I save it later, if it is not in the storage?
-# # maybe I should remove memberships from the storage and leave them only in author and evtl. team?
-
-#     $self->teamMemberships_add(
-#       MTeamMembership->new(
-#         author_id => $self->id,
-#         team_id   => $team->id,
-#         author    => $self,
-#         team      => $team,
-#         start     => 0,
-#         stop      => 0
-#       )
-#     );
-#     return 1;
-#   }
-#   return 0;
-
-
-# }
 ################################################################################
 sub is_member_of {
   my $self = shift;
@@ -403,7 +337,7 @@ sub remove_from_team {
 
   my $mem_index = $self->teamMemberships_find_index(
     sub {
-      $_->{team_id} == $team->id and $_->{author_id} == $self->id;
+      $_->team_id == $team->id and $_->{author_id} == $self->id;
     }
   );
   return 0 if $mem_index == -1;

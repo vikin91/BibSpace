@@ -226,8 +226,8 @@ sub remove_uid {
   }
   else {
 
-    my @all_entries = $author_master->entries();
-    $author_minor->remove_master();
+    my @master_entries = $author_master->entries;
+    $author_minor->remove_master;
     $self->app->repo->authors_save($author_minor);
 
 # authors are uncnnected now
@@ -235,36 +235,37 @@ sub remove_uid {
 # All entries of the $author_master from before seperation needs be updated
 # The $author_minor comes back to the list of all authors and it keeps its entries.
 
-    my $storage = StorageBase->get();
-    foreach my $e (@all_entries) {
-
-      # 0 = no creation of new authors
-      $storage->add_entry_authors( $e, 0 );
-    }
+    $self->reassign_authors_to_entries_given_by_array(0, \@master_entries);
   }
+
   $self->redirect_to( $self->get_referrer );
 }
 ##############################################################################################################
 sub merge_authors {
   my $self           = shift;
-  my $dbh            = $self->app->db;
   my $destination_id = $self->param('author_to');
   my $source_id      = $self->param('author_from');
 
-  my $storage            = StorageBase->get();
-  my $author_destination = $storage->find_author_by_id_or_name($destination_id);
-  my $author_source      = $storage->find_author_by_id_or_name($source_id);
+  my $author_destination = $self->app->repo->authors_find( sub { $_->id == $destination_id } );
+  $author_destination  ||= $self->app->repo->authors_find( sub { $_->uid eq $destination_id } );
 
-  my $copy_name = $author_source->{uid};
+  my $author_source      = $self->app->repo->authors_find( sub { $_->id == $source_id } );
+  $author_source       ||= $self->app->repo->authors_find( sub { $_->uid eq $source_id } );
+
+  my $copy_name = $author_source->uid;
 
   my $success = 0;
 
   if ( defined $author_source and defined $author_destination ) {
     if ( $author_destination->can_merge_authors($author_source) ) {
 
+      $self->app->logger->warn("WARNING: controller method Authors->merge_authors contains dummy implementation!", "".__PACKAGE__."->merge_authors");
+
+      # this function must be taken out of object!!
       $author_destination->merge_authors($author_source);
-      $author_destination->save($dbh);
-      $author_source->save($dbh);
+      
+      $self->app->repo->authors_save($author_destination);
+      $self->app->repo->authors_save($author_source);
 
       $self->flash(
         msg =>
@@ -445,11 +446,12 @@ sub delete_author_force {
 
 }
 ##############################################################################################################
-sub reassign_authors_to_entries {
+sub reassign_authors_to_entries_given_by_array {
   my $self = shift;
   my $create_new = shift // 0;
+  my $entries_arr_ref = shift;
 
-  my @all_entries         = $self->app->repo->entries_all;
+  my @all_entries         = @{ $entries_arr_ref };
   my $num_authors_created = 0;
   foreach my $entry (@all_entries) {
     next unless defined $entry;
@@ -478,6 +480,16 @@ sub reassign_authors_to_entries {
       }
     }
   }
+  return $num_authors_created;
+}
+##############################################################################################################
+sub reassign_authors_to_entries {
+  my $self = shift;
+  my $create_new = shift // 0;
+
+  my @all_entries         = $self->app->repo->entries_all;
+  my $num_authors_created = $self->reassign_authors_to_entries_given_by_array($create_new, \@all_entries);
+
   $self->flash( msg =>
       "Reassignment with author creation has finished. $num_authors_created authors have been created or assigned." );
   $self->redirect_to( $self->get_referrer );

@@ -148,11 +148,23 @@ after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_inse
 
 sub update {
   my ( $self, @objects ) = @_;
+  my $dbh = $self->handle;
+  foreach my $obj (@objects) {
+    next if !defined $obj->id;
+    my $qry = "UPDATE TagType SET
+                      name=?,
+                      comment=?";
+    $qry .= " WHERE id = ?";
 
-  die "" . __PACKAGE__ . "->update not implemented. Method was instructed to update " . scalar(@objects) . " objects.";
-
-  # TODO: auto-generated method stub. Implement me!
-
+    my $sth = $dbh->prepare($qry);
+    try {
+      my $result = $sth->execute( $obj->name, $obj->comment, $obj->id );
+      $sth->finish();
+    }
+    catch {
+      $self->logger->error( "Update exception: $_", "" . __PACKAGE__ . "->update" );
+    };
+  }
 }
 before 'update' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->update" ); };
 after 'update' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update" ); };
@@ -164,11 +176,17 @@ after 'update' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update
 
 sub delete {
   my ( $self, @objects ) = @_;
-
-  die "" . __PACKAGE__ . "->delete not implemented. Method was instructed to delete " . scalar(@objects) . " objects.";
-
-  # TODO: auto-generated method stub. Implement me!
-
+  my $dbh = $self->handle;
+  foreach my $obj (@objects) {
+    my $qry = "DELETE FROM TagType WHERE id=?;";
+    my $sth = $dbh->prepare($qry);
+    try {
+      my $result = $sth->execute( $obj->id );
+    }
+    catch {
+      $self->logger->error( "Delete exception: $_", "" . __PACKAGE__ . "->delete" );
+    };
+  }
 }
 before 'delete' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->delete" ); };
 after 'delete' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->delete" ); };

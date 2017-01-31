@@ -28,13 +28,6 @@ sub register {
   my ( $self, $app ) = @_;
 
   $app->helper(
-    storage => sub {
-      StorageBase->get();
-    }
-  );
-
-
-  $app->helper(
     bst => sub {
       my $self = shift;
 
@@ -114,7 +107,7 @@ sub register {
     get_tag_type_obj => sub {
       my $self = shift;
       my $type = shift || 1;
-      return $self->app->repo->tagtypes_find( sub { $_->id == $type } );
+      return $self->app->repo->tagTypes_find( sub { $_->id == $type } );
     }
   );
 

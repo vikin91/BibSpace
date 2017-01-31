@@ -88,10 +88,9 @@ after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); }
 =cut 
 sub delete {
   my ($self, @objects) = @_;
-
-  die "".__PACKAGE__."->delete not implemented. Method was instructed to delete ".scalar(@objects)." objects.";
-  # TODO: auto-generated method stub. Implement me!
-
+  my %toDelete = map {$_ => 1} @objects;
+  my @diff = grep {not $toDelete{$_} } $self->all;
+  $self->handle->data->{'TagType'} = \@diff;
 }
 before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
 after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };

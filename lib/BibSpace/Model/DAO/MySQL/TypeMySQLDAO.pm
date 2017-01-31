@@ -163,7 +163,7 @@ after 'save' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->save" );
 
 sub update {
   my ( $self, @objects ) = @_;
-  # we have no ID here, so we may delete all and reinsert
+  # we have no autoincrement ID here, so we may delete all and reinsert
   $self->delete(@objects);
   $self->_insert(@objects);
 }
