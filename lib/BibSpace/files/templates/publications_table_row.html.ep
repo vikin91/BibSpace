@@ -79,7 +79,7 @@
         </button>
     </td>
 
-    <td class="bibtexitem" colspan="6">
-      %== $entry_obj->{html}
+    <td class="bibtexitem">
+      %== $entry_obj->html
     </td>
 </tr>

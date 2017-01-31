@@ -14,8 +14,8 @@
 
         <table class="table table-condensed table-hover">
           <thead>
-            <td ><button class="btn btn-default btn-sm">Controls</button></td>
-            <td><button class="btn btn-default btn-sm">HTML</button></td>
+<!--             <td ><button class="btn btn-default btn-sm">Controls</button></td>
+            <td><button class="btn btn-default btn-sm">HTML</button></td> -->
           </thead>
           <tbody>
          % my $i = 0;
