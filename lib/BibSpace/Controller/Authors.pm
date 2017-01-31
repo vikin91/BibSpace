@@ -119,11 +119,14 @@ sub edit_author {
 # }
 
 
+
+
   if ( !defined $author ) {
     $self->flash( msg => "Author with id $id does not exist!", msg_type => "danger" );
     $self->redirect_to( $self->url_for('all_authors') );
   }
   else {
+
 
     my @all_teams    = $self->app->repo->teams_all;
     my @author_teams = $author->get_teams;
@@ -142,7 +145,6 @@ sub edit_author {
       author           => $author,
       minor_authors    => \@minor_authors,
       teams            => \@author_teams,
-      exit_code        => '',
       tags             => \@author_tags,
       all_teams        => \@all_teams,
       unassigned_teams => \@unassigned_teams
@@ -228,18 +230,29 @@ sub remove_uid {
 
     my @master_entries = $author_master->get_entries;
 
+    # remove master authorships from both authors
     foreach my $master_authorship ( $author_master->authorships_all ){
-        $master_authorship->author->remove_authorship($master_authorship);
+        $author_master->remove_authorship($master_authorship);
+        $author_minor->remove_authorship($master_authorship);
+
         $master_authorship->entry->remove_authorship($master_authorship);
         $self->app->repo->authorships_delete($master_authorship);
     }
+    # remove minion authorships from both authors
     foreach my $minion_authorship ( $author_minor->authorships_all ){
-        $minion_authorship->author->remove_authorship($minion_authorship);
+        $author_minor->remove_authorship($minion_authorship);
+        $author_master->remove_authorship($minion_authorship);
+
         $minion_authorship->entry->remove_authorship($minion_authorship);
         $self->app->repo->authorships_delete($minion_authorship);
     }
+    # unlink authors
     $author_minor->remove_master;
-    $self->app->repo->authors_save($author_minor);
+    # save changes (minor should be enough)
+    $self->app->repo->authors_update($author_master);
+    $self->app->repo->authors_update($author_minor);
+
+    # calculate proper authorships automatically
     $self->reassign_authors_to_entries_given_by_array(0, \@master_entries);
 
   }
@@ -265,7 +278,6 @@ sub merge_authors {
   if ( defined $author_source and defined $author_destination ) {
     if ( $author_destination->can_merge_authors($author_source) ) {
 
-
       my @src_authorships = $author_source->authorships_all;
       foreach my $src_authorship ( @src_authorships ){
           # Removing the authorship from the source author
@@ -281,7 +293,6 @@ sub merge_authors {
       }
       $author_source->abandon_all_teams;
       $author_source->set_master($author_destination);
-
       
       $self->app->repo->authors_save($author_destination);
       $self->app->repo->authors_save($author_source);
@@ -291,17 +302,17 @@ sub merge_authors {
 
       $self->flash(
         msg =>
-          "Authors merged. <strong>$copy_name</strong> was merged into <strong>$author_destination->{master}</strong>.",
+          "Author <strong>$copy_name</strong> was merged into <strong>$author_destination->{master}</strong>.",
         msg_type => "success"
       );
     }
     else {
-      $self->flash( msg => "Author cannot be merged with its self. ", msg_type => "danger" );
+      $self->flash( msg => "An author cannot be merged with its self. ", msg_type => "danger" );
     }
 
   }
   else {
-    $self->flash( msg => "Authors cannot be merged. Some of authors does not exist.", msg_type => "danger" );
+    $self->flash( msg => "Authors cannot be merged. One or both authors do not exist.", msg_type => "danger" );
   }
 
   $self->redirect_to( $self->get_referrer );
@@ -478,7 +489,7 @@ sub reassign_authors_to_entries_given_by_array {
   foreach my $entry (@all_entries) {
     next unless defined $entry;
 
-    my @bibtex_author_name = $entry->author_names_from_bibtex();
+    my @bibtex_author_name = $entry->author_names_from_bibtex;
 
     for my $author_name (@bibtex_author_name) {
 
@@ -523,7 +534,6 @@ sub reassign_authors_to_entries_and_create_authors {
 }
 
 ##############################################################################################################
-
 sub toggle_visibility {
   my $self = shift;
   my $id   = $self->param('id');
@@ -533,7 +543,6 @@ sub toggle_visibility {
   $self->app->repo->authors_update($author);
   $self->redirect_to( $self->get_referrer );
 }
-
 ##############################################################################################################
 
 1;

@@ -255,17 +255,10 @@ sub Fget_publications_core {
     # filtering
     my @entries = $self->app->repo->entries_all;
     if(defined $master_id and defined $author_obj){
-        # $self->app->logger->debug("BEFORE Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core" );
-        if($author_obj->is_master){
-            @entries = $author_obj->get_entries; 
-            # @entries = grep { $_->has_master_author($author_obj) } @entries;
-        }
-        else{
-            @entries = $author_obj->get_entries;
-            # @entries = grep { $_->has_author($author_obj) } @entries;   
-        }
-        # $self->app->logger->debug("AFTER Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core" );
+        @entries = $author_obj->get_entries; 
+        # WARNING: this overwrites all entries - this filtering must be done as first!
     }
+     
 
     # simple filters
     if( defined $year and $year > 0 ){
@@ -306,85 +299,19 @@ sub Fget_publications_core {
         @entries = grep { $_->has_team($team_obj) } @entries;
     }
     if($debug == 1){
-        say "Fget_publications_core Input author = $author" if defined $author;
-        say "Fget_publications_core Input year = $year" if defined $year;
-        say "Fget_publications_core Input bibtex_type = $bibtex_type" if defined $bibtex_type;
-        say "Fget_publications_core Input entry_type = $entry_type" if defined $entry_type;
-        say "Fget_publications_core Input tag = $tag" if defined $tag;
-        say "Fget_publications_core Input team = $team" if defined $team;
-        say "Fget_publications_core Input visible = $visible" if defined $visible;
-        say "Fget_publications_core Input permalink = $permalink" if defined $permalink;
-        say "Fget_publications_core Input hidden = $hidden" if defined $hidden;
-        say "Fget_publications_core Input debug = $debug" if defined $debug;
-        say "Fget_publications_core Found ".scalar(@entries)." entries";
+        $self->app->logger->debug("Fget_publications_core Input author = $author") if defined $author;
+        $self->app->logger->debug("Fget_publications_core Input year = $year") if defined $year;
+        $self->app->logger->debug("Fget_publications_core Input bibtex_type = $bibtex_type") if defined $bibtex_type;
+        $self->app->logger->debug("Fget_publications_core Input entry_type = $entry_type") if defined $entry_type;
+        $self->app->logger->debug("Fget_publications_core Input tag = $tag") if defined $tag;
+        $self->app->logger->debug("Fget_publications_core Input team = $team") if defined $team;
+        $self->app->logger->debug("Fget_publications_core Input visible = $visible") if defined $visible;
+        $self->app->logger->debug("Fget_publications_core Input permalink = $permalink") if defined $permalink;
+        $self->app->logger->debug("Fget_publications_core Input hidden = $hidden") if defined $hidden;
+        $self->app->logger->debug("Fget_publications_core Input debug = $debug") if defined $debug;
+        $self->app->logger->debug("Fget_publications_core Found ".scalar(@entries)." entries");
     }
 
     return @entries;
 }
-####################################################################################
-# Keep this for a while. Reason: see above (good for tests)
-# sub Fget_publications_core_old {
-#     my $self        = shift;
-#     my $author      = shift;
-#     my $year        = shift;
-#     my $bibtex_type = shift;
-#     my $entry_type  = shift;
-#     my $tag         = shift;
-#     my $team        = shift;
-#     my $visible     = shift // 0;
-#     my $permalink   = shift;
-#     my $hidden      = shift;
-#     my $debug       = shift // 0;
-
-
-#     my $dbh = $self->app->db;
-
-#     my $team_obj = MTeam->static_get_by_name( $dbh, $team );
-#     if ( !defined $team_obj ){
-#         # no such master. Assume, that author id was given
-#         $team_obj = MTeam->static_get( $dbh, $team );    
-#     }
-
-#     my $author_obj = MAuthor->static_get_by_master( $dbh, $author );
-#     if ( !defined $author_obj ){
-#         # no such master. Assume, that author id was given
-#         $author_obj = MAuthor->static_get( $dbh, $author );    
-#     }
-
-#     my $tag_obj = MTag->static_get_by_name( $dbh, $tag );
-#     if ( !defined $tag_obj ){
-#         # no such master. Assume, that author id was given
-#         $tag_obj = MTag->static_get( $dbh, $tag );    
-#     }
-    
-#     my $teamid = undef;
-#     $teamid = $team_obj->{id} if defined $team_obj;    
-
-#     my $master_id = undef;
-#     $master_id = $author_obj->{id} if defined $author_obj;
-
-#     my $tagid = undef;
-#     $tagid = $tag_obj->{id} if defined $tag_obj;
-
-
-#     my @entries = MEntry->static_get_filter(
-#         $dbh,   $master_id, $year,    $bibtex_type, $entry_type,
-#         $tagid, $teamid,    $visible, $permalink,   $hidden
-#     );
-
-#     if($debug == 1){
-#         say "DB Input author = $author" if defined $author;
-#         say "DB Input year = $year" if defined $year;
-#         say "DB Input bibtex_type = $bibtex_type" if defined $bibtex_type;
-#         say "DB Input entry_type = $entry_type" if defined $entry_type;
-#         say "DB Input tag = $tag" if defined $tag;
-#         say "DB Input team = $team" if defined $team;
-#         say "DB Input visible = $visible" if defined $visible;
-#         say "DB Input permalink = $permalink" if defined $permalink;
-#         say "DB Input hidden = $hidden" if defined $hidden;
-#         say "DB Input debug = $debug" if defined $debug;
-#         say "DB Found ".scalar(@entries)." entries";
-#     }
-#     return @entries;
-# }
 ####################################################################################

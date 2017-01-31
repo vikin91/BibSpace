@@ -27,7 +27,7 @@ has 'author' => (
 ####################################################################################
 sub id {
   my $self = shift;
-  return "(" . $self->entry_id . "-" . $self->author->uid . ")" if defined $self->author;
+  return "(" . $self->entry_id . "-" . $self->author->id . ")" if defined $self->author;
   return "(" . $self->entry_id . "-" . $self->author_id . ")";
 }
 ####################################################################################
