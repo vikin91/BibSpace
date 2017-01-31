@@ -158,15 +158,29 @@ my @pages = (
   $self->url_for('recently_changed', num=> 10),
   $self->url_for('get_untagged_publications'),
 
+  $self->url_for('get_single_publication', id=>0),
   $self->url_for('get_single_publication', id=>$entry->id),
+
   $self->url_for('toggle_hide_publication', id=>$entry->id),
   $self->url_for('hide_publication', id=>$entry->id),
   $self->url_for('unhide_publication', id=>$entry->id),
+  
+  $self->url_for('toggle_hide_publication', id=>0),
+  $self->url_for('hide_publication', id=>0),
+  $self->url_for('unhide_publication', id=>0),
+
   $self->url_for('make_paper', id=>$entry->id),
   $self->url_for('make_talk', id=>$entry->id),
+
+  $self->url_for('make_paper', id=>0),
+  $self->url_for('make_talk', id=>0),
+
   $self->url_for('edit_publication', id=>$entry->id),
+  $self->url_for('edit_publication', id=>0),
+
   $self->url_for('regenerate_publication', id=>$entry->id),
   $self->url_for('regenerate_publication', id=>0),
+  
   $self->url_for('get_untagged_publications_for_author', tagtype=>1, author=>$author->id),
   $self->url_for('get_untagged_publications_for_author', tagtype=>1, author=>'NotExistingAuthor'),
 
@@ -188,10 +202,18 @@ my @pages = (
   $self->url_for('add_tag_to_publication', eid=>$entry->id , tid=>$tag->id),
   $self->url_for('remove_tag_from_publication', eid=>$entry->id , tid=>$tag->id),
 
+  $self->url_for('manage_attachments', id=>0),
+  $self->url_for('manage_attachments', id=>$entry->id),
+
   $self->url_for('manage_exceptions', id=>0),
   $self->url_for('manage_exceptions', id=>$entry->id),
+
   $self->url_for('add_exception_to_publication', eid=>$entry->id , tid=>$team->id),
+  $self->url_for('add_exception_to_publication', eid=>0 , tid=>$team->id),
+
   $self->url_for('remove_exception_from_publication', eid=>$entry->id , tid=>$team->id),
+  $self->url_for('remove_exception_from_publication', eid=>$entry->id , tid=>$team->id),
+  $self->url_for('remove_exception_from_publication', eid=>0 , tid=>$team->id),
 
   $self->url_for('show_authors_of_entry', id=>0),
   $self->url_for('show_authors_of_entry', id=>$entry->id),
