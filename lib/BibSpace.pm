@@ -545,7 +545,7 @@ sub setup_routes {
   $logged_user->get('/teams')->to('teams#show')->name('all_teams');
   $logged_user->get('/teams/members/:teamid')->to('teams#team_members');
 
-  $logged_user->get('/teams/edit/:teamid')->to('teams#edit')->name('edit_team');
+  $logged_user->get('/teams/edit/:id')->to('teams#edit')->name('edit_team');
   $logged_user->get('/teams/delete/:id')->to('teams#delete_team')->name('delete_team');
   $logged_user->get('/teams/delete/:id/force')->to('teams#delete_team_force')->name('delete_team_force');
   $logged_user->get('/teams/unrealted_papers/:teamid')->to('publications#show_unrelated_to_team')
@@ -709,6 +709,7 @@ sub setup_routes {
   $anyone->get('/read/publications/meta')
     ->to('publicationsSEO#metalist')
     ->name("metalist_all_entries");
+    
   $anyone->get('/read/publications/meta/:id')
     ->to('publicationsSEO#meta')
     ->name("metalist_entry");
@@ -746,12 +747,12 @@ sub setup_routes {
 
   ########
 
-  $anyone->get('/read/authors-for-tag/:tid/:team')
+  $anyone->get('/read/authors-for-tag/:tag_id/:team_id')
     ->to('tags#get_authors_for_tag_read')
     ->name('get_authors_for_tag_read');
 
   #ALIAS
-  $anyone->get('/r/a4t/:tid/:team')
+  $anyone->get('/r/a4t/:tag_id/:team_id')
     ->to('tags#get_authors_for_tag_read')
     ->name('get_authors_for_tag_read');
 
@@ -761,10 +762,10 @@ sub setup_routes {
   $anyone->get('/r/t4a/:author_id')
     ->to('tags#get_tags_for_author_read');    #ALIAS
 
-  $anyone->get('/read/tags-for-team/:tid')
+  $anyone->get('/read/tags-for-team/:team_id')
     ->to('tags#get_tags_for_team_read')
     ->name('tags_for_team');
-  $anyone->get('/r/t4t/:tid')
+  $anyone->get('/r/t4t/:team_id')
     ->to('tags#get_tags_for_team_read');            #ALIAS
 
   ################ CRON ################

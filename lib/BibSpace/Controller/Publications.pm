@@ -66,8 +66,8 @@ sub all {
 sub all_read {
   my $self = shift;
 
-  my @objs = $self->app->repo->entries_filter( sub { not $_->is_hidden } );
-
+  # this function does filtering !
+  my @objs = Fget_publications_main_hashed_args( $self, { hidden => 0 } );
 
   $self->stash( entries => \@objs );
   my $html = $self->render_to_string( template => 'publications/all_read' );

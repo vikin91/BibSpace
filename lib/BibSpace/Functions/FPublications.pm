@@ -190,124 +190,132 @@ sub Fget_publications_main_hashed_args {    #
 
 sub Fget_publications_core {
     my $self        = shift;
-    my $author      = shift;
-    my $year        = shift;
-    my $bibtex_type = shift;
-    my $entry_type  = shift;
-    my $tag         = shift;
-    my $team        = shift;
-    my $visible     = shift // 0;
-    my $permalink   = shift;
-    my $hidden      = shift;
-    my $debug       = shift // 0;
+    my $query_author      = shift;
+    my $query_year        = shift;
+    my $query_bibtex_type = shift;
+    my $query_entry_type  = shift;
+    my $query_tag         = shift;
+    my $query_team        = shift;
+    my $query_visible     = shift // 0; # value cannot be set by the end-user
+    my $query_permalink   = shift;
+    my $query_hidden      = shift;  # value cannot be set by the end-user
+    my $debug       = shift // 0;   # value cannot be set by the end-user
+
 
     my $team_obj;     
-    if(defined $team){
-        $team_obj = $self->app->repo->teams_find( sub{ $_->name eq $team } );
+    if(defined $query_team){
+        $team_obj = $self->app->repo->teams_find( sub{ $_->name eq $query_team } );
         if( !$team_obj ){
-            $team_obj = $self->app->repo->teams_find( sub{ $_->id == $team } );
+            $team_obj = $self->app->repo->teams_find( sub{ $_->id == $query_team } );
         }
     }
     my $author_obj;
-    if(defined $author){
-        if( Scalar::Util::looks_like_number($author) ){
-            $author_obj   = $self->app->repo->authors_find(sub{ $_->master_id == $author });
-            $author_obj ||= $self->app->repo->authors_find(sub{ $_->id == $author });
+    if(defined $query_author){
+        if( Scalar::Util::looks_like_number($query_author) ){
+            $author_obj   = $self->app->repo->authors_find(sub{ $_->master_id == $query_author });
+            $author_obj ||= $self->app->repo->authors_find(sub{ $_->id == $query_author });
         }
         else{
-            $author_obj = $self->app->repo->authors_find(sub{ $_->master eq $author });
-            $author_obj ||= $self->app->repo->authors_find(sub{ $_->uid eq $author });
+            $author_obj = $self->app->repo->authors_find(sub{ $_->master eq $query_author });
+            $author_obj ||= $self->app->repo->authors_find(sub{ $_->uid eq $query_author });
         }
     }   
     my $tag_obj;
-    if(defined $tag){
-        $tag_obj = $self->app->repo->tags_find( sub{ $_->name eq $tag } );
+    if(defined $query_tag){
+        $tag_obj = $self->app->repo->tags_find( sub{ $_->name eq $query_tag } );
         if( !$tag_obj ){
-            $tag_obj = $self->app->repo->tags_find( sub{ $_->id == $tag } );    
+            $tag_obj = $self->app->repo->tags_find( sub{ $_->id == $query_tag } );    
         }
     }
     my $tag_obj_perm;
-    if(defined $permalink){
-        $tag_obj_perm = $self->app->repo->tags_find( sub{ $_->name eq $permalink } );
+    if(defined $query_permalink){
+        $tag_obj_perm = $self->app->repo->tags_find( sub{ $_->permalink eq $query_permalink } );
         if( !$tag_obj_perm ){
-            $self->app->repo->tags_find( sub{ $_->id == $permalink } );
+            $self->app->repo->tags_find( sub{ $_->id == $query_permalink } );
         }
     }
-    
-    my $teamid = undef;
-    $teamid = $team_obj->id if defined $team_obj;    
-    my $master_id = undef;
-    $master_id = $author_obj->id if defined $author_obj;
-    my $tagid = undef;
-    $tagid = $tag_obj->id if defined $tag_obj;
-
-
-    ### WARNING, always compare if something is null by searching by name OR id!!
-    # my $cmp1 = undef == 33;
-    # my $cmp2 = undef == 'dddd'; # this is 1!!!!!!!!!!!
-    # my $cmp3 = $cmp1 or $cmp2;
-    # my $cmp4 = undef eq 33;
-    # my $cmp5 = undef eq 'dddd'; 
-    # my $cmp6 = $cmp4 or $cmp5;
-    # $self->app->logger->warn("undef == id: 1 $cmp1 / 2 $cmp2 / 3 $cmp3 / 4 $cmp4 / 5 $cmp5 / 6 $cmp6 / " );    
 
     # $self->app->logger->debug("==== START new Filtering ====", "Fget_publications_core" );
-    # filtering
+
+
     my @entries = $self->app->repo->entries_all;
-    if(defined $master_id and defined $author_obj){
-        @entries = $author_obj->get_entries; 
-        # WARNING: this overwrites all entries - this filtering must be done as first!
+
+    ###### filtering
+
+    
+    
+
+    # WARNING: this overwrites all entries - this filtering must be done as first!
+    if($query_author){
+        if($author_obj){
+            @entries = $author_obj->get_entries; 
+        }
+        else{
+            # searched for author, but not found any = immediate return empty array
+            return ();
+        }
     }
      
 
     # simple filters
-    if( defined $year and $year > 0 ){
-        # $self->app->logger->debug("BEFORE Filtering year. Got ".scalar(@entries)." results", "Fget_publications_core" );
-        @entries = grep { (defined $_->year and $_->year == $year) } @entries;
-        # $self->app->logger->debug("AFTER Filtering year. Got ".scalar(@entries)." results", "Fget_publications_core" );
+    if( defined $query_year ){
+        @entries = grep { (defined $_->year and $_->year == $query_year) } @entries;
     }
 
     # $bibtex_type - is in fact query for OurType
-    if(defined $bibtex_type){
-        # $self->app->logger->debug("BEFORE Filtering bibtex_type. Got ".scalar(@entries)." results", "Fget_publications_core" );
-        @entries = grep { $_->matches_our_type($bibtex_type, $self->app->repo) } @entries;
-        # $self->app->logger->debug("AFTER Filtering bibtex_type. Got ".scalar(@entries)." results", "Fget_publications_core" );
+    if(defined $query_bibtex_type){
+        @entries = grep { $_->matches_our_type($query_bibtex_type, $self->app->repo) } @entries;
     }
-    if(defined $entry_type){
-        # $self->app->logger->debug("BEFORE Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core" );
-        @entries = grep { $_->entry_type eq $entry_type } @entries;
-        # $self->app->logger->debug("AFTER Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core" );
+    if(defined $query_entry_type){
+        @entries = grep { $_->entry_type eq $query_entry_type } @entries;
     }
-    if(defined $permalink and defined $tag_obj_perm){
-        @entries = grep { $_->has_tag($tag_obj_perm) } @entries;
+    if(defined $query_permalink){
+        if(defined $tag_obj_perm){
+            @entries = grep { $_->has_tag($tag_obj_perm) } @entries;
+        }
+        else{
+            return ();
+        }
     }
-    if(defined $hidden){
-        # $self->app->logger->debug("BEFORE Filtering hidden. Got ".scalar(@entries)." results", "Fget_publications_core" );
-        @entries = grep { $_->hidden == $hidden } @entries;
-        # $self->app->logger->debug("AFTER Filtering hidden. Got ".scalar(@entries)." results", "Fget_publications_core" );
+    # All entries = hidden + unhidden entries
+    # by default, we return all (e.g., for admin interface)
+    if(defined $query_hidden){
+        @entries = grep { $_->hidden == $query_hidden } @entries;
     }
-    # complex filters
-    if(defined $visible and $visible == 1){
+    # Entries of visible authors
+    # by default, we return entries of all authors
+    if(defined $query_visible and $query_visible == 1){
         @entries = grep { $_->is_visible } @entries;
     }
-    if(defined $tagid and defined $tag_obj){
-        # $self->app->logger->debug("BEFORE Filtering tag. Got ".scalar(@entries)." results", "Fget_publications_core" );
-        @entries = grep { $_->has_tag($tag_obj) } @entries;
-        # $self->app->logger->debug("AFTER Filtering tag. Got ".scalar(@entries)." results", "Fget_publications_core" );
+
+    ######## complex filters
+    
+    if(defined $query_tag){
+        if(defined $tag_obj){
+            @entries = grep { $_->has_tag($tag_obj) } @entries;
+        }
+        else{
+            return ();
+        }
     }
-    if(defined $teamid and defined $team_obj){
-        @entries = grep { $_->has_team($team_obj) } @entries;
-    }
+    if(defined $query_team){
+        if(defined $team_obj){
+            @entries = grep { $_->has_team($team_obj) } @entries;
+        }
+        else{
+            return ();
+        }
+    } 
     if($debug == 1){
-        $self->app->logger->debug("Fget_publications_core Input author = $author") if defined $author;
-        $self->app->logger->debug("Fget_publications_core Input year = $year") if defined $year;
-        $self->app->logger->debug("Fget_publications_core Input bibtex_type = $bibtex_type") if defined $bibtex_type;
-        $self->app->logger->debug("Fget_publications_core Input entry_type = $entry_type") if defined $entry_type;
-        $self->app->logger->debug("Fget_publications_core Input tag = $tag") if defined $tag;
-        $self->app->logger->debug("Fget_publications_core Input team = $team") if defined $team;
-        $self->app->logger->debug("Fget_publications_core Input visible = $visible") if defined $visible;
-        $self->app->logger->debug("Fget_publications_core Input permalink = $permalink") if defined $permalink;
-        $self->app->logger->debug("Fget_publications_core Input hidden = $hidden") if defined $hidden;
+        $self->app->logger->debug("Fget_publications_core Input author = $query_author") if defined $query_author;
+        $self->app->logger->debug("Fget_publications_core Input year = $query_year") if defined $query_year;
+        $self->app->logger->debug("Fget_publications_core Input bibtex_type = $query_bibtex_type") if defined $query_bibtex_type;
+        $self->app->logger->debug("Fget_publications_core Input entry_type = $query_entry_type") if defined $query_entry_type;
+        $self->app->logger->debug("Fget_publications_core Input tag = $query_tag") if defined $query_tag;
+        $self->app->logger->debug("Fget_publications_core Input team = $query_team") if defined $query_team;
+        $self->app->logger->debug("Fget_publications_core Input visible = $query_visible") if defined $query_visible;
+        $self->app->logger->debug("Fget_publications_core Input permalink = $query_permalink") if defined $query_permalink;
+        $self->app->logger->debug("Fget_publications_core Input hidden = $query_hidden") if defined $query_hidden;
         $self->app->logger->debug("Fget_publications_core Input debug = $debug") if defined $debug;
         $self->app->logger->debug("Fget_publications_core Found ".scalar(@entries)." entries");
     }

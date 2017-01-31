@@ -29,10 +29,11 @@ use List::MoreUtils qw(any uniq);
 
 # these are exported by default.
 our @EXPORT = qw(
+  decodeLatex
+  official_bibtex_types
   random_string
   create_user_id
   uniqlc
-  official_bibtex_types
   get_generic_type_description
   nohtml
   clean_tag_name
@@ -42,6 +43,50 @@ our @EXPORT = qw(
 );
 
 our $bibtex2html_tmp_dir = "./tmp";
+################################################################################
+sub decodeLatex {
+    my $str = shift;
+
+    $str =~ s/\{(.)\}/$1/g;         # makes {x} -> x
+    $str =~ s/\{\\\"(u)\}/ü/g;    # makes {\"x} -> xe
+    $str =~ s/\{\\\"(U)\}/Ü/g;    # makes {\"x} -> xe
+    $str =~ s/\{\\\"(o)\}/ö/g;    # makes {\"x} -> xe
+    $str =~ s/\{\\\"(O)\}/Ö/g;    # makes {\"x} -> xe
+    $str =~ s/\{\\\"(a)\}/ä/g;    # makes {\"x} -> xe
+    $str =~ s/\{\\\"(A)\}/Ä/g;    # makes {\"x} -> xe
+
+    $str =~ s/\{\"(u)\}/ü/g;      # makes {"x} -> xe
+    $str =~ s/\{\"(U)\}/Ü/g;      # makes {"x} -> xe
+    $str =~ s/\{\"(o)\}/ö/g;      # makes {"x} -> xe
+    $str =~ s/\{\"(O)\}/Ö/g;      # makes {"x} -> xe
+    $str =~ s/\{\"(a)\}/ä/g;      # makes {"x} -> xe
+    $str =~ s/\{\"(A)\}/Ä/g;      # makes {"x} -> xe
+
+    $str =~ s/\\\"(u)/ü/g;        # makes \"{x} -> xe
+    $str =~ s/\\\"(U)/Ü/g;        # makes \"{x} -> xe
+    $str =~ s/\\\"(o)/ö/g;        # makes \"{x} -> xe
+    $str =~ s/\\\"(O)/Ö/g;        # makes \"{x} -> xe
+    $str =~ s/\\\"(a)/ä/g;        # makes \"{x} -> xe
+    $str =~ s/\\\"(A)/Ä/g;        # makes \"{x} -> xe
+
+
+    $str =~ s/\{\\\'(.)\}/$1/g;     # makes {\'x} -> x
+    $str =~ s/\\\'(.)/$1/g;         # makes \'x -> x
+    $str =~ s/\'\'(.)/$1/g;         # makes ''x -> x
+    $str =~ s/\"(.)/$1e/g;          # makes "x -> xe
+    $str =~ s/\{\\ss\}/ss/g;        # makes {\ss}-> ss
+    $str =~ s/\{(.*)\}/$1/g;        # makes {abc..def}-> abc..def
+    $str =~ s/\\\^(.)(.)/$1$2/g;    # makes \^xx-> xx
+    $str =~ s/\\\^(.)/$1/g;         # makes \^x-> x
+    $str =~ s/\\\~(.)/$1/g;         # makes \~x-> x
+    $str =~ s/\\//g;                # removes \
+
+
+
+    $str =~ s/\{+//g;
+    $str =~ s/\}+//g;
+    return $str;
+}
 ################################################################################
 sub official_bibtex_types {
 

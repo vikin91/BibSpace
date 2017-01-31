@@ -7,8 +7,9 @@ use BibSpace::Model::Author;
 use BibSpace::Model::TagType;
 use BibSpace::Model::Type;
 
-use List::MoreUtils qw(any uniq);
+use BibSpace::Functions::Core;
 
+use List::MoreUtils qw(any uniq);
 
 
 use DateTime::Format::Strptime;
@@ -39,7 +40,8 @@ my $dtPattern
 
 has 'entry_type' => ( is => 'rw', isa => 'Str', default => 'paper' );
 has 'bibtex_key' => ( is => 'rw', isa => 'Maybe[Str]' );
-has '_bibtex_type'    => ( is => 'rw', isa => 'Maybe[Str]', reader=>'bibtex_type' );
+has '_bibtex_type' =>
+    ( is => 'rw', isa => 'Maybe[Str]', reader => 'bibtex_type' );
 has 'bib'             => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'html'            => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'html_bib'        => ( is => 'rw', isa => 'Maybe[Str]' );
@@ -97,14 +99,13 @@ has 'bst_file' => (
 );
 
 
-
-
 ####################################################################################
 
 sub equals {
     my $self = shift;
     my $obj  = shift;
-    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
+    die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj)
+        unless ref($self) eq ref($obj);
     return $self->equals_bibtex($obj);
 }
 ####################################################################################
@@ -116,7 +117,8 @@ sub equals {
 sub equals_bibtex {
     my $self = shift;
     my $obj  = shift;
-    die "Comparing apples to peaches! ".ref($self)." against ".ref($obj) unless ref($self) eq ref($obj);
+    die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj)
+        unless ref($self) eq ref($obj);
     return $self->bib eq $obj->bib;
 }
 ####################################################################################
@@ -198,7 +200,8 @@ sub matches_our_type {
 
     return if !defined $mapping;
 
-    my $match = $mapping->bibtexTypes_find( sub { $_ eq $self->{_bibtex_type} } );
+    my $match
+        = $mapping->bibtexTypes_find( sub { $_ eq $self->{_bibtex_type} } );
 
     return defined $match;
 }
@@ -376,21 +379,22 @@ sub regenerate_html {
 
 ####################################################################################
 sub has_author {
-    my $self            = shift;
-    my $author          = shift;
+    my $self   = shift;
+    my $author = shift;
 
-    # SimpleLogger->new->warn("Checking if entry ".$self->id." has author ".$author->uid." (master ".$author->master.")");
-    # SimpleLogger->new->warn("Entry ".$self->id." authorships: ".join(',', map{$_->id} grep {$_->author_id == $author->id } $self->authorships_all));
+# SimpleLogger->new->warn("Checking if entry ".$self->id." has author ".$author->uid." (master ".$author->master.")");
+# SimpleLogger->new->warn("Entry ".$self->id." authorships: ".join(',', map{$_->id} grep {$_->author_id == $author->id } $self->authorships_all));
 
-    my $authorship = $self->authorships_find( sub { $_->author->equals($author) and $_->entry->equals($self)});
+    my $authorship = $self->authorships_find(
+        sub { $_->author->equals($author) and $_->entry->equals($self) } );
     return defined $authorship;
 }
 ####################################################################################
 sub has_master_author {
-    my $self            = shift;
-    my $author          = shift;
+    my $self   = shift;
+    my $author = shift;
 
-    return $self->has_author($author->get_master);
+    return $self->has_author( $author->get_master );
 }
 ####################################################################################
 ####################################################################################
@@ -426,7 +430,8 @@ sub author_names_from_bibtex {
 ####################################################################################
 sub teams {
     my $self = shift;
-    SimpleLogger->new->warn("entry->teams is deprecated in favor of entry->get_teams");
+    SimpleLogger->new->warn(
+        "entry->teams is deprecated in favor of entry->get_teams");
     return $self->get_teams;
 }
 ####################################################################################
@@ -455,7 +460,7 @@ sub has_team {
     my $team = shift;
 
     return 1 if any { $_->equals($team) } $self->get_teams;
-    return ;
+    return;
 }
 ####################################################################################
 ####################################################################################
@@ -504,20 +509,12 @@ sub sort_by_year_month_modified_time {
 # $a->{modified_time} <=> $b->{modified_time}; # needs an extra lib, so we just compare ids as approximation
 }
 ####################################################################################
-sub decodeLatex {
-    my $self = shift;
-    if ( defined $self->title ) {
-        my $title = $self->title;
-        $title =~ s/^\{+//g;
-        $title =~ s/\}+$//g;
-        $self->title($title);
-
-        # $self->{title} = decode( 'latex', $self->{title} );
-        # $self->{title} = decode( 'latex', $self->{title} );
-    }
+sub get_title {
+    my $self      = shift;
+    my $raw_title = $self->title;
+    $raw_title = decodeLatex($raw_title);
+    return $raw_title;
 }
-####################################################################################
-
 ####################################################################################
 sub clean_ugly_bibtex_fields {
     my $self = shift;

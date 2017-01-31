@@ -71,7 +71,7 @@ foreach my $entry(@all_entries){
   is( scalar @tag_names, 1, "Entry has more than one tag in bibtex");
 
   # just call
-  $entry->decodeLatex;
+  $entry->get_title;
 
   $limit_test_entries = $limit_test_entries -1;
 }

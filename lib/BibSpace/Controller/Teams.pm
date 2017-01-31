@@ -28,7 +28,7 @@ sub show {
 ################################################################################################################
 sub edit {
   my $self = shift;
-  my $id   = $self->param('teamid');
+  my $id   = $self->param('id');
 
   my $team = $self->app->repo->teams_find( sub { $_->id == $id } );
 
@@ -72,7 +72,7 @@ sub add_team_post {
     return;
   }
   $self->write_log( "Add new team: Added new team with proposed name ($new_team_name). Team id is $new_team_id." );
-  $self->redirect_to( 'edit_team', teamid => $new_team_id );
+  $self->redirect_to( 'edit_team', id => $new_team_id );
 }
 
 ##############################################################################################################

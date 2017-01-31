@@ -38,18 +38,23 @@
     </div>
 
     <hr>
-    <h1>Team <%= $team->{name} %></h1>
+    <h1>Team <%= $team->name %></h1>
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-8 col-md-8 col-xs-8">
             
             <a class="btn btn-default btn-sm" href="<%= url_for('publications')->query(team=>$team->{name}) %>"  data-toggle="tooltip" data-placement="left" title="Show papers of the team <%= $team->{name} %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-list-alt"></span> Show papers</a>
 
-            <a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications')->query(team=>$team->{name}) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the team <%= $team->{name} %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span></a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications')->query(team=>$team->{name}) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the team <%= $team->{name} %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span> Landing types</a>
             
-            <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications')->query(team=>$team->{name}) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the team <%= $team->{name} %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span></a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications')->query(team=>$team->{name}) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the team <%= $team->{name} %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing years</a>
 
             <a class="btn btn-default btn-sm" href="<%= url_for('/read/bibtex')->query(team=>$team->{name}) %>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of team <%= $team->{name} %>"><i class="fa fa-users"></i><span class="glyphicon glyphicon-plane"></span> BibTeX</a>
+
+            <a class="btn btn-default btn-sm" href="<%= url_for('tags_for_team', team_id =>$team->id )%>">
+                <i class="fa fa-tags" aria-hidden="true"></i>
+                <i class="fa fa-cloud" aria-hidden="true"></i> Show tag-cloud 
+            </a>
             
         </div>
     </div>
