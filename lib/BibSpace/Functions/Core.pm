@@ -16,7 +16,7 @@ use strict;
 use warnings;
 
 # for latex decode
-use TeX::Encode;
+require TeX::Encode;
 use Encode;
 use BibSpace::Functions::FPublications;
 
@@ -29,6 +29,7 @@ use List::MoreUtils qw(any uniq);
 
 # these are exported by default.
 our @EXPORT = qw(
+  split_bibtex_entries
   decodeLatex
   official_bibtex_types
   random_string
@@ -43,9 +44,33 @@ our @EXPORT = qw(
 );
 
 our $bibtex2html_tmp_dir = "./tmp";
+####################################################################################
+sub split_bibtex_entries {
+    my $input = shift;
+
+    my @bibtex_codes = ();
+    $input =~ s/^\s+|\s+$//g;
+    $input =~ s/^\t//g;
+
+    for my $b_code ( split /@/, $input ) {
+        next unless length($b_code) > 10;
+        my $entry_code = "@" . $b_code;
+
+        my $entry = new Text::BibTeX::Entry;
+        $entry->parse_s($entry_code);
+        if ( $entry->parse_ok ) {
+            push @bibtex_codes, $entry_code;
+        }
+    }
+
+    return @bibtex_codes;
+}
 ################################################################################
 sub decodeLatex {
     my $str = shift;
+
+    use TeX::Encode;
+    $str = decode( 'latex', $str );
 
     $str =~ s/\{(.)\}/$1/g;         # makes {x} -> x
     $str =~ s/\{\\\"(u)\}/ü/g;    # makes {\"x} -> xe

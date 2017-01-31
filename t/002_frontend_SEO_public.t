@@ -41,7 +41,7 @@ subtest 'PublicationsSEO: public functions' => sub {
             $t_anyone->get_ok($page)
                 ->status_is( 404, "HIDDEN==TRUE Checking: 404 $page" );
             my $str_that_should_not_be
-                = "<li>Paper with id $entry_id: <a href";
+                = "<li>Paper ID $entry_id: <a href";
             $t_anyone->get_ok($main_SEOpage)->status_is(200)
                 ->content_unlike(qr/$str_that_should_not_be/i)
                 ;    ### this is slow!!!
@@ -52,12 +52,12 @@ subtest 'PublicationsSEO: public functions' => sub {
 };
 
 ####################################################################
-# TODO: {
-#     local $TODO
-#         = "PublicationsSEO: public functions – decoding is still not 100% ready";
+TODO: {
+    local $TODO
+        = "PublicationsSEO: public functions – decoding is still not 100% ready";
 
-#     my $main_page = $self->url_for('metalist_all_entries');
-#     $t_anyone->get_ok($main_page)->status_is(200)->content_unlike(qr/\{/i);
-# }
+    my $main_page = $self->url_for('metalist_all_entries');
+    $t_anyone->get_ok($main_page)->status_is(200)->content_unlike(qr/\{/i);
+}
 
 done_testing();

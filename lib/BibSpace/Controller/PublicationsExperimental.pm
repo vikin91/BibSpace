@@ -43,7 +43,6 @@ our %mons = (
 ####################################################################################
 ## ADD form
 sub publications_add_many_get {
-    say "CALL: publications_add_many_get";
     my $self = shift;
     my $dbh  = $self->app->db;
 
@@ -237,27 +236,6 @@ sub publications_add_many_post {
         preview     => $html_preview
     );
     $self->render( template => 'publications/add_multiple_entries' );
-}
-####################################################################################
-sub split_bibtex_entries {
-    my $input = shift;
-
-    my @bibtex_codes = ();
-    $input =~ s/^\s+|\s+$//g;
-    $input =~ s/^\t//g;
-
-    for my $b_code ( split /@/, $input ) {
-        next unless length($b_code) > 10;
-        my $entry_code = "@" . $b_code;
-
-        my $entry = new Text::BibTeX::Entry;
-        $entry->parse_s($entry_code);
-        if ( $entry->parse_ok ) {
-            push @bibtex_codes, $entry_code;
-        }
-    }
-
-    return @bibtex_codes;
 }
 ####################################################################################
 
