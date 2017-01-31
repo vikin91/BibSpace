@@ -306,8 +306,8 @@ sub show_unrelated_to_team {
 
 
   my $team_name = "";
-  my $team = $self->app->repo->teams_find( sub { $_->{id} == $team_id } );
-  $team_name = $team->{name} if defined $team;
+  my $team = $self->app->repo->teams_find( sub { $_->id == $team_id } );
+  $team_name = $team->name if defined $team;
 
 
   my @allEntres  = $self->app->repo->entries_all;
@@ -534,7 +534,7 @@ sub download {
 
   if ( !defined $file_path or $file_path eq 0 ) {
     $self->app->logger->info("Unsuccessful download filetype $filetype, id $id.");
-    $self->render( text => "File not found. Unsuccessful download filetype $filetype, id $id.", status => 404 );
+    $self->render(status => 404, text => "File not found. Unsuccessful download filetype $filetype, id $id.");
     return;
   }
 
@@ -809,7 +809,7 @@ sub show_authors_of_entry {
 
 
   my @authors = map { $_->author } $entry->authorships_all;
-  my @teams = $entry->teams;
+  my @teams = $entry->get_teams;
 
   $self->stash( entry => $entry, authors => \@authors, teams => \@teams );
   $self->render( template => 'publications/show_authors' );
@@ -935,11 +935,11 @@ sub add_exception {
   my $self     = shift;
   my $entry_id = $self->param('eid');
   my $team_id  = $self->param('tid');
-  my $dbh      = $self->app->db;
+  
 
-
-  my $entry     = $self->app->repo->entries_find( sub { $_->{id} == $entry_id } );
-  my $team = $self->app->repo->teams_find( sub   { $_->{id} == $team_id } );
+  my $msg;
+  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $entry_id } );
+  my $team  = $self->app->repo->teams_find( sub   { $_->{id} == $team_id } );
 
   if ( defined $entry and defined $team ) {
 
@@ -949,9 +949,14 @@ sub add_exception {
     $team->add_exception($exception);
     $self->app->repo->exceptions_save($exception);
 
-    $self->app->logger->info("Added exception $exception->{name} to entry id $entry->{id}. ");
+    $msg = "Exception added! Entry ID ".$entry->id." will be now listed under team '".$team->name."'.";
+  }
+  else{
+    $msg = "Cannot find entry or team to create excperions. Searched team ID: ".$team_id." entry ID: ".$entry_id.".";
   }
 
+  $self->flash( msg => $msg );
+  $self->app->logger->info($msg);
   $self->redirect_to( $self->get_referrer );
 
 }
@@ -964,23 +969,34 @@ sub remove_exception {
   my $dbh      = $self->app->db;
 
 
-  my $entry     = $self->app->repo->entries_find( sub { $_->{id} == $entry_id } );
-  my $team = $self->app->repo->teams_find( sub   { $_->{id} == $team_id } );
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $entry_id } );
+  my $team  = $self->app->repo->teams_find( sub   { $_->id == $team_id } );
+
+  my $msg;
 
   if ( defined $entry and defined $team ) {
 
-    my $exception = $self->app->repo->exceptions_find(
-        sub{
-          $_->team->equals($team) and $_->entry->equals($entry)
-        }
-    );
+    my $ex = Exception->new(team_id => $team_id, entry_id => $entry_id, team => $team, entry=> $entry);
 
-    $entry->remove_exception($exception);
-    $team->remove_exception($exception);
-    $self->app->repo->exceptions_delete($exception);
-    
-    $self->app->logger->info("Removed exception ".$team->name." from entry ID ".$entry->id.". ");
+    my $exception = $self->app->repo->exceptions_find( sub{ $_->equals($ex) } );
+
+    if(defined $exception){
+      $entry->remove_exception($exception);
+      $team->remove_exception($exception);
+      $self->app->repo->exceptions_delete($exception); 
+
+      $msg = "Removed exception team '".$team->name."' from entry ID ".$entry->id.". ";
+    }
+    else{
+      $msg = "Cannot find exception to remove. Searched team '".$team->name."' entry ID: ".$entry->id.".";
+    }
   }
+  else{
+    $msg = "Cannot find exception to remove. Searched team ID: ".$team_id." entry ID: ".$entry_id.".";
+  }
+
+  $self->flash( msg => $msg );
+  $self->app->logger->info($msg);
 
   $self->redirect_to( $self->get_referrer );
 

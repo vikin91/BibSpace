@@ -613,10 +613,12 @@ sub setup_routes {
         ->name('publications_remove_attachment');
 
     $manager_user->get('/publications/hide/:id')
-        ->to('publications#hide');
+        ->to('publications#hide')
+        ->name('hide_publication');
 
     $manager_user->get('/publications/unhide/:id')
-        ->to('publications#unhide');
+        ->to('publications#unhide')
+        ->name('unhide_publication');
 
     $manager_user->get('/publications/toggle_hide/:id')
         ->to('publications#toggle_hide')
