@@ -47,7 +47,7 @@ my $some_tag = $tags[0];
 my @teams = $t_logged_in->app->repo->teams_all;
 my $some_team = $teams[0];
 
-# generated with: ./script/bibspace routes | grep GET | grep -v : 
+# generated with: ./bin/bibspace routes | grep GET | grep -v : 
 my @pages = (
 	$self->url_for('start'),
 	"/test",  

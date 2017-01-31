@@ -437,88 +437,88 @@ sub setup_routes {
   $anyone->post('/register')->to('login#post_do_register')->name('post_do_register');
   $anyone->any('/noregister')->to('login#register_disabled');
 
-  my $logged_user = $anyone->under->to('login#check_is_logged_in');
-  my $manager     = $logged_user->under->to('login#under_check_is_manager');
-  my $superadmin  = $logged_user->under->to('login#under_check_is_admin');
+  my $logged_user  = $anyone->under->to('login#check_is_logged_in');
+  my $manager_user = $logged_user->under->to('login#under_check_is_manager');
+  my $admin_user   = $logged_user->under->to('login#under_check_is_admin');
 
   ################ SETTINGS ################
   $logged_user->get('/profile')->to('login#profile');
-  $superadmin->get('/manage_users')->to('login#manage_users')->name('manage_users');
-  $superadmin->get('/profile/:id')->to('login#foreign_profile')->name('show_user_profile');
-  $superadmin->get('/profile/delete/:id')->to('login#delete_user')->name('delete_user');
+  $admin_user->get('/manage_users')->to('login#manage_users')->name('manage_users');
+  $admin_user->get('/profile/:id')->to('login#foreign_profile')->name('show_user_profile');
+  $admin_user->get('/profile/delete/:id')->to('login#delete_user')->name('delete_user');
 
-  $superadmin->get('/profile/make_user/:id')->to('login#make_user')->name('make_user');
-  $superadmin->get('/profile/make_manager/:id')->to('login#make_manager')->name('make_manager');
-  $superadmin->get('/profile/make_admin/:id')->to('login#make_admin')->name('make_admin');
+  $admin_user->get('/profile/make_user/:id')->to('login#make_user')->name('make_user');
+  $admin_user->get('/profile/make_manager/:id')->to('login#make_manager')->name('make_manager');
+  $admin_user->get('/profile/make_admin/:id')->to('login#make_admin')->name('make_admin');
 
-  $manager->get('/log')->to('display#show_log');
-  $superadmin->get('/settings/fix_months')->to('publications#fixMonths');
+  $manager_user->get('/log')->to('display#show_log');
+  $admin_user->get('/settings/fix_months')->to('publications#fixMonths');
 
-  $manager->get('/settings/clean_all')->to('publications#clean_ugly_bibtex')->name('clean_ugly_bibtex');
-  $manager->get('/settings/regenerate_all_force')->to('publications#regenerate_html_for_all_force');
+  $manager_user->get('/settings/clean_all')->to('publications#clean_ugly_bibtex')->name('clean_ugly_bibtex');
+  $manager_user->get('/settings/regenerate_all_force')->to('publications#regenerate_html_for_all_force');
   $logged_user->get('/settings/regenerate_all')->to('publications#regenerate_html_for_all');
 
   # RESTIfied begin
   # GET '/backups'
-  $logged_user->get('/backups')->to('backup#index')->name('backup_index');
+  $manager_user->get('/backups')->to('backup#index')->name('backup_index');
 
   # PUT '/backups'
-  $anyone->put('/backups')->to('backup#save')->name('backup_do');
+  $manager_user->put('/backups')->to('backup#save')->name('backup_do');
 
   # GET '/backups/id'
-  $logged_user->get('/backups/:id')->to('backup#backup_download')->name('backup_download');
+  $manager_user->get('/backups/:id')->to('backup#backup_download')->name('backup_download');
 
   # DELETE '/backups/id'
-  $superadmin->delete('/backups/:id')->to('backup#delete_backup')->name('backup_delete');
+  $admin_user->delete('/backups/:id')->to('backup#delete_backup')->name('backup_delete');
 
-#$superadmin->post('/backups')->to('backup#delete_backup')->name('backup_delete');
+#$admin_user->post('/backups')->to('backup#delete_backup')->name('backup_delete');
 
 # PUT '/backups/id'
-# $manager->get('/restore/do/:id')->to('backup#restore_backup')->name('backup_restore');
-  $manager->put('/backups/:id')->to('backup#restore_backup')->name('backup_restore');
+# $manager_user->get('/restore/do/:id')->to('backup#restore_backup')->name('backup_restore');
+  $manager_user->put('/backups/:id')->to('backup#restore_backup')->name('backup_restore');
 
   # DELETE '/backups'
-  $manager->delete('/backups')->to('backup#cleanup')->name('backup_cleanup');
+  $manager_user->delete('/backups')->to('backup#cleanup')->name('backup_cleanup');
 
   # RESTIfied end
 
   ################ TYPES ################
   $logged_user->get('/types')->to('types#all_our')->name('all_types');
-  $logged_user->get('/types/add')->to('types#add_type')->name('add_type_get');
-  $logged_user->post('/types/add')->to('types#post_add_type')->name('add_type_post');
-  $logged_user->get('/types/manage/:name')->to('types#manage')->name('edit_type');
-  $logged_user->get('/types/delete/:name')->to('types#delete_type')->name('delete_type');
+  $manager_user->get('/types/add')->to('types#add_type')->name('add_type_get');
+  $manager_user->post('/types/add')->to('types#post_add_type')->name('add_type_post');
+  $manager_user->get('/types/manage/:name')->to('types#manage')->name('edit_type');
+  $manager_user->get('/types/delete/:name')->to('types#delete_type')->name('delete_type');
 
-  $logged_user->post('/types/store_description')->to('types#post_store_description')->name('update_type_description');
-  $logged_user->get('/types/toggle/:name')->to('types#toggle_landing')->name('toggle_landing_type');
+  $manager_user->post('/types/store_description')->to('types#post_store_description')->name('update_type_description');
+  $manager_user->get('/types/toggle/:name')->to('types#toggle_landing')->name('toggle_landing_type');
 
-  $logged_user->get('/types/:our_type/map/:bibtex_type')->to('types#map_types');
-  $logged_user->get('/types/:our_type/unmap/:bibtex_type')->to('types#unmap_types')->name('unmap_bibtex_type');
+  $manager_user->get('/types/:our_type/map/:bibtex_type')->to('types#map_types');
+  $manager_user->get('/types/:our_type/unmap/:bibtex_type')->to('types#unmap_types')->name('unmap_bibtex_type');
 
   ################ AUTHORS ################
 
   $logged_user->get('/authors/')->to('authors#all_authors')->name('all_authors');
-  $logged_user->get('/authors/add')->to('authors#add_author')->name('add_author');
-  $logged_user->post('/authors/add/')->to('authors#add_post');
+  $manager_user->get('/authors/add')->to('authors#add_author')->name('add_author');
+  $manager_user->post('/authors/add/')->to('authors#add_post');
 
   $logged_user->get('/authors/edit/:id')->to('authors#edit_author')->name('edit_author');
-  $logged_user->post('/authors/edit/')->to('authors#edit_post')->name('edit_author_post');
-  $logged_user->get('/authors/delete/:id')->to('authors#delete_author')->name('delete_author');
-  $logged_user->get('/authors/delete/:id/force')->to('authors#delete_author_force');
-  $logged_user->post('/authors/edit_membership_dates')->to('authors#post_edit_membership_dates')
+  $manager_user->post('/authors/edit/')->to('authors#edit_post')->name('edit_author_post');
+  $manager_user->get('/authors/delete/:id')->to('authors#delete_author')->name('delete_author');
+  $manager_user->get('/authors/delete/:id/force')->to('authors#delete_author_force');
+  $manager_user->post('/authors/edit_membership_dates')->to('authors#post_edit_membership_dates')
     ->name('edit_author_membership_dates');
 
-  $logged_user->get('/authors/:id/add_to_team/:tid')->to('authors#add_to_team')->name('add_author_to_team');
-  $logged_user->get('/authors/:id/remove_from_team/:tid')->to('authors#remove_from_team')
+  $manager_user->get('/authors/:id/add_to_team/:tid')->to('authors#add_to_team')->name('add_author_to_team');
+  $manager_user->get('/authors/:id/remove_from_team/:tid')->to('authors#remove_from_team')
     ->name('remove_author_from_team');
-  $logged_user->get('/authors/:masterid/remove_uid/:uid')->to('authors#remove_uid')->name('remove_author_uid');
+  $manager_user->get('/authors/:masterid/remove_uid/:uid')->to('authors#remove_uid')->name('remove_author_uid');
 
-  $logged_user->post('/authors/merge/')->to('authors#merge_authors')->name('merge_authors');
+  $manager_user->post('/authors/merge/')->to('authors#merge_authors')->name('merge_authors');
 
-  $logged_user->get('/authors/reassign')->to('authors#reassign_authors_to_entries');
-  $logged_user->get('/authors/reassign_and_create')->to('authors#reassign_authors_to_entries_and_create_authors');
+  $manager_user->get('/authors/reassign')->to('authors#reassign_authors_to_entries');
+  $manager_user->get('/authors/reassign_and_create')->to('authors#reassign_authors_to_entries_and_create_authors');
 
-  $logged_user->get('/authors/toggle_visibility/:id')->to('authors#toggle_visibility')
+  $manager_user->get('/authors/toggle_visibility/:id')->to('authors#toggle_visibility')
     ->name('toggle_author_visibility');
 
   # $logged_user->get('/authors/toggle_visibility')
@@ -527,41 +527,41 @@ sub setup_routes {
   ################ TAG TYPES ################
   # $logged_user->get('/tags/')->to('tags#index')->name("tags_index");
   $logged_user->get('/tagtypes')->to('tagtypes#index')->name('all_tag_types');
-  $superadmin->get('/tagtypes/add')->to('tagtypes#add')->name('add_tag_type');
-  $superadmin->post('/tagtypes/add')->to('tagtypes#add_post')->name('add_tag_type_post');
-  $superadmin->get('/tagtypes/delete/:id')->to('tagtypes#delete')->name('delete_tag_type');
-  $manager->any('/tagtypes/edit/:id')->to('tagtypes#edit')->name('edit_tag_type');
+  $admin_user->get('/tagtypes/add')->to('tagtypes#add')->name('add_tag_type');
+  $admin_user->post('/tagtypes/add')->to('tagtypes#add_post')->name('add_tag_type_post');
+  $admin_user->get('/tagtypes/delete/:id')->to('tagtypes#delete')->name('delete_tag_type');
+  $manager_user->any('/tagtypes/edit/:id')->to('tagtypes#edit')->name('edit_tag_type');
 
   ################ TAGS ################
   $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )->name('all_tags');
-  $superadmin->get('/tags/add/:type')->to( 'tags#add', type => 1 );
-  $superadmin->post('/tags/add/:type')->to( 'tags#add_post', type => 1 );
+  $admin_user->get('/tags/add/:type')->to( 'tags#add', type => 1 );
+  $admin_user->post('/tags/add/:type')->to( 'tags#add_post', type => 1 );
   $logged_user->get('/tags/authors/:tid/:type')->to( 'tags#get_authors_for_tag', type => 1 )
     ->name('get_authors_for_tag');
-  $superadmin->get('/tags/delete/:id')->to('tags#delete')->name('delete_tag');
-  $manager->get('/tags/edit/:id')->to('tags#edit');
+  $admin_user->get('/tags/delete/:id')->to('tags#delete')->name('delete_tag');
+  $manager_user->get('/tags/edit/:id')->to('tags#edit');
 
   ################ TEAMS ################
   $logged_user->get('/teams')->to('teams#show')->name('all_teams');
   $logged_user->get('/teams/members/:teamid')->to('teams#team_members');
 
-  $logged_user->get('/teams/edit/:id')->to('teams#edit')->name('edit_team');
-  $logged_user->get('/teams/delete/:id')->to('teams#delete_team')->name('delete_team');
-  $logged_user->get('/teams/delete/:id/force')->to('teams#delete_team_force')->name('delete_team_force');
+  $manager_user->get('/teams/edit/:id')->to('teams#edit')->name('edit_team');
+  $manager_user->get('/teams/delete/:id')->to('teams#delete_team')->name('delete_team');
+  $manager_user->get('/teams/delete/:id/force')->to('teams#delete_team_force')->name('delete_team_force');
   $logged_user->get('/teams/unrealted_papers/:teamid')->to('publications#show_unrelated_to_team')
     ->name('unrelated_papers_for_team');
 
-  $logged_user->get('/teams/add')->to('teams#add_team')->name('add_team_get');
-  $logged_user->post('/teams/add/')->to('teams#add_team_post');
+  $manager_user->get('/teams/add')->to('teams#add_team')->name('add_team_get');
+  $manager_user->post('/teams/add/')->to('teams#add_team_post');
 
   ################ EDITING PUBLICATIONS ################
     #<<< no perltidy here
     # EXPERIMENTAL
 
-    $logged_user->get('/publications/add_many')
+    $manager_user->get('/publications/add_many')
         ->to('publicationsexperimental#publications_add_many_get')
         ->name('add_many_publications');
-    $logged_user->post('/publications/add_many')
+    $manager_user->post('/publications/add_many')
         ->to('publicationsexperimental#publications_add_many_post')
         ->name('add_many_publications_post');
 
@@ -590,10 +590,10 @@ sub setup_routes {
         ->to('publications#all_without_tag_for_author')
         ->name('get_untagged_publications_for_author');
 
-    $logged_user->get('/publications/candidates_to_delete')
+    $manager_user->get('/publications/candidates_to_delete')
         ->to('publications#all_candidates_to_delete');
 
-    $logged_user->get('/publications/missing_month')
+    $manager_user->get('/publications/missing_month')
         ->to('publications#all_with_missing_month');
 
     $logged_user->get('/publications/get/:id')
@@ -608,93 +608,93 @@ sub setup_routes {
         ->to('publications#download')
         ->name('download_publication_pdf');
     #
-    $logged_user->get('/publications/remove_attachment/:filetype/:id')
+    $manager_user->get('/publications/remove_attachment/:filetype/:id')
         ->to('publications#remove_attachment')
         ->name('publications_remove_attachment');
 
-    $logged_user->get('/publications/hide/:id')
+    $manager_user->get('/publications/hide/:id')
         ->to('publications#hide');
 
-    $logged_user->get('/publications/unhide/:id')
+    $manager_user->get('/publications/unhide/:id')
         ->to('publications#unhide');
 
-    $logged_user->get('/publications/toggle_hide/:id')
+    $manager_user->get('/publications/toggle_hide/:id')
         ->to('publications#toggle_hide')
         ->name('toggle_hide_publication');
 
     # candidate to be removed
-    $superadmin->get('/publications/fix_urls')              
+    $admin_user->get('/publications/fix_urls')              
         ->to('publications#replace_urls_to_file_serving_function')
         ->name('fix_attachment_urls');
 
 
-    $logged_user->get('/publications/add')
+    $manager_user->get('/publications/add')
         ->to('publications#publications_add_get')
         ->name('add_publication');
 
-    $logged_user->post('/publications/add')
+    $manager_user->post('/publications/add')
         ->to('publications#publications_add_post')
         ->name('add_publication_post');
 
-    $logged_user->get('/publications/edit/:id')
+    $manager_user->get('/publications/edit/:id')
         ->to('publications#publications_edit_get')
         ->name('edit_publication');
 
-    $logged_user->post('/publications/edit/:id')
+    $manager_user->post('/publications/edit/:id')
         ->to('publications#publications_edit_post')
         ->name('edit_publication_post');
 
-    $logged_user->get('/publications/make_paper/:id')
+    $manager_user->get('/publications/make_paper/:id')
         ->to('publications#make_paper')
         ->name('make_paper');
 
-    $logged_user->get('/publications/make_talk/:id')
+    $manager_user->get('/publications/make_talk/:id')
         ->to('publications#make_talk')
         ->name('make_talk');
 
-    $logged_user->get('/publications/regenerate/:id')
+    $manager_user->get('/publications/regenerate/:id')
         ->to('publications#regenerate_html')
         ->name('regenerate_publication');
 
 
     # change to POST or DELETE
-    $logged_user->get('/publications/delete_sure/:id')
+    $manager_user->get('/publications/delete_sure/:id')
         ->to('publications#delete_sure')
         ->name('delete_publication_sure');
 
-    $logged_user->get('/publications/attachments/:id')
+    $manager_user->get('/publications/attachments/:id')
         ->to('publications#add_pdf')
         ->name('manage_attachments');
 
-    $logged_user->post('/publications/add_pdf/do/:id')
+    $manager_user->post('/publications/add_pdf/do/:id')
         ->to('publications#add_pdf_post')
         ->name('post_upload_pdf');
 
-    $logged_user->get('/publications/manage_tags/:id')
+    $manager_user->get('/publications/manage_tags/:id')
         ->to('publications#manage_tags')
         ->name('manage_tags');
 
     # change to POST or DELETE
-    $logged_user->get('/publications/:eid/remove_tag/:tid')
+    $manager_user->get('/publications/:eid/remove_tag/:tid')
         ->to('publications#remove_tag')
         ->name('remove_tag_from_publication');
 
     # change to POST or UPDATE
-    $logged_user->get('/publications/:eid/add_tag/:tid')
+    $manager_user->get('/publications/:eid/add_tag/:tid')
         ->to('publications#add_tag')
         ->name('add_tag_to_publication');
 
-    $logged_user->get('/publications/manage_exceptions/:id')
+    $manager_user->get('/publications/manage_exceptions/:id')
         ->to('publications#manage_exceptions')
         ->name('manage_exceptions');
 
     # change to POST or DELETE
-    $logged_user->get('/publications/:eid/remove_exception/:tid')
+    $manager_user->get('/publications/:eid/remove_exception/:tid')
         ->to('publications#remove_exception')
         ->name('remove_exception_from_publication');
 
     # change to POST or UPDATE
-    $logged_user->get('/publications/:eid/add_exception/:tid')
+    $manager_user->get('/publications/:eid/add_exception/:tid')
         ->to('publications#add_exception')
         ->name('add_exception_to_publication');
 
@@ -709,7 +709,7 @@ sub setup_routes {
   $anyone->get('/read/publications/meta')
     ->to('publicationsSEO#metalist')
     ->name("metalist_all_entries");
-    
+
   $anyone->get('/read/publications/meta/:id')
     ->to('publicationsSEO#meta')
     ->name("metalist_entry");
