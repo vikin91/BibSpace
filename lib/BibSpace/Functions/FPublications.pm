@@ -188,7 +188,7 @@ sub Fget_publications_main_hashed_args {    #
 }
 ####################################################################################
 
-sub Fget_publications_core_storage {
+sub Fget_publications_core {
     my $self        = shift;
     my $author      = shift;
     my $year        = shift;
@@ -211,10 +211,12 @@ sub Fget_publications_core_storage {
     my $author_obj;
     if(defined $author){
         if( Scalar::Util::looks_like_number($author) ){
-            $author_obj = $self->app->repo->authors_find(sub{ $_->master_id == $author });
+            $author_obj   = $self->app->repo->authors_find(sub{ $_->master_id == $author });
+            $author_obj ||= $self->app->repo->authors_find(sub{ $_->id == $author });
         }
         else{
             $author_obj = $self->app->repo->authors_find(sub{ $_->master eq $author });
+            $author_obj ||= $self->app->repo->authors_find(sub{ $_->uid eq $author });
         }
     }   
     my $tag_obj;
@@ -249,77 +251,75 @@ sub Fget_publications_core_storage {
     # my $cmp6 = $cmp4 or $cmp5;
     # $self->app->logger->warn("undef == id: 1 $cmp1 / 2 $cmp2 / 3 $cmp3 / 4 $cmp4 / 5 $cmp5 / 6 $cmp6 / " );    
 
-    # $self->app->logger->debug("==== START new Filtering ====", "Fget_publications_core_storage" );
+    # $self->app->logger->debug("==== START new Filtering ====", "Fget_publications_core" );
     # filtering
     my @entries = $self->app->repo->entries_all;
+    if(defined $master_id and defined $author_obj){
+        # $self->app->logger->debug("BEFORE Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core" );
+        if($author_obj->is_master){
+            @entries = $author_obj->get_entries; 
+            # @entries = grep { $_->has_master_author($author_obj) } @entries;
+        }
+        else{
+            @entries = $author_obj->get_entries;
+            # @entries = grep { $_->has_author($author_obj) } @entries;   
+        }
+        # $self->app->logger->debug("AFTER Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core" );
+    }
 
     # simple filters
     if( defined $year and $year > 0 ){
-        # $self->app->logger->debug("BEFORE Filtering year. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering year. Got ".scalar(@entries)." results", "Fget_publications_core" );
         @entries = grep { (defined $_->year and $_->year == $year) } @entries;
-        # $self->app->logger->debug("AFTER Filtering year. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering year. Got ".scalar(@entries)." results", "Fget_publications_core" );
     }
 
     # $bibtex_type - is in fact query for OurType
     if(defined $bibtex_type){
-        # $self->app->logger->debug("BEFORE Filtering bibtex_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering bibtex_type. Got ".scalar(@entries)." results", "Fget_publications_core" );
         @entries = grep { $_->matches_our_type($bibtex_type, $self->app->repo) } @entries;
-        # $self->app->logger->debug("AFTER Filtering bibtex_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering bibtex_type. Got ".scalar(@entries)." results", "Fget_publications_core" );
     }
     if(defined $entry_type){
-        # $self->app->logger->debug("BEFORE Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core" );
         @entries = grep { $_->entry_type eq $entry_type } @entries;
-        # $self->app->logger->debug("AFTER Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering entry_type. Got ".scalar(@entries)." results", "Fget_publications_core" );
     }
     if(defined $permalink and defined $tag_obj_perm){
         @entries = grep { $_->has_tag($tag_obj_perm) } @entries;
     }
     if(defined $hidden){
-        # $self->app->logger->debug("BEFORE Filtering hidden. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering hidden. Got ".scalar(@entries)." results", "Fget_publications_core" );
         @entries = grep { $_->hidden == $hidden } @entries;
-        # $self->app->logger->debug("AFTER Filtering hidden. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering hidden. Got ".scalar(@entries)." results", "Fget_publications_core" );
     }
     # complex filters
     if(defined $visible and $visible == 1){
         @entries = grep { $_->is_visible } @entries;
     }
-    if(defined $master_id and defined $author_obj){
-        # $self->app->logger->debug("BEFORE Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
-        @entries = grep { $_->has_master_author($author_obj) } @entries;
-        # $self->app->logger->debug("AFTER Filtering author. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
-    }
     if(defined $tagid and defined $tag_obj){
-        # $self->app->logger->debug("BEFORE Filtering tag. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("BEFORE Filtering tag. Got ".scalar(@entries)." results", "Fget_publications_core" );
         @entries = grep { $_->has_tag($tag_obj) } @entries;
-        # $self->app->logger->debug("AFTER Filtering tag. Got ".scalar(@entries)." results", "Fget_publications_core_storage" );
+        # $self->app->logger->debug("AFTER Filtering tag. Got ".scalar(@entries)." results", "Fget_publications_core" );
     }
     if(defined $teamid and defined $team_obj){
         @entries = grep { $_->has_team($team_obj) } @entries;
     }
     if($debug == 1){
-        say "Fget_publications_core_storage Input author = $author" if defined $author;
-        say "Fget_publications_core_storage Input year = $year" if defined $year;
-        say "Fget_publications_core_storage Input bibtex_type = $bibtex_type" if defined $bibtex_type;
-        say "Fget_publications_core_storage Input entry_type = $entry_type" if defined $entry_type;
-        say "Fget_publications_core_storage Input tag = $tag" if defined $tag;
-        say "Fget_publications_core_storage Input team = $team" if defined $team;
-        say "Fget_publications_core_storage Input visible = $visible" if defined $visible;
-        say "Fget_publications_core_storage Input permalink = $permalink" if defined $permalink;
-        say "Fget_publications_core_storage Input hidden = $hidden" if defined $hidden;
-        say "Fget_publications_core_storage Input debug = $debug" if defined $debug;
-        say "Fget_publications_core_storage Found ".scalar(@entries)." entries";
+        say "Fget_publications_core Input author = $author" if defined $author;
+        say "Fget_publications_core Input year = $year" if defined $year;
+        say "Fget_publications_core Input bibtex_type = $bibtex_type" if defined $bibtex_type;
+        say "Fget_publications_core Input entry_type = $entry_type" if defined $entry_type;
+        say "Fget_publications_core Input tag = $tag" if defined $tag;
+        say "Fget_publications_core Input team = $team" if defined $team;
+        say "Fget_publications_core Input visible = $visible" if defined $visible;
+        say "Fget_publications_core Input permalink = $permalink" if defined $permalink;
+        say "Fget_publications_core Input hidden = $hidden" if defined $hidden;
+        say "Fget_publications_core Input debug = $debug" if defined $debug;
+        say "Fget_publications_core Found ".scalar(@entries)." entries";
     }
 
     return @entries;
-}
-####################################################################################
-sub Fget_publications_core {
-    my @input = @_;
-    # this is good for tests - 
-    # with debug=>1, the number of returned entries should be identical
-    # Fget_publications_core_old(@input);
-
-    return Fget_publications_core_storage(@input);
 }
 ####################################################################################
 # Keep this for a while. Reason: see above (good for tests)

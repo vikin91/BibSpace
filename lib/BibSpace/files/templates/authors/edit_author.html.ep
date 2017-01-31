@@ -20,13 +20,13 @@
         <div class="col-lg-10 col-md-10 col-xs-10">
             
 
-            <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->{master}) %>">
+            <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id) %>">
                 <i class="fa fa-files-o"></i> Show entries <span class="badge"><%= num_entries_for_author($author)%></span>
             </a>
-            <a class="btn btn-success" href="<%= url_for('publications')->query(author=>$author->{master}, entry_type=>'paper') %>">
+            <a class="btn btn-success" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'paper') %>">
                 <i class="fa fa-files-o"></i> Show papers <span class="badge"><%= num_papers_for_author($author)%></span>
             </a>
-            <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->{master}, entry_type=>'talk')%>">
+            <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'talk')%>">
                 <i class="fa fa-microphone"></i> Show talks <span class="badge"><%= num_talks_for_author($author)%></span>
             </a>
             

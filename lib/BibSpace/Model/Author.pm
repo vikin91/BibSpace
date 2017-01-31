@@ -55,15 +55,7 @@ sub toString {
   my $self = shift;
   my $str  = $self->freeze;
   $str .= "\n\t (MASTER): " . $self->masterObj->freeze if defined $self->masterObj;
-
-  $str .= "\nMEMBERSHIPS: [\n";
-  map { $str .= "\t" . $_->toString . "\n" } $self->memberships_all;
-  $str .= "]\n";
-
-  $str .= "\nAUTHORSHIPS: [\n";
-  map { $str .= "\t" . $_->toString . "\n" } $self->authorships_all;
-  $str .= "]\n";
-  $str;
+  return $str;
 }
 ####################################################################################
 sub equals {
@@ -74,7 +66,6 @@ sub equals {
   die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj) unless ref($self) eq ref($obj);
 
 
-  # return 0 unless $obj->isa("MAuthorBase");
   my $result = $self->uid eq $obj->uid;
   return $result;
 }
@@ -121,14 +112,8 @@ sub is_minion_of {
 
 
   if ( $self->masterObj and $self->masterObj->equals($master) ) {
-    SimpleLogger->new->debug( $self->uid . " is_minion_of " . $master->uid . " due to 1" );
     return 1;
   }
-  # if ( defined $master->id and defined $self->master_id and $self->master_id == $master->id ) {
-  #   SimpleLogger->new->debug( $self->uid . " is_minion_of " . $master->uid . " due to 2" );
-  #   return 1;
-  # }
-
   return;
 }
 ####################################################################################
@@ -136,31 +121,30 @@ sub update_master_name {
   my $self       = shift;
   my $new_master = shift;
 
-  # TODO: if this is minion, then this may not have sense
+  $self->uid($new_master);
+
   if ( $self->is_minion ) {
-    die "Cannot update master name if author is a minion";
+    #
   }
-
-  $self->{master} = $new_master;
-  $self->{uid}    = $new_master;
-
+  else{
+    $self->master($new_master);
+  }
   return 1;
 }
 ####################################################################################
 sub remove_master {
   my $self = shift;
 
-  $self->{masterObj} = undef;
-
-  $self->{master}    = $self->{uid};
-  $self->{master_id} = $self->{id};
+  $self->masterObj(undef);
+  $self->master($self->uid);
+  $self->master_id($self->id);
 }
 ####################################################################################
 sub add_minion {
   my $self   = shift;
   my $minion = shift;
 
-  return unless defined $minion;
+  return if !defined $minion;
   $minion->set_master($self);
   return 1;
 }
@@ -174,23 +158,6 @@ sub can_merge_authors {
     return 1;
   }
   return;
-}
-##############################################################################################################
-sub merge_authors {
-  my $self          = shift;
-  my $source_author = shift;
-
-  if ($source_author) {
-
-    # author with new_user_id already exist
-    # move all entries of candidate to this author
-    $self->take_entries_from_author($source_author);
-
-    # necessary due to possible conflicts caused on ON UPDATE CASCADE
-    $source_author->abandon_all_entries();
-    $source_author->abandon_all_teams();
-    $source_author->set_master($self);
-  }
 }
 ####################################################################################
 ####################################################################################

@@ -222,20 +222,26 @@ sub remove_uid {
     $self->flash( msg => "Cannot remove user_id $minor_id. Reason: such author deos not exist.", msg_type => "danger" );
   }
   elsif ( $author_minor->is_master ) {
-    $self->flash( msg => "Cannot remove user_id $minor_id. Reason: it is a master_id.", msg_type => "danger" );
+    $self->flash( msg => "Cannot remove user_id $minor_id. Reason: it is a master_id.", msg_type => "warning" );
   }
   else {
 
-    my @master_entries = $author_master->entries;
+    my @master_entries = $author_master->get_entries;
+
+    foreach my $master_authorship ( $author_master->authorships_all ){
+        $master_authorship->author->remove_authorship($master_authorship);
+        $master_authorship->entry->remove_authorship($master_authorship);
+        $self->app->repo->authorships_delete($master_authorship);
+    }
+    foreach my $minion_authorship ( $author_minor->authorships_all ){
+        $minion_authorship->author->remove_authorship($minion_authorship);
+        $minion_authorship->entry->remove_authorship($minion_authorship);
+        $self->app->repo->authorships_delete($minion_authorship);
+    }
     $author_minor->remove_master;
     $self->app->repo->authors_save($author_minor);
-
-# authors are uncnnected now
-# ON UPDATE CASCADE has removed all entreis from $author_master and assigned them to $author_minor
-# All entries of the $author_master from before seperation needs be updated
-# The $author_minor comes back to the list of all authors and it keeps its entries.
-
     $self->reassign_authors_to_entries_given_by_array(0, \@master_entries);
+
   }
 
   $self->redirect_to( $self->get_referrer );
@@ -259,13 +265,29 @@ sub merge_authors {
   if ( defined $author_source and defined $author_destination ) {
     if ( $author_destination->can_merge_authors($author_source) ) {
 
-      $self->app->logger->warn("WARNING: controller method Authors->merge_authors contains dummy implementation!", "".__PACKAGE__."->merge_authors");
 
-      # this function must be taken out of object!!
-      $author_destination->merge_authors($author_source);
+      my @src_authorships = $author_source->authorships_all;
+      foreach my $src_authorship ( @src_authorships ){
+          # Removing the authorship from the source author
+          $src_authorship->author->remove_authorship($src_authorship);
+          # authorships cannot be updated, so we need to delete and add later
+          $self->app->repo->authorships_delete($src_authorship);
+          # Changing the authorship to point to a new author
+          $src_authorship->author($author_destination);
+          # store changes the authorship in the repo
+          $self->app->repo->authorships_save($src_authorship);
+          # Adding the authorship to the new author
+          $author_destination->add_authorship($src_authorship);
+      }
+      $author_source->abandon_all_teams;
+      $author_source->set_master($author_destination);
+
       
       $self->app->repo->authors_save($author_destination);
       $self->app->repo->authors_save($author_source);
+
+      my @entries = $author_destination->get_entries;
+      $self->reassign_authors_to_entries_given_by_array(0, \@entries);
 
       $self->flash(
         msg =>
