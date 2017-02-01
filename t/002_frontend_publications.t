@@ -6,7 +6,6 @@ use Test::Mojo;
 use BibSpace;
 use BibSpace::Functions::Core;
 
-my $t_anyone    = Test::Mojo->new('BibSpace');
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
@@ -46,13 +45,11 @@ $t_logged_in->get_ok($page)->status_isnt( 404, "Checking: 404 $page" )
 # this weak! fix it later
 $page = $self->url_for( 'recently_changed', num => 10 );
 $t_logged_in->get_ok($page)->status_isnt( 404, "Checking: 404 $page" )
-    ->status_isnt( 500, "Checking: 500 $page" )
-    ->content_like(qr/glyphicon-barcode/i);
+    ->status_isnt( 500, "Checking: 500 $page" );
 
 # this weak! fix it later
 $page = $self->url_for( 'recently_added', num => 10 );
 $t_logged_in->get_ok($page)->status_isnt( 404, "Checking: 404 $page" )
-    ->status_isnt( 500, "Checking: 500 $page" )
-    ->content_like(qr/glyphicon-barcode/i);
+    ->status_isnt( 500, "Checking: 500 $page" );
 
 done_testing();

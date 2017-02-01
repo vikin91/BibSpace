@@ -208,12 +208,16 @@ sub insert_admin {
     my $new_user = User->new(
       idProvider => $self->app->repo->users_idProvider,
       login      => 'pub_admin',
-      email      => 'example@example.com',
+      email      => 'pub_admin@example.com',
       real_name  => 'Admin',
+      rank       => 2,
       pass       => $hash,
       pass2      => $salt
     );
     $self->app->repo->users_save($new_user);
+  }
+  else{
+    $admin_exists->make_admin;
   }
 }
 

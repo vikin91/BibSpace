@@ -233,11 +233,11 @@ sub post_gen_forgot_token {
 
 
     if ( !$user ) {
-        $self->app->logger->info(
-            "Cannot find user nor email to generate forgot-password-token.");
+        $self->app->logger->warn(
+            "Cannot find user '$login' nor email '$email' to generate forgot-password-token.");
         $self->flash(
             msg_type => 'warning',
-            msg      => 'User or email does not exists. Try again.'
+            msg      => "User '$login' or email '$email' does not exist. Try again."
         );
         $self->redirect_to('forgot');
         return;
