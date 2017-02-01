@@ -168,6 +168,9 @@ sub startup {
   $self->app->logger->info("Setup repositories...");
   $self->setup_repositories;
 
+  $self->app->logger->info("Add startup admin user...");
+  $self->insert_admin;
+
   $self->app->logger->info("Setup done.");
 
   $self->app->logger->info( "Using CONFIG: " . $self->app->config_file );
@@ -194,7 +197,25 @@ sub startup {
   #   $self->repo->entries_save($testEntry);
   # }
 }
+################################################################
+sub insert_admin {
+  my $self = shift;
 
+  my $admin_exists = $self->app->repo->users_find( sub { $_->login eq 'pub_admin' } );
+  if(!$admin_exists){
+    my $salt     = salt();
+    my $hash     = encrypt_password( 'asdf', $salt );
+    my $new_user = User->new(
+      idProvider => $self->app->repo->users_idProvider,
+      login      => 'pub_admin',
+      email      => 'example@example.com',
+      real_name  => 'Admin',
+      pass       => $hash,
+      pass2      => $salt
+    );
+    $self->app->repo->users_save($new_user);
+  }
+}
 
 ################################################################
 sub setup_repositories {
