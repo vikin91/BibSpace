@@ -28,6 +28,7 @@ sub tags_idProvider        { my ($self) = @_; return $self->_getIdProvider('Tag'
 sub tagTypes_idProvider    { my ($self) = @_; return $self->_getIdProvider('TagType');    }
 sub teams_idProvider       { my ($self) = @_; return $self->_getIdProvider('Team');       }
 sub types_idProvider       { my ($self) = @_; return $self->_getIdProvider('Type');       }
+sub users_idProvider       { my ($self) = @_; return $self->_getIdProvider('User');       }
 #>>>
 
 #<<< no perltidy here

@@ -12,8 +12,7 @@ use BibSpace::Controller::Helpers;
 
 use BibSpace::Model::SimpleLogger;
 
-use BibSpace::Model::M::MUser;
-use BibSpace::Model::M::CMUsers;
+use BibSpace::Model::User;
 
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
@@ -196,6 +195,7 @@ sub startup {
   # }
 }
 
+
 ################################################################
 sub setup_repositories {
   my $self = shift;
@@ -354,7 +354,6 @@ sub setup_plugins {
   $self->plugin('BibSpace::Controller::CronHelpers');
   $self->secrets( [ $self->config->{key_cookie} ] );
 
-  $self->helper( users => sub { state $users = CMUsers->new } );
   $self->helper( proxy_prefix => sub { $self->config->{proxy_prefix} } );
 
 
@@ -378,9 +377,9 @@ sub setup_plugins {
     is_manager => sub {
       my $self = shift;
       return 1 if $self->app->is_demo;
-      my $login = $self->session('user');
-      my $usr = MUser->static_get_by_login( $self->app->db, $login );
-      return $usr->is_manager();
+      my $me = $self->app->repo->users_find(sub { $_->login eq $self->session('user') } );
+      return if !$me;
+      return $me->is_manager;
     }
   );
 
@@ -388,9 +387,9 @@ sub setup_plugins {
     is_admin => sub {
       my $self = shift;
       return 1 if $self->app->is_demo;
-      my $login = $self->session('user');
-      my $usr = MUser->static_get_by_login( $self->app->db, $login );
-      return $usr->is_admin();
+      my $me = $self->app->repo->users_find(sub { $_->login eq $self->session('user') } );
+      return if !$me;
+      return $me->is_admin;
     }
   );
 

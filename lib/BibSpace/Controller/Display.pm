@@ -18,10 +18,7 @@ sub index {
     if ( $self->app->is_demo ) {
         $self->session( user      => 'demouser' );
         $self->session( user_name => 'demouser' );
-        $self->users->record_logging_in( 'demouser', $self->app->db );
     }
-
-
     $self->render( template => 'display/start' );
 }
 #################################################################################

@@ -6,7 +6,6 @@ use Test::Mojo;
 
 use BibSpace;
 use BibSpace::Functions::Core;
-use BibSpace::Model::M::CMUsers;
 
 
 ### Problem with this test suite is that the token for mailgun returns error because it is not correct in the default config
@@ -28,7 +27,7 @@ $t_logged_in->ua->max_redirects(10);
 # # ############################ READY FOR TESTING
 
 
-my $token = CMUsers->generate_token();
+my $token = generate_token();
 ok(defined $token);
 is(length($token), 32);
 
@@ -66,22 +65,21 @@ subtest 'Setting new password' => sub {
     #requesting new token in cas it does not exist
     $t_anyone->post_ok('/forgot/gen' => { Accept => '*/*' }, form => { user   => 'pub_admin' });
 
-    my $token2 = $t_anyone->app->users->get_token_for_email("your_email\@email.com", $dbh);
-    ok(defined $token2 and length($token2) == 32, "Checking token length");
+    my $user = $t_anyone->app->repo->users_find(sub{$_->login eq 'pub_admin'});
+    my $token2 = $user->forgot_token;
 
-    $t_anyone->get_ok("/forgot/reset/$token2")->status_is(200);
+    ok($token2, "Checking token exists");
+    is(length($token2), 32, "Checking token length");
 
+    my $page = $t_anyone->app->url_for( 'token_clicked', token => $token2 );
+    $t_anyone->get_ok($page)->status_is(200);
 
-    
-    # requesting new token in cas it does not exist
-    $t_anyone->post_ok('/forgot/gen' => { Accept => '*/*' }, form => { user   => 'pub_admin' });
-    $token2 = $t_anyone->app->users->get_token_for_email("your_email\@email.com", $dbh);
 
     # not matching passwords
     $t_anyone->post_ok('/forgot/store' => form => { token  => $token2, pass1 => 'asdf', pass2 => 'qwerty' })
         ->status_isnt(404)
         ->status_isnt(500)
-        ->content_like(qr/Passwords are not same. Try again./i, "Trying with non-matching passwords");
+        ->content_like(qr/Passwords are not same or do not obey the password policy./i, "Trying with non-matching passwords");
 
     # matching passwords
     $t_anyone->post_ok('/forgot/store' => form => { token  => $token2, pass1 => 'asdf', pass2 => 'asdf' })
@@ -110,7 +108,7 @@ $t_anyone->get_ok("/noregister")
 subtest 'User management: public registration' => sub {
   if( $t_anyone->app->config->{registration_enabled} == 1){
 
-    my $token = CMUsers->generate_token();
+    my $token = generate_token;
     note "=== Registration anyone: using token $token";
 
 
@@ -148,8 +146,17 @@ subtest 'User management: public registration' => sub {
                                             password2 => 'a1234' })
     ->status_isnt(404)
     ->status_isnt(500)
-    ->content_like(qr/Some input is missing!/i, "Trying to register with missing login and email");
+    ->content_like(qr/Login is missing/i, "Trying to register with missing login and email");
 
+    $t_anyone->post_ok('/register' => form => { 
+                                            login  => 'Henry John', 
+                                            name  => '',
+                                            email  => '',
+                                            password1 => 'a1234', 
+                                            password2 => 'a1234' })
+    ->status_isnt(404)
+    ->status_isnt(500)
+    ->content_like(qr/Email is missing/i, "Trying to register with missing login and email");
 
 
     $t_anyone->post_ok('/register' => form => { 
@@ -187,7 +194,7 @@ subtest 'User management: noregister' => sub {
 subtest 'User management: admin registration' => sub {
 
 
-    my $token = CMUsers->generate_token();
+    my $token = generate_token;
     note "=== Registration admin: using token $token";
 
     $t_logged_in->get_ok("/register")
@@ -224,7 +231,7 @@ subtest 'User management: admin registration' => sub {
                                             password2 => 'a1234' })
     ->status_isnt(404)
     ->status_isnt(500)
-    ->content_like(qr/Some input is missing!/i, "Trying to register with missing login and email");
+    ->content_like(qr/Login is missing/i, "Trying to register with missing login and email");
 
 
 
