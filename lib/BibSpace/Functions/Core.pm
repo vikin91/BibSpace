@@ -23,7 +23,6 @@ use Session::Token;
 
 ### Posting to Mailgun
 use WWW::Mechanize;
-use LWP::UserAgent;
 
 # for latex decode
 require TeX::Encode;
