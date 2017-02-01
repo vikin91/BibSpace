@@ -130,7 +130,7 @@ sub cron_run {
 
     ############ Cron ACTIONS
     log_cron_usage( $self->app->db, $level );
-    $self->write_log("Cron level $level started");
+    $self->app->logger->info("Cron level $level started");
 
     if ( $level == 0 ) {
         $self->do_cron_day();
@@ -150,7 +150,7 @@ sub cron_run {
     else {
         # do nothing
     }
-    $self->write_log("Cron level $level finished");
+    $self->app->logger->info("Cron level $level finished");
 
     return $text_to_render;
 }

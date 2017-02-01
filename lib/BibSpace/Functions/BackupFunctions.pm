@@ -153,7 +153,7 @@ sub do_delete_backup {    # added 22.08.14
 
     # say "do_delete_backup deletes file: $file_path exists $exists";
 
-    $self->write_log("destroying backup id $id");
+    $self->app->logger->info("destroying backup id $id");
 
     my $sth2 = $dbh->prepare("DELETE FROM Backup WHERE id=?");
     $sth2->execute($id);

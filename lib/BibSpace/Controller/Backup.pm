@@ -124,7 +124,7 @@ sub backup_download {
     $exists = 1 if -e $file_path;
 
     if ( $exists == 1 ) {
-        $self->write_log("downloading backup $file_path");
+        $self->app->logger->info("downloading backup $file_path");
         $self->render_file( 'filepath' => $file_path );
     }
     else {
@@ -169,7 +169,7 @@ sub restore_backup {
     my $backup_file_path = $backup_dir_absolute . $backup_filename;
 
     do_backup_current_state( $self, "pre-restore" );
-    $self->write_log("Restoring backup from file $backup_file_path");
+    $self->app->logger->info("Restoring backup from file $backup_file_path");
     my $restore_ok = do_restore_backup_from_file( $self->app, $dbh, $backup_file_path,
         $self->app->config );
 

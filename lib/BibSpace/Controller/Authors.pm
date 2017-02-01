@@ -85,13 +85,13 @@ sub add_post {
         $self->redirect_to( $self->url_for('add_author') );
         return;
       }
-      $self->write_log( "Added new author with master: $new_master. Author id is " . $author->{id} );
+      $self->app->logger->info( "Added new author with master: $new_master. Author id is " . $author->{id} );
       $self->flash( msg_type => 'success', msg => "Author added successfully!" );
       $self->redirect_to( $self->url_for( 'edit_author', id => $author->{id} ) );
       return;
     }
     else {    # such user already exists!
-      $self->write_log("Author with master: $new_master already exists!");
+      $self->app->logger->info("Author with master: $new_master already exists!");
       $self->flash(
         msg_type => 'warning',
         msg      => "Author with proposed master: $new_master already exists! Pick a different one."
@@ -467,7 +467,7 @@ sub delete_author_force {
     # finally delete author
     $self->app->repo->authors_delete($author);
 
-    $self->write_log( "Author " . $author->uid . " ID $id has been deleted." );
+    $self->app->logger->info( "Author " . $author->uid . " ID $id has been deleted." );
     $self->flash( msg => "Author " . $author->uid . " ID $id removed successfully.", msg_type => "success" );
   }
   else {

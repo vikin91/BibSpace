@@ -392,32 +392,6 @@ sub setup_plugins {
       return $me->is_admin;
     }
   );
-
-  $self->helper(
-    write_log => sub {
-      my $c       = shift;
-      my $msg     = shift;
-      my $usr     = $c->session('user') || "not_logged_in";
-      my $usr_str = "(" . $usr . "): ";
-
-      my $datetime_string = strftime( '%Y-%m-%d %H:%M:%S', localtime );
-
-      my $filename   = $self->config->{log_file};
-      my $msg_to_log = "[" . $datetime_string . "] " . $usr_str . $msg . "\n";
-
-      try {
-        if ( open( my $fh, '>>', $filename ) ) {
-          print $fh $msg_to_log;
-          close $fh;
-        }
-      }
-      catch {
-        warn "Opening log failed! Message to log: $msg_to_log . Reason: $_ ";
-      };
-    }
-  );
-
-
 }
 ################################################################
 ################################################################

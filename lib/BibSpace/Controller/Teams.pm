@@ -58,7 +58,7 @@ sub add_team_post {
   my $existing_mteam = $self->app->repo->teams_find( sub { $_->name eq $new_team_name } );
 
   if ( defined $existing_mteam ) {
-    $self->write_log( "add new team: team with proposed name ($new_team_name) exists!!" );
+    $self->app->logger->info( "add new team: team with proposed name ($new_team_name) exists!!" );
     $self->flash( msg => "Team with such name exists already! Pick a different one." );
     $self->redirect_to( $self->url_for('add_team_get') );
     return;
@@ -71,7 +71,7 @@ sub add_team_post {
     $self->redirect_to( $self->url_for('add_team_get') );
     return;
   }
-  $self->write_log( "Add new team: Added new team with proposed name ($new_team_name). Team id is $new_team_id." );
+  $self->app->logger->info( "Add new team: Added new team with proposed name ($new_team_name). Team id is $new_team_id." );
   $self->redirect_to( 'edit_team', id => $new_team_id );
 }
 
@@ -84,7 +84,7 @@ sub delete_team {
 
   if ( $team and $team->can_be_deleted ) {
     my $msg = "Team " . $team->name . " ID " . $team->id . " has been deleted";
-    $self->write_log( $msg );
+    $self->app->logger->info( $msg );
     $self->flash( msg => $msg, msg_type => 'success' );
     $self->do_delete_team($team);
   }
@@ -104,7 +104,7 @@ sub delete_team_force {
   my $team = $self->app->repo->teams_find( sub { $_->id == $id } );
   if ($team) {
     my $msg = "Team " . $team->name . " ID " . $team->id . " has been deleted";
-    $self->write_log( $msg );
+    $self->app->logger->info( $msg );
     $self->flash( msg => $msg, msg_type => 'success' );
     $self->do_delete_team($team);
   }

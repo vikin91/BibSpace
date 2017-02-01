@@ -34,16 +34,6 @@ sub test {
 
     my $errored = 0;
 
-    ###################
-    $msg .= "<br/>" . "Opening log: ";
-    try {
-        read_file($log_file);
-        $msg .= "OK ";
-    }
-    catch {
-        $msg .= "ERROR: $_";
-        $errored = 1;
-    };
 
     ###################
     $msg .= "<br/>" . "Connecting to DB: ";

@@ -99,7 +99,7 @@ sub publications_add_many_post {
     my $preview = 0;
     my $msg = "<strong>Adding mode</strong> You operate on an unsaved entry!";
 
-    $self->write_log("post_add_many_store add publication with bib $new_bib");
+    $self->app->logger->info("post_add_many_store add publication with bib $new_bib");
 
     my $debug_str = "";
 
