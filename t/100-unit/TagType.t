@@ -6,7 +6,7 @@ use Test::Exception;
 
 # use BibSpace::Functions::Core;
 # use BibSpace::Functions::FDB;
-# use BibSpace::Functions::BackupFunctions;
+# use BibSpace::Functions::MySqlBackupFunctions;
 # use Data::Dumper;
 
 # my $t_logged_in = Test::Mojo->new('BibSpace');

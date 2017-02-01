@@ -5,7 +5,7 @@ use Test::Exception;
 
 
 # use BibSpace::Functions::Core;
-# use BibSpace::Functions::BackupFunctions;
+# use BibSpace::Functions::MySqlBackupFunctions;
 # use BibSpace::Functions::FDB;
 
 # use Data::Dumper;

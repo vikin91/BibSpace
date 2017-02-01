@@ -13,7 +13,6 @@ my $dbh = $t_logged_in->app->db;
 
 use BibSpace::Functions::FPublications;
 
-$dbh->do('DELETE FROM Entry;');
 $t_logged_in->app->repo->entries_delete($t_logged_in->app->repo->entries_all);
 
 # my $en = MEntry->new();

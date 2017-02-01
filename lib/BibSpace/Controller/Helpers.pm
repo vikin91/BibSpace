@@ -16,7 +16,7 @@ use List::MoreUtils qw(any uniq);
 
 use BibSpace::Functions::Core;
 use BibSpace::Controller::Publications;
-use BibSpace::Functions::BackupFunctions;
+use BibSpace::Functions::MySqlBackupFunctions;
 
 use BibSpace::Functions::FPublications;
 

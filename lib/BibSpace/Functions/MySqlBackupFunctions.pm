@@ -1,4 +1,4 @@
-package BibSpace::Functions::BackupFunctions;
+package BibSpace::Functions::MySqlBackupFunctions;
 
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::Core;

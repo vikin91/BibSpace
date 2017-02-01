@@ -10,7 +10,7 @@ use Try::Tiny;
 use Data::Dumper;
 
 use Mojo::Base 'Mojolicious::Controller';
-use BibSpace::Functions::BackupFunctions;
+use BibSpace::Functions::MySqlBackupFunctions;
 
 #################################################################################
 sub index {

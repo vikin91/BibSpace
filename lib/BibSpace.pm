@@ -3,7 +3,7 @@ package BibSpace v0.5.0;
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
 use BibSpace::Functions::Core;
-use BibSpace::Functions::BackupFunctions;
+use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Controller::Publications;
 use BibSpace::Controller::PublicationsLanding;
 use BibSpace::Controller::PublicationsExperimental;

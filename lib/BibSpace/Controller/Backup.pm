@@ -15,7 +15,7 @@ use DBIx::Connector;
 use File::Copy qw(copy);
 
 use BibSpace::Functions::Core;
-use BibSpace::Functions::BackupFunctions;
+use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::FDB;
 
 use Mojo::Base 'Mojolicious::Controller';
@@ -25,6 +25,10 @@ use Mojo::Log;
 ####################################################################################
 sub save {
     my $self = shift;
+
+    use Storable;
+    store $self->app->repo->lr->get_read_layer, "./backup_normal_xxx.dat";
+
     my $return_value = do_backup_current_state( $self, "normal" );
 
     if ( defined $return_value ) {

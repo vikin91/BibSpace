@@ -10,7 +10,7 @@ use BibSpace;
 use BibSpace::Functions::Core;
 use BibSpace::Controller::Cron;
 use BibSpace::Controller::Backup;
-use BibSpace::Functions::BackupFunctions;
+use BibSpace::Functions::MySqlBackupFunctions;
 
 use BibSpace::Functions::FDB;
 
