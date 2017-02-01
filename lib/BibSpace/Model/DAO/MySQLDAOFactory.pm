@@ -14,6 +14,7 @@ use BibSpace::Model::DAO::MySQL::TagTypeMySQLDAO;
 use BibSpace::Model::DAO::MySQL::LabelingMySQLDAO;
 use BibSpace::Model::DAO::MySQL::AuthorMySQLDAO;
 use BibSpace::Model::DAO::MySQL::TypeMySQLDAO;
+use BibSpace::Model::DAO::MySQL::UserMySQLDAO;
 use BibSpace::Model::DAO::DAOFactory;
 extends 'DAOFactory';
 
@@ -110,6 +111,15 @@ sub getTypeDao {
 }
 before 'getTypeDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getTypeDao" ); };
 after 'getTypeDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getTypeDao" ); };
+
+sub getUserDao {
+  my $self       = shift;
+  my $idProvider = shift;
+  die "" . __PACKAGE__ . "->getUserDao MUST be called with valid idProvider!" if !defined $idProvider;
+  return UserMySQLDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle );
+}
+before 'getUserDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getUserDao" ); };
+after 'getUserDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getUserDao" ); };
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

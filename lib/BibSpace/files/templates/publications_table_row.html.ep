@@ -66,7 +66,7 @@
                     % $extra_msg = ". Talks should have bibtex_type set to 'misc'"; 
                 %}
             %}
-             <a href="<%= url_for('make_paper', id=>$entry_obj->{id} ) %>" class="btn <%=$t1%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
+             <a href="<%= url_for('make_paper', id=>$entry_obj->id ) %>" class="btn <%=$t1%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to PAPER" data-container="body">
                     <span class="glyphicon glyphicon-file"></span>
             </a>
             <a href="<%= url_for('make_talk', id=>$entry_obj->{id} ) %>" class="btn <%=$t2%> btn-sm" data-toggle="tooltip" data-placement="top" title="Click to set entry type to TALK<%=$extra_msg%>" data-container="body">

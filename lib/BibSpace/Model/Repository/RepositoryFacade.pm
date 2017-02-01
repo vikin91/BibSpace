@@ -150,6 +150,17 @@ sub types_filter { my ($self, @params) = @_; return $self->lr->filter('Type', @p
 sub types_find   { my ($self, @params) = @_; return $self->lr->find('Type', @params);   }
 #>>>
 
+#<<< no perltidy here
+sub users_all    { my ($self, @params) = @_; return $self->lr->all('User', @params);    }
+sub users_count  { my ($self, @params) = @_; return $self->lr->count('User', @params);  }
+sub users_empty  { my ($self, @params) = @_; return $self->lr->empty('User', @params);  }
+sub users_exists { my ($self, @params) = @_; return $self->lr->exists('User', @params); }
+sub users_save   { my ($self, @params) = @_; return $self->lr->save('User', @params);   }
+sub users_update { my ($self, @params) = @_; return $self->lr->update('User', @params); }
+sub users_delete { my ($self, @params) = @_; return $self->lr->delete('User', @params); }
+sub users_filter { my ($self, @params) = @_; return $self->lr->filter('User', @params); }
+sub users_find   { my ($self, @params) = @_; return $self->lr->find('User', @params);   }
+#>>>
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

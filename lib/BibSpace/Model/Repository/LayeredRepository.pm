@@ -104,7 +104,7 @@ sub copy_data {
     my $backendFrom = $config->{from};
     my $backendTo = $config->{to};
 
-    my @types = qw(TagType Team Author Authorship Membership Entry Labeling Tag Exception Type);
+    my @types = qw(TagType Team Author Authorship Membership Entry Labeling Tag Exception Type User);
 
     $self->hardReset;
     my $srcLayer = $self->get_layer($backendFrom);

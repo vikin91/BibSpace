@@ -451,15 +451,15 @@ sub remove_attachment {
   my $self     = shift;
   my $id       = $self->param('id');                     # entry ID
   my $filetype = $self->param('filetype') // 'paper';    # paper, slides
-  my $dbh      = $self->app->db;
 
-
-  my $mentry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
 
   # no check as we want to have the files deleted anyway!
 
   my $file_path = get_paper_pdf_path( $self, $id, "$filetype" );
-  say "file_path $file_path";
+
+  $self->app->logger->debug("File_path '$file_path'", __PACKAGE__."->remove_attachment");
+
   my $num_deleted_files = 0;
   my $msg;
   my $msg_type;
@@ -471,11 +471,11 @@ sub remove_attachment {
   else {    # file exists
 
     $num_deleted_files = $self->remove_attachment_do( $id, $filetype );
-    if ( defined $mentry and $num_deleted_files > 0 ) {
-      $mentry->remove_bibtex_fields( ['pdf'] )    if $filetype eq 'paper';
-      $mentry->remove_bibtex_fields( ['slides'] ) if $filetype eq 'slides';
-      $mentry->regenerate_html( 0, $self->app->bst );
-      $self->app->repo->entries_save($mentry);
+    if ( defined $entry and $num_deleted_files > 0 ) {
+      $entry->remove_bibtex_fields( ['pdf'] )    if $filetype eq 'paper';
+      $entry->remove_bibtex_fields( ['slides'] ) if $filetype eq 'slides';
+      $entry->regenerate_html( 0, $self->app->bst );
+      $self->app->repo->entries_save($entry);
     }
 
     $msg      = "There were $num_deleted_files attachments removed for id $id.";
@@ -530,10 +530,10 @@ sub download {
   # $self->app->logger->info("Requesting download: filetype $filetype, id $id. ");
 
   my $file_path = $self->get_paper_pdf_path( $id, "$filetype" );
-  say "Found paper type $filetype : $file_path";
+  $self->app->logger->debug("Found paper type '$filetype': '$file_path'", __PACKAGE__."->download");
 
   if ( !defined $file_path or $file_path eq 0 ) {
-    $self->app->logger->info("Unsuccessful download filetype $filetype, id $id.");
+    $self->app->logger->info("Unsuccessful download filetype '$filetype', id '$id'.");
     $self->render(status => 404, text => "File not found. Unsuccessful download filetype $filetype, id $id.");
     return;
   }
@@ -587,7 +587,7 @@ sub add_pdf_post {
 
   # Check file size
   if ( $self->req->is_limit_exceeded ) {
-    $self->app->logger->info("Saving attachment for paper id $id: limit exceeded!");
+    $self->app->logger->info("Saving attachment for paper id '$id': limit exceeded!");
     $self->flash( message => "The File is too big and cannot be saved!", msg_type => "danger" );
     $self->redirect_to( $self->get_referrer );
     return;
@@ -596,17 +596,19 @@ sub add_pdf_post {
   # Process uploaded file
   my $uploaded_file = $self->param('uploaded_file');
 
-  unless ($uploaded_file) {
+  if( !$uploaded_file ) {
     $self->flash( message => "File upload unsuccessful!", msg_type => "danger" );
-    $self->app->logger->info("Saving attachment for paper id $id FAILED. Unknown reason");
+    $self->app->logger->info("Saving attachment for paper id '$id' FAILED. Unknown reason");
     $self->redirect_to( $self->get_referrer );
+    return;
   }
 
   my $size = $uploaded_file->size;
   if ( $size == 0 ) {
     $self->flash( message => "No file was selected or file has 0 bytes! Not saving!", msg_type => "danger" );
-    $self->app->logger->info("Saving attachment for paper id $id FAILED. File size is 0.");
+    $self->app->logger->info("Saving attachment for paper id '$id' FAILED. File size is 0.");
     $self->redirect_to( $self->get_referrer );
+    return;
   }
   else {
     my $sizeKB = int( $size / 1024 );
@@ -646,7 +648,7 @@ sub add_pdf_post {
       path( $uploads_directory . $directory )->mkpath;
     }
     catch {
-      warn "Exception: cannot create directory $directory. Msg: $_";
+      $self->app->logger->warn("Cannot create directory '$directory'. Msg: '$_'.", __PACKAGE__."->add_pdf_post");
     };
 
     $file_path = $directory . $fname;
@@ -835,7 +837,7 @@ sub manage_tags {
 
 
 
-  my @tags = map { $_->tag } $entry->labelings_all;
+  my @tags = $entry->get_tags;
   my @tag_types = $self->app->repo->tagTypes_all;
 
 
@@ -938,8 +940,8 @@ sub add_exception {
   
 
   my $msg;
-  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $entry_id } );
-  my $team  = $self->app->repo->teams_find( sub   { $_->{id} == $team_id } );
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $entry_id } );
+  my $team  = $self->app->repo->teams_find(   sub { $_->id == $team_id } );
 
   if ( defined $entry and defined $team ) {
 
@@ -952,7 +954,7 @@ sub add_exception {
     $msg = "Exception added! Entry ID ".$entry->id." will be now listed under team '".$team->name."'.";
   }
   else{
-    $msg = "Cannot find entry or team to create excperions. Searched team ID: ".$team_id." entry ID: ".$entry_id.".";
+    $msg = "Cannot find entry or team to create exception. Searched team ID: ".$team_id." entry ID: ".$entry_id.".";
   }
 
   $self->flash( msg => $msg );
@@ -1245,7 +1247,6 @@ sub publications_edit_post {
 ####################################################################################
 sub clean_ugly_bibtex {
   my $self = shift;
-  my $dbh  = $self->app->db;
 
   $self->app->logger->info("Cleaning ugly bibtex fields for all entries");
 
@@ -1281,7 +1282,7 @@ sub get_paper_pdf_path {
     path($directory)->mkpath;
   }
   catch {
-    warn "Exception: cannot create directory $directory. Msg: $_";
+    $self->app->logger->warn("Cannot create directory '$directory'. Msg: '$_'.", __PACKAGE__."->get_paper_pdf_path");
   };
 
   opendir( DIR, $directory ) or die "Cannot open directory $directory :" . $!;
@@ -1290,7 +1291,7 @@ sub get_paper_pdf_path {
     # Use a regular expression to ignore files beginning with a period
     next if ( $file =~ m/^\./ );
     if ( $file =~ /^$filequery.*/ ) {    # filequery contains the dot!
-      say "get_paper_pdf_path MATCH $file $filequery";
+      $self->app->logger->debug("Found match file: '$file', query: '$filequery'.", __PACKAGE__."->get_paper_pdf_path");
       $filename = $file;
     }
   }

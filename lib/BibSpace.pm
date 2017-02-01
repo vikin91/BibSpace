@@ -175,6 +175,18 @@ sub startup {
   $self->app->logger->info( "App home is: " . $self->app->home );
   $self->app->logger->info( "Active bst file is: " . $self->app->bst );
 
+  ## SANDBOX
+
+  # my @users = $self->app->repo->users_all;
+  # $self->logger->warn("All users: ".@users);
+  # map {say $_->toString } @users;
+
+
+  # my @users_to_delete = $self->app->repo->users_filter(sub{$_->email =~ /\@example.com/});
+  # $self->logger->warn("To delete: ".@users_to_delete);
+  # map {say $_->toString } @users_to_delete;
+  # $self->app->repo->users_delete(@users_to_delete);
+
   # $self->logger->info("this is info");
   # $self->logger->warn("this is warning");
   # $self->logger->error("this is error");

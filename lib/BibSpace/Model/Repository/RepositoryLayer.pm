@@ -86,6 +86,9 @@ sub dispatcher {
     if( $type eq 'Type' ) { 
         return $factory->getTypeDao($self->uidProvider->get_provider($type)); 
     }
+    if( $type eq 'User' ) { 
+        return $factory->getUserDao($self->uidProvider->get_provider($type)); 
+    }
     $self->logger->error("Requested unknown entity type: '$type'", "" . __PACKAGE__ . "->dispatcher");
     die "Requested unknown type: '$type'";
 }
@@ -103,7 +106,7 @@ sub get_summary_string {
     my $self = shift;
 
     # TODO: this line is duplicated code
-    my @types = qw(TagType Team Author Authorship Membership Entry Labeling Tag Exception Type);
+    my @types = qw(TagType Team Author Authorship Membership Entry Labeling Tag Exception Type User);
     my $str;
     $str .= "Layer '".$self->name."'->";
     foreach my $type (@types){
