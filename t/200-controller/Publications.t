@@ -14,22 +14,8 @@ $admin_user->post_ok(
 
 my $self = $admin_user->app;
 my $app_config = $admin_user->app->config;
-
-# uncommentig this causes "premature connection close"
-# SKIP: {
-#   note "============ APPLY DATABASE FIXTURE ============";
-#   skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir.$fixture_name;
-
-#   my $status = 0;
-#   $status = BibSpace::Functions::MySqlBackupFunctions::do_restore_backup_from_file($self, $dbh, "./fixture/".$fixture_name, $app_config);
-#   is($status, 1, "Fixture read correctly");
-#   $self->repo->hardReset;
-#   $self->setup_repositories;
-# }
-
-
 $admin_user->ua->max_redirects(3);
-# $admin_user->ua->inactivity_timeout(3600);
+
 
 
 ## THIS SHOULD BE REPEATED FOR EACH TEST!
@@ -41,21 +27,12 @@ my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
 restore_storable_backup($fixture, $self->app);
 
 
-# my @all_tag_type_objs = $admin_user->app->repo->tagTypes_all;
-# my $some_tag_type_obj = $all_tag_type_objs[0];
-
-# my @tags = $admin_user->app->repo->tags_all;
-# my $some_tag = $tags[0];
-
-# my @teams = $admin_user->app->repo->teams_all;
-# my $some_team = $teams[0];
-
 ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'ERR_BIBTEX'));
 ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'PREVIEW'));
 ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'ADD_OK'));
 ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'EDIT_OK'));
 ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'KEY_OK'));
-# ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'KEY_TAKEN')); # needs real controller obj
+# ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'KEY_TAKEN')); # needs a real controller obj
 ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'WEIRD_SHIT'));
 
 

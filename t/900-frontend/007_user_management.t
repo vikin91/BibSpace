@@ -24,6 +24,14 @@ $t_logged_in->post_ok(
 my $dbh = $t_logged_in->app->db;
 $t_anyone->ua->max_redirects(10);
 $t_logged_in->ua->max_redirects(10);
+
+## THIS SHOULD BE REPEATED FOR EACH TEST!
+my $fixture_name = "bibspace_fixture.dat";
+my $fixture_dir = "./fixture/";
+use BibSpace::Model::Backup;
+use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
+my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
+restore_storable_backup($fixture, $t_logged_in->app);
 # # ############################ READY FOR TESTING
 
 

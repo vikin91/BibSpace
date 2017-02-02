@@ -13,11 +13,17 @@ my $t_anyone    = Test::Mojo->new('BibSpace');
 my $self       = $t_anyone->app;
 
 
-
-# my $c = BibSpace::Controller::Cron->new(app => Mojolicious->new);
 $t_anyone->ua->inactivity_timeout(3600);
 
-# Mojo::IOLoop->stream($self->tx->connection)->timeout(3600);
+## THIS SHOULD BE REPEATED FOR EACH TEST!
+my $fixture_name = "bibspace_fixture.dat";
+my $fixture_dir = "./fixture/";
+use BibSpace::Model::Backup;
+use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
+my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
+restore_storable_backup($fixture, $t_anyone->app);
+
+
 $t_anyone->get_ok("/cron/night")
     ->status_isnt( 404, "Checking: 404 /cron/night" )
     ->status_isnt( 500, "Checking: 500 /cron/night" );

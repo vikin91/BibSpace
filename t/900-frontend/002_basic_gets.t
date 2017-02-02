@@ -17,24 +17,16 @@ $t_logged_in->post_ok(
 my $self = $t_logged_in->app;
 my $dbh = $t_logged_in->app->db;
 my $app_config = $t_logged_in->app->config;
-my $fixture_name = "small_fixture.sql";
-my $fixture_dir = "./fixture/";
-
-# uncommentig this causes "premature connection close"
-# SKIP: {
-# 	note "============ APPLY DATABASE FIXTURE ============";
-# 	skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir.$fixture_name;
-
-# 	my $status = 0;
-# 	$status = BibSpace::Functions::MySqlBackupFunctions::do_restore_backup_from_file($self, $dbh, "./fixture/".$fixture_name, $app_config);
-# 	is($status, 1, "Fixture read correctly");
-# 	$self->repo->hardReset;
-# 	$self->setup_repositories;
-# }
-
-
 $t_logged_in->ua->max_redirects(3);
-# $t_logged_in->ua->inactivity_timeout(3600);
+
+
+## THIS SHOULD BE REPEATED FOR EACH TEST!
+my $fixture_name = "bibspace_fixture.dat";
+my $fixture_dir = "./fixture/";
+use BibSpace::Model::Backup;
+use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
+my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
+restore_storable_backup($fixture, $self->app);
 
 
 
