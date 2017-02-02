@@ -56,7 +56,7 @@ sub remove_membership {
     my $index = $self->memberships_find_index( sub { $_->equals($membership) } );
     return if $index == -1;
     return 1 if $self->memberships_delete($index);
-    return ;
+    return;
 }
 ####################################################################################
 1;

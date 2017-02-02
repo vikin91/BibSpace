@@ -4,29 +4,98 @@ use Test::Mojo;
 use Test::Exception;
 
 
-# use BibSpace::Functions::Core;
-# use BibSpace::Functions::MySqlBackupFunctions;
-# use BibSpace::Functions::FDB;
+use Data::Dumper;
+use Array::Utils qw(:all);
 
-# use Data::Dumper;
+use BibSpace::Model::Author;
 
-# my $t_logged_in = Test::Mojo->new('BibSpace');
-# $t_logged_in->post_ok(
-#     '/do_login' => { Accept => '*/*' },
-#     form        => { user   => 'pub_admin', pass => 'asdf' }
-# );
-# my $self       = $t_logged_in->app;
-# my $dbh        = $t_logged_in->app->db;
-# my $app_config = $t_logged_in->app->config;
+my $t_anyone    = Test::Mojo->new('BibSpace');
+my $self = $t_anyone->app;
+my $repo = $self->app->repo;
 
 
-# ####################################################################
-# subtest 'Author teams experiments' => sub {
-#     plan 'skip_all' => "Test contains hardocded data (fixture-specific). Skipping for safety!";
+my @all_authors = $repo->authors_all;
+my $idp = $repo->authors_idProvider;
 
+my $limit_test_objects = 20;
 
-# };
+my $other_author = Author->new(idProvider => $idp, uid => "Henry");
+
+subtest 'Author constructor' => sub {
+
+  is($other_author->master, $other_author->uid, "master name same as uid");
+  is($other_author->master_id, $other_author->id, "master_id name same as id");
+  is($other_author->masterObj, undef, "masterObj empty");
+};
+ 
+subtest 'Alone author functions' => sub {
+
+  is($other_author->can_be_deleted, 1, "can_be_deleted");
+  dies_ok {$other_author->take_entries_from_author($other_author) } 'take_entries_from_author dies ok';
+  dies_ok {$other_author->abandon_all_entries } 'abandon_all_entries dies ok';
+};
+
+note "============ Testing ".scalar(@all_authors)." authors ============";
+
+foreach my $author (@all_authors){
+  last if $limit_test_objects < 0;
+  note ">> Testing Author ID ".$author->id.".";
+
+  ok($author, "author defined");
+  ok($author->toString, "author->toString defined");
+  ok($author->get_master, "author->get_master defined");
+  
+
+  $author->set_master($other_author);
+  isnt($author->is_master, 1, "isnt master");
+  is($author->is_minion, 1, "is minion");
+  is($author->is_minion_of($other_author), 1, "is_minion_of");
+  isnt($author->is_minion_of($author), 1, "isnt_minion_of");
+  is($author->get_master, $other_author, "get_master");
+
+  is($author->update_master_name("John"), 1, "update master name");
+  isnt($author->master, "John");
+  is($author->uid, "John", "uid is John");
+  ok($author->remove_master, "remove master");
+  is($author->update_master_name("John"), 1);
+  is($author->master, "John", "master is John");
+  is($author->uid, "John", "uid is John");
+
+  ok($other_author->add_minion($author), "add minion");
+  isnt($author->is_master, 1, "isnt master");
+  is($author->is_minion, 1, "is minion");
+  is($author->is_minion_of($other_author), 1, "is_minion_of");
+  isnt($author->is_minion_of($author), 1, "isnt_minion_of");
+  is($author->get_master, $other_author, "get_master");
+
+  is($other_author->can_merge_authors($author), 1, "can_merge_authors");
+  is($author->can_merge_authors($other_author), 1, "can_merge_authors");
+  isnt($author->can_merge_authors($author), 1, "can_merge_authors");
+  isnt($other_author->can_merge_authors($other_author), 1, "can_merge_authors");
+
+  if($author->is_visible){
+    $author->toggle_visibility;
+    ok(!$author->is_visible, "is not visible");
+    $author->toggle_visibility;
+    ok($author->is_visible, "is visible");
+  }
+  else{
+    $author->toggle_visibility;
+    ok($author->is_visible, "is visible");
+    $author->toggle_visibility;
+    ok(!$author->is_visible, "is not visible");
+  }
+
+  my @teams = $author->get_teams;
+  foreach my $team (@teams){
+    ok($author->has_team($team), "has_team");
+  }
+  
+  
+}
+
 
 
 ok(1);
 done_testing();
+

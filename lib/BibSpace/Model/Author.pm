@@ -182,12 +182,12 @@ sub is_visible {
 sub can_be_deleted {
   my $self = shift;
 
-  return 0 if $self->{display} == 1;
+  return if $self->{display} == 1;
 
   my @teams = $self->get_teams;
 
   return 1 if scalar @teams == 0 and $self->{display} == 0;
-  return 0;
+  return;
 }
 ####################################################################################
 ####################################################################################
@@ -286,36 +286,6 @@ sub update_membership {
   }
 }
 
-################################################################################
-sub is_member_of {
-  my $self = shift;
-  my $team = shift;
-
-  my $found = $self->teams_find( sub { $_->equals($team) } );
-  return 1 if $found;
-  return 0;
-}
-################################################################################
-sub remove_from_team {
-  my $self = shift;
-  my $team = shift;
-
-  return 0 if !defined $team and $team->{id} <= 0;
-
-  my $mem_index = $self->teamMemberships_find_index(
-    sub {
-      $_->team_id == $team->id and $_->{author_id} == $self->id;
-    }
-  );
-  return 0 if $mem_index == -1;
-  $self->teamMemberships_delete($mem_index);
-
-  my $index = $self->teams_find_index( sub { $_->equals($team) } );
-  return 0 if $index == -1;
-  return 1 if $self->teams_delete($index);
-  return 0;
-
-}
 
 ####################################################################################
 #################################################################################### TAGS
