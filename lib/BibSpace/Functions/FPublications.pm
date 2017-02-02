@@ -59,7 +59,7 @@ sub FprintBibtexWarnings {
 }
 ####################################################################################
 sub Fhandle_add_edit_publication_Repo {
-my ( $entriesRepo, $new_bib, $id, $action, $bst_file ) = @_;
+my ( $repo, $new_bib, $id, $action, $bst_file ) = @_;
 
     # var that will be returned
     my $mentry;         # the entry object
@@ -89,10 +89,10 @@ my ( $entriesRepo, $new_bib, $id, $action, $bst_file ) = @_;
     say "Fhandle_add_edit_publication_Repo: id $id";
     
     if( $id > 0){
-        $e = $entriesRepo->find( sub {$_->id == $id} ); 
+        $e = $repo->entries_find( sub {$_->id == $id} ); 
     }
     if(!$e){
-        $e = Entry->new( idProvider => $entriesRepo->getIdProvider, id=>$id, bib=>$new_bib );
+        $e = Entry->new( idProvider => $repo->entries_idProvider, id=>$id, bib=>$new_bib );
     }
     $e->bib($new_bib);
 
@@ -105,7 +105,7 @@ my ( $entriesRepo, $new_bib, $id, $action, $bst_file ) = @_;
         return ( $e, $status_code_str, -1, -1 );
     }
 
-    my $tmp_e = $entriesRepo->find( sub { ($_->bibtex_key cmp $e->bibtex_key)==0 } ); 
+    my $tmp_e = $repo->entries_find( sub { ($_->bibtex_key cmp $e->bibtex_key)==0 } ); 
     # grep { $_->{bibtex_key} eq $e->{bibtex_key} } MEntry->static_all( $dbh );
     $existing_id = $tmp_e->{id} if defined $tmp_e;
 
@@ -142,7 +142,7 @@ my ( $entriesRepo, $new_bib, $id, $action, $bst_file ) = @_;
         $e->generate_html($bst_file);
         $e->populate_from_bib();
         $e->fix_month();
-        $entriesRepo->save($e);
+        $repo->entries_save($e);
 
         $added_under_id = $e->id;
     }

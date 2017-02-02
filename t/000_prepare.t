@@ -7,15 +7,12 @@ use Mojo::IOLoop;
 use Try::Tiny;
 
 use BibSpace;
-use BibSpace::Functions::Core;
-use BibSpace::Controller::Cron;
 
-use BibSpace::Controller::Backup;
 use BibSpace::Model::Backup;
 
-use BibSpace::Functions::BackupFunctions;
+use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
 
-use BibSpace::Functions::FDB;
+use BibSpace::Functions::FDB; # TODO: purge DB etc.
 
 
 
@@ -42,7 +39,9 @@ $dbh = $self->app->db;
 my $fixture_name = "bibspace_fixture.dat";
 my $fixture_dir = "./fixture/";
 
-
+# TODO: Purge MySQL DB
+# DONE: Apply storable fixture
+# TODO: push fixture to DB
 
 SKIP: {
 	note "============ APPLY DATABASE FIXTURE ============";
@@ -52,6 +51,8 @@ SKIP: {
   restore_storable_backup($fixture, $self->app);
 
 }
+
+ok(1);
 
 done_testing();
 

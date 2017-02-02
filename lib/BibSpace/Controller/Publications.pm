@@ -1218,7 +1218,7 @@ sub publications_edit_post {
   #     = Fhandle_add_edit_publication( $dbh, $new_bib, $id, $action,
   #     $self->app->bst );
   my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-    = Fhandle_add_edit_publication_Repo( $self->app->repo->getEntriesRepository, $new_bib, $id, $action,
+    = Fhandle_add_edit_publication_Repo( $self->app->repo, $new_bib, $id, $action,
     $self->app->bst );
   my $adding_msg = get_adding_editing_message_for_error_code( $self, $status_code_str, $existing_id );
 
