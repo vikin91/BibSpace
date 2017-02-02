@@ -82,18 +82,9 @@ sub cleanup {
     my $self         = shift;
     my $age_treshold = $self->config->{backup_age_in_days_to_delete_automatically};
 
-    my $num_deleted = 0;
+    my $num_deleted = delete_old_backups($self->app, $age_treshold);
 
-    my @backups_arr = sort {$b->date cmp $a->date} read_backups($self->app->backup_dir);
-    foreach my $backup (@backups_arr){
-        my $age = $backup->get_age->days;
-        if( $age >= $age_treshold ){
-            ++$num_deleted;
-            unlink $backup->get_path;
-            $self->app->logger->info("Deleting backup ".$backup->uuid);
-        }
-    }
-    
+    $self->app->logger->info("Deleting old backups.  $num_deleted backups have been cleaned.");
     $self->flash( msg_type=>'success', msg => "$num_deleted backups have been cleaned." );
 
     # redirecting to referrer here breaks the test if the test supports redirects! why?
@@ -157,11 +148,10 @@ sub restore_backup {
     if($backup and $backup->is_healthy){
 
         restore_storable_backup($backup, $self->app);
-        ### WARNING : Smart array and MySQL DB are not in sync now!!!
 
         $self->app->logger->info("Restoring backup ".$backup->uuid);
 
-        $self->flash( msg_type=>'warning', msg => "Backup restored successfully. WARNING: SYSTEM NOT IN SYNC!" );
+        $self->flash( msg_type=>'success', msg => "Backup restored successfully. Database recreated, persistence layers in sync." );
     }
     else {
         $self->flash( msg_type=>'danger', msg => "Cannot restore - backup not healthy!" );

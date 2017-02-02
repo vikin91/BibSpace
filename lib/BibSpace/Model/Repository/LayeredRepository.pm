@@ -28,7 +28,7 @@ sub get_read_layer {
 }
 
 =item get_all_layers
-    Returns layers(!) designated for writing
+    Returns all layers
 =cut
 sub get_all_layers {
     my $self = shift;
@@ -112,9 +112,9 @@ sub copy_data {
     foreach my $type (@types){
         $self->logger->info("Copying all objects of type '".$type."' from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
         my @resultRead = $srcLayer->all($type);
-        $self->logger->info(scalar(@resultRead)." objects of type '".$type."' read from layer '$backendFrom'.","".__PACKAGE__."->copy_data");
+        $self->logger->info("Read ".scalar(@resultRead)." objects of type '".$type."' from layer '$backendFrom'.","".__PACKAGE__."->copy_data");
         my $resultSave = $destLayer->save($type, @resultRead);
-        $self->logger->info("$resultSave objects of type '".$type."' saved to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+        $self->logger->info("Saved $resultSave objects of type '".$type."' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
         
     }
 }

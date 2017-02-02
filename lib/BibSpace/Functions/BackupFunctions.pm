@@ -3,6 +3,7 @@ package BibSpace::Functions::BackupFunctions;
 use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Model::Backup;
 use BibSpace::Functions::Core;
+use BibSpace::Functions::FDB;
 
 use Storable;
 
@@ -29,6 +30,7 @@ our @EXPORT = qw(
     do_storable_backup
     do_mysql_backup
     restore_storable_backup
+    delete_old_backups
 );
 ## Trivial DAO FIND
 ####################################################################################
@@ -101,11 +103,12 @@ sub read_backups {
 ####################################################################################
 sub do_storable_backup {
     my $app = shift;
+    my $name = shift // 'normal';
 
     my $backup_dir_absolute = $app->config->{backups_dir};
     $backup_dir_absolute =~ s!/*$!/!;  
 
-    my $backup = Backup->create("normal", "storable");
+    my $backup = Backup->create($name, "storable");
     $backup->dir($backup_dir_absolute);
 
 
@@ -120,11 +123,12 @@ sub do_storable_backup {
 ####################################################################################
 sub do_mysql_backup {
     my $app = shift;
+    my $name = shift // 'normal';
 
     my $backup_dir_absolute = $app->config->{backups_dir};
     $backup_dir_absolute =~ s!/*$!/!;  
 
-    my $backup = Backup->create("normal", "mysql");
+    my $backup = Backup->create($name, "mysql");
     $backup->dir($backup_dir_absolute);
     dump_mysql_to_file( $backup->get_path, $app->config );
 
@@ -136,8 +140,37 @@ sub restore_storable_backup {
     my $app    = shift;
 
     my $layer = retrieve($backup->get_path);
+
+    my @layers = $app->repo->lr->get_all_layers;
+    foreach (@layers){ $_->hardReset };
     $app->repo->lr->replace_layer('smart', $layer);
 
+    purge_and_create_db($app->db, 
+        $app->config->{db_host},
+        $app->config->{db_user},
+        $app->config->{db_database},
+        $app->config->{db_pass}
+    );
+
+    $app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
+
+}
+####################################################################################
+sub delete_old_backups {
+    my $app    = shift;
+    my $age_treshold = shift // $app->config->{backup_age_in_days_to_delete_automatically};
+
+    my $num_deleted = 0;
+
+    my @backups_arr = sort {$b->date cmp $a->date} read_backups($app->backup_dir);
+    foreach my $backup (@backups_arr){
+        my $age = $backup->get_age->days;
+        if( $age >= $age_treshold ){
+            ++$num_deleted;
+            unlink $backup->get_path;
+        }
+    }
+    return $num_deleted;
 }
 ####################################################################################
 1;

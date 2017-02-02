@@ -94,7 +94,7 @@ has appStateDumpFileName => sub {
 };
 
 has useDumpFixture => sub {
-  return $ENV{BIBSPACE_USE_DUMP} if $ENV{BIBSPACE_USE_DUMP};
+  return 1 if defined $ENV{BIBSPACE_USE_DUMP} and $ENV{BIBSPACE_USE_DUMP} == 1;
   return;
 };
 
@@ -245,7 +245,10 @@ sub setup_repositories {
   # no data, no fun = no need copy, link, and store
   if( $self->repo->entries_empty ){
     $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
+
+    # data in the smart layer (or any read layer) must be linked!
     $self->link_data;
+    # store current state to file
     store $self->repo->lr->get_read_layer, $self->appStateDumpFileName;  
   }
 
@@ -386,7 +389,6 @@ sub setup_plugins {
 
   $self->app->db;
   $self->plugin('BibSpace::Controller::Helpers');
-  $self->plugin('BibSpace::Controller::CronHelpers');
   $self->secrets( [ $self->config->{key_cookie} ] );
 
   $self->helper( proxy_prefix => sub { $self->config->{proxy_prefix} } );
@@ -436,6 +438,8 @@ sub setup_routes {
   my $anyone = $self->routes;
   $anyone->get('/')->to('display#index')->name('start');
 
+
+
   $anyone->get('/test')->to('display#test');
 
   $anyone->get('/forgot')->to('login#forgot');
@@ -460,6 +464,14 @@ sub setup_routes {
   my $logged_user  = $anyone->under->to('login#check_is_logged_in');
   my $manager_user = $logged_user->under->to('login#under_check_is_manager');
   my $admin_user   = $logged_user->under->to('login#under_check_is_admin');
+
+  ################ EXPERIMENTAL / TEST ################
+
+  $admin_user->get('/fixture/load')->to('display#load_fixture')->name('load_fixture');
+  $admin_user->get('/fixture/save')->to('display#save_fixture')->name('save_fixture');
+  $admin_user->get('/fixture/copy_mysql_to_smart')->to('display#copy_mysql_to_smart')->name('copy_mysql_to_smart');
+  $admin_user->get('/fixture/copy_smart_to_mysql')->to('display#copy_smart_to_mysql')->name('copy_smart_to_mysql');
+  
 
   ################ SETTINGS ################
   $logged_user->get('/profile')->to('login#profile');

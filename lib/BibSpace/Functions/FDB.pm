@@ -11,17 +11,18 @@ use Data::Dumper;
 use Exporter;
 use DBI;
 use DBIx::Connector;
-use DBIx::Connector;
 our @ISA = qw( Exporter );
 
 
 our @EXPORT = qw(
   db_connect
   create_main_db
+  purge_and_create_db
   prepare_token_table_mysql
   prepare_user_table_mysql
   prepare_cron_table
   populate_tables
+
 );
 
 ##########################################################################################
@@ -29,15 +30,22 @@ sub db_connect {
   my ( $db_host, $db_user, $db_database, $db_pass ) = @_;
   
   my $conn = undef;
-  # my %attr = (RaiseError=>1, AutoCommit=>0, mysql_auto_reconnect => 0); 
   my %attr = (RaiseError=>1, AutoCommit=>1); 
   try{
-    # $conn = DBIx::Connector->new("DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr);
     $conn = DBI->connect( "DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
   }
   catch{
+    warn "db_connect: could not connect to the database: $_";
+    warn "Trying to recreate database...";
+    try{
+      my $drh = DBI->install_driver("mysql");
+      $drh->func( 'createdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
+    }
+    catch{
+      die "FATAL: DB Recreation falied: $_";
+    };
     # we catch and throw...
-    warn "db_connect could not connect to the database: $_";
+    
   };
   my $dbh = $conn;
   
@@ -46,47 +54,32 @@ sub db_connect {
   return $dbh;
 }
 ##########################################################################################
-sub prepare_cron_table {
-  my $dbh = shift;
+sub purge_and_create_db {
+  my ( $dbh, $db_host, $db_user, $db_database, $db_pass ) = @_;
+  
+  my $drh = DBI->install_driver("mysql");
   try {
-    $dbh->do(
-      "CREATE TABLE IF NOT EXISTS Cron(
-            type INTEGER PRIMARY KEY,
-            last_run_time TIMESTAMP DEFAULT '1970-01-01 01:01:01'
-            )"
-    );
+
+    say "!!! DROPPING DATABASE '$db_database'.";
+    my $rc = $drh->func( 'dropdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
+    say "!!! CREATING DATABASE '$db_database'.";
+    $rc = $drh->func( 'createdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
   }
   catch {
-    $dbh->do(
-      "CREATE TABLE IF NOT EXISTS Cron(
-            type INTEGER PRIMARY KEY,
-            last_run_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )"
-    );
-  };
-
-  try {
-    $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (0)");
-    $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (1)");
-    $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (2)");
-    $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (3)");
+    warn $_;
   }
-  catch { };
-
+  finally{
+    $dbh = db_connect( $db_host, $db_user, $db_database, $db_pass );
+    create_main_db($dbh);
+  };
+  return $dbh;
 }
+
 ####################################################################################
 sub create_main_db {
   say "CALL: create_main_db";
   my $dbh = shift;
 
-  $dbh->do(
-    "CREATE TABLE IF NOT EXISTS `Backup`(
-            id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
-            creation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            filename VARCHAR(250),
-            CONSTRAINT backup_filename_unique UNIQUE(filename)
-      )"
-  );
 
   $dbh->do(
     "CREATE TABLE IF NOT EXISTS `Author`(
@@ -240,25 +233,55 @@ sub create_main_db {
          )"
   );
 
-  prepare_token_table_mysql($dbh);
+  # prepare_token_table_mysql($dbh);
+  prepare_cron_table($dbh);
   prepare_user_table_mysql($dbh);
   populate_tables($dbh);
   # $dbh->commit();
 }
 
 ####################################################################################################
-sub prepare_token_table_mysql {
-  my $user_dbh = shift;
+# sub prepare_token_table_mysql {
+#   my $user_dbh = shift;
 
-  $user_dbh->do(
-    "CREATE TABLE IF NOT EXISTS `Token`(
-        id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
-        token VARCHAR(250) NOT NULL,
-        email VARCHAR(250) NOT NULL,
-        requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT login_token_unique UNIQUE(token)
-      )"
-  );
+#   $user_dbh->do(
+#     "CREATE TABLE IF NOT EXISTS `Token`(
+#         id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
+#         token VARCHAR(250) NOT NULL,
+#         email VARCHAR(250) NOT NULL,
+#         requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#         CONSTRAINT login_token_unique UNIQUE(token)
+#       )"
+#   );
+# }
+##########################################################################################
+sub prepare_cron_table {
+  my $dbh = shift;
+  try {
+    $dbh->do(
+      "CREATE TABLE IF NOT EXISTS Cron(
+            type INTEGER PRIMARY KEY,
+            last_run_time TIMESTAMP DEFAULT '1970-01-01 01:01:01'
+            )"
+    );
+  }
+  catch {
+    $dbh->do(
+      "CREATE TABLE IF NOT EXISTS Cron(
+            type INTEGER PRIMARY KEY,
+            last_run_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )"
+    );
+  };
+
+  try {
+    $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (0)");
+    $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (1)");
+    $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (2)");
+    $dbh->do("INSERT IGNORE INTO Cron (type) VALUES (3)");
+  }
+  catch { };
+
 }
 ####################################################################################################
 sub prepare_user_table_mysql {
@@ -305,8 +328,6 @@ sub prepare_user_table_mysql {
     )"
     );
   };
-  prepare_token_table_mysql($dbh);
-  # $dbh->commit();
 }
 
 
@@ -339,8 +360,7 @@ sub populate_tables {
 
     $dbh->do("INSERT IGNORE INTO `TagType` VALUES ('Tag','keyword',1)");
     $dbh->do("INSERT IGNORE INTO `TagType` VALUES ('Category','12 categories defined as in research agenda',2)");
-    $dbh->do(
-      "INSERT IGNORE INTO `TagType` VALUES ('Other','Reserved for other groupings of papers (e.g., QPME_Bibliography)',3)"
+    $dbh->do("INSERT IGNORE INTO `TagType` VALUES ('Other','Reserved for other groupings of papers',3)"
     );
   }
   catch {

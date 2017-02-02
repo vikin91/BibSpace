@@ -106,11 +106,11 @@ sub save {
   foreach my $obj (@objects) {
     if ( $self->exists($obj) ) {
       $self->update($obj);
-      $self->logger->info( "Updated object ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->info( "Updated ".ref($obj)." ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
     }
     else {
       $self->_insert($obj);
-      $self->logger->info( "Inserted object ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->info( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
     }
   }
 }
@@ -134,7 +134,8 @@ sub _insert {
       $sth->finish();
     }
     catch {
-      $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
+      my $obj_str = $obj->toString;
+      $self->logger->error( "Insert exception: $_  Skipped object: $obj_str", "" . __PACKAGE__ . "->insert" );
     };
   }
   # $dbh->commit();

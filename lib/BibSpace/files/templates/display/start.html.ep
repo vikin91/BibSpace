@@ -11,8 +11,23 @@
     % else{
         <p>Please login or register.</p>
     % }
+
 </div>
 
+% if(is_admin){
+<div class="jumbotron">
+    <h3>DANGER ZONE - Experimental and debug features!</h3>    
+    <br/>
+    <a href="<%= url_for('load_fixture')%>">load_fixture</a>
+    <br/>
+    <a href="<%= url_for('save_fixture')%>">save_fixture</a>
+    <br/>
+    <a href="<%= url_for('copy_mysql_to_smart')%>">copy_mysql_to_smart</a>
+    <br/>
+    <a href="<%= url_for('copy_smart_to_mysql')%>">copy_smart_to_mysql</a>
+    
+</div>
+%}
 
 <div class="container">
 

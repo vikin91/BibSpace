@@ -15,6 +15,8 @@ use DBIx::Connector;
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
 
+use BibSpace::Functions::BackupFunctions;
+
 use Mojo::Base 'Mojolicious::Controller';
 
 # use Mojo::UserAgent;
@@ -84,7 +86,7 @@ sub cron_level {
         return "";
     }
 
-    my $call_freq = 999;
+    my $call_freq = 99999;
 
     if ( $level == 0 ) {
         $call_freq = $self->config->{cron_day_freq_lock};
@@ -157,9 +159,9 @@ sub cron_run {
 ##########################################################################################
 sub do_cron_day {
     my $self = shift;
-    my $dbh  = $self->app->db;
 
-    $self->helper_do_mysql_db_backup( $self, "cron" );
+    my $backup1 = do_storable_backup($self->app, "cron");
+
 }
 ##########################################################################################
 sub do_cron_night {
@@ -174,14 +176,16 @@ sub do_cron_night {
 ##########################################################################################
 sub do_cron_week {
     my $self = shift;
-    my $dbh  = $self->app->db;
+    
 
-    $self->helper_do_delete_broken_or_old_backup();
+    my $backup1 = do_mysql_backup($self->app, "cron");
+    my $num_deleted = delete_old_backups($self->app);
+    
 }
 ##########################################################################################
 sub do_cron_month {
     my $self = shift;
-    my $dbh  = $self->app->db;
+    
 }
 ##########################################################################################
 ##########################################################################################

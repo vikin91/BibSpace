@@ -121,16 +121,19 @@ after 'exists' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->exists
 sub save {
   my ( $self, @objects ) = @_;
   my $dbh = $self->handle;
+
+  my $added = 0;
   foreach my $obj (@objects) {
     if ( $self->exists($obj) ) {
       $self->update($obj);
-      $self->logger->info( "Updated object ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->info( "Updated ".ref($obj)." ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
     }
     else {
-      $self->_insert($obj);
-      $self->logger->info( "Inserted object ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+      $added = $added + $self->_insert($obj);
+      $self->logger->info( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
     }
   }
+  return $added;
 }
 before 'save' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->save" ); };
 after 'save' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->save" ); };
@@ -153,15 +156,18 @@ sub _insert {
     ) 
     VALUES (?,?,?,?,?);";
   my $sth = $dbh->prepare($qry);
+  my $added = 0;
   foreach my $obj (@objects) {
     try {
       my $result = $sth->execute( $obj->id, $obj->uid, $obj->master_id, $obj->master, $obj->display );
       $sth->finish();
+      ++$added;
     }
     catch {
       $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
     };
   }
+  return $added;
   # $dbh->commit();
 }
 before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };

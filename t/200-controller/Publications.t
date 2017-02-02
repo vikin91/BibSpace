@@ -56,6 +56,8 @@ subtest 'edit_publication_post' => sub {
   my $bib_content = '
   @article{key_2017_TEST,
     author = {Johny Example},
+    journal = {Journal of Bar},
+    publisher = {Foo Publishing house},
     title = {{Selected aspects of some methods}},
     year = {2017},
     month = {January},
@@ -112,6 +114,8 @@ subtest 'add_publication_post' => sub {
   my $bib_content = '
   @article{key_2017_TEST,
     author = {Johny Example},
+    journal = {Journal of Bar},
+    publisher = {Foo Publishing house},
     title = {{Selected aspects of some methods}},
     year = {2017},
     month = {January},

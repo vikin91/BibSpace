@@ -88,17 +88,19 @@ after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); }
 =cut 
 sub save {
   my ( $self, @objects ) = @_;
-  my $dbh = $self->handle;
-  foreach my $obj (@objects) {
-    if ( $self->exists($obj) ) {
-      $self->update($obj);
-      $self->logger->info( "Updated object ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
-    }
-    else {
-      $self->_insert($obj);
-      $self->logger->info( "Inserted object ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
-    }
-  }
+  $self->_insert(@objects);
+
+  # my $dbh = $self->handle;
+  # foreach my $obj (@objects) {
+  #   if ( $self->exists($obj) ) {
+  #     $self->update($obj);
+  #     $self->logger->info( "Updated ".ref($obj)." ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+  #   }
+  #   else {
+  #     $self->_insert($obj);
+  #     $self->logger->info( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+  #   }
+  # }
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
 after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
@@ -111,12 +113,13 @@ sub _insert {
   my ( $self, @objects ) = @_;
   my $dbh = $self->handle;
   my $qry = "
-    INSERT INTO Exceptions_Entry_to_Team(team_id, entry_id) VALUES (?,?);";
+    INSERT IGNORE INTO Exceptions_Entry_to_Team(team_id, entry_id) VALUES (?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
     try {
       my $result = $sth->execute( $obj->team_id, $obj->entry_id );
       $sth->finish();
+      $self->logger->info( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
     }
     catch {
       $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );

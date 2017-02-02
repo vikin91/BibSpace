@@ -24,6 +24,72 @@ sub index {
     $self->render( template => 'display/start' );
 }
 #################################################################################
+sub load_fixture {
+    my $self = shift;
+
+    use BibSpace::Model::Backup;
+    use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
+    use BibSpace::Functions::FDB;
+
+
+    my $fixture_name = "bibspace_fixture.dat";
+    my $fixture_dir = "./fixture/";
+
+    my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
+  
+    restore_storable_backup($fixture, $self->app);
+
+    $self->flash( msg_type=>'success', msg => "Fixture loaded into memory and mysql. Status: <pre>".$self->app->repo->lr->get_summary_string."</pre>" );
+    $self->redirect_to('start');
+}
+#################################################################################
+sub save_fixture {
+    my $self = shift;
+
+    use BibSpace::Model::Backup;
+    use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
+    use BibSpace::Functions::FDB;
+
+    my $fixture_name = "bibspace_fixture.dat";
+    my $fixture_dir = "./fixture/";
+    my $backup = Backup->create('dummy', "storable");
+    $backup->dir($fixture_dir);
+    $backup->filename($fixture_name);
+
+    my $layer = $self->app->repo->lr->get_read_layer;
+    my $path = "".$backup->get_path;
+
+    $Storable::forgive_me = "do store regexp please";
+    Storable::store $layer, $path;
+
+    $self->flash( msg_type=>'success', msg => "Fixture stored to '".$backup->get_path."'. Status: <pre>".$self->app->repo->lr->get_summary_string."</pre>" );
+    $self->redirect_to('start');
+}
+#################################################################################
+sub copy_mysql_to_smart {
+    my $self = shift;
+
+    my @layers = $self->app->repo->lr->get_all_layers;
+    foreach (@layers){ $_->hardReset };
+
+    $self->app->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
+
+    $self->flash( msg_type=>'success', msg => "Copied mysql => smart. Status: <pre>".$self->app->repo->lr->get_summary_string."</pre>" );
+    $self->redirect_to('start');
+}
+#################################################################################
+sub copy_smart_to_mysql {
+    my $self = shift;
+
+    my @layers = $self->app->repo->lr->get_all_layers;
+    foreach (@layers){ $_->hardReset };
+
+    $self->app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
+
+    $self->flash( msg_type=>'success', msg => "Copied smart => mysql. Status: <pre>".$self->app->repo->lr->get_summary_string."</pre>" );
+    $self->redirect_to('start');
+}
+#################################################################################
 sub test {
     my $self = shift;
 
@@ -58,41 +124,11 @@ sub test {
         $errored = 1;
     };
     ###################
-    $msg .= "<br/>" . "Writing backup dir: ";
-    my $bfname = "";
-    try {
-        $bfname = $self->do_mysql_db_backup_silent("can-be-deleted-test");
-        say "Creating: $bfname ";
-        $msg .= "OK ";
-    }
-    catch {
-        $msg .= "ERROR: $_";
-        $errored = 1;
-    };
-    #### only one location is the correct one!
-    my $test_backup_path = $bfname;
-    # if ( -e $bfname ) {
-    #     $test_backup_path = $bfname;
-    # }
-    # elsif ( -e $backup_dir_absolute . $test_backup_path ) {
-    #     $test_backup_path = $backup_dir_absolute . $test_backup_path;
-    # }
-    # elsif ( -e $backup_dir_absolute . "\\" . $test_backup_path ) {
-    #     $test_backup_path = $backup_dir_absolute . "\\" . $test_backup_path;
-    # }
-    # else {
-    #     $msg .= "WARNING: test backup file cannot be removed: Wrong path.";
-    # }
-
-    try {
-        say "Removing: $test_backup_path ";
-        unlink $test_backup_path;
-    }
-    catch {
-        $msg .= "WARNING: test backup file cannot be removed. Error: $_.";
-    };
+    $msg .= "<br/>" . "Current state of persistence backends:";
+    $msg .= "<br/>" . "<pre>";
+    $msg .= $self->app->repo->lr->get_summary_string;
+    $msg .= "</pre>";
     ###################
-
     $msg .= "<br/>" . "End.";
 
     if ($errored) {
