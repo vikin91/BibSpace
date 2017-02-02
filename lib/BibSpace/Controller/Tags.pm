@@ -122,7 +122,7 @@ sub edit {
 }
 
 ####################################################################################
-sub get_authors_for_tag_read {
+sub get_authors_for_tag_and_team {
   my $self    = shift;
   my $dbh     = $self->app->db;
   my $tag_id  = $self->param('tag_id');
@@ -272,7 +272,7 @@ sub get_tags_for_team_read {
 ####################################################################################
 sub get_authors_for_tag {
   my $self = shift;
-  my $tag_id   = $self->param('tid');
+  my $tag_id   = $self->param('id');
 
   my $tag = $self->app->repo->tags_find( sub { $_->id == $tag_id } );
   if ( !defined $tag ) {

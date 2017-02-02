@@ -542,12 +542,45 @@ sub setup_routes {
 
   ################ TAGS ################
   $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )->name('all_tags');
-  $admin_user->get('/tags/add/:type')->to( 'tags#add', type => 1 );
-  $admin_user->post('/tags/add/:type')->to( 'tags#add_post', type => 1 );
-  $logged_user->get('/tags/authors/:tid/:type')->to( 'tags#get_authors_for_tag', type => 1 )
+  $admin_user->get('/tags/add/:type')->to( 'tags#add', type => 1 )->name('add_tag_get');
+  $admin_user->post('/tags/add/:type')->to( 'tags#add_post', type => 1 )->name('add_tag_post');
+  $logged_user->get('/tags/authors/:id/:type')->to( 'tags#get_authors_for_tag', type => 1 )
     ->name('get_authors_for_tag');
   $admin_user->get('/tags/delete/:id')->to('tags#delete')->name('delete_tag');
-  $manager_user->get('/tags/edit/:id')->to('tags#edit');
+
+  ### EDIT TAG FORM GOES WITH GET - WTF!?!
+  # FIXME: FIX THIS
+  $manager_user->get('/tags/edit/:id')->to('tags#edit')->name('edit_tag');
+
+  $anyone->get('/read/authors-for-tag/:tag_id/:team_id')
+    ->to('tags#get_authors_for_tag_and_team')
+    ->name('get_authors_for_tag_and_team');
+  #ALIAS
+  $anyone->get('/r/a4t/:tag_id/:team_id')
+    ->to('tags#get_authors_for_tag_and_team')
+    ->name('get_authors_for_tag_and_team');
+
+  $anyone->get('/read/authors-for-tag/:tag_id/:team_id')
+    ->to('tags#get_authors_for_tag_and_team')
+    ->name('get_authors_for_tag_and_team');
+  #ALIAS
+  $anyone->get('/r/a4t/:tag_id/:team_id')
+    ->to('tags#get_authors_for_tag_and_team')
+    ->name('get_authors_for_tag_and_team');
+
+  $anyone->get('/read/tags-for-author/:author_id')
+    ->to('tags#get_tags_for_author_read')
+    ->name('tags_for_author');
+  #ALIAS
+  $anyone->get('/r/t4a/:author_id')
+    ->to('tags#get_tags_for_author_read');    
+
+  $anyone->get('/read/tags-for-team/:team_id')
+    ->to('tags#get_tags_for_team_read')
+    ->name('tags_for_team');
+  #ALIAS
+  $anyone->get('/r/t4t/:team_id')
+    ->to('tags#get_tags_for_team_read');
 
   ################ TEAMS ################
   $logged_user->get('/teams')->to('teams#show')->name('all_teams');
@@ -757,26 +790,7 @@ sub setup_routes {
 
   ########
 
-  $anyone->get('/read/authors-for-tag/:tag_id/:team_id')
-    ->to('tags#get_authors_for_tag_read')
-    ->name('get_authors_for_tag_read');
 
-  #ALIAS
-  $anyone->get('/r/a4t/:tag_id/:team_id')
-    ->to('tags#get_authors_for_tag_read')
-    ->name('get_authors_for_tag_read');
-
-  $anyone->get('/read/tags-for-author/:author_id')
-    ->to('tags#get_tags_for_author_read')
-    ->name('tags_for_author');
-  $anyone->get('/r/t4a/:author_id')
-    ->to('tags#get_tags_for_author_read');    #ALIAS
-
-  $anyone->get('/read/tags-for-team/:team_id')
-    ->to('tags#get_tags_for_team_read')
-    ->name('tags_for_team');
-  $anyone->get('/r/t4t/:team_id')
-    ->to('tags#get_tags_for_team_read');            #ALIAS
 
   ################ CRON ################
 

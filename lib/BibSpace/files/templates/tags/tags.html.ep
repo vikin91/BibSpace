@@ -44,7 +44,7 @@
               <tr>
                 <td>
                     <div class="btn-group">
-                        <a class="btn btn-success btn-sm" href="<%= url_for('/tags/edit/')%><%=$id%>" data-toggle="tooltip" data-placement="top" title="Edit tag name"><span class="glyphicon glyphicon-pencil"></span></a>
+                        <a class="btn btn-success btn-sm" href="<%= url_for('edit_tag', id=>$otag->id) %>" data-toggle="tooltip" data-placement="top" title="Edit tag name"><span class="glyphicon glyphicon-pencil"></span></a>
                         <span data-toggle="tooltip" data-placement="top" title="Delete tag...">
                             <a class="btn btn-danger btn-sm" href="#modal-dialog-delete-tag-<%=$id%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span></a>
                         </span>

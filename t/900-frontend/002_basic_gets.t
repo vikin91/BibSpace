@@ -104,8 +104,8 @@ my @pages = (
 	"/cron/night",
 	"/cron/week",
 	"/cron/month",
-	$self->url_for('get_authors_for_tag', tag_id=>$some_tag->id, type=>$some_tag_type_obj->id),
-	$self->url_for('get_authors_for_tag_read', tag_id=>$some_tag->id, team_id=>$some_team->id),
+	$self->url_for('get_authors_for_tag', id=>$some_tag->id, type=>$some_tag_type_obj->id),
+	$self->url_for('get_authors_for_tag_and_team', tag_id=>$some_tag->id, team_id=>$some_team->id),
 	"/settings/regenerate_all"
 );
 
