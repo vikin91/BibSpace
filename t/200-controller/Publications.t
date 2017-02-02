@@ -32,6 +32,14 @@ $admin_user->ua->max_redirects(3);
 # $admin_user->ua->inactivity_timeout(3600);
 
 
+## THIS SHOULD BE REPEATED FOR EACH TEST!
+my $fixture_name = "bibspace_fixture.dat";
+my $fixture_dir = "./fixture/";
+use BibSpace::Model::Backup;
+use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
+my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
+restore_storable_backup($fixture, $self->app);
+
 
 # my @all_tag_type_objs = $admin_user->app->repo->tagTypes_all;
 # my $some_tag_type_obj = $all_tag_type_objs[0];
@@ -65,6 +73,8 @@ subtest 'edit_publication_post' => sub {
 
   my @entries = $admin_user->app->repo->entries_all;
   my $entry   = shift @entries;
+
+  ok($entry, "Find an entry to conduct test");
 
   my $bib_content = '
   @article{key_2017_TEST,
