@@ -16,15 +16,15 @@
 
 % if(is_admin){
 <div class="jumbotron">
-    <h3>DANGER ZONE - Experimental and debug features!</h3>    
+    <p>DANGER ZONE - Experimental and debug features!</p>
     <br/>
-    <a href="<%= url_for('load_fixture')%>">load_fixture</a>
+    <a href="<%= url_for('load_fixture')%>">Load fixture to smart</a>
     <br/>
-    <a href="<%= url_for('save_fixture')%>">save_fixture</a>
+    <a href="<%= url_for('save_fixture')%>">Load smart to fixture</a>
     <br/>
-    <a href="<%= url_for('copy_mysql_to_smart')%>">copy_mysql_to_smart</a>
+    <a href="<%= url_for('copy_mysql_to_smart')%>">Copy all data from mysql to smart layer</a>
     <br/>
-    <a href="<%= url_for('copy_smart_to_mysql')%>">copy_smart_to_mysql</a>
+    <a href="<%= url_for('copy_smart_to_mysql')%>">Copy all data from smart to mysql layer</a>
     
 </div>
 %}
