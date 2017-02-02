@@ -574,8 +574,8 @@ sub add_pdf {
 ####################################################################################
 sub add_pdf_post {
   my $self     = shift;
-  my $id       = $self->param('id') || "unknown";
-  my $filetype = $self->param('filetype') || undef;
+  my $id       = $self->param('id') // "unknown";
+  my $filetype = $self->param('filetype');
   my $dbh      = $self->app->db;
 
   my $uploads_directory = $self->config->{upload_dir};

@@ -93,19 +93,19 @@ subtest 'post_upload_pdf' => sub {
 
   note "This is difficult to test due to file upload. We accept some 404 here.";
 
-  my $upload = {uploaded_file => {content => 'test', filename => 'test.pdf'} };
+  my $upload = {filetype=>'paper', uploaded_file => {content => 'test', filename => 'test.pdf'} };
   $admin_user->post_ok(
-      $self->url_for('post_upload_pdf', id=>$entry->id, filetype=>'paper') => form => $upload
+      $self->url_for('post_upload_pdf', id=>$entry->id) => form => $upload
   );
 
-  my $page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
+  my $page = $self->url_for('download_publication_pdf', id=>$entry->id);
   $admin_user->get_ok($page, "Get for page $page")
       # ->status_isnt(404, "Checking: 404 $page")
       ->status_isnt(500, "Checking: 500 $page");
 
-  my $upload2 = {uploaded_file => {content => 'test2', filename => 'test.docx'} };
+  my $upload2 = {filetype=>'paper', uploaded_file => {content => 'test2', filename => 'test.docx'} };
   $admin_user->post_ok(
-      $self->url_for('post_upload_pdf', id=>$entry->id, filetype=>'paper') => form => $upload2
+      $self->url_for('post_upload_pdf', id=>$entry->id) => form => $upload2
   );
 
   $page = $self->url_for('download_publication', filetype=>'paper', id=>$entry->id);
