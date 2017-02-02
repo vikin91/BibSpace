@@ -13,25 +13,123 @@ use warnings;
 use DBI;
 use DBIx::Connector;
 use File::Copy qw(copy);
+use List::MoreUtils qw(any uniq);
+use List::Util qw(first);
 
 use BibSpace::Functions::Core;
 use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::FDB;
 
+use BibSpace::Model::Backup;
+use Storable;
+
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::Log;
 
+
+## Trivial DAO FIND
+####################################################################################
+sub find_backup {
+    my $uuid = shift;
+    my $dir = shift;
+
+    my @file_list;
+    try{
+        opendir(D, "$dir") or die;
+        @file_list = readdir(D);
+        closedir(D);
+    }
+    catch{
+        warn;
+    };
+
+    my @backups;
+
+    foreach my $file (@file_list){
+        next unless $file =~ /^backup/;
+        next unless $file =~ /\.dat$/;
+        next unless $file =~ /$uuid/;
+
+        my $backup = Backup->parse($file);
+        $backup->dir($dir);
+        return $backup;
+    }
+    return;
+}
+## Trivial DAO ALL
+####################################################################################
+sub read_backups {
+    my $dir = shift;
+
+    my @file_list;
+    try{
+        opendir(D, "$dir") or die;
+        @file_list = readdir(D);
+        closedir(D);
+    }
+    catch{
+        warn;
+    };
+
+    my @backups;
+
+    foreach my $file (@file_list){
+        next unless $file =~ /^backup/;
+        next unless $file =~ /\.dat$/;
+
+        my $backup = Backup->parse($file);
+        $backup->dir($dir);
+        push @backups, $backup;
+    }
+    return @backups;
+}
+
+####################################################################################
+
+sub index {
+    my $self       = shift;
+    my $dbh = $self->app->db;
+
+    my $backup_dir_absolute = $self->config->{backups_dir};
+    # makes sure that there is exactly one / at the end
+    $backup_dir_absolute =~ s!/*$!/!;    
+    my $dir_size = get_dir_size($backup_dir_absolute);
+    $dir_size = $dir_size >> 20;
+
+    my @backups_arr = sort {$b->date cmp $a->date} read_backups($backup_dir_absolute);
+
+    $self->stash(
+        backups_arr => \@backups_arr,
+        dir_size    => $dir_size
+    );
+    $self->render( template => 'backup/backup' );
+}
+
+####################################################################################
 ####################################################################################
 sub save {
     my $self = shift;
 
-    use Storable;
-    store $self->app->repo->lr->get_read_layer, "./backup_normal_xxx.dat";
+    my $backup_dir_absolute = $self->config->{backups_dir};
+    $backup_dir_absolute =~ s!/*$!/!;  
 
-    my $return_value = do_backup_current_state( $self, "normal" );
+    my $backup = Backup->create("normal");
+    $backup->dir($backup_dir_absolute);
 
-    if ( defined $return_value ) {
+    $self->app->logger->info("Creating backup ".$backup->uuid);
+
+    my $layer = $self->app->repo->lr->get_read_layer;
+    my $path = "".$backup->get_path;
+
+    $Storable::forgive_me = "do store regexp";
+
+    Storable::store $layer, $path;
+
+    # create old-mysql backup for double safety
+    # do_backup_current_state( $self, "normal" );
+
+    if ( $backup->is_healthy ) {
         $self->flash( msg_type=>'success', msg => "Backup created successfully" );
     }
     else {
@@ -54,84 +152,21 @@ sub cleanup {
 
 ####################################################################################
 
-sub index {
-    my $self       = shift;
-    my $dbh = $self->app->db;
-
-    my $sth
-        = $dbh->prepare(
-        "SELECT id, creation_time, filename FROM Backup ORDER BY creation_time DESC"
-        );
-    $sth->execute();
-
-    my $dir_size            = 0;
-    my $backup_dir_absolute = $self->config->{backups_dir};
-    $backup_dir_absolute
-        =~ s!/*$!/!;    # makes sure that there is exactly one / at the end
-    $dir_size = get_dir_size($backup_dir_absolute);
-    $dir_size = $dir_size >> 20;
-
-    my @ctime_arr;
-    my @fname_arr;
-    my @id_arr;
-    my @exists_arr;
-
-    my $i = 1;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $id = $row->{id};
-
-        can_delete_backup($dbh, $id, $self->app->config);
-
-        my $backup_file_name = $row->{filename};
-        my $exists           = 0;
-        my $backup_file_path = $backup_dir_absolute . $backup_file_name;
-        $exists = 1 if -e $backup_file_path;
-
-        my $ctime = $row->{creation_time};
-        push @exists_arr, $exists;
-        push @ctime_arr,  $ctime;
-        push @fname_arr,  $backup_file_name;
-        push @id_arr,     $id;
-    }
-
-    $self->stash(
-        ids      => \@id_arr,
-        fnames   => \@fname_arr,
-        ctimes   => \@ctime_arr,
-        exists   => \@exists_arr,
-        dir_size => $dir_size
-    );
-    $self->render( template => 'backup/backup' );
-}
-
-####################################################################################
-
 sub backup_download {
     my $self       = shift;
-    my $backup_dbh = $self->app->db;
-    my $backup_id  = $self->param('id');
-
-    my $sth = $backup_dbh->prepare(
-        "SELECT id, creation_time, filename FROM Backup WHERE Backup.id=?");
-    $sth->execute($backup_id);
+    my $uuid  = $self->param('id');
 
     my $backup_dir_absolute = $self->config->{backups_dir};
-    $backup_dir_absolute
-        =~ s!/*$!/!;    # makes sure that there is exactly one / at the end
+    $backup_dir_absolute =~ s!/*$!/!;
 
-    my $row      = $sth->fetchrow_hashref();
-    my $filename = $row->{filename};
+    my $backup =  find_backup($uuid, $backup_dir_absolute);
 
-    my $file_path = $backup_dir_absolute . $filename;
-
-    my $exists = 0;
-    $exists = 1 if -e $file_path;
-
-    if ( $exists == 1 ) {
-        $self->app->logger->info("downloading backup $file_path");
-        $self->render_file( 'filepath' => $file_path );
+    if ( $backup and $backup->is_healthy ) {
+        $self->app->logger->info("Downloading backup ".$backup->uuid);
+        $self->render_file( 'filepath' => $backup->get_path );
     }
     else {
+        $self->flash( msg_type=>'danger', msg => "Cannot download backup $uuid - backup not healthy." );
         $self->redirect_to( $self->get_referrer );
     }
 }
@@ -139,16 +174,26 @@ sub backup_download {
 ####################################################################################
 sub delete_backup {
     my $self       = shift;
-    my $backup_dbh = $self->app->db;
-    my $id         = $self->param('id');
+    my $uuid  = $self->param('id');
 
+    my $backup_dir_absolute = $self->config->{backups_dir};
+    $backup_dir_absolute =~ s!/*$!/!;
 
-    if ( can_delete_backup($backup_dbh, $id, $self->app->config) == 1 ) {
-        do_delete_backup( $self, $id );
-        $self->flash( msg_type=>'success', msg => "Backup id $id deleted!" );
+    my $backup =  find_backup($uuid, $backup_dir_absolute);
+
+    if ( $backup and $backup->is_healthy ) {
+        try{
+            unlink $backup->get_path;
+            $self->app->logger->info("Deleting backup ".$backup->uuid);
+            $self->flash( msg_type=>'success', msg => "Backup id $uuid deleted!" );
+        }
+        catch{
+            $self->flash( msg_type=>'danger', msg => "Exception during deleting backup '$uuid': $_." );
+        };
+        
     }
     else{
-        $self->flash( msg_type=>'warning', msg => "Cannot delete, backup id $id not found!" );   
+        $self->flash( msg_type=>'danger', msg => "Cannot delete backup $uuid - need to do this manually." );
     }
 
     # redirecting to referrer here breaks the test if the test supports redirects! why?
@@ -161,29 +206,24 @@ sub delete_backup {
 sub restore_backup {
     my $self = shift;
     my $dbh  = $self->app->db;
-    my $id   = $self->param('id');
-
-    say "CALL: restore_backup";
-
-    my $backup_filename = get_backup_filename_by_id( $dbh, $id );
+    my $uuid = $self->param('id');
 
     my $backup_dir_absolute = $self->app->config->{backups_dir};
-    $backup_dir_absolute
-        =~ s!/*$!/!;    # makes sure that there is exactly one / at the end
-    my $backup_file_path = $backup_dir_absolute . $backup_filename;
+    $backup_dir_absolute =~ s!/*$!/!;
+    my $backup =  find_backup($uuid, $backup_dir_absolute);
 
-    do_backup_current_state( $self, "pre-restore" );
-    $self->app->logger->info("Restoring backup from file $backup_file_path");
-    my $restore_ok = do_restore_backup_from_file( $self->app, $dbh, $backup_file_path,
-        $self->app->config );
+    if($backup->is_healthy){
 
-    $self->app->db; #reconnect
+        ### WARNING : Smart array and MySQL DB are not in sync now!!!
+        my $layer = retrieve($backup->get_path);
+        $self->app->repo->lr->replace_layer('smart', $layer);
 
-    if ( $restore_ok ) {
-        $self->flash( msg_type=>'success', msg => "Backup restored successfully" );
+        $self->app->logger->info("Restoring backup ".$backup->uuid);
+
+        $self->flash( msg_type=>'warning', msg => "Backup restored successfully. WARNING: SYSTEM NOT IN SYNC!" );
     }
     else {
-        $self->flash( msg_type=>'danger', msg => "Backup restore failed!" );
+        $self->flash( msg_type=>'danger', msg => "Cannot restore - backup not healthy!" );
     }
     $self->redirect_to('backup_index');
 }

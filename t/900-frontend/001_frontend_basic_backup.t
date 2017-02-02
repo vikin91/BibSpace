@@ -11,19 +11,21 @@ $t_logged_in->post_ok(
 );
 my $self = $t_logged_in->app;
 
-# if uncommented, this breaks the test - FIXME
-$t_logged_in->ua->max_redirects(3);
 
-my $db_backup_file
-    = do_mysql_db_backup( $t_logged_in->app, "basic_backup_testing" );
-my $backup_id = get_backup_id( $self, $db_backup_file );
+$t_logged_in->ua->max_redirects(5);
 
-my $status = $t_logged_in->app->do_restore_backup_from_file(
-    "./fixture/thisdoesnotexist.txt");
-ok( !$status, "preparing DB for test" );
+# my $db_backup_file
+#     = do_mysql_db_backup( $t_logged_in->app, "basic_backup_testing" );
+# my $backup_id = get_backup_id( $self, $db_backup_file );
+
+# my $status = $t_logged_in->app->do_restore_backup_from_file(
+#     "./fixture/thisdoesnotexist.txt");
+# ok( !$status, "preparing DB for test" );
 
 my @pages;
 my $page = "";
+
+my $backup_id = 1;
 
 # $logged_user->get('/backups')->to('backup#index')->name('backup_index');
 # $anyone->put('/backups')->to('backup#save')->name('backup_do');
@@ -32,21 +34,30 @@ my $page = "";
 # $manager->put('/backups/:id')->to('backup#restore_backup')->name('backup_restore');
 # $manager->delete('/backups')->to('backup#cleanup')->name('backup_cleanup');
 
-$page = $t_logged_in->app->url_for('backup_index');
-$t_logged_in->get_ok($page)->status_isnt( 404, "Checking: 404 $page" )
-    ->status_isnt( 500, "Checking: 500 $page" );
+####################################################################
+subtest 'backup_index' => sub {
+    $page = $t_logged_in->app->url_for('backup_index');
+    $t_logged_in->get_ok($page)->status_isnt( 404, "Checking: 404 $page" )
+        ->status_isnt( 500, "Checking: 500 $page" );
+};
 
-$page = $t_logged_in->app->url_for('backup_do');
-$t_logged_in->put_ok($page)->status_isnt( 404, "Checking: 404 $page" )
-    ->status_isnt( 500, "Checking: 500 $page" );
+####################################################################
+subtest 'backup_do' => sub {
+    $page = $t_logged_in->app->url_for('backup_do');
+    $t_logged_in->put_ok($page)->status_isnt( 404, "Checking: 404 $page" )
+        ->status_isnt( 500, "Checking: 500 $page" );
+};
+
+####################################################################
+subtest 'backup_download' => sub {
 
 $page = $t_logged_in->app->url_for( 'backup_download', id => $backup_id );
 $t_logged_in->get_ok($page)->status_isnt( 404, "Checking: 404 $page" )
     ->status_isnt( 500, "Checking: 500 $page" );
-
+};
 
 ####################################################################
-subtest 'Backup : delete' => sub {
+subtest 'backup_delete' => sub {
 
 	my $page = $t_logged_in->app->url_for( 'backup_delete', id => $backup_id );
 
@@ -59,20 +70,18 @@ subtest 'Backup : delete' => sub {
 	    ->status_isnt( 500, "Checking: 500 $page" );
 	    # ->content_like(qr/Cannot delete,/i); # this does not work :(
 };
-####################################################################
 
-$db_backup_file = do_mysql_db_backup(
-    $t_logged_in->app, "basic_backup_testing" );
-$backup_id = get_backup_id( $self,
-    $db_backup_file );
+
 
 # you need to get a valid ID first!
 # $page = $t_logged_in->app->url_for('backup_restore', id=>2);
 # $t_logged_in->put_ok($page)->status_isnt( 404, "Checking: 404 $page" )
 #     ->status_isnt( 500, "Checking: 500 $page" );
 
-$page = $t_logged_in->app->url_for('backup_cleanup');
-$t_logged_in->delete_ok($page)->status_isnt( 404, "Checking: 404 $page" )
-    ->status_isnt( 500, "Checking: 500 $page" );
-
+####################################################################
+subtest 'backup_cleanup' => sub {
+    $page = $t_logged_in->app->url_for('backup_cleanup');
+    $t_logged_in->delete_ok($page)->status_isnt( 404, "Checking: 404 $page" )
+        ->status_isnt( 500, "Checking: 500 $page" );
+};
 done_testing();

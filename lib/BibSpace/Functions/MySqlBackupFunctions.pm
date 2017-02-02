@@ -32,7 +32,6 @@ our @EXPORT = qw(
     get_backup_filename_by_id
     do_restore_backup_from_file
     do_backup_current_state
-    get_dir_size
     get_backup_id
     get_backup_creation_time
     get_backup_age_in_days
@@ -312,14 +311,7 @@ sub do_backup_current_state {
 }
 ################################################################################
  
-sub get_dir_size {
-    my $dir  = shift;
-    my $size = 0;
 
-    find( sub { $size += -f $_ ? -s _ : 0 }, $dir );
-
-    return $size;
-}
 
 ####################################################################################
 sub get_backup_id {

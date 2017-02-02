@@ -34,6 +34,7 @@ requires 'TeX::Encode' , '>= 0.0';
 requires 'Text::ASCIIMathML' , '>= 0.0';
 requires 'Text::BibTeX' , '>= 0.0';
 requires 'Time::Piece' , '>= 0.0';
+requires 'UUID::Tiny' , '>= 0.0';
 requires 'WWW::Mechanize' , '>= 0.0';
 requires 'utf8' , '>= 0.0';
 

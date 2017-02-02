@@ -1,12 +1,7 @@
 % layout 'admin';
 
-% my @id_arr = @{$ids};
-% my @fname_arr = @{$fnames};
-% my @ctimes_arr = @{$ctimes};
-% my @exists_arr = @{$exists};
+% my @backups = @{$backups_arr};
 
-% my $size = scalar @ctimes_arr;
-% my $j = $size;
 
 
 <div class="container">
@@ -35,7 +30,7 @@
             <table class="table table-striped table-condensed">
             <thead>
               <tr>
-                <td><a class="btn btn-default">ID</a></td>
+                <td><a class="btn btn-default">UUID</a></td>
                 <td><a class="btn btn-default">Restore</a></td>
                 <td><a class="btn btn-default">Destroy</a></td>
                 <td><a class="btn btn-default">Status</a></td>
@@ -45,63 +40,55 @@
             </thead>
             <tbody>
             % my $i = 0;
-            % foreach my $id (@id_arr){
-                % my $fname = $fname_arr[$i];
-                % my $ctime = $ctimes_arr[$i];
-                % my $exists = $exists_arr[$i];
+            % foreach my $backup (@backups){
                 <tr>
                     <td>
-                        <button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-barcode"></span> <%= $id %></button>
+                        <button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-barcode"></span> <%= $backup->id %></button>
                     </td>
                     <td>
-                        % if( $exists == 1 ){
-                          <a class="btn btn-warning btn-sm" href="#modal-dialog-restore-<%=$id%>" data-toggle="modal"><span class="glyphicon glyphicon-import"></span> Restore</a>
+                        % if( $backup->is_healthy ){
+                          <a class="btn btn-warning btn-sm" href="#modal-dialog-restore-<%=$backup->id%>" data-toggle="modal"><span class="glyphicon glyphicon-import"></span> Restore</a>
                         %}
                         %else{
                           <a class="btn btn-default btn-sm"><span class="glyphicon glyphicon-import"></span> Can't restore</a>
                         %}
                     </td>
                     <td>
-                        % if(can_delete_backup_helper($id) == 1){
-                            <a class="btn btn-danger btn-sm" href="#modal-dialog-del-<%=$id%>" data-toggle="modal"><span class="glyphicon glyphicon-fire"></span> Destroy</a>
-                            <!-- MODAL DIALOG FOR DELETE -->
-                            <div id="modal-dialog-del-<%=$id%>" class="modal">
-                                <div class="modal-dialog">
-                                  <div class="modal-content">
-                                    <div class="modal-header">
-                                        <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
-                                        <h3>Are you sure?</h3>
-                                         <p>Are you sure you want to delete the DB backup <span class="btn btn-default btn-sm"><span class="glyphicon glyphicon-barcode"></span> <%= $id %></span> created at <span class="badge"><%=$ctime %></span> file <span class="badge"><%=$fname%></span> ?</p>
-                                    </div>
-                                    <div class="modal-body">
-                                      <div class="alert alert-danger">
-                                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                                        <i class="fa fa-info-circle"></i> 
-                                        The backup will be lost forever.
-                                      </div>
-                                      <div class="modal-footer">
-                                        %= form_for 'backup_delete'  => {id => $id} => (class=>'display-inline') => begin
-                                          %= hidden_field id => $id
-                                          <button type="submit" class="btn btn-danger"> 
-                                            Yes, delete it <span class="glyphicon glyphicon-fire"></span>
-                                          </button>
-                                        % end
-                                        <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, I want to keep it <span class="glyphicon glyphicon-heart"></span> </button></a>
-                                      </div>
-                                    </div>
+                        <a class="btn btn-danger btn-sm" href="#modal-dialog-del-<%=$backup->id%>" data-toggle="modal"><span class="glyphicon glyphicon-fire"></span> Destroy</a>
+                        <!-- MODAL DIALOG FOR DELETE -->
+                        <div id="modal-dialog-del-<%=$backup->id%>" class="modal">
+                            <div class="modal-dialog">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                    <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
+                                    <h3>Are you sure?</h3>
+                                     <p>Are you sure you want to delete the DB backup <span class="badge"><%=$backup->filename %></span>?</p>
+                                </div>
+                                <div class="modal-body">
+                                  <div class="alert alert-danger">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                    <i class="fa fa-info-circle"></i> 
+                                    The backup will be lost forever.
+                                  </div>
+                                  <div class="modal-footer">
+                                    %= form_for 'backup_delete'  => {id => $backup->id} => (class=>'display-inline') => begin
+                                      %= hidden_field id => $backup->id
+                                      <button type="submit" class="btn btn-danger"> 
+                                        Yes, delete it <span class="glyphicon glyphicon-fire"></span>
+                                      </button>
+                                    % end
+                                    <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, I want to keep it <span class="glyphicon glyphicon-heart"></span> </button></a>
                                   </div>
                                 </div>
+                              </div>
                             </div>
-                            <!-- END OF MODAL DIALOG FOR DELETE -->
-                        % }
-                        % else{
-                            <a class="btn btn-default btn-sm" href="#" data-toggle="tooltip" data-placement="left" title="Healthy backups younger than 7 days cannot be destroyed"><span class="glyphicon glyphicon-fire"></span> <del>Destroy</del></a>
-                        % }
+                        </div>
+                        <!-- END OF MODAL DIALOG FOR DELETE -->
                         
 
 
                         <!-- MODAL DIALOG FOR RESTORE -->
-                          <div id="modal-dialog-restore-<%=$id%>" class="modal">
+                          <div id="modal-dialog-restore-<%=$backup->id%>" class="modal">
                             <div class="modal-dialog">
                               <div class="modal-content">
                                 <div class="modal-header">
@@ -109,7 +96,7 @@
                                     <h3>Are you sure?</h3>
                                 </div>
                                 <div class="modal-body">
-                                		<p>Are you sure you want to restore the state of DB from backup <span class="btn btn-default btn-sm"><span class="glyphicon glyphicon-barcode"></span> <%= $id %></span> created at <span class="badge"><%=$ctime %></span> file <span class="badge"><%=$fname%></span> ?</p>
+                                		<p>Are you sure you want to restore the state of DB from backup <span class="badge"><%=$backup->filename %></span>?</p>
                                     <br>
                                     <div class="alert alert-info">
                                       <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
@@ -117,8 +104,8 @@
                                       Current state of the DB will saved as a new backup 
                                     </div>
                                     <div class="modal-footer">
-                                    %= form_for 'backup_restore' => {id => $id} => (class=>'display-inline') => begin
-                                      %= hidden_field id => $id
+                                    %= form_for 'backup_restore' => {id => $backup->id} => (class=>'display-inline') => begin
+                                      %= hidden_field id => $backup->id
                                       <button type="submit" class="btn btn-warning">
                                         Yes, restore <span class="glyphicon glyphicon-import"></span>
                                       </button>
@@ -132,27 +119,22 @@
                         <!-- END OF MODAL DIALOG FOR RESTORE -->
                     </td>
                     <td>
-                        % if( $exists == 0 ){
-                          <a class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-remove"></span> Broken</a>
+                        % if( $backup->is_healthy ){
+                          <a class="btn btn-success btn-sm"><span class="glyphicon glyphicon-ok"></span> Healthy</a>
                         %}
                         %else{
-                          <a class="btn btn-success btn-sm"><span class="glyphicon glyphicon-ok"></span> Healthy</a>
+                          <a class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-remove"></span> Broken</a>
                         %}
                     </td>
 
                     <td>
-                      <a class="btn btn-default btn-sm" href="<%= url_for('backup_download', id=>$id)%>">
-                        <span class="glyphicon glyphicon-save"></span>
-                        <i class="fa fa-hdd-o"></i> 
-                        <%= $fname %> 
+                      <a class="btn btn-default btn-sm" href="<%= url_for('backup_download', id=>$backup->id)%>">
+                        <span class="glyphicon glyphicon-save"></span> Download <%= $backup->get_size %>
                       </a>
                     </td>
-                    % my @ct = split(/ /,$ctime);
-                    <td><a class="btn btn-default btn-sm" ><i class="fa fa-calendar"></i> <%= $ct[0] %> <span class="glyphicon glyphicon-time"></span> <%= $ct[1] %></a>
+                    <td><a class="btn btn-default btn-sm" ><i class="fa fa-calendar"></i> <%= $backup->date %> </a>
                     </td>
                 </tr>
-                % $i++;
-                % $j--;
             %}
             </tbody>
             </table>

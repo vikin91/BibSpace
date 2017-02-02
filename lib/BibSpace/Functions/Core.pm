@@ -40,6 +40,7 @@ use List::MoreUtils qw(any uniq);
 
 # these are exported by default.
 our @EXPORT = qw(
+  get_dir_size
   validate_registration_data
   check_password_policy
   generate_token
@@ -62,6 +63,13 @@ our @EXPORT = qw(
 );
 
 our $bibtex2html_tmp_dir = "./tmp";
+####################################################################################################
+sub get_dir_size {
+    my $dir  = shift;
+    my $size = 0;
+    find( sub { $size += -f $_ ? -s _ : 0 }, $dir );
+    return $size;
+}
 ####################################################################################################
 sub validate_registration_data {
     my $login = shift;
