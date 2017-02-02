@@ -36,13 +36,18 @@ has 'uidProvider' => ( is => 'rw', isa => 'Maybe[SmartUidProvider]', default => 
 
 sub hardReset {
     my $self = shift;
-    $self->logger->warn( "Conducting HARD RESET of all repositories and ID Providers!",
+    $self->logger->warn( "Conducting HARD RESET of all repositories and ID Providers in layer '".$self->name."'!",
         "" . __PACKAGE__ . "->hardReset" );
     $self->uidProvider->reset if defined $self->uidProvider;
     try{
         $self->handle->hardReset;
     }
     catch{
+        # Only SmartArray supports direct reset
+        if( ref($self->handle) eq 'SmartArray'){
+            $self->logger->error( "Reset of ".ref($self->handle)." failed. Error $_","" . __PACKAGE__ . "->hardReset" );    
+        }
+        
         # we ignore if the handle cannot be reset 
         # e.g. MySQL database should not be reset - it does persistence, 
         # but our SmartArray should - it does caching
@@ -100,6 +105,13 @@ sub getDao {
     my $daoAbstractFactory = DAOFactory->new(logger => $self->logger);
     my $daoFactory = $daoAbstractFactory->getInstance($self->backendFactoryName, $self->handle);
     return $self->dispatcher($daoFactory, $type);
+}
+
+sub get_summary_hash {
+    my $self = shift;
+    my @types = qw(TagType Team Author Authorship Membership Entry Labeling Tag Exception Type User);
+    my %hash = map{$_ => $self->count($_)} @types;
+    return \%hash;
 }
 
 sub get_summary_string {

@@ -74,6 +74,40 @@ sub set_uid_provider {
     $self->uidProvider($uidProvider);
 }
 
+
+
+sub get_summary_table {
+    my $self = shift;
+    my $str;
+
+    my %hash;
+    my @entities;
+    my @layer_names;
+    foreach my $layer ($self->get_all_layers){
+        push @layer_names, $layer->name;
+        $hash{$layer->name} = $layer->get_summary_hash;
+
+        @entities = keys %{$hash{$layer->name}};
+    }
+    
+    $str .= "-----------------------------------\n";
+    $str .= sprintf "| %-15s |", 'entity';
+    foreach my $ln (reverse sort @layer_names){
+        $str .= sprintf " %-5s |", $ln;
+    }
+    $str .= "\n";
+    $str .= "-----------------------------------\n";
+    foreach my $entity (sort @entities){
+        $str .= sprintf "| %-15s |", $entity;
+        foreach my $ln (reverse sort @layer_names){
+            $str .= sprintf " %5s |", $hash{$ln}->{$entity};
+        }
+        $str .= "\n";
+    }
+    $str .= "-----------------------------------\n";
+    return $str;
+}
+
 sub get_summary_string {
     my $self = shift;
     my $str = "\n";
@@ -84,15 +118,7 @@ sub get_summary_string {
     return $str;
 }
 
-=item hardReset
-    Hard reset removes all instances of repositories and resets all id providers. 
-    Use only for overwriting entire data set, e.g., during backup restore.
-=cut
 
-sub hardReset {
-    my $self = shift;
-    $self->get_read_layer->hardReset if defined $self->get_read_layer;
-}
 
 =item copy_data
     Copy data copies data between layers of repositories
@@ -104,11 +130,15 @@ sub copy_data {
     my $backendFrom = $config->{from};
     my $backendTo = $config->{to};
 
-    my @types = qw(TagType Team Author Authorship Membership Entry Labeling Tag Exception Type User);
-
-    $self->hardReset;
+    # first entities - then relations - important for foreign keys in DB!
+    my @entites = qw(TagType Team Author Entry Tag Type User);
+    my @relations = qw(Labeling Authorship Membership Exception);
+    my @types = (@entites, @relations);
+    
     my $srcLayer = $self->get_layer($backendFrom);
     my $destLayer = $self->get_layer($backendTo);
+    $destLayer->hardReset;
+
     foreach my $type (@types){
         $self->logger->info("Copying all objects of type '".$type."' from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
         my @resultRead = $srcLayer->all($type);

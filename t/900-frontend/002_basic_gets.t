@@ -42,7 +42,7 @@ my $some_team = $teams[0];
 # generated with: ./bin/bibspace routes | grep GET | grep -v : 
 my @pages = (
 	$self->url_for('start'),
-	"/test",  
+	$self->url_for('system_status'),
 	"/forgot",
 	"/login_form",
 	"/youneedtologin",

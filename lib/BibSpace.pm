@@ -4,6 +4,7 @@ package BibSpace v0.5.0;
 
 use BibSpace::Functions::Core;
 use BibSpace::Functions::MySqlBackupFunctions;
+
 use BibSpace::Controller::Publications;
 use BibSpace::Controller::PublicationsLanding;
 use BibSpace::Controller::PublicationsExperimental;
@@ -148,18 +149,6 @@ sub startup {
   $self->app->logger->info("Setup config...");
   $self->setup_config;
 
-  # $self->helper(
-  #   db => sub {
-  #     my $self = shift;
-  #     my $db = db_connect(
-  #       $self->config->{db_host},
-  #       $self->config->{db_user},
-  #       $self->config->{db_database},
-  #       $self->config->{db_pass}
-  #     );
-  #     return $db;
-  #   }
-  # );
 
   $self->app->logger->info("Setup plugins...");
   $self->setup_plugins;
@@ -172,6 +161,7 @@ sub startup {
 
   $self->app->logger->info("Connecting to database...");
   $self->app->db;
+
 
   $self->app->logger->info("Setup repositories...");
   $self->setup_repositories;
@@ -242,7 +232,7 @@ sub setup_repositories {
     my $layer = retrieve($self->appStateDumpFileName);
     $self->repo->lr->replace_layer('smart', $layer);
   }
-  # no data, no fun = no need copy, link, and store
+  # no data, no fun = no need to copy, link, and store
   if( $self->repo->entries_empty ){
     $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
 
@@ -414,6 +404,7 @@ sub setup_plugins {
     is_manager => sub {
       my $self = shift;
       return 1 if $self->app->is_demo;
+      return if !$self->session('user');
       my $me = $self->app->repo->users_find(sub { $_->login eq $self->session('user') } );
       return if !$me;
       return $me->is_manager;
@@ -424,6 +415,7 @@ sub setup_plugins {
     is_admin => sub {
       my $self = shift;
       return 1 if $self->app->is_demo;
+      return if !$self->session('user');
       my $me = $self->app->repo->users_find(sub { $_->login eq $self->session('user') } );
       return if !$me;
       return $me->is_admin;
@@ -440,7 +432,7 @@ sub setup_routes {
 
 
 
-  $anyone->get('/test')->to('display#test');
+  
 
   $anyone->get('/forgot')->to('login#forgot');
   $anyone->post('/forgot/gen')->to('login#post_gen_forgot_token');
@@ -465,12 +457,17 @@ sub setup_routes {
   my $manager_user = $logged_user->under->to('login#under_check_is_manager');
   my $admin_user   = $logged_user->under->to('login#under_check_is_admin');
 
-  ################ EXPERIMENTAL / TEST ################
+  ################ EXPERIMENTAL / PERSISTENCE ################
 
-  $admin_user->get('/fixture/load')->to('display#load_fixture')->name('load_fixture');
-  $admin_user->get('/fixture/save')->to('display#save_fixture')->name('save_fixture');
-  $admin_user->get('/fixture/copy_mysql_to_smart')->to('display#copy_mysql_to_smart')->name('copy_mysql_to_smart');
-  $admin_user->get('/fixture/copy_smart_to_mysql')->to('display#copy_smart_to_mysql')->name('copy_smart_to_mysql');
+  $anyone->get('/system_status')->to('persistence#system_status')->name('system_status');
+  $admin_user->get('/persistence/load')->to('persistence#load_fixture')->name('load_fixture');
+  $admin_user->get('/persistence/save')->to('persistence#save_fixture')->name('save_fixture');
+  $admin_user->get('/persistence/copy_mysql_to_smart')->to('persistence#copy_mysql_to_smart')->name('copy_mysql_to_smart');
+  $admin_user->get('/persistence/copy_smart_to_mysql')->to('persistence#copy_smart_to_mysql')->name('copy_smart_to_mysql');
+  $admin_user->get('/persistence/persistence_status')->to('persistence#persistence_status')->name('persistence_status');
+  $admin_user->get('/persistence/reset_mysql')->to('persistence#reset_mysql')->name('reset_mysql');
+  $admin_user->get('/persistence/reset_smart')->to('persistence#reset_smart')->name('reset_smart');
+  
   
 
   ################ SETTINGS ################

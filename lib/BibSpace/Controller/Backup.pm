@@ -151,7 +151,9 @@ sub restore_backup {
 
         $self->app->logger->info("Restoring backup ".$backup->uuid);
 
-        $self->flash( msg_type=>'success', msg => "Backup restored successfully. Database recreated, persistence layers in sync." );
+        my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
+
+        $self->flash( msg_type=>'success', msg => "Backup restored successfully. Database recreated, persistence layers in sync. $status" );
     }
     else {
         $self->flash( msg_type=>'danger', msg => "Cannot restore - backup not healthy!" );

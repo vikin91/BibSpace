@@ -1,0 +1,12 @@
+% use Mojo::ByteStream 'b';
+
+<a class="btn btn-warning btn-xs" href="<%= url_for('load_fixture') %>">fixture => smart (restore)</a>
+<a class="btn btn-warning btn-xs" href="<%= url_for('save_fixture') %>">smart => fixture</a>
+<a class="btn btn-warning btn-xs" href="<%= url_for('copy_mysql_to_smart') %>">mysql => smart</a>
+<a class="btn btn-warning btn-xs" href="<%= url_for('copy_smart_to_mysql') %>">smart => mysql</a>
+<a class="btn btn-info btn-xs" href="<%= url_for('persistence_status') %>">status</a>
+<a class="btn btn-danger btn-xs" href="<%= url_for('reset_mysql') %>">reset mysql</a>
+<a class="btn btn-danger btn-xs" href="<%= url_for('reset_smart') %>">reset smart</a>
+
+
+

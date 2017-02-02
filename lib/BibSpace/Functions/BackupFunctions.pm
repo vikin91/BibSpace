@@ -141,8 +141,11 @@ sub restore_storable_backup {
 
     my $layer = retrieve($backup->get_path);
 
+    ## this writes to all layers!!
+
     my @layers = $app->repo->lr->get_all_layers;
     foreach (@layers){ $_->hardReset };
+
     $app->repo->lr->replace_layer('smart', $layer);
 
     purge_and_create_db($app->db, 
@@ -152,8 +155,8 @@ sub restore_storable_backup {
         $app->config->{db_pass}
     );
 
-    $app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
+    $app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 }
 ####################################################################################
 sub delete_old_backups {

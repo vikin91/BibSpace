@@ -19,9 +19,21 @@ sub check_is_logged_in {
     my $self = shift;
     return 1 if $self->app->is_demo;
 
-    return 1 if $self->session('user');
-    $self->redirect_to('badpassword');
-    return;
+    # no session
+    if( !defined $self->session('user')){
+        $self->redirect_to('youneedtologin');
+        return;
+    }
+
+    # session exists, but user unknown
+    my $me = $self->app->repo->users_find(sub { $_->login eq $self->session('user') } );
+    if( !defined $me ){
+        $self->session( expires => 1 );
+        $self->redirect_to('youneedtologin');
+        return;
+    }
+
+    return 1;
 }
 ####################################################################################
 # for _under_ -checking
@@ -48,13 +60,16 @@ sub under_check_has_rank {
         return 1;
     }
 
+    my $your_rank = 'undefined';
+    $your_rank = $me->rank if $me; 
+
     $self->flash(
         msg_type => 'danger',
         msg      => "You need to have rank '"
             . $required_rank
             . "') to access this page! "
             . "Your rank is: '"
-            . $me->rank . "'"
+            . $your_rank . "'"
             . " <br/> You have tried to access: "
             . $self->url_for('current')->to_abs
     );
@@ -366,11 +381,11 @@ sub login {
     # get the user with login
     my $user
         = $self->app->repo->users_find( sub { $_->login eq $input_login } );
+        
     $self->app->logger->info("Trying to login as user '$input_login'");
 
-    my $password_valid = $user->authenticate($input_pass);
 
-    if ( defined $password_valid and $password_valid == 1 ) {
+    if ( defined $user and $user->authenticate($input_pass) == 1 ) {
         $self->session( user      => $user->login );
         $self->session( user_name => $user->real_name );
         $user->record_logging_in;
