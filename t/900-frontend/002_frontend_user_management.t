@@ -33,6 +33,9 @@ is(length($token), 32);
 
 ########################################################
 
+use Data::Dumper;
+use BibSpace::Model::User;
+map{ note Dumper $_ } $t_anyone->app->repo->users_all;
 
 subtest 'Requesting password reset' => sub {
 
@@ -40,20 +43,20 @@ note "============ FORGOT GEN 1 ============";
 $t_anyone->post_ok('/forgot/gen' => { Accept => '*/*' }, form => { user   => 'pub_admin' })
     ->status_isnt(404)
     ->status_isnt(500)
-    ->content_like(qr/Email with password reset instructions has been sent/i);
+    ->content_like(qr/Email with password reset instructions has been sent/i, "Filling forgot with login");
 
 note "============ FORGOT GEN 2 ============";
 $t_anyone->post_ok('/forgot/gen' => { Accept => '*/*' }, form => { user   => '', email => 'pub_admin@example.com' })
     ->status_isnt(404)
     ->status_isnt(500)
-    ->content_like(qr/Email with password reset instructions has been sent/i);
+    ->content_like(qr/Email with password reset instructions has been sent/i, "Filling forgot with email");
 
 note "============ FORGOT GEN 3 ============";
 
 $t_anyone->post_ok('/forgot/gen' => form => { user   => 'qwerty1234', email => '' })
     ->status_isnt(404)
     ->status_isnt(500)
-    ->content_like(qr/User 'qwerty1234' or email '' does not exist. Try again./i);
+    ->content_like(qr/User 'qwerty1234' or email '' does not exist. Try again./i, "Filling forgot with bad data");
 };
 
 note "============ SET NEW PW ============";

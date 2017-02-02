@@ -9,8 +9,11 @@ use Try::Tiny;
 use BibSpace;
 use BibSpace::Functions::Core;
 use BibSpace::Controller::Cron;
+
 use BibSpace::Controller::Backup;
-use BibSpace::Functions::MySqlBackupFunctions;
+use BibSpace::Model::Backup;
+
+use BibSpace::Functions::BackupFunctions;
 
 use BibSpace::Functions::FDB;
 
@@ -36,31 +39,18 @@ my $db_pass     = $self->config->{db_pass};
 ok(db_connect($db_host, $db_user, $db_database, $db_pass), "Can connect to database");
 $dbh = $self->app->db;
 
-
-
-note "============ BACKING UP THE DATABASE ============";
-my $db_backup_file = $t_logged_in->app->do_mysql_db_backup("basic_backup_testing");
-note "============ BACKING FILE: $db_backup_file ============";
-
-
-my $fixture_name = "small_fixture.sql";
+my $fixture_name = "bibspace_fixture.dat";
 my $fixture_dir = "./fixture/";
+
+
+
 SKIP: {
 	note "============ APPLY DATABASE FIXTURE ============";
 	skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir.$fixture_name;
 
-  try{
-	 ok(do_restore_backup_from_file($self, $dbh, "./fixture/".$fixture_name, $app_config), "preparing DB for test");
-  }
-  catch{
-    my $db_host     = $self->config->{db_host};
-    my $db_user     = $self->config->{db_user};
-    my $db_database = $self->config->{db_database};
-    my $db_pass     = $self->config->{db_pass};
+  my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
+  restore_storable_backup($fixture, $self->app);
 
-    ok(db_connect($db_host, $db_user, $db_database, $db_pass), "Can connect to database");
-    $dbh = $self->app->db;
-  };
 }
 
 done_testing();

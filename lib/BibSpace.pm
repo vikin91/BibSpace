@@ -67,15 +67,23 @@ has config_file => sub {
     if -e $self->app->home->rel_file('config/default.conf');
 };
 
-# has db => sub {
-#   my $self = shift;
-#   state $db = db_connect(
-#     $self->config->{db_host},
-#     $self->config->{db_user},
-#     $self->config->{db_database},
-#     $self->config->{db_pass}
-#   );
-# };
+has backup_dir => sub {
+  my $self = shift;
+  my $backup_dir_absolute = $self->app->config->{backups_dir};
+  $backup_dir_absolute =~ s!/*$!/!;
+  return $backup_dir_absolute;
+};
+    
+    
+has db => sub {
+  my $self = shift;
+  state $db = db_connect(
+    $self->config->{db_host},
+    $self->config->{db_user},
+    $self->config->{db_database},
+    $self->config->{db_pass}
+  );
+};
 
 has version => sub {
   return $BibSpace::VERSION // "0.5.0";
@@ -140,18 +148,18 @@ sub startup {
   $self->app->logger->info("Setup config...");
   $self->setup_config;
 
-  $self->helper(
-    db => sub {
-      my $self = shift;
-      my $db = db_connect(
-        $self->config->{db_host},
-        $self->config->{db_user},
-        $self->config->{db_database},
-        $self->config->{db_pass}
-      );
-      return $db;
-    }
-  );
+  # $self->helper(
+  #   db => sub {
+  #     my $self = shift;
+  #     my $db = db_connect(
+  #       $self->config->{db_host},
+  #       $self->config->{db_user},
+  #       $self->config->{db_database},
+  #       $self->config->{db_pass}
+  #     );
+  #     return $db;
+  #   }
+  # );
 
   $self->app->logger->info("Setup plugins...");
   $self->setup_plugins;
@@ -217,7 +225,9 @@ sub insert_admin {
     $self->app->repo->users_save($new_user);
   }
   else{
+    $admin_exists->email('pub_admin@example.com'); # this email is used for tests!
     $admin_exists->make_admin;
+    $self->app->repo->users_update($admin_exists);
   }
 }
 
@@ -468,29 +478,16 @@ sub setup_routes {
   $manager_user->get('/settings/regenerate_all_force')->to('publications#regenerate_html_for_all_force');
   $logged_user->get('/settings/regenerate_all')->to('publications#regenerate_html_for_all');
 
-  # RESTIfied begin
-  # GET '/backups'
+
   $manager_user->get('/backups')->to('backup#index')->name('backup_index');
-
-  # PUT '/backups'
   $manager_user->put('/backups')->to('backup#save')->name('backup_do');
-
-  # GET '/backups/id'
-  $manager_user->get('/backups/:id')->to('backup#backup_download')->name('backup_download');
-
-  # DELETE '/backups/id'
+  $manager_user->put('/backups/mysql')->to('backup#save_mysql')->name('backup_do_mysql');
+  $admin_user->get('/backups/:id')->to('backup#backup_download')->name('backup_download');
   $admin_user->delete('/backups/:id')->to('backup#delete_backup')->name('backup_delete');
+  $admin_user->put('/backups/:id')->to('backup#restore_backup')->name('backup_restore');
+  $admin_user->delete('/backups')->to('backup#cleanup')->name('backup_cleanup');
 
-#$admin_user->post('/backups')->to('backup#delete_backup')->name('backup_delete');
 
-# PUT '/backups/id'
-# $manager_user->get('/restore/do/:id')->to('backup#restore_backup')->name('backup_restore');
-  $manager_user->put('/backups/:id')->to('backup#restore_backup')->name('backup_restore');
-
-  # DELETE '/backups'
-  $manager_user->delete('/backups')->to('backup#cleanup')->name('backup_cleanup');
-
-  # RESTIfied end
 
   ################ TYPES ################
   $logged_user->get('/types')->to('types#all_our')->name('all_types');
