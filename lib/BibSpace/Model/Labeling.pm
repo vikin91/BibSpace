@@ -68,7 +68,11 @@ sub equals {
     my $self = shift;
     my $obj  = shift;
 
-    die "Comparing apples to peaches!!" unless ref($self) eq ref($obj);
+    my $trace = Devel::StackTrace->new;
+    my $trace_str = "\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n";
+
+    die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj) . "Trace: $trace_str" unless ref($self) eq ref($obj);
+    
     if (    $self->entry
         and $self->tag
         and $obj->entry

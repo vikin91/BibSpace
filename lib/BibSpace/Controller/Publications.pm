@@ -279,7 +279,7 @@ sub all_without_tag_for_author {
 
   # no such master. Assume, that author id was given
 
-  my @all_author_entries = $author->entries();                                    
+  my @all_author_entries = $author->get_entries;                                    
   my @objs = grep { scalar $_->get_tags( $tagtype ) == 0 } @all_author_entries;
 
 
@@ -850,23 +850,28 @@ sub remove_tag {
   my $self     = shift;
   my $entry_id = $self->param('eid');
   my $tag_id   = $self->param('tid');
-  my $dbh      = $self->app->db;
-
 
   my $entry = $self->app->repo->entries_find( sub { $_->id == $entry_id } );
   my $tag   = $self->app->repo->tags_find( sub    { $_->id == $tag_id } );
 
   if ( defined $entry and defined $tag ) {
 
-    my $label
-      = $self->app->repo->labelings_find( sub { $_->tag->equals($tag) and $_->entry->equals($entry) } );
+    my $search_label = Labeling->new( entry => $entry, tag => $tag, entry_id => $entry->id, tag_id => $tag->id );
+    my $label = $self->app->repo->labelings_find( sub { $_->equals($search_label) } );
 
-    # you should always execute all those three commands together - smells like command pattern...
-    $entry->remove_labeling($label);
-    $tag->remove_labeling($label);
-    $self->app->repo->labelings_delete($label);
+    if($label){
+      # you should always execute all those three commands together - smells like command pattern...
+      $entry->remove_labeling($label);
+      $tag->remove_labeling($label);
+      $self->app->repo->labelings_delete($label);
 
-    $self->app->logger->info( "Removed tag " . $tag->name . " from entry ID " . $entry->id . ". " );
+      $self->app->logger->info( "Removed tag " . $tag->name . " from entry ID " . $entry->id . ". " );
+    }
+    else{
+      # this paper does not have this tag - do nothing
+      $self->app->logger->warn( "Cannot remove tag " . $tag->name . " from entry ID " . $entry->id . " - reason: labeling not found. " );
+    }
+
   }
 
   $self->redirect_to( $self->get_referrer );
@@ -892,6 +897,10 @@ sub add_tag {
     $entry->add_labeling($label);
     $tag->add_labeling($label);
   }
+  else{
+      # this paper does not have this tag - do nothing
+      $self->app->logger->warn( "Cannot add tag $tag_id to entry ID $entry_id - reason: tag or entry not found. " );
+    }
   $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################

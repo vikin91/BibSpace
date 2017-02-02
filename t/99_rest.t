@@ -2,10 +2,9 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 
-use BibSpace;
-use BibSpace::Functions::Core;
-
 `rm test-backups/*sql`;
+`rm backups/*dat`;
+`rm backups/*sql`;
 
 
 

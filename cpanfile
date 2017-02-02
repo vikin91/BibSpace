@@ -19,7 +19,7 @@ requires 'LWP::Protocol::https' , '>= 0.0';
 requires 'Module::Build::Mojolicious' , '>= 0.0';
 requires 'Module::Build::Mojolicious' , '>= 0.0';
 requires 'Module::CPANfile' , '>= 0.0';
-requires 'Mojolicious' , '== 7.20';
+requires 'Mojolicious' , '== 7.22';     # Update it later once Mojolicious will be stable on CPAN
 requires 'Mojolicious::Plugin::RenderFile' , '>= 0.0';
 requires 'Moose' , '>= 0.0';
 requires 'MooseX::ClassAttribute' , '>= 0.0';
