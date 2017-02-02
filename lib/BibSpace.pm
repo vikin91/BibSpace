@@ -41,13 +41,6 @@ use BibSpace::Model::Repository::RepositoryFacade;
 
 use Storable;
 
-# for Makemake. Needs to be removed for Dist::Zilla
-# our $VERSION = '0.4.4';
-
-# 0 4,12,20 * * * curl http://localhost:8081/cron/day
-# 0 2 * * * curl http://localhost:8081/cron/night
-# 5 2 * * 0 curl http://localhost:8081/cron/week
-# 10 2 1 * * curl http://localhost:8081/cron/month
 
 # this is deprecated and should not be used
 our $bibtex2html_tmp_dir = "./tmp";
@@ -225,24 +218,23 @@ sub insert_admin {
 sub setup_repositories {
   my $self = shift;
 
-
-  $self->app->logger->debug($self->repo->lr->get_summary_string);
-
   if( -e $self->appStateDumpFileName and $self->useDumpFixture ){
     my $layer = retrieve($self->appStateDumpFileName);
+    # reser read layer = not needed, layer empty by start of the app
     $self->repo->lr->replace_layer('smart', $layer);
   }
   # no data, no fun = no need to copy, link, and store
   if( $self->repo->entries_empty ){
+    $self->app->repo->lr->get_read_layer->hardReset;
     $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
 
-    # data in the smart layer (or any read layer) must be linked!
+    # Entities and Relations in the smart layer must be linked!
     $self->link_data;
     # store current state to file
     store $self->repo->lr->get_read_layer, $self->appStateDumpFileName;  
   }
 
-  $self->app->logger->debug($self->repo->lr->get_summary_string);
+  $self->app->logger->debug($self->repo->lr->get_summary_table);
 
 
   # my $eidP = $self->repo->entries_idProvider;

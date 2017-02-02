@@ -155,7 +155,6 @@ sub restore_storable_backup {
         $app->config->{db_pass}
     );
 
-
     $app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 }
 ####################################################################################

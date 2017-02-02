@@ -78,7 +78,7 @@ sub set_uid_provider {
 
 sub get_summary_table {
     my $self = shift;
-    my $str;
+    my $str = "\n";
 
     my %hash;
     my @entities;
