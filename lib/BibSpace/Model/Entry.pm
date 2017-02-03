@@ -298,14 +298,6 @@ sub remove_bibtex_fields {
 
     if ( $num_deleted > 0 ) {
         my $new_bib = $entry->print_s;
-
-# # cleaning errors caused by sqlite - mysql import # FIXME: do we still need this?
-#         $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
-#         $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
-
-#         $new_bib =~ s/\\\\/\\/g;
-#         $new_bib =~ s/\\\\/\\/g;
-
         $self->bib($new_bib);
     }
     return $num_deleted;
@@ -355,12 +347,11 @@ sub generate_html {
 
     $self->fix_bibtex_accents;
 
-    my $c = BibSpaceBibtexToHtml::BibSpaceBibtexToHtml->new();
-    $self->html(
-        $c->convert_to_html(
-            { method => 'new', bib => $self->{bib}, bst => $bst_file }
-        )
-    );
+    my $c = BibSpaceBibtexToHtml::BibSpaceBibtexToHtml->new;
+    my $html = $c->convert_to_html(
+            { method => 'new', bib => $self->bib, bst => $bst_file }
+        );
+    $self->html($html);
     $self->warnings( join( ', ', @{ $c->{warnings_arr} } ) );
 
     $self->need_html_regen(0);

@@ -65,6 +65,10 @@ our @EXPORT = qw(
 
 our $bibtex2html_tmp_dir = "./tmp";
 ####################################################################################################
+=item fix_bibtex_national_characters
+  This function should help to avoid bibtex=>html warnings of BibStyle, like this:
+  line 5, warning: found " at brace-depth zero in string (TeX accents in BibTeX should be inside braces)
+=cut
 sub fix_bibtex_national_characters {
     my $str  = shift;
     
@@ -241,7 +245,7 @@ sub decodeLatex {
     use TeX::Encode;
     $str = decode( 'latex', $str );
 
-    $str =~ s/\{(.)\}/$1/g;         # makes {x} -> x
+    $str =~ s/\{(:alpha:)\}/$1/g;         # makes {x} -> x
     $str =~ s/\{\\\"(u)\}/ü/g;    # makes {\"x} -> xe
     $str =~ s/\{\\\"(U)\}/Ü/g;    # makes {\"x} -> xe
     $str =~ s/\{\\\"(o)\}/ö/g;    # makes {\"x} -> xe
@@ -264,15 +268,15 @@ sub decodeLatex {
     $str =~ s/\\\"(A)/Ä/g;        # makes \"{x} -> xe
 
 
-    $str =~ s/\{\\\'(.)\}/$1/g;     # makes {\'x} -> x
-    $str =~ s/\\\'(.)/$1/g;         # makes \'x -> x
-    $str =~ s/\'\'(.)/$1/g;         # makes ''x -> x
-    $str =~ s/\"(.)/$1e/g;          # makes "x -> xe
+    $str =~ s/\{\\\'(:alpha:)\}/$1/g;     # makes {\'x} -> x
+    $str =~ s/\\\'(:alpha:)/$1/g;         # makes \'x -> x
+    $str =~ s/\'\'(:alpha:)/$1/g;         # makes ''x -> x
+    $str =~ s/\"(:alpha:)/$1e/g;          # makes "x -> xe
     $str =~ s/\{\\ss\}/ss/g;        # makes {\ss}-> ss
     $str =~ s/\{(.*)\}/$1/g;        # makes {abc..def}-> abc..def
-    $str =~ s/\\\^(.)(.)/$1$2/g;    # makes \^xx-> xx
-    $str =~ s/\\\^(.)/$1/g;         # makes \^x-> x
-    $str =~ s/\\\~(.)/$1/g;         # makes \~x-> x
+    $str =~ s/\\\^(:alpha:)(:alpha:)/$1$2/g;    # makes \^xx-> xx
+    $str =~ s/\\\^(:alpha:)/$1/g;         # makes \^x-> x
+    $str =~ s/\\\~(:alpha:)/$1/g;         # makes \~x-> x
     $str =~ s/\\//g;                # removes \
 
 
@@ -388,25 +392,27 @@ sub create_user_id {
   $userID .= $first if defined $first;
   $userID .= $jr    if defined $jr;
 
+
+
   $userID =~ s/\\k\{a\}/a/g;    # makes \k{a} -> a
   $userID =~ s/\\l/l/g;         # makes \l -> l
   $userID =~ s/\\r\{u\}/u/g;    # makes \r{u} -> u # FIXME: make sure that the letter is caught
                                 # $userID =~ s/\\r{u}/u/g;   # makes \r{u} -> u # the same but not escaped
 
-  $userID =~ s/\{(.)\}/$1/g;         # makes {x} -> x
-  $userID =~ s/\{\\\"(.)\}/$1e/g;    # makes {\"x} -> xe
-  $userID =~ s/\{\"(.)\}/$1e/g;      # makes {"x} -> xe
-  $userID =~ s/\\\"(.)/$1e/g;        # makes \"{x} -> xe
-  $userID =~ s/\{\\\'(.)\}/$1/g;     # makes {\'x} -> x
-  $userID =~ s/\\\'(.)/$1/g;         # makes \'x -> x
-  $userID =~ s/\'\'(.)/$1/g;         # makes ''x -> x
-  $userID =~ s/\"(.)/$1e/g;          # makes "x -> xe
+  $userID =~ s/\{(:alpha:)\}/$1/g;         # makes {x} -> x
+  $userID =~ s/\{\\\"(:alpha:)\}/$1e/g;    # makes {\"x} -> xe
+  $userID =~ s/\{\"(:alpha:)\}/$1e/g;      # makes {"x} -> xe
+  $userID =~ s/\\\"(:alpha:)/$1e/g;        # makes \"{x} -> xe
+  $userID =~ s/\{\\\'(:alpha:)\}/$1/g;     # makes {\'x} -> x
+  $userID =~ s/\\\'(:alpha:)/$1/g;         # makes \'x -> x
+  $userID =~ s/\'\'(:alpha:)/$1/g;         # makes ''x -> x
+  $userID =~ s/\"(:alpha:)/$1e/g;          # makes "x -> xe
   $userID =~ s/\{\\ss\}/ss/g;        # makes {\ss}-> ss
-  $userID =~ s/\{(.*)\}/$1/g;        # makes {abc..def}-> abc..def
-  $userID =~ s/\\\^(.)(.)/$1$2/g;    # makes \^xx-> xx
+  $userID =~ s/\{(:alpha:*)\}/$1/g;        # makes {abc..def}-> abc..def
+  $userID =~ s/\\\^(:alpha:)(:alpha:)/$1$2/g;    # makes \^xx-> xx
                                      # I am not sure if the next one is necessary
-  $userID =~ s/\\\^(.)/$1/g;         # makes \^x-> x
-  $userID =~ s/\\\~(.)/$1/g;         # makes \~x-> x
+  $userID =~ s/\\\^(:alpha:)/$1/g;         # makes \^x-> x
+  $userID =~ s/\\\~(:alpha:)/$1/g;         # makes \~x-> x
   $userID =~ s/\\//g;                # removes \
 
   $userID =~ s/\{//g;                # removes {

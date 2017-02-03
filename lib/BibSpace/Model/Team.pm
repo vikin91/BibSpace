@@ -48,34 +48,7 @@ sub has_author {
 
   my $found = $self->authors_find( sub { $_->equals($author) } );
   return 1 if $found;
-  return 0;
-}
-####################################################################################
-sub add_author {
-  my $self   = shift;
-  my $author = shift;
-
-  return 0 if !defined $author and $author->{id} <= 0;
-
-
-  if ( !$self->has_author($author) ) {
-
-    $self->authors_add($author);
-    $self->teamMemberships_add(
-      MTeamMembership->new(
-        author_id => $author->id,
-        team_id   => $self->id,
-        author    => $author,
-        team      => $self,
-        start     => 0,
-        stop      => 0
-      )
-    );
-    return 1;
-  }
-  return 0;
-
-
+  return;
 }
 ####################################################################################
 sub remove_all_authors {
@@ -83,27 +56,6 @@ sub remove_all_authors {
 
   $self->teamMemberships_clear;
   $self->authors_clear;
-}
-####################################################################################
-sub remove_author {
-  my $self   = shift;
-  my $author = shift;
-
-  return 0 if !defined $author and $author->{id} <= 0;
-
-  my $mem_index = $self->teamMemberships_find_index(
-    sub {
-      $_->{author_id} == $author->id and $_->{team_id} == $self->id;
-    }
-  );
-  return 0 if $mem_index == -1;
-  $self->teamMemberships_delete($mem_index);
-
-  my $index = $self->authors_find_index( sub { $_->equals($author) } );
-  return 0 if $index == -1;
-  return 1 if $self->authors_delete($index);
-  return 0;
-
 }
 ####################################################################################
 sub get_members {

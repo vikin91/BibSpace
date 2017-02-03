@@ -94,8 +94,8 @@ sub equals_id {
 sub equals_obj {
     my $self = shift;
     my $obj  = shift;
-    return 0 if !$self->entry->equals( $obj->entry );
-    return 0 if !$self->tag->equals( $obj->tag );
+    return if !$self->entry->equals( $obj->entry );
+    return if !$self->tag->equals( $obj->tag );
     return 1;
 }
 ####################################################################################

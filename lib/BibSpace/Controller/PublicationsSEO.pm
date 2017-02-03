@@ -126,10 +126,11 @@ sub meta {
 # $citation_publication_date .= "/".$first_day if defined $first_day and defined $days;;
 
     # ABSTRACT
-    my $abstract = $bibtex_entry->get('abstract')
-        || "This paper has no abstract. The title is: " . $citation_title;
-    $abstract =~ s/\{//g;
-    $abstract =~ s/\}//g;
+    my $abstract = $bibtex_entry->get('abstract');
+    $abstract ||= "This paper has no abstract. The title is: " . $citation_title;
+
+    $abstract =~ s/^\{//g;
+    $abstract =~ s/\}$//g;
     $abstract = decode( 'latex', $abstract );
 
     # TYPE
