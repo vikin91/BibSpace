@@ -220,7 +220,7 @@ sub setup_repositories {
   if( $self->repo->entries_empty ){
     $self->app->logger->info("Repo has no entries. Reseting read_layer.");
     
-
+    # refactor this nicely into a single function - load dump fixture or so...
     # IMPORTANT FIXME: this should be always called when entire dataset in smart array is replaced!!
     $self->app->repo->lr->get_read_layer->reset_data;
     $self->app->repo->lr->reset_uid_providers;
