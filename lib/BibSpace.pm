@@ -355,6 +355,9 @@ sub setup_config {
   my $app  = $self;
   $self->app->logger->info("Setup config...");
   $self->plugin( 'Config' => { file => $self->app->config_file } );
+
+  $ENV{MOJO_MAX_MESSAGE_SIZE} = 40*1024*1024;
+  $self->app->logger->info("Setting max upload size to ".$ENV{MOJO_MAX_MESSAGE_SIZE}." Bytes.");
 }
 ################################################################
 sub setup_plugins {
@@ -489,7 +492,7 @@ sub setup_routes {
   $admin_user->get('/profile/make_admin/:id')->to('login#make_admin')->name('make_admin');
 
   $manager_user->get('/log')->to('display#show_log');
-  $admin_user->get('/settings/fix_months')->to('publications#fixMonths');
+  $admin_user->get('/settings/fix_months')->to('publications#fixMonths')->name('fix_all_months');
 
   $manager_user->get('/settings/clean_all')->to('publications#clean_ugly_bibtex')->name('clean_ugly_bibtex');
   $manager_user->get('/settings/regenerate_all_force')->to('publications#regenerate_html_for_all_force');
@@ -683,7 +686,7 @@ sub setup_routes {
 
     # candidate to be removed
     $admin_user->get('/publications/fix_urls')              
-        ->to('publications#replace_urls_to_file_serving_function')
+        ->to('publications#fix_file_urls')
         ->name('fix_attachment_urls');
 
 

@@ -38,6 +38,14 @@ my @tags    = $admin_user->app->repo->tags_all;
 my $tag     = shift @tags; 
 
 
+
+
+my $page = $self->url_for('add_publication');
+  $admin_user->get_ok($page, "Get for page $page")
+      ->status_isnt(404, "Checking: 404 $page")
+      ->status_isnt(500, "Checking: 500 $page");
+
+
 ####################################################################
 subtest 'edit_publication_post' => sub {
 
@@ -99,13 +107,27 @@ subtest 'post_upload_pdf' => sub {
   $admin_user->get_ok($page, "Get for page $page")
       ->status_isnt(404, "Checking: 404 $page")
       ->status_isnt(500, "Checking: 500 $page");
+
+  # call twice to remove the non-existing file
+  $page = $self->url_for('publications_remove_attachment', filetype=>'paper', id=>$entry->id);
+  $admin_user->get_ok($page, "Get for page $page")
+      ->status_isnt(404, "Checking: 404 $page")
+      ->status_isnt(500, "Checking: 500 $page");
+
+  $page = $self->url_for('download_publication', filetype=>'paper', id=>$entry->id);
+  $admin_user->get_ok($page, "Get for page $page")
+      ->status_isnt(500, "Checking: 500 $page")
+      ->status_is(404, "Checking: 404 $page"); # this should give 404, the attachment has been removed
+      
       
 };
 ####################################################################
 subtest 'add_publication_post' => sub {
 
+  my $random_string = random_string(16);
+
   my $bib_content = '
-  @article{key_2017_TEST,
+  @article{key_2017_TEST'.$random_string.',
     author = {Johny Example},
     journal = {Journal of Bar},
     publisher = {Foo Publishing house},
@@ -128,6 +150,9 @@ subtest 'add_publication_post' => sub {
   # again to get key conflict
   $admin_user->post_ok(
     $self->url_for('add_publication_post') => form => {new_bib => $bib_content, check_key => 1 }
+  );
+  $admin_user->post_ok(
+    $self->url_for('add_publication_post') => form => {new_bib => $bib_content, save => 1 }
   );
 };
 
@@ -173,8 +198,9 @@ my @pages = (
   "/publications/candidates_to_delete",
   "/settings/regenerate_all",
   "/publications/fix_urls",
-  "/settings/fix_months",
 
+  $self->url_for('clean_ugly_bibtex'),
+  $self->url_for('fix_all_months'),
   $self->url_for('unrelated_papers_for_team', teamid=>$team->id),
 
   # $self->url_for('download_publication', filetype=>'paper', id=>$entry->id),

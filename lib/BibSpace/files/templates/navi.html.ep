@@ -265,7 +265,7 @@
             <li class="divider"></li>
             <li role="presentation" class="dropdown-header">Calculates integer month field in DB based on bibtex field 'month' .</li>
             <li>
-                <a href="<%= url_for('/settings/fix_months')%>">
+                <a href="<%= url_for('fix_all_months')%>">
                     <i class="fa fa-magic"></i> Fix month numbers in DB
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">for all</span>

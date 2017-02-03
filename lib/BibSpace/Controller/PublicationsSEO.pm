@@ -213,7 +213,7 @@ sub meta {
         my $local_file_paper
             = BibSpace::Controller::Publications::get_paper_pdf_path( $self,
             $id, 'paper' );
-        if ( -e $local_file_paper ) {
+        if ( $local_file_paper and -e $local_file_paper ) {
             $citation_pdf_url = $self->url_for(
                 'download_publication_pdf',
                 filetype => 'paper',
@@ -228,7 +228,7 @@ sub meta {
         my $local_file_slides
             = BibSpace::Controller::Publications::get_paper_pdf_path( $self,
             $id, 'slides' );
-        if ( -e $local_file_slides ) {
+        if ( $local_file_slides and -e $local_file_slides ) {
             $citation_pdf_url = $self->url_for(
                 'download_publication_pdf',
                 filetype => 'slides',

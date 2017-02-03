@@ -54,7 +54,7 @@ my @pages = (
 	$self->url_for('recently_changed', num=>10),
 	$self->url_for('recently_added', num=>10),
 	"/manage_users",
-	"/settings/fix_months",
+	$self->url_for('fix_all_months'),
 	"/publications/fix_urls",
 	"/profile",
 	"/backups",

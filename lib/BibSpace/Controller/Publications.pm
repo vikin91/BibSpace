@@ -49,18 +49,11 @@ sub all {
   my $entry_type = undef;
   $entry_type = $self->param('entry_type') // undef;
 
-  if ( $self->session('user') ) {
+  my @objs = Fget_publications_main_hashed_args( $self, { entry_type => $entry_type } );
 
-    my @objs = Fget_publications_main_hashed_args( $self, { entry_type => $entry_type } );
-
-    $self->stash( entries => \@objs );
-    my $html = $self->render_to_string( template => 'publications/all' );
-    $self->render( data => $html );
-
-  }
-  else {
-    return $self->all_read();
-  }
+  $self->stash( entries => \@objs );
+  my $html = $self->render_to_string( template => 'publications/all' );
+  $self->render( data => $html );
 }
 
 ####################################################################################
@@ -412,7 +405,7 @@ sub all_bibtex {
 #here was landing
 
 ####################################################################################
-sub replace_urls_to_file_serving_function {
+sub fix_file_urls {
 
   ##
   # http://127.0.0.1:3000/publications/download/paper/4/pdf
@@ -431,16 +424,16 @@ sub replace_urls_to_file_serving_function {
     my $url_slides = $self->url_for( 'download_publication',     filetype => 'slides', id => $e->{id} )->to_abs;
 
     # check if the entry has pdf
-    my $pdf_path = $self->get_paper_pdf_path( $e->{id}, "paper" );
-    if ( $pdf_path ne 0 ) {    # this means that file exists locally
+    my $pdf_path = $self->get_paper_pdf_path( $e->id, "paper" );
+    if ( $pdf_path ) {    # this means that file exists locally
       if ( $e->has_bibtex_field("pdf") ) {
         $e->add_bibtex_field( "pdf", "$url_pdf" );
         $str .= "id $e->{id}, PDF: " . $url_pdf;
         $str .= '<br/>';
       }
     }
-    my $slides_path = $self->get_paper_pdf_path( $e->{id}, "slides" );
-    if ( $slides_path ne 0 ) {    # this means that file exists locally
+    my $slides_path = $self->get_paper_pdf_path( $e->id, "slides" );
+    if ( $slides_path ) {    # this means that file exists locally
       if ( $e->has_bibtex_field("slides") ) {
         $e->add_bibtex_field( "slides", "$url_slides" );
         $str .= "id $e->{id}, SLI: " . $url_slides;
@@ -470,7 +463,7 @@ sub remove_attachment {
   my $msg;
   my $msg_type;
 
-  if ( !defined $file_path or $file_path eq 0 ) {
+  if ( !defined $file_path ) {
     $msg      = "File not found. Cannot remove attachment. Filetype $filetype or entry id $id.";
     $msg_type = 'danger';
   }
@@ -505,7 +498,7 @@ sub remove_attachment_do {    # refactor this - this is clutter
   my $num_deleted_files = 0;
 
   if ( !defined $mentry or !defined $file_path or $file_path eq 0 ) {
-    return 0;
+    return;
   }
 
   try {
@@ -516,7 +509,8 @@ sub remove_attachment_do {    # refactor this - this is clutter
 
   # make sure that there is no file
   my $file_path_after_delete = get_paper_pdf_path( $self, $id, "$filetype" );
-  while ( $file_path_after_delete ne 0 ) {
+  # if there is something left, try again
+  if( defined $file_path_after_delete ) {
     try {
       unlink $file_path;
       $num_deleted_files = $num_deleted_files + 1;
@@ -531,30 +525,19 @@ sub remove_attachment_do {    # refactor this - this is clutter
 sub download {
   my $self     = shift;
   my $id       = $self->param('id');                     # entry ID
-  my $filetype = $self->param('filetype') || 'paper';    # paper, slides
-
-  # $self->app->logger->info("Requesting download: filetype $filetype, id $id. ");
+  my $filetype = $self->param('filetype') // 'paper';    # paper, slides
 
   my $file_path = $self->get_paper_pdf_path( $id, "$filetype" );
-  $self->app->logger->debug("Found paper type '$filetype': '$file_path'", __PACKAGE__."->download");
-
-  if ( !defined $file_path or $file_path eq 0 ) {
-    $self->app->logger->info("Unsuccessful download filetype '$filetype', id '$id'.");
-    $self->render(status => 404, text => "File not found. Unsuccessful download filetype $filetype, id $id.");
+  
+  if( $file_path and -e $file_path ){
+    $self->app->logger->debug("Found paper type '$filetype': '$file_path'", __PACKAGE__."->download");
+    $self->app->logger->info("Downloading file download '$filetype' for entry '$id'.");
+    $self->render_file( 'filepath' => $file_path );
     return;
   }
-
-  my $exists = 0;
-  $exists = 1 if -e $file_path;
-
-  if ( $exists == 1 ) {
-
-    # $self->app->logger->info("Serving file $file_path");
-    $self->render_file( 'filepath' => $file_path );
-  }
-  else {
-    $self->redirect_to( $self->get_referrer );
-  }
+  $self->app->logger->error("Requested download for entry $id, filetype $filetype but file is missing!");
+  $self->app->logger->info("Unsuccessful download filetype '$filetype', id '$id'.");
+  $self->render(status => 404, text => "File not found. Unsuccessful download filetype $filetype, id $id.");
 }
 ####################################################################################
 
@@ -593,8 +576,11 @@ sub add_pdf_post {
 
   # Check file size
   if ( $self->req->is_limit_exceeded ) {
-    $self->app->logger->info("Saving attachment for paper id '$id': limit exceeded!");
-    $self->flash( message => "The File is too big and cannot be saved!", msg_type => "danger" );
+    my $curr_limit_B = $ENV{MOJO_MAX_MESSAGE_SIZE};
+    $curr_limit_B ||= 16777216;
+    my $curr_limit_MB = $curr_limit_B / 1024 / 1024;
+    $self->app->logger->info("Saving attachment for paper id '$id': limit exceeded. Current limit: $curr_limit_MB MB.");
+    $self->flash( msg => "The File is too big and cannot be saved!", msg_type => "danger" );
     $self->redirect_to( $self->get_referrer );
     return;
   }
@@ -603,7 +589,7 @@ sub add_pdf_post {
   my $uploaded_file = $self->param('uploaded_file');
 
   if( !$uploaded_file ) {
-    $self->flash( message => "File upload unsuccessful!", msg_type => "danger" );
+    $self->flash( msg => "File upload unsuccessful!", msg_type => "danger" );
     $self->app->logger->info("Saving attachment for paper id '$id' FAILED. Unknown reason");
     $self->redirect_to( $self->get_referrer );
     return;
@@ -611,7 +597,7 @@ sub add_pdf_post {
 
   my $size = $uploaded_file->size;
   if ( $size == 0 ) {
-    $self->flash( message => "No file was selected or file has 0 bytes! Not saving!", msg_type => "danger" );
+    $self->flash( msg => "No file was selected or file has 0 bytes! Not saving!", msg_type => "danger" );
     $self->app->logger->info("Saving attachment for paper id '$id' FAILED. File size is 0.");
     $self->redirect_to( $self->get_referrer );
     return;
@@ -661,13 +647,10 @@ sub add_pdf_post {
 
     # remove old file that would match the patterns
     my $old_file = $self->get_paper_pdf_path( $id, "$filetype" );
-    say "old_file: $old_file";
-    if ( $old_file ne 0 ) {
-
+    if ( $old_file and -e $old_file ) {
       # old file exists and must be deleted!
       try {
         unlink $old_file;
-        say "Deleting $old_file";
       }
       catch { };
     }
@@ -678,10 +661,7 @@ sub add_pdf_post {
 
     my $file_url = $self->url_for( 'download_publication', filetype => "$filetype", id => $id )->to_abs;
     if ( $filetype eq 'paper' ) {    # so that the link looks nicer
-      say "Nicing the url for paper";
-      say "old file_url $file_url";
       $file_url = $self->url_for( 'download_publication_pdf', filetype => "paper", id => $id )->to_abs;
-      say "file_url $file_url";
     }
 
     $self->app->logger->info("Saving attachment for paper id $id under: $file_url");
@@ -696,14 +676,14 @@ sub add_pdf_post {
     $mentry->add_bibtex_field( $bibtex_field, "$file_url" );
 
     if ( !defined $mentry ) {
-      $self->flash( msg => "There is no entry with id $id" );
+      $self->flash( msg_type=> 'danger', msg => "There is no entry with id $id" );
       $self->redirect_to( $self->get_referrer );
       return;
     }
     $mentry->regenerate_html( 0, $self->app->bst );
     $self->app->repo->entries_save($mentry);
 
-    $self->flash( message => $msg );
+    $self->flash( msg_type=> 'success', msg => $msg );
     $self->redirect_to( $self->get_referrer );
   }
 }
@@ -763,14 +743,14 @@ sub regenerate_html {
   my $id   = $self->param('id');
 
 
-  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
   if ( !defined $entry ) {
     $self->flash( msg => "There is no entry with id $id", msg_type => 'danger' );
     $self->redirect_to( $self->get_referrer );
     return;
   }
-  $entry->{bst_file} = $self->app->bst;
+  $entry->bst_file($self->app->bst);
   $entry->regenerate_html(1);
   $self->app->repo->entries_save($entry);
 
@@ -783,7 +763,7 @@ sub delete_sure {
   my $id   = $self->param('id');
   my $dbh  = $self->app->db;
 
-  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
   if ( !defined $entry ) {
     $self->flash( mgs_type => 'danger', msg => "There is no entry with id $id" );
@@ -1312,7 +1292,7 @@ sub get_paper_pdf_path {
   }
   closedir(DIR);
   if ( !defined $filename ) {
-    return 0;
+    return;
   }
 
   my $file_path = $directory . $filename;

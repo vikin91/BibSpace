@@ -363,9 +363,9 @@ sub regenerate_html {
     my $self     = shift;
     my $force    = shift;
     my $bst_file = shift;
-
-    $bst_file = $self->{bst_file} if !defined $bst_file;
-    warn "Warning, you use Mentry->regenerate_html without valid bst file!"
+    $bst_file ||= $self->bst_file;
+    
+    warn "Warning, you use entry->regenerate_html without valid bst file!"
         unless defined $bst_file;
 
     if (   $force == 1
