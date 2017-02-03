@@ -97,11 +97,11 @@ sub save {
   # foreach my $obj (@objects) {
   #   if ( $self->exists($obj) ) {
   #     $self->update($obj);
-  #     $self->logger->info( "Updated object ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+  #     $self->logger->debug( "Updated object ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
   #   }
   #   else {
   #     $self->_insert($obj);
-  #     $self->logger->info( "Inserted object ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+  #     $self->logger->debug( "Inserted object ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
   #   }
   # }
 }
@@ -123,7 +123,7 @@ sub _insert {
     try {
       my $result = $sth->execute( $obj->author_id, $obj->entry_id );
       $sth->finish();
-      $self->logger->info( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->debug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
     }
     catch {
       $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );

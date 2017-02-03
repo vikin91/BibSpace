@@ -141,12 +141,20 @@ sub restore_storable_backup {
 
     my $layer = retrieve($backup->get_path);
 
+    say "restore_storable_backup has retrieved:" . $layer->get_summary_table;
+
     ## this writes to all layers!!
 
+    # my $smart_layer = $self->get_layer('smart');
+    # $smart_layer->reset_data;
     my @layers = $app->repo->lr->get_all_layers;
-    foreach (@layers){ $_->hardReset };
+    foreach (@layers){ $_->reset_data };
+
+    # say "Smart layer after reset:" . $app->repo->lr->get_layer('smart')->get_summary_table;
 
     $app->repo->lr->replace_layer('smart', $layer);
+
+    # say "Smart layer after replace:" . $app->repo->lr->get_layer('smart')->get_summary_table;
 
     purge_and_create_db($app->db, 
         $app->config->{db_host},
@@ -155,7 +163,11 @@ sub restore_storable_backup {
         $app->config->{db_pass}
     );
 
+    # say "Smart layer before copy_data:" . $app->repo->lr->get_layer('smart')->get_summary_table;
+
     $app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
+
+    # say "Smart layer after copy_data:" . $app->repo->lr->get_layer('smart')->get_summary_table;
 }
 ####################################################################################
 sub delete_old_backups {

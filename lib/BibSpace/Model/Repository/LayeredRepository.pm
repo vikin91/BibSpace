@@ -3,6 +3,7 @@ package LayeredRepository;
 use namespace::autoclean;
 use Moose;
 use MooseX::ClassAttribute;
+use MooseX::StrictConstructor;
 use Try::Tiny;
 use List::Util qw(first);
 
@@ -15,15 +16,49 @@ has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
 has 'layers' => ( is => 'ro', isa => 'HashRef[RepositoryLayer]', traits => ['DoNotSerialize'], default => sub{ {} } );
 has 'uidProvider' => ( is => 'rw', isa => 'SmartUidProvider', required => 1 );
 
+class_has 'entities' => (
+        is => 'ro', 
+        isa => 'ArrayRef[Str]', 
+        default => sub{
+            ['TagType', 'Team', 'Author', 'Entry', 'Tag', 'Type', 'User']
+        },
+        traits  => ['Array'],
+        handles => {
+          get_entities    => 'elements',
+      },
+);
+class_has 'relations' => (
+        is => 'ro', 
+        isa => 'ArrayRef[Str]', 
+        default => sub{
+            ['Authorship', 'Membership', 'Labeling', 'Exception']
+        },
+        traits  => ['Array'],
+        handles => {
+          get_relations    => 'elements',
+      },
+);
 
+class_has 'models' => (
+        is => 'ro', 
+        isa => 'ArrayRef[Str]', 
+        default => sub {
+            return [ LayeredRepository->get_entities, LayeredRepository->get_relations];
+        },
+        traits  => ['Array'],
+        handles => {
+          get_models  => 'elements',
+      },
+);
 
 
 =item get_read_layer
-    Returns layer designated for reading
+    Returns layer designated for reading. Throws exception if no read layer found
 =cut
 sub get_read_layer {
     my $self = shift;
     my $readLayer = first {$_->is_read} $self->get_all_layers;
+    die "Read layer in the repo not found!" if !defined $readLayer;
     return $readLayer;
 }
 
@@ -35,16 +70,9 @@ sub get_all_layers {
     return sort {$a->priority <=> $b->priority} values %{ $self->layers };
 }
 
-=item get_write_layers
-    Returns layers(!) designated for writing
+=item get_layer
+    Searches for layer named $name in the repo and returs it.
 =cut
-sub get_write_layers {
-    my $self = shift;
-    my @all = $self->get_all_layers;
-    my @writeLayers = sort {$a->priority <=> $b->priority} grep {not $_->is_read} @all;
-    return @writeLayers;
-}
-
 sub get_layer {
     my $self = shift;
     my $name = shift;
@@ -52,14 +80,22 @@ sub get_layer {
 }
 
 
+=item replace_layer
+    Replaces layer named $name in the repo with an input layer object (e.g., from backup).
+    Sets all id providers (no copy, replace!) in all layers to the id provider of the input layer.
+=cut
 sub replace_layer {
     my $self = shift;
     my $name = shift;
-    my $layer = shift;
-    $self->layers->{$name} = $layer;
+    my $input_layer = shift;
+    $self->layers->{$name} = $input_layer;
+    $self->replace_uid_provider($input_layer->uidProvider);
 }
 
-
+=item add_layer
+    Adds new layer to the layered repository.
+    Sets id provider (no copy, replace!) to this layer
+=cut
 sub add_layer {
     my $self = shift;
     my $layer = shift;
@@ -67,44 +103,63 @@ sub add_layer {
     $self->layers->{$layer->name} = $layer;
 }
 
-
-sub set_uid_provider {
+=item replace_uid_provider
+    Replaces main id provider (loacted in $self->uidProvider) state.
+    This id provider is referenced by all layers!
+=cut
+sub replace_uid_provider {
     my $self = shift;
-    my $uidProvider = shift;
-    $self->uidProvider($uidProvider);
+    my $input_id_provider = shift;
+    $self->uidProvider($input_id_provider);
+    foreach my $layer ($self->get_all_layers){
+        $layer->uidProvider($input_id_provider);
+    }
 }
 
 
+=item reset_uid_providers
+    Resets main id provider (loacted in $self->uidProvider) state.
+    This id provider is referenced by all layers!
+=cut
+sub reset_uid_providers {
+    my $self = shift;
+    # $self->uidProvider is a container that is referenced directly by all layers!
+    $self->uidProvider->reset;
+}
 
 sub get_summary_table {
     my $self = shift;
     my $str = "\n";
+    # get_id_provider_summary_hash
 
-    my %hash;
-    my @entities;
+    my %count_hash; #layer_name => summary_hash
     my @layer_names;
     foreach my $layer ($self->get_all_layers){
-        push @layer_names, $layer->name;
-        $hash{$layer->name} = $layer->get_summary_hash;
-
-        @entities = keys %{$hash{$layer->name}};
+        push @layer_names, "CNT_".$layer->name;
+        push @layer_names, "ID_".$layer->name;
+        $count_hash{"CNT_".$layer->name} = $layer->get_summary_hash;
+        $count_hash{"ID_".$layer->name} = $layer->get_id_provider_summary_hash;
     }
+    my $tab_width = 67;
     
-    $str .= "-----------------------------------\n";
+    for (1..$tab_width) { $str .= "_"; } 
+    $str .= "\n";
     $str .= sprintf "| %-15s |", 'entity';
     foreach my $ln (reverse sort @layer_names){
-        $str .= sprintf " %-5s |", $ln;
+        $str .= sprintf " %-9s |", $ln;
     }
     $str .= "\n";
-    $str .= "-----------------------------------\n";
-    foreach my $entity (sort @entities){
+    for (1..$tab_width) { $str .= "-"; }
+    $str .= "\n";
+    foreach my $entity (sort LayeredRepository->get_models ){
         $str .= sprintf "| %-15s |", $entity;
         foreach my $ln (reverse sort @layer_names){
-            $str .= sprintf " %5s |", $hash{$ln}->{$entity};
+            $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};
         }
         $str .= "\n";
     }
-    $str .= "-----------------------------------\n";
+    for (1..$tab_width) { $str .= "-"; }
+    $str .= "\n";
     return $str;
 }
 
@@ -121,7 +176,8 @@ sub get_summary_string {
 
 
 =item copy_data
-    Copy data copies data between layers of repositories
+    Copies data between layers of repositories. 
+    Does not change the uid_providers (there is one global)
 =cut
 sub copy_data {
     my $self = shift;
@@ -129,22 +185,34 @@ sub copy_data {
 
     my $backendFrom = $config->{from};
     my $backendTo = $config->{to};
-
-    # first entities - then relations - important for foreign keys in DB!
-    my @entites = qw(TagType Team Author Entry Tag Type User);
-    my @relations = qw(Labeling Authorship Membership Exception);
-    my @types = (@entites, @relations);
     
     my $srcLayer = $self->get_layer($backendFrom);
     my $destLayer = $self->get_layer($backendTo);
-    $destLayer->hardReset;
 
-    foreach my $type (@types){
-        $self->logger->info("Copying all objects of type '".$type."' from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+    print "1: copy_data srcLayer" . $srcLayer->get_summary_table;
+    print "1: copy_data destLayer" . $destLayer->get_summary_table;
+
+    my $src_uidProvider = $srcLayer->uidProvider;
+    
+
+    # this resets all uid providers!!!
+    # $destLayer->hardReset;
+
+    print "2: copy_data srcLayer" . $srcLayer->get_summary_table;
+    print "2: copy_data destLayer" . $destLayer->get_summary_table;
+
+    $destLayer->uidProvider($src_uidProvider);
+
+    print "3: copy_data srcLayer" . $srcLayer->get_summary_table;
+    print "3: copy_data destLayer" . $destLayer->get_summary_table;
+    
+
+    foreach my $type ( LayeredRepository->get_models ){
+        $self->logger->debug("Copying all objects of type '".$type."' from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
         my @resultRead = $srcLayer->all($type);
-        $self->logger->info("Read ".scalar(@resultRead)." objects of type '".$type."' from layer '$backendFrom'.","".__PACKAGE__."->copy_data");
+        $self->logger->debug("Read ".scalar(@resultRead)." objects of type '".$type."' from layer '$backendFrom'.","".__PACKAGE__."->copy_data");
         my $resultSave = $destLayer->save($type, @resultRead);
-        $self->logger->info("Saved $resultSave objects of type '".$type."' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+        $self->logger->debug("Saved $resultSave objects of type '".$type."' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
         
     }
 }

@@ -62,8 +62,10 @@ sub save_fixture {
 sub copy_mysql_to_smart {
     my $self = shift;
 
-    my @layers = $self->app->repo->lr->get_all_layers;
-    foreach (@layers){ $_->hardReset };
+    my $smart_layer = $self->app->repo->lr->get_layer('smart');
+    # reading from mysql registers UIDs - all uid providers must be reset!
+    $self->app->repo->lr->reset_uid_providers;
+    $smart_layer->reset_data;
 
     $self->app->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
 
@@ -76,7 +78,8 @@ sub copy_smart_to_mysql {
     my $self = shift;
 
     my $layer = $self->app->repo->lr->get_layer('mysql');
-    $layer->hardReset;
+    # only data is copied, uid providers stay as they are
+    $layer->reset_data;
 
     $self->app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
@@ -96,7 +99,7 @@ sub persistence_status {
 sub reset_smart {
     my $self = shift;
 
-    $self->app->repo->lr->get_read_layer->hardReset;
+    $self->app->repo->lr->get_read_layer->reset_data;
 
     # no pub_admin user would lock the whole system
     $self->app->insert_admin;

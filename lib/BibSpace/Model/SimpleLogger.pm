@@ -24,7 +24,7 @@ sub debug {
   my $self   = shift;
   my $msg    = shift;
   my $origin = shift // 'unknown';
-  print color('yellow on_blue');
+  print color('bright_blue');
   $self->log( 'DEBUG', $msg, $origin );
 }
 
@@ -50,7 +50,7 @@ sub info {
   my $self   = shift;
   my $msg    = shift;
   my $origin = shift // 'unknown';
-  print color('bright_blue');
+  print color('yellow on_blue');
   $self->log( 'INFO', $msg, $origin );
 }
 

@@ -102,14 +102,20 @@ sub registerUID {
     }
 }
 
-sub generateUID {
+sub last_id {
     my ( $self, $type ) = @_;
-
     my $curr_max           = 1;                     # starting default id
     my $curr_max_candidate = max $self->_get($type)->uid_keys;
     if ( defined $curr_max_candidate and $curr_max_candidate > 0 ) {
         $curr_max = $curr_max_candidate;
     }
+    return $curr_max;
+}
+
+sub generateUID {
+    my ( $self, $type ) = @_;
+
+    my $curr_max  = $self->last_id($type);
     my $new_uid = $curr_max + 1;
     $self->_get($type)->uid_set( $new_uid => 1 );
     $self->logger->debug("Generated uid $new_uid.");

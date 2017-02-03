@@ -43,9 +43,9 @@ has 'data' => (
     },
 );
 
-sub hardReset {
+sub reset_data {
     my $self = shift;
-    $self->logger->warn("Resetting SmartArray","".__PACKAGE__."->hardReset");
+    $self->logger->warn("Resetting SmartArray","".__PACKAGE__."->reset_data");
     $self->_clear;
 }
 

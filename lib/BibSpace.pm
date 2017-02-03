@@ -225,7 +225,7 @@ sub setup_repositories {
   }
   # no data, no fun = no need to copy, link, and store
   if( $self->repo->entries_empty ){
-    $self->app->repo->lr->get_read_layer->hardReset;
+    $self->app->repo->lr->get_read_layer->reset_data;
     $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
 
     # Entities and Relations in the smart layer must be linked!

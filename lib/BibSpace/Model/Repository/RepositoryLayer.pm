@@ -3,6 +3,7 @@ package RepositoryLayer;
 use namespace::autoclean;
 use Moose;
 use MooseX::ClassAttribute;
+use MooseX::StrictConstructor;
 use Try::Tiny;
 
 use BibSpace::Model::IUidProvider;
@@ -29,18 +30,17 @@ has 'uidProvider' => ( is => 'rw', isa => 'Maybe[SmartUidProvider]', default => 
 
 
 
-=item hardReset
+=item reset_data
     Hard reset removes all instances of repositories and resets all id providers. 
     Use only for overwriting whole data set, e.g., during backup restore.
 =cut
 
-sub hardReset {
+sub reset_data {
     my $self = shift;
-    $self->logger->warn( "Conducting HARD RESET of all repositories and ID Providers in layer '".$self->name."'!",
-        "" . __PACKAGE__ . "->hardReset" );
-    $self->uidProvider->reset if defined $self->uidProvider;
+    $self->logger->warn( "Conducting HARD RESET of data in layer '".$self->name."'!",
+        "" . __PACKAGE__ . "->reset_data" );
     try{
-        $self->handle->hardReset;
+        $self->handle->reset_data;
     }
     catch{
         # Only SmartArray supports direct reset
@@ -54,74 +54,146 @@ sub hardReset {
     };
 }
 
-sub dispatcher {
+sub daoDispatcher {
     my $self = shift;
     my $factory = shift;
-    my $type = shift;
+    my $entity_type = shift;
 
-    # $self->logger->debug("Dispatcher searches for: '$type' using factory '$factory'", "" . __PACKAGE__ . "->dispatcher");
+    # $self->logger->debug("Dispatcher searches for: '$entity_type' using factory '$factory'", "" . __PACKAGE__ . "->daoDispatcher");
 
-    if( $type eq 'TagType' ) { 
-        return $factory->getTagTypeDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'TagType' ) { 
+        return $factory->getTagTypeDao($self->uidProvider->get_provider($entity_type)); 
     }
-    if( $type eq 'Team' ) { 
-        return $factory->getTeamDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'Team' ) { 
+        return $factory->getTeamDao($self->uidProvider->get_provider($entity_type)); 
     }
-    if( $type eq 'Author' ) { 
-        return $factory->getAuthorDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'Author' ) { 
+        return $factory->getAuthorDao($self->uidProvider->get_provider($entity_type)); 
     }
-    if( $type eq 'Authorship' ) { 
-        return $factory->getAuthorshipDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'Authorship' ) { 
+        return $factory->getAuthorshipDao($self->uidProvider->get_provider($entity_type)); 
     }
-    if( $type eq 'Membership' ) { 
-        return $factory->getMembershipDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'Membership' ) { 
+        return $factory->getMembershipDao($self->uidProvider->get_provider($entity_type)); 
     }
-    if( $type eq 'Entry' ) { 
-        return $factory->getEntryDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'Entry' ) { 
+        return $factory->getEntryDao($self->uidProvider->get_provider($entity_type)); 
     }
-    if( $type eq 'Labeling' ) { 
-        return $factory->getLabelingDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'Labeling' ) { 
+        return $factory->getLabelingDao($self->uidProvider->get_provider($entity_type)); 
     }
-    if( $type eq 'Tag' ) { 
-        return $factory->getTagDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'Tag' ) { 
+        return $factory->getTagDao($self->uidProvider->get_provider($entity_type)); 
     }
-    if( $type eq 'Exception' ) { 
-        return $factory->getExceptionDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'Exception' ) { 
+        return $factory->getExceptionDao($self->uidProvider->get_provider($entity_type)); 
     }
-    if( $type eq 'Type' ) { 
-        return $factory->getTypeDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'Type' ) { 
+        return $factory->getTypeDao($self->uidProvider->get_provider($entity_type)); 
     }
-    if( $type eq 'User' ) { 
-        return $factory->getUserDao($self->uidProvider->get_provider($type)); 
+    if( $entity_type eq 'User' ) { 
+        return $factory->getUserDao($self->uidProvider->get_provider($entity_type)); 
     }
-    $self->logger->error("Requested unknown entity type: '$type'", "" . __PACKAGE__ . "->dispatcher");
-    die "Requested unknown type: '$type'";
+    $self->logger->error("Requested unknown entity_type: '$entity_type'", "" . __PACKAGE__ . "->daoDispatcher");
+    die "Requested unknown entity_type: '$entity_type'";
 }
 
-
+=item getDao
+    Returns Data Access Object (DAO) for given entity_type and backend used by layer
+=cut
 sub getDao {
     my $self = shift;
-    my $type = shift;
+    my $entity_type = shift;
     my $daoAbstractFactory = DAOFactory->new(logger => $self->logger);
     my $daoFactory = $daoAbstractFactory->getInstance($self->backendFactoryName, $self->handle);
-    return $self->dispatcher($daoFactory, $type);
+    return $self->daoDispatcher($daoFactory, $entity_type);
 }
 
+=item get_summary_hash
+    Provides a summary of a layer in form of a hash.
+    Has is build like this: entity_name => number of stored objects
+=cut
 sub get_summary_hash {
     my $self = shift;
-    my @types = qw(TagType Team Author Authorship Membership Entry Labeling Tag Exception Type User);
-    my %hash = map{$_ => $self->count($_)} @types;
+    my %hash = map{$_ => $self->count($_)} LayeredRepository->get_models;
     return \%hash;
 }
 
+=item get_id_provider_summary_hash
+    Provides a summary of a layer in form of a hash.
+    Has is build like this: entity_name => last_id of idProvider
+=cut
+sub get_id_provider_summary_hash {
+    my $self = shift;
+    my %hash = map{$_ => $self->uidProvider->get_provider($_)->last_id} LayeredRepository->get_models;
+    return \%hash;
+}
+
+=item get_summary_table
+    Prints nice summary table for all layers. 
+    Example:
+    ID_X  = last id of the id_provider in layer X
+    CNT_X = number of entities in layer X
+    ___________________________________________________________________
+    | entity          | ID_smart  | ID_mysql  | CNT_smart | CNT_mysql |
+    -------------------------------------------------------------------
+    | Author          |      1296 |      1296 |        74 |        74 |
+    | Authorship      |         1 |         1 |       696 |       696 |
+    | Entry           |      1117 |      1117 |       379 |       379 |
+    | Exception       |         1 |         1 |         2 |         2 |
+    | Labeling        |         1 |         1 |         6 |         6 |
+    | Membership      |         1 |         1 |        27 |        27 |
+    | Tag             |       231 |       231 |        50 |        50 |
+    | TagType         |         4 |         4 |         4 |         4 |
+    | Team            |         6 |         6 |         4 |         4 |
+    | Type            |        18 |        18 |        17 |        24 |
+    | User            |         1 |         1 |         1 |         1 |
+    -------------------------------------------------------------------
+=cut
+sub get_summary_table {
+    my $self = shift;
+    my $str = "\n";
+
+    my %count_hash; #layer_name => summary_hash
+    my @layer_names;
+    push @layer_names, "CNT_".$self->name;
+    push @layer_names, "ID_".$self->name;
+    $count_hash{"CNT_".$self->name} = $self->get_summary_hash;
+    $count_hash{"ID_".$self->name} = $self->get_id_provider_summary_hash;
+    
+    my $tab_width = 67;
+    
+    for (1..$tab_width) { $str .= "_"; } 
+    $str .= "\n";
+    $str .= sprintf "| %-15s |", 'entity';
+    foreach my $ln (reverse sort @layer_names){
+        $str .= sprintf " %-9s |", $ln;
+    }
+    $str .= "\n";
+    for (1..$tab_width) { $str .= "-"; }
+    $str .= "\n";
+    foreach my $entity (sort LayeredRepository->get_models){
+        $str .= sprintf "| %-15s |", $entity;
+        foreach my $ln (reverse sort @layer_names){
+            $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};
+        }
+        $str .= "\n";
+    }
+    for (1..$tab_width) { $str .= "-"; }
+    $str .= "\n";
+    return $str;
+}
+
+=item get_summary_string
+    Provides a summary of a layer in form of a string.
+    Similar output to get_summary_hash
+=cut
 sub get_summary_string {
     my $self = shift;
 
-    # TODO: this line is duplicated code
-    my @types = qw(TagType Team Author Authorship Membership Entry Labeling Tag Exception Type User);
     my $str;
     $str .= "Layer '".$self->name."'->";
-    foreach my $type (@types){
+    foreach my $type ( LayeredRepository->get_models ){
         my $cnt = $self->count($type);
         $str .= "'$type'";
         $str .= sprintf "#'%-5s',", $cnt;
@@ -129,7 +201,9 @@ sub get_summary_string {
     return $str;
 }
 
-
+=item all
+    Returns all objects of a $type stored in this layer
+=cut
 sub all {
     my ($self, $type) = @_;
     # $self->logger->debug("Calling all for type '$type' on layer '".$self->name."'", "".__PACKAGE__."->all");
@@ -153,8 +227,6 @@ sub exists {
 
 sub save {
     my ($self, $type, @objects) = @_;
-    # $self->logger->debug("Calling save for type '$type' on layer '".$self->name."'", "".__PACKAGE__."->save");
-    # $self->logger->debug("Calling save for objects '@objects' on layer '".$self->name."'", "".__PACKAGE__."->save");
     return $self->getDao($type)->save(@objects);
 }
 
