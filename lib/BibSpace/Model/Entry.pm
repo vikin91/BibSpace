@@ -383,9 +383,8 @@ sub has_author {
     my $self   = shift;
     my $author = shift;
 
-# SimpleLogger->new->warn("Checking if entry ".$self->id." has author ".$author->uid." (master ".$author->master.")");
-# SimpleLogger->new->warn("Entry ".$self->id." authorships: ".join(',', map{$_->id} grep {$_->author_id == $author->id } $self->authorships_all));
-
+    warn "FIXME: Change authorship search method! Use dummy-search authorship object!";
+    
     my $authorship = $self->authorships_find(
         sub { $_->author->equals($author) and $_->entry->equals($self) } );
     return defined $authorship;

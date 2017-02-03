@@ -393,19 +393,24 @@ sub post_edit_membership_dates {
   my $team   = $self->app->repo->teams_find( sub   { $_->id == $team_id } );
 
   if ( $author and $team ) {
-    my $membership = $self->app->repo->memberships_find(
-      sub {
-        $_->author->equals($author) and $_->team->equals($team);
-      }
-    );
-    $membership->start($new_start);
-    $membership->stop($new_stop);
-    $self->app->repo->memberships_update($membership);
+    my $search_mem = Membership->new(
+          author    => $author->get_master,
+          team      => $team,
+          author_id => $author->get_master->id,
+          team_id   => $team->id
+        );
+    my $membership = $self->app->repo->memberships_find( sub { $_->equals($search_mem) } );
 
-    # $author->remove_membership($membership);
-    # $team->remove_membership($membership);
-
-    $self->flash( msg => "Membership updated successfully.", msg_type => "success" );
+    if( $membership ){
+      
+      $membership->start($new_start);
+      $membership->stop($new_stop);
+      $self->app->repo->memberships_update($membership);  
+      $self->flash( msg => "Membership updated successfully.", msg_type => "success" );
+    }
+    else{
+      $self->flash( msg => "Cannot find membership.", msg_type => "danger" );
+    }
     $self->redirect_to( $self->url_for( 'edit_author', id => $author->id ) );
     return;
   }
