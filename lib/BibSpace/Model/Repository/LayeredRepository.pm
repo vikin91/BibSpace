@@ -189,9 +189,8 @@ sub copy_data {
     my $srcLayer = $self->get_layer($backendFrom);
     my $destLayer = $self->get_layer($backendTo);
 
-    # this is probably not necessary
-    my $src_uidProvider = $srcLayer->uidProvider;
-    $destLayer->uidProvider($src_uidProvider);
+    # why should I??
+    $self->replace_uid_provider($srcLayer->uidProvider);
 
     ## avoid data duplication in the destination layer!!
     $destLayer->reset_data; # this has unfortunately no meaning for mysql :( need to implement this
@@ -200,9 +199,13 @@ sub copy_data {
 
     $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
 
+    $self->logger->debug("State before copying:".$self->get_summary_table);
+
     foreach my $type ( LayeredRepository->get_entities ){
         
+        $self->logger->debug("Read all $type.");
         my @resultRead = $srcLayer->all($type);
+        $self->logger->debug("Save all $type.");
         my $resultSave = $destLayer->save($type, @resultRead);
         
         $self->logger->debug("'$backendFrom'->read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'->save $resultSave objects.","".__PACKAGE__."->copy_data");

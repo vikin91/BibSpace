@@ -236,6 +236,9 @@ sub create_main_db {
   # prepare_token_table_mysql($dbh);
   prepare_cron_table($dbh);
   prepare_user_table_mysql($dbh);
+
+  # this causes desynchronisation between layers!!
+  # mysql has some initial data, whereas smart doesnt (so id providers are unaware of the data as well) 
   populate_tables($dbh);
   # $dbh->commit();
 }

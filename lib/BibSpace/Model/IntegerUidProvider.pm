@@ -47,7 +47,7 @@ sub registerUID{
 
 sub last_id {
     my ( $self ) = @_;
-    my $curr_max           = 1;                     # starting default id
+    my $curr_max           = 0;                     # starting default id
     my $curr_max_candidate = max $self->uid_keys;
     if ( defined $curr_max_candidate and $curr_max_candidate > 0 ) {
         $curr_max = $curr_max_candidate;

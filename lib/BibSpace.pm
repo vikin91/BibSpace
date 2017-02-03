@@ -211,6 +211,7 @@ sub setup_repositories {
     # reser read layer = not needed, layer empty by start of the app
     $self->app->logger->info("Replacing layer 'smart' with the dump.");
     $self->repo->lr->replace_layer('smart', $layer);
+    $self->app->logger->debug("State after replacement:".$self->repo->lr->get_summary_table);
   }
   else{
     $self->app->logger->info("We do not use dump file '".$self->appStateDumpFileName."'.");
@@ -218,7 +219,11 @@ sub setup_repositories {
   # no data, no fun = no need to copy, link, and store
   if( $self->repo->entries_empty ){
     $self->app->logger->info("Repo has no entries. Reseting read_layer.");
+    
+
+    # IMPORTANT FIXME: this should be always called when entire dataset in smart array is replaced!!
     $self->app->repo->lr->get_read_layer->reset_data;
+    $self->app->repo->lr->reset_uid_providers;
     $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
 
     # Entities and Relations in the smart layer must be linked!
