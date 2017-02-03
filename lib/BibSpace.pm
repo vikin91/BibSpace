@@ -83,11 +83,17 @@ has version => sub {
   return $BibSpace::VERSION // "0.5.0";
 };
 
-has appStateDumpFileName => sub {
+has quick_load_fixture_filename => sub {
   return 'bibspace.dat';
 };
 
-has useDumpFixture => sub {
+# don't want to read data form DB and wait to link them every reload? 
+# use quick_load_fixture! Useful for development and testing. 
+# better disable it for production
+has use_quick_load_fixture => sub {
+  my $self = shift;
+  return if $self->mode eq 'production';
+
   return 1 if defined $ENV{BIBSPACE_USE_DUMP} and $ENV{BIBSPACE_USE_DUMP} == 1;
   return;
 };
@@ -114,6 +120,8 @@ has layeredRepository => sub {
     backendFactoryName => "SmartArrayDAOFactory", 
     logger => $self->logger,
     handle => $self->smartArrayBackend,
+    # reset_data_callback must be undef if you want to make and restore backups using Storable.
+    reset_data_callback => undef, 
     is_read => 1);
 
   my $mySQLLayer = RepositoryLayer->new( 
@@ -122,7 +130,23 @@ has layeredRepository => sub {
     creates_on_read => 1,
     backendFactoryName => "MySQLDAOFactory", 
     logger => $self->logger,
-    handle => $self->db);
+    handle => $self->db,
+    # reset_data_callback => sub { say foreach @_; },
+    # reset_data_callback_arguments => [
+    #     $self->db, 
+    #     $self->config->{db_host},
+    #     $self->config->{db_user},
+    #     $self->config->{db_database},
+    #     $self->config->{db_pass}
+    #   ],
+    reset_data_callback => \&purge_and_create_db,
+    reset_data_callback_arguments => [
+        $self->db, $self->config->{db_host},
+        $self->config->{db_user},
+        $self->config->{db_database},
+        $self->config->{db_pass}
+      ],
+  );
 
   $LR->add_layer($smartArrayLayer);
   $LR->add_layer($mySQLLayer);
@@ -207,40 +231,36 @@ sub setup_repositories {
 
   $self->app->logger->info("Setup repositories...");
 
-  if( -e $self->appStateDumpFileName and $self->useDumpFixture ){
-    $self->app->logger->info("Retrieving dump from '".$self->appStateDumpFileName."'.");
-    my $layer = retrieve($self->appStateDumpFileName);
+  if( -e $self->quick_load_fixture_filename and $self->use_quick_load_fixture ){
+    # $self->app->logger->info("Retrieving dump from '".$self->quick_load_fixture_filename."'.");
+    my $layer = retrieve($self->quick_load_fixture_filename);
     # reser read layer = not needed, layer empty by start of the app
-    $self->app->logger->info("Replacing layer 'smart' with the dump.");
+    # $self->app->logger->info("Replacing layer 'smart' with the dump.");
     $self->repo->lr->replace_layer('smart', $layer);
-    $self->app->logger->debug("State after replacement:".$self->repo->lr->get_summary_table);
+    # $self->app->logger->debug("State after replacement:".$self->repo->lr->get_summary_table);
   }
   else{
-    $self->app->logger->info("We do not use dump file '".$self->appStateDumpFileName."'.");
+    $self->app->logger->info("We do not use dump file '".$self->quick_load_fixture_filename."'.");
   }
   # no data, no fun = no need to copy, link, and store
   if( $self->repo->entries_empty ){
     $self->app->logger->info("Repo has no entries. Reseting read_layer.");
     
-    # refactor this nicely into a single function - load dump fixture or so...
-    # IMPORTANT FIXME: this should be always called when entire dataset in smart array is replaced!!
-    # $self->app->repo->lr->get_read_layer->reset_data;
-    # $self->app->repo->lr->reset_uid_providers;
-    $self->repo->lr->move_data( { from => 'mysql', to => 'smart' } );
+    $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
 
     # Entities and Relations in the smart layer must be linked!
     $self->link_data;
 
     $self->app->logger->debug("Current state:".$self->repo->lr->get_summary_table);
-    $self->app->logger->info("Storing current state to dump file '".$self->appStateDumpFileName."'.");
+    $self->app->logger->info("Storing current state to dump file '".$self->quick_load_fixture_filename."'.");
     # store current state to file
-    store $self->repo->lr->get_read_layer, $self->appStateDumpFileName;  
+    store $self->repo->lr->get_read_layer, $self->quick_load_fixture_filename;  
   }
   else{
     $self->app->logger->info("Repo has entries. Skip copy mysql=>smart and store to dump.");
   }
 
-  $self->app->logger->debug("setup_repositories has finished. Status:".$self->repo->lr->get_summary_table);
+  $self->app->logger->debug("setup_repositories is finished. Status:".$self->repo->lr->get_summary_table);
 
 }
 ################################################################

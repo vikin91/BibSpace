@@ -57,7 +57,7 @@ SKIP: {
   # my $layer = $self->app->repo->lr->get_layer('mysql');
   # mysql does not support reset data!!!!!
   # $layer->reset_data;
-  # $self->app->repo->lr->move_data( { from => 'smart', to => 'mysql' } );
+  # $self->app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
 }
 

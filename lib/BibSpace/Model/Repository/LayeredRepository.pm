@@ -11,6 +11,8 @@ use BibSpace::Model::IUidProvider;
 use BibSpace::Model::SmartUidProvider;
 use BibSpace::Model::Repository::RepositoryLayer;
 
+# logic of the layered repository = read from one layer, write to all layers
+
 has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
 # layer_name => RepositoryLayer
 has 'layers' => ( 
@@ -98,6 +100,10 @@ sub replace_layer {
     my $input_layer = shift;
 
     my $destLayer = $self->get_layer($name);
+    if( ref($destLayer) ne ref($input_layer) ){
+        $self->logger->error("Replacing layers with of different type, this will lead to failure!");
+        die "Replacing layers with of different type, this will lead to failure!";
+    }
     if($destLayer and $input_layer->is_read != $destLayer->is_read){
         $self->logger->warn("Replacing layers with different is_read value! This is experimental!");
     }
@@ -216,7 +222,7 @@ sub get_summary_string {
 
 
 
-=item move_data
+=item copy_data
     Copies data between layers of repositories. 
     Does not change the uid_providers (there is one global)
     Remember: If you move data FROM layer, which creates_on_read==true,
@@ -227,9 +233,9 @@ sub get_summary_string {
 # IMPORTANT FIXME: this should be always called when entire dataset in smart array is replaced!!
 # $self->app->repo->lr->get_read_layer->reset_data;
 # $self->app->repo->lr->reset_uid_providers;
-# $self->repo->lr->move_data( { from => 'mysql', to => 'smart' } );
+# $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
 
-sub move_data {
+sub copy_data {
     my $self = shift;
     my $config  = shift;
 
@@ -240,7 +246,7 @@ sub move_data {
     my $destLayer = $self->get_layer($backendTo);
 
     if(!$srcLayer or !$destLayer){
-        $self->logger->error("Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist.","".__PACKAGE__."->move_data");
+        $self->logger->error("Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist.","".__PACKAGE__."->copy_data");
         return;
     }
 
@@ -258,7 +264,7 @@ sub move_data {
     
     # ALWAYS: first copy entities, then relations
 
-    $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->move_data");
+    $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
 
     # $self->logger->debug("State before copying:".$self->get_summary_table);
 
@@ -267,19 +273,19 @@ sub move_data {
         my @resultRead = $srcLayer->all($type);
         my $resultSave = $destLayer->save($type, @resultRead);
         
-        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".__PACKAGE__."->move_data");
+        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".__PACKAGE__."->copy_data");
         
     }
     foreach my $type ( LayeredRepository->get_relations ){
         my @resultRead = $srcLayer->all($type);
         my $resultSave = $destLayer->save($type, @resultRead);
         
-        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".__PACKAGE__."->move_data");
+        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".__PACKAGE__."->copy_data");
         
     }
 }
 
-# logic of the layered repository = read from one layer, write to all layer
+
 
 sub all {
     my $self = shift;

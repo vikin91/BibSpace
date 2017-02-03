@@ -15,6 +15,14 @@ use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::Core;
 
 #################################################################################
+sub persistence_status {
+    my $self = shift;
+
+    my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
+    $self->flash( msg_type=>'success', msg => $status );
+    $self->redirect_to( $self->get_referrer );
+}
+#################################################################################
 sub load_fixture {
     my $self = shift;
 
@@ -62,12 +70,12 @@ sub save_fixture {
 sub copy_mysql_to_smart {
     my $self = shift;
 
-    my $smart_layer = $self->app->repo->lr->get_layer('smart');
-    # reading from mysql registers UIDs - all uid providers must be reset!
-    $self->app->repo->lr->reset_uid_providers;
-    $smart_layer->reset_data;
+    # my $smart_layer = $self->app->repo->lr->get_layer('smart');
+    # # reading from mysql registers UIDs - all uid providers must be reset!
+    # $self->app->repo->lr->reset_uid_providers;
+    # $smart_layer->reset_data;
 
-    $self->app->repo->lr->move_data( { from => 'mysql', to => 'smart' } );
+    $self->app->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
 
     my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
     $self->flash( msg_type=>'success', msg => "Copied mysql => smart. $status" );
@@ -77,29 +85,19 @@ sub copy_mysql_to_smart {
 sub copy_smart_to_mysql {
     my $self = shift;
 
-    my $layer = $self->app->repo->lr->get_layer('mysql');
-    # only data is copied, uid providers stay as they are
-    $layer->reset_data;
 
-    $self->app->repo->lr->move_data( { from => 'smart', to => 'mysql' } );
+    $self->app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
     my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
     $self->flash( msg_type=>'success', msg => "Copied smart => mysql. $status" );
     $self->redirect_to( $self->get_referrer );
 }
 #################################################################################
-sub persistence_status {
-    my $self = shift;
-
-    my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
-    $self->flash( msg_type=>'success', msg => $status );
-    $self->redirect_to( $self->get_referrer );
-}
-#################################################################################
 sub reset_smart {
     my $self = shift;
 
-    $self->app->repo->lr->get_read_layer->reset_data;
+    my $layer = $self->app->repo->lr->get_layer('smart');
+    $layer->reset_data;
 
     # no pub_admin user would lock the whole system
     $self->app->insert_admin;
@@ -112,12 +110,15 @@ sub reset_smart {
 sub reset_mysql {
     my $self = shift;
 
-    purge_and_create_db($self->app->db, 
-        $self->app->config->{db_host},
-        $self->app->config->{db_user},
-        $self->app->config->{db_database},
-        $self->app->config->{db_pass}
-    );
+    my $layer = $self->app->repo->lr->get_layer('mysql');
+    $layer->reset_data;
+
+    # purge_and_create_db($self->app->db, 
+    #     $self->app->config->{db_host},
+    #     $self->app->config->{db_user},
+    #     $self->app->config->{db_database},
+    #     $self->app->config->{db_pass}
+    # );
 
     my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
     $self->flash( msg_type=>'success', msg => $status );

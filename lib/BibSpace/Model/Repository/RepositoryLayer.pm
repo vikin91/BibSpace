@@ -13,15 +13,43 @@ use BibSpace::Model::DAO::RedisDAOFactory;
 use BibSpace::Model::SmartUidProvider;
 
 has 'name' => ( is => 'ro', isa => 'Str', required => 1 );
-
-# lower number = higher priority = will be saved before layers with lower priority
-has 'priority' => ( is => 'ro', isa  => 'Int',     default  => 99 );
-has 'logger'   => ( is => 'ro', does => 'ILogger', required => 1 );
-has 'handle'   => ( is => 'ro', isa  => 'Object',  required => 1 );
-has 'is_read'  => ( is => 'ro', isa  => 'Bool',    default  => undef );
+has 'priority' => (
+    is            => 'ro',
+    isa           => 'Int',
+    default       => 99,
+    documentation => q{
+        Lower number = higher priority = will be saved before other layers with lower priority.
+    },
+);
+has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
+has 'handle' => (
+    is            => 'ro',
+    isa           => 'Object',
+    required      => 1,
+    documentation => q{
+        Holds a backend handle (e.g., DBI handle, ArrayRef, Redis Connection.
+    },
+);
+has 'reset_data_callback' => (
+    is            => 'ro',
+    isa           => 'Maybe[CodeRef]',
+    default       => undef,
+    documentation => q{
+        Holds a pointer to the function that resets data of this layer.
+    },
+);
+has 'reset_data_callback_arguments' => (
+    is            => 'ro',
+    isa           => 'Maybe[ArrayRef]',
+    default       => sub { [] },
+    documentation => q{
+        Holds an array of parameters for the function that resets data of this layer.
+    },
+);
+has 'is_read' => ( is => 'ro', isa => 'Bool', default => undef );
 has 'creates_on_read' => (
-    is      => 'ro',
-    isa     => 'Bool',
+    is       => 'ro',
+    isa      => 'Bool',
     required => 1,
     documentation =>
         q{Does this layer creates new objects (BibSpaceEntity) on reading them from backend?
@@ -66,21 +94,39 @@ sub reset_data {
     $self->logger->warn(
         "Conducting HARD RESET of data in layer '" . $self->name . "'!",
         "" . __PACKAGE__ . "->reset_data" );
-    try {
-        $self->handle->reset_data;
-    }
-    catch {
-        # Only SmartArray supports direct reset
-        if ( ref( $self->handle ) eq 'SmartArray' ) {
-            $self->logger->error(
-                "Reset of " . ref( $self->handle ) . " failed. Error $_",
-                "" . __PACKAGE__ . "->hardReset" );
+
+    if ( defined $self->reset_data_callback ) {
+        $self->logger->warn(
+            "HARD RESET of data in layer '"
+                . $self->name
+                . "' using reset_data_callback",
+            "" . __PACKAGE__ . "->reset_data"
+        );
+
+        my $reset_subroutine = \&{ $self->reset_data_callback };
+        if ( @{ $self->reset_data_callback_arguments } ) {
+            ($reset_subroutine)
+                ->( @{ $self->reset_data_callback_arguments } );
+        }
+        else {
+            &$reset_subroutine;
         }
 
-        # we ignore if the handle cannot be reset
-        # e.g. MySQL database should not be reset - it does persistence,
-        # but our SmartArray should - it does caching
-    };
+    }
+    else {
+        try {
+            $self->handle->reset_data;
+        }
+        catch {
+            # Only SmartArray supports direct reset
+            if ( ref( $self->handle ) eq 'SmartArray' ) {
+                $self->logger->error(
+                    "Reset of " . ref( $self->handle ) . " failed. Error $_",
+                    "" . __PACKAGE__ . "->hardReset"
+                );
+            }
+        };
+    }
 }
 
 sub daoDispatcher {
@@ -259,8 +305,6 @@ sub get_summary_string {
 
 sub all {
     my ( $self, $type ) = @_;
-
-# $self->logger->debug("Calling all for type '$type' on layer '".$self->name."'", "".__PACKAGE__."->all");
     return $self->getDao($type)->all;
 }
 
