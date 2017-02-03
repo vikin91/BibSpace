@@ -129,7 +129,10 @@ sub system_status {
     my $self = shift;
 
     my $msg      = "";
-    my $log_file = $self->app->config->{log_file};
+    my $log_dir = $self->app->config->{log_dir};
+    my $backups_dir = $self->app->config->{backups_dir};
+    my $upload_dir = $self->app->config->{upload_dir};
+    
 
     my $backup_dir_absolute = $self->config->{backups_dir};
     $backup_dir_absolute
@@ -149,9 +152,29 @@ sub system_status {
         $errored = 1;
     };
     ###################
+    $msg .= "<br/>" . "Reading upload directory: ";
+    try {
+        get_dir_size($upload_dir);
+        $msg .= "OK ";
+    }
+    catch {
+        $msg .= "ERROR: $_";
+        $errored = 1;
+    };
+    ###################
+    $msg .= "<br/>" . "Reading log directory: ";
+    try {
+        get_dir_size($log_dir);
+        $msg .= "OK ";
+    }
+    catch {
+        $msg .= "ERROR: $_";
+        $errored = 1;
+    };
+    ###################
     $msg .= "<br/>" . "Reading backup dir: ";
     try {
-        get_dir_size("backups");
+        get_dir_size($backups_dir);
         $msg .= "OK ";
     }
     catch {

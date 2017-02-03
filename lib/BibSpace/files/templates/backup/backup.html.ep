@@ -83,14 +83,20 @@
                     </td>
                     <td>
                         % if( $backup->is_healthy and $backup->type eq 'storable' ){
-                          <a class="btn btn-warning btn-sm" href="#modal-dialog-restore-<%=$backup->id%>" data-toggle="modal"><span class="glyphicon glyphicon-import"></span> Restore</a>
+                          <a class="btn btn-warning btn-sm" href="#modal-dialog-restore-<%=$backup->id%>" data-toggle="modal"><span class="glyphicon glyphicon-import"></span> Restore...</a>
                         %}
                         %else{
                           <button class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="right" title="MySQL dumps must be restored manually."><span class="glyphicon glyphicon-import"></span> Restore</button>
                         %}
                     </td>
                     <td>
+                    % if( $backup->allow_delete ){
                         <a class="btn btn-danger btn-sm" href="#modal-dialog-del-<%=$backup->id%>" data-toggle="modal"><span class="glyphicon glyphicon-fire"></span> Destroy</a>
+                    % }
+                    % else {
+                        <a class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Only backups older than <%= config 'allow_delete_backups_older_than'%> days can be destroyed.">
+                        <span class="glyphicon glyphicon-fire"></span> Destroy</a>
+                    % }
                     </td>
                     <td>
                       <button class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Backup age: <%=$backup->get_age->days%> d <%=$backup->get_age->hours%> h <%=$backup->get_age->minutes%> m "><i class="fa fa-calendar"></i> <%= $backup->get_date_readable %> </button>
@@ -150,8 +156,8 @@
                   <ol>
                     <li>Backup file will be read.</li>
                     <li>Backup contents will replace current 'read' layer (SmartArray).</li>
-                    <li>MySQL database will be dropped and recreated.</li>
-                    <li>Contents of the 'read' layer will be inserted into MySQL in a batch operation.</li>
+                    <li>All layers will be reset! MySQL database will be dropped and recreated.</li>
+                    <li>Contents of the backup layer will be pushed to all layers in a batch operation.</li>
                   </ol>
                 </div>
                 <div class="modal-footer">

@@ -42,6 +42,15 @@ sub index {
 
     my @backups_arr = sort {$b->date cmp $a->date} read_backups($backup_dir);
 
+    foreach my $backup (@backups_arr){
+        if( $backup->get_age->days >= $self->app->config->{allow_delete_backups_older_than}){
+            $backup->allow_delete(1);    
+        }
+        else{
+            $backup->allow_delete(undef); 
+        }
+    }
+
     $self->stash(
         backups_arr => \@backups_arr,
         dir_size    => $dir_size

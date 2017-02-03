@@ -145,8 +145,6 @@ sub restore_storable_backup {
 
     ## this writes to all layers!!
 
-    # my $smart_layer = $self->get_layer('smart');
-    # $smart_layer->reset_data;
     my @layers = $app->repo->lr->get_all_layers;
     foreach (@layers){ $_->reset_data };
 
@@ -155,16 +153,6 @@ sub restore_storable_backup {
     $app->repo->lr->replace_layer('smart', $layer);
 
     # say "Smart layer after replace:" . $app->repo->lr->get_layer('smart')->get_summary_table;
-
-    # this is in fact $layer->reset_data for mysql!!
-    purge_and_create_db($app->db, 
-        $app->config->{db_host},
-        $app->config->{db_user},
-        $app->config->{db_database},
-        $app->config->{db_pass}
-    );
-
-    # say "Smart layer before copy_data:" . $app->repo->lr->get_layer('smart')->get_summary_table;
 
     $app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
