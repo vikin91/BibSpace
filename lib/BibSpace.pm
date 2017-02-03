@@ -110,6 +110,7 @@ has layeredRepository => sub {
   my $smartArrayLayer = RepositoryLayer->new(
     name => 'smart',
     priority => 1,
+    creates_on_read => undef,
     backendFactoryName => "SmartArrayDAOFactory", 
     logger => $self->logger,
     handle => $self->smartArrayBackend,
@@ -118,6 +119,7 @@ has layeredRepository => sub {
   my $mySQLLayer = RepositoryLayer->new( 
     name => 'mysql',
     priority => 99,
+    creates_on_read => 1,
     backendFactoryName => "MySQLDAOFactory", 
     logger => $self->logger,
     handle => $self->db);
@@ -222,9 +224,9 @@ sub setup_repositories {
     
     # refactor this nicely into a single function - load dump fixture or so...
     # IMPORTANT FIXME: this should be always called when entire dataset in smart array is replaced!!
-    $self->app->repo->lr->get_read_layer->reset_data;
-    $self->app->repo->lr->reset_uid_providers;
-    $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
+    # $self->app->repo->lr->get_read_layer->reset_data;
+    # $self->app->repo->lr->reset_uid_providers;
+    $self->repo->lr->move_data( { from => 'mysql', to => 'smart' } );
 
     # Entities and Relations in the smart layer must be linked!
     $self->link_data;
@@ -239,33 +241,6 @@ sub setup_repositories {
   }
 
   $self->app->logger->debug("setup_repositories has finished. Status:".$self->repo->lr->get_summary_table);
-
-  # $self->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
-
-  # $self->app->logger->debug("setup_repositories: copy 1 Status:".$self->repo->lr->get_summary_table);
-
-  # $self->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
-
-  # $self->app->logger->debug("setup_repositories: copy 2 Status:".$self->repo->lr->get_summary_table);
-
-
-  # my $eidP = $self->repo->entries_idProvider;
-  # foreach (0..100){
-  #   my $testEntry = Entry->new(idProvider => $eidP, bib=>'@article{key'.$_.', title={xyz'.$_.'}, year={2099}}');
-  #   say "testEntry:".$testEntry->id;
-  #   $self->repo->entries_save($testEntry);
-  # }
-
-  # $self->app->logger->debug($self->repo->lr->get_summary_string);
-
-
-  # my $rf = $self->repo;
-
-  # my @allAuthors = $rf->authors_filter(sub{$_->is_visible}); #good!!
-
-  # for my $e (@allAuthors) {
-  #   say $e->uid;    
-  # }
 
 }
 ################################################################

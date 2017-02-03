@@ -67,7 +67,7 @@ sub copy_mysql_to_smart {
     $self->app->repo->lr->reset_uid_providers;
     $smart_layer->reset_data;
 
-    $self->app->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
+    $self->app->repo->lr->move_data( { from => 'mysql', to => 'smart' } );
 
     my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
     $self->flash( msg_type=>'success', msg => "Copied mysql => smart. $status" );
@@ -81,7 +81,7 @@ sub copy_smart_to_mysql {
     # only data is copied, uid providers stay as they are
     $layer->reset_data;
 
-    $self->app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
+    $self->app->repo->lr->move_data( { from => 'smart', to => 'mysql' } );
 
     my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
     $self->flash( msg_type=>'success', msg => "Copied smart => mysql. $status" );

@@ -13,7 +13,13 @@ use BibSpace::Model::Repository::RepositoryLayer;
 
 has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
 # layer_name => RepositoryLayer
-has 'layers' => ( is => 'ro', isa => 'HashRef[RepositoryLayer]', traits => ['DoNotSerialize'], default => sub{ {} } );
+has 'layers' => ( 
+        is => 'ro', 
+        isa => 'HashRef[RepositoryLayer]', 
+        traits => ['DoNotSerialize'], 
+        default => sub{ {} } 
+);
+
 has 'uidProvider' => ( is => 'rw', isa => 'SmartUidProvider', required => 1 );
 
 class_has 'entities' => (
@@ -58,7 +64,6 @@ class_has 'models' => (
 sub get_read_layer {
     my $self = shift;
     my $readLayer = first {$_->is_read} $self->get_all_layers;
-    die "Read layer in the repo not found!" if !defined $readLayer;
     return $readLayer;
 }
 
@@ -76,18 +81,26 @@ sub get_all_layers {
 sub get_layer {
     my $self = shift;
     my $name = shift;
-    return $self->layers->{$name};
+    if( exists $self->layers->{$name} ){
+        return $self->layers->{$name};
+    }
+    return;
 }
 
 
 =item replace_layer
-    Replaces layer named $name in the repo with an input layer object (e.g., from backup).
-    Sets all id providers (no copy, replace!) in all layers to the id provider of the input layer.
+    Replaces layer named $name in the repo with an input_layer object (e.g., from backup).
+    Sets id providers (no copy, replace!) in all layers to the id provider of the input layer.
 =cut
 sub replace_layer {
     my $self = shift;
     my $name = shift;
     my $input_layer = shift;
+
+    my $destLayer = $self->get_layer($name);
+    if($destLayer and $input_layer->is_read != $destLayer->is_read){
+        $self->logger->warn("Replacing layers with different is_read value! This is experimental!");
+    }
     $self->layers->{$name} = $input_layer;
     $self->replace_uid_provider($input_layer->uidProvider);
 }
@@ -99,6 +112,13 @@ sub replace_layer {
 sub add_layer {
     my $self = shift;
     my $layer = shift;
+
+    if(exists $self->layers->{$layer->name}){
+        die "Layer with such name already exist.";
+    }
+    if($layer->is_read and $self->get_read_layer){
+        die "There can be only one read layer.";
+    }
     $layer->uidProvider($self->uidProvider);
     $self->layers->{$layer->name} = $layer;
 }
@@ -119,7 +139,8 @@ sub replace_uid_provider {
 
 =item reset_uid_providers
     Resets main id provider (loacted in $self->uidProvider) state.
-    This id provider is referenced by all layers!
+    This id provider is referenced by all layers! 
+    You reset here, and all id_provider references in the layers will be reset as well.
 =cut
 sub reset_uid_providers {
     my $self = shift;
@@ -150,7 +171,7 @@ sub get_summary_table {
             $count_hash{$prefix.'OK'}->{$entity} = 'y';
             my $val;
             foreach my $ln (reverse sort map {$_->name} $self->get_all_layers){
-                if(!$val){
+                if( !defined $val ){
                     $val = "".$count_hash{$prefix.$ln}->{$entity};
                 }
                 if($count_hash{$prefix.$ln}->{$entity} ne $val){
@@ -195,11 +216,20 @@ sub get_summary_string {
 
 
 
-=item copy_data
+=item move_data
     Copies data between layers of repositories. 
     Does not change the uid_providers (there is one global)
+    Remember: If you move data FROM layer, which creates_on_read==true,
+        then you need to reset id_providers.
 =cut
-sub copy_data {
+
+# refactor this nicely into a single function - load dump fixture or so...
+# IMPORTANT FIXME: this should be always called when entire dataset in smart array is replaced!!
+# $self->app->repo->lr->get_read_layer->reset_data;
+# $self->app->repo->lr->reset_uid_providers;
+# $self->repo->lr->move_data( { from => 'mysql', to => 'smart' } );
+
+sub move_data {
     my $self = shift;
     my $config  = shift;
 
@@ -209,33 +239,42 @@ sub copy_data {
     my $srcLayer = $self->get_layer($backendFrom);
     my $destLayer = $self->get_layer($backendTo);
 
-    # why should I??
-    $self->replace_uid_provider($srcLayer->uidProvider);
+    if(!$srcLayer or !$destLayer){
+        $self->logger->error("Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist.","".__PACKAGE__."->move_data");
+        return;
+    }
+
+    if( $srcLayer->creates_on_read ){
+        $self->reset_uid_providers;
+    }
+
+    # # Copy uid_provider from srcLayer to all layers
+    # # A) smart -> mysql
+    # # B) mysql -> smart
+    # $self->replace_uid_provider($srcLayer->uidProvider);
 
     ## avoid data duplication in the destination layer!!
     $destLayer->reset_data; # this has unfortunately no meaning for mysql :( need to implement this
     
     # ALWAYS: first copy entities, then relations
 
-    $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+    $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->move_data");
 
-    $self->logger->debug("State before copying:".$self->get_summary_table);
+    # $self->logger->debug("State before copying:".$self->get_summary_table);
 
     foreach my $type ( LayeredRepository->get_entities ){
         
-        $self->logger->debug("Read all $type.");
         my @resultRead = $srcLayer->all($type);
-        $self->logger->debug("Save all $type.");
         my $resultSave = $destLayer->save($type, @resultRead);
         
-        $self->logger->debug("'$backendFrom'->read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'->save $resultSave objects.","".__PACKAGE__."->copy_data");
+        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".__PACKAGE__."->move_data");
         
     }
     foreach my $type ( LayeredRepository->get_relations ){
         my @resultRead = $srcLayer->all($type);
         my $resultSave = $destLayer->save($type, @resultRead);
         
-        $self->logger->debug("'$backendFrom'->read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'->save $resultSave objects.","".__PACKAGE__."->copy_data");
+        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".__PACKAGE__."->move_data");
         
     }
 }
