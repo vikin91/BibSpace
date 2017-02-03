@@ -126,7 +126,7 @@ sub _insert {
       $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
     }
     catch {
-      $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
+      $self->logger->error( "Insert exception when inserting " . $obj->id . ": $_", "" . __PACKAGE__ . "->insert" );
       $dbh->rollback();
     };
   }
