@@ -42,30 +42,9 @@ sub can_be_deleted {
   return 1;
 }
 ####################################################################################
-sub has_author {
-  my $self   = shift;
-  my $author = shift;
-
-  my $found = $self->authors_find( sub { $_->equals($author) } );
-  return 1 if $found;
-  return;
-}
-####################################################################################
-sub remove_all_authors {
-  my $self = shift;
-
-  $self->teamMemberships_clear;
-  $self->authors_clear;
-}
-####################################################################################
 sub get_members {
   my $self = shift;
   return map { $_->author } $self->memberships_all;
-}
-####################################################################################
-sub members {
-  my $self = shift;
-  return $self->get_members; 
 }
 ####################################################################################
 sub get_membership_beginning {

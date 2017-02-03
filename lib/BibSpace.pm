@@ -103,7 +103,7 @@ has smartArrayBackend => sub {
 
 has layeredRepository => sub {
   my $self = shift;
-  $self->app->logger->warn("Calling layeredRepository");
+  $self->app->logger->info("Building layeredRepository");
   my $sup = SmartUidProvider->new(logger=> $self->logger, idProviderClassName => 'IntegerUidProvider');
   my $LR = LayeredRepository->new(logger => $self->logger, uidProvider => $sup);
 
@@ -148,9 +148,9 @@ sub startup {
 
 
   $self->app->logger->info("Setup done.");
-  $self->app->logger->info( "Using CONFIG: " . $self->app->config_file );
-  $self->app->logger->info( "App home is: " . $self->app->home );
-  $self->app->logger->info( "Active bst file is: " . $self->app->bst );
+  $self->app->logger->info("Using CONFIG: " . $self->app->config_file );
+  $self->app->logger->info("App home is: " . $self->app->home );
+  $self->app->logger->info("Active bst file is: " . $self->app->bst );
 
   ## SANDBOX
 

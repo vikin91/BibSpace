@@ -38,7 +38,7 @@ sub edit {
     return;
   }
 
-  my @team_members = $team->members;
+  my @team_members = $team->get_members;
 
 
   $self->stash( members => \@team_members, team => $team );
