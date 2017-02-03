@@ -290,19 +290,21 @@ sub remove_bibtex_fields {
     my $num_deleted = 0;
 
     for my $field (@bib_fields_to_delete) {
-        $entry->delete($field) if defined $entry->exists($field);
-        $num_deleted++ if defined $entry->exists($field);
+        if( $entry->exists($field) ){
+            $entry->delete($field);
+            $num_deleted++;
+        }
     }
 
     if ( $num_deleted > 0 ) {
         my $new_bib = $entry->print_s;
 
-# cleaning errors caused by sqlite - mysql import # FIXME: do we still need this?
-        $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
-        $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
+# # cleaning errors caused by sqlite - mysql import # FIXME: do we still need this?
+#         $new_bib =~ s/''\{(.)\}/"\{$1\}/g;
+#         $new_bib =~ s/"\{(.)\}/\\"\{$1\}/g;
 
-        $new_bib =~ s/\\\\/\\/g;
-        $new_bib =~ s/\\\\/\\/g;
+#         $new_bib =~ s/\\\\/\\/g;
+#         $new_bib =~ s/\\\\/\\/g;
 
         $self->bib($new_bib);
     }
@@ -338,6 +340,11 @@ sub fix_month {
     return $num_fixes;
 }
 ####################################################################################
+sub fix_bibtex_accents {
+    my $self     = shift;
+    $self->bib(fix_bibtex_national_characters($self->bib));
+}
+####################################################################################
 sub generate_html {
     my $self     = shift;
     my $bst_file = shift;
@@ -345,6 +352,8 @@ sub generate_html {
     $bst_file = $self->bst_file if !defined $bst_file;
 
     $self->populate_from_bib();
+
+    $self->fix_bibtex_accents;
 
     my $c = BibSpaceBibtexToHtml::BibSpaceBibtexToHtml->new();
     $self->html(
@@ -364,7 +373,7 @@ sub regenerate_html {
     my $force    = shift;
     my $bst_file = shift;
     $bst_file ||= $self->bst_file;
-    
+
     warn "Warning, you use entry->regenerate_html without valid bst file!"
         unless defined $bst_file;
 

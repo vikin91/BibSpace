@@ -40,6 +40,7 @@ use List::MoreUtils qw(any uniq);
 
 # these are exported by default.
 our @EXPORT = qw(
+  fix_bibtex_national_characters
   get_dir_size
   validate_registration_data
   check_password_policy
@@ -63,6 +64,59 @@ our @EXPORT = qw(
 );
 
 our $bibtex2html_tmp_dir = "./tmp";
+####################################################################################################
+sub fix_bibtex_national_characters {
+    my $str  = shift;
+    
+    # matches / not followed by bob: /^\/(?!bob\/)/
+    # matches a word that follows a tab /(?<=\t)\w+/ 
+
+    # s/(foo)bar/$1/g; - removes bar after foo
+    # s/foo\Kbar//g; - removes bar after foo
+
+    # /(?<!bar)foo/ matches any occurrence of "foo" that does not follow "bar"
+
+    use utf8; # for :alpha:
+
+    # makes sth \'x sth --> sth {\'x} sth
+    $str =~ s/(?<!\{)(\\':alpha:)(?!\})/\{$1\}/g;
+
+    # makes sth \"x sth --> sth {\"x} sth
+    $str =~ s/(?<!\{)(\\":alpha:)(?!\})/\{$1\}/g;
+
+    # makes sth \^x sth --> sth {\^x} sth
+    $str =~ s/(?<!\{)(\\^:alpha:)(?!\})/\{$1\}/g;
+
+    # makes sth \~x sth --> sth {\~x} sth
+    $str =~ s/(?<!\{)(\\~:alpha:)(?!\})/\{$1\}/g;
+
+    # makes sth \aa sth --> sth {\aa} sth
+    $str =~ s/(?<!\{)\\aa(?!\})/\{\\aa}/g;
+
+    # makes sth \l sth --> sth {\l} sth
+    $str =~ s/(?<!\{)\\l(?!\})/\{\\l}/g;
+
+    # makes sth \ss sth --> sth {\ss} sth
+    $str =~ s/(?<!\{)\\ss(?!\})/\{\\ss}/g;
+
+    # if( $str =~ /(?<!\{)(\\".)(?!\})/ ){
+    #   say "BEFORE:" .$str;
+    #   $str =~ s/(?<!\{)(\\".)(?!\})/\{$1\}/g;
+    #   say "AFTER:" .$str;
+    # }
+    # if( $str =~ /(?<!\{)(\\".)(?!\})/ ){
+    #   say "NOT FIXED!!!";
+    # }
+    # else{
+    #   say "FIXED OK!";
+    # }
+
+    
+
+    
+
+    return $str;
+}
 ####################################################################################################
 sub get_dir_size {
     my $dir  = shift;
