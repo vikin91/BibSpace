@@ -127,6 +127,8 @@ sub _insert {
     }
     catch {
       $self->logger->error( "Insert exception when inserting " . ref($obj) . " " . $obj->id . ": $_", "" . __PACKAGE__ . "->insert" );
+      # probably author or entry does not exist - authorship is no longer needed
+      $self->delete($obj);     
       $dbh->rollback();
     };
   }

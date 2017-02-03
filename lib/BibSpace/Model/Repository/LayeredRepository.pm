@@ -142,7 +142,7 @@ sub get_summary_table {
         $count_hash{"ID_".$layer->name} = $layer->get_id_provider_summary_hash;
     }
 
-    my $tab_width = 90;
+    my $tab_width = 91;
 
     # calc CHECK status
     foreach my $entity (sort LayeredRepository->get_models ){
@@ -161,7 +161,7 @@ sub get_summary_table {
     }
     
     # print column names
-    for (1..$tab_width) { $str .= "_"; } 
+    for (1..$tab_width) { $str .= "-"; } 
     $str .= "\n";
     $str .= sprintf "| %-15s |", 'entity';
     foreach my $ln (reverse sort @column_name){
