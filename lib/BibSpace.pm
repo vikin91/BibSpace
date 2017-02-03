@@ -138,32 +138,16 @@ sub startup {
   my $self = shift;
   $self->app->logger->info("*** Starting BibSpace ***");
 
-
-  $self->app->logger->info("Setup config...");
-  $self->setup_config;
-
-
-  $self->app->logger->info("Setup plugins...");
+  $self->setup_config;  
   $self->setup_plugins;
-
-  $self->app->logger->info("Setup routes...");
   $self->setup_routes;
-
-  $self->app->logger->info("Setup hooks...");
   $self->setup_hooks;
-
-  $self->app->logger->info("Connecting to database...");
-  $self->app->db;
-
-
-  $self->app->logger->info("Setup repositories...");
   $self->setup_repositories;
-
-  $self->app->logger->info("Add startup admin user...");
   $self->insert_admin;
 
-  $self->app->logger->info("Setup done.");
 
+
+  $self->app->logger->info("Setup done.");
   $self->app->logger->info( "Using CONFIG: " . $self->app->config_file );
   $self->app->logger->info( "App home is: " . $self->app->home );
   $self->app->logger->info( "Active bst file is: " . $self->app->bst );
@@ -191,6 +175,7 @@ sub startup {
 ################################################################
 sub insert_admin {
   my $self = shift;
+  $self->app->logger->info("Add startup admin user...");
 
   my $admin_exists = $self->app->repo->users_find( sub { $_->login eq 'pub_admin' } );
   if(!$admin_exists){
@@ -218,31 +203,45 @@ sub insert_admin {
 sub setup_repositories {
   my $self = shift;
 
+  $self->app->logger->info("Setup repositories...");
+
   if( -e $self->appStateDumpFileName and $self->useDumpFixture ){
+    $self->app->logger->info("Retrieving dump from '".$self->appStateDumpFileName."'.");
     my $layer = retrieve($self->appStateDumpFileName);
     # reser read layer = not needed, layer empty by start of the app
+    $self->app->logger->info("Replacing layer 'smart' with the dump.");
     $self->repo->lr->replace_layer('smart', $layer);
+  }
+  else{
+    $self->app->logger->info("We do not use dump file '".$self->appStateDumpFileName."'.");
   }
   # no data, no fun = no need to copy, link, and store
   if( $self->repo->entries_empty ){
+    $self->app->logger->info("Repo has no entries. Reseting read_layer.");
     $self->app->repo->lr->get_read_layer->reset_data;
     $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
 
     # Entities and Relations in the smart layer must be linked!
     $self->link_data;
+
+    $self->app->logger->debug("Current state:".$self->repo->lr->get_summary_table);
+    $self->app->logger->info("Storing current state to dump file '".$self->appStateDumpFileName."'.");
     # store current state to file
     store $self->repo->lr->get_read_layer, $self->appStateDumpFileName;  
+  }
+  else{
+    $self->app->logger->info("Repo has entries. Skip copy mysql=>smart and store to dump.");
   }
 
   $self->app->logger->debug("setup_repositories has finished. Status:".$self->repo->lr->get_summary_table);
 
-  $self->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
+  # $self->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
-  $self->app->logger->debug("setup_repositories: copy 1 Status:".$self->repo->lr->get_summary_table);
+  # $self->app->logger->debug("setup_repositories: copy 1 Status:".$self->repo->lr->get_summary_table);
 
-  $self->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
+  # $self->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
-  $self->app->logger->debug("setup_repositories: copy 2 Status:".$self->repo->lr->get_summary_table);
+  # $self->app->logger->debug("setup_repositories: copy 2 Status:".$self->repo->lr->get_summary_table);
 
 
   # my $eidP = $self->repo->entries_idProvider;
@@ -343,16 +342,19 @@ sub link_data {
 sub setup_cache {
   my $self = shift;
   my $app  = $self;
+  $self->app->logger->info("Setup cache...");
 }
 ################################################################
 sub setup_config {
   my $self = shift;
   my $app  = $self;
+  $self->app->logger->info("Setup config...");
   $self->plugin( 'Config' => { file => $self->app->config_file } );
 }
 ################################################################
 sub setup_plugins {
   my $self = shift;
+  $self->app->logger->info("Setup plugins...");
 
   $ENV{MOJO_REVERSE_PROXY} = 1;
 
@@ -426,6 +428,7 @@ sub setup_plugins {
 ################################################################
 sub setup_routes {
   my $self = shift;
+  $self->app->logger->info("Setup routes...");
 
   my $anyone = $self->routes;
   $anyone->get('/')->to('display#index')->name('start');
@@ -816,6 +819,7 @@ sub setup_routes {
 
 sub setup_hooks {
   my $self = shift;
+  $self->app->logger->info("Setup hooks...");
 
   $self->hook(
     before_dispatch => sub {
