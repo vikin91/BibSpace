@@ -8,7 +8,9 @@ $t_logged_in->post_ok(
     form        => { user   => 'pub_admin', pass => 'asdf' }
 );
 my $self = $t_logged_in->app;
-my $dbh = $t_logged_in->app->db;
+
+use BibSpace::TestManager;
+TestManager->apply_fixture($self->app);
 
 
 use BibSpace::Functions::FPublications;
@@ -31,7 +33,7 @@ $en3->{bib} = '@mastersthesis{zzzzz1,
   title = {{Selected aspects of some methods}},
   year = {1999},
 }';
-$en3->populate_from_bib($dbh);
+$en3->populate_from_bib;
 $t_logged_in->app->repo->entries_save($en3);
 
 my $en4 = Entry->new(idProvider => $idProvider);
@@ -43,7 +45,7 @@ $en4->{bib} = '@mastersthesis{zzzzz2,
   title = {{Selected aspects of some methods}},
   year = {1999},
 }';
-$en4->populate_from_bib($dbh);
+$en4->populate_from_bib;
 $t_logged_in->app->repo->entries_save($en4);
 
 
@@ -73,7 +75,7 @@ $en3->{bib} = '@mastersthesis{xxx1,
   title = {{Selected aspects of some methods}},
   year = {1999},
 }';
-$en3->populate_from_bib($dbh);
+$en3->populate_from_bib;
 $t_logged_in->app->repo->entries_save($en3);
 
 $en4 = Entry->new(idProvider => $idProvider);
@@ -85,7 +87,7 @@ $en4->{bib} = '@mastersthesis{xxx2,
   title = {{Selected aspects of some methods}},
   year = {1999},
 }';
-$en4->populate_from_bib($dbh);
+$en4->populate_from_bib;
 $t_logged_in->app->repo->entries_save($en4);
 @entries = $t_logged_in->app->repo->entries_all;
 $num_entries = scalar(@entries);

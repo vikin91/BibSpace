@@ -10,17 +10,10 @@ $t_logged_in->post_ok(
     form        => { user   => 'pub_admin', pass => 'asdf' }
 );
 my $self = $t_logged_in->app;
-
-
 $t_logged_in->ua->max_redirects(5);
 
-# my $db_backup_file
-#     = do_mysql_db_backup( $t_logged_in->app, "basic_backup_testing" );
-# my $backup_id = get_backup_id( $self, $db_backup_file );
-
-# my $status = $t_logged_in->app->do_restore_backup_from_file(
-#     "./fixture/thisdoesnotexist.txt");
-# ok( !$status, "preparing DB for test" );
+use BibSpace::TestManager;
+TestManager->apply_fixture($self->app);
 
 my @pages;
 my $page = "";

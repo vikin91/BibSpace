@@ -52,6 +52,8 @@ SKIP: {
   restore_storable_backup($fixture, $self->app);
 
   note "copy 'smart' layer into 'mysql' layer";
+  my $layer = $self->app->repo->lr->get_layer('mysql');
+  $layer->reset_data;
   $self->app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
 }

@@ -13,13 +13,16 @@ my $t_anyone    = Test::Mojo->new('BibSpace');
 my $self = $t_anyone->app;
 
 
-## THIS SHOULD BE REPEATED FOR EACH TEST!
-my $fixture_name = "bibspace_fixture.dat";
-my $fixture_dir = "./fixture/";
-use BibSpace::Model::Backup;
-use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
-my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
-restore_storable_backup($fixture, $self->app);
+use BibSpace::TestManager;
+TestManager->apply_fixture($self->app);
+
+# ## THIS SHOULD BE REPEATED FOR EACH TEST!
+# my $fixture_name = "bibspace_fixture.dat";
+# my $fixture_dir = "./fixture/";
+# use BibSpace::Model::Backup;
+# use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
+# my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
+# restore_storable_backup($fixture, $self->app);
 
 
 my $repo = $self->app->repo;
@@ -29,7 +32,7 @@ my $repo = $self->app->repo;
 my @all_authors = $repo->authors_all;
 my $idp = $repo->authors_idProvider;
 
-my $limit_test_objects = 20;
+my $limit_test_objects = scalar(@all_authors) + 1;
 
 my $other_author = Author->new(idProvider => $idp, uid => "Henry");
 

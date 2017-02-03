@@ -16,15 +16,8 @@ my $self = $admin_user->app;
 my $app_config = $admin_user->app->config;
 $admin_user->ua->max_redirects(3);
 
-
-
-## THIS SHOULD BE REPEATED FOR EACH TEST!
-my $fixture_name = "bibspace_fixture.dat";
-my $fixture_dir = "./fixture/";
-use BibSpace::Model::Backup;
-use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
-my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
-restore_storable_backup($fixture, $self->app);
+use BibSpace::TestManager;
+TestManager->apply_fixture($self->app);
 
 
 # $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )->name('all_tags');

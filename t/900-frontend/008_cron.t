@@ -15,13 +15,8 @@ my $self       = $t_anyone->app;
 
 $t_anyone->ua->inactivity_timeout(3600);
 
-## THIS SHOULD BE REPEATED FOR EACH TEST!
-my $fixture_name = "bibspace_fixture.dat";
-my $fixture_dir = "./fixture/";
-use BibSpace::Model::Backup;
-use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
-my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
-restore_storable_backup($fixture, $t_anyone->app);
+use BibSpace::TestManager;
+TestManager->apply_fixture($t_anyone->app);
 
 
 $t_anyone->get_ok("/cron/night")

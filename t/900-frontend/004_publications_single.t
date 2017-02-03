@@ -13,19 +13,14 @@ my $num_publications_limit = 5;
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok( '/do_login' => { Accept => '*/*' }, form => { user => 'pub_admin', pass => 'asdf' } );
 my $self = $t_logged_in->app;
-
 # this is crucial for the test to pass as there are redirects here!
 $t_logged_in->ua->max_redirects(3);
 $t_logged_in->ua->inactivity_timeout(3600);
-my $dbh = $t_logged_in->app->db;
 
-## THIS SHOULD BE REPEATED FOR EACH TEST!
-my $fixture_name = "bibspace_fixture.dat";
-my $fixture_dir = "./fixture/";
-use BibSpace::Model::Backup;
-use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
-my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
-restore_storable_backup($fixture, $t_logged_in->app);
+use BibSpace::TestManager;
+TestManager->apply_fixture($self->app);
+
+
 
 ####################################################################
 subtest 'Checking pages for single publication' => sub {

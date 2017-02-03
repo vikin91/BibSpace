@@ -189,25 +189,21 @@ sub copy_data {
     my $srcLayer = $self->get_layer($backendFrom);
     my $destLayer = $self->get_layer($backendTo);
 
-    print "1: copy_data srcLayer" . $srcLayer->get_summary_table;
-    print "1: copy_data destLayer" . $destLayer->get_summary_table;
-
+    # this is probably not necessary
     my $src_uidProvider = $srcLayer->uidProvider;
-    
-
-    # this resets all uid providers!!!
-    # $destLayer->hardReset;
-
-    print "2: copy_data srcLayer" . $srcLayer->get_summary_table;
-    print "2: copy_data destLayer" . $destLayer->get_summary_table;
-
     $destLayer->uidProvider($src_uidProvider);
-
-    print "3: copy_data srcLayer" . $srcLayer->get_summary_table;
-    print "3: copy_data destLayer" . $destLayer->get_summary_table;
     
+    # ALWAYS: first copy entities, then relations
 
-    foreach my $type ( LayeredRepository->get_models ){
+    foreach my $type ( LayeredRepository->get_entities ){
+        $self->logger->debug("Copying all objects of type '".$type."' from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+        my @resultRead = $srcLayer->all($type);
+        $self->logger->debug("Read ".scalar(@resultRead)." objects of type '".$type."' from layer '$backendFrom'.","".__PACKAGE__."->copy_data");
+        my $resultSave = $destLayer->save($type, @resultRead);
+        $self->logger->debug("Saved $resultSave objects of type '".$type."' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+        
+    }
+    foreach my $type ( LayeredRepository->get_relations ){
         $self->logger->debug("Copying all objects of type '".$type."' from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
         my @resultRead = $srcLayer->all($type);
         $self->logger->debug("Read ".scalar(@resultRead)." objects of type '".$type."' from layer '$backendFrom'.","".__PACKAGE__."->copy_data");

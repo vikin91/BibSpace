@@ -14,6 +14,8 @@ use warnings;
 use DBI;
 use DBIx::Connector;
 
+use Scalar::Util qw(looks_like_number);
+
 use TeX::Encode;
 use Encode;
 
@@ -266,11 +268,15 @@ sub all_without_tag_for_author {
   my $master_name = $self->param('author');
   my $tagtype     = $self->param('tagtype');
 
-
-  my $author = $self->app->repo->authors_find( sub { ( $_->master cmp $master_name ) == 0 } );
-  if ( !defined $author ) {
+  my $author;
+  if( Scalar::Util::looks_like_number($master_name) ){
     $author = $self->app->repo->authors_find( sub { $_->master_id == $master_name } );
   }
+  else{
+    $author = $self->app->repo->authors_find( sub { $_->master eq $master_name } );  
+  }
+  
+
   if ( !defined $author ) {
     $self->flash( msg => "Author $master_name does not exist!", msg_type => "danger" );
     $self->redirect_to( $self->get_referrer );

@@ -442,12 +442,10 @@ sub get_teams {
     foreach my $author ( $self->get_authors ) {
 
         foreach my $team ( $author->get_teams ) {
-            if ($author->joined_team($team) <= $self->year
-                and (  $author->left_team($team) > $self->year
-                    or $author->left_team($team) == 0 )
-                )
-            {
-                # $final_teams{$team}       = 1; # BAD: $team gets stringified
+            my $joined = $author->joined_team($team);
+            my $left = $author->left_team($team);
+            
+            if ( $joined <= $self->year and (  $left > $self->year or $left == 0 ) ){
                 $final_teams{ $team->id } = $team;
             }
         }

@@ -12,7 +12,7 @@ use Time::Piece;
 use DBI;
 use DBIx::Connector;
 
-use Scalar::Util;
+use Scalar::Util qw(looks_like_number);
 
 use BibSpace::Functions::Core;
 
