@@ -126,9 +126,7 @@ sub _insert {
       $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
     }
     catch {
-      $self->logger->error( "Insert exception when inserting " . ref($obj) . " " . $obj->id . ": $_", "" . __PACKAGE__ . "->insert" );
-      # probably author or entry does not exist - authorship is no longer needed
-      $self->delete($obj);     
+      $self->logger->error( "Insert exception when inserting " . ref($obj) . " " . $obj->id . ": $_", "" . __PACKAGE__ . "->insert" );   
       $dbh->rollback();
     };
   }
