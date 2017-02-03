@@ -127,18 +127,28 @@ sub delete_backup {
     my $backup =  find_backup($uuid, $self->app->backup_dir);
 
     if ( $backup and $backup->is_healthy ) {
-        try{
-            unlink $backup->get_path;
-            $self->app->logger->info("Deleting backup ".$backup->uuid);
-            $self->flash( msg_type=>'success', msg => "Backup id $uuid deleted!" );
+        if( $backup->get_age->days >= $self->app->config->{allow_delete_backups_older_than}){
+            $backup->allow_delete(1);    
         }
-        catch{
-            $self->flash( msg_type=>'danger', msg => "Exception during deleting backup '$uuid': $_." );
-        };
-        
+        else{
+            $backup->allow_delete(undef); 
+        }
+        if($backup->allow_delete){
+            try{
+                unlink $backup->get_path;
+                $self->app->logger->info("Deleting backup ".$backup->uuid);
+                $self->flash( msg_type=>'success', msg => "Backup id $uuid deleted!" );
+            }
+            catch{
+                $self->flash( msg_type=>'danger', msg => "Exception during deleting backup '$uuid': $_." );
+            };
+        }
+        else{
+            $self->flash( msg_type=>'warning', msg => "Backup $uuid is too young to be deleted!" );
+        }
     }
     else{
-        $self->flash( msg_type=>'danger', msg => "Cannot delete backup $uuid - need to do this manually." );
+        $self->flash( msg_type=>'danger', msg => "Cannot delete backup $uuid - you need to do this manually." );
     }
 
     $self->res->code(303);

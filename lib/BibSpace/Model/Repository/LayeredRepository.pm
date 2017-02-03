@@ -210,15 +210,7 @@ sub get_summary_table {
     return $str;
 }
 
-sub get_summary_string {
-    my $self = shift;
-    my $str = "\n";
-    foreach my $layer ($self->get_all_layers){
-        $str .= $layer->get_summary_string;
-        $str .= "\n";
-    }
-    return $str;
-}
+
 
 
 

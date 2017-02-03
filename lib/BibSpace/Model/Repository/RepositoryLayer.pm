@@ -281,23 +281,7 @@ sub get_summary_table {
     return $str;
 }
 
-=item get_summary_string
-    Provides a summary of a layer in form of a string.
-    Similar output to get_summary_hash
-=cut
 
-sub get_summary_string {
-    my $self = shift;
-
-    my $str;
-    $str .= "Layer '" . $self->name . "'->";
-    foreach my $type ( LayeredRepository->get_models ) {
-        my $cnt = $self->count($type);
-        $str .= "'$type'";
-        $str .= sprintf "#'%-5s',", $cnt;
-    }
-    return $str;
-}
 
 =item all
     Returns all objects of a $type stored in this layer
