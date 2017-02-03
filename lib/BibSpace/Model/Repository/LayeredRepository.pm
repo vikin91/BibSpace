@@ -133,27 +133,47 @@ sub get_summary_table {
     # get_id_provider_summary_hash
 
     my %count_hash; #layer_name => summary_hash
-    my @layer_names;
+    my @prefixes = qw(CNT_ ID_);
+    my @column_name = map{$_."OK"} @prefixes;
     foreach my $layer ($self->get_all_layers){
-        push @layer_names, "CNT_".$layer->name;
-        push @layer_names, "ID_".$layer->name;
+        push @column_name, "CNT_".$layer->name;
+        push @column_name, "ID_".$layer->name;
         $count_hash{"CNT_".$layer->name} = $layer->get_summary_hash;
         $count_hash{"ID_".$layer->name} = $layer->get_id_provider_summary_hash;
     }
-    my $tab_width = 67;
+
+    my $tab_width = 90;
+
+    # calc CHECK status
+    foreach my $entity (sort LayeredRepository->get_models ){
+        foreach my $prefix (@prefixes){
+            $count_hash{$prefix.'OK'}->{$entity} = 'y';
+            my $val;
+            foreach my $ln (reverse sort map {$_->name} $self->get_all_layers){
+                if(!$val){
+                    $val = "".$count_hash{$prefix.$ln}->{$entity};
+                }
+                if($count_hash{$prefix.$ln}->{$entity} ne $val){
+                    $count_hash{$prefix.'OK'}->{$entity} = 'NO';
+                }
+            }
+        }
+    }
     
+    # print column names
     for (1..$tab_width) { $str .= "_"; } 
     $str .= "\n";
     $str .= sprintf "| %-15s |", 'entity';
-    foreach my $ln (reverse sort @layer_names){
+    foreach my $ln (reverse sort @column_name){
         $str .= sprintf " %-9s |", $ln;
     }
     $str .= "\n";
     for (1..$tab_width) { $str .= "-"; }
     $str .= "\n";
+    # print data
     foreach my $entity (sort LayeredRepository->get_models ){
         $str .= sprintf "| %-15s |", $entity;
-        foreach my $ln (reverse sort @layer_names){
+        foreach my $ln (reverse sort @column_name){
             $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};
         }
         $str .= "\n";
