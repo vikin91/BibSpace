@@ -4,24 +4,16 @@ use Test::Mojo;
 use Test::Exception;
 
 
-# use BibSpace::Functions::Core;
-# use BibSpace::Functions::FDB;
-# use BibSpace::Functions::MySqlBackupFunctions;
-# use Data::Dumper;
+# my $t_anyone    = Test::Mojo->new('BibSpace');
+# my $self = $t_anyone->app;
 
-# my $t_logged_in = Test::Mojo->new('BibSpace');
-# $t_logged_in->post_ok(
-#     '/do_login' => { Accept => '*/*' },
-#     form        => { user   => 'pub_admin', pass => 'asdf' }
-# );
-# my $self       = $t_logged_in->app;
-# my $dbh        = $t_logged_in->app->db;
-# my $app_config = $t_logged_in->app->config;
-
-
-
-# subtest 'TagType: basics 1' => sub {
-# };
+# ## THIS SHOULD BE REPEATED FOR EACH TEST!
+# my $fixture_name = "bibspace_fixture.dat";
+# my $fixture_dir = "./fixture/";
+# use BibSpace::Model::Backup;
+# use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
+# my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
+# restore_storable_backup($fixture, $self->app);
 
 
 

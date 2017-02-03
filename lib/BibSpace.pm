@@ -813,28 +813,16 @@ sub setup_hooks {
     before_dispatch => sub {
       my $c = shift;
 
-      # {
-      #   # my $db_host     = $self->config->{db_host};
-      #   # my $db_user     = $self->config->{db_user};
-      #   # my $db_database = $self->config->{db_database};
-      #   # my $db_pass     = $self->config->{db_pass};
-      #   if ( !$self->app->db ) {
-      #     my $err_msg = "MySQL is not running!";
-      #     $err_msg .= " BibSpace cannot work without a database.";
-      #     $self->logger->error($err_msg);
-      #     $c->render( text => $err_msg, status => 500 );
-      #     return;
-      #   }
-      # }
-
       $c->req->url->base->scheme('https') if $c->req->headers->header('X-Forwarded-HTTPS');
 
       # dirty fix for production deployment in a directory
+      # config->{proxy_prefix} stores the proxy prefix, e.g., /app
       my $proxy_prefix = $self->config->{proxy_prefix};
       if ( $proxy_prefix ne "" ) {
 
         # we remove the leading slash
-        $proxy_prefix =~ s|^/||;
+        $proxy_prefix =~ s!^/!!;
+        # and let Mojolicious add it again
         push @{ $c->req->url->base->path->trailing_slash(1) }, $proxy_prefix;
       }
     }
