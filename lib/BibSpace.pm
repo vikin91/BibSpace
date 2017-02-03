@@ -234,7 +234,15 @@ sub setup_repositories {
     store $self->repo->lr->get_read_layer, $self->appStateDumpFileName;  
   }
 
-  $self->app->logger->debug($self->repo->lr->get_summary_table);
+  $self->app->logger->debug("setup_repositories has finished. Status:".$self->repo->lr->get_summary_table);
+
+  $self->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
+
+  $self->app->logger->debug("setup_repositories: copy 1 Status:".$self->repo->lr->get_summary_table);
+
+  $self->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
+
+  $self->app->logger->debug("setup_repositories: copy 2 Status:".$self->repo->lr->get_summary_table);
 
 
   # my $eidP = $self->repo->entries_idProvider;

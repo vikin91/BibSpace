@@ -156,6 +156,7 @@ sub restore_storable_backup {
 
     # say "Smart layer after replace:" . $app->repo->lr->get_layer('smart')->get_summary_table;
 
+    # this is in fact $layer->reset_data for mysql!!
     purge_and_create_db($app->db, 
         $app->config->{db_host},
         $app->config->{db_user},

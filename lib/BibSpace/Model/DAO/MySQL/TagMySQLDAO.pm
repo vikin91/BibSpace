@@ -110,11 +110,11 @@ sub save {
   foreach my $obj (@objects) {
     if ( $self->exists($obj) ) {
       $self->update($obj);
-      $self->logger->debug( "Updated ".ref($obj)." ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->lowdebug( "Updated ".ref($obj)." ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
     }
     else {
       $self->_insert($obj);
-      $self->logger->debug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
     }
   }
 }

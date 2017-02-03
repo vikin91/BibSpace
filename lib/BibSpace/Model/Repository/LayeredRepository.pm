@@ -192,23 +192,27 @@ sub copy_data {
     # this is probably not necessary
     my $src_uidProvider = $srcLayer->uidProvider;
     $destLayer->uidProvider($src_uidProvider);
+
+    ## avoid data duplication in the destination layer!!
+    $destLayer->reset_data; # this has unfortunately no meaning for mysql :( need to implement this
     
     # ALWAYS: first copy entities, then relations
 
+    $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+
     foreach my $type ( LayeredRepository->get_entities ){
-        $self->logger->debug("Copying all objects of type '".$type."' from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+        
         my @resultRead = $srcLayer->all($type);
-        $self->logger->debug("Read ".scalar(@resultRead)." objects of type '".$type."' from layer '$backendFrom'.","".__PACKAGE__."->copy_data");
         my $resultSave = $destLayer->save($type, @resultRead);
-        $self->logger->debug("Saved $resultSave objects of type '".$type."' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+        
+        $self->logger->debug("'$backendFrom'->read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'->save $resultSave objects.","".__PACKAGE__."->copy_data");
         
     }
     foreach my $type ( LayeredRepository->get_relations ){
-        $self->logger->debug("Copying all objects of type '".$type."' from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
         my @resultRead = $srcLayer->all($type);
-        $self->logger->debug("Read ".scalar(@resultRead)." objects of type '".$type."' from layer '$backendFrom'.","".__PACKAGE__."->copy_data");
         my $resultSave = $destLayer->save($type, @resultRead);
-        $self->logger->debug("Saved $resultSave objects of type '".$type."' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+        
+        $self->logger->debug("'$backendFrom'->read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'->save $resultSave objects.","".__PACKAGE__."->copy_data");
         
     }
 }

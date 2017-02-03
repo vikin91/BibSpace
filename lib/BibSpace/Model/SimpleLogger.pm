@@ -28,6 +28,13 @@ sub debug {
   $self->log( 'DEBUG', $msg, $origin );
 }
 
+sub lowdebug {
+    my $self=shift;
+    my $msg = shift;
+    my $origin = shift // 'unknown';
+    # $self->log( 'LOW_LEVEL_DEBUG', $msg, $origin );
+}
+
 sub entering {
   my $self   = shift;
   my $msg    = shift;

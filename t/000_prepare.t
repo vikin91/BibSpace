@@ -38,7 +38,7 @@ $dbh = $self->app->db;
 my $fixture_name = "bibspace_fixture.dat";
 my $fixture_dir = "./fixture/";
 
-note "Crop database and recreate tables";
+note "Drop database and recreate tables";
 ok( purge_and_create_db($dbh, $db_host, $db_user, $db_database, $db_pass), "purge_and_create_db");
 
 SKIP: {
@@ -48,13 +48,16 @@ SKIP: {
 	note "Find backup file";
   my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
   
-  note "read backup into 'smart' layer";
+  note "restore_storable_backup - read data into all layers";
+  # this restores data to all layers!
   restore_storable_backup($fixture, $self->app);
 
-  note "copy 'smart' layer into 'mysql' layer";
-  my $layer = $self->app->repo->lr->get_layer('mysql');
-  $layer->reset_data;
-  $self->app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
+  # this may make problems on travis - duplicate data in mysql
+  # note "copy 'smart' layer into 'mysql' layer";
+  # my $layer = $self->app->repo->lr->get_layer('mysql');
+  # mysql does not support reset data!!!!!
+  # $layer->reset_data;
+  # $self->app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
 }
 

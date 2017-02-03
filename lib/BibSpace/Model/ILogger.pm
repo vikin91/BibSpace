@@ -18,6 +18,14 @@ sub debug{
     my $origin = shift // 'unknown';
     $self->log('debu', $msg, $origin);
 }
+
+sub lowdebug{
+    my $self=shift;
+    my $msg = shift;
+    my $origin = shift // 'unknown';
+    $self->log('lowdebu', $msg, $origin);
+}
+
 sub entering{
     my $self=shift;
     my $msg = shift;
