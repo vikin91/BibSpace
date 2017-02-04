@@ -135,7 +135,7 @@ sub publications_add_many_post {
     my $num_errors = 0;
     for my $bibtex_code (@bibtex_codes) {
         my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-            = Fhandle_add_edit_publication_Repo( $self->app->repo, $bibtex_code, -1,
+            = Fhandle_add_edit_publication( $self->app, $bibtex_code, -1,
             'preview' );
 
         if ( $status_code_str eq 'ERR_BIBTEX' ) {
@@ -215,7 +215,7 @@ sub publications_add_many_post {
 
     for my $bibtex_code (@bibtex_codes) {
         my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-            = Fhandle_add_edit_publication_Repo( $self->app->repo, $bibtex_code, -1, 'save',
+            = Fhandle_add_edit_publication( $self->app, $bibtex_code, -1, 'save',
             $self->app->bst );
 
         if ( $status_code_str eq 'ADD_OK' ) {

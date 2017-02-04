@@ -473,7 +473,7 @@ sub remove_attachment {
     if ( defined $entry and $num_deleted_files > 0 ) {
       $entry->remove_bibtex_fields( ['pdf'] )    if $filetype eq 'paper';
       $entry->remove_bibtex_fields( ['slides'] ) if $filetype eq 'slides';
-      $entry->regenerate_html( 0, $self->app->bst );
+      $entry->regenerate_html( 0, $self->app->bst, $self->app->bibtexConverter );
       $self->app->repo->entries_save($entry);
     }
 
@@ -547,17 +547,17 @@ sub add_pdf {
   my $dbh  = $self->app->db;
 
 
-  my $mentry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
 
-  if ( !defined $mentry ) {
+  if ( !defined $entry ) {
     $self->flash( msg => "There is no entry with id $id" );
     $self->redirect_to( $self->get_referrer );
     return;
   }
-  $mentry->populate_from_bib();
-  $mentry->generate_html( $self->app->bst );
+  $entry->populate_from_bib();
+  $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
 
-  $self->stash( mentry => $mentry );
+  $self->stash( mentry => $entry );
   $self->render( template => 'publications/pdf_upload' );
 }
 ####################################################################################
@@ -680,7 +680,7 @@ sub add_pdf_post {
       $self->redirect_to( $self->get_referrer );
       return;
     }
-    $mentry->regenerate_html( 0, $self->app->bst );
+    $mentry->regenerate_html(0, $self->app->bst, $self->app->bibtexConverter);
     $self->app->repo->entries_save($mentry);
 
     $self->flash( msg_type=> 'success', msg => $msg );
@@ -692,15 +692,17 @@ sub add_pdf_post {
 ####################################################################################
 sub regenerate_html_for_all {
   my $self = shift;
+  my $converter = $self->app->bibtexConverter;
+
   $self->inactivity_timeout(3000);
 
   $self->app->logger->info("regenerate_html_for_all is running");
 
   my @entries   = $self->app->repo->entries_all;
   my $num_fixes = 0;
-  for my $e (@entries) {
-    $e->bst_file( $self->app->bst );
-    $e->regenerate_html( 0, $self->app->bst );
+  for my $entry (@entries) {
+    $entry->bst_file( $self->app->bst );
+    $entry->regenerate_html( 0, $self->app->bst, $converter );
   }
   $self->app->repo->entries_save(@entries);
 
@@ -713,17 +715,18 @@ sub regenerate_html_for_all {
 ####################################################################################
 sub regenerate_html_for_all_force {
   my $self = shift;
+  my $converter = $self->app->bibtexConverter;
+
   $self->inactivity_timeout(3000);
-  my $dbh = $self->app->db;
 
   $self->app->logger->info("regenerate_html_for_all_force is running");
 
 
   my @entries   = $self->app->repo->entries_all;
   my $num_fixes = 0;
-  for my $e (@entries) {
-    $e->bst_file( $self->app->bst );
-    $e->regenerate_html( 1, $self->app->bst );
+  for my $entry (@entries) {
+    $entry->bst_file( $self->app->bst );
+    $entry->regenerate_html( 1, $self->app->bst, $converter );
   }
   $self->app->repo->entries_save(@entries);
 
@@ -739,7 +742,7 @@ sub regenerate_html_for_all_force {
 ####################################################################################
 sub regenerate_html {
   my $self = shift;
-  my $dbh  = $self->app->db;
+  my $converter = $self->app->bibtexConverter;
   my $id   = $self->param('id');
 
 
@@ -751,7 +754,7 @@ sub regenerate_html {
     return;
   }
   $entry->bst_file($self->app->bst);
-  $entry->regenerate_html(1);
+  $entry->regenerate_html(1, $self->app->bst, $self->app->bibtexConverter);
   $self->app->repo->entries_save($entry);
 
   $self->redirect_to( $self->get_referrer );
@@ -1070,7 +1073,7 @@ sub publications_add_get {
   my $e_dummy = Entry->new( idProvider => $self->app->repo->entries_idProvider, bib => $bib );
 
   $e_dummy->populate_from_bib();
-  $e_dummy->generate_html( $self->app->bst );
+  $e_dummy->generate_html( $self->app->bst, $self->app->bibtexConverter );
 
   $self->stash( entry => $e_dummy, msg => $msg );
   $self->render( template => 'publications/add_entry' );
@@ -1109,11 +1112,11 @@ sub publications_add_post {
   }
   elsif ( $action eq 'preview' ) {
     $status_code_str = 'PREVIEW';
-    $entry->generate_html( $self->app->bst );
+    $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
   }
   elsif ( $action eq 'check_key' ) {
     $status_code_str = 'KEY_OK';
-    $entry->generate_html( $self->app->bst );
+    $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
 
     my $entry_conflicting_key
       = $self->app->repo->entries_find( sub { ( $_->bibtex_key cmp $entry->bibtex_key ) == 0 } );
@@ -1124,7 +1127,7 @@ sub publications_add_post {
   }
   elsif ( $action eq 'save' ) {
 
-    $entry->generate_html( $self->app->bst );
+    $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
 
     # TODO: duplicated code
     my $entry_conflicting_key
@@ -1188,7 +1191,7 @@ sub publications_edit_get {
     return;
   }
   $entry->populate_from_bib();
-  $entry->generate_html( $self->app->bst );
+  $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
 
   $self->stash( entry => $entry );
   $self->render( template => 'publications/edit_entry' );
@@ -1211,11 +1214,9 @@ sub publications_edit_post {
   $new_bib =~ s/^\s+|\s+$//g;
   $new_bib =~ s/^\t//g;
 
-  # my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-  #     = Fhandle_add_edit_publication( $dbh, $new_bib, $id, $action,
-  #     $self->app->bst );
+
   my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-    = Fhandle_add_edit_publication_Repo( $self->app->repo, $new_bib, $id, $action,
+    = Fhandle_add_edit_publication( $self->app, $new_bib, $id, $action,
     $self->app->bst );
   my $adding_msg = get_adding_editing_message_for_error_code( $self, $status_code_str, $existing_id );
 

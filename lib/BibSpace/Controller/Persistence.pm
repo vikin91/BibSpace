@@ -97,7 +97,9 @@ sub reset_smart {
     my $self = shift;
 
     my $layer = $self->app->repo->lr->get_layer('smart');
-    $layer->reset_data;
+    if($layer){
+        $layer->reset_data;
+    }
 
     # no pub_admin user would lock the whole system
     $self->app->insert_admin;
@@ -111,17 +113,16 @@ sub reset_mysql {
     my $self = shift;
 
     my $layer = $self->app->repo->lr->get_layer('mysql');
-    $layer->reset_data;
-
-    # purge_and_create_db($self->app->db, 
-    #     $self->app->config->{db_host},
-    #     $self->app->config->{db_user},
-    #     $self->app->config->{db_database},
-    #     $self->app->config->{db_pass}
-    # );
-
-    my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
-    $self->flash( msg_type=>'success', msg => $status );
+    if($layer){
+        $layer->reset_data;
+        my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
+        $self->flash( msg_type=>'success', msg => $status );
+    }
+    else{
+        my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
+        $self->flash( msg_type=>'danger', msg => "Reset failed - backend handle undefined. ".$status );
+    }
+    
     $self->redirect_to( $self->get_referrer );
 }
 #################################################################################

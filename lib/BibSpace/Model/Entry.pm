@@ -340,19 +340,21 @@ sub fix_bibtex_accents {
 sub generate_html {
     my $self     = shift;
     my $bst_file = shift;
+    my $converter = shift;
 
+    die "Bibtex-Html converter is not defined" unless $converter;
     $bst_file = $self->bst_file if !defined $bst_file;
 
     $self->populate_from_bib();
 
     $self->fix_bibtex_accents;
 
-    my $c = BibSpaceBibtexToHtml::BibSpaceBibtexToHtml->new;
-    my $html = $c->convert_to_html(
-            { method => 'new', bib => $self->bib, bst => $bst_file }
-        );
+    $converter->convert($self->bib, $bst_file);
+    my $html = $converter->get_html;
     $self->html($html);
-    $self->warnings( join( ', ', @{ $c->{warnings_arr} } ) );
+    $self->warnings( 
+            join( ', ', $converter->get_warnings )
+    );
 
     $self->need_html_regen(0);
 
@@ -363,7 +365,10 @@ sub regenerate_html {
     my $self     = shift;
     my $force    = shift;
     my $bst_file = shift;
+    my $converter = shift;
     $bst_file ||= $self->bst_file;
+
+    die "Bibtex-Html converter is not defined" unless $converter;
 
     warn "Warning, you use entry->regenerate_html without valid bst file!"
         unless defined $bst_file;
@@ -372,9 +377,7 @@ sub regenerate_html {
         or $self->need_html_regen == 1
         or $self->html =~ m/ERROR/ )
     {
-        $self->populate_from_bib();
-        $self->generate_html($bst_file);
-        $self->need_html_regen(0);
+        $self->generate_html($bst_file, $converter);
     }
 }
 

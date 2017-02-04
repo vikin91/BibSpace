@@ -26,7 +26,7 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw(
     Fdo_regenerate_html
     FprintBibtexWarnings
-    Fhandle_add_edit_publication_Repo
+    Fhandle_add_edit_publication
     Fget_publications_main_hashed_args_only
     Fget_publications_main_hashed_args
     Fget_publications_core
@@ -58,8 +58,9 @@ sub FprintBibtexWarnings {
     return $msg;
 }
 ####################################################################################
-sub Fhandle_add_edit_publication_Repo {
-my ( $repo, $new_bib, $id, $action, $bst_file ) = @_;
+sub Fhandle_add_edit_publication {
+    my ( $app, $new_bib, $id, $action, $bst_file ) = @_;
+    my $repo = $app->repo;
 
     # var that will be returned
     my $mentry;         # the entry object
@@ -86,7 +87,7 @@ my ( $repo, $new_bib, $id, $action, $bst_file ) = @_;
 
     my $e;
 
-    say "Fhandle_add_edit_publication_Repo: id $id";
+    say "Fhandle_add_edit_publication: id $id";
     
     if( $id > 0){
         $e = $repo->entries_find( sub {$_->id == $id} ); 
@@ -122,12 +123,12 @@ my ( $repo, $new_bib, $id, $action, $bst_file ) = @_;
     }
     else {
         $status_code_str = 'KEY_TAKEN';
-        $e->generate_html($bst_file);
+        $e->generate_html($bst_file, $app->bibtexConverter);
         return ( $e, $status_code_str, $existing_id, -1 );
     }
     if ( $action eq 'check_key' or $action eq 'preview' )
     {    # user wanted only to check key - we give him the preview as well
-        $e->generate_html($bst_file);
+        $e->generate_html($bst_file, $app->bibtexConverter);
         $e->populate_from_bib();
         return ( $e, $status_code_str, $existing_id, -1 );
     }
@@ -139,8 +140,7 @@ my ( $repo, $new_bib, $id, $action, $bst_file ) = @_;
         else {              #adding
             $status_code_str = 'ADD_OK';
         }
-        $e->generate_html($bst_file);
-        $e->populate_from_bib();
+        $e->generate_html($bst_file, $app->bibtexConverter);
         $e->fix_month();
         $repo->entries_save($e);
 

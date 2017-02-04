@@ -170,7 +170,7 @@ sub do_cron_night {
     my @entries = $self->app->repo->entries_all;
 
     for my $e (@entries) {
-        $e->regenerate_html(0);
+        $e->regenerate_html(0, $self->app->bst, $self->app->bibtexConverter);
     }
 }
 ##########################################################################################

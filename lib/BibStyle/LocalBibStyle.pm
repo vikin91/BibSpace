@@ -1,9 +1,11 @@
-package BibSpaceBibtexToHtml::LocalBibStyle v0.0.4;
+package BibStyle::LocalBibStyle v0.0.4;
 
 # use Data::Dumper;
 =head1 NAME
 
 Text::BibTeX::BibStyle - Format Text::BibTeX::Entry items using .bst
+This is a local copy of Text::BibTeX::BibStyle (v 0.0.3) from CPAN. 
+This version will be pushed to CPAN once tests are ready
 
 =cut
 

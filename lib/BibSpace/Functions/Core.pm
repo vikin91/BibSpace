@@ -1,7 +1,6 @@
 package BibSpace::Functions::Core;
 
 use BibSpace::Functions::FDB;
-use BibSpaceBibtexToHtml::BibSpaceBibtexToHtml;
 
 use Data::Dumper;
 use utf8;

@@ -1,138 +1,73 @@
-package BibSpaceBibtexToHtml::BibSpaceBibtexToHtml;
+package BibStyleConverter;
 
-  use Text::BibTeX;
-  use strict;
-  use warnings;
-  #
-  use FindBin;
-  use lib $FindBin::Bin;
-  use BibSpaceBibtexToHtml::LocalBibStyle;
-  #
-  use Data::Dumper;
-  use v5.10;
-  use utf8;
-  use Cwd;
-  use File::Slurp;
-  use Moose;
-  use Pod::LaTeX;
+use BibSpace::Model::Entry;
+use BibSpace::Functions::Core;
+
+use List::MoreUtils qw(any uniq);
 
 
+use Path::Tiny;
+use File::Spec;
 
-  has 'bst' => (is => 'rw', isa => 'Maybe[Str]');
-  has 'bib' => (is => 'rw', isa => 'Maybe[Str]');
-  has 'html' => (is => 'rw', isa => 'Maybe[Str]'); 
-  has 'html_tuned' => (is => 'rw', isa => 'Maybe[Str]'); 
-  #
-  #
-  has 'bbl' => (is => 'rw', isa => 'Maybe[Str]'); 
-  has 'bbl_clean' => (is => 'rw', isa => 'Maybe[Str]'); 
-  has 'bbl_arr' => (is => 'rw', isa=>'Maybe[ArrayRef[Str]]', default => sub{[]}); 
-  has 'warnings_arr' => (is => 'rw', isa=>'Maybe[ArrayRef[Str]]', default => sub{[]}); 
+use Data::Dumper;
+use utf8;
+use Text::BibTeX;
+use 5.010;    #because of ~~ and say
 
-####################################################################################
-sub reset {
-  my $self = shift;
-  $self->bst(undef);
-  $self->bib(undef);
-  $self->html(undef);
-  $self->html_tuned(undef);
-  $self->bbl(undef);
-  $self->bbl_clean(undef);
-  $self->bbl_arr([]);
-  $self->warnings_arr([]);
-}
-####################################################################################
-sub bbl_clean_contains_rubbish {
-  my $self = shift;
-  return 1 if $self->bbl_clean =~ m!bibitem!;
-  return 1 if $self->bbl_clean =~ m!{!;
-  return 1 if $self->bbl_clean =~ m!}!;
-  return 1 if $self->bbl_clean =~ m!\\!;
-  return ;
-}
-####################################################################################
-sub convert_to_html {
-  my $self = shift;
-  my $opts_ref = shift;
-  my %opts = %{$opts_ref};
+use Try::Tiny;
+use TeX::Encode;
+use Encode;
 
-  $self->reset();
+use BibStyle::LocalBibStyle;
 
-  if($opts{'bib'}){
-     $self->bib($opts{'bib'});
-  }
-  if($opts{'bst'}){
-     $self->bst($opts{'bst'});
-  }
+use Moose;
+use Moose::Util::TypeConstraints;
+use BibSpace::Model::ILogger;
+use BibSpace::Model::Converter::IHtmlBibtexConverter;
+with 'IHtmlBibtexConverter';
 
-  if( !$self->bib){
-    warn "Cannot convert. BibTeX code not set!";
-    return "ERROR: BibTeX code empty";
-  }
-  if(!$self->bst or !-e $self->bst){
-    warn "Cannot convert. Bst file does not exist! File: $self->{bst}";
-    return "ERROR: BST - .bst file not found";
-  }
-
-  my $entry = new Text::BibTeX::Entry();
-  $entry->parse_s($self->bib);
-  return "ERROR: BIBTEX PARSE" unless $entry->parse_ok;
-
-  my $bibtex_key = $entry->key;
+has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
+has 'bst'    => ( is => 'rw', isa  => 'Maybe[Str]' );
+has 'html'   => ( is => 'rw', isa  => 'Maybe[Str]' );
+has 'warnings' =>
+    ( is => 'rw', isa => 'Maybe[ArrayRef[Str]]', default => sub { [] } );
 
 
-  if($opts{'method'} eq 'old'){
-    my $tuned_html = $self->_convert_to_html_old_method();
-    $self->html_tuned($tuned_html);
-  }
-  else{
-    my $tuned_html = $self->_convert_to_html_new_method();
-    $self->html_tuned($tuned_html);
-  }
-
-  return $self->html_tuned;
+sub set_template {
+    my ( $self, $template ) = @_;
+    $self->bst($template);
 }
 
-
-####################################################################################
-####################################################################################
-####################################################################################
-sub _convert_to_html_new_method {
-  my $self = shift;
-  my $bib = shift;
-
-  $self->bib($bib) if $bib;
-
-  # stateless call
-  my ($bbl_dirty, $dirty_bbl_array_ref, $warnings_arr_ref) = _convert_bib_to_bbl($self->bib, $self->bst);
-
-  $self->bbl($bbl_dirty);
-  $self->bbl_arr($dirty_bbl_array_ref);
-  $self->warnings_arr($warnings_arr_ref);
+sub convert {
+    my ( $self, $bib, $bst ) = @_;
+    $bst ||= $self->bst;
+    die "Template not provided" unless $bst and -e $bst;
 
 
-  # stateless call 
-  my $clean_bbl = _clean_bbl($dirty_bbl_array_ref);
-  $self->bbl_clean($clean_bbl);
+    my ( $bbl_dirty, $dirty_bbl_array_ref, $warnings_arr_ref )
+        = _convert_bib_to_bbl( $bib, $bst );
+    $self->warnings($warnings_arr_ref);
+    # stateless call
+    my $clean_bbl = _clean_bbl($dirty_bbl_array_ref);
+    my $html_code = _add_html_links( $clean_bbl, $bib );
+    $self->html($html_code);
+}
 
+sub get_html {
+    my $self = shift;
+    $self->html;
+}
 
-  my $html_code = _add_html_links($clean_bbl, $self->bib);
-  $self->html($html_code);
-  
-
-  my $tuned_html_code = "";
-  # $tuned_html_code .= '<div class="bibtex_entry">'."\n";  
-  $tuned_html_code .= $html_code;
-  # $tuned_html_code .= "\n".'</div>';
-  $self->html_tuned($tuned_html_code);
-  return $tuned_html_code;
+sub get_warnings {
+    my $self = shift;
+    return @{ $self->warnings };
 }
 ####################################################################################
 sub _convert_bib_to_bbl {
   my ($input_bib, $bst_file_path) = @_;
 
 
-  my $bibstyle = BibSpaceBibtexToHtml::LocalBibStyle->new(); #Text::BibTeX::BibStyle->new();
+  my $bibstyle = BibStyle::LocalBibStyle->new(); #Text::BibTeX::BibStyle->new();
   die "Cannot find bst file under: $bst_file_path  ." if !-e $bst_file_path;
   $bibstyle->read_bibstyle($bst_file_path);
 
@@ -148,6 +83,8 @@ sub _convert_bib_to_bbl {
 
   return ($bbl_dirty, $dirty_bbl_array_ref, $warnings_arr_ref);
 }
+
+####################################################################################
 ####################################################################################
 sub _clean_bbl {
   my ($bbl_arr_ref) = @_;
@@ -530,146 +467,8 @@ sub string_replace_with_counting {
   # say "======== string_replace_with_counting END ========";
   return $s;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ####################################################################################
-####################################################################################
-####################################################################################
-sub _convert_to_html_old_method {
-  my $self = shift;
 
-  if(!defined $self->{bib} or $self->{bib} eq ''){
-    warn "Bib is empty!";
-    return "";  
-  }
-  if(!defined $self->{bst} or $self->{bst} eq '' or !-e $self->{bst}){
-    warn "Bst file not found or missing";
-    return "";  
-  }
-
-  my $tmp_file_pattern = 'xxxdelete';
-  my $inputFile = 'xxxdelete.input.bib';
-  my $outputFile = 'xxxdelete.out';
-
-  my $devnull = File::Spec->devnull();
-  my $tmpdir = File::Spec->tmpdir();
-
-  open (my $MYFILE, q{>}, $inputFile);
-  print $MYFILE $self->bib;
-  close ($MYFILE); 
-
-  my $bibtex2html_command = "bibtex2html -s ".$self->bst ." -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc -no-footer -o $outputFile $inputFile";
-  my $syscommand = "TMPDIR=$tmpdir ".$bibtex2html_command.' &> '.$devnull;
-  `$syscommand`;
-
-  my $html = read_file($outputFile.".html");
-  $self->html($html);
-
-  `rm $tmp_file_pattern*`;
-
-  $self->html_tuned(
-    tune_html_old($self->html, $self->bib, "key")
-  );
-
-  return $self->html_tuned;
-}
-####################################################################################
-sub tune_html_old{
-  my $html = shift;
-  my $bib = shift;
-  my $key = shift // 'key';
-  
-  my $htmlbib = $bib;
-  my $s = $html;
-
-  $s =~ s/out_bib.html#(.*)/\/publications\/get\/bibtex\/$1/g;
-
-  # FROM .pdf">.pdf</a>&nbsp;]
-  # TO   .pdf" target="blank">.pdf</a>&nbsp;]
-  # $s =~ s/.pdf">/.pdf" target="blank">/g;
-
-
-  $s =~ s/>.pdf<\/a>/ target="blank">.pdf<\/a>/g;
-  $s =~ s/>slides<\/a>/ target="blank">slides<\/a>/g;
-  $s =~ s/>http<\/a>/ target="blank">http<\/a>/g;
-  $s =~ s/>.http<\/a>/ target="blank">http<\/a>/g;
-  $s =~ s/>DOI<\/a>/ target="blank">DOI<\/a>/g;
-
-  $s =~ s/<a (.*)>bib<\/a>/BIB_LINK_ID/g;
-
-
-  # # replace &lt; and &gt; b< '<' and '>' in Samuel's files.
-  # sed 's_\&lt;_<_g' $FILE > $TMP && mv -f $TMP $FILE
-  # sed 's_\&gt;_>_g' $FILE > $TMP && mv -f $TMP $FILE
-  $s =~ s/\&lt;/</g;
-  $s =~ s/\&gt;/>/g;
-
-
-  # ### insert JavaScript hrefs to show/hide abstracts on click ###
-  # #replaces every newline command with <NeueZeile> to insert the Abstract link in the next step properly 
-  # perl -p -i -e "s/\n/<NeueZeile>/g" $FILE
-  $s =~ s/\n/<NeueZeile>/g;
-
-  # #inserts the link to javascript
-  # sed 's_\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">_\&nbsp;\|\&nbsp;<a href=\"javascript:showAbstract(this);\" onclick=\"showAbstract(this)\">Abstract</a><noscript> (JavaScript required!)</noscript>\&nbsp;\]<div style=\"display:none;\"><blockquote id=\"abstractBQ\">_g' $FILE > $TMP && mv -f $TMP $FILE
-  # sed 's_</font></blockquote><NeueZeile><p>_</blockquote></div>_g' $FILE > $TMP && mv -f $TMP $FILE
-  # $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a href=\"javascript:showAbstract(this);\" onclick=\"showAbstract(this)\">Abstract<\/a><noscript> (JavaScript required!)<\/noscript>\&nbsp;\]<div style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
-
-
-  #$s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \]<div id=\"$key\" style=\"display:none;\"><blockquote id=\"abstractBQ\">/g;
-  $s =~ s/\&nbsp;\]<NeueZeile><blockquote><font size=\"-1\">/\&nbsp;\|\&nbsp;<a class="abstract-a" onclick=\"showAbstract(\'$key\')\">Abstract<\/a>\&nbsp; \] <div id=\"$key\" style=\"display:none;\"><blockquote class=\"abstractBQ\">/g;
-  $s =~ s/<\/font><\/blockquote><NeueZeile><p>/<\/blockquote><\/div>/g;
-
-  #inserting bib DIV marker
-  $s =~ s/\&nbsp;\]/\&nbsp; \]/g;
-  $s =~ s/\&nbsp; \]/\&nbsp; \] BIB_DIV_ID/g;
-
-  $key =~ s/\./_/g;   
-
-  # handling BIB_DIV_ID marker
-  $s =~ s/BIB_DIV_ID/<div id="bib-of-$key" class="inline-bib" style=\"display:none;\"><pre>$htmlbib<\/pre><\/div>/g;
-  # handling BIB_LINK_ID marker
-  $s =~ s/BIB_LINK_ID/<a class="abstract-a" onclick=\"showAbstract(\'bib-of-$key\')\">bib<\/a>/g;
-
-  # #undo the <NeueZeile> insertions
-  # perl -p -i -e "s/<NeueZeile>/\n/g" $FILE
-  $s =~ s/<NeueZeile>/\n/g;
-
-  $s =~ s/(\s)\s+/$1/g;  # !!! TEST
-
-  $s =~ s/<p>//g;
-  $s =~ s/<\/p>//g;
-
-  $s =~ s/<a name="(.*)"><\/a>//g;
-  # $s =~ s/<a name=/<a id=/g;
-
-  $s =~ s/\&amp /\&amp; /g;
-
-  
-  return $s;
-}
-####################################################################################
+no Moose;
+__PACKAGE__->meta->make_immutable;
 1;
