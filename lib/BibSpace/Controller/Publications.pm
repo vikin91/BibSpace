@@ -1060,6 +1060,8 @@ sub publications_add_get {
 
   my $bib = '@article{key' . get_current_year() . ',
       author = {Johny Example},
+      journal = {Journal of this and that},
+      publisher = {Printer-at-home publishing},
       title = {{Selected aspects of some methods}},
       year = {' . get_current_year() . '},
       month = {' . $mons{ get_current_month() } . '},
