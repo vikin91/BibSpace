@@ -19,8 +19,7 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use 5.010;           #because of ~~ and say
-use DBI;
-use DBIx::Connector;
+
 use Try::Tiny;
 use TeX::Encode;
 use Encode;
@@ -51,10 +50,6 @@ has 'title'           => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'hidden'          => ( is => 'rw', isa => 'Int', default => 0 );
 has 'year'            => ( is => 'rw', isa => 'Maybe[Int]', default => 0 );
 has 'month'           => ( is => 'rw', isa => 'Int', default => 0 );
-has 'sort_month'      => ( is => 'rw', isa => 'Int', default => 0 );
-has 'teams_str'       => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'people_str'      => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'tags_str'        => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'need_html_regen' => ( is => 'rw', isa => 'Int', default => 1 );
 has 'shall_update_modified_time' =>
     ( is => 'rw', isa => 'Int', default => 0 );
@@ -71,7 +66,6 @@ has 'creation_time' => (
     traits  => ['DoNotSerialize'],
     default => sub {
         my $dt = DateTime->now;
-        say "Setting default MEntry->creation_time";
         $dt->set_formatter($dtPattern);
         return $dt;
     },
@@ -90,6 +84,7 @@ has 'modified_time' => (
 );
 
 # not DB fields
+# bibtex warnings
 has 'warnings' =>
     ( is => 'rw', isa => 'Maybe[Str]', traits => ['DoNotSerialize'] );
 has 'bst_file' => (
@@ -317,15 +312,9 @@ sub fix_month {
             = BibSpace::Functions::Core::get_month_numeric($month_str);
 
     }
-    if ( $self->{month} != $month_numeric ) {
-        $self->{month} = $month_numeric;
+    if ( $self->month != $month_numeric ) {
+        $self->month($month_numeric);
         $num_fixes = 1;
-    }
-
-    # ve leave changed
-    if ( $self->{sort_month} == 0 and $self->{sort_month} != $month_numeric )
-    {
-        $self->{sort_month} = $month_numeric;
     }
 
 
@@ -502,7 +491,6 @@ sub sort_by_year_month_modified_time {
     {
         no warnings 'uninitialized';
                $a->{year} <=> $b->{year}
-            or $a->{sort_month} <=> $b->{sort_month}
             or $a->{month} <=> $b->{month}
             or $a->{id} <=> $b->{id};
     }

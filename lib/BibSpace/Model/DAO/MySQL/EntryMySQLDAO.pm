@@ -33,10 +33,6 @@ sub all {
               hidden,
               year,
               month,
-              sort_month,
-              teams_str,
-              people_str,
-              tags_str,
               creation_time,
               modified_time,
               need_html_regen
@@ -80,10 +76,6 @@ sub all {
       hidden          => $row->{hidden},
       year            => $row->{year},
       month           => $row->{month},
-      sort_month      => $row->{sort_month},
-      teams_str       => $row->{teams_str},
-      people_str      => $row->{people_str},
-      tags_str        => $row->{tags_str},
       creation_time   => $ct,
       modified_time   => $mt,
       need_html_regen => $row->{need_html_regen},
@@ -189,15 +181,11 @@ sub _insert {
     hidden,
     year,
     month,
-    sort_month,
-    teams_str,
-    people_str,
-    tags_str,
     creation_time,
     modified_time,
     need_html_regen
     ) 
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW(),?);";
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW(),?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
     
@@ -205,8 +193,6 @@ sub _insert {
       my $result = $sth->execute(
         $obj->{id},       $obj->{entry_type}, $obj->{bibtex_key}, $obj->{_bibtex_type}, $obj->{bib},  $obj->{html},
         $obj->{html_bib}, $obj->{abstract},   $obj->{title},      $obj->{hidden},       $obj->{year}, $obj->{month},
-        $obj->{sort_month}, $obj->{teams_str}, $obj->{people_str}, $obj->{tags_str},
-
         # $obj->{creation_time},
         # $obj->{modified_time},
         $obj->{need_html_regen},
@@ -247,10 +233,6 @@ sub update {
             hidden=?,
             year=?,
             month=?,
-            sort_month=?,
-            teams_str=?,
-            people_str=?,
-            tags_str=?,
             need_html_regen=?";
     $qry .= ", modified_time=NOW()" if $obj->shall_update_modified_time == 1;
     $qry .= "WHERE id = ?";
@@ -260,8 +242,7 @@ sub update {
       my $result = $sth->execute(
         $obj->{entry_type}, $obj->{bibtex_key}, $obj->{_bibtex_type}, $obj->{bib},
         $obj->{html},       $obj->{html_bib},   $obj->{abstract},     $obj->{title},
-        $obj->{hidden},     $obj->{year},       $obj->{month},        $obj->{sort_month},
-        $obj->{teams_str},  $obj->{people_str}, $obj->{tags_str},     $obj->{need_html_regen},
+        $obj->{hidden},     $obj->{year},       $obj->{month},        $obj->{need_html_regen},
         $obj->{id}
       );
       $sth->finish();
