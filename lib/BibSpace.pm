@@ -641,9 +641,12 @@ sub setup_routes {
     $manager_user->post('/authors/merge/')->to('authors#merge_authors')
         ->name('merge_authors');
 
+    $admin_user->get('/authors/fix_masters')
+        ->to('authors#fix_masters')->name('fix_masters');
+
     $manager_user->get('/authors/reassign')
         ->to('authors#reassign_authors_to_entries');
-    $manager_user->get('/authors/reassign_and_create')
+    $admin_user->get('/authors/reassign_and_create')
         ->to('authors#reassign_authors_to_entries_and_create_authors');
 
     $manager_user->get('/authors/toggle_visibility/:id')
@@ -787,14 +790,6 @@ sub setup_routes {
     $manager_user->get('/publications/remove_attachment/:filetype/:id')
         ->to('publications#remove_attachment')
         ->name('publications_remove_attachment');
-
-    $manager_user->get('/publications/hide/:id')
-        ->to('publications#hide')
-        ->name('hide_publication');
-
-    $manager_user->get('/publications/unhide/:id')
-        ->to('publications#unhide')
-        ->name('unhide_publication');
 
     $manager_user->get('/publications/toggle_hide/:id')
         ->to('publications#toggle_hide')

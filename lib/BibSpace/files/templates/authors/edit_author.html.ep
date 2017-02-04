@@ -124,16 +124,19 @@
             <ul class="list-group">
             % for my $minor_author (@$minor_authors){
                  <li class="list-group-item">
+                    
                     <span class="badge">
                         <span class="glyphicon glyphicon-barcode"></span>
-                        <%= $minor_author->{id} %>        
+                        <%= $minor_author->id %>
                     </span>
-                    %if( $minor_author->{id} != $author->{id}){
+                    %if( $minor_author->id != $author->id){
                         <a class="btn btn-danger btn-sm" href="<%= url_for('remove_author_uid', masterid=>$id, uid=>$minor_author->{id}) %>">
-                            <span class="glyphicon glyphicon-trash"></span>
+                            <i class="fa fa-chain-broken" style="color: white;"></i>
                         </a>
                     %}
-                    <%= $minor_author->{uid} %>
+                    <a href="<%= url_for('edit_author', id=>$minor_author->id) %>">
+                        <%= $minor_author->uid %>
+                    </a>
                 </li>
             %}
             </ul>

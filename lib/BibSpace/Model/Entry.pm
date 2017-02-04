@@ -14,6 +14,7 @@ use List::MoreUtils qw(any uniq);
 
 use DateTime::Format::Strptime;
 use DateTime;
+use Path::Tiny;
 
 use Data::Dumper;
 use utf8;
@@ -51,6 +52,30 @@ has 'hidden'          => ( is => 'rw', isa => 'Int', default => 0 );
 has 'year'            => ( is => 'rw', isa => 'Maybe[Int]', default => 0 );
 has 'month'           => ( is => 'rw', isa => 'Int', default => 0 );
 has 'need_html_regen' => ( is => 'rw', isa => 'Int', default => 1 );
+
+# name => Path::Tiny object
+has 'attachments' => (
+    is      => 'rw',
+    traits  => ['Hash'],
+    isa     => 'HashRef[Path::Tiny]',
+    default => sub { {} },
+    handles => {
+        attachments_set     => 'set',
+        attachments_get     => 'get',
+        attachments_has     => 'exists',
+        attachments_defined => 'defined',
+        attachments_keys    => 'keys',
+        attachments_values  => 'values',
+        attachments_num     => 'count',
+        attachments_pairs   => 'kv',
+        attachments_delete  => 'delete',
+        attachments_clear   => 'clear',
+    },
+);
+has 'attachment_slides' =>
+    ( is => 'rw', isa => 'Maybe[Path::Tiny]', default => undef );
+
+
 has 'shall_update_modified_time' =>
     ( is => 'rw', isa => 'Int', default => 0 );
 
@@ -116,6 +141,53 @@ sub equals_bibtex {
     die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj)
         unless ref($self) eq ref($obj);
     return $self->bib eq $obj->bib;
+}
+####################################################################################
+####################################################################################
+sub delete_all_attachments {
+    my $self = shift;
+
+    for my $fp ( $self->attachments_values ) {
+        $fp->remove;
+    }
+    $self->attachments_clear;
+}
+####################################################################################
+sub add_attachment {
+    my ( $self, $type, $obj ) = @_;
+    $self->attachments_set( $type, $obj );
+}
+####################################################################################
+sub get_attachment {
+    my ( $self, $type ) = @_;
+    $self->attachments_get($type);
+}
+####################################################################################
+sub delete_attachment {
+    my ( $self, $type ) = @_;
+    if ( $self->attachments_has($type) ) {
+        $self->attachments_get($type)->remove;
+        $self->attachments_delete($type);
+    }
+}
+####################################################################################
+sub discover_attachments {
+    my ($self, $upload_dir) = @_;
+
+    my $id = $self->id;
+    my @discovery_papers
+        = Path::Tiny->new( $upload_dir, "papers" )
+        ->children(qr/paper-$id\./);
+    my @discovery_slides
+        = Path::Tiny->new( $upload_dir, "slides" )
+        ->children(qr/slides-paper-$id\./);
+    my @discovery_other
+        = Path::Tiny->new( $upload_dir, "unknown" )
+        ->children(qr/unknown-$id\./);
+
+    $self->add_attachment( 'slides', $_ ) for @discovery_slides;
+    $self->add_attachment( 'paper', $_ ) for @discovery_slides;
+    $self->add_attachment( 'unknown', $_ ) for @discovery_other;
 }
 ####################################################################################
 
@@ -277,6 +349,9 @@ sub remove_bibtex_fields {
     my $arr_ref_bib_fields_to_delete = shift;
     my @bib_fields_to_delete         = @$arr_ref_bib_fields_to_delete;
 
+    say "remove_bibtex_fields got request to remove: "
+        . @bib_fields_to_delete;
+
     my $entry = new Text::BibTeX::Entry();
     $entry->parse_s( $self->bib );
     return -1 unless $entry->parse_ok;
@@ -285,7 +360,7 @@ sub remove_bibtex_fields {
     my $num_deleted = 0;
 
     for my $field (@bib_fields_to_delete) {
-        if( $entry->exists($field) ){
+        if ( $entry->exists($field) ) {
             $entry->delete($field);
             $num_deleted++;
         }
@@ -322,13 +397,13 @@ sub fix_month {
 }
 ####################################################################################
 sub fix_bibtex_accents {
-    my $self     = shift;
-    $self->bib(fix_bibtex_national_characters($self->bib));
+    my $self = shift;
+    $self->bib( fix_bibtex_national_characters( $self->bib ) );
 }
 ####################################################################################
 sub generate_html {
-    my $self     = shift;
-    my $bst_file = shift;
+    my $self      = shift;
+    my $bst_file  = shift;
     my $converter = shift;
 
     die "Bibtex-Html converter is not defined" unless $converter;
@@ -338,12 +413,10 @@ sub generate_html {
 
     $self->fix_bibtex_accents;
 
-    $converter->convert($self->bib, $bst_file);
+    $converter->convert( $self->bib, $bst_file );
     my $html = $converter->get_html;
     $self->html($html);
-    $self->warnings( 
-            join( ', ', $converter->get_warnings )
-    );
+    $self->warnings( join( ', ', $converter->get_warnings ) );
 
     $self->need_html_regen(0);
 
@@ -351,9 +424,9 @@ sub generate_html {
 }
 ####################################################################################
 sub regenerate_html {
-    my $self     = shift;
-    my $force    = shift;
-    my $bst_file = shift;
+    my $self      = shift;
+    my $force     = shift;
+    my $bst_file  = shift;
     my $converter = shift;
     $bst_file ||= $self->bst_file;
 
@@ -366,7 +439,7 @@ sub regenerate_html {
         or $self->need_html_regen == 1
         or $self->html =~ m/ERROR/ )
     {
-        $self->generate_html($bst_file, $converter);
+        $self->generate_html( $bst_file, $converter );
     }
 }
 
@@ -375,8 +448,9 @@ sub has_author {
     my $self   = shift;
     my $author = shift;
 
-    warn "FIXME: Change authorship search method! Use dummy-search authorship object!";
-    
+    warn
+        "FIXME: Change authorship search method! Use dummy-search authorship object!";
+
     my $authorship = $self->authorships_find(
         sub { $_->author->equals($author) and $_->entry->equals($self) } );
     return defined $authorship;
@@ -435,9 +509,11 @@ sub get_teams {
 
         foreach my $team ( $author->get_teams ) {
             my $joined = $author->joined_team($team);
-            my $left = $author->left_team($team);
-            
-            if ( $joined <= $self->year and (  $left > $self->year or $left == 0 ) ){
+            my $left   = $author->left_team($team);
+
+            if ( $joined <= $self->year
+                and ( $left > $self->year or $left == 0 ) )
+            {
                 $final_teams{ $team->id } = $team;
             }
         }
@@ -490,7 +566,7 @@ sub sort_by_year_month_modified_time {
     # $a and $b exist and are MEntry objects
     {
         no warnings 'uninitialized';
-               $a->{year} <=> $b->{year}
+        $a->{year} <=> $b->{year}
             or $a->{month} <=> $b->{month}
             or $a->{id} <=> $b->{id};
     }

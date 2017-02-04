@@ -108,6 +108,8 @@ sub single_read {
 sub fixMonths {
   my $self = shift;
 
+  $self->app->logger->info("Fix months in all entries.");
+
   my @entries = $self->app->repo->entries_all;
 
   foreach my $entry(@entries){
@@ -122,50 +124,16 @@ sub fixMonths {
   $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
-sub unhide {
-  my $self = shift;
-  my $id   = $self->param('id');
-
-  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
-
-  if ( defined $entry ) {
-
-    $entry->unhide();
-    $self->app->repo->entries_update($entry);
-  }
-  else {
-    $self->flash( msg => "There is no entry with id $id" );
-  }
-
-
-  $self->redirect_to( $self->get_referrer );
-}
-
-####################################################################################
-sub hide {
-  my $self = shift;
-  my $id   = $self->param('id');
-
-  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
-
-  if ( defined $entry ) {
-    $entry->hide();
-    $self->app->repo->entries_update($entry);
-  }
-  else {
-    $self->flash( msg => "There is no entry with id $id" );
-  }
-  $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
 sub toggle_hide {
   my $self = shift;
   my $id   = $self->param('id');
 
-  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+  $self->app->logger->info("Toggle hide entry '$id'.");
+
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
   if ( defined $entry ) {
-    $entry->toggle_hide();
+    $entry->toggle_hide;
     $self->app->repo->entries_update($entry);
   }
   else {
@@ -180,7 +148,9 @@ sub make_paper {
   my $self = shift;
   my $id   = $self->param('id');
 
-  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+  $self->app->logger->info("Make entry '$id' 'paper'.");
+
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
   if ( defined $entry ) {
     $entry->make_paper();
@@ -198,7 +168,9 @@ sub make_talk {
   my $self = shift;
   my $id   = $self->param('id');
 
-  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+  $self->app->logger->info("Make entry '$id' 'talk'.");
+
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
   if ( defined $entry ) {
     $entry->make_talk();
@@ -216,6 +188,8 @@ sub all_recently_added {
   my $self = shift;
   my $num  = $self->param('num') // 10;
 
+  $self->app->logger->info("Displaying recently added entries.");
+
   my @objs = $self->app->repo->entries_all;
   @objs = sort { $b->creation_time cmp $a->creation_time } @objs;
   @objs = @objs[ 0 .. $num-1 ];
@@ -230,6 +204,8 @@ sub all_recently_added {
 sub all_recently_modified {
   my $self = shift;
   my $num = $self->param('num') // 10;
+
+  $self->app->logger->info("Displaying recently modified entries.");
 
   my @objs = $self->app->repo->entries_all;
   @objs = sort { $b->modified_time cmp $a->modified_time } @objs;
@@ -246,6 +222,8 @@ sub all_without_tag {
   my $self    = shift;
   my $tagtype = $self->param('tagtype') || 1;
 
+  $self->app->logger->info("Displaying untagged entries.");
+
   my @all = $self->app->repo->entries_all;
   my @objs = grep { scalar $_->get_tags( $tagtype ) == 0 } @all;
 
@@ -260,6 +238,8 @@ sub all_without_tag_for_author {
   my $self        = shift;
   my $master_name = $self->param('author');
   my $tagtype     = $self->param('tagtype');
+
+  $self->app->logger->info("Displaying untagged entries for author '$master_name'.");
 
   my $author;
   if( Scalar::Util::looks_like_number($master_name) ){
@@ -303,6 +283,8 @@ sub show_unrelated_to_team {
   my $self    = shift;
   my $team_id = $self->param('teamid');
 
+  $self->app->logger->info("Displaying entries unrelated to team '$team_id'.");
+
 
   my $team_name = "";
   my $team = $self->app->repo->teams_find( sub { $_->id == $team_id } );
@@ -335,7 +317,7 @@ sub all_with_missing_month {
 
 
   my @objs
-    = grep { !defined $_->{month} or $_->{month} < 1 or $_->{month} > 12 } $self->app->repo->entries_all;
+    = grep { !defined $_->month or $_->month < 1 or $_->month > 12 } $self->app->repo->entries_all;
 
   my $msg = "This list contains entries with missing BibTeX field 'month'. ";
   $msg .= "Add this data to get the proper chronological sorting.";
@@ -383,9 +365,9 @@ sub all_bibtex {
   $entry_type = $self->param('entry_type');
 
 
-  my @objs = $self->app->repo->entries_filter( sub { $_->{hidden} == 0 } );
+  my @objs = $self->app->repo->entries_filter( sub { !$_->is_hidden } );
 
-  @objs = grep { ( $_->{entry_type} cmp $entry_type ) == 0 } @objs if defined $entry_type;
+  @objs = grep { $_->entry_type eq $entry_type } @objs if defined $entry_type;
 
   # my @objs = Fget_publications_main_hashed_args( $self,
   #     { hidden => 0, entry_type => $entry_type } );
@@ -399,50 +381,43 @@ sub all_bibtex {
   $self->render( text => $big_str );
 }
 
-
-############################################################################################################
-
-#here was landing
-
 ####################################################################################
 sub fix_file_urls {
-
-  ##
-  # http://127.0.0.1:3000/publications/download/paper/4/pdf
-
   my $self = shift;
-  my $dbh  = $self->app->db;
+  
+  $self->app->logger->info("Fixing file urls for all entries.");
 
 
   my @all_entries = $self->app->repo->entries_all;
 
   my $str = "";
 
-  for my $e (@all_entries) {
+  for my $entry (@all_entries) {
 
-    my $url_pdf    = $self->url_for( 'download_publication_pdf', filetype => 'paper',  id => $e->{id} )->to_abs;
-    my $url_slides = $self->url_for( 'download_publication',     filetype => 'slides', id => $e->{id} )->to_abs;
+    $entry->discover_attachments($self->app->config->{upload_dir});
 
-    # check if the entry has pdf
-    my $pdf_path = $self->get_paper_pdf_path( $e->id, "paper" );
-    if ( $pdf_path ) {    # this means that file exists locally
-      if ( $e->has_bibtex_field("pdf") ) {
-        $e->add_bibtex_field( "pdf", "$url_pdf" );
-        $str .= "id $e->{id}, PDF: " . $url_pdf;
-        $str .= '<br/>';
-      }
+    my $file = $entry->get_attachment('paper');
+    my $file_url = $self->url_for( 'download_publication_pdf', filetype => "paper", id => $entry->id )->to_abs;
+
+    if ( $file and $file->exists and $entry->has_bibtex_field("pdf") ) {
+      $entry->add_bibtex_field( "pdf", "$file_url" );
+
+      $str .= "<br/>Fixed: ID $entry->{id}, PDF: " . $file_url;
+      $str .= '<br/>';
     }
-    my $slides_path = $self->get_paper_pdf_path( $e->id, "slides" );
-    if ( $slides_path ) {    # this means that file exists locally
-      if ( $e->has_bibtex_field("slides") ) {
-        $e->add_bibtex_field( "slides", "$url_slides" );
-        $str .= "id $e->{id}, SLI: " . $url_slides;
-        $str .= '<br/>';
-      }
+
+    $file = $entry->get_attachment('slides');
+    $file_url = $self->url_for( 'download_publication', filetype => "slides", id => $entry->id )->to_abs;
+
+    if ( $file and $file->exists and $entry->has_bibtex_field("slides") ) {
+      $entry->add_bibtex_field( "slides", "$file_url" );
+
+      $str .= "<br/>Fixed: ID $entry->{id}, SLIDES: " . $file_url;
+      $str .= '<br/>';
     }
   }
 
-  $self->flash( msg => 'The following urls are now fixed: <br/>' . $str );
+  $self->flash( msg_type => 'info', msg => 'Results of fix_attachment_urls:' . $str );
   $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
@@ -451,75 +426,37 @@ sub remove_attachment {
   my $id       = $self->param('id');                     # entry ID
   my $filetype = $self->param('filetype') // 'paper';    # paper, slides
 
-  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+  $self->app->logger->info("Requested to remove attachment of type '$filetype'.");
 
-  # no check as we want to have the files deleted anyway!
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+  my ($msg, $msg_type);
 
-  my $file_path = get_paper_pdf_path( $self, $id, "$filetype" );
+  $entry->discover_attachments($self->app->config->{upload_dir});
 
-  $self->app->logger->debug("File_path '$file_path'", __PACKAGE__."->remove_attachment");
+  if( $entry->attachments_has($filetype) ){
+    $entry->delete_attachment($filetype);
 
-  my $num_deleted_files = 0;
-  my $msg;
-  my $msg_type;
-
-  if ( !defined $file_path ) {
-    $msg      = "File not found. Cannot remove attachment. Filetype $filetype or entry id $id.";
-    $msg_type = 'danger';
-  }
-  else {    # file exists
-
-    $num_deleted_files = $self->remove_attachment_do( $id, $filetype );
-    if ( defined $entry and $num_deleted_files > 0 ) {
-      $entry->remove_bibtex_fields( ['pdf'] )    if $filetype eq 'paper';
-      $entry->remove_bibtex_fields( ['slides'] ) if $filetype eq 'slides';
-      $entry->regenerate_html( 0, $self->app->bst, $self->app->bibtexConverter );
-      $self->app->repo->entries_save($entry);
+    if($filetype eq 'paper'){
+      $entry->remove_bibtex_fields( ['pdf'] );
     }
+    elsif($filetype eq 'slides'){
+      $entry->remove_bibtex_fields( ['slides'] );  
+    }
+    $entry->regenerate_html( 1, $self->app->bst, $self->app->bibtexConverter );
+    $self->app->repo->entries_save($entry);
 
-    $msg      = "There were $num_deleted_files attachments removed for id $id.";
+    $msg      = "The attachment has been removed for entry '$id'.";
     $msg_type = 'success';
+    $self->app->logger->info($msg);
   }
-
-  $self->app->logger->info($msg);
+  else{
+    $msg      = "File not found. Cannot remove attachment. Filetype '$filetype', entry '$id'.";
+    $msg_type = 'danger';
+    $self->app->logger->warn($msg);
+  }
+  
   $self->flash( msg_type => $msg_type, msg => $msg );
   $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
-sub remove_attachment_do {    # refactor this - this is clutter
-  my $self     = shift;
-  my $id       = shift;
-  my $filetype = shift;
-  my $dbh      = $self->app->db;
-
-  my $mentry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
-
-  my $file_path = get_paper_pdf_path( $self, $id, "$filetype" );
-  my $num_deleted_files = 0;
-
-  if ( !defined $mentry or !defined $file_path or $file_path eq 0 ) {
-    return;
-  }
-
-  try {
-    unlink $file_path;
-    $num_deleted_files = $num_deleted_files + 1;
-  }
-  catch { };
-
-  # make sure that there is no file
-  my $file_path_after_delete = get_paper_pdf_path( $self, $id, "$filetype" );
-  # if there is something left, try again
-  if( defined $file_path_after_delete ) {
-    try {
-      unlink $file_path;
-      $num_deleted_files = $num_deleted_files + 1;
-    }
-    catch { };
-    $file_path_after_delete = get_paper_pdf_path( $self, $id, "$filetype" );
-  }
-
-  return $num_deleted_files;
 }
 ####################################################################################
 sub download {
@@ -527,30 +464,28 @@ sub download {
   my $id       = $self->param('id');                     # entry ID
   my $filetype = $self->param('filetype') // 'paper';    # paper, slides
 
-  my $file_path = $self->get_paper_pdf_path( $id, "$filetype" );
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+  $entry->discover_attachments($self->app->config->{upload_dir});
   
-  if( $file_path and -e $file_path ){
-    $self->app->logger->debug("Found paper type '$filetype': '$file_path'", __PACKAGE__."->download");
+  my $file = $entry->get_attachment($filetype);
+  
+  if( $file and -e $file ){
     $self->app->logger->info("Downloading file download '$filetype' for entry '$id'.");
-    $self->render_file( 'filepath' => $file_path );
+    $self->render_file( 'filepath' => $file );
     return;
   }
-  $self->app->logger->error("Requested download for entry $id, filetype $filetype but file is missing!");
-  $self->app->logger->info("Unsuccessful download filetype '$filetype', id '$id'.");
-  $self->render(status => 404, text => "File not found. Unsuccessful download filetype $filetype, id $id.");
+  $self->app->logger->error("File not found. Requested download for entry '$id', filetype '$filetype'.");
+  $self->render(status => 404, text => "File not found.  Filetype '$filetype', ID '$id'.");
 }
 ####################################################################################
 
 sub add_pdf {
   my $self = shift;
   my $id   = $self->param('id');
-  my $dbh  = $self->app->db;
-
-
-  my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
   if ( !defined $entry ) {
-    $self->flash( msg => "There is no entry with id $id" );
+    $self->flash( msg_type => 'danger', msg => "Entry '$id' not found." );
     $self->redirect_to( $self->get_referrer );
     return;
   }
@@ -565,14 +500,11 @@ sub add_pdf_post {
   my $self     = shift;
   my $id       = $self->param('id') // "unknown";
   my $filetype = $self->param('filetype');
-  my $dbh      = $self->app->db;
+  my $uploaded_file = $self->param('uploaded_file');
 
-  my $uploads_directory = $self->config->{upload_dir};
-  $uploads_directory =~ s!/*$!/!;    # makes sure that there is exactly one / at the end
+  my $uploads_directory = Path::Tiny->new( $self->app->config->{upload_dir} );
 
-  my $extension;
-
-  $self->app->logger->info("Saving attachment for paper id $id");
+  $self->app->logger->info("Saving attachment for entry '$id'");
 
   # Check file size
   if ( $self->req->is_limit_exceeded ) {
@@ -585,8 +517,7 @@ sub add_pdf_post {
     return;
   }
 
-  # Process uploaded file
-  my $uploaded_file = $self->param('uploaded_file');
+
 
   if( !$uploaded_file ) {
     $self->flash( msg => "File upload unsuccessful!", msg_type => "danger" );
@@ -596,96 +527,69 @@ sub add_pdf_post {
   }
 
   my $size = $uploaded_file->size;
+  my $sizeKB = int( $size / 1024 );
   if ( $size == 0 ) {
     $self->flash( msg => "No file was selected or file has 0 bytes! Not saving!", msg_type => "danger" );
     $self->app->logger->info("Saving attachment for paper id '$id' FAILED. File size is 0.");
     $self->redirect_to( $self->get_referrer );
     return;
   }
-  else {
-    my $sizeKB = int( $size / 1024 );
-    my $name   = $uploaded_file->filename;
 
-    my @dot_arr = split( /\./, $name );
-    my $arr_size = scalar @dot_arr;
-    $extension = $dot_arr[ $arr_size - 1 ];
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
-    my $fname;
-    my $fname_no_ext;
-    my $file_path;
-    my $bibtex_field;
-    my $directory;
-
-    if ( $filetype eq 'paper' ) {
-      $fname_no_ext = "paper-" . $id . ".";
-      $fname        = $fname_no_ext . $extension;
-
-      $directory    = "papers/";
-      $bibtex_field = "pdf";
-    }
-    elsif ( $filetype eq 'slides' ) {
-      $fname_no_ext = "slides-paper-" . $id . ".";
-      $fname        = $fname_no_ext . $extension;
-      $directory    = "slides/";
-      $bibtex_field = "slides";
-    }
-    else {
-      $fname_no_ext = "unknown-" . $id . ".";
-      $fname        = $fname_no_ext . $extension;
-      $directory    = "unknown/";
-
-      $bibtex_field = "pdf2";
-    }
-    try {
-      path( $uploads_directory . $directory )->mkpath;
-    }
-    catch {
-      $self->app->logger->warn("Cannot create directory '$directory'. Msg: '$_'.", __PACKAGE__."->add_pdf_post");
-    };
-
-    $file_path = $directory . $fname;
-
-    # remove old file that would match the patterns
-    my $old_file = $self->get_paper_pdf_path( $id, "$filetype" );
-    if ( $old_file and -e $old_file ) {
-      # old file exists and must be deleted!
-      try {
-        unlink $old_file;
-      }
-      catch { };
-    }
-
-    $uploaded_file->move_to( $uploads_directory . $file_path );
-
-    my $new_file = $self->get_paper_pdf_path( $id, "$filetype" );
-
-    my $file_url = $self->url_for( 'download_publication', filetype => "$filetype", id => $id )->to_abs;
-    if ( $filetype eq 'paper' ) {    # so that the link looks nicer
-      $file_url = $self->url_for( 'download_publication_pdf', filetype => "paper", id => $id )->to_abs;
-    }
-
-    $self->app->logger->info("Saving attachment for paper id $id under: $file_url");
-
-
-    my $msg = "Successfully uploaded the $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>.
-        The file was renamed to: <em>$fname</em>. URL <a href=\""
-      . $file_url . "\">$name</a>";
-
-
-    my $mentry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
-    $mentry->add_bibtex_field( $bibtex_field, "$file_url" );
-
-    if ( !defined $mentry ) {
-      $self->flash( msg_type=> 'danger', msg => "There is no entry with id $id" );
-      $self->redirect_to( $self->get_referrer );
-      return;
-    }
-    $mentry->regenerate_html(0, $self->app->bst, $self->app->bibtexConverter);
-    $self->app->repo->entries_save($mentry);
-
-    $self->flash( msg_type=> 'success', msg => $msg );
+  if ( !defined $entry ) {
+    $self->flash( msg_type=> 'danger', msg => "Entry '$id' does not exist." );
     $self->redirect_to( $self->get_referrer );
+    return;
   }
+  
+
+  my $name   = $uploaded_file->filename;
+  my @dot_arr = split( /\./, $name );
+  my $extension = $dot_arr[-1];
+
+
+  my $file_url;
+  my $destination;
+
+  if ( $filetype eq 'paper' ) {
+    $entry->delete_attachment('paper');
+    $destination = $uploads_directory->path("papers", "paper-$id.$extension");
+    $uploaded_file->move_to( $destination );
+
+    $entry->add_attachment('paper', $destination);
+    $file_url = $self->url_for( 'download_publication_pdf', filetype => "paper", id => $entry->id )->to_abs;
+    $entry->add_bibtex_field( 'pdf', "$file_url" );
+  }
+  elsif ( $filetype eq 'slides' ) {
+    $entry->delete_attachment('slides');
+    $destination = $uploads_directory->path("slides", "slides-paper-$id.$extension");
+    $uploaded_file->move_to( $destination );
+
+    $entry->add_attachment('slides', $destination);
+    $file_url = $self->url_for( 'download_publication', filetype => "slides", id => $entry->id )->to_abs;
+    $entry->add_bibtex_field( 'slides', "$file_url" );
+  }
+  else{
+    $entry->delete_attachment('unknown');
+    $destination = $uploads_directory->path("unknown", "unknown-$id.$extension");
+    $uploaded_file->move_to( $destination );
+
+    $entry->add_attachment('unknown', $destination);
+    $file_url = $self->url_for( 'download_publication', filetype => "unknown", id => $entry->id )->to_abs;
+    $entry->add_bibtex_field( 'pdf2', "$file_url" );
+  }
+
+  $self->app->logger->info("Saving attachment for entry '$id' under: '$destination'.");
+
+  my $msg = "Successfully uploaded the $sizeKB KB file as <strong><em>$filetype</em></strong>.
+      The file was renamed to:  <a href=\"".$file_url. "\">".$destination->basename."</a>";
+
+  $entry->regenerate_html(0, $self->app->bst, $self->app->bibtexConverter);
+  $self->app->repo->entries_save($entry);
+
+  $self->flash( msg_type=> 'success', msg => $msg );
+  $self->redirect_to( $self->get_referrer );
 }
 
 ####################################################################################
@@ -774,12 +678,10 @@ sub delete_sure {
     return;
   }
 
-  remove_attachment_do( $self, $id, 'paper' );
-  remove_attachment_do( $self, $id, 'slides' );
+  $entry->delete_all_attachments;
   $self->app->repo->entries_delete($entry);
 
-  $self->app->logger->info("Entry id $id has been deleted.");
-
+  $self->app->logger->info("Entry '$id' has been deleted.");
   $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
@@ -1256,50 +1158,6 @@ sub clean_ugly_bibtex {
   $self->flash( msg_type => 'info', msg => 'All entries have now their Bibtex cleaned.' );
 
   $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
-sub get_paper_pdf_path {
-  my $self = shift;
-  my $id   = shift;
-  my $type = shift || "paper";
-
-  my $upload_dir = $self->config->{upload_dir};
-  $upload_dir =~ s!/*$!/!;    # makes sure that there is exactly one / at the end
-
-  my $filequery = "";
-  $filequery .= "paper-" . $id . "."        if $type eq "paper";
-  $filequery .= "slides-paper-" . $id . "." if $type eq "slides";
-
-  my $directory = $upload_dir;
-  $directory .= "papers/" if $type eq "paper";
-  $directory .= "slides/" if $type eq "slides";
-  my $filename = undef;
-
-  # make sure that the directories exist
-  try {
-    path($directory)->mkpath;
-  }
-  catch {
-    $self->app->logger->warn("Cannot create directory '$directory'. Msg: '$_'.", __PACKAGE__."->get_paper_pdf_path");
-  };
-
-  opendir( DIR, $directory ) or die "Cannot open directory $directory :" . $!;
-  while ( my $file = readdir(DIR) ) {
-
-    # Use a regular expression to ignore files beginning with a period
-    next if ( $file =~ m/^\./ );
-    if ( $file =~ /^$filequery.*/ ) {    # filequery contains the dot!
-      $self->app->logger->debug("Found match file: '$file', query: '$filequery'.", __PACKAGE__."->get_paper_pdf_path");
-      $filename = $file;
-    }
-  }
-  closedir(DIR);
-  if ( !defined $filename ) {
-    return;
-  }
-
-  my $file_path = $directory . $filename;
-  return $file_path;
 }
 ####################################################################################
 1;

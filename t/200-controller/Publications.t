@@ -171,12 +171,7 @@ my @pages = (
   $self->url_for('get_single_publication', id=>$entry->id),
 
   $self->url_for('toggle_hide_publication', id=>$entry->id),
-  $self->url_for('hide_publication', id=>$entry->id),
-  $self->url_for('unhide_publication', id=>$entry->id),
-  
   $self->url_for('toggle_hide_publication', id=>0),
-  $self->url_for('hide_publication', id=>0),
-  $self->url_for('unhide_publication', id=>0),
 
   $self->url_for('make_paper', id=>$entry->id),
   $self->url_for('make_talk', id=>$entry->id),

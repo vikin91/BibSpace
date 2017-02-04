@@ -227,56 +227,53 @@
     <ul class="dropdown-menu" role="menu">
         <li>
             <a href="<%= url_for('/settings/regenerate_all')%>">
-                <span class="glyphicon glyphicon-refresh"></span> Regenrate HTML
-                <span class="glyphicon glyphicon-warning-sign"  style="color: orange;"></span>
-                <span class="glyphicon glyphicon-time"  style="color: red;"></span>
+                <span class="glyphicon glyphicon-refresh"></span> Regenerate HTML
             </a>
         </li>
         % if(is_admin()){
+            <li class="divider"></li>
             <li>
-                <a href="<%= url_for('/settings/regenerate_all_force')%>">
-                    <span class="glyphicon glyphicon-refresh"></span> Regenrate HTML 
+                <a href="<%= url_for('/settings/regenerate_all_force')%>" data-toggle="tooltip" data-placement="left" title="Regenerates HTML for all entries. Takes some tome...">
+                    <span class="glyphicon glyphicon-refresh"></span> Regenerate HTML 
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">force</span>
-                    <span class="glyphicon glyphicon-warning-sign"  style="color: orange;"></span>
                     <span class="glyphicon glyphicon-time"  style="color: red;"></span>
                 </a>
             </li>
-        % }
-        % if(is_admin()){
-            <li class="divider"></li>
-            <li role="presentation" class="dropdown-header">Removes ugly BibTeX fields form entries. After cleaning HTML regeneration is required.</li>
+
             <li>
-                <a href="<%= url_for('/settings/clean_all')%>">
+                <a href="<%= url_for('/settings/clean_all')%>" data-toggle="tooltip" data-placement="left" title="Removes ugly BibTeX fields form entries. After cleaning HTML regeneration is required.">
                     <i class="fa fa-magic"></i> Clean BibTeX fields
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">for all</span>
                 </a>
             </li>
-            <li class="divider"></li>
-            <li role="presentation" class="dropdown-header">Converts download links from direct file access to the file serving function.</li>
             <li>
-                <a href="<%= url_for('fix_attachment_urls')%>">
+                <a href="<%= url_for('fix_attachment_urls')%>" data-toggle="tooltip" data-placement="left" title="Links discovered files to entries. Converts download links from direct file path to the file serving function.">
                     <i class="fa fa-magic"></i> Fix attachment urls
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">for all</span>
                 </a>
             </li>
-            <li class="divider"></li>
-            <li role="presentation" class="dropdown-header">Calculates integer month field in DB based on bibtex field 'month' .</li>
             <li>
-                <a href="<%= url_for('fix_all_months')%>">
-                    <i class="fa fa-magic"></i> Fix month numbers in DB
+                <a href="<%= url_for('fix_all_months')%>" data-toggle="tooltip" data-placement="left" title="Calculates integer month field in DB based on bibtex field 'month'.">
+                    <i class="fa fa-magic"></i> Fix months
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
-                    <span class="badge">for all</span>
+                    <span class="badge">for all entries</span>
                 </a>
             </li>
         % }
         % if(is_admin()){
             <li class="divider"></li>
+            <li>
+              <a href="<%= url_for('fix_masters')%>" data-toggle="tooltip" data-placement="left" title="Should fix the 'serious warning' issued by accessing 'author->get_master'.">
+                <i class="fa fa-refresh fa-spin" style="color: blue;"></i>
+                 Fix author master relations
+              </a>
+            </li>
             <li>          
                 <a href="#modal-dialog-reassign-navi" data-toggle="modal">
-                <i class="fa fa-refresh fa-spin" style="color: blue;"></i> Reassign all papers to authors ...
+                <i class="fa fa-refresh fa-spin" style="color: yellow;"></i> Reassign all papers to authors ...
                 </a>
             </li>
             <li>          

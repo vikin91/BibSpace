@@ -211,9 +211,7 @@ sub meta {
     my $citation_pdf_url = undef;
 
     if ( $bibtex_entry->exists('pdf') ) {
-        my $local_file_paper
-            = BibSpace::Controller::Publications::get_paper_pdf_path( $self,
-            $id, 'paper' );
+        my $local_file_paper = $mentry->get_attachment('paper');
         if ( $local_file_paper and -e $local_file_paper ) {
             $citation_pdf_url = $self->url_for(
                 'download_publication_pdf',
@@ -226,9 +224,7 @@ sub meta {
         }
     }
     elsif ( $bibtex_entry->exists('slides') ) {
-        my $local_file_slides
-            = BibSpace::Controller::Publications::get_paper_pdf_path( $self,
-            $id, 'slides' );
+        my $local_file_slides = $mentry->get_attachment('slides');
         if ( $local_file_slides and -e $local_file_slides ) {
             $citation_pdf_url = $self->url_for(
                 'download_publication_pdf',

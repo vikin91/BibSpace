@@ -46,9 +46,10 @@ sub show_log {
     my @log_names = map { $_->basename('.log') } @file_list;
 
 
-    my $log_2_read = $log_dir->child( $type . ".log" );
-    $log_2_read = $log_dir->child("info.log") unless $log_2_read->exists;
-    $log_2_read = shift @file_list            unless $log_2_read->exists;
+    my $log_2_read;
+    $log_2_read = $log_dir->child( $type . ".log" ) if defined $type;
+    $log_2_read = $log_dir->child("info.log") if !$log_2_read or !$log_2_read->exists;
+    $log_2_read = shift @file_list            if !$log_2_read or !$log_2_read->exists;
 
     my @lines;
     try {

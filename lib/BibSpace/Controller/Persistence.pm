@@ -76,6 +76,7 @@ sub copy_mysql_to_smart {
     # $smart_layer->reset_data;
 
     $self->app->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
+    $self->app->link_data;
 
     my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
     $self->flash( msg_type=>'success', msg => "Copied mysql => smart. $status" );

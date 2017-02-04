@@ -101,12 +101,14 @@ sub get_master {
 
     return $self if $self->is_master;
     return $self->masterObj if $self->masterObj;
-    die "Cannot derive master for "
+
+    warn "SERIOUS WARNING! Cannot derive master for "
         . $self->uid
         . ". Author is not master, but masterObj is undef. id '"
         . $self->id
         . "' master_id '"
         . $self->master_id . "'.";
+    return;
 }
 ####################################################################################
 sub is_master {
@@ -203,11 +205,11 @@ sub is_visible {
 sub can_be_deleted {
     my $self = shift;
 
-    return if $self->{display} == 1;
+    return if $self->display == 1;
 
     my @teams = $self->get_teams;
 
-    return 1 if scalar @teams == 0 and $self->{display} == 0;
+    return 1 if scalar @teams == 0 and $self->display == 0;
     return;
 }
 ####################################################################################

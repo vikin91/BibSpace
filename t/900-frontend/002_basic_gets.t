@@ -45,17 +45,21 @@ my @pages = (
 	"/logout",
 	"/register",
 	"/log",
-	"/settings/clean_all",
+
 	"/settings/regenerate_all_force",
-	$self->url_for('fix_attachment_urls'),
-	$self->url_for('clean_ugly_bibtex'),
+	
 	$self->url_for('add_publication'),
 	$self->url_for('add_many_publications'),
 	$self->url_for('recently_changed', num=>10),
 	$self->url_for('recently_added', num=>10),
-	"/manage_users",
+
+	$self->url_for('manage_users'),
 	$self->url_for('fix_all_months'),
-	"/publications/fix_urls",
+	$self->url_for('fix_attachment_urls'),
+	$self->url_for('clean_ugly_bibtex'),
+
+	$self->url_for('fix_masters'),
+
 	"/profile",
 	"/backups",
 	"/types",
@@ -72,7 +76,6 @@ my @pages = (
 	"/publications/orphaned",
 	"/publications/candidates_to_delete",
 	"/publications/missing_month",
-	"/publications/fix_urls",
 	"/read/publications/meta",
 	"/read/publications",
 	"/r/publications",
