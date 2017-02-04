@@ -10,382 +10,257 @@ use 5.010;           #because of ~~
 use strict;
 use warnings;
 use DBI;
-use Set::Scalar;
+use DBIx::Connector;
 
-use Mojo::Redis2;
+use List::MoreUtils qw(any uniq);
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Controller::Publications;
-use BibSpace::Controller::BackupFunctions;
+use BibSpace::Functions::MySqlBackupFunctions;
 
 use BibSpace::Functions::FPublications;
 
-use BibSpace::Model::MTagType;
 
 use base 'Mojolicious::Plugin';
 
 sub register {
 
-    my ( $self, $app ) = @_;
-
-
-    $app->helper(
-        get_dbh => sub {
-            my $self = shift;
-            return $self->app->db;
-        }
-    );
-    $app->helper( 
-        bst => sub {
-            my $self = shift;
-
-            my $bst_candidate_file = $self->app->home . '/lib/descartes2.bst';
-
-            if( defined $self->app->config->{bst_file} ){
-                $bst_candidate_file = $self->app->config->{bst_file};
-                say "BST candidate 1: $bst_candidate_file";
-                return File::Spec->rel2abs( $bst_candidate_file )
-                    if File::Spec->file_name_is_absolute( $bst_candidate_file )
-                    and -e File::Spec->rel2abs( $bst_candidate_file );
-
-                $bst_candidate_file = $self->app->home . $self->app->config->{bst_file};
-                say "BST candidate 2: $bst_candidate_file";
-
-                return File::Spec->rel2abs( $bst_candidate_file )
-                    if File::Spec->file_name_is_absolute( $bst_candidate_file )
-                    and -e File::Spec->rel2abs( $bst_candidate_file );     
-            }
-            
-            $bst_candidate_file = $self->app->home . '/lib/descartes2.bst';
-            say "BST candidate 3: $bst_candidate_file";
-
-            return File::Spec->rel2abs( $bst_candidate_file )
-                if -e File::Spec->rel2abs( $bst_candidate_file );
-
-            say "All BST candidates failed";
-            return './bst-not-found.bst';
-        }
-    );
-
-
-
-# TODO: Move all implementations to a separate files to avoid code redundancy! Here only function calls should be present, not theirs implementation
-
-    $app->helper(
-        get_rank_of_current_user => sub {
-            my $self = shift;
-            return 99 if $self->app->is_demo();
-
-            my $uname = shift || $app->session('user');
-            my $user_dbh = $app->db;
-
-            my $sth
-                = $user_dbh->prepare("SELECT rank FROM Login WHERE login=?");
-            $sth->execute($uname);
-            my $row  = $sth->fetchrow_hashref();
-            my $rank = $row->{rank};
-
-            $rank = 0 unless defined $rank;
-
-            return $rank;
-        }
-    );
-
-    $app->helper(
-        current_year => sub {
-            my ($sec,  $min,  $hour, $mday, $mon,
-                $year, $wday, $yday, $isdst
-            ) = localtime(time);
-            return 1900 + $year;
-        }
-    );
-
-    $app->helper(
-        get_year_of_oldest_entry => sub {
-            my $self = shift;
-            my $sth
-                = $self->app->db->prepare(
-                "SELECT MIN(year) as min FROM Entry")
-                or die $self->app->db->errstr;
-            $sth->execute();
-            my $row = $sth->fetchrow_hashref();
-            my $min = $row->{min};
-            return $min;
-
-        }
-    );
-
-    $app->helper(
-        current_month => sub {
-            my ($sec,  $min,  $hour, $mday, $mon,
-                $year, $wday, $yday, $isdst
-            ) = localtime(time);
-            return $mon + 1;
-        }
-    );
-
-    $app->helper(
-        can_delete_backup_helper => sub {
-            my $self       = shift;
-            my $bid        = shift;
-
-            return can_delete_backup($self->app->db, $bid, $self->app->config);
-        }
-    );
-
-    $app->helper(
-        num_pubs => sub {
-            my $self = shift;
-
-            my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => undef } );
-            my $count = scalar @objs;
-            return $count;
-        }
-    );
-
-    $app->helper(
-        get_all_tag_types => sub {
-            my $self     = shift;
-            return MTagType->static_all($self->app->db);
-        }
-    );
-
-    $app->helper(
-        get_tag_type_obj => sub {
-            my $self = shift;
-            my $type = shift || 1;
-
-            return MTagType->static_get($self->app->db, $type);
-        }
-    );
-
-    $app->helper(
-        get_tags_of_type_for_paper => sub {
-            my $self = shift;
-            my $eid  = shift;
-            my $type = shift || 1;
-
-            return MTag->static_get_all_of_type_for_paper( $self->app->db,
-                $eid, $type );
-        }
-    );
-
-    $app->helper(
-        get_unassigned_tags_of_type_for_paper => sub {
-            my $self = shift;
-            my $eid  = shift;
-            my $type = shift || 1;
-
-            return MTag->static_get_unassigned_of_type_for_paper(
-                $self->app->db, $eid, $type );
-        }
-    );
-
-    $app->helper(
-        num_authors => sub {
-            my $self = shift;
-            return scalar MAuthor->static_all_masters($self->app->db);
-        }
-    );
-
-    $app->helper(
-        num_visible_authors => sub {
-            my $self = shift;
-            return scalar grep {$_->{display} == 1} MAuthor->static_all_masters($self->app->db);
-        }
-    );
-
-    $app->helper(
-        get_num_members_for_team => sub {
-            my $self = shift;
-            my $id   = shift;
-
-            my $author = MAuthor->static_get( $self->app->db, $id );
-            return scalar $author->teams($self->app->db);
-        }
-    );
-
-    $app->helper(
-        team_can_be_deleted => sub {
-            my $self = shift;
-            my $id   = shift;
-
-            my $team = MTeam->static_get( $self->app->db, $id );
-            return 0 if !defined $team or scalar $team->members($self->app->db) > 0;
-            return 1;
-        }
-    );
-
-    $app->helper(
-        get_num_teams => sub {
-            my $self = shift;
-            return scalar MTeam->static_all( $self->app->db );
-        }
-    );
-
-
-
-    $app->helper(
-        num_tags => sub {
-            my $self = shift;
-            my $type = shift || 1;
-
-            return scalar MTag->static_all_type($self->app->db, $type);
-        }
-    );
-
-    $app->helper(
-        num_pubs_for_year => sub {
-            my $self = shift;
-            my $year = shift;
-
-            my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => 0, year => $year } );
-            my $count = scalar @objs;
-            return $count;
-        }
-    );
-
-    $app->helper(
-        get_bibtex_types_aggregated_for_type => sub {
-            my $self = shift;
-            my $type = shift;
-
-            return get_bibtex_types_for_our_type( $self->app->db, $type );
-        }
-    );
-
-    $app->helper(
-        helper_get_description_for_our_type => sub {
-            my $self = shift;
-            my $type = shift;
-            return get_description_for_our_type( $self->app->db, $type );
-        }
-    );
-
-    $app->helper(
-        helper_get_landing_for_our_type => sub {
-            my $self = shift;
-            my $type = shift;
-            return get_landing_for_our_type( $self->app->db, $type );
-        }
-    );
-
-    $app->helper(
-        helper_get_entry_title => sub {
-            my $self = shift;
-            my $id   = shift;
-            my $dbh  = $self->app->db;
-
-            my $mentry = MEntry->static_get( $dbh, $id );
-            if ( !defined $mentry ) {
-                return "";
-            }
-            return $mentry->{title};
-        }
-    );
-
-    $app->helper(
-        num_bibtex_types_aggregated_for_type => sub {
-            my $self = shift;
-            my $type = shift;
-            return scalar $self->get_bibtex_types_aggregated_for_type($type);
-        }
-    );
-
-    $app->helper(
-        num_pubs_for_author_and_tag => sub {
-            my $self      = shift;
-            my $master_id = shift;
-            my $tag_id    = shift;
-
-
-            my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => 0, author => $master_id, tag => $tag_id } );
-
-            my $count = scalar @objs;
-            return $count;
-        }
-    );
-
-    $app->helper(
-        num_pubs_for_author_and_team => sub {
-            my $self      = shift;
-            my $master_id = shift;
-            my $team_id   = shift;
-
-            
-
-            my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => 0, author => $master_id, team => $team_id } );
-            my $count = scalar @objs;
-
-            return $count;
-
-     # my $set = get_set_of_papers_for_author_and_team($self, $mid, $team_id);
-        }
-    );
-
-    $app->helper(
-        get_recent_years_arr => sub {
-            my $self = shift;
-
-            my @arr = MEntry->static_get_unique_years_array( $self->app->db );
-            my $max = scalar @arr;
-            $max = 10 if $max > 10;
-            return @arr[0 .. $max];
-        }
-    );
-
-    $app->helper(
-        num_entries_for_author => sub {
-            my $self = shift;
-            my $mid  = shift;
-
-            my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => 0, author => $mid } );
-            my $count = scalar @objs;
-            return $count;
-        }
-    );
-
-    $app->helper(
-        num_talks_for_author => sub {
-            my $self = shift;
-            my $mid  = shift;
-
-            my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => 0, author => $mid, entry_type => 'talk' } );
-            my $count = scalar @objs;
-            return $count;
-        }
-    );
-
-    $app->helper(
-        num_papers_for_author => sub {
-            my $self = shift;
-            my $mid  = shift;
-
-            my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => 0, author => $mid, entry_type => 'paper' } );
-            my $count = scalar @objs;
-            return $count;
-        }
-    );
-
-
-    $app->helper(
-        num_pubs_for_tag => sub {
-            my $self = shift;
-            my $tid  = shift;
-
-            my @objs = Fget_publications_main_hashed_args_only( $self,
-                { hidden => undef, tag => $tid } );
-            my $count = scalar @objs;
-            return $count;
-        }
-    );
+  my ( $self, $app ) = @_;
+
+  $app->helper(
+    bst => sub {
+      my $self = shift;
+
+      my $bst_candidate_file = $self->app->home . '/lib/descartes2.bst';
+
+      if ( defined $self->app->config->{bst_file} ) {
+        $bst_candidate_file = $self->app->config->{bst_file};
+        return File::Spec->rel2abs($bst_candidate_file)
+          if File::Spec->file_name_is_absolute($bst_candidate_file)
+          and -e File::Spec->rel2abs($bst_candidate_file);
+
+        $bst_candidate_file = $self->app->home . $self->app->config->{bst_file};
+
+        return File::Spec->rel2abs($bst_candidate_file)
+          if File::Spec->file_name_is_absolute($bst_candidate_file)
+          and -e File::Spec->rel2abs($bst_candidate_file);
+      }
+
+      $bst_candidate_file = $self->app->home . '/lib/descartes2.bst';
+
+      return File::Spec->rel2abs($bst_candidate_file) if -e File::Spec->rel2abs($bst_candidate_file);
+
+      $self->app->logger->error("Cannot find any valid bst file!");
+      return './bst-not-found.bst';
+    }
+  );
+
+
+  $app->helper(
+    current_year => sub {
+      return BibSpace::Functions::Core::get_current_year();
+    }
+  );
+  $app->helper(
+    current_month => sub {
+      return BibSpace::Functions::Core::get_current_month();
+    }
+  );
+
+  $app->helper(
+    get_year_of_oldest_entry => sub {
+      my $self = shift;
+
+      my @entryYears = map { $_->year } grep { defined $_->year } $self->app->repo->entries_all;
+      @entryYears = uniq @entryYears;
+      @entryYears = sort { $a <=> $b } @entryYears;
+      return $entryYears[0];
+
+    }
+  );
+
+
+  $app->helper(
+    can_delete_backup_helper => sub {
+      my $self = shift;
+      my $bid  = shift;
+
+      return can_delete_backup( $self->app->db, $bid, $self->app->config );
+    }
+  );
+
+  $app->helper(
+    num_pubs => sub {
+      my $self = shift;
+      return $self->app->repo->entries_all;
+    }
+  );
+
+  $app->helper(
+    get_all_tag_types => sub {
+      my $self = shift;
+      return $self->app->repo->tagTypes_all;
+    }
+  );
+
+  $app->helper(
+    get_tag_type_obj => sub {
+      my $self = shift;
+      my $type = shift || 1;
+      return $self->app->repo->tagTypes_find( sub { $_->id == $type } );
+    }
+  );
+
+  $app->helper(
+    get_tags_of_type_for_paper => sub {
+      my $self = shift;
+      my $eid  = shift;
+      my $type = shift // 1;
+
+      my $paper = $self->app->repo->entries_find( sub { $_->id == $eid } );
+      my @tags = $paper->get_tags($type);
+      @tags = sort {$a->name cmp $b->name} @tags;
+      return @tags;
+    }
+  );
+
+  $app->helper(
+    get_unassigned_tags_of_type_for_paper => sub {
+      my $self = shift;
+      my $eid  = shift;
+      my $type = shift // 1;
+
+      my $paper = $self->app->repo->entries_find( sub { $_->id == $eid } );
+      my %has_tags = map {$_ => 1} $paper->get_tags($type);
+      my @all_tags = $self->app->repo->tags_filter( sub{$_->type == $type} );
+      my @unassigned = grep { not $has_tags{$_} } @all_tags;
+      @unassigned = sort {$a->name cmp $b->name} @unassigned;
+      return @unassigned;
+    }
+  );
+
+  $app->helper(
+    num_authors => sub {
+      my $self = shift;
+      return $self->app->repo->authors_all;
+
+      # return $self->storage->authors_all;
+
+    }
+  );
+
+  $app->helper(
+    get_visible_authors => sub {
+      my $self = shift;
+      return $self->app->repo->authors_filter( sub { $_->is_visible } );
+    }
+  );
+
+  $app->helper(
+    num_visible_authors => sub {
+      my $self = shift;
+      return scalar $self->get_visible_authors();
+    }
+  );
+
+  $app->helper(
+    get_num_members_for_team => sub {
+      my $self   = shift;
+      my $id     = shift;
+      my $author = $self->storage->authors_find( sub { $_->id == $id } );
+      return scalar $author->teams_count;
+    }
+  );
+
+  $app->helper(
+    get_num_teams => sub {
+      my $self = shift;
+      return $self->app->repo->teams_count;
+    }
+  );
+
+
+  $app->helper(
+    num_tags => sub {
+      my $self = shift;
+      my $type = shift || 1;
+      return scalar $self->app->repo->tags_filter( sub { $_->type == $type } );
+    }
+  );
+
+  $app->helper(
+    num_pubs_for_year => sub {
+      my $self = shift;
+      my $year = shift;
+      return 0 unless defined $year;
+
+      return
+        scalar grep { defined $_->year and $_->year == $year and $_->hidden == 0 }
+        $self->app->repo->entries_all;
+    }
+  );
+
+
+
+
+  $app->helper(
+    num_pubs_for_author_and_tag => sub {
+      my $self   = shift;
+      my $author = shift;
+      my $tag    = shift;
+
+      return
+        scalar $author->authorships_filter( sub { defined $_ and defined $_->entry and $_->entry->has_tag($tag) } );
+    }
+  );
+
+  $app->helper(
+    get_recent_years_arr => sub {
+      my $self = shift;
+
+      my @arr = grep { defined $_ } map { $_->year } $self->app->repo->entries_all;
+      @arr = uniq @arr;
+      @arr = sort { $b <=> $a } @arr;
+      my $max = scalar @arr;
+      $max = 10 if $max > 10;
+      return @arr[ 0 .. $max-1 ];
+    }
+  );
+
+  $app->helper(
+    num_entries_for_author => sub {
+      my $self   = shift;
+      my $author = shift;
+
+      return $author->authorships_count;
+    }
+  );
+
+  $app->helper(
+    num_talks_for_author => sub {
+      my $self   = shift;
+      my $author = shift;
+
+      return scalar $author->authorships_filter( sub { $_->entry->is_talk } ) // 0;
+    }
+  );
+
+  $app->helper(
+    num_papers_for_author => sub {
+      my $self   = shift;
+      my $author = shift;
+      return scalar $author->authorships_filter( sub { $_->entry->is_paper } ) // 0;
+    }
+  );
+
+
+  $app->helper(
+    num_pubs_for_tag => sub {
+      my $self = shift;
+      my $tag  = shift;
+      return $tag->labelings_count // 0;
+    }
+  );
 
 }
 

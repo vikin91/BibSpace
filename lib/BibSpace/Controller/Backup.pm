@@ -6,26 +6,65 @@ use Text::BibTeX;    # parsing bib files
 use DateTime;
 use File::Slurp;
 use Time::Piece;
-use 5.010;           #because of ~~
+use 5.010; 
+use Try::Tiny;
 use strict;
 use warnings;
 use DBI;
+use DBIx::Connector;
 use File::Copy qw(copy);
+use List::MoreUtils qw(any uniq);
+use List::Util qw(first);
 
-use BibSpace::Controller::Core;
-use BibSpace::Controller::BackupFunctions;
-use BibSpace::Functions::FDB;
+use BibSpace::Functions::Core;
+use BibSpace::Functions::MySqlBackupFunctions;
+use BibSpace::Functions::BackupFunctions;
+# use BibSpace::Functions::FDB;
+
+use BibSpace::Model::Backup;
+use Storable;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::Log;
 
+
+
+
+####################################################################################
+sub index {
+    my $self       = shift;
+    my $dbh = $self->app->db;
+
+    my $backup_dir = $self->app->backup_dir;
+    my $dir_size = get_dir_size($backup_dir);
+    $dir_size = $dir_size >> 20;
+
+    my @backups_arr = sort {$b->date cmp $a->date} read_backups($backup_dir);
+
+    foreach my $backup (@backups_arr){
+        if( $backup->get_age->days >= $self->app->config->{allow_delete_backups_older_than}){
+            $backup->allow_delete(1);    
+        }
+        else{
+            $backup->allow_delete(undef); 
+        }
+    }
+
+    $self->stash(
+        backups_arr => \@backups_arr,
+        dir_size    => $dir_size
+    );
+    $self->render( template => 'backup/backup' );
+}
+
 ####################################################################################
 sub save {
     my $self = shift;
-    my $return_value = do_backup_current_state( $self, "normal" );
 
-    if ( defined $return_value ) {
+    my $backup = do_storable_backup($self->app);
+
+    if ( $backup->is_healthy ) {
         $self->flash( msg_type=>'success', msg => "Backup created successfully" );
     }
     else {
@@ -33,12 +72,28 @@ sub save {
     }
     $self->redirect_to( 'backup_index' );
 }
+####################################################################################
+sub save_mysql {
+    my $self = shift;
 
+    my $backup = do_mysql_backup($self->app);
+
+    if ( $backup->is_healthy ) {
+        $self->flash( msg_type=>'success', msg => "Backup created successfully" );
+    }
+    else {
+        $self->flash(msg_type=>'danger',  msg => "Backup create failed!" );
+    }
+    $self->redirect_to( 'backup_index' );
+}
 ####################################################################################
 sub cleanup {
-    my $self        = shift;
-    my $num_deleted = do_delete_broken_or_old_backup($self);
+    my $self         = shift;
+    my $age_treshold = $self->config->{backup_age_in_days_to_delete_automatically};
 
+    my $num_deleted = delete_old_backups($self->app, $age_treshold);
+
+    $self->app->logger->info("Deleting old backups.  $num_deleted backups have been cleaned.");
     $self->flash( msg_type=>'success', msg => "$num_deleted backups have been cleaned." );
 
     # redirecting to referrer here breaks the test if the test supports redirects! why?
@@ -48,84 +103,18 @@ sub cleanup {
 
 ####################################################################################
 
-sub index {
-    my $self       = shift;
-    my $backup_dbh = $self->app->db;
-
-    my $sth
-        = $backup_dbh->prepare(
-        "SELECT id, creation_time, filename FROM Backup ORDER BY creation_time DESC"
-        );
-    $sth->execute();
-
-    my $dir_size            = 0;
-    my $backup_dir_absolute = $self->config->{backups_dir};
-    $backup_dir_absolute
-        =~ s!/*$!/!;    # makes sure that there is exactly one / at the end
-    $dir_size = get_dir_size($backup_dir_absolute);
-    $dir_size = $dir_size >> 20;
-
-    my @ctime_arr;
-    my @fname_arr;
-    my @id_arr;
-    my @exists_arr;
-
-    my $i = 1;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $id = $row->{id};
-
-        can_delete_backup($backup_dbh, $id, $self->app->config);
-
-        my $backup_file_name = $row->{filename};
-        my $exists           = 0;
-        my $backup_file_path = $backup_dir_absolute . $backup_file_name;
-        $exists = 1 if -e $backup_file_path;
-
-        my $ctime = $row->{creation_time};
-        push @exists_arr, $exists;
-        push @ctime_arr,  $ctime;
-        push @fname_arr,  $backup_file_name;
-        push @id_arr,     $id;
-    }
-
-    $self->stash(
-        ids      => \@id_arr,
-        fnames   => \@fname_arr,
-        ctimes   => \@ctime_arr,
-        exists   => \@exists_arr,
-        dir_size => $dir_size
-    );
-    $self->render( template => 'backup/backup' );
-}
-
-####################################################################################
-
 sub backup_download {
     my $self       = shift;
-    my $backup_dbh = $self->app->db;
-    my $backup_id  = $self->param('id');
+    my $uuid  = $self->param('id');
 
-    my $sth = $backup_dbh->prepare(
-        "SELECT id, creation_time, filename FROM Backup WHERE Backup.id=?");
-    $sth->execute($backup_id);
+    my $backup =  find_backup($uuid, $self->app->backup_dir);
 
-    my $backup_dir_absolute = $self->config->{backups_dir};
-    $backup_dir_absolute
-        =~ s!/*$!/!;    # makes sure that there is exactly one / at the end
-
-    my $row      = $sth->fetchrow_hashref();
-    my $filename = $row->{filename};
-
-    my $file_path = $backup_dir_absolute . $filename;
-
-    my $exists = 0;
-    $exists = 1 if -e $file_path;
-
-    if ( $exists == 1 ) {
-        $self->write_log("downloading backup $file_path");
-        $self->render_file( 'filepath' => $file_path );
+    if ( $backup and $backup->is_healthy ) {
+        $self->app->logger->info("Downloading backup ".$backup->uuid);
+        $self->render_file( 'filepath' => $backup->get_path );
     }
     else {
+        $self->flash( msg_type=>'danger', msg => "Cannot download backup $uuid - backup not healthy." );
         $self->redirect_to( $self->get_referrer );
     }
 }
@@ -133,20 +122,35 @@ sub backup_download {
 ####################################################################################
 sub delete_backup {
     my $self       = shift;
-    my $backup_dbh = $self->app->db;
-    my $id         = $self->param('id');
+    my $uuid  = $self->param('id');
 
+    my $backup =  find_backup($uuid, $self->app->backup_dir);
 
-    if ( can_delete_backup($backup_dbh, $id, $self->app->config) == 1 ) {
-        do_delete_backup( $self, $id );
-        $self->flash( msg_type=>'success', msg => "Backup id $id deleted!" );
+    if ( $backup and $backup->is_healthy ) {
+        if( $backup->get_age->days >= $self->app->config->{allow_delete_backups_older_than}){
+            $backup->allow_delete(1);    
+        }
+        else{
+            $backup->allow_delete(undef); 
+        }
+        if($backup->allow_delete){
+            try{
+                unlink $backup->get_path;
+                $self->app->logger->info("Deleting backup ".$backup->uuid);
+                $self->flash( msg_type=>'success', msg => "Backup id $uuid deleted!" );
+            }
+            catch{
+                $self->flash( msg_type=>'danger', msg => "Exception during deleting backup '$uuid': $_." );
+            };
+        }
+        else{
+            $self->flash( msg_type=>'warning', msg => "Backup $uuid is too young to be deleted!" );
+        }
     }
     else{
-        $self->flash( msg_type=>'warning', msg => "Cannot delete, backup id $id not found!" );   
+        $self->flash( msg_type=>'danger', msg => "Cannot delete backup $uuid - you need to do this manually." );
     }
 
-    # redirecting to referrer here breaks the test if the test supports redirects! why?
-    # disabling redirects for test and putting here referrer allows test to pass
     $self->res->code(303);
     $self->redirect_to($self->url_for('backup_index'));
 }
@@ -155,27 +159,23 @@ sub delete_backup {
 sub restore_backup {
     my $self = shift;
     my $dbh  = $self->app->db;
-    my $id   = $self->param('id');
+    my $uuid = $self->param('id');
 
-    say "CALL: restore_backup";
 
-    my $backup_filename = get_backup_filename_by_id( $dbh, $id );
+    my $backup =  find_backup($uuid, $self->app->backup_dir);
 
-    my $backup_dir_absolute = $self->app->config->{backups_dir};
-    $backup_dir_absolute
-        =~ s!/*$!/!;    # makes sure that there is exactly one / at the end
-    my $backup_file_path = $backup_dir_absolute . $backup_filename;
+    if($backup and $backup->is_healthy){
 
-    do_backup_current_state( $self, "pre-restore" );
-    $self->write_log("Restoring backup from file $backup_file_path");
-    my $return_value = do_restore_backup_from_file( $dbh, $backup_file_path,
-        $self->app->config );
+        restore_storable_backup($backup, $self->app);
 
-    if ( $return_value == 1 ) {
-        $self->flash( msg_type=>'success', msg => "Backup restored successfully" );
+        $self->app->logger->info("Restoring backup ".$backup->uuid);
+
+        my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
+
+        $self->flash( msg_type=>'success', msg => "Backup restored successfully. Database recreated, persistence layers in sync. $status" );
     }
     else {
-        $self->flash( msg_type=>'danger', msg => "Backup restore failed!" );
+        $self->flash( msg_type=>'danger', msg => "Cannot restore - backup not healthy!" );
     }
     $self->redirect_to('backup_index');
 }

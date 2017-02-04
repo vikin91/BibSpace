@@ -1,15 +1,22 @@
 language: perl
 perl:
-    # - "5.22"
-    - "5.20"
+    - "5.22"
+    # - "5.20"
     # - "5.18"
     # - "5.16"
     # - "5.14"
     # - "5.12"
     # - "5.10"
 
-dist: trusty
-sudo: require # ubuntu
+# dist: trusty
+# sudo: require # ubuntu
+# sudo: required
+
+# services:
+#   - docker
+services:
+  - mysql
+
 addons:
   apt:
     packages:
@@ -17,10 +24,10 @@ addons:
     # - mysql-server-5.5
     # - mysql-client-core-5.5
     # - mysql-client-5.5
-    - mysql-server-core-5.6
-    - mysql-server-5.6
-    - mysql-client-core-5.6
-    - mysql-client-5.6
+    # - mysql-server-core-5.6
+    # - mysql-server-5.6
+    # - mysql-client-core-5.6
+    # - mysql-client-5.6
     - ocaml 
     - libbtparse-dev # disallowed in travis # Text::BibTeX  requires it
     - libdbd-mysql-perl
@@ -48,21 +55,12 @@ before_install:
     - touch tmp/out.html
     - touch tmp/out_bib.html
     - chmod -R 777 tmp
-
-
-install:
     - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
-    - cpan-install --deps # this works well!
-    - cpan-install --coverage
-    - cpanm --quiet --notest --skip-satisfied Dist::Zilla
-    - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
-    - cpanm --quiet --notest --skip-satisfied Module::Build::Mojolicious Module::CPANfile
-    # - dzil listdeps | grep -vP '[^\w:]' | cpanm --notest --skip-satisfied  --verbose # does almost nothing
-    - dzil authordeps --missing | cpanm --notest --skip-satisfied 
-    - cpanm -nq --no-interactive --installdeps .
-    # - cpanm -nq --skip-satisfied --no-interactive Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent Text::BibTeX HTML::TagCloud::Sortable Crypt::Random WWW::Mechanize Test::Differences Test::MockModule Mojolicious::Plugin::RenderFile Path::Tiny 
-    # - cpanm -nq --skip-satisfied --no-interactive Moose Test::Pod::Coverage TeX::Encode Array::Utils File::Spec
-    # - cpanm -nq --skip-satisfied --no-interactive Text::ASCIIMathML Mojo::Redis2
+
+
+# install:
+#     - cpanm -nq --no-interactive --installdeps .
+
 before_script:
     - mysql --version
     - mysql -u root -e "SELECT VERSION();"
@@ -80,14 +78,10 @@ notifications:
         on_failure: always
 
 script: 
-    # works! # 
-    - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr t/
-    # - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf cover -report coveralls # runs ./Build test that does not work
-
-# after_failure:
-    # - coverage-report
+    - export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
+    - export BIBSPACE_USE_DUMP=1
+    - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr t/
 
 after_success:
     - cover -report coveralls
-    # - coverage-report
 

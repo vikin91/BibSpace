@@ -130,13 +130,13 @@
 
         <li class="divider"></li>
         <li role="presentation" class="dropdown-header">Visible authors</li>
-        % my @authors = sort {$a->{master} cmp $b->{master}}  grep {$_->{display} == 1} MAuthor->static_all_masters($self->app->db);
+        % my @authors = sort {$a->master cmp $b->master} get_visible_authors();
         % foreach my $author (@authors){
             <li>
                 <a href="<%= url_for('edit_author', id=>$author->{master_id})%>" >
                     <span class="glyphicon glyphicon-user"></span> <%= $author->{master} %> 
                     <span class="badge">
-                        <%= num_entries_for_author($author->{master})%>
+                        <%= num_entries_for_author($author)%>
                         <span class="glyphicon glyphicon-file"></span> 
                     </span>
                 </a>
@@ -159,13 +159,13 @@
 
         <li class="divider"></li>
         <li role="presentation" class="dropdown-header">Teams</li>
-        % my @all_teams = MTeam->static_all( get_dbh() );
+        % my @all_teams = $self->app->repo->teams_all;
         % foreach my $team ( @all_teams ){
             <li>
-                <a href="<%= url_for('edit_team', teamid=>$team->{id} )%>">
-                    <i class="fa fa-users"></i> <%= $team->{name} %> 
+                <a href="<%= url_for('edit_team', id=>$team->id )%>">
+                    <i class="fa fa-users"></i> <%= $team->name %> 
                     <span class="badge">
-                        <%= scalar $team->members( get_dbh() ) %>
+                        <%= scalar $team->get_members %>
                         <span class="glyphicon glyphicon-user"></span>
                     </span>
                     
@@ -263,17 +263,9 @@
                 </a>
             </li>
             <li class="divider"></li>
-            <li role="presentation" class="dropdown-header">Sets entry_type to talk if the entry has tag 'talk'.</li>
-            <li>
-                <a href="<%= url_for('/settings/fix_entry_types')%>">
-                    <i class="fa fa-magic"></i> Fix entry_type <i class="fa fa-microphone"></i> <span class="glyphicon glyphicon-file"></span> based on Tag
-                    <span class="badge">for all</span>
-                </a>
-            </li>
-            <li class="divider"></li>
             <li role="presentation" class="dropdown-header">Calculates integer month field in DB based on bibtex field 'month' .</li>
             <li>
-                <a href="<%= url_for('/settings/fix_months')%>">
+                <a href="<%= url_for('fix_all_months')%>">
                     <i class="fa fa-magic"></i> Fix month numbers in DB
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">for all</span>

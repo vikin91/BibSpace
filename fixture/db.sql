@@ -18,6 +18,7 @@
 --
 -- Table structure for table `Author`
 --
+SET FOREIGN_KEY_CHECKS=0; -- to disable them
 
 DROP TABLE IF EXISTS `Author`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -34,6 +35,7 @@ CREATE TABLE `Author` (
   CONSTRAINT `Author_ibfk_1` FOREIGN KEY (`master_id`) REFERENCES `Author` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1427 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+SET FOREIGN_KEY_CHECKS=1;
 
 --
 -- Dumping data for table `Author`

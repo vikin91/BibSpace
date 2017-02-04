@@ -10,9 +10,10 @@ use 5.010;           #because of ~~
 use strict;
 use warnings;
 use DBI;
+use DBIx::Connector;
 
-use BibSpace::Controller::Core;
-use BibSpace::Model::MTagType;
+use BibSpace::Functions::Core;
+use BibSpace::Model::TagType;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -21,21 +22,14 @@ use Mojo::Log;
 ####################################################################################
 sub index {
     my $self = shift;
-    my $dbh  = $self->app->db;
-
-    my @objs = MTagType->static_all($dbh);
-
-    $self->render( template => 'tagtypes/tagtypes', tagtypes => \@objs );
+    my @tag_types = $self->app->repo->tagTypes_all;
+    $self->render( template => 'tagtypes/tagtypes', tagtypes => \@tag_types );
 }
-
 ####################################################################################
 sub add {
     my $self = shift;
-    my $dbh  = $self->app->db;
-
     $self->render( template => 'tagtypes/add' );
 }
-
 ####################################################################################
 sub add_post {
     my $self    = shift;
@@ -43,24 +37,26 @@ sub add_post {
     my $name    = $self->param('new_name');
     my $comment = $self->param('new_comment');
 
-    my $tt = MTagType->static_get_by_name( $dbh, $name );
+    my $tt = $self->app->repo->tagTypes_find( sub { $_->name eq $name } );
+
     if ( defined $tt ) {
         $self->flash(
             msg_type => 'error',
             msg      => 'Tag type with such name already exists.'
         );
     }
-
-    $tt = MTagType->new( name => $name, comment => $comment );
-    $tt->save($dbh);
-    $self->flash( msg_type => 'success', msg => 'Tag type added.' );
+    else{
+        $tt = TagType->new( name => $name, comment => $comment, idProvider => $self->app->repo->tagTypes_idProvider );
+        $self->app->repo->tagTypes_save($tt);
+        $self->flash( msg_type => 'success', msg => 'Tag type added.' );    
+    }
+    
     $self->redirect_to( $self->url_for('all_tag_types') );
 }
 
 ####################################################################################
 sub delete {
     my $self = shift;
-    my $dbh  = $self->app->db;
     my $id   = $self->param('id');
 
     # we do not allow to delete the two first tag types!
@@ -73,13 +69,11 @@ sub delete {
         return;
     }
 
-    my $tt = MTagType->static_get( $dbh, $id );
+    my $tt = $self->app->repo->tagTypes_find( sub { $_->id == $id } );
 
-
-    for my $t ( MTag->static_all_type( $dbh, $id ) ) {
-        $t->delete($dbh);
-    }
-    $tt->delete($dbh);
+    my @tags_of_tag_type = $self->app->repo->tags_filter( sub { $_->type == $id } );
+    $self->app->repo->tags_delete(@tags_of_tag_type);
+    $self->app->repo->tagTypes_delete($tt);
 
     $self->flash( msg_type => 'success', msg => 'Tag type deleted.' );
 
@@ -89,14 +83,14 @@ sub delete {
 ####################################################################################
 sub edit {
     my $self = shift;
-    my $dbh  = $self->app->db;
     my $id   = $self->param('id');
 
     my $name    = $self->param('new_name');
     my $comment = $self->param('new_comment');
     my $saved   = 0;
 
-    my $tt = MTagType->static_get( $dbh, $id );
+    
+    my $tt = $self->app->repo->tagTypes_find( sub { $_->id == $id } );
 
     if ( !defined $tt ) {
         $self->flash(
@@ -108,9 +102,9 @@ sub edit {
     }
 
     if ( defined $name or defined $comment ) {
-        $tt->{name}    = $name    if defined $name;
-        $tt->{comment} = $comment if defined $comment;
-        $tt->save($dbh);
+        $tt->name($name)    if defined $name;
+        $tt->comment($comment) if defined $comment;
+        $self->app->repo->tagTypes_update($tt);
 
         $self->flash( msg_type => 'success', msg => 'Update successful.' );
         $self->redirect_to( $self->url_for('all_tag_types') );
