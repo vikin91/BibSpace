@@ -131,14 +131,6 @@ has layeredRepository => sub {
     backendFactoryName => "MySQLDAOFactory", 
     logger => $self->logger,
     handle => $self->db,
-    # reset_data_callback => sub { say foreach @_; },
-    # reset_data_callback_arguments => [
-    #     $self->db, 
-    #     $self->config->{db_host},
-    #     $self->config->{db_user},
-    #     $self->config->{db_database},
-    #     $self->config->{db_pass}
-    #   ],
     reset_data_callback => \&purge_and_create_db,
     reset_data_callback_arguments => [
         $self->db, $self->config->{db_host},
@@ -174,6 +166,9 @@ sub startup {
 
 
   $self->app->logger->info("Setup done.");
+  # too see on travis which config is used for tests
+  warn "Using CONFIG: " . $self->app->config_file if $self->mode ne 'production';
+
   $self->app->logger->info("Using CONFIG: " . $self->app->config_file );
   $self->app->logger->info("App home is: " . $self->app->home );
   $self->app->logger->info("Active bst file is: " . $self->app->bst );
