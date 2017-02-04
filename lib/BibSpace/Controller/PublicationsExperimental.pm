@@ -13,15 +13,14 @@ use strict;
 use warnings;
 use DBI;
 
+use List::MoreUtils qw(any uniq);
+
 use TeX::Encode;
 use Encode;
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Functions::FPublications;
-use BibSpace::Model::MEntry;
 
-# use BibSpace::Controller::Set
-    ;    # deprecated but needed so far. TODO: refactor this
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -45,9 +44,7 @@ our %mons = (
 ####################################################################################
 ## ADD form
 sub publications_add_many_get {
-    say "CALL: publications_add_many_get";
     my $self = shift;
-    my $dbh  = $self->app->db;
 
     my $bib1
         = '@article{key-'
@@ -55,6 +52,8 @@ sub publications_add_many_get {
         . get_current_year() . ',
       author = {Johny Example},
       title = {{Selected aspects of some methods ' . random_string(8) . '}},
+      journal = {Journal of this and that},
+      publisher = {Printer-at-home publishing},
       year = {' . get_current_year() . '},
       month = {' . $mons{ get_current_month() } . '},
       day = {1--31},
@@ -66,6 +65,8 @@ sub publications_add_many_get {
         . get_current_year() . ',
       author = {Johny Example},
       title = {{Selected aspects of some methods ' . random_string(8) . '}},
+      journal = {Journal of other things},
+      publisher = {Copy-machine publishing house},
       year = {' . get_current_year() . '},
       month = {' . $mons{ get_current_month() } . '},
       day = {1--31},
@@ -102,11 +103,10 @@ sub publications_add_many_post {
     my $preview = 0;
     my $msg = "<strong>Adding mode</strong> You operate on an unsaved entry!";
 
-    $self->write_log("post_add_many_store add publication with bib $new_bib");
+    $self->app->logger->debug("post_add_many_store add publication with bib $new_bib");
 
     my $debug_str = "";
 
-    my $dbh          = $self->app->db;
     my $html_preview = "";
     my $code         = -2;
 
@@ -116,8 +116,8 @@ sub publications_add_many_post {
     for my $bibtex_code (@bibtex_codes) {
 
         # $debug_str.="<br>Found code!";
-        my $entry = MEntry->new(bib=>$bibtex_code);
-        $entry->populate_from_bib();
+        my $entry = Entry->new( idProvider => $self->app->repo->entries_idProvider, bib=>$bibtex_code );
+        $entry->populate_from_bib;
         $debug_str .= "<br>Found key: $entry->{bibtex_key}";
 
         push @key_arr, $entry->{bibtex_key};
@@ -135,7 +135,7 @@ sub publications_add_many_post {
     my $num_errors = 0;
     for my $bibtex_code (@bibtex_codes) {
         my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-            = Fhandle_add_edit_publication( $dbh, $bibtex_code, -1,
+            = Fhandle_add_edit_publication_Repo( $self->app->repo, $bibtex_code, -1,
             'preview' );
 
         if ( $status_code_str eq 'ERR_BIBTEX' ) {
@@ -215,7 +215,7 @@ sub publications_add_many_post {
 
     for my $bibtex_code (@bibtex_codes) {
         my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-            = Fhandle_add_edit_publication( $dbh, $bibtex_code, -1, 'save',
+            = Fhandle_add_edit_publication_Repo( $self->app->repo, $bibtex_code, -1, 'save',
             $self->app->bst );
 
         if ( $status_code_str eq 'ADD_OK' ) {
@@ -239,27 +239,6 @@ sub publications_add_many_post {
         preview     => $html_preview
     );
     $self->render( template => 'publications/add_multiple_entries' );
-}
-####################################################################################
-sub split_bibtex_entries {
-    my $input = shift;
-
-    my @bibtex_codes = ();
-    $input =~ s/^\s+|\s+$//g;
-    $input =~ s/^\t//g;
-
-    for my $b_code ( split /@/, $input ) {
-        next unless length($b_code) > 10;
-        my $entry_code = "@" . $b_code;
-
-        my $entry = new Text::BibTeX::Entry;
-        $entry->parse_s($entry_code);
-        if ( $entry->parse_ok ) {
-            push @bibtex_codes, $entry_code;
-        }
-    }
-
-    return @bibtex_codes;
 }
 ####################################################################################
 

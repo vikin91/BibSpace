@@ -9,7 +9,7 @@
             <H1 class="pull-right">Author: </H1>
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <h1> <%= $author->{master} %> </h1>
+            <h1> <%= $author->{uid} %> </h1>
         </div>
     </div>
 
@@ -20,16 +20,19 @@
         <div class="col-lg-10 col-md-10 col-xs-10">
             
 
-            <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->{master}) %>">
-                <i class="fa fa-files-o"></i> Show entries <span class="badge"><%= num_entries_for_author($id)%></span>
+            <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id) %>">
+                <i class="fa fa-files-o"></i> Show entries <span class="badge"><%= num_entries_for_author($author)%></span>
             </a>
-            <a class="btn btn-success" href="<%= url_for('publications')->query(author=>$author->{master}) %>">
-                <i class="fa fa-files-o"></i> Show papers <span class="badge"><%= num_papers_for_author($id)%></span>
+            <a class="btn btn-success" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'paper') %>">
+                <i class="fa fa-files-o"></i> Show papers <span class="badge"><%= num_papers_for_author($author)%></span>
             </a>
-            <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->{master}, entry_type=>'talk')%>">
-                <i class="fa fa-microphone"></i> Show talks <span class="badge"><%= num_talks_for_author($id)%></span>
+            <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'talk')%>">
+                <i class="fa fa-microphone"></i> Show talks <span class="badge"><%= num_talks_for_author($author)%></span>
             </a>
-            
+            <a class="btn btn-default" href="<%= url_for('tags_for_author', author_id =>$author->id )%>">
+                <i class="fa fa-tags" aria-hidden="true"></i>
+                <i class="fa fa-cloud" aria-hidden="true"></i> Show tag-cloud 
+            </a>
         </div>
     </div>
     <br/>
@@ -60,17 +63,35 @@
         </div>
     </div>
 
+    <br/>
+
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-xs-2">
+            <H1 class="pull-right">Edit author </H1>
+        </div>
+        <div class="col-lg-10 col-md-10 col-xs-10">
+        </div>
+    </div>
+  
 
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <h1> Edit author </h1>
+              % if( $author->is_master ){
+                <a  class="btn btn-success">
+                This author is master
+                </a>
+            % }
+            % else {
+                <a  class="btn btn-danger" href="<%= url_for('edit_author', id=>$author->master_id) %>">
+                This author is not master. Click to edit master: <%=$author->master%> 
+                </a>
+            % }
         </div>
     </div>
-  
-
   <!-- MUID -->
+
 
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
@@ -179,7 +200,7 @@
             <tr>
                 <td>
                     <div class="btn-group pull-right">
-                        <a type="button" class="btn btn-default" href="<%= url_for('edit_team', teamid=>$team->{id} ) %>">
+                        <a type="button" class="btn btn-default" href="<%= url_for('edit_team', id=>$team->id ) %>">
                             <i class="fa fa-users" style="color: #5CB85C;"></i> <%= $team->{name} %>  
                         </a>
                         <a class="btn btn-default" href="<%= url_for('remove_author_from_team', id=>$id, tid=>$team->{id}  ) %>" data-toggle="tooltip" data-placement="bottom" title="Remove from team"><span class="glyphicon glyphicon-minus" style="color: red;"></span> <span style="color: white">|</span></a>
@@ -191,10 +212,10 @@
                         <div data-toggle="tooltip" data-placement="right" title="Click to edit">
                             <div class="btn-group pull-right">
                                 <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Joined the group in year">
-                                    <i class="fa fa-sun-o"></i> <%= $author->joined_team( get_dbh(), $team ) %>
+                                    <i class="fa fa-sun-o"></i> <%= $author->joined_team( $team ) %>
                                 </span>
                                 <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Left the group in year">
-                                    <i class="fa fa-moon-o"></i> <%= $author->left_team( get_dbh(), $team ) || b('&#8734;') %>
+                                    <i class="fa fa-moon-o"></i> <%= $author->left_team( $team ) || b('&#8734;') %>
                                 </span>
                             </div>
                         </div>
@@ -216,10 +237,10 @@
                                             <input type="hidden" name="aid" value="<%= $author->{id} %>"></input>
                                             <div class="input-group input-group-lg">
                                                 <span class="input-group-addon"><i class="fa fa-sun-o"></i></span>
-                                                <input class="form-control" type="text" name="new_start" placeholder="new_start" value="<%= $author->joined_team( get_dbh(), $team ) %>"></input>
+                                                <input class="form-control" type="text" name="new_start" placeholder="new_start" value="<%= $author->joined_team( $team ) %>"></input>
                                             </div>
                                             <div class="input-group input-group-lg">
-                                                <input class="form-control" type="text" name="new_stop" placeholder="New stop. Type 0 for infinity" value="<%= $author->left_team( get_dbh(), $team ) %>"></input>
+                                                <input class="form-control" type="text" name="new_stop" placeholder="New stop. Type 0 for infinity" value="<%= $author->left_team( $team ) %>"></input>
                                                 <span class="input-group-addon"><i class="fa fa-moon-o"></i></span>
                                             </div>
                                         </div>
@@ -237,7 +258,7 @@
                 </td>
                 <td>
                     <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->{master}, team=>$team->{name}) %>">
-                        Show  <span class="badge"><%= num_pubs_for_author_and_team($author->{id}, $team->{id})%> <i class="fa fa-files-o"></i></span> of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i> 
+                        Show papers of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i> 
                     </a>
                 </td>
             </tr>
@@ -260,7 +281,7 @@
             % my $jj = 0;
             % foreach my $team (@$unassigned_teams){
                 <div class="btn-group">
-                    <a type="button" class="btn btn-default btn-sm" href="<%= url_for('edit_team', teamid=>$team->{id}) %>">
+                    <a type="button" class="btn btn-default btn-sm" href="<%= url_for('edit_team', id=>$team->{id}) %>">
                         <span style="color: gray">
                             <i class="fa fa-users"></i> <%= $team->{name} %>  
                         </span>
@@ -288,7 +309,7 @@
                     </span>
                     <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->{master}, tag=>$tag->{name} ) %>">
                       <span class="glyphicon glyphicon-file"></span>
-                      <span class="badge"><%= num_pubs_for_author_and_tag( $author->{master_id}, $tag->{id} )%></span>
+                      <span class="badge"><%= num_pubs_for_author_and_tag( $author, $tag )%></span>
                     </a>
                 </div>
               % $k++;

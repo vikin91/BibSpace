@@ -14,10 +14,9 @@ use 5.010;           #because of ~~
 use TeX::Encode;
 use Encode;
 
-use BibSpace::Controller::Core;            # ok
-use BibSpace::Functions::FPublications;    #ok
-use BibSpace::Model::MEntry;               # ok
-use BibSpace::Controller::Publications;    # ok
+use BibSpace::Functions::Core;           
+use BibSpace::Functions::FPublications;   
+use BibSpace::Controller::Publications;   
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -28,8 +27,9 @@ use Mojo::Log;
 sub metalist {
     my $self = shift;
 
-    my @pubs = Fget_publications_main_hashed_args_only( $self,
-        { hidden => 0, entry_type => 'paper' } );
+
+    my @pubs = Fget_publications_main_hashed_args( $self, { entry_type => 'paper', hidden => 0 } );
+
     $self->stash( entries => \@pubs );
     $self->render( template => 'publicationsSEO/metalist' );
 }
@@ -40,27 +40,23 @@ sub meta {
     my $self = shift;
     my $id   = $self->param('id');
 
-    my $mentry = MEntry->static_get( $self->app->db, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
+    my $mentry = $self->app->repo->entries_find(sub{ $_->id==$id } );
 
-    if ( $mentry->{hidden} == 1 ) {
+    if ( !defined $mentry or $mentry->is_hidden ) {
         $self->render(
-            text   => 'Error 404: Cannot find entry id: ' . $id,
+            text   => 'Cannot find entry ID \'' . $id.'\'.',
             status => 404
         );
         return;
     }
 
+
     # PARSING BIBTEX
 
-    my $entry_str = $mentry->{bib};
-    my $entry     = new Text::BibTeX::Entry();
-    $entry->parse_s($entry_str);
-    unless ( $entry->parse_ok ) {
+    my $bibtex_entry_str = $mentry->bib;
+    my $bibtex_entry     = new Text::BibTeX::Entry();
+    $bibtex_entry->parse_s($bibtex_entry_str);
+    unless ( $bibtex_entry->parse_ok ) {
         $self->render(
             text =>
                 'Error 503: Cannot parse BibTeX code for this entry! Entry id: '
@@ -73,28 +69,28 @@ sub meta {
     # EXTRACTING IMPORTANT FIELDS
 
     # TITLE
-    my $title = $mentry->{title};
+    my $title = $mentry->get_title;
 
     my $citation_title = $title;
 
     # AUTHORS
     my @names;
     my @citation_authors;
-    if ( $entry->exists('author') ) {
-        my @authors = $entry->split('author');
-        my (@n) = $entry->names('author');
+    if ( $bibtex_entry->exists('author') ) {
+        my @authors = $bibtex_entry->split('author');
+        my (@n) = $bibtex_entry->names('author');
         @names = @n;
     }
-    elsif ( $entry->exists('editor') ) {
-        my @authors = $entry->split('editor');
-        my (@n) = $entry->names('editor');
+    elsif ( $bibtex_entry->exists('editor') ) {
+        my @authors = $bibtex_entry->split('editor');
+        my (@n) = $bibtex_entry->names('editor');
         @names = @n;
     }
     for my $name (@names) {
 
         my $name_clean = "";
         $name_clean = decode( 'latex', $name_clean );
-        my $firstname = join( ' ', $name->part('first') );
+        my $firstname = join( ' ', grep {defined $_} $name->part('first') ) if defined $name->part('first');
         my $von       = join( ' ', $name->part('von') )
             if defined $name->part('von');
         my $lastname = join( ' ', $name->part('last') );
@@ -112,13 +108,13 @@ sub meta {
     }
 
     # PUBLICATION DATE
-    my $year = $entry->get('year');
+    my $year = $bibtex_entry->get('year');
 
     my $month = 0;
-    $month = $entry->get('month') if $entry->exists('month');
+    $month = $bibtex_entry->get('month') if $bibtex_entry->exists('month');
 
     my $days = 0;
-    $days = $entry->get('day') if $entry->exists('day');
+    $days = $bibtex_entry->get('day') if $bibtex_entry->exists('day');
     my @day = ();
     @day = split( "--", $days ) if defined $days;
     my $first_day = 0;
@@ -130,14 +126,15 @@ sub meta {
 # $citation_publication_date .= "/".$first_day if defined $first_day and defined $days;;
 
     # ABSTRACT
-    my $abstract = $entry->get('abstract')
-        || "This paper has no abstract. The title is: " . $citation_title;
-    $abstract =~ s/\{//g;
-    $abstract =~ s/\}//g;
+    my $abstract = $bibtex_entry->get('abstract');
+    $abstract ||= "This paper has no abstract. The title is: " . $citation_title;
+
+    $abstract =~ s/^\{//g;
+    $abstract =~ s/\}$//g;
     $abstract = decode( 'latex', $abstract );
 
     # TYPE
-    my $type = $entry->type;
+    my $type = $bibtex_entry->type;
 
     my $citation_journal_title;       # OK
     my $citation_conference_title;    #ok
@@ -149,21 +146,21 @@ sub meta {
     my $citation_lastpage;            #ok
 
     if ( $type eq "article" ) {
-        if ( $entry->exists('journal') ) {
-            $citation_journal_title = $entry->get('journal');
+        if ( $bibtex_entry->exists('journal') ) {
+            $citation_journal_title = $bibtex_entry->get('journal');
             $citation_journal_title
                 = decode( 'latex', $citation_journal_title );
         }
-        if ( $entry->exists('volume') ) {
-            $citation_volume = $entry->get('volume');
+        if ( $bibtex_entry->exists('volume') ) {
+            $citation_volume = $bibtex_entry->get('volume');
         }
-        if ( $entry->exists('number') ) {
-            $citation_issue = $entry->get('number');
+        if ( $bibtex_entry->exists('number') ) {
+            $citation_issue = $bibtex_entry->get('number');
         }
     }
 
-    if ( $entry->exists('pages') ) {
-        my $pages = $entry->get('pages');
+    if ( $bibtex_entry->exists('pages') ) {
+        my $pages = $bibtex_entry->get('pages');
 
         my @pages_arr;
         if ( $pages =~ /--/ ) {
@@ -180,8 +177,8 @@ sub meta {
         $citation_lastpage  = $pages_arr[1] if defined $pages_arr[1];
     }
 
-    if ( $entry->exists('booktitle') ) {
-        $citation_conference_title = $entry->get('booktitle');
+    if ( $bibtex_entry->exists('booktitle') ) {
+        $citation_conference_title = $bibtex_entry->get('booktitle');
         $citation_conference_title
             = decode( 'latex', $citation_conference_title );
     }
@@ -193,31 +190,31 @@ sub meta {
     my $citation_technical_report_number;
 
     if ( $type eq "mastersthesis" or $type eq "phdthesis" ) {
-        $citation_dissertation_institution = $entry->get('school')
-            if $entry->exists('school');
+        $citation_dissertation_institution = $bibtex_entry->get('school')
+            if $bibtex_entry->exists('school');
         $citation_dissertation_institution
             = decode( 'latex', $citation_dissertation_institution );
     }
 
     if ( $type eq "techreport" ) {
-        $citation_technical_report_institution = $entry->get('institution')
-            if $entry->exists('institution');
+        $citation_technical_report_institution = $bibtex_entry->get('institution')
+            if $bibtex_entry->exists('institution');
         $citation_technical_report_institution
             = decode( 'latex', $citation_technical_report_institution );
-        $citation_technical_report_number = $entry->get('number')
-            if $entry->exists('number');
-        $citation_technical_report_number = $entry->get('type')
-            if $entry->exists('type');
+        $citation_technical_report_number = $bibtex_entry->get('number')
+            if $bibtex_entry->exists('number');
+        $citation_technical_report_number = $bibtex_entry->get('type')
+            if $bibtex_entry->exists('type');
     }
 
     # PDF URL
     my $citation_pdf_url = undef;
 
-    if ( $entry->exists('pdf') ) {
+    if ( $bibtex_entry->exists('pdf') ) {
         my $local_file_paper
             = BibSpace::Controller::Publications::get_paper_pdf_path( $self,
             $id, 'paper' );
-        if ( -e $local_file_paper ) {
+        if ( $local_file_paper and -e $local_file_paper ) {
             $citation_pdf_url = $self->url_for(
                 'download_publication_pdf',
                 filetype => 'paper',
@@ -225,14 +222,14 @@ sub meta {
             );
         }
         else {
-            $citation_pdf_url = $entry->get('pdf');
+            $citation_pdf_url = $bibtex_entry->get('pdf');
         }
     }
-    elsif ( $entry->exists('slides') ) {
+    elsif ( $bibtex_entry->exists('slides') ) {
         my $local_file_slides
             = BibSpace::Controller::Publications::get_paper_pdf_path( $self,
             $id, 'slides' );
-        if ( -e $local_file_slides ) {
+        if ( $local_file_slides and -e $local_file_slides ) {
             $citation_pdf_url = $self->url_for(
                 'download_publication_pdf',
                 filetype => 'slides',
@@ -240,11 +237,11 @@ sub meta {
             );
         }
         else {
-            $citation_pdf_url = $entry->get('slides');
+            $citation_pdf_url = $bibtex_entry->get('slides');
         }
     }
-    elsif ( $entry->exists('url') ) {
-        $citation_pdf_url = $entry->get('url');
+    elsif ( $bibtex_entry->exists('url') ) {
+        $citation_pdf_url = $bibtex_entry->get('url');
     }
     else {
         # this entry has no pdf/slides/url. $citation_pdf_url remains undef

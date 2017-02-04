@@ -1,6 +1,8 @@
 package BibSpaceBibtexToHtml::BibSpaceBibtexToHtml;
 
-  use Text::BibTeX;  
+  use Text::BibTeX;
+  use strict;
+  use warnings;
   #
   use FindBin;
   use lib $FindBin::Bin;
@@ -16,64 +18,37 @@ package BibSpaceBibtexToHtml::BibSpaceBibtexToHtml;
 
 
 
-  has 'bst' => (is => 'rw', isa => 'Str');
-  has 'bib' => (is => 'rw', isa => 'Str');
-  has 'html' => (is => 'rw', isa => 'Str'); 
-  has 'html_tuned' => (is => 'rw', isa => 'Str'); 
+  has 'bst' => (is => 'rw', isa => 'Maybe[Str]');
+  has 'bib' => (is => 'rw', isa => 'Maybe[Str]');
+  has 'html' => (is => 'rw', isa => 'Maybe[Str]'); 
+  has 'html_tuned' => (is => 'rw', isa => 'Maybe[Str]'); 
   #
   #
-  has 'bbl' => (is => 'ro', isa => 'Str'); 
-  has 'bbl_clean' => (is => 'ro', isa => 'Str'); 
-  has 'bbl_arr' => (is => 'rw', isa=>'ArrayRef[Str]'); 
-  has 'warnings_arr' => (is => 'rw', isa=>'ArrayRef[Str]'); 
+  has 'bbl' => (is => 'rw', isa => 'Maybe[Str]'); 
+  has 'bbl_clean' => (is => 'rw', isa => 'Maybe[Str]'); 
+  has 'bbl_arr' => (is => 'rw', isa=>'Maybe[ArrayRef[Str]]', default => sub{[]}); 
+  has 'warnings_arr' => (is => 'rw', isa=>'Maybe[ArrayRef[Str]]', default => sub{[]}); 
 
 ####################################################################################
 sub reset {
   my $self = shift;
-  $self->{bst} = "";
-  $self->{bib} = "";
-  $self->{html} = "";
-  $self->{html_tuned} = "";
-
-  $self->{bbl} = "";
-  $self->{bbl_clean} = "";
-  $self->{bbl_arr} = undef;
-  $self->{warnings_arr} = [];
-}
-####################################################################################
-sub set_bib {
-  my $self = shift;
-  my $bib = shift;
-  $self->{bib} = $bib;
-}
-####################################################################################
-sub html_contains_em {
-  my $self = shift;
-  my $result = 0;
-  $result = 1 if $self->{html_tuned} =~ m!\em!;
-  return $result;
+  $self->bst(undef);
+  $self->bib(undef);
+  $self->html(undef);
+  $self->html_tuned(undef);
+  $self->bbl(undef);
+  $self->bbl_clean(undef);
+  $self->bbl_arr([]);
+  $self->warnings_arr([]);
 }
 ####################################################################################
 sub bbl_clean_contains_rubbish {
   my $self = shift;
-  my $result = 0;
-  $result = 1 if $self->{bbl_clean} =~ m!bibitem!;
-  $result = 1 if $self->{bbl_clean} =~ m!{!;
-  $result = 1 if $self->{bbl_clean} =~ m!}!;
-  $result = 1 if $self->{bbl_clean} =~ m!\\!;
-  return $result;
-}
-
-####################################################################################
-sub set_bst {
-  my $self = shift;
-  my $bst_path = shift;
-  if(-e $bst_path){
-    $self->{bst} = $bst_path;  
-  }
-  else{
-    warn "Bst file does not exist! File: $bst_path";
-  }
+  return 1 if $self->bbl_clean =~ m!bibitem!;
+  return 1 if $self->bbl_clean =~ m!{!;
+  return 1 if $self->bbl_clean =~ m!}!;
+  return 1 if $self->bbl_clean =~ m!\\!;
+  return ;
 }
 ####################################################################################
 sub convert_to_html {
@@ -84,23 +59,23 @@ sub convert_to_html {
   $self->reset();
 
   if($opts{'bib'}){
-     $self->{bib} = $opts{'bib'};
+     $self->bib($opts{'bib'});
   }
   if($opts{'bst'}){
-     $self->{bst} = $opts{'bst'};
+     $self->bst($opts{'bst'});
   }
 
-  if($self->{bib} eq ''){
+  if( !$self->bib){
     warn "Cannot convert. BibTeX code not set!";
-    return "ERROR: BIB";
+    return "ERROR: BibTeX code empty";
   }
-  if(!-e $self->{bst}){
+  if(!$self->bst or !-e $self->bst){
     warn "Cannot convert. Bst file does not exist! File: $self->{bst}";
     return "ERROR: BST - .bst file not found";
   }
 
   my $entry = new Text::BibTeX::Entry();
-  $entry->parse_s($self->{bib});
+  $entry->parse_s($self->bib);
   return "ERROR: BIBTEX PARSE" unless $entry->parse_ok;
 
   my $bibtex_key = $entry->key;
@@ -108,14 +83,14 @@ sub convert_to_html {
 
   if($opts{'method'} eq 'old'){
     my $tuned_html = $self->_convert_to_html_old_method();
-    $self->{html_tuned} = $tuned_html;
+    $self->html_tuned($tuned_html);
   }
   else{
     my $tuned_html = $self->_convert_to_html_new_method();
-    $self->{html_tuned} = $tuned_html;
+    $self->html_tuned($tuned_html);
   }
 
-  return $self->{html_tuned};
+  return $self->html_tuned;
 }
 
 
@@ -124,32 +99,32 @@ sub convert_to_html {
 ####################################################################################
 sub _convert_to_html_new_method {
   my $self = shift;
-  my $bib = shift // $self->{bib};
+  my $bib = shift;
 
-  $self->{bib} = $bib;
+  $self->bib($bib) if $bib;
 
   # stateless call
-  my ($bbl_dirty, $dirty_bbl_array_ref, $warnings_arr_ref) = _convert_bib_to_bbl($bib, $self->{bst});
+  my ($bbl_dirty, $dirty_bbl_array_ref, $warnings_arr_ref) = _convert_bib_to_bbl($self->bib, $self->bst);
 
-  $self->{bbl} = $bbl_dirty;
-  $self->{bbl_arr} = $dirty_bbl_array_ref;
-  $self->{warnings_arr} = $warnings_arr_ref;
+  $self->bbl($bbl_dirty);
+  $self->bbl_arr($dirty_bbl_array_ref);
+  $self->warnings_arr($warnings_arr_ref);
 
 
   # stateless call 
   my $clean_bbl = _clean_bbl($dirty_bbl_array_ref);
-  $self->{bbl_clean} = $clean_bbl;
+  $self->bbl_clean($clean_bbl);
 
 
-  my $html_code = _add_html_links($clean_bbl, $bib);
-  $self->{html} = $html_code;
+  my $html_code = _add_html_links($clean_bbl, $self->bib);
+  $self->html($html_code);
   
 
   my $tuned_html_code = "";
   # $tuned_html_code .= '<div class="bibtex_entry">'."\n";  
   $tuned_html_code .= $html_code;
   # $tuned_html_code .= "\n".'</div>';
-  $self->{html_tuned} = $tuned_html_code;
+  $self->html_tuned($tuned_html_code);
   return $tuned_html_code;
 }
 ####################################################################################
@@ -163,12 +138,13 @@ sub _convert_bib_to_bbl {
 
   my $bbl = $bibstyle->execute([], $input_bib);
   my $out = $bibstyle->get_output(); 
-  my @a = $bibstyle->{output};
+  
+  my @bibstyle_output = @{$bibstyle->{output}};
 
   my $warnings_arr_ref = $bibstyle->{warnings};
 
-  my $bbl_dirty = join '', @{$bibstyle->{output}};
-  my $dirty_bbl_array_ref = \@{$bibstyle->{output}};
+  my $bbl_dirty = join '', @bibstyle_output ;
+  my $dirty_bbl_array_ref = \@bibstyle_output ;
 
   return ($bbl_dirty, $dirty_bbl_array_ref, $warnings_arr_ref);
 }
@@ -181,6 +157,12 @@ sub _clean_bbl {
 
   foreach my $f (@arr){
     chomp $f;
+
+    # fix strange commas 
+    # before: J\'{o}akim von Kistowski, , Hansfried Block, , John Beckett, , Cloyce Spradling, , Klaus-Dieter Lange, , and Samuel Kounev, .
+    # after: J\'{o}akim von Kistowski, Hansfried Block, John Beckett, Cloyce Spradling, Klaus-Dieter Lange, and Samuel Kounev.
+    $f =~ s/(\w+),\s+,/$1,/g;
+    $f =~ s/(\w+),\s+([\.,])/$1$2/g;
     
     if($f =~ m/^\\begin/ or $f =~ m/^\\end/){
       # say "BB".$f;
@@ -341,18 +323,20 @@ my $s = shift;
     next if $tex eq '"';  # we want our html to stay
     next if $tex eq '\''; # we want our html to stay
 
+    # say "str_replace_as_pod_latex: tex before escaping: '$tex'.";
     # escaping the stuff 
+    $tex =~ s!\\!\\\\!g;
     $tex =~ s!\{!\\\{!g;
     $tex =~ s!\}!\\\}!g;
-    $tex =~ s!\\!\\\\!g;
-
-
+    
     $s =~ s![{}]!!g; # you need to remove this before decoding...
 
     # say "tex $tex -> $html" if $html =~ /ouml/;
     # say "BEFORE $s" if $html =~ /ouml/;
+    # say "str_replace_as_pod_latex: changing: '$tex' to '&$html;'";
     $s =~ s!$tex!&$html;!g;
     # say "AFTER $s" if $html =~ /ouml/;
+    # m/\\texttwosuperior\\{ <-- HERE \\}/ at
 
   } 
 
@@ -586,21 +570,31 @@ sub _convert_to_html_old_method {
     return "";  
   }
 
+  my $tmp_file_pattern = 'xxxdelete';
+  my $inputFile = 'xxxdelete.input.bib';
+  my $outputFile = 'xxxdelete.out';
+
   my $devnull = File::Spec->devnull();
   my $tmpdir = File::Spec->tmpdir();
 
-  open (my $MYFILE, q{>}, 'input.bib');
-  print $MYFILE $self->{bib};
+  open (my $MYFILE, q{>}, $inputFile);
+  print $MYFILE $self->bib;
   close ($MYFILE); 
 
-  my $bibtex2html_command = "bibtex2html -s ".$self->{bst} ." -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc -no-footer -o out.xxx input.bib";
-  my $syscommand = "TMPDIR=. ".$bibtex2html_command.' &> '.$devnull;
+  my $bibtex2html_command = "bibtex2html -s ".$self->bst ." -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc -no-footer -o $outputFile $inputFile";
+  my $syscommand = "TMPDIR=$tmpdir ".$bibtex2html_command.' &> '.$devnull;
   `$syscommand`;
-  $self->{html} = read_file('out.xxx.html');
 
-  $self->{html_tuned} = tune_html_old($self->{html}, $self->{bib}, "key");
+  my $html = read_file($outputFile.".html");
+  $self->html($html);
 
-  return $self->{html_tuned};
+  `rm $tmp_file_pattern*`;
+
+  $self->html_tuned(
+    tune_html_old($self->html, $self->bib, "key")
+  );
+
+  return $self->html_tuned;
 }
 ####################################################################################
 sub tune_html_old{

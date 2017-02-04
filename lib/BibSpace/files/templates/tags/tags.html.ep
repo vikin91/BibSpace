@@ -6,7 +6,7 @@
 <div class="container">
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
-            <h2>Tags of type <%= $ttobj->{name}  %> (ID=<%= $ttobj->{id} %>)</h2>
+            <h2>Tags of type "<%= $ttobj->{name}  %>" (ID=<%= $ttobj->{id} %>)</h2>
         </div>
     </div>
 
@@ -38,13 +38,13 @@
             <table class="table table-hover table-condensed">
             <tbody>
             % foreach my $otag (@{$otags}){
-              % my $id = $otag->{id};
-              % my $tag = $otag->{name};
+              % my $id = $otag->id;
+              % my $tag = $otag->name;
               
               <tr>
                 <td>
                     <div class="btn-group">
-                        <a class="btn btn-success btn-sm" href="<%= url_for('/tags/edit/')%><%=$id%>" data-toggle="tooltip" data-placement="top" title="Edit tag name"><span class="glyphicon glyphicon-pencil"></span></a>
+                        <a class="btn btn-success btn-sm" href="<%= url_for('edit_tag', id=>$otag->id) %>" data-toggle="tooltip" data-placement="top" title="Edit tag name"><span class="glyphicon glyphicon-pencil"></span></a>
                         <span data-toggle="tooltip" data-placement="top" title="Delete tag...">
                             <a class="btn btn-danger btn-sm" href="#modal-dialog-delete-tag-<%=$id%>" data-toggle="modal"><span class="glyphicon glyphicon-trash"></span></a>
                         </span>
@@ -60,11 +60,11 @@
                           </div>
                           <div class="modal-body">
 
-                              <p>Are you sure you want to delete tag: <i><%= $tag %></i>?</p>
-                              <p>There are <span class="badge"> <%= num_pubs_for_tag($id) %></span> papers tagged with this tag. They will be untagged if you continue.</p>
+                              <p>Are you sure you want to delete tag: <i><%= $otag->name %></i>?</p>
+                              <p>There are <span class="badge"> <%= num_pubs_for_tag($otag) %></span> papers tagged with this tag. They will be untagged if you continue.</p>
                             
                               <div class="modal-footer">
-                                <a class="btn btn-danger" href="<%= url_for('/tags/delete/')%><%=$id%>"><i class="fa fa-trash"></i> Yes, delete this tag</a>
+                                <a class="btn btn-danger" href="<%= url_for('delete_tag', id=>$otag->id)%>"><i class="fa fa-trash"></i> Yes, delete this tag</a>
                                 <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, leave <i><%= $tag %></i> alone</a>
                               </div>
                           </div>
@@ -81,7 +81,7 @@
                 </td>
                 <td>
                     <a class="btn btn-default btn-sm" href="<%= url_for('publications')->query(tag=>$tag) %>">
-                        <span class="glyphicon glyphicon-list-alt"></span> Papers <span class="badge"> <%= num_pubs_for_tag($id) %></span>
+                        <span class="glyphicon glyphicon-list-alt"></span> Papers <span class="badge"> <%= num_pubs_for_tag($otag) %></span>
                     </a>
                 </td>
                 <td>

@@ -10,9 +10,12 @@ use 5.010;           #because of ~~
 use strict;
 use warnings;
 use DBI;
+use DBIx::Connector;
 
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
+
+use BibSpace::Functions::BackupFunctions;
 
 use Mojo::Base 'Mojolicious::Controller';
 
@@ -83,7 +86,7 @@ sub cron_level {
         return "";
     }
 
-    my $call_freq = 999;
+    my $call_freq = 99999;
 
     if ( $level == 0 ) {
         $call_freq = $self->config->{cron_day_freq_lock};
@@ -129,7 +132,7 @@ sub cron_run {
 
     ############ Cron ACTIONS
     log_cron_usage( $self->app->db, $level );
-    $self->write_log("Cron level $level started");
+    $self->app->logger->info("Cron level $level started");
 
     if ( $level == 0 ) {
         $self->do_cron_day();
@@ -149,45 +152,40 @@ sub cron_run {
     else {
         # do nothing
     }
-    $self->write_log("Cron level $level finished");
+    $self->app->logger->info("Cron level $level finished");
 
     return $text_to_render;
 }
 ##########################################################################################
 sub do_cron_day {
     my $self = shift;
-    my $dbh  = $self->app->db;
 
-    $self->helper_do_mysql_db_backup( $self, "cron" );
+    my $backup1 = do_storable_backup($self->app, "cron");
+
 }
 ##########################################################################################
 sub do_cron_night {
     my $self = shift;
-    my $dbh  = $self->app->db;
 
-    my @entries = MEntry->static_all($dbh);
+    my @entries = $self->app->repo->entries_all;
+
     for my $e (@entries) {
-        $e->regenerate_html($dbh, 0);
-        $e->save($dbh);
+        $e->regenerate_html(0);
     }
 }
 ##########################################################################################
 sub do_cron_week {
     my $self = shift;
-    my $dbh  = $self->app->db;
+    
 
-    # Fhandle_author_uids_change_for_all_entries($self->app->db, 0);
-    # Fclean_ugly_bibtex_fields_for_all_entries($dbh);
-
-    $self->helper_do_delete_broken_or_old_backup();
+    my $backup1 = do_mysql_backup($self->app, "cron");
+    my $num_deleted = delete_old_backups($self->app);
+    
 }
 ##########################################################################################
 sub do_cron_month {
     my $self = shift;
-    my $dbh  = $self->app->db;
-
-    # Fhandle_author_uids_change_for_all_entries($self->app->db, 0);
-    # Fclean_ugly_bibtex_fields_for_all_entries($dbh);
+    
 }
 ##########################################################################################
 ##########################################################################################

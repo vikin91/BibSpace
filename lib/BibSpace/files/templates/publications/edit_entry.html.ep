@@ -2,10 +2,6 @@
 % layout 'admin';
 
 
-% my $adding = -1;
-% $adding = 1 if $mentry->{id} < 0;
-% $adding = 0 if $mentry->{id} > 0;
-
 <div class="container">
     <div class="row">
         <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
@@ -16,30 +12,19 @@
                 <thead>
                 </thead>
                 <tbody>
-                % if ($adding == 0) { 
-                    %= include 'publications_table_row', use_modal => 1, entry_obj => $mentry, j => '';
-                % }
+                %= include 'publications_table_row', use_modal => 1, entry_obj => $entry, j => '';
                 </tbody>
             </table>
         </div>
     </div> 
 
-    % if (defined $mentry and $adding == 1) { 
-        %= include 'preview_row', preview => $mentry->{html}, btype=> $mentry->{bibtex_type}, bkey =>$mentry->{key};
-    % }
-
 
     <div class="row">
-        % my $route_name = 'edit_publication_post';
-        % if($adding){
-        %    $route_name = 'add_publication_post';
-        % }
-
-        %= form_for $route_name => {id => $mentry->{id}} => (class=>'form-horizontal', role=>'form', method=>'POST') => begin
+        %= form_for 'edit_publication_post' => {id => $entry->{id}} => (class=>'form-horizontal', role=>'form', method=>'POST') => begin
             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="form-group">
                     <label for="bibtex">BibTeX code</label>
-                    <textarea class="form-control" rows="12" id="description" name="new_bib"><%=$mentry->{bib}%></textarea>
+                    <textarea class="form-control" rows="12" id="description" name="new_bib"><%=$entry->{bib}%></textarea>
                 </div>
                 <div class="form-group">
                     <button name="save" value="save" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Check & Save</button>
@@ -47,13 +32,7 @@
                     <button name="check_key" value="check_key" type="submit" class="btn btn-default"><i class="fa fa-exclamation-triangle" style="color: red;"></i> Check if BibTeX key exists</button>
                 </div>
             </div>
-            % end
-<!--             <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">
-                <div class="alert alert-info">
-                    %= include 'bibtex_help';
-                </div>
-            </div> -->
-            
+        % end
     </div>
 
     <hr/>
