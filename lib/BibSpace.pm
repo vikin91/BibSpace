@@ -453,7 +453,7 @@ sub setup_routes {
   $anyone->get('/logout')->to('login#logout')->name('logout');
 
   $anyone->any('/test/500')->to('display#test500')->name('error500');
-  $anyone->any('/test/404')->to('display#test404');
+  $anyone->any('/test/404')->to('display#test404')->name('error404');
 
   $anyone->get('/register')->to('login#register')->name('register');
   $anyone->post('/register')->to('login#post_do_register')->name('post_do_register');
@@ -486,7 +486,7 @@ sub setup_routes {
   $admin_user->get('/profile/make_manager/:id')->to('login#make_manager')->name('make_manager');
   $admin_user->get('/profile/make_admin/:id')->to('login#make_admin')->name('make_admin');
 
-  $manager_user->get('/log')->to('display#show_log');
+  $manager_user->get('/log')->to('display#show_log')->name('show_log');
   $admin_user->get('/settings/fix_months')->to('publications#fixMonths')->name('fix_all_months');
 
   $manager_user->get('/settings/clean_all')->to('publications#clean_ugly_bibtex')->name('clean_ugly_bibtex');

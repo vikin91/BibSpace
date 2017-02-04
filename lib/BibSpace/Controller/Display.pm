@@ -6,6 +6,7 @@ use utf8;
 use 5.010;    #because of ~~
 use File::Slurp;
 use Try::Tiny;
+use List::Util qw(first);
 
 use Data::Dumper;
 
@@ -36,30 +37,42 @@ sub test404 {
 #################################################################################
 sub show_log {
     my $self = shift;
-    my $num  = $self->param('num');
+    my $num  = $self->param('num') // 100;
+    my $type = $self->param('type');
 
-    $num = 100 unless $num;
+    my $log_dir = Path::Tiny->new( $self->app->config->{log_dir} );
 
-    my $filename = $self->app->config->{log_file};
+    my @file_list = $log_dir->children(qr/\.log$/);
+    my @log_names = map { $_->basename('.log') } @file_list;
 
-    my @lines = ();
 
+    my $log_2_read = $log_dir->child( $type . ".log" );
+    $log_2_read = $log_dir->child("info.log") unless $log_2_read->exists;
+    $log_2_read = shift @file_list            unless $log_2_read->exists;
+
+    my @lines;
     try {
-        @lines = read_file($filename);
-        if ( $num > $#lines ) {
-            $num = $#lines + 1;
-        }
+        @lines = $log_2_read->lines( { count => $num } );
+        @lines
+            = ( $num >= @lines )
+            ? reverse @lines
+            : reverse @lines[ -$num .. -1 ];
+        chomp(@lines);
     }
     catch {
-        say "Opening log failed!";
-        $num = 5;
+        $self->app->logger->error("Cannot find log '$type'. Error: $_.");
+        $self->stash(
+            msg_type => 'danger',
+            msg      => "Cannot find log '$type'."
+        );
     };
 
-    # @lines = reverse(@lines);
-    @lines = @lines[ $#lines - $num .. $#lines ];
-    chomp(@lines);
 
-    $self->stash( lines => \@lines );
+    $self->stash(
+        files     => \@file_list,
+        lines     => \@lines,
+        curr_file => $log_2_read
+    );
     $self->render( template => 'display/log' );
 }
 

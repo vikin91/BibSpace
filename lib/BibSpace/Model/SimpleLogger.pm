@@ -1,20 +1,44 @@
 package SimpleLogger;
 use namespace::autoclean;
 
+use Mojo::Log;
 
-use DateTime;
 use Term::ANSIColor;
 use Moose;
 use BibSpace::Model::ILogger;
 with 'ILogger';
 
 
+# # Log messages
+# $log->debug('Not sure what is happening here');
+# $log->info('FYI: it happened again');
+# $log->warn('This might be a problem');
+# $log->error('Garden variety error');
+# $log->fatal('Boom');
+
+sub log_mojo {
+  my $self   = shift;
+  my $type   = shift;                 # info, warn, error, debug
+  my $msg    = shift;                 # text to log
+
+  $type =~ s/warning/warn/;
+  my $mojo_log = Mojo::Log->new(level => 'info');
+
+  $mojo_log->path('log/'.$type.'.log');
+  $mojo_log->emit('message', $type, $msg);
+  # my $code = '$mojo_log->'.$type.'("'.$msg.'")';
+  # eval $code; warn $@ if $@;
+}
+
 sub log {
   my $self   = shift;
   my $type   = shift;                 # info, warn, error, debug
   my $msg    = shift;                 # text to log
   my $origin = shift // "unknown";    # method from where the msg originates
-  my $time   = DateTime->now();
+  
+  $self->log_mojo(lc($type),$msg);
+
+  my $time   = localtime;
   print "[$time] $type: $msg (Origin: $origin).";
   print color('reset');
   print "\n";
@@ -39,7 +63,6 @@ sub entering {
   my $self   = shift;
   my $msg    = shift;
   my $origin = shift // 'unknown';
-
   # print color('black on_yellow');
   # $self->log('ENTER', $msg, $origin);
 }
@@ -48,7 +71,6 @@ sub exiting {
   my $self   = shift;
   my $msg    = shift;
   my $origin = shift // 'unknown';
-
   # print color('black on_yellow');
   # $self->log('EXIT', $msg, $origin);
 }
