@@ -80,32 +80,22 @@ has 'shall_update_modified_time' =>
     ( is => 'rw', isa => 'Int', default => 0 );
 
 
-# class_type 'DateTime';
-# coerce 'DateTime'
-#       => from 'Str'
-#       => via { $dtPattern->parse_datetime($_) };
-
 has 'creation_time' => (
     is      => 'rw',
     isa     => 'DateTime',
     traits  => ['DoNotSerialize'],
     default => sub {
-        my $dt = DateTime->now;
-        $dt->set_formatter($dtPattern);
-        return $dt;
+        DateTime->now(formatter => $dtPattern);
     },
-
-    # coerce => 1
 );
+
 has 'modified_time' => (
     is      => 'rw',
     isa     => 'DateTime',
     traits  => ['DoNotSerialize'],
     default => sub {
-        $dtPattern->parse_datetime('1970-01-01 00:00:00');
+        DateTime->now(formatter => $dtPattern);
     },
-
-    # coerce => 1
 );
 
 # not DB fields
@@ -175,15 +165,31 @@ sub discover_attachments {
     my ($self, $upload_dir) = @_;
 
     my $id = $self->id;
-    my @discovery_papers
-        = Path::Tiny->new( $upload_dir, "papers" )
+    Path::Tiny->new( $upload_dir )->mkpath;
+
+    my @discovery_papers;
+    try{
+      Path::Tiny->new( $upload_dir, "papers" )->mkpath;
+      @discovery_papers = Path::Tiny->new( $upload_dir, "papers" )
         ->children(qr/paper-$id\./);
-    my @discovery_slides
-        = Path::Tiny->new( $upload_dir, "slides" )
+    }
+    catch{   };
+  
+
+    my @discovery_slides;
+    try{
+      @discovery_slides = Path::Tiny->new( $upload_dir, "slides" )
         ->children(qr/slides-paper-$id\./);
-    my @discovery_other
-        = Path::Tiny->new( $upload_dir, "unknown" )
+    }
+    catch{   };
+  
+
+    my @discovery_other;
+    try{
+      @discovery_other = Path::Tiny->new( $upload_dir, "other" )
         ->children(qr/unknown-$id\./);
+    }
+    catch{   };
 
     $self->add_attachment( 'slides', $_ ) for @discovery_slides;
     $self->add_attachment( 'paper', $_ ) for @discovery_slides;

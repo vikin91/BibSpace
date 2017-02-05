@@ -74,8 +74,11 @@
             </a>
         </div>
 
-        <button class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Created: <%=$entry_obj->creation_time%>, Modified: <%=$entry_obj->modified_time%>">
-            <span class="glyphicon glyphicon-calendar"></span>
+        <button class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Created: <%=$entry_obj->creation_time%>">
+            <span class="glyphicon glyphicon-star"></span><span class="glyphicon glyphicon-calendar"></span>
+        </button>
+        <button class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Modified: <%=$entry_obj->modified_time%>">
+            <span class="glyphicon glyphicon-pencil"></span><span class="glyphicon glyphicon-calendar"></span>
         </button>
     </td>
 

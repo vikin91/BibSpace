@@ -466,7 +466,7 @@ sub download {
 
   my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
   $entry->discover_attachments($self->app->config->{upload_dir});
-  
+
   my $file = $entry->get_attachment($filetype);
   
   if( $file and -e $file ){
@@ -958,8 +958,6 @@ sub get_adding_editing_message_for_error_code {
 sub publications_add_get {
   my $self = shift;
   $self->app->logger->info("Open Add Publication");
-  my $dbh = $self->app->db;
-
 
   my $msg = "<strong>Adding mode</strong> You operate on an unsaved entry!";
 
