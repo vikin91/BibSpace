@@ -91,7 +91,7 @@ sub all {
             title           => $row->{title},
             hidden          => $row->{hidden},
             year            => $row->{year},
-            month           => $row->{month},
+            month           => $row->{month} or 0,
             creation_time   => $ct,
             modified_time   => $mt,
             need_html_regen => $row->{need_html_regen},
