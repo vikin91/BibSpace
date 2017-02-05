@@ -76,6 +76,9 @@ sub all {
         # # $mysqlPattern seems to be REGEXP - do not store this in the object!
         # say "Entry->SQL->all: parsing  mod_time: ".$mt;
 
+        # add default
+        my $month = $row->{month} // 0;
+
         push @objs,
             Entry->new(
             old_mysql_id    => $row->{id},
@@ -91,7 +94,7 @@ sub all {
             title           => $row->{title},
             hidden          => $row->{hidden},
             year            => $row->{year},
-            month           => $row->{month} or 0,
+            month           => $month,
             creation_time   => $ct,
             modified_time   => $mt,
             need_html_regen => $row->{need_html_regen},
