@@ -24,6 +24,7 @@ sub log_mojo {
   my $msg    = shift;                 # text to log
 
   $type =~ s/warning/warn/;
+  $type =~ s/LOW_LEVEL_DEBUG/debug/;
 
   if($self->log_dir){
     my $mojo_log = Mojo::Log->new(level => 'info');

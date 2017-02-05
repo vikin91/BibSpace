@@ -67,8 +67,12 @@ after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); }
 =cut 
 sub save {
   my ($self, @objects) = @_;
+
+  $self->logger->lowdebug("adding all ".$self->count." existing objects to hash","".__PACKAGE__."->save");
   my %existing = map { $_->id =>1} $self->all;
+  $self->logger->lowdebug("grepping new objects that do not exist in hash","".__PACKAGE__."->save");
   my @new_objects = grep { not $existing{$_->id} } @objects;
+  $self->logger->lowdebug("saving with handle","".__PACKAGE__."->save");
   $self->handle->save( @new_objects );
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
