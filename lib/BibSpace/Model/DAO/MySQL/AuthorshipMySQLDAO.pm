@@ -20,7 +20,7 @@ sub all {
   my ($self) = @_;
   my $dbh = $self->handle;
   my $qry = "SELECT author_id, entry_id
-            FROM Entry_to_Author";
+            FROM Entry_to_Author;";
 
   my $sth = $dbh->prepare($qry);
   $sth->execute();
@@ -42,7 +42,7 @@ after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
 sub count {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $sth    = $dbh->prepare("SELECT COUNT(*) as num FROM Entry_to_Author LIMIT 1");
+  my $sth    = $dbh->prepare("SELECT COUNT(*) as num FROM Entry_to_Author LIMIT 1;");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
   my $num = $row->{num} // 0;
@@ -73,7 +73,7 @@ after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 sub exists {
   my ($self, $object) = @_;
   my $dbh = $self->handle;
-  my $sth = $dbh->prepare("SELECT EXISTS(SELECT 1 FROM Entry_to_Author WHERE author_id=? AND entry_id=? LIMIT 1) as num ");
+  my $sth = $dbh->prepare("SELECT EXISTS(SELECT 1 FROM Entry_to_Author WHERE author_id=? AND entry_id=? LIMIT 1) as num;");
   $sth->execute($object->author_id, $object->entry_id,);
   my $row = $sth->fetchrow_hashref();
   my $num = $row->{num} // 0;

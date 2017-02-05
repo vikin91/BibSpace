@@ -38,7 +38,7 @@ sub all {
               creation_time,
               modified_time,
               need_html_regen
-          FROM Entry";
+          FROM Entry;";
 
     my $sth;
     try {
@@ -115,7 +115,7 @@ after 'all' =>
 sub count {
     my ($self) = @_;
     my $dbh    = $self->handle;
-    my $sth    = $dbh->prepare("SELECT COUNT(*) as num FROM Entry LIMIT 1");
+    my $sth    = $dbh->prepare("SELECT COUNT(*) as num FROM Entry LIMIT 1;");
     $sth->execute();
     my $row = $sth->fetchrow_hashref();
     my $num = $row->{num} // 0;
@@ -134,7 +134,7 @@ after 'count' =>
 sub empty {
     my ($self) = @_;
     my $dbh    = $self->handle;
-    my $sth    = $dbh->prepare("SELECT 1 as num FROM Entry LIMIT 1");
+    my $sth    = $dbh->prepare("SELECT 1 as num FROM Entry LIMIT 1;");
     $sth->execute();
     my $row = $sth->fetchrow_hashref();
     my $num = $row->{num} // 0;
@@ -154,7 +154,7 @@ sub exists {
     my ( $self, $object ) = @_;
     my $dbh = $self->handle;
     my $sth = $dbh->prepare(
-        "SELECT EXISTS(SELECT 1 FROM Entry WHERE id=? LIMIT 1) as num ");
+        "SELECT EXISTS(SELECT 1 FROM Entry WHERE id=? LIMIT 1) as num;");
     $sth->execute( $object->id );
     my $row = $sth->fetchrow_hashref();
     my $num = $row->{num} // 0;
@@ -275,8 +275,8 @@ sub update {
             year=?,
             month=?,
             modified_time=?,
-            need_html_regen=?";
-        $qry .= "WHERE id = ?";
+            need_html_regen=?
+            WHERE id = ?;";
 
         my $sth = $dbh->prepare($qry);
         try {

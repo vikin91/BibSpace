@@ -22,7 +22,7 @@ use Try::Tiny;
 sub all {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $qry    = " SELECT id, name, comment 
+  my $qry    = "SELECT id, name, comment 
               FROM TagType;";
   my $sth = $dbh->prepare($qry);
   $sth->execute();
