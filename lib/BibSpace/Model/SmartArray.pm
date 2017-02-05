@@ -88,13 +88,21 @@ after '_add'  => sub { shift->logger->exiting("","".__PACKAGE__."->_add"); };
 sub save {
     my ($self, @objects) = @_;
     my $added = 0;
-    foreach my $obj(@objects){
-        if( !$self->exists($obj)){
-            ++$added;
-            $self->_add($obj);
-        }
-        else{
-            $self->update($obj);
+    my $type = ref($objects[0]);
+    if( $self->empty($type) ){
+        $self->_add(@objects);
+        $added = scalar @objects;
+    }
+    else{
+
+        foreach my $obj(@objects){
+            if( !$self->exists($obj)){
+                ++$added;
+                $self->_add($obj);
+            }
+            else{
+                $self->update($obj);
+            }
         }
     }
     return $added;
