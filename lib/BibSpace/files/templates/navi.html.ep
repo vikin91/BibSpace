@@ -372,6 +372,9 @@
 </a>
 
 % if(session 'user'){
+  <a type="button" class="btn btn-default" href="<%= url_for('preferences') %>">
+    <i class="fa fa-cog"></i> Preferences
+  </a>
   <a type="button" class="btn btn-default"><small><%= $self->app->version %> </small></a>
 % }
 

@@ -4,19 +4,10 @@ package BibSpace v0.5.0;
 
 use BibSpace::Functions::Core;
 use BibSpace::Functions::MySqlBackupFunctions;
-
-use BibSpace::Controller::Publications;
-use BibSpace::Controller::PublicationsLanding;
-use BibSpace::Controller::PublicationsExperimental;
-use BibSpace::Controller::PublicationsSEO;
-use BibSpace::Controller::Helpers;
-
-use BibSpace::Model::SimpleLogger;
-
-use BibSpace::Model::User;
-
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
+
+
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -33,6 +24,9 @@ use Cwd;
 
 use BibSpace::Model::DAO::DAOFactory;
 use BibSpace::Model::SmartArray;
+
+use BibSpace::Model::SimpleLogger;
+use BibSpace::Model::User;
 
 use BibSpace::Model::SmartUidProvider;
 use BibSpace::Model::Repository::LayeredRepository;
@@ -121,25 +115,6 @@ has use_quick_load_fixture => sub {
 has logger => sub { state $logger = SimpleLogger->new };
 
 
-has bibtexConverter => sub {
-    my $self = shift;
-    try{
-        my $class = Preferences->bibitex_html_converter;
-        Class::Load::load_class($class);
-        if($class->does('IHtmlBibtexConverter')){
-          return $class->new( logger => $self->logger);  
-        }
-        die "Requested class '$class' does not implement interface 'IHtmlBibtexConverter'";
-        
-    }
-    catch{
-        $self->logger->error("Requested unknown type of bibitex_html_converter: '".Preferences->bibitex_html_converter."'. Error: $_.");
-    }
-    finally{
-      return BibStyleConverter->new( logger => $self->logger );
-    };
-};
-
 
 has smartArrayBackend => sub {
     my $self = shift;
@@ -211,15 +186,15 @@ sub startup {
 
     $self->setup_config;
     $self->setup_plugins;
+
+    Preferences->local_time_zone( DateTime::TimeZone->new( name => 'local' )->name );
+
     $self->setup_routes;
     $self->setup_hooks;
     $self->setup_repositories;
     $self->insert_admin;
 
-    # ugly global. state means that this will be set only once.
-    Preferences->local_time_zone( DateTime::TimeZone->new( name => 'local' ) );
-
-
+    
     $self->app->logger->info("Setup done.");
 
 
@@ -557,6 +532,11 @@ sub setup_routes {
     my $manager_user
         = $logged_user->under->to('login#under_check_is_manager');
     my $admin_user = $logged_user->under->to('login#under_check_is_admin');
+
+    ################ PREFERENCES ################
+
+    $manager_user->get('/preferences')->to('preferences#index')->name('preferences');
+    $manager_user->post('/preferences')->to('preferences#save')->name('save_preferences');
 
     ################ EXPERIMENTAL / PERSISTENCE ################
 

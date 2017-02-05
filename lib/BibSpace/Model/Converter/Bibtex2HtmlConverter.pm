@@ -39,13 +39,12 @@ sub convert {
     my ( $self, $bib, $bst ) = @_;
     $bst ||= $self->bst;
     die "Template not provided" unless $bst and -e $bst;
-
     my $tmp_file_pattern = 'old_bibtex_converter_temp';
 
 
     my $tmp_dir = Path::Tiny->new( File::Spec->tmpdir() );
     my $cmd_output_file = Path::Tiny->new( $tmp_dir, $tmp_file_pattern . '.cmd_output.txt' );
-    # my $inputFile = Path::Tiny->new( $tmp_dir, $tmp_file_pattern . '.input.bib' );
+    my $inputFile = Path::Tiny->new( $tmp_dir, $tmp_file_pattern . '.input.bib' );
     my $outputFile = Path::Tiny->new( $tmp_dir, $tmp_file_pattern . '.out' );
 
     # print "tmp_dir ".$tmp_dir . "\n";
@@ -53,22 +52,23 @@ sub convert {
     # print "inputFile ".$inputFile . "\n";
     # print "outputFile ".$outputFile . "\n";
 
-    # $inputFile->append_utf8({truncate => 1}, $bib); # write file
+    $inputFile->append_utf8({truncate => 1}, $bib); # write file
 
     $bst =~ s/\.bst$//g; # because bibtex2html doesn't want the extension
 
     # processes 100 entries in 11 seconds - requires to write input_file
-    # my $bibtex2html_command
-    #     = "bibtex2html -s "
-    #     . $bst
-    #     . " -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc -no-footer -o $outputFile $inputFile";
+    my $bibtex2html_command
+        = "bibtex2html -s "
+        . $bst
+        . " -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc -no-footer -o $outputFile $inputFile";
 
 
     # processes 100 entries in 11 seconds - gives input via stdin, stores output to file
-    my $bibtex2html_command
-        = "echo \"$bib\" | bibtex2html -s "
-        . $bst
-        . " -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc -no-footer -o $outputFile";
+    # echo escaping problems!!
+    # my $bibtex2html_command
+    #     = "echo -n '\Q$bib\E' | bibtex2html -s "
+    #     . $bst
+    #     . " -nf slides slides -d -r --revkeys -no-keywords -no-header -nokeys --nodoc -no-footer -o $outputFile";
 
     # processes 100 entries in 11 seconds - gives input via stdin and reads output via stdout
     # my $bibtex2html_command
@@ -79,7 +79,8 @@ sub convert {
     my $syscommand
         = "TMPDIR=$tmp_dir " . $bibtex2html_command . ' &> ' . $cmd_output_file->absolute;
 
-    # say $syscommand;
+    # say "=================\n $syscommand\n =================";
+    
     my $command_output;
     try{
         $command_output = qx($syscommand);

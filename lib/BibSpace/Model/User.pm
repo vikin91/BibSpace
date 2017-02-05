@@ -45,13 +45,16 @@ has 'last_login' => (
     isa     => 'DateTime',
     traits  => ['DoNotSerialize'],
     default => sub {
-        DateTime->now->set_time_zone(Preferences->local_time_zone);
+        DateTime->now
+            ->set_time_zone(Preferences->local_time_zone);
     },
 );
 sub get_last_login {
     my $self = shift;
     
-    $self->last_login->strftime( Preferences->output_time_format );
+    $self->last_login
+        ->set_time_zone(Preferences->local_time_zone)
+        ->strftime(Preferences->output_time_format);
 }
 
 has 'registration_time' => (
@@ -64,7 +67,9 @@ has 'registration_time' => (
 );
 sub get_registration_time {
     my $self = shift;
-    $self->registration_time->strftime( Preferences->output_time_format );
+    $self->registration_time
+        ->set_time_zone(Preferences->local_time_zone)
+        ->strftime(Preferences->output_time_format);
 }
 
 ####################################################################################

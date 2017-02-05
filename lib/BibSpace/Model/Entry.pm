@@ -97,7 +97,7 @@ has 'creation_time' => (
 
 sub get_creation_time {
     my $self = shift;
-    $self->creation_time->strftime(Preferences->output_time_format);
+    $self->creation_time->set_time_zone(Preferences->local_time_zone)->strftime(Preferences->output_time_format);
 }
 
 has 'modified_time' => (
@@ -111,7 +111,7 @@ has 'modified_time' => (
 
 sub get_modified_time {
     my $self = shift;
-    $self->modified_time->strftime(Preferences->output_time_format);
+    $self->modified_time->set_time_zone(Preferences->local_time_zone)->strftime(Preferences->output_time_format);
 }
 
 # not DB fields
