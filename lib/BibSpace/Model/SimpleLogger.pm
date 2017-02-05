@@ -61,7 +61,7 @@ sub lowdebug {
     my $self=shift;
     my $msg = shift;
     my $origin = shift // 'unknown';
-    $self->log( 'LOW_LEVEL_DEBUG', $msg, $origin );
+    # $self->log( 'LOW_LEVEL_DEBUG', $msg, $origin );
 }
 
 sub entering {
