@@ -744,10 +744,10 @@ sub setup_routes {
     # EXPERIMENTAL
 
     $manager_user->get('/publications/add_many')
-        ->to('publicationsexperimental#publications_add_many_get')
+        ->to('PublicationsExperimental#publications_add_many_get')
         ->name('add_many_publications');
     $manager_user->post('/publications/add_many')
-        ->to('publicationsexperimental#publications_add_many_post')
+        ->to('PublicationsExperimental#publications_add_many_post')
         ->name('add_many_publications_post');
 
     # EXPERIMENTAL END
@@ -886,11 +886,11 @@ sub setup_routes {
 
   # contains meta info for every paper. Optimization for google scholar
   $anyone->get('/read/publications/meta')
-    ->to('publicationsseo#metalist')
+    ->to('PublicationsSeo#metalist')
     ->name("metalist_all_entries");
 
   $anyone->get('/read/publications/meta/:id')
-    ->to('publicationsseo#meta')
+    ->to('PublicationsSeo#meta')
     ->name("metalist_entry");
 
   ################

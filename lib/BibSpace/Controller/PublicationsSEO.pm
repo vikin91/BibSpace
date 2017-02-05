@@ -1,4 +1,4 @@
-package BibSpace::Controller::PublicationsSEO;
+package BibSpace::Controller::PublicationsSeo;
 
 # this must be written in non-capitalized because otherwise you get error:
 # Class "BibSpace::Controller::Publicationsseo" is not a controller
