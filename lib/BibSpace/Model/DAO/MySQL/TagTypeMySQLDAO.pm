@@ -23,7 +23,7 @@ sub all {
   my ($self) = @_;
   my $dbh    = $self->handle;
   my $qry    = " SELECT id, name, comment 
-              FROM TagType";
+              FROM TagType;";
   my $sth = $dbh->prepare($qry);
   $sth->execute();
 
@@ -52,7 +52,7 @@ after 'all' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->all" ); }
 sub count {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $sth    = $dbh->prepare("SELECT COUNT(*) as num FROM TagType LIMIT 1");
+  my $sth    = $dbh->prepare("SELECT COUNT(*) as num FROM TagType LIMIT 1;");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
   my $num = $row->{num} // 0;
@@ -85,7 +85,7 @@ after 'empty' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->empty" 
 sub exists {
   my ($self, $object) = @_;
   my $dbh = $self->handle;
-  my $sth = $dbh->prepare("SELECT EXISTS(SELECT 1 FROM TagType WHERE id=? LIMIT 1) as num ");
+  my $sth = $dbh->prepare("SELECT EXISTS(SELECT 1 FROM TagType WHERE id=? LIMIT 1) as num;");
   $sth->execute($object->id);
   my $row = $sth->fetchrow_hashref();
   my $num = $row->{num} // 0;
