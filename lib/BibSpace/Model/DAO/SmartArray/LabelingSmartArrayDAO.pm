@@ -74,6 +74,7 @@ sub save {
   my @new_objects = grep { not $existing{$_->id} } @objects;
   $self->logger->lowdebug("saving with handle","".__PACKAGE__."->save");
   $self->handle->save( @new_objects );
+  $self->logger->lowdebug("saving with handle DONE","".__PACKAGE__."->save");
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
 after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
