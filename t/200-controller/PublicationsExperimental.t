@@ -11,19 +11,13 @@ $admin_user->post_ok(
     form        => { user   => 'pub_admin', pass => 'asdf' }
 );
 
+use BibSpace::TestManager;
+TestManager->apply_fixture($admin_user->app);
 
 my $self = $admin_user->app;
 my $app_config = $admin_user->app->config;
 $admin_user->ua->max_redirects(3);
 
-use BibSpace::TestManager;
-TestManager->apply_fixture($self->app);
-
-$admin_user->post_ok(
-    '/do_login' => { Accept => '*/*' },
-    form        => { user   => 'pub_admin', pass => 'asdf' }
-);
-$self = $admin_user->app;
 
 
 

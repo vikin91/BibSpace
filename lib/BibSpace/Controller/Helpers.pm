@@ -4,13 +4,13 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use File::Slurp;
-use Time::Piece;
+# use File::Slurp;
+
 use 5.010;           #because of ~~
 use strict;
 use warnings;
 use DBI;
-use DBIx::Connector;
+# use DBIx::Connector;
 
 use List::MoreUtils qw(any uniq);
 

@@ -12,15 +12,14 @@ use BibSpace::Functions::FPublications;
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
-use Time::Piece;
+
 use Data::Dumper;
-use File::Slurp;
+# use File::Slurp;
 use POSIX qw/strftime/;
 use Try::Tiny;
 use Path::Tiny;    # for creating directories
 use Mojo::Home;
 use File::Spec;
-use Cwd;
 
 use BibSpace::Model::DAO::DAOFactory;
 use BibSpace::Model::SmartArray;

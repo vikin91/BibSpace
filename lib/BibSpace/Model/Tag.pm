@@ -5,7 +5,7 @@ use utf8;
 use Text::BibTeX;    # parsing bib files
 use 5.010;           #because of ~~ and say
 use DBI;
-use DBIx::Connector;
+# use DBIx::Connector;
 use List::MoreUtils qw(any uniq first_index);
 
 use Moose;

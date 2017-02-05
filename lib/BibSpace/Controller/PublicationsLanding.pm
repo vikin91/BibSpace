@@ -4,15 +4,15 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use File::Slurp;     # should be replaced in the future
+# use File::Slurp;     # should be replaced in the future
 use Path::Tiny;      # for creating directories
 use Try::Tiny;
-use Time::Piece;
+
 use 5.010;           #because of ~~
 use strict;
 use warnings;
 use DBI;
-use DBIx::Connector;
+# use DBIx::Connector;
 
 use TeX::Encode;
 use Encode;

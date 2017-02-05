@@ -6,9 +6,9 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use File::Slurp;
+# use File::Slurp;
 use File::Find;
-use Time::Piece;
+
 use 5.010;           #because of ~~
 use Cwd;
 use strict;

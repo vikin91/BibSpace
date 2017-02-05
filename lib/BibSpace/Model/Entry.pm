@@ -376,8 +376,6 @@ sub remove_bibtex_fields {
     my $arr_ref_bib_fields_to_delete = shift;
     my @bib_fields_to_delete         = @$arr_ref_bib_fields_to_delete;
 
-    say "remove_bibtex_fields got request to remove: "
-        . @bib_fields_to_delete;
 
     my $entry = new Text::BibTeX::Entry();
     $entry->parse_s( $self->bib );

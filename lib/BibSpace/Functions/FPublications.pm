@@ -7,10 +7,10 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use File::Slurp;
-use Time::Piece;
+# use File::Slurp;
+
 use DBI;
-use DBIx::Connector;
+# use DBIx::Connector;
 
 use Scalar::Util qw(looks_like_number);
 

@@ -8,7 +8,7 @@ use BibSpace::Functions::Core;
 
 
 my $t_logged_in = Test::Mojo->new('BibSpace');
-
+my $self = $t_logged_in->app;
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
 
@@ -18,7 +18,7 @@ $t_logged_in->post_ok(
 );
 
 
-my $self = $t_logged_in->app;
+$self = $t_logged_in->app;
 my $app_config = $t_logged_in->app->config;
 $t_logged_in->ua->max_redirects(3);
 
