@@ -1,12 +1,27 @@
 ### Changelog ###
 
-#### v0.4.7 22.2016 ####
+#### v0.5.0 05.2016 ####
+* remove Redis-based caching
+* Big refactoring
+* add Data Access Objects for SmartArray, MySQL, and Redis (dummy)
+* add LayeredRepository, Logger, IdProvider, many Roles (interfaces)
+* use Storable to dump current state of the system as a backup
+* simplify backups - no more mysql restore available
+* add persistence controller
+* cleanup two bibtex-2-html converters and integrate them into the system using a strategy pattern
+* add new view of the logs
+* add new view of the entries table
+* improve author filtering
+* upgrade bootstrap
+* and a lot more (this was a major change)
+
+#### v0.4.7 22.11.2016 ####
 * Code refactoring - separate code for landing pages for publications
 * add Redis-based caching
 * new look-and-feel for filtering publications on the landing pages
 
 
-#### v0.4.6 15-10.2016 ####
+#### v0.4.6 15.10.2016 ####
 * Code refactoring - removed small parts of unused code
 * add systemd .service profile
 * add cpanfile stub
@@ -17,16 +32,16 @@
 * minor fixes and improvements # i love to write this :P
 
 
-#### v0.4.5 08-10.2016 ####
+#### v0.4.5 08.10.2016 ####
 * Code refactoring - towards OO design and getting rid of core.pm - edit_author, authors, tags
 * Various bugfixes, e.g., showing publications with no tag for autor no longer returns 404.
 
 
-#### v0.4.4 18-09.2016 ####
+#### v0.4.4 18.09.2016 ####
 * Code refactoring - towards OO design and getting rid of core.pm
 * Bugfix - saving publication creates now authors and provides updated preview
 
-#### v0.4.2 and 0.4.3 06-08.2016 ####
+#### v0.4.2 and 0.4.3 06.08.2016 ####
 * Code refactoring
 * Multiple improvements
 
