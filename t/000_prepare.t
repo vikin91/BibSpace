@@ -63,13 +63,13 @@ SKIP: {
 
 
 
-my @pages = ('/read/publications/meta');
-for my $page (@pages){
-    note "============ Testing page $page ============";
-    $t_logged_in->get_ok($page, "Get for page $page")
-      ->status_isnt(404, "Checking: 404 $page")
-      ->status_isnt(500, "Checking: 500 $page")->content_like(qr/is list is intended for Google Scholar crawler/i);
-}
+# my @pages = ('/read/publications/meta');
+# for my $page (@pages){
+#     note "============ Testing page $page ============";
+#     $t_logged_in->get_ok($page, "Get for page $page")
+#       ->status_isnt(404, "Checking: 404 $page")
+#       ->status_isnt(500, "Checking: 500 $page")->content_like(qr/is list is intended for Google Scholar crawler/i);
+# }
 
 ok(1);
 

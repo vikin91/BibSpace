@@ -1,6 +1,3 @@
-% my @entries = @{$entries};
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -18,8 +15,8 @@
 <body>
     <p>This list is intended for Google Scholar crawler.</p>
     <ul>
-    % foreach my $e (@entries){
-      <li>Paper ID <%=$e->id%>: <a href="<%= url_for('metalist_entry', id=>$e->id)%>"> <%=  $e->get_title %> </a></li>
+    % foreach my $entry (@{$entries}){
+      <li>Paper ID <%=$entry->id%>: <a href="<%= url_for('metalist_entry', id=>$entry->id)%>"> <%=  $entry->get_title %> </a></li>
     % }
     </ul>
 

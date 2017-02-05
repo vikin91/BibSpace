@@ -47,10 +47,10 @@ sub convert {
     my $inputFile = Path::Tiny->new( $tmp_dir, $tmp_file_pattern . '.input.bib' );
     my $outputFile = Path::Tiny->new( $tmp_dir, $tmp_file_pattern . '.out' );
 
-    print "tmp_dir ".$tmp_dir . "\n";
-    print "cmd_output_file ".$cmd_output_file . "\n";
-    print "inputFile ".$inputFile . "\n";
-    print "outputFile ".$outputFile . "\n";
+    # say "tmp_dir ".$tmp_dir;
+    # say "cmd_output_file ".$cmd_output_file;
+    # say "inputFile ".$inputFile;
+    # say "outputFile ".$outputFile;
 
     $inputFile->append_utf8({truncate => 1}, $bib); # write file
 
@@ -79,7 +79,7 @@ sub convert {
     my $syscommand
         = "TMPDIR=$tmp_dir " . $bibtex2html_command . ' &> ' . $cmd_output_file->absolute;
 
-    say "=================\n $syscommand\n =================";
+    # say "=================\n $syscommand\n =================";
     
     my $command_output;
     try{
