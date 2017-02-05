@@ -90,8 +90,6 @@ sub registerUID {
 
     if ( !$self->_get($type)->uid_defined($uid) ) {
         $self->_get($type)->uid_set( $uid => 1 );
-
-        # SimpleLogger->new()->debug("Registered uid $uid.");
     }
     else {
         my $msg

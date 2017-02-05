@@ -112,7 +112,8 @@ has use_quick_load_fixture => sub {
     return;
 };
 
-has logger => sub { state $logger = SimpleLogger->new };
+
+has logger => sub { state $logger = SimpleLogger->new() };
 
 
 
@@ -283,9 +284,7 @@ sub setup_repositories {
 
         # Entities and Relations in the smart layer must be linked!
         $self->link_data;
-
-        $self->app->logger->debug(
-            "Current state:" . $self->repo->lr->get_summary_table );
+        
         $self->app->logger->info( "Storing current state to dump file '"
                 . $self->quick_load_fixture_filename
                 . "'." );
@@ -294,13 +293,7 @@ sub setup_repositories {
         store $self->repo->lr->get_read_layer,
             $self->quick_load_fixture_filename;
     }
-    else {
-        $self->app->logger->info(
-            "Repo has entries. Skip copy mysql=>smart and store to dump.");
-    }
 
-    $self->app->logger->debug( "setup_repositories is finished. Status:"
-            . $self->repo->lr->get_summary_table );
 
 }
 ################################################################
@@ -443,6 +436,9 @@ sub setup_plugins {
             $self->app->logger->error("Exception: cannot create directory $dir. Msg: $_");
         };
     }
+
+    # set logging dir in the logger
+    $self->logger->log_dir("".Path::Tiny->new($self->config->{log_dir}) );
 
     # this was supposed to trigger connection to the DB
     $self->app->db;

@@ -8,6 +8,10 @@ use BibSpace::Functions::Core;
 
 
 my $t_logged_in = Test::Mojo->new('BibSpace');
+
+use BibSpace::TestManager;
+TestManager->apply_fixture($self->app);
+
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
     form        => { user   => 'pub_admin', pass => 'asdf' }
@@ -15,14 +19,8 @@ $t_logged_in->post_ok(
 
 
 my $self = $t_logged_in->app;
-my $dbh = $t_logged_in->app->db;
 my $app_config = $t_logged_in->app->config;
 $t_logged_in->ua->max_redirects(3);
-
-
-use BibSpace::TestManager;
-TestManager->apply_fixture($self->app);
-
 
 
 my @all_tag_type_objs = $t_logged_in->app->repo->tagTypes_all;

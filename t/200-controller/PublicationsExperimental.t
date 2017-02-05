@@ -19,7 +19,11 @@ $admin_user->ua->max_redirects(3);
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
 
-
+$admin_user->post_ok(
+    '/do_login' => { Accept => '*/*' },
+    form        => { user   => 'pub_admin', pass => 'asdf' }
+);
+$self = $admin_user->app;
 
 
 
@@ -27,7 +31,7 @@ TestManager->apply_fixture($self->app);
 my $page = $self->url_for('add_many_publications');
   $admin_user->get_ok($page, "Get for page $page")
       ->status_isnt(404, "Checking: 404 $page")
-      ->status_isnt(500, "Checking: 500 $page");
+      ->status_isnt(500, "Checking: 500 $page")->content_like(qr/You operate on an unsaved entry/i);
 
 
 

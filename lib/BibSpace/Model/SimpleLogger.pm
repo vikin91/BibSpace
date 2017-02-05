@@ -1,13 +1,15 @@
 package SimpleLogger;
 use namespace::autoclean;
 
+use feature qw( state say );
 use Mojo::Log;
-
+use Path::Tiny;
 use Term::ANSIColor;
 use Moose;
 use BibSpace::Model::ILogger;
 with 'ILogger';
 
+has 'log_dir' => ( is => 'rw', isa => 'Maybe[Str]' );
 
 # # Log messages
 # $log->debug('Not sure what is happening here');
@@ -22,12 +24,14 @@ sub log_mojo {
   my $msg    = shift;                 # text to log
 
   $type =~ s/warning/warn/;
-  my $mojo_log = Mojo::Log->new(level => 'info');
 
-  $mojo_log->path('log/'.$type.'.log');
-  $mojo_log->emit('message', $type, $msg);
-  # my $code = '$mojo_log->'.$type.'("'.$msg.'")';
-  # eval $code; warn $@ if $@;
+  if($self->log_dir){
+    my $mojo_log = Mojo::Log->new(level => 'info');
+
+    my $file = Path::Tiny->new($self->log_dir, $type.'.log');
+    $mojo_log->path($file);
+    $mojo_log->emit('message', $type, $msg);
+  }
 }
 
 sub log {

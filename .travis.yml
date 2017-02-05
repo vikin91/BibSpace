@@ -8,9 +8,9 @@ perl:
     # - "5.12"
     # - "5.10"
 
-# dist: trusty
+dist: trusty
 # sudo: require # ubuntu
-# sudo: required
+sudo: required
 
 # services:
 #   - docker
@@ -37,22 +37,15 @@ git:
   depth: 3
 
 before_install:
-    # - sudo apt-get update -qq
-    # - sudo apt-get install -y tree
-    # - sudo apt-get install -y ocaml libbtparse-dev libdbd-mysql-perl
-    - bash install-bibtex2html.sh
+    - sudo apt-get install -y texlive-base bibtex2html 
+    # - bash install-bibtex2html.sh
     # - git config --global user.name "TravisCI"
-    # - eval $(curl https://travis-perl.github.io/init) --auto # hangs often!
     - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
     - source ~/travis-perl-helpers/init
     - build-perl
     - perl -V
-    # - build-dist                # does not work anymore - must be some incompatibility due to version changes
-    # - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
     - pwd
     - tree
-    - echo $PATH
-    - chmod -R 777 tmp
     - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
 
 
@@ -78,8 +71,11 @@ notifications:
 script: 
     - export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
     - export BIBSPACE_USE_DUMP=1
-    - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr t/
+    - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrv t/
 
 after_success:
     - cover -report coveralls
+
+after_failure:
+    - tree
 
