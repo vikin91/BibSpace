@@ -30,28 +30,35 @@ sub all_authors {    # refactored
   my $self    = shift;
   my $dbh     = $self->app->db;
   my $visible = $self->param('visible');
-  my $search  = $self->param('search') || '%';
-  my $letter  = $self->param('letter') || '%';
-
-  my $letter_pattern = $letter;
-  if ( $letter ne '%' ) {
-    $letter_pattern .= '%';
-  }
+  my $search  = $self->param('search');
+  my $letter  = $self->param('letter');
+  
 
   my @authors = $self->app->repo->authors_all;
   if ( defined $visible ) {
     @authors = grep { $_->display == $visible } @authors;
   }
+  
   @authors = grep { $_->is_master } @authors;
 
-  if ( $letter ne '%' ) {
+  if ( $letter) {
     @authors = grep { ( substr( $_->master, 0, 1 ) cmp $letter ) == 0 } @authors;
   }
-  my @letters = map { substr( $_->master, 0, 1 ) } @authors;
+  my @letters;
+  if( defined $visible){
+    @letters = map { substr( $_->master, 0, 1 ) } $self->app->repo->authors_filter(sub{ $_->display == $visible });
+  }
+  else{
+    @letters = map { substr( $_->master, 0, 1 ) } $self->app->repo->authors_all;
+  }
   @letters = uniq @letters;
   @letters = sort @letters;
 
-  $self->stash( authors => \@authors, letters => \@letters, letter => $letter, visible => $visible );
+
+
+  @authors = sort {$a->uid cmp $b->uid} @authors;
+
+  $self->stash( authors => \@authors, letters => \@letters, selected_letter => $letter, visible => $visible );
 
   $self->render( template => 'authors/authors' );
 }
@@ -253,7 +260,7 @@ sub remove_uid {
     $self->app->repo->authors_update($author_minor);
 
     # calculate proper authorships automatically
-    $self->reassign_authors_to_entries_given_by_array(0, \@master_entries);
+    Freassign_authors_to_entries_given_by_array($self->app->repo, 0, \@master_entries);
 
   }
 
@@ -298,7 +305,7 @@ sub merge_authors {
       $self->app->repo->authors_save($author_source);
 
       my @entries = $author_destination->get_entries;
-      $self->reassign_authors_to_entries_given_by_array(0, \@entries);
+      Freassign_authors_to_entries_given_by_array($self->app->repo, 0, \@entries);
 
       $self->flash(
         msg =>
@@ -483,50 +490,14 @@ sub delete_author_force {
   $self->redirect_to( $self->url_for('all_authors') );
 
 }
-##############################################################################################################
-sub reassign_authors_to_entries_given_by_array {
-  my $self = shift;
-  my $create_new = shift // 0;
-  my $entries_arr_ref = shift;
 
-  my @all_entries         = @{ $entries_arr_ref };
-  my $num_authors_created = 0;
-  foreach my $entry (@all_entries) {
-    next unless defined $entry;
-
-    my @bibtex_author_name = $entry->author_names_from_bibtex;
-
-    for my $author_name (@bibtex_author_name) {
-
-      my $author = $self->app->repo->authors_find( sub { $_->uid eq $author_name } );
-      if ( $create_new == 1 and !defined $author ) {
-        $author
-          = Author->new( idProvider => $self->app->repo->authors_idProvider, uid => $author_name );
-        $self->app->repo->authors_save($author);
-        ++$num_authors_created;
-      }
-      if ( defined $author ) {
-        my $authorship = Authorship->new(
-          author    => $author->get_master,
-          entry     => $entry,
-          author_id => $author->get_master->id,
-          entry_id  => $entry->id
-        );
-        $self->app->repo->authorships_save($authorship);
-        $entry->add_authorship($authorship);
-        $author->add_authorship($authorship);
-      }
-    }
-  }
-  return $num_authors_created;
-}
 ##############################################################################################################
 sub reassign_authors_to_entries {
   my $self = shift;
   my $create_new = shift // 0;
 
   my @all_entries         = $self->app->repo->entries_all;
-  my $num_authors_created = $self->reassign_authors_to_entries_given_by_array($create_new, \@all_entries);
+  my $num_authors_created = Freassign_authors_to_entries_given_by_array($self->app->repo, $create_new, \@all_entries);
 
   $self->flash( msg =>
       "Reassignment with author creation has finished. $num_authors_created authors have been created or assigned." );

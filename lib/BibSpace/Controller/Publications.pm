@@ -1039,6 +1039,7 @@ sub publications_add_post {
     else {
       $status_code_str = 'ADD_OK';
       $entry->fix_month();
+      Freassign_authors_to_entries_given_by_array($self->app->repo, 1, [ $entry ]);
       $self->app->repo->entries_save($entry);
 
       $added_under_id = $entry->id;

@@ -24,6 +24,7 @@ our @ISA = qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw(
+    Freassign_authors_to_entries_given_by_array
     Fdo_regenerate_html
     FprintBibtexWarnings
     Fhandle_add_edit_publication
@@ -31,6 +32,43 @@ our @EXPORT = qw(
     Fget_publications_main_hashed_args
     Fget_publications_core
 );
+##############################################################################################################
+sub Freassign_authors_to_entries_given_by_array {
+  my $repo = shift;
+  my $create_new = shift // 0;
+  my $entries_arr_ref = shift;
+
+  my @all_entries         = @{ $entries_arr_ref };
+  my $num_authors_created = 0;
+  foreach my $entry (@all_entries) {
+    next unless defined $entry;
+
+    my @bibtex_author_name = $entry->author_names_from_bibtex;
+
+    for my $author_name (@bibtex_author_name) {
+
+      my $author = $repo->authors_find( sub { $_->uid eq $author_name } );
+      if ( $create_new == 1 and !defined $author ) {
+        $author
+          = Author->new( idProvider => $repo->authors_idProvider, uid => $author_name );
+        $repo->authors_save($author);
+        ++$num_authors_created;
+      }
+      if ( defined $author ) {
+        my $authorship = Authorship->new(
+          author    => $author->get_master,
+          entry     => $entry,
+          author_id => $author->get_master->id,
+          entry_id  => $entry->id
+        );
+        $repo->authorships_save($authorship);
+        $entry->add_authorship($authorship);
+        $author->add_authorship($authorship);
+      }
+    }
+  }
+  return $num_authors_created;
+}
 ####################################################################################
 sub Fdo_regenerate_html {
     my ($repo, $bst_file, $force, @entries) = @_;
@@ -142,6 +180,7 @@ sub Fhandle_add_edit_publication {
         }
         $e->generate_html($bst_file, $app->bibtexConverter);
         $e->fix_month();
+        Freassign_authors_to_entries_given_by_array($repo, 1, [ $e ]);
         $repo->entries_save($e);
 
         $added_under_id = $e->id;

@@ -5,15 +5,31 @@
 
 
 
-<a class="btn btn-default" href="<%= url_for('all_authors') %>"><span class="glyphicon glyphicon-user"></span> Show all authors</a>
-<a class="btn btn-info" href="<%= url_for('all_authors')->query(visible=>1) %>"><span class="glyphicon glyphicon-eye-open"></span> Show visible</a>
-<a class="btn btn-danger" href="<%= url_for('all_authors')->query(visible=>0) %>"><span class="glyphicon glyphicon-eye-open"></span> Show invisible</a>
+<a class="btn btn-default" href="<%= url_with->query(letter=>$selected_letter) %>"><span class="glyphicon glyphicon-user"></span> Show all authors</a>
+<a class="btn btn-info" href="<%= url_with->query(letter=>$selected_letter, visible=>1) %>"><span class="glyphicon glyphicon-eye-open"></span> Show visible</a>
+<a class="btn btn-danger" href="<%= url_with->query(letter=>$selected_letter, visible=>0) %>"><span class="glyphicon glyphicon-eye-open"></span> Show invisible</a>
 <br>
 <br>
-<div class="btn-group">
- <a class="btn btn-default btn-sm" href="<%= url_for('all_authors')->query(visible=>$visible) %>"> * </a>
-% foreach my $letter (@{$letters}){
-  <a class="btn btn-default btn-sm" href="<%= url_for('all_authors')->query(letter=>$letter, visible=>$visible) %>"><%= $letter %></a>
+
+
+<ul class="nav nav-pills">
+  % if( $selected_letter ){
+    <li role="presentation">
+  % }
+  % else{
+      <li role="presentation" class="active">
+  % }
+    <a class="btn btn-default btn-sm" href="<%= url_with->query(visible=>$visible) %>"> * </a>
+  </li>
+% foreach my $let (@{$letters}){
+  % if( $selected_letter and $let eq $selected_letter ){
+    <li role="presentation" class="active">
+  % }
+  % else{
+    <li role="presentation">
+  % }
+  <a class="btn btn-default btn-sm" href="<%= url_with->query(letter=>$let, visible=>$visible) %>"><%= $let %></a>
+  </li>
 %}
 </div>
 <br>

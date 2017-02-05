@@ -43,7 +43,17 @@ has 'entry_type' => ( is => 'rw', isa => 'Str', default => 'paper' );
 has 'bibtex_key' => ( is => 'rw', isa => 'Maybe[Str]' );
 has '_bibtex_type' =>
     ( is => 'rw', isa => 'Maybe[Str]', reader => 'bibtex_type' );
-has 'bib'             => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'bib'             => ( is => 'rw', isa => 'Maybe[Str]', trigger => \&_bib_changed_trigger );
+
+sub _bib_changed_trigger{
+    my ( $self, $curr_val, $prev_val ) = @_;
+    # bib was updated, we need to bump modified_time
+    if( $prev_val and $curr_val ne $prev_val){
+        $self->modified_time(DateTime->now(formatter => $dtPattern));
+    }
+}
+
+
 has 'html'            => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'html_bib'        => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'abstract'        => ( is => 'rw', isa => 'Maybe[Str]' );
@@ -74,11 +84,6 @@ has 'attachments' => (
 );
 has 'attachment_slides' =>
     ( is => 'rw', isa => 'Maybe[Path::Tiny]', default => undef );
-
-
-has 'shall_update_modified_time' =>
-    ( is => 'rw', isa => 'Int', default => 0 );
-
 
 has 'creation_time' => (
     is      => 'rw',

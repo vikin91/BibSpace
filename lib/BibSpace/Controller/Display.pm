@@ -53,7 +53,8 @@ sub show_log {
 
     my @lines;
     try {
-        @lines = $log_2_read->lines( { count => $num } );
+        # read $num lines from the end
+        @lines = $log_2_read->lines( {count => -1*$num} ); 
         @lines
             = ( $num >= @lines )
             ? reverse @lines
