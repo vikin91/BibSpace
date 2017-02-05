@@ -1,4 +1,3 @@
-# package BibSpace::Controller::PublicationsSEO;
 package BibSpace::Controller::PublicationsSEO;
 
 # this must be written in non-capitalized because otherwise you get error:

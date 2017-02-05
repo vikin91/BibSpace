@@ -886,11 +886,11 @@ sub setup_routes {
 
   # contains meta info for every paper. Optimization for google scholar
   $anyone->get('/read/publications/meta')
-    ->to('publicationsSEO#metalist')
+    ->to('publicationsseo#metalist')
     ->name("metalist_all_entries");
 
   $anyone->get('/read/publications/meta/:id')
-    ->to('publicationsSEO#meta')
+    ->to('publicationsseo#meta')
     ->name("metalist_entry");
 
   ################

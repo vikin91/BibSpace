@@ -1,4 +1,4 @@
-package BibSpace::Controller::Publicationsexperimental;
+package BibSpace::Controller::PublicationsExperimental;
 
 use Data::Dumper;
 use utf8;
