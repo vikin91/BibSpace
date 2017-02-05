@@ -79,11 +79,11 @@ foreach my $entry(@all_entries){
   # just call
   $entry->get_title;
 
-  Preferences->bibitex_html_converter('BibStyleConverter');
+  # Preferences->bibitex_html_converter('BibStyleConverter');
   $entry->regenerate_html( 1, $self->app->bst, $self->app->bibtexConverter );
-  Preferences->bibitex_html_converter('Bibtex2HtmlConverter');
-  $entry->regenerate_html( 1, $self->app->bst, $self->app->bibtexConverter );
-  Preferences->bibitex_html_converter('BibStyleConverter');
+  # Preferences->bibitex_html_converter('Bibtex2HtmlConverter');
+  # $entry->regenerate_html( 1, $self->app->bst, $self->app->bibtexConverter );
+  # Preferences->bibitex_html_converter('BibStyleConverter');
   
 
 
