@@ -427,7 +427,7 @@ sub setup_plugins {
         ))
     {
         $dir =~ s!/*$!/!;
-        say "\t\t: $dir";
+        $self->app->logger->debug("Creating directory: $dir");
         try {
             Path::Tiny->new($dir)->mkpath;
         }
@@ -437,6 +437,7 @@ sub setup_plugins {
     }
 
     # set logging dir in the logger
+    $self->app->logger->debug("Setting log dir to the logger");
     $self->logger->log_dir("".Path::Tiny->new($self->config->{log_dir}) );
 
     # this was supposed to trigger connection to the DB
