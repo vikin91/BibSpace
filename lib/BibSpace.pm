@@ -45,9 +45,16 @@ use BibSpace::Model::Converter::BibStyleConverter;
 
 use Storable;
 
+use BibSpace::Model::Preferences;
 
-# this is deprecated and should not be used
-our $bibtex2html_tmp_dir = "./tmp";
+
+# STATE keyword
+# state declares a lexically scoped variable, just like my. 
+# However, those variables will never be reinitialized, 
+# contrary to lexical variables that are reinitialized each time their enclosing block is entered. 
+# See Persistent Private Variables in perlsub for details.
+use feature qw( state say );
+
 
 has is_demo => sub {
     return 1 if shift->config->{demo_mode};
@@ -57,7 +64,14 @@ has is_demo => sub {
 
 has config_file => sub {
     my $self = shift;
-    return $ENV{BIBSPACE_CONFIG} if $ENV{BIBSPACE_CONFIG};
+    if( $ENV{BIBSPACE_CONFIG}){
+      if( !-e $ENV{BIBSPACE_CONFIG} ){
+        $self->logger->warn("Environment variable BIBSPACE_CONFIG has been set to non-existing file! Using default.");
+      }
+      else{
+        return $ENV{BIBSPACE_CONFIG};  
+      }
+    }
     return $self->app->home->rel_file('/etc/bibspace.conf')
         if -e $self->app->home->rel_file('/etc/bibspace.conf');
     return $self->app->home->rel_file(
@@ -106,11 +120,24 @@ has use_quick_load_fixture => sub {
 
 has logger => sub { state $logger = SimpleLogger->new };
 
-has bibtexConverter => sub {
 
-    # the old one is a bit faulty (abstract keys overlap, external links, etc)
-    # state $converter = Bibtex2HtmlConverter->new( logger => shift->logger );
-    state $converter = BibStyleConverter->new( logger => shift->logger );
+has bibtexConverter => sub {
+    my $self = shift;
+    try{
+        my $class = Preferences->bibitex_html_converter;
+        Class::Load::load_class($class);
+        if($class->does('IHtmlBibtexConverter')){
+          return $class->new( logger => $self->logger);  
+        }
+        die "Requested class '$class' does not implement interface 'IHtmlBibtexConverter'";
+        
+    }
+    catch{
+        $self->logger->error("Requested unknown type of bibitex_html_converter: '".Preferences->bibitex_html_converter."'. Error: $_.");
+    }
+    finally{
+      return BibStyleConverter->new( logger => $self->logger );
+    };
 };
 
 
@@ -188,6 +215,9 @@ sub startup {
     $self->setup_hooks;
     $self->setup_repositories;
     $self->insert_admin;
+
+    # ugly global. state means that this will be set only once.
+    Preferences->local_time_zone( DateTime::TimeZone->new( name => 'local' ) );
 
 
     $self->app->logger->info("Setup done.");

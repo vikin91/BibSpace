@@ -8,6 +8,8 @@ use BibSpace::Model::Entry;
 with 'IDAO';
 use Try::Tiny;
 
+use feature qw( state say );
+
 # Inherited fields from BibSpace::Model::DAO::Interface::IDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);
@@ -49,19 +51,30 @@ sub all {
                 . $trace->as_string
                 . "\n=== END TRACE ===\n" );    # like carp
     };
-    my $dtPattern
+
+    # this pattern was used in mysql internally
+    my $mysqlPattern
         = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
 
     my @objs;
     while ( my $row = $sth->fetchrow_hashref() ) {
-        my $ct = $dtPattern->parse_datetime( $row->{creation_time} );
-        my $mt = $dtPattern->parse_datetime( $row->{modified_time} );
 
-        # set defaults
-        $ct = DateTime->now(formatter => $dtPattern) unless $ct;
-        $mt = DateTime->now(formatter => $dtPattern) unless $mt;
+        # set formatter to parse date/time in the requested format
+        my $ct = $mysqlPattern->parse_datetime( $row->{creation_time} );
+        my $mt = $mysqlPattern->parse_datetime( $row->{modified_time} );
+        # set defaults if there is no data in mysql
+        $ct ||= DateTime->now();# formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
+        $mt ||= DateTime->now();# formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
 
-        # say "MEntry->static_all: parsing creation_ and mod_time";
+        # ct and mt are not in DateTime's internal format
+
+        # # set formatter to output date/time in the requested format
+        # $ct->set_formatter($mysqlPattern);
+        # $mt->set_formatter($mysqlPattern); 
+        # # finally fount it!
+        # # this causes to inject regexp in the object and causes problems with Storable!
+        # # $mysqlPattern seems to be REGEXP - do not store this in the object!
+        # say "Entry->SQL->all: parsing  mod_time: ".$mt;
 
         push @objs,
             Entry->new(

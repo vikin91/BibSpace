@@ -5,6 +5,7 @@ use Data::Dumper;
 use utf8;
 use 5.010;           #because of ~~ and say
 use List::MoreUtils qw(any uniq);
+use BibSpace::Model::Preferences;
 
 use BibSpace::Functions::Core qw(check_password);
 use BibSpace::Model::IEntity;
@@ -44,22 +45,27 @@ has 'last_login' => (
     isa     => 'DateTime',
     traits  => ['DoNotSerialize'],
     default => sub {
-        my $dt = DateTime->now;
-        $dt->set_formatter($dtPattern);
-        return $dt;
+        DateTime->now->set_time_zone(Preferences->local_time_zone);
     },
 );
+sub get_last_login {
+    my $self = shift;
+    
+    $self->last_login->strftime( Preferences->output_time_format );
+}
 
 has 'registration_time' => (
     is      => 'ro',
     isa     => 'DateTime',
     traits  => ['DoNotSerialize'],
     default => sub {
-        my $dt = DateTime->now;
-        $dt->set_formatter($dtPattern);
-        return $dt;
+        DateTime->now;
     },
 );
+sub get_registration_time {
+    my $self = shift;
+    $self->registration_time->strftime( Preferences->output_time_format );
+}
 
 ####################################################################################
 sub toString {
@@ -122,10 +128,8 @@ sub make_user {
 ####################################################################################
 sub record_logging_in {
     my $self     = shift;
+    $self->last_login( DateTime->now->set_time_zone(Preferences->local_time_zone) );
 
-    my $dt = DateTime->now;
-    $dt->set_formatter($dtPattern);
-    $self->last_login($dt);
 }
 no Moose;
 __PACKAGE__->meta->make_immutable;

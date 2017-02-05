@@ -45,16 +45,20 @@ sub all {
     my $trace = Devel::StackTrace->new;
     $self->logger->error( "\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n" );    # like carp
   };
-  my $dtPattern = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
+
+
+  # this pattern was used in mysql internally
+  my $mysqlPattern
+      = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
 
   my @objs;
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $rt = $dtPattern->parse_datetime( $row->{registration_time} );
-    my $ll = $dtPattern->parse_datetime( $row->{last_login} );
-
-    # set defaults
-    $rt = DateTime->now unless $rt;
-    $ll = DateTime->now unless $ll;
+    # set formatter to parse date/time in the requested format
+    my $rt = $mysqlPattern->parse_datetime( $row->{registration_time} );
+    my $ll = $mysqlPattern->parse_datetime( $row->{last_login} );
+    # set defaults if there is no data in mysql 
+    $rt ||= DateTime->now();# formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
+    $ll ||= DateTime->now();# formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
 
     push @objs,
       User->new(

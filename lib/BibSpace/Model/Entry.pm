@@ -8,6 +8,7 @@ use BibSpace::Model::TagType;
 use BibSpace::Model::Type;
 
 use BibSpace::Functions::Core;
+use BibSpace::Model::Preferences;
 
 use List::MoreUtils qw(any uniq);
 
@@ -36,20 +37,20 @@ use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
 
-my $dtPattern
-    = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
 
 has 'entry_type' => ( is => 'rw', isa => 'Str', default => 'paper' );
 has 'bibtex_key' => ( is => 'rw', isa => 'Maybe[Str]' );
 has '_bibtex_type' =>
     ( is => 'rw', isa => 'Maybe[Str]', reader => 'bibtex_type' );
-has 'bib'             => ( is => 'rw', isa => 'Maybe[Str]', trigger => \&_bib_changed_trigger );
+has 'bib' =>
+    ( is => 'rw', isa => 'Maybe[Str]', trigger => \&_bib_changed );
 
-sub _bib_changed_trigger{
+sub _bib_changed {
     my ( $self, $curr_val, $prev_val ) = @_;
+
     # bib was updated, we need to bump modified_time
-    if( $prev_val and $curr_val ne $prev_val){
-        $self->modified_time(DateTime->now(formatter => $dtPattern));
+    if ( $prev_val and $curr_val ne $prev_val ) {
+        $self->modified_time( DateTime->now->set_time_zone( Preferences->local_time_zone ) );
     }
 }
 
@@ -90,18 +91,28 @@ has 'creation_time' => (
     isa     => 'DateTime',
     traits  => ['DoNotSerialize'],
     default => sub {
-        DateTime->now(formatter => $dtPattern);
+        DateTime->now->set_time_zone(Preferences->local_time_zone);
     },
 );
+
+sub get_creation_time {
+    my $self = shift;
+    $self->creation_time->strftime(Preferences->output_time_format);
+}
 
 has 'modified_time' => (
     is      => 'rw',
     isa     => 'DateTime',
     traits  => ['DoNotSerialize'],
     default => sub {
-        DateTime->now(formatter => $dtPattern);
+        DateTime->now->set_time_zone(Preferences->local_time_zone);
     },
 );
+
+sub get_modified_time {
+    my $self = shift;
+    $self->modified_time->strftime(Preferences->output_time_format);
+}
 
 # not DB fields
 # bibtex warnings
@@ -167,37 +178,37 @@ sub delete_attachment {
 }
 ####################################################################################
 sub discover_attachments {
-    my ($self, $upload_dir) = @_;
+    my ( $self, $upload_dir ) = @_;
 
     my $id = $self->id;
-    Path::Tiny->new( $upload_dir )->mkpath;
+    Path::Tiny->new($upload_dir)->mkpath;
 
     my @discovery_papers;
-    try{
-      Path::Tiny->new( $upload_dir, "papers" )->mkpath;
-      @discovery_papers = Path::Tiny->new( $upload_dir, "papers" )
-        ->children(qr/paper-$id\./);
+    try {
+        Path::Tiny->new( $upload_dir, "papers" )->mkpath;
+        @discovery_papers = Path::Tiny->new( $upload_dir, "papers" )
+            ->children(qr/paper-$id\./);
     }
-    catch{   };
-  
+    catch { };
+
 
     my @discovery_slides;
-    try{
-      @discovery_slides = Path::Tiny->new( $upload_dir, "slides" )
-        ->children(qr/slides-paper-$id\./);
+    try {
+        @discovery_slides = Path::Tiny->new( $upload_dir, "slides" )
+            ->children(qr/slides-paper-$id\./);
     }
-    catch{   };
-  
+    catch { };
+
 
     my @discovery_other;
-    try{
-      @discovery_other = Path::Tiny->new( $upload_dir, "other" )
-        ->children(qr/unknown-$id\./);
+    try {
+        @discovery_other = Path::Tiny->new( $upload_dir, "other" )
+            ->children(qr/unknown-$id\./);
     }
-    catch{   };
+    catch { };
 
-    $self->add_attachment( 'slides', $_ ) for @discovery_slides;
-    $self->add_attachment( 'paper', $_ ) for @discovery_slides;
+    $self->add_attachment( 'slides',  $_ ) for @discovery_slides;
+    $self->add_attachment( 'paper',   $_ ) for @discovery_slides;
     $self->add_attachment( 'unknown', $_ ) for @discovery_other;
 }
 ####################################################################################
@@ -296,7 +307,12 @@ sub populate_from_bib {
         return if !$bibtex_entry->parse_ok;
 
         $self->bibtex_key( $bibtex_entry->key );
-        $self->year( $bibtex_entry->get('year') );
+        my $year_str = $bibtex_entry->get('year');
+        if ( Scalar::Util::looks_like_number($year_str) ) {
+            $self->year($year_str);
+        }
+
+
         if ( $bibtex_entry->exists('booktitle') ) {
             $self->title( $bibtex_entry->get('booktitle') );
         }

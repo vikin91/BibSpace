@@ -1,4 +1,3 @@
-% my $str = Time::Piece::localtime->strftime('%Y%m%d-%H%M%S');
 % my $thisY = Time::Piece::localtime->strftime('%Y');
 % use Mojo::ByteStream 'b';
 

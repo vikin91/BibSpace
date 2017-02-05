@@ -62,7 +62,6 @@ our @EXPORT = qw(
   get_current_month
 );
 
-our $bibtex2html_tmp_dir = "./tmp";
 ####################################################################################################
 =item fix_bibtex_national_characters
   This function should help to avoid bibtex=>html warnings of BibStyle, like this:

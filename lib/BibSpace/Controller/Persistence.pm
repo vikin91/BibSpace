@@ -60,6 +60,8 @@ sub save_fixture {
     my $path = "".$backup->get_path;
 
     $Storable::forgive_me = "do store regexp please";
+    # if you see any exceptions being thrown here, this might be due to REGEXP caused by DateTime pattern.
+    # this should not happen currently however - I think it is fixed now.
     Storable::store $layer, $path;
 
     my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
