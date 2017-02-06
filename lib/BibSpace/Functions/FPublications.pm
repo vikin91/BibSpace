@@ -34,7 +34,7 @@ our @EXPORT = qw(
 );
 ##############################################################################################################
 sub Freassign_authors_to_entries_given_by_array {
-  my $repo = shift;
+  my $app = shift;
   my $create_new = shift // 0;
   my $entries_arr_ref = shift;
 
@@ -47,11 +47,10 @@ sub Freassign_authors_to_entries_given_by_array {
 
     for my $author_name (@bibtex_author_name) {
 
-      my $author = $repo->authors_find( sub { $_->uid eq $author_name } );
+      my $author = $app->repo->authors_find( sub { $_->uid eq $author_name } );
       if ( $create_new == 1 and !defined $author ) {
-        $author
-          = Author->new( idProvider => $repo->authors_idProvider, uid => $author_name );
-        $repo->authors_save($author);
+        $author = $app->entityFactory->new_Author(uid => $author_name );
+        $app->repo->authors_save($author);
         ++$num_authors_created;
       }
       if ( defined $author ) {
@@ -61,7 +60,7 @@ sub Freassign_authors_to_entries_given_by_array {
           author_id => $author->get_master->id,
           entry_id  => $entry->id
         );
-        $repo->authorships_save($authorship);
+        $app->repo->authorships_save($authorship);
         $entry->add_authorship($authorship);
         $author->add_authorship($authorship);
       }
@@ -131,7 +130,7 @@ sub Fhandle_add_edit_publication {
         $e = $repo->entries_find( sub {$_->id == $id} ); 
     }
     if(!$e){
-        $e = Entry->new( idProvider => $repo->entries_idProvider, id=>$id, bib=>$new_bib );
+        $e = $app->entityFactory->new_Entry( id=>$id, bib=>$new_bib );
     }
     $e->bib($new_bib);
 

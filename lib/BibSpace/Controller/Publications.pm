@@ -970,7 +970,7 @@ sub publications_add_get {
       month = {' . $mons{ get_current_month() } . '},
       day = {1--31},
     }';
-  my $e_dummy = Entry->new( idProvider => $self->app->repo->entries_idProvider, bib => $bib );
+  my $e_dummy = $self->app->entityFactory->new_Entry( bib => $bib );
 
   $e_dummy->populate_from_bib();
   $e_dummy->generate_html( $self->app->bst, $self->app->bibtexConverter );
@@ -1002,7 +1002,7 @@ sub publications_add_post {
   my $added_under_id = -1;
 
 
-  my $entry = Entry->new( idProvider => $self->app->repo->entries_idProvider, bib => $new_bib );
+  my $entry = $self->app->entityFactory->new_Entry( bib => $new_bib );
 
 
   my $bibtex_code_valid = $entry->populate_from_bib();
@@ -1039,7 +1039,7 @@ sub publications_add_post {
     else {
       $status_code_str = 'ADD_OK';
       $entry->fix_month();
-      Freassign_authors_to_entries_given_by_array($self->app->repo, 1, [ $entry ]);
+      Freassign_authors_to_entries_given_by_array($self->app, 1, [ $entry ]);
       $self->app->repo->entries_save($entry);
 
       $added_under_id = $entry->id;

@@ -63,7 +63,8 @@ sub add_team_post {
     $self->redirect_to( $self->url_for('add_team_get') );
     return;
   }
-  my $new_mteam = Team->new( name => $new_team_name, idProvider => $self->app->repo->teams_idProvider );
+  my $new_mteam = $self->app->entityFactory->new_Team(name => $new_team_name);
+
   $self->app->repo->teams_save($new_mteam);
   my $new_team_id = $new_mteam->id;
   if ( !defined $new_team_id or $new_team_id <= 0 ) {

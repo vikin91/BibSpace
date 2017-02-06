@@ -515,8 +515,7 @@ sub post_do_register {
 
         my $salt     = salt();
         my $hash     = encrypt_password( $password1, $salt );
-        my $new_user = User->new(
-            idProvider => $self->app->repo->users_idProvider,
+        my $new_user = $self->app->entityFactory->new_User(
             login      => $login,
             email      => $email,
             real_name  => $name,

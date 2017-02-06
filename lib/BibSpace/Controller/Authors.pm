@@ -81,7 +81,8 @@ sub add_post {
     my $author = $self->app->repo->authors_find( sub { $_->master eq $new_master } );
 
     if ( !defined $author ) {    # no such user exists yet
-      $author = Author->new( uid => $new_master, idProvider => $self->app->repo->authors_idProvider );
+
+      $author = $self->app->entityFactory->new_Author( uid => $new_master );
       $self->app->repo->authors_save($author);
 
       if ( !defined $author->id ) {
@@ -260,7 +261,7 @@ sub remove_uid {
     $self->app->repo->authors_update($author_minor);
 
     # calculate proper authorships automatically
-    Freassign_authors_to_entries_given_by_array($self->app->repo, 0, \@master_entries);
+    Freassign_authors_to_entries_given_by_array($self->app, 0, \@master_entries);
 
   }
 
@@ -305,7 +306,7 @@ sub merge_authors {
       $self->app->repo->authors_save($author_source);
 
       my @entries = $author_destination->get_entries;
-      Freassign_authors_to_entries_given_by_array($self->app->repo, 0, \@entries);
+      Freassign_authors_to_entries_given_by_array($self->app, 0, \@entries);
 
       $self->flash(
         msg =>
@@ -376,9 +377,7 @@ sub edit_post {
         );
       }
       else {
-        my $minion
-          = Author->new( uid => $new_user_id, idProvider => $self->app->repo->authors_idProvider );
-        $minion->id;
+        my $minion = $self->app->entityFactory->new_Author( uid => $new_user_id );
         $author->add_minion($minion);
         $self->app->repo->authors_save($author);
         $self->app->repo->authors_save($minion);
@@ -497,7 +496,7 @@ sub reassign_authors_to_entries {
   my $create_new = shift // 0;
 
   my @all_entries         = $self->app->repo->entries_all;
-  my $num_authors_created = Freassign_authors_to_entries_given_by_array($self->app->repo, $create_new, \@all_entries);
+  my $num_authors_created = Freassign_authors_to_entries_given_by_array($self->app, $create_new, \@all_entries);
 
   $self->flash( msg =>
       "Reassignment with author creation has finished. $num_authors_created authors have been created or assigned." );

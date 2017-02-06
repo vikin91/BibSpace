@@ -51,7 +51,7 @@ sub all {
     my $desc         = $data_desc{$k};
     my $landing      = $data_landing{$k};
 
-    my $obj = Type->new( idProvider => $self->idProvider, our_type => $k, description => $desc, onLanding => $landing );
+    my $obj = $self->e_factory->new_Type(our_type => $k, description => $desc, onLanding => $landing );
     $obj->bibtexTypes_add(@bibtex_types);
     push @mappings, $obj;
   }

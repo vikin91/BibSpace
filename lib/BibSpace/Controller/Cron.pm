@@ -34,6 +34,10 @@ use Mojo::Base 'Mojolicious::Controller';
 sub index {
     my $self = shift;
 
+    use JSON -convert_blessed_universally;
+    my $json_text = JSON->new->allow_blessed(1)->convert_blessed(1)->utf8(1)->pretty(1)->encode($self->app->preferences);
+    say $json_text;
+
     $self->render(
         template => 'display/cron',
         lr_0     => $self->get_last_cron_run_in_hours( 0 ),
@@ -126,7 +130,7 @@ sub cron_run {
     }
 
     ############ Cron ACTIONS
-    log_cron_usage( $level );
+    $self->log_cron_usage( $level );
     $self->app->logger->info("Cron level $level started");
 
     if ( $level == 0 ) {
@@ -188,6 +192,7 @@ sub do_cron_month {
 ##########################################################################################
 ##########################################################################################
 sub log_cron_usage {
+    my $self = shift;
     my $level = shift;
 
     my $now = DateTime->now->set_time_zone(Preferences->local_time_zone);
@@ -195,16 +200,18 @@ sub log_cron_usage {
 
     say "Storing cron usage level '$level' as '$fomatted_now'.";
 
-    Preferences->cron_set($level, $fomatted_now);
+    # Preferences->cron_set($level, $fomatted_now);
+    $self->app->preferences->cron_set($level, $fomatted_now);
 }
 ##########################################################################################
 sub get_last_cron_run_in_hours {
     my $self   = shift;
     my $level = shift;
 
-
-    my $last_call_str = Preferences->cron_get($level);
+    # my $last_call_str = Preferences->cron_get($level);
+    my $last_call_str = $self->app->preferences->cron_get($level);
     return 0 if !$last_call_str;
+
     
 
     my $now = DateTime->now->set_time_zone(Preferences->local_time_zone);

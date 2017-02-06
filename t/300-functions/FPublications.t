@@ -17,14 +17,12 @@ use BibSpace::Functions::FPublications;
 
 $t_logged_in->app->repo->entries_delete($t_logged_in->app->repo->entries_all);
 
-# my $en = MEntry->new();
 my @entries = $t_logged_in->app->repo->entries_all;
 my $num_entries = scalar(@entries);
 is($num_entries, 0, "Got 0 entries");
 
 #### adding some fixtures. TODO: this needs to be done automatically at the beginning of the test suite
-my $idProvider = $t_logged_in->app->repo->entries_idProvider;
-my $en3 = Entry->new(idProvider => $idProvider);
+my $en3 = $self->app->entityFactory->new_Entry();
 $en3->{bib} = '@mastersthesis{zzzzz1,
   address = {World},
   author = {James Bond},
@@ -36,7 +34,7 @@ $en3->{bib} = '@mastersthesis{zzzzz1,
 $en3->populate_from_bib;
 $t_logged_in->app->repo->entries_save($en3);
 
-my $en4 = Entry->new(idProvider => $idProvider);
+my $en4 = $self->app->entityFactory->new_Entry();
 $en4->{bib} = '@mastersthesis{zzzzz2,
   address = {World},
   author = {James Bond},
@@ -53,7 +51,7 @@ $t_logged_in->app->repo->entries_save($en4);
 @entries = $t_logged_in->app->repo->entries_all;
 $num_entries = scalar(@entries);
 
-my $en = Entry->new(idProvider => $idProvider);
+my $en = $self->app->entityFactory->new_Entry();
 ok(defined $en, "MEntry initialized correctly");
 ok($num_entries > 0, "Got more than 0 entries");
 
@@ -66,7 +64,7 @@ ok($num_entries > 0, "Got more than 0 entries");
 $t_logged_in->app->repo->entries_delete($t_logged_in->app->repo->entries_all);
 
 ### adding some entries for the next test
-$en3 = Entry->new(idProvider => $idProvider);
+$en3 = $self->app->entityFactory->new_Entry();
 $en3->{bib} = '@mastersthesis{xxx1,
   address = {World},
   author = {James Bond},
@@ -78,7 +76,7 @@ $en3->{bib} = '@mastersthesis{xxx1,
 $en3->populate_from_bib;
 $t_logged_in->app->repo->entries_save($en3);
 
-$en4 = Entry->new(idProvider => $idProvider);
+$en4 = $self->app->entityFactory->new_Entry();
 $en4->{bib} = '@mastersthesis{xxx2,
   address = {World},
   author = {James Bond},

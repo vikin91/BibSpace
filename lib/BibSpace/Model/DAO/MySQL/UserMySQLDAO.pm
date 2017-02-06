@@ -60,10 +60,8 @@ sub all {
     $rt ||= DateTime->now();# formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
     $ll ||= DateTime->now();# formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
 
-    push @objs,
-      User->new(
+    my $obj = $self->e_factory->new_User(
       old_mysql_id      => $row->{id},
-      idProvider        => $self->idProvider,
       id                => $row->{id},
       login             => $row->{login},
       registration_time => $rt,
@@ -76,7 +74,8 @@ sub all {
       rank              => $row->{rank},
       master_id         => $row->{master_id},
       tennant_id        => $row->{tennant_id},
-      );
+    );
+    push @objs, $obj;
   }
   return @objs;
 }

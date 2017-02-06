@@ -36,8 +36,7 @@ sub post_add_type {
   my $self     = shift;
   my $new_type = $self->param('new_type');
 
-  my $idp = $self->app->repo->types_idProvider;
-  my $type = Type->new( idProvider => $idp, our_type => $new_type );
+  my $type =  $self->app->entityFactory->new_Type(our_type => $new_type );
   $self->app->repo->types_save($type);
 
   $self->redirect_to( $self->url_for('all_types') );

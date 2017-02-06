@@ -72,8 +72,7 @@ sub add_post {
       }
     }
     foreach my $tag_name (@tag_names) {
-      my $new_tag = Tag->new( idProvider => $self->app->repo->tags_idProvider, name => $tag_name,
-        type => $type );
+      my $new_tag = $self->app->entityFactory->new_Tag( name => $tag_name, type => $type );
       $self->app->repo->tags_save($new_tag);
       $self->app->logger->info("Added new tag $tag_name.");
       push @tags, $new_tag;

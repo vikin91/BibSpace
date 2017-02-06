@@ -15,21 +15,9 @@ sub hardReset {
 sub _getIdProvider {
     my $self = shift;
     my $type = shift;
-    return $self->lr->get_read_layer->uidProvider->get_provider($type);
+    return $self->lr->uidProvider->get_provider($type);
 }
-#<<< no perltidy here
-sub authors_idProvider     { my ($self) = @_; return $self->_getIdProvider('Author');     }
-sub authorships_idProvider { my ($self) = @_; return $self->_getIdProvider('Authorship'); }
-sub entries_idProvider     { my ($self) = @_; return $self->_getIdProvider('Entry');      }
-sub exceptions_idProvider  { my ($self) = @_; return $self->_getIdProvider('Exception');  }
-sub labelings_idProvider   { my ($self) = @_; return $self->_getIdProvider('Labeling');   }
-sub memberships_idProvider { my ($self) = @_; return $self->_getIdProvider('Membership'); }
-sub tags_idProvider        { my ($self) = @_; return $self->_getIdProvider('Tag');        }
-sub tagTypes_idProvider    { my ($self) = @_; return $self->_getIdProvider('TagType');    }
-sub teams_idProvider       { my ($self) = @_; return $self->_getIdProvider('Team');       }
-sub types_idProvider       { my ($self) = @_; return $self->_getIdProvider('Type');       }
-sub users_idProvider       { my ($self) = @_; return $self->_getIdProvider('User');       }
-#>>>
+
 
 #<<< no perltidy here
 sub authors_all    { my ($self, @params) = @_; return $self->lr->all('Author', @params);    }
