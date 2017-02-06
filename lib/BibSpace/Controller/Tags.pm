@@ -214,7 +214,7 @@ sub get_tags_for_author_read {
 sub get_tags_for_team_read {
   my $self    = shift;
   my $team_id = $self->param('team_id');
-  my $tag_type = 1;
+  my $tag_type = 1; 
 
   my $team = $self->app->repo->teams_find( sub { $_->id == $team_id } );
   $team ||= $self->app->repo->teams_find( sub { $_->name eq $team_id } );
