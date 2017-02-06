@@ -71,7 +71,7 @@ notifications:
 script: 
     - export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
     - export BIBSPACE_USE_DUMP=1
-    - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr t/
+    - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrv t/
 
 after_success:
     - cover -report coveralls
