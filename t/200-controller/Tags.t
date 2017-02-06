@@ -57,11 +57,16 @@ foreach my $type (@tagTypes){
     ->status_isnt(404, "Checking: 404 $page")
     ->status_isnt(500, "Checking: 500 $page");
 
+  # calling this like:
+  # $admin_user->post_ok(
+  #   $self->url_for('add_tag_post', type=>$typeID) => form => {type => $typeID, new_tag => "test_tag_type_$typeID" }
+  # );
+  # causes to use totally wrong id provider!
   $admin_user->post_ok(
-    $self->url_for('add_tag_post', type=>$typeID) => form => {type => $typeID, new_tag => "test_tag_type_$typeID" }
+    $self->url_for('add_tag_post', type=>$typeID) => form => {new_tag => "test_tag_type_$typeID" }
   );
   $admin_user->post_ok(
-    $self->url_for('add_tag_post', type=>$typeID) => form => {type => $typeID, new_tag => "zz_$typeID;aa_$typeID;;test_tag2_type_$typeID" }
+    $self->url_for('add_tag_post', type=>$typeID) => form => {new_tag => "zz_$typeID;aa_$typeID;;test_tag2_type_$typeID" }
   );
 
 

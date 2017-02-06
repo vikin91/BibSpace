@@ -56,7 +56,7 @@ sub add {
 ####################################################################################
 sub add_post {
   my $self        = shift;
-  my $type        = $self->param('type') // 1;
+  my $tag_type    = $self->param('type') // 1;
   my $tags_to_add = $self->param('new_tag');
 
 
@@ -72,7 +72,10 @@ sub add_post {
       }
     }
     foreach my $tag_name (@tag_names) {
-      my $new_tag = $self->app->entityFactory->new_Tag( name => $tag_name, type => $type );
+      my $new_tag = $self->app->entityFactory->new_Tag( name => $tag_name, type => $tag_type );
+
+      print "Adding tag name $tag_name of type $tag_type: ". Dumper $new_tag;
+      
       $self->app->repo->tags_save($new_tag);
       $self->app->logger->info("Added new tag $tag_name.");
       push @tags, $new_tag;
@@ -81,7 +84,7 @@ sub add_post {
   }
 
 
-  $self->flash( msg => "The following tags (of type $type) were added successfully: " . " <i>"
+  $self->flash( msg => "The following tags (of type $tag_type) were added successfully: " . " <i>"
       . join( ", ", map { $_->name } @tags )
       . "</i> ,"
       . " ids: <i>"
@@ -89,7 +92,7 @@ sub add_post {
       . "</i>" )
     if scalar @tags > 0;
 
-  $self->redirect_to( $self->url_for( 'all_tags', type => $type ) );
+  $self->redirect_to( $self->url_for( 'all_tags', type => $tag_type ) );
 
   # $self->render(template => 'tags/add');
 }

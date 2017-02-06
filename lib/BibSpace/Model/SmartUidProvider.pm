@@ -51,6 +51,7 @@ has 'data' => (
 sub get_provider {
     my ( $self, $type ) = @_;
     $self->_init($type);
+    $self->logger->debug("Returning idProvider for type '$type'.","".__PACKAGE__."->get_provider");
     return $self->_get($type);
 }
 
@@ -116,7 +117,7 @@ sub generateUID {
     my $curr_max  = $self->last_id($type);
     my $new_uid = $curr_max + 1;
     $self->_get($type)->uid_set( $new_uid => 1 );
-    $self->logger->debug("Generated uid $new_uid.");
+    $self->logger->debug("Generated uid '$new_uid' for object type '$type'.","".__PACKAGE__."->generateUID");
     return $new_uid;
 }
 
