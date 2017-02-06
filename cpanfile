@@ -8,6 +8,7 @@ requires 'DBIx::Connector' , '>= 0.0';
 requires 'Data::Dumper' , '>= 0.0';
 requires 'DateTime' , '>= 0.0';
 requires 'DateTime::Format::Strptime' , '>= 0.0';
+requires 'DateTime::Format::HTTP' , '>= 0.0';
 requires 'Exporter' , '>= 0.0';
 requires 'File::Spec' , '>= 0.0';
 requires 'HTML::TagCloud::Sortable' , '>= 0.0';

@@ -57,22 +57,21 @@ has is_demo => sub {
 
 has config_file => sub {
     my $self = shift;
-    if( $ENV{BIBSPACE_CONFIG}){
-      if( !-e $ENV{BIBSPACE_CONFIG} ){
-        $self->logger->warn("Environment variable BIBSPACE_CONFIG has been set to non-existing file! Using default.");
-      }
-      else{
-        return $ENV{BIBSPACE_CONFIG};  
-      }
-    }
-    return $self->app->home->rel_file('/etc/bibspace.conf')
-        if -e $self->app->home->rel_file('/etc/bibspace.conf');
-    return $self->app->home->rel_file(
-        'lib/BibSpace/files/config/default.conf')
-        if -e $self->app->home->rel_file(
-        'lib/BibSpace/files/config/default.conf');
-    return $self->app->home->rel_file('config/default.conf')    # for travis
-        if -e $self->app->home->rel_file('config/default.conf');
+    my $candidate;
+    $candidate = $ENV{BIBSPACE_CONFIG};
+    return $candidate if defined $candidate and -e $candidate;
+
+    $candidate = $self->app->home->rel_file('/etc/bibspace.conf');
+    return $candidate if -e $candidate;
+
+    $candidate = $self->app->home->rel_file('lib/BibSpace/files/config/default.conf');
+    return $candidate if -e $candidate;
+
+    $candidate = $self->app->home->rel_file('config/default.conf');    # for travis
+    return $candidate if -e $candidate;
+
+    die "Cannot find Bibspace config!";
+    return;
 };
 
 has backup_dir => sub {
@@ -82,14 +81,14 @@ has backup_dir => sub {
     return $backup_dir_absolute;
 };
 
-
-has db => sub {
-    my $self = shift;
-    state $db = db_connect(
-        $self->config->{db_host},     $self->config->{db_user},
-        $self->config->{db_database}, $self->config->{db_pass}
-    );
-};
+# do not use this - if MySQL server dies during operation, you will be not able to reconnect!
+# has db => sub {
+#     my $self = shift;
+#     state $db = db_connect(
+#         $self->config->{db_host},     $self->config->{db_user},
+#         $self->config->{db_database}, $self->config->{db_pass}
+#     );
+# };
 
 has version => sub {
     return $BibSpace::VERSION // "0.5.0";
@@ -151,6 +150,7 @@ has layeredRepository => sub {
     if ( !$self->db ) {
         $self->logger->error(
             "You add SQL layer, but there is no connection to the database! Skipping this layer."
+            . " You need to start MySQL server and restart BibSpace to use this layer"
         );
     }
     else {
@@ -184,6 +184,12 @@ sub startup {
     my $self = shift;
     $self->app->logger->info("*** Starting BibSpace ***");
 
+    # loading preferences if  file exist
+    if( -e 'bibspace_preferences.json' ){
+        my $prefs = Preferences->load('bibspace_preferences.json');
+        $prefs->load_class_vars;    
+    }
+
     $self->setup_config;
     $self->setup_plugins;
 
@@ -201,6 +207,9 @@ sub startup {
     $self->app->logger->info( "Using CONFIG: " . $self->app->config_file );
     $self->app->logger->info( "App home is: " . $self->app->home );
     $self->app->logger->info( "Active bst file is: " . $self->app->bst );
+
+    # my $prefs = Preferences->new;
+    # $prefs->store('bibspace_preferences.json');
 
     ## SANDBOX
 
@@ -414,6 +423,7 @@ sub setup_plugins {
 
     $self->app->plugin('InstallablePaths');
     $self->app->plugin('RenderFile');
+    $self->plugin('BibSpace::Controller::Helpers');
 
     push @{ $self->app->static->paths }, $self->app->home->rel_file('public');
 
@@ -443,53 +453,13 @@ sub setup_plugins {
     # this was supposed to trigger connection to the DB
     $self->app->db;
 
-    $self->plugin('BibSpace::Controller::Helpers');
+    
     $self->secrets( [ $self->config->{key_cookie} ] );
 
     $self->helper( proxy_prefix => sub { $self->config->{proxy_prefix} } );
 
 
-    $self->helper(
-        get_referrer => sub {
-            my $s   = shift;
-            my $ret = $s->url_for('start');
-            $ret = $s->req->headers->referrer
-                if defined $s->req->headers->referrer
-                and $s->req->headers->referrer ne '';
-            return $ret;
-        }
-    );
 
-    $self->helper(
-        nohtml => sub {
-            my $s = shift;
-            return nohtml( shift, shift );
-        }
-    );
-
-    $self->helper(
-        is_manager => sub {
-            my $self = shift;
-            return 1 if $self->app->is_demo;
-            return   if !$self->session('user');
-            my $me = $self->app->repo->users_find(
-                sub { $_->login eq $self->session('user') } );
-            return if !$me;
-            return $me->is_manager;
-        }
-    );
-
-    $self->helper(
-        is_admin => sub {
-            my $self = shift;
-            return 1 if $self->app->is_demo;
-            return   if !$self->session('user');
-            my $me = $self->app->repo->users_find(
-                sub { $_->login eq $self->session('user') } );
-            return if !$me;
-            return $me->is_admin;
-        }
-    );
 }
 ################################################################
 ################################################################
@@ -931,12 +901,8 @@ sub setup_routes {
   ################ CRON ################
 
   $anyone->get('/cron')->to('cron#index');
-  $anyone->get('/cron/:level')->to('cron#cron');
+  $anyone->get('/cron/(#level)')->to('cron#cron');
 
-  $anyone->get('/cron/night')->to('cron#cron_day');
-  $anyone->get('/cron/night')->to('cron#cron_night');
-  $anyone->get('/cron/week')->to('cron#cron_week');
-  $anyone->get('/cron/month')->to('cron#cron_month');
    #>>> 
 }
 

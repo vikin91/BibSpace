@@ -3,19 +3,22 @@ package BibSpace::Controller::Cron;
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
+use Try::Tiny;
+
+use DateTime::Format::Strptime;
 use DateTime;
-# use File::Slurp;
+use DateTime::Format::HTTP;
 
 use 5.010;           #because of ~~
 use strict;
 use warnings;
-use DBI;
-# use DBIx::Connector;
 
-use BibSpace::Functions::FDB;
+
+# use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
-
 use BibSpace::Functions::BackupFunctions;
+
+use BibSpace::Model::Preferences;
 
 use Mojo::Base 'Mojolicious::Controller';
 
@@ -30,30 +33,21 @@ use Mojo::Base 'Mojolicious::Controller';
 ##########################################################################################
 sub index {
     my $self = shift;
-    my $dbh  = $self->app->db;
 
-    prepare_cron_table($dbh);
     $self->render(
         template => 'display/cron',
-        lr_0     => get_last_cron_run_in_hours( $dbh, 0 ),
-        lr_1     => get_last_cron_run_in_hours( $dbh, 1 ),
-        lr_2     => get_last_cron_run_in_hours( $dbh, 2 ),
-        lr_3     => get_last_cron_run_in_hours( $dbh, 3 )
+        lr_0     => $self->get_last_cron_run_in_hours( 0 ),
+        lr_1     => $self->get_last_cron_run_in_hours( 1 ),
+        lr_2     => $self->get_last_cron_run_in_hours( 2 ),
+        lr_3     => $self->get_last_cron_run_in_hours( 3 )
     );
-}
-##########################################################################################
-sub get_server_address {
-    my $self = shift;
-
-    my $str1 = $self->req->url->to_abs;
-    my $str2 = $self->req->url;
-    $str1 =~ s/$str2//g;
-    $str1;
 }
 ##########################################################################################
 sub cron {
     my $self = shift;
-    my $level_param = $self->param('level') or shift;
+    my $level_param = $self->param('level');# or shift;
+
+    $self->app->logger->debug("Called cron with level param '$level_param'.");
 
     my $num_level = -1;    # just in case
 
@@ -62,13 +56,12 @@ sub cron {
     $num_level = 2 if $level_param eq 'week'  or $level_param eq '2';
     $num_level = 3 if $level_param eq 'month' or $level_param eq '3';
 
-    # say "Cron level: $level_param (numeric: $num_level)";
 
     my $result = $self->cron_level($num_level);
-    if ( $result eq "" ) {
+    if ( !$result ) {
         $self->render(
             text =>
-                "Incorrect cron job level: $level_param (numeric: $num_level)",
+                "Error 404. Incorrect cron job level: $level_param (numeric: $num_level)",
             status => 404
         );
     }
@@ -81,6 +74,7 @@ sub cron {
 sub cron_level {
     my $self  = shift;
     my $level = shift;
+
 
     if ( !defined $level or $level < 0 or $level > 3 ) {
         return "";
@@ -115,13 +109,14 @@ sub cron_run {
     my $level     = shift;
     my $call_freq = shift;
 
-    my $last_call = get_last_cron_run_in_hours( $self->app->db, $level ) // 3;
+
+    my $last_call = $self->get_last_cron_run_in_hours( $level ) // 3;
     my $left = $call_freq - $last_call;
 
-    my $text_to_render = "";
+    my $text_to_render;
 
     ############ Cron ACTIONS
-    if ( $last_call < $call_freq and $last_call > -1 ) {
+    if ( $last_call < $call_freq ) {
         $text_to_render
             = "Cron level $level called too often. Last call $last_call hours ago. Come back in $left hours\n";
         return $text_to_render;
@@ -131,7 +126,7 @@ sub cron_run {
     }
 
     ############ Cron ACTIONS
-    log_cron_usage( $self->app->db, $level );
+    log_cron_usage( $level );
     $self->app->logger->info("Cron level $level started");
 
     if ( $level == 0 ) {
@@ -152,7 +147,7 @@ sub cron_run {
     else {
         # do nothing
     }
-    $self->app->logger->info("Cron level $level finished");
+    $self->app->logger->info("Cron level $level has finished");
 
     return $text_to_render;
 }
@@ -193,28 +188,39 @@ sub do_cron_month {
 ##########################################################################################
 ##########################################################################################
 sub log_cron_usage {
-    my $dbh   = shift;
     my $level = shift;
 
-    prepare_cron_table($dbh);
-    my $sth = $dbh->prepare("REPLACE INTO Cron (type) VALUES (?)");
-    $sth->execute($level);
+    my $now = DateTime->now->set_time_zone(Preferences->local_time_zone);
+    my $fomatted_now = DateTime::Format::HTTP->format_datetime($now);
+
+    say "Storing cron usage level '$level' as '$fomatted_now'.";
+
+    Preferences->cron_set($level, $fomatted_now);
 }
 ##########################################################################################
 sub get_last_cron_run_in_hours {
-    my $dbh   = shift;
+    my $self   = shift;
     my $level = shift;
-    prepare_cron_table($dbh);
 
-    my $sth
-        = $dbh->prepare(
-        "SELECT ABS(TIMESTAMPDIFF(HOUR, CURRENT_TIMESTAMP, last_run_time)) as age FROM Cron WHERE type=?"
-        );
-    $sth->execute($level);
-    my $row = $sth->fetchrow_hashref();
-    my $age = $row->{age};
 
-    return $age // 0;    # returns 0 if age is undefined
+    my $last_call_str = Preferences->cron_get($level);
+    return 0 if !$last_call_str;
+    
+
+    my $now = DateTime->now->set_time_zone(Preferences->local_time_zone);
+    my $last_call;
+    try{
+        $last_call = DateTime::Format::HTTP->parse_datetime( $last_call_str );
+    }
+    catch{
+        warn;
+        $self->app->logger->error("Cannot parse date of last cron usage. Parser got input: '$last_call_str', error: $_ ");
+    };
+    return 0 if !$last_call;
+    
+    my $diff = $now->subtract_datetime($last_call);
+    my $hours = $diff->hours; 
+    return $hours;
 }
 
 ##########################################################################################

@@ -17,6 +17,7 @@ use List::MoreUtils qw(any uniq);
 use BibSpace::Functions::Core;
 use BibSpace::Controller::Publications;
 use BibSpace::Functions::MySqlBackupFunctions;
+use BibSpace::Functions::FDB;
 
 use BibSpace::Functions::FPublications;
 
@@ -28,8 +29,18 @@ sub register {
   my ( $self, $app ) = @_;
 
   $app->helper(
-    bst => sub {
+    db => sub {
       my $self = shift;
+      return db_connect(
+        $self->app->config->{db_host},     $self->app->config->{db_user},
+        $self->app->config->{db_database}, $self->app->config->{db_pass}
+      );
+    }
+  );
+
+  $app->helper(
+    bst => sub {
+      my $self = shift; 
 
       my $bst_candidate_file = $self->app->home . '/lib/descartes2.bst';
 
@@ -73,6 +84,48 @@ sub register {
         return BibStyleConverter->new( logger => $self->app->logger );
       };
     }
+  );
+
+  $app->helper(
+      get_referrer => sub {
+          my $s   = shift;
+          my $ret = $s->url_for('start');
+          $ret = $s->req->headers->referrer
+              if defined $s->req->headers->referrer
+              and $s->req->headers->referrer ne '';
+          return $ret;
+      }
+  );
+
+  $app->helper(
+      nohtml => sub {
+          my $s = shift;
+          return nohtml( shift, shift );
+      }
+  );
+
+  $app->helper(
+      is_manager => sub {
+          my $self = shift;
+          return 1 if $self->app->is_demo;
+          return   if !$self->session('user');
+          my $me = $self->app->repo->users_find(
+              sub { $_->login eq $self->session('user') } );
+          return if !$me;
+          return $me->is_manager;
+      }
+  );
+
+  $app->helper(
+      is_admin => sub {
+          my $self = shift;
+          return 1 if $self->app->is_demo;
+          return   if !$self->session('user');
+          my $me = $self->app->repo->users_find(
+              sub { $_->login eq $self->session('user') } );
+          return if !$me;
+          return $me->is_admin;
+      }
   );
 
 
