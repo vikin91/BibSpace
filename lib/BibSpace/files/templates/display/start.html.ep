@@ -46,7 +46,7 @@
                     <a href="<%= url_for('/read/tags-for-author/author')%>">/read/tags-for-author/author</a>  (alias <a href="<%= url_for('/r/t4a/author_id')%>">/r/t4a/author</a>)
                 </li>
                 <li>
-                    <a href="<%= url_for('/read/tags-for-team/1')%>">/read/tags-for-team/team</a>  (alias <a href="<%= url_for('/r/t4t/team_id')%>">/r/t4t/team_id</a>)
+                    <a href="<%= url_for('tags_for_team', team_id=>1)%>">/read/tags-for-team/(team_id)</a>  (alias <a href="<%= url_for('/r/t4t/team_id')%>">/r/t4t/team_id</a>)
                 </li>
                 
 			</ul>

@@ -1147,14 +1147,19 @@ sub publications_edit_post {
 sub clean_ugly_bibtex {
   my $self = shift;
 
+  # TODO: put this into config or preferences!
+  my @fields_to_clean
+        = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
+
   $self->app->logger->info("Cleaning ugly bibtex fields for all entries");
 
   my @entries = $self->app->repo->entries_all;
-  foreach my $e (@entries) {
-    $e->clean_ugly_bibtex_fields();
+  my $num_removed = 0;
+  foreach my $entry (@entries) {
+    $num_removed = $num_removed + $entry->clean_ugly_bibtex_fields(\@fields_to_clean);
   }
 
-  $self->flash( msg_type => 'info', msg => 'All entries have now their Bibtex cleaned.' );
+  $self->flash( msg_type => 'info', msg => "All entries have now their Bibtex cleaned. I have removed $num_removed fields." );
 
   $self->redirect_to( $self->get_referrer );
 }

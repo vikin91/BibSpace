@@ -521,22 +521,29 @@ sub author_names_from_bibtex {
 ####################################################################################
 sub teams {
     my $self = shift;
-    SimpleLogger->new->warn(
-        "entry->teams is deprecated in favor of entry->get_teams");
+    warn  "entry->teams is deprecated in favor of entry->get_teams";
     return $self->get_teams;
 }
 ####################################################################################
 sub get_teams {
     my $self = shift;
 
-    my %final_teams;
+    my @exception_teams = map{ $_->team } $self->get_exceptions;
+
+    ## Important: this means that entry-teams = teams + exceptions!
+    my %final_teams = map { $_->id => $_ } @exception_teams;
+
     foreach my $author ( $self->get_authors ) {
 
         foreach my $team ( $author->get_teams ) {
             my $joined = $author->joined_team($team);
             my $left   = $author->left_team($team);
 
-            if ( $joined <= $self->year
+            # entry has no year... strange but possible
+            if ( !$self->year ){
+                $final_teams{ $team->id } = $team;   
+            }
+            elsif ( $joined <= $self->year
                 and ( $left > $self->year or $left == 0 ) )
             {
                 $final_teams{ $team->id } = $team;
@@ -588,12 +595,13 @@ sub tag_names_from_bibtex {
 ####################################################################################
 sub sort_by_year_month_modified_time {
 
-    # $a and $b exist and are MEntry objects
+    # $a and $b are Perl's standard sorting variables
+    # $a and $b exist and are Entry objects
     {
         no warnings 'uninitialized';
-        $a->{year} <=> $b->{year}
-            or $a->{month} <=> $b->{month}
-            or $a->{id} <=> $b->{id};
+        $a->year <=> $b->year
+            or $a->month <=> $b->month
+            or $a->id <=> $b->id;
     }
 
 # $a->{modified_time} <=> $b->{modified_time}; # needs an extra lib, so we just compare ids as approximation
@@ -608,10 +616,9 @@ sub get_title {
 ####################################################################################
 sub clean_ugly_bibtex_fields {
     my $self = shift;
+    my $field_names_to_clean_arr_ref = shift;
 
-    my @arr_default
-        = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
-    return $self->remove_bibtex_fields( \@arr_default );
+    return $self->remove_bibtex_fields( $field_names_to_clean_arr_ref );
 }
 
 ####################################################################################

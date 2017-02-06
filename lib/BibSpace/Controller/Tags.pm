@@ -220,26 +220,21 @@ sub get_tags_for_team_read {
 
   
   if ( !$team ) {
-    $self->render( text => "Team $team_id does not exist.", status => 404 );
+    $self->render( text => "404. Team '$team_id' does not exist.", status => 404 );
     return;
   }
 
-  my @members = $team->get_members;
-  
-  
-  my %tt;
-  foreach my $member (@members) {
-    my @papers = $member->get_entries;
-    foreach my $paper (@papers) {
-      # merge two hashes
-      %tt = (%tt, map { "".$_->name => 1} $paper->get_tags );
-    }
+  my @team_entries = grep { $_->has_team($team) } $self->app->repo->entries_all;
+  my %team_tags_hash;
+  foreach my $paper (@team_entries) {
+    # merge two hashes
+    %team_tags_hash = (%team_tags_hash, map { "".$_->name => $_} $paper->get_tags );
   }
-  my @team_tag_names = keys %tt;
+  my @team_tags = values %team_tags_hash;
   
 
-  if ( !@team_tag_names ) {
-    $self->render( text => "Team $team_id has no tagged papers.", status => 200 );
+  if ( !@team_tags ) {
+    $self->render( text => "Team '$team_id' has no tagged papers.", status => 200 );
     return;
   }
 
@@ -247,14 +242,20 @@ sub get_tags_for_team_read {
   my @tagc_cloud_arr;
   my @sorted_tagc_cloud_arr;
 
-  foreach my $tag_name (@team_tag_names) {
+  foreach my $tag (@team_tags) {
+    my $tag_name = $tag->name;
     $tag_name =~ s/_/\ /g;
+    
+    # FIXME: not all papers belong to team
+    # FIXME: take exceptions into account
+    my @papers = grep { $_->has_team($team) } $tag->get_entries;  
 
-    my $url = "".$self->url_for('lyp')->query( team => $team->name, tag => $tag_name, title => '1', navbar => '1' );
+
+    my $url = "".$self->url_for('lyp')->query( team => $team->name, tag => $tag->name, title => '1', navbar => '1' );
 
     my $tag_cloud_obj = TagCloud->new(
       url   => $url,
-      count => "-1",         # FIXME!
+      count => "".scalar(@papers),
       name  => $tag_name,
     );
     push @tagc_cloud_arr, $tag_cloud_obj;
@@ -276,7 +277,7 @@ sub get_authors_for_tag {
 
   my $tag = $self->app->repo->tags_find( sub { $_->id == $tag_id } );
   if ( !defined $tag ) {
-    $self->render( text => "Tag $tag_id does not exist.", status => 404 );
+    $self->render( text => "404. Tag '$tag_id' does not exist.", status => 404 );
     return;
   }
 

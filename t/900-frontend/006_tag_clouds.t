@@ -44,7 +44,10 @@ subtest 'FRONTEND Tag Clouds AUTHOR' => sub {
 
   foreach my $author (@all_authors){
     my $page = $self->url_for( 'tags_for_author', author_id=>$author->id );
-    $t_anyone->get_ok($page)->status_isnt(404, "Checking: 404 $page")->status_isnt(500, "Checking: 500 $page");
+    $t_anyone->get_ok($page)
+      ->status_isnt(404, "Checking: 404 $page")
+      ->status_isnt(500, "Checking: 500 $page")
+      ->content_unlike(qr/-1/i);
   }
 
 };
