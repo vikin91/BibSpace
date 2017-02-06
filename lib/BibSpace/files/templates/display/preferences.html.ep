@@ -6,6 +6,7 @@
 <div class="container">
 <H1>Preferences</H1>
 
+
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
             <!-- class => 'form-horizontal',  -->
@@ -41,8 +42,10 @@
                 %= text_field output_time_format => Preferences->output_time_format  =>  (class => 'form-control') 
                 <p class="help-block">For example: last login, last modification. <a href="http://search.cpan.org/~drolsky/DateTime-1.42/lib/DateTime.pm#strftime_Patterns">List of allowed tokens</a>.</p>
             </div>
-            
-            <button type="submit" class="btn btn-success"> Save <i class="fa fa-floppy-o"></i> </button>
+            <div class="form-group">
+                <button type="submit" class="btn btn-success"> Save <i class="fa fa-floppy-o"></i> </button>
+                <p class="help-block">Currently, preferences cannot be persisted. Sorry.</p>
+            </div>
         % end
 
         </div>

@@ -184,11 +184,6 @@ sub startup {
     my $self = shift;
     $self->app->logger->info("*** Starting BibSpace ***");
 
-    # loading preferences if  file exist
-    if( -e 'bibspace_preferences.json' ){
-        my $prefs = Preferences->load('bibspace_preferences.json');
-        $prefs->load_class_vars;    
-    }
 
     $self->setup_config;
     $self->setup_plugins;

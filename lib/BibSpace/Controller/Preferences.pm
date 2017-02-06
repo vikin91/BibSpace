@@ -29,11 +29,6 @@ sub index {
     my @converterClasses = grep { does_role($_ , 'IHtmlBibtexConverter') } Class::MOP::get_all_metaclasses;
     @converterClasses = grep { $_ ne 'IHtmlBibtexConverter' } @converterClasses;
     
-    # ok, so you can load this
-    if( -e 'bibspace_preferences.json' ){
-        my $prefs = Preferences->load('bibspace_preferences.json');
-        $prefs->load_class_vars;    
-    }
 
     $self->stash( converters => \@converterClasses );
     $self->render( template => 'display/preferences' );
@@ -51,8 +46,8 @@ sub save {
     Preferences->local_time_zone($local_time_zone);
     Preferences->output_time_format($output_time_format);
 
-    # store to file
-    Preferences->new->store('bibspace_preferences.json');
+    # # store to file
+    # my $json_str = Preferences->instance->store('bibspace_preferences.json');
 
     $self->flash( msg_type=>'success', msg => 'Preferences saved!' );
     # $self->render( template => 'display/preferences' );

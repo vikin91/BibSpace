@@ -11,35 +11,10 @@ use feature qw( state say );
 
 use Moose;
 use Moose::Util::TypeConstraints;
-use MooseX::Storage;
 use MooseX::ClassAttribute;
-with Storage( format => 'JSON', 'io' => 'File' );
 
-has '_bibitex_html_converter' => (
-    is      => 'rw',
-    isa     => 'Str',
-    default => sub { Preferences->bibitex_html_converter }
-);
-has '_default_bibitex_html_converter' => (
-    is      => 'rw',
-    isa     => 'Str',
-    default => sub { Preferences->default_bibitex_html_converter }
-);
-has '_local_time_zone' => (
-    is      => 'rw',
-    isa     => 'Str',
-    default => sub { Preferences->local_time_zone }
-);
-has '_output_time_format' => (
-    is      => 'rw',
-    isa     => 'Str',
-    default => sub { Preferences->output_time_format }
-);
-has '_cron' => (
-    is      => 'rw',
-    isa     => 'HashRef[Str]',
-    default => sub { Preferences->cron },
-);
+
+###### CLASS VARIABLES
 
 class_has 'bibitex_html_converter' => (
     is      => 'rw',
@@ -72,6 +47,7 @@ class_has 'output_time_format' => (
 );
 
 # cron_level => last_call
+# TODO: this will be not persisted and this is a real problem... need to solve this.
 class_has 'cron' => (
     traits  => ['Hash'],
     is      => 'rw',
@@ -89,24 +65,11 @@ class_has 'cron' => (
     },
 );
 
-sub load_class_vars {
-    my ($self) = @_;
-    $self->bibitex_html_converter( $self->_bibitex_html_converter );
-    $self->local_time_zone( $self->_local_time_zone );
-    $self->output_time_format( $self->_output_time_format );
-    $self->cron( $self->_cron );
-}
-
-# sub store_class_vars {
-#     my ($self) = @_;
-#     $self->{_bibitex_html_converter} = Preferences->bibitex_html_converter;
-#     $self->{_local_time_zone}        = Preferences->local_time_zone;
-#     $self->{_output_time_format}     = Preferences->output_time_format;
-#     $self->{_cron}                   = Preferences->cron;
-# }
+###### METHODS
 
 sub _pref_changed {
     my ( $self, $curr_val, $prev_val ) = @_;
+
     # $self->store_class_vars;
     if ( $curr_val ne $prev_val ) {
         say "A preference changed to '$curr_val'.";
