@@ -9,8 +9,17 @@ use Moose;
 use BibSpace::Model::ILogger;
 with 'ILogger';
 
-has 'log_dir' => ( is => 'rw', isa => 'Maybe[Str]' );
 
+# this is stored in the fixture - for tests, this must be relative path!!
+
+has '_log_dir' => ( is => 'rw', isa => 'Maybe[Str]', reader => 'log_dir');
+
+sub set_log_dir {
+  my ($self, $dir) = @_;
+
+  $self->{_log_dir} = Path::Tiny->new($dir)->relative();
+
+}
 # # Log messages
 # $log->debug('Not sure what is happening here');
 # $log->info('FYI: it happened again');

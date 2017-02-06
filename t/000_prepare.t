@@ -13,7 +13,8 @@ use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
 use BibSpace::Functions::FDB; # TODO: purge DB etc.
 
 
-
+`rm log/*.log`;
+`rm bibspace.dat`;
 
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(

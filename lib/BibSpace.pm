@@ -235,7 +235,6 @@ sub startup {
     ########### SANDBOX ###########
     ###############################
     
-
     # # cool!
     # my $author = $self->app->entityFactory->new_Author( uid => "AabakusAston" );
     # say $author->uid;
@@ -478,7 +477,9 @@ sub setup_plugins {
 
     # set logging dir in the logger
     $self->app->logger->debug("Setting log dir to the logger");
-    $self->logger->log_dir("".Path::Tiny->new($self->config->{log_dir}) );
+    $self->logger->set_log_dir("".Path::Tiny->new($self->config->{log_dir}) );
+
+
 
     # this was supposed to trigger connection to the DB
     $self->app->db;
