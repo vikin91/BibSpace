@@ -6,7 +6,7 @@ use Test::Mojo;
 
 use BibSpace;
 use BibSpace::Functions::Core;
-
+use BibSpace::Model::User;
 
 ### Problem with this test suite is that the token for mailgun returns error because it is not correct in the default config
 ### We need to find a method to test this without providing the real credentials
@@ -36,9 +36,7 @@ is(length($token), 32);
 
 ########################################################
 
-use Data::Dumper;
-use BibSpace::Model::User;
-map{ note Dumper $_ } $t_anyone->app->repo->users_all;
+
 
 subtest 'Requesting password reset' => sub {
 

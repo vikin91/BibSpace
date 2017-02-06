@@ -158,6 +158,7 @@ sub restore_storable_backup {
     $app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
     say "restore_storable_backup DONE. Smart layer after copy_data:" . $app->repo->lr->get_layer('smart')->get_summary_table;
+    say "restore_storable_backup DONE. All layer after copy_data:" . $app->repo->lr->get_summary_table;
 }
 ####################################################################################
 sub delete_old_backups {
