@@ -51,7 +51,6 @@ has 'data' => (
 sub get_provider {
     my ( $self, $type ) = @_;
     $self->_init($type);
-    $self->logger->debug("Returning idProvider for type '$type'.","".__PACKAGE__."->get_provider");
     return $self->_get($type);
 }
 
@@ -66,7 +65,7 @@ sub _init {
         try {
             my $className = $self->idProviderClassName;
             Class::Load::load_class($className);
-            my $providerInstance = $className->new();
+            my $providerInstance = $className->new( logger => $self->logger, for_type=>$type );
             $self->_set( $type, $providerInstance );
         }
         catch {
@@ -79,7 +78,7 @@ sub _init {
 
 sub reset {
     my $self = shift;
-    $self->logger->warn("Resetting UID record!");
+    $self->logger->warn("Resetting all UID Providers","" . __PACKAGE__ . "->reset");
     foreach my $type ($self->_keys){
         $self->_get($type)->clear;    
     }
@@ -111,6 +110,7 @@ sub last_id {
     return $curr_max;
 }
 
+# I think this is never used...
 sub generateUID {
     my ( $self, $type ) = @_;
 
