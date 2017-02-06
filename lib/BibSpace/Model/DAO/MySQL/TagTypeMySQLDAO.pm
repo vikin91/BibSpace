@@ -30,14 +30,14 @@ sub all {
   my @objs;
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    push @objs,
-      TagType->new(
+    
+    my $obj = $self->e_factory->new_TagType(
       old_mysql_id => $row->{id},
-      idProvider   => $self->idProvider,
       id           => $row->{id},
       name         => $row->{name},
       comment      => $row->{comment},
-      );
+    );
+    push @objs, $obj;
   }
   return @objs;
 }

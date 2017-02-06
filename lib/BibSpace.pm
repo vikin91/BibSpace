@@ -39,7 +39,8 @@ use BibSpace::Model::Converter::BibStyleConverter;
 use Storable;
 
 use BibSpace::Model::Preferences;
-
+use BibSpace::Model::PreferencesInstance;
+use BibSpace::Model::EntityFactory;
 
 # STATE keyword
 # state declares a lexically scoped variable, just like my. 
@@ -48,6 +49,9 @@ use BibSpace::Model::Preferences;
 # See Persistent Private Variables in perlsub for details.
 use feature qw( state say );
 
+has preferences => sub {
+    return state $prefs = PreferencesInstance->new;
+};
 
 has is_demo => sub {
     return 1 if shift->config->{demo_mode};
@@ -120,20 +124,39 @@ has smartArrayBackend => sub {
     return SmartArray->new( logger => $self->logger );
 };
 
+has smartIDProvider => sub {
+    my $self = shift;
+    return state $sup = SmartUidProvider->new(
+        logger              => $self->logger,
+        idProviderClassName => 'IntegerUidProvider'
+    );
+};
+
+has entityFactory => sub {
+    my $self = shift;
+    return state $factory = EntityFactory->new(
+            logger => $self->app->logger, 
+            id_provider => $self->app->smartIDProvider, 
+            preferences => $self->app->preferences 
+    );
+};
+
+
 
 has layeredRepository => sub {
     my $self = shift;
     $self->app->logger->info("Building layeredRepository");
-    my $sup = SmartUidProvider->new(
-        logger              => $self->logger,
-        idProviderClassName => 'IntegerUidProvider'
-    );
+    
+    my $sup = $self->app->smartIDProvider;
+
     my $LR = LayeredRepository->new(
+        e_factory   => $self->entityFactory,
         logger      => $self->logger,
         uidProvider => $sup
     );
 
     my $smartArrayLayer = RepositoryLayer->new(
+        e_factory   => $self->entityFactory,
         name               => 'smart',
         priority           => 1,
         creates_on_read    => undef,
@@ -155,6 +178,7 @@ has layeredRepository => sub {
     }
     else {
         my $mySQLLayer = RepositoryLayer->new(
+            e_factory                     => $self->entityFactory,
             name                          => 'mysql',
             priority                      => 99,
             creates_on_read               => 1,
@@ -189,6 +213,7 @@ sub startup {
     $self->setup_plugins;
 
     Preferences->local_time_zone( DateTime::TimeZone->new( name => 'local' )->name );
+    $self->app->preferences->local_time_zone( DateTime::TimeZone->new( name => 'local' )->name );
 
     $self->setup_routes;
     $self->setup_hooks;
@@ -206,7 +231,23 @@ sub startup {
     # my $prefs = Preferences->new;
     # $prefs->store('bibspace_preferences.json');
 
-    ## SANDBOX
+    ###############################
+    ########### SANDBOX ###########
+    ###############################
+    
+
+    # cool!
+    my $entry = $self->app->entityFactory->new_Entry( bib => "aaatest!", year => 999 );
+    my $author = $self->app->entityFactory->new_Author( uid => "jamesBond" );
+
+    say $entry->year; 
+    say $entry->id; 
+    say $author->uid;
+    say $author->id;
+    # say $author->preferences;
+
+    store $self->app->entityFactory, 'test_factory.dat';
+
 
     # my @users = $self->app->repo->users_all;
     # $self->logger->warn("All users: ".@users);
@@ -221,10 +262,7 @@ sub startup {
     # $self->logger->info("this is info");
     # $self->logger->warn("this is warning");
     # $self->logger->error("this is error");
-    # foreach (0..1){
-    #   my $testEntry = Entry->new(bib=>'@article{title={xyz'.$_.'}, year={2099}}');
-    #   $self->repo->entries_save($testEntry);
-    # }
+
 }
 ################################################################
 sub insert_admin {
@@ -236,8 +274,7 @@ sub insert_admin {
     if ( !$admin_exists ) {
         my $salt     = salt();
         my $hash     = encrypt_password( 'asdf', $salt );
-        my $new_user = User->new(
-            idProvider => $self->app->repo->users_idProvider,
+        my $new_user = $self->app->entityFactory->new_User(
             login      => 'pub_admin',
             email      => 'pub_admin@example.com',
             real_name  => 'Admin',

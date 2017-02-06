@@ -32,15 +32,16 @@ sub all {
   $sth->execute();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    push @objs,
-      Tag->new(
+    
+    my $obj = $self->e_factory->new_Tag(
       old_mysql_id => $row->{id},
       idProvider   => $self->idProvider,
       id           => $row->{id},
       name         => $row->{name},
       type         => $row->{type},
       permalink    => $row->{permalink},
-      );
+    );
+    push @objs, $obj;
   }
   return @objs;
 }

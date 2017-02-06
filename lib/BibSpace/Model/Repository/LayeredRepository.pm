@@ -10,10 +10,13 @@ use List::Util qw(first);
 use BibSpace::Model::IUidProvider;
 use BibSpace::Model::SmartUidProvider;
 use BibSpace::Model::Repository::RepositoryLayer;
+use BibSpace::Model::EntityFactory;
 
 # logic of the layered repository = read from one layer, write to all layers
 
 has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
+has 'e_factory' => ( is => 'ro', isa => 'EntityFactory', required => 1);
+
 # layer_name => RepositoryLayer
 has 'layers' => ( 
         is => 'ro', 

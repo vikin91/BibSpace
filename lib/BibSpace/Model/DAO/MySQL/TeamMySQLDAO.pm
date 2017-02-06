@@ -29,9 +29,8 @@ sub all {
   $sth->execute();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $obj = Team->new(
+    my $obj = $self->e_factory->new_Team(
       old_mysql_id => $row->{id},
-      idProvider   => $self->idProvider,
       id           => $row->{id},
       name         => $row->{name},
       parent       => $row->{parent}

@@ -80,9 +80,8 @@ sub all {
         my $month = $row->{month} // 0;
 
         push @objs,
-            Entry->new(
+            $self->e_factory->new_Entry(
             old_mysql_id    => $row->{id},
-            idProvider      => $self->idProvider,
             id              => $row->{id},
             entry_type      => $row->{entry_type},
             bibtex_key      => $row->{bibtex_key},

@@ -20,4 +20,6 @@ has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # e.g. database connection handle
 has 'handle' => ( is => 'ro', required => 1, traits => ['DoNotSerialize']);
 has 'idProvider' => ( is => 'ro', does => 'IUidProvider', required => 1);
+has 'e_factory' => ( is => 'ro', isa => 'EntityFactory', required => 1);
+
 1;

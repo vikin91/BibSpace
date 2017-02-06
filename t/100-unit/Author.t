@@ -30,11 +30,10 @@ my $repo = $self->app->repo;
 
 
 my @all_authors = $repo->authors_all;
-my $idp = $repo->authors_idProvider;
 
 my $limit_test_objects = scalar(@all_authors) + 1;
 
-my $other_author = Author->new(idProvider => $idp, uid => "Henry");
+my $other_author = $self->app->entityFactory->new_Author( uid => "Henry");
 
 subtest 'Author constructor' => sub {
 

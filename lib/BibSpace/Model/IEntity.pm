@@ -16,6 +16,9 @@ sub _generateUIDEntry {
     return $self->idProvider->generateUID();
 }
 
+
+has 'preferences' => ( is => 'ro', isa => 'PreferencesInstance');
+
 has 'idProvider' => (
     is       => 'ro',
     does     => 'IUidProvider',

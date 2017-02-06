@@ -12,6 +12,9 @@ use BibSpace::Model::DAO::MySQLDAOFactory;
 use BibSpace::Model::DAO::RedisDAOFactory;
 use BibSpace::Model::SmartUidProvider;
 
+use BibSpace::Model::EntityFactory;
+has 'e_factory' => ( is => 'ro', isa => 'EntityFactory', required => 1);
+
 has 'name' => ( is => 'ro', isa => 'Str', required => 1 );
 has 'priority' => (
     is            => 'ro',
@@ -192,7 +195,10 @@ sub daoDispatcher {
 sub getDao {
     my $self               = shift;
     my $entity_type        = shift;
-    my $daoAbstractFactory = DAOFactory->new( logger => $self->logger );
+    my $daoAbstractFactory = DAOFactory->new( 
+            logger => $self->logger, 
+            e_factory   => $self->e_factory 
+    );
     my $daoFactory
         = $daoAbstractFactory->getInstance( $self->backendFactoryName,
         $self->handle );

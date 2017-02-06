@@ -116,7 +116,7 @@ sub publications_add_many_post {
     for my $bibtex_code (@bibtex_codes) {
 
         # $debug_str.="<br>Found code!";
-        my $entry = Entry->new( idProvider => $self->app->repo->entries_idProvider, bib=>$bibtex_code );
+        my $entry = $self->app->entityFactory->new_Entry( bib=>$bibtex_code );
         $entry->populate_from_bib;
         $debug_str .= "<br>Found key: $entry->{bibtex_key}";
 

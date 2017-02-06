@@ -46,7 +46,7 @@ sub add_post {
         );
     }
     else{
-        $tt = TagType->new( name => $name, comment => $comment, idProvider => $self->app->repo->tagTypes_idProvider );
+        $tt = $self->app->entityFactory->new_TagType(name => $name, comment => $comment);
         $self->app->repo->tagTypes_save($tt);
         $self->flash( msg_type => 'success', msg => 'Tag type added.' );    
     }

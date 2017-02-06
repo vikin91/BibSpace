@@ -32,9 +32,8 @@ sub all {
   $sth->execute();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $obj = Author->new(
+    my $obj = $self->e_factory->new_Author(
       old_mysql_id => $row->{id},
-      idProvider   => $self->idProvider,
       id           => $row->{id},
       uid          => $row->{uid},
       display      => $row->{display},
