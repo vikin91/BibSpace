@@ -210,9 +210,11 @@ sub get_tags_for_author_read {
 
 }
 ####################################################################################
+# we mean here tags of type 1
 sub get_tags_for_team_read {
   my $self    = shift;
   my $team_id = $self->param('team_id');
+  my $tag_type = 1;
 
   my $team = $self->app->repo->teams_find( sub { $_->id == $team_id } );
   $team ||= $self->app->repo->teams_find( sub { $_->name eq $team_id } );
@@ -227,7 +229,7 @@ sub get_tags_for_team_read {
   my %team_tags_hash;
   foreach my $paper (@team_entries) {
     # merge two hashes
-    %team_tags_hash = (%team_tags_hash, map { "".$_->name => $_} $paper->get_tags );
+    %team_tags_hash = (%team_tags_hash, map { "".$_->name => $_} $paper->get_tags($tag_type) );
   }
   my @team_tags = values %team_tags_hash;
   

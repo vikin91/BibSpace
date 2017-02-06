@@ -89,7 +89,7 @@ sub save {
     my ($self, @objects) = @_;
     my $added = 0;
     
-    # if there are multiple objetcs to add and the array is empty -> do it quicker!
+    # if there are multiple objects to add and the array is empty -> do it quicker!
     if( @objects > 0 ){
         my $type = ref($objects[0]);
 
