@@ -24,99 +24,77 @@ has 'e_factory' => ( is => 'ro', isa => 'EntityFactory', required => 1);
 
 sub getTagTypeDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getTagTypeDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return TagTypeSmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return TagTypeSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getTagTypeDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getTagTypeDao" ); };
 after 'getTagTypeDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getTagTypeDao" ); };
 
 sub getTeamDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getTeamDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return TeamSmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return TeamSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getTeamDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getTeamDao" ); };
 after 'getTeamDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getTeamDao" ); };
 
 sub getAuthorDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getAuthorDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return AuthorSmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return AuthorSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getAuthorDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getAuthorDao" ); };
 after 'getAuthorDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getAuthorDao" ); };
 
 sub getAuthorshipDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getAuthorshipDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return AuthorshipSmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return AuthorshipSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getAuthorshipDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getAuthorshipDao" ); };
 after 'getAuthorshipDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getAuthorshipDao" ); };
 
 sub getMembershipDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getMembershipDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return MembershipSmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return MembershipSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getMembershipDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getMembershipDao" ); };
 after 'getMembershipDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getMembershipDao" ); };
 
 sub getEntryDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getEntryDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return EntrySmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return EntrySmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getEntryDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getEntryDao" ); };
 after 'getEntryDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getEntryDao" ); };
 
 sub getLabelingDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getLabelingDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return LabelingSmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return LabelingSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getLabelingDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getLabelingDao" ); };
 after 'getLabelingDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getLabelingDao" ); };
 
 sub getTagDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getTagDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return TagSmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return TagSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getTagDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getTagDao" ); };
 after 'getTagDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getTagDao" ); };
 
 sub getExceptionDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getExceptionDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return ExceptionSmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return ExceptionSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getExceptionDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getExceptionDao" ); };
 after 'getExceptionDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getExceptionDao" ); };
 
 sub getTypeDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getTypeDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return TypeSmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return TypeSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getTypeDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getTypeDao" ); };
 after 'getTypeDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getTypeDao" ); };
 
 sub getUserDao {
   my $self       = shift;
-  my $idProvider = shift;
-  die "" . __PACKAGE__ . "->getUserDao MUST be called with valid idProvider!" if !defined $idProvider;
-  return UserSmartArrayDAO->new( idProvider => $idProvider, logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
+  return UserSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
 before 'getUserDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getUserDao" ); };
 after 'getUserDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getUserDao" ); };

@@ -236,17 +236,15 @@ sub startup {
     ###############################
     
 
-    # cool!
-    my $entry = $self->app->entityFactory->new_Entry( bib => "aaatest!", year => 999 );
-    my $author = $self->app->entityFactory->new_Author( uid => "jamesBond" );
+    # # cool!
+    # my $author = $self->app->entityFactory->new_Author( uid => "AabakusAston" );
+    # say $author->uid;
+    # say $author->id;
+    # # say $author->preferences;
 
-    say $entry->year; 
-    say $entry->id; 
-    say $author->uid;
-    say $author->id;
-    # say $author->preferences;
+    # say Dumper $author;
+    # $self->app->repo->authors_save($author);
 
-    store $self->app->entityFactory, 'test_factory.dat';
 
 
     # my @users = $self->app->repo->users_all;

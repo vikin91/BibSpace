@@ -89,25 +89,28 @@ sub save {
     my ($self, @objects) = @_;
     my $added = 0;
     
+    # if there are multiple objetcs to add and the array is empty -> do it quicker!
     if( @objects > 0 ){
         my $type = ref($objects[0]);
-        if($self->empty($type) ){
+
+        if( $self->empty($type) ){
             $self->_add(@objects);
             $added = scalar @objects;
+            return $added;
         }
     }
-    else{
+    
 
-        foreach my $obj(@objects){
-            if( !$self->exists($obj)){
-                ++$added;
-                $self->_add($obj);
-            }
-            else{
-                $self->update($obj);
-            }
+    foreach my $obj(@objects){
+        if( !$self->exists($obj)){
+            ++$added;
+            $self->_add($obj);
+        }
+        else{
+            $self->update($obj);
         }
     }
+    
     return $added;
 }
 before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };

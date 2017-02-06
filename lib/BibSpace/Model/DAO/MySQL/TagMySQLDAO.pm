@@ -35,7 +35,6 @@ sub all {
     
     my $obj = $self->e_factory->new_Tag(
       old_mysql_id => $row->{id},
-      idProvider   => $self->idProvider,
       id           => $row->{id},
       name         => $row->{name},
       type         => $row->{type},
