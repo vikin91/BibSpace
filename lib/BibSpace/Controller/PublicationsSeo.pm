@@ -7,7 +7,7 @@ use warnings;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use 5.010;           #because of ~~
+use v5.16;           #because of ~~
 
 use TeX::Encode;
 use Encode;

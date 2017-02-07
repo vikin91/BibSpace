@@ -1,7 +1,7 @@
 package TagCloud;
 
 use utf8;
-use 5.010;    #because of ~~ and say
+use v5.16;    #because of ~~ and say
 use Moose;
 
 has 'count' => ( is => 'rw', isa => 'Int' );    # number in parenthesis

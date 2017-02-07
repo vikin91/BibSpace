@@ -5,7 +5,7 @@ use utf8;
 use DateTime;
 use strict;
 use warnings;
-use v5.10;
+use v5.16;
 use Try::Tiny;
 use Data::Dumper;
 use Exporter;

@@ -2,7 +2,7 @@ package Membership;
 
 use Data::Dumper;
 use utf8;
-use 5.010;    #because of ~~ and say
+use v5.16;    #because of ~~ and say
 use BibSpace::Model::Author;
 use BibSpace::Model::Team;
 use Try::Tiny;

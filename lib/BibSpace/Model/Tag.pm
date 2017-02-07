@@ -3,7 +3,7 @@ package Tag;
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
-use 5.010;           #because of ~~ and say
+use v5.16;           #because of ~~ and say
 
 use List::MoreUtils qw(any uniq first_index);
 

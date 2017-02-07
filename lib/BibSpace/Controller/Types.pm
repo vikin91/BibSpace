@@ -2,7 +2,7 @@ package BibSpace::Controller::Types;
 
 use Data::Dumper;
 use utf8;
-use 5.010;           #because of ~~
+use v5.16;           #because of ~~
 use strict;
 use warnings;
 

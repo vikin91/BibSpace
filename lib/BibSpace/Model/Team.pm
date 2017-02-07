@@ -5,7 +5,7 @@ use Devel::StackTrace;
 use Data::Dumper;
 use utf8;
 use BibSpace::Model::Author;
-use 5.010;    #because of ~~ and say
+use v5.16;    #because of ~~ and say
 use List::MoreUtils qw(any uniq);
 use Moose;
 use BibSpace::Model::IEntity;

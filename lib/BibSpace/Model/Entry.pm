@@ -19,7 +19,7 @@ use Path::Tiny;
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
-use 5.010;           #because of ~~ and say
+use v5.16;           #because of ~~ and say
 
 use Try::Tiny;
 use TeX::Encode;

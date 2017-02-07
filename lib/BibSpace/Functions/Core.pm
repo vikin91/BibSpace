@@ -9,7 +9,7 @@ use DateTime;
 # use File::Slurp;
 use File::Find;
 
-use 5.010;           #because of ~~
+use v5.16;           #because of ~~
 use Cwd;
 use strict;
 use warnings;

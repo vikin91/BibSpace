@@ -6,7 +6,7 @@ use Text::BibTeX;    # parsing bib files
 use DateTime;
 # use File::Slurp;
 
-use 5.010; 
+use v5.16; 
 use Try::Tiny;
 use strict;
 use warnings;

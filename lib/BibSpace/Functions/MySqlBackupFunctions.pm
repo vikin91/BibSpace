@@ -11,7 +11,7 @@ use DateTime;
 use File::Find;
 
 use Try::Tiny;
-use 5.010;           #because of ~~
+use v5.16;           #because of ~~
 use Cwd;
 use strict;
 use warnings;

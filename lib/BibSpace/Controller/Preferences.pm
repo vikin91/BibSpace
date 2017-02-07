@@ -3,7 +3,7 @@ package BibSpace::Controller::Preferences;
 use strict;
 use warnings;
 use utf8;
-use 5.010;    #because of ~~
+use v5.16;    #because of ~~
 # use File::Slurp;
 use Try::Tiny;
 
