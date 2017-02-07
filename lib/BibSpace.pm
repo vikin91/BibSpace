@@ -277,8 +277,8 @@ sub insert_admin {
         $self->app->repo->users_save($new_user);
     }
     else {
-        $admin_exists->email('pub_admin@example.com')
-            ;    # this email is used for tests!
+        # this email is used in tests!
+        $admin_exists->email('pub_admin@example.com');    
         $admin_exists->make_admin;
         $self->app->repo->users_update($admin_exists);
     }

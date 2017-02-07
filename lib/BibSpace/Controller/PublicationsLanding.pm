@@ -335,8 +335,7 @@ sub landing_types_obj {    # TODO: clean this mess!
             {   bibtex_type => $bibtexType,
                 entry_type  => $entryType,
                 visible     => 0,
-                hidden      => 0,
-                debug       => 1
+                hidden      => 0
             }
         );
 

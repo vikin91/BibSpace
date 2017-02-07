@@ -39,7 +39,7 @@ sub registerUID{
 
     if( !$self->uid_defined($uid) ){
         $self->uid_set($uid => 1);
-        $self->logger->debug("Registered uid '$uid' for type '".$self->for_type."'.");
+        $self->logger->lowdebug("Registered uid '$uid' for type '".$self->for_type."'.","".__PACKAGE__."->registerUID");
     }
     else{
         my $msg = "Cannot registerUID for type '".$self->for_type."'. It exists already! Wanted to reg: $uid. Existing: ". join(' ', sort $self->uid_keys);
