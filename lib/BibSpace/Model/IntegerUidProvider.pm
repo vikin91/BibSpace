@@ -42,7 +42,7 @@ sub registerUID{
         $self->logger->debug("Registered uid '$uid' for type '".$self->for_type."'.");
     }
     else{
-        my $msg = "Cannot registerUID. It exists already! Wanted to reg: $uid. Existing: ". join(' ', sort $self->uid_keys);
+        my $msg = "Cannot registerUID for type '".$self->for_type."'. It exists already! Wanted to reg: $uid. Existing: ". join(' ', sort $self->uid_keys);
         $self->logger->error($msg,"".__PACKAGE__."->registerUID");
         die $msg;
     }
