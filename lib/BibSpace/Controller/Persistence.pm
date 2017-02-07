@@ -18,9 +18,15 @@ use BibSpace::Functions::Core;
 sub persistence_status {
     my $self = shift;
 
-    my $status = "Status: <pre style=\"font-family:monospace;\">".$self->app->repo->lr->get_summary_table."</pre>";
-    $self->flash( msg_type=>'success', msg => $status );
-    $self->redirect_to( $self->get_referrer );
+    my $status = '
+    <div class="alert alert-info">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        System backend status
+        <pre style="font-family:monospace;">'.$self->app->repo->lr->get_summary_table.'</pre>        
+    </div>';
+    $self->render(text => $status);
+    # $self->flash( msg_type=>'success', msg => $status );
+    # $self->redirect_to( $self->get_referrer );
 }
 #################################################################################
 sub load_fixture {
