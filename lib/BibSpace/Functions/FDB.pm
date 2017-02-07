@@ -39,6 +39,8 @@ sub db_connect {
   catch{
     warn "db_connect: could not connect to the database: $_";
     warn "Trying to recreate database...";
+
+    # THIS BLOCK MAY CAUSE PROBLEMS !!! If MySQL dies during operation, make sure to check again without this block.
     try{
       my $drh = DBI->install_driver("mysql");
       $drh->func( 'createdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );

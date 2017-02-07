@@ -54,7 +54,24 @@ sub all {
   my $html = $self->render_to_string( template => 'publications/all' );
   $self->render( data => $html );
 }
+####################################################################################
 
+sub all_bibtex {
+  my $self = shift;
+  my $entry_type = undef;
+  # if entry_type = undef, then this includes papers+talks by default
+  $entry_type = $self->param('entry_type');
+
+  my @objs = Fget_publications_main_hashed_args( $self, { entry_type => $entry_type, hidden => 0 } );
+
+  my $big_str = "<pre>\n";
+  foreach my $obj (@objs) {
+    $big_str .= $obj->{bib};
+    $big_str .= "\n";
+  }
+  $big_str .= "\n</pre>";
+  $self->render( text => $big_str );
+}
 ####################################################################################
 
 sub all_read {
@@ -351,33 +368,6 @@ sub all_candidates_to_delete {
   $self->stash( msg_type => 'info', msg => $msg );
   $self->stash( entries => \@objs );
   $self->render( template => 'publications/all' );
-}
-
-####################################################################################
-
-sub all_bibtex {
-  my $self = shift;
-
-  my $entry_type = undef;
-
-  # this includes papers+talks by default
-  $entry_type = $self->param('entry_type');
-
-
-  my @objs = $self->app->repo->entries_filter( sub { !$_->is_hidden } );
-
-  @objs = grep { $_->entry_type eq $entry_type } @objs if defined $entry_type;
-
-  # my @objs = Fget_publications_main_hashed_args( $self,
-  #     { hidden => 0, entry_type => $entry_type } );
-
-  my $big_str = "<pre>\n";
-  foreach my $obj (@objs) {
-    $big_str .= $obj->{bib};
-    $big_str .= "\n";
-  }
-  $big_str .= "\n</pre>";
-  $self->render( text => $big_str );
 }
 
 ####################################################################################
