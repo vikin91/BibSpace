@@ -118,7 +118,6 @@ sub _insert {
   foreach my $obj (@objects) {
     try {
       my $result = $sth->execute( $obj->team_id, $obj->entry_id );
-      $sth->finish();
       $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
     }
     catch {

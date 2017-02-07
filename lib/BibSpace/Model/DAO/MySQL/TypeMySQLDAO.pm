@@ -121,7 +121,6 @@ sub _insert {
     foreach my $bibtex_type ($obj->bibtexTypes_all) {
       try {
         my $result = $sth->execute( $bibtex_type, $obj->our_type, $obj->onLanding, $obj->description);
-        $sth->finish();
       }
       catch {
         $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
@@ -184,7 +183,6 @@ sub delete {
   foreach my $obj (@objects) {
     try {
       my $result = $sth->execute( $obj->our_type );
-      $sth->finish();
     }
     catch {
       $self->logger->error( "Delete exception: $_", "" . __PACKAGE__ . "->delete" );

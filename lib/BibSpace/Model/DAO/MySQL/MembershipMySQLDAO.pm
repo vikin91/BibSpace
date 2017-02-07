@@ -131,7 +131,6 @@ sub _insert {
   foreach my $obj (@objects) {
     try {
       my $result = $sth->execute( $obj->author_id, $obj->team_id, $obj->start, $obj->stop );
-      $sth->finish();
     }
     catch {
       my $obj_str = $obj->toString;
@@ -164,7 +163,6 @@ sub update {
     my $sth = $dbh->prepare($qry);
     try {
       my $result = $sth->execute( $obj->start, $obj->stop, $obj->author_id, $obj->team_id );
-      $sth->finish();
     }
     catch {
       $self->logger->error( "Update exception: $_", "" . __PACKAGE__ . "->update" );

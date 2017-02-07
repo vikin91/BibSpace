@@ -197,7 +197,6 @@ sub _insert {
         $obj->master_id,
         $obj->tennant_id
       );
-      $sth->finish();
     }
     catch {
       $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
@@ -251,7 +250,6 @@ sub update {
         $obj->tennant_id,
         $obj->id
       );
-      $sth->finish();
     }
     catch {
       $self->logger->error( "Update exception: $_", "" . __PACKAGE__ . "->update" );

@@ -233,7 +233,6 @@ sub _insert {
                 $obj->creation_time, $obj->modified_time,
                 $obj->need_html_regen,
             );
-            $sth->finish();
         }
         catch {
             $self->logger->error( "Insert exception: $_",
@@ -288,7 +287,6 @@ sub update {
                 $obj->month,           $obj->modified_time,
                 $obj->need_html_regen, $obj->id
             );
-            $sth->finish();
         }
         catch {
             $self->logger->error( "Update exception: $_",

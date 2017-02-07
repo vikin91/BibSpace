@@ -122,7 +122,6 @@ sub _insert {
     
     try {
       my $result = $sth->execute( $obj->author_id, $obj->entry_id );
-      $sth->finish();
       $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
     }
     catch {
