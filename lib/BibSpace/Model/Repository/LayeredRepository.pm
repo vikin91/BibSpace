@@ -274,11 +274,7 @@ sub copy_data {
     }
     foreach my $type ( LayeredRepository->get_relations ){
 
-        $self->logger->debug("Reading all $type.","".__PACKAGE__."->copy_data");
-
         my @resultRead = $srcLayer->all($type);
-
-        $self->logger->debug("Saving all ".scalar(@resultRead)." $type.","".__PACKAGE__."->copy_data");
         my $resultSave = $destLayer->save($type, @resultRead);
         
         $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".__PACKAGE__."->copy_data");

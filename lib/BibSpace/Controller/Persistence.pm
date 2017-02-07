@@ -17,16 +17,22 @@ use BibSpace::Functions::Core;
 #################################################################################
 sub persistence_status {
     my $self = shift;
+    my $use_ajax = $self->param('ajax');
 
+    my $now = DateTime->now->set_time_zone( $self->app->preferences->local_time_zone );
     my $status = '
     <div class="alert alert-info">
         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-        System backend status
+        '.$now.' System backend status:
         <pre style="font-family:monospace;">'.$self->app->repo->lr->get_summary_table.'</pre>        
     </div>';
-    $self->render(text => $status);
-    # $self->flash( msg_type=>'success', msg => $status );
-    # $self->redirect_to( $self->get_referrer );
+    if($use_ajax){
+        $self->render(text => $status);    
+    }
+    else{
+        $self->flash( msg_type=>'success', msg => $status );
+        $self->redirect_to( $self->get_referrer );
+    }
 }
 #################################################################################
 sub load_fixture {
