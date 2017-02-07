@@ -224,14 +224,14 @@ sub _insert {
 
         try {
             my $result = $sth->execute(
-                $obj->{id},            $obj->{entry_type},
-                $obj->{bibtex_key},    $obj->{_bibtex_type},
-                $obj->{bib},           $obj->{html},
-                $obj->{html_bib},      $obj->{abstract},
-                $obj->{title},         $obj->{hidden},
-                $obj->{year},          $obj->{month},
-                $obj->{creation_time}, $obj->{modified_time},
-                $obj->{need_html_regen},
+                $obj->id,            $obj->entry_type,
+                $obj->bibtex_key,    $obj->{_bibtex_type},
+                $obj->bib,           $obj->html,
+                $obj->html_bib,      $obj->abstract,
+                $obj->title,         $obj->hidden,
+                $obj->year,          $obj->month,
+                $obj->creation_time, $obj->modified_time,
+                $obj->need_html_regen,
             );
             $sth->finish();
         }
@@ -280,13 +280,13 @@ sub update {
         my $sth = $dbh->prepare($qry);
         try {
             my $result = $sth->execute(
-                $obj->{entry_type},      $obj->{bibtex_key},
-                $obj->{_bibtex_type},    $obj->{bib},
-                $obj->{html},            $obj->{html_bib},
-                $obj->{abstract},        $obj->{title},
-                $obj->{hidden},          $obj->{year},
-                $obj->{month},           $obj->{modified_time},
-                $obj->{need_html_regen}, $obj->{id}
+                $obj->entry_type,      $obj->bibtex_key,
+                $obj->{_bibtex_type},  $obj->bib,
+                $obj->html,            $obj->html_bib,
+                $obj->abstract,        $obj->title,
+                $obj->hidden,          $obj->year,
+                $obj->month,           $obj->modified_time,
+                $obj->need_html_regen, $obj->id
             );
             $sth->finish();
         }

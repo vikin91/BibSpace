@@ -183,6 +183,9 @@ subtest 'User management: public registration' => sub {
     ->status_isnt(500)
     ->content_like(qr/This login is already taken/i, "Trying to register pub_admin");
   }
+  else{
+    ok(1);
+  }
 };
 
 
