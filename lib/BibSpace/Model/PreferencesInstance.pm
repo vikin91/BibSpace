@@ -15,64 +15,56 @@ use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
 
-has 'bibitex_html_converter' => (
-    is      => 'rw',
-    isa     => 'Str',
-    default => 'BibStyleConverter',
-    trigger => \&_pref_changed
-);
+# I can't name it load due to deep recursion (direct or indirect)
+sub load_maybe {
+  my $self = shift;
+  if ( -e 'bibspace_preferences.json' ) {
+    say "Loading prefeerences from file 'bibspace_preferences.json'.";
+    return PreferencesInstance->load('bibspace_preferences.json');
+  }
+  return $self;
+}
+
+has 'bibitex_html_converter' =>
+  ( is => 'rw', isa => 'Str', default => 'BibStyleConverter', trigger => \&_pref_changed );
 
 # important for Preferences form
-has 'default_bibitex_html_converter' => (
-    is      => 'ro',
-    isa     => 'Str',
-    default => 'BibStyleConverter',
-    trigger => \&_pref_changed
-);
+has 'default_bibitex_html_converter' =>
+  ( is => 'ro', isa => 'Str', default => 'BibStyleConverter', trigger => \&_pref_changed );
 
-has 'local_time_zone' => (
-    is      => 'rw',
-    isa     => 'Str',
-    default => 'Europe/Berlin',
-    trigger => \&_pref_changed
-);
+has 'local_time_zone' => ( is => 'rw', isa => 'Str', default => 'Europe/Berlin', trigger => \&_pref_changed );
 
 # http://search.cpan.org/~drolsky/DateTime-1.42/lib/DateTime.pm#strftime_Patterns
-has 'output_time_format' => (
-    is      => 'rw',
-    isa     => 'Str',
-    default => '%a %d %b %T, %Y',
-    trigger => \&_pref_changed
-);
+has 'output_time_format' => ( is => 'rw', isa => 'Str', default => '%a %d %b %T, %Y', trigger => \&_pref_changed );
 
 # cron_level => last_call
-# TODO: this will be not persisted and this is a real problem... need to solve this.
 has 'cron' => (
-    traits  => ['Hash'],
-    is      => 'rw',
-    isa     => 'HashRef[Str]',
-    default => sub { {} },
-    handles => {
-        cron_set     => 'set',
-        cron_get     => 'get',
-        cron_has     => 'exists',
-        cron_defined => 'defined',
-        cron_keys    => 'keys',
-        cron_values  => 'values',
-        cron_num     => 'count',
-        cron_pairs   => 'kv',
-    },
+  traits  => ['Hash'],
+  is      => 'rw',
+  isa     => 'HashRef[Str]',
+  default => sub { {} },
+  trigger => \&_pref_changed,
+  handles => {
+    cron_set     => 'set',
+    cron_get     => 'get',
+    cron_has     => 'exists',
+    cron_defined => 'defined',
+    cron_keys    => 'keys',
+    cron_values  => 'values',
+    cron_num     => 'count',
+    cron_pairs   => 'kv',
+  },
 );
 
 ###### METHODS
 
 sub _pref_changed {
-    my ( $self, $curr_val, $prev_val ) = @_;
+  my ( $self, $curr_val, $prev_val ) = @_;
 
-    # $self->store_class_vars;
-    if ( $curr_val ne $prev_val ) {
-        say "A preference changed to '$curr_val'.";
-    }
+  if ( $prev_val and $curr_val ne $prev_val ) {
+    say "A preference changed to '$curr_val'.";
+    $self->store('bibspace_preferences.json');
+  }
 }
 
 __PACKAGE__->meta->make_immutable;

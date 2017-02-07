@@ -9,8 +9,6 @@
 
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
-            <!-- class => 'form-horizontal',  -->
-            <!-- % if(Preferences->bibitex_html_converter eq 'BibStyleConverter) -->
 
         %= form_for save_preferences => (method=>'POST') => begin
 
@@ -22,11 +20,11 @@
                         % my $desc = $converter_class;
                         % my $selected = '';
                         
-                        % if( $converter_class eq Preferences->bibitex_html_converter){
+                        % if( $converter_class eq $preferences->bibitex_html_converter){
                         %    $selected = ' selected="selected"';
                         %    $desc .= ' (current)';
                         % }
-                        % if( $converter_class eq Preferences->default_bibitex_html_converter){
+                        % if( $converter_class eq $preferences->default_bibitex_html_converter){
                         %       $desc .= ' (default)';
                         % }
                         <option value="<%=$val%>"<%=$selected%>> <%=$desc%> </option>
@@ -35,16 +33,15 @@
             </div>
             <div class="form-group">
                 %= label_for local_time_zone => 'Time Zone'
-                %= select_field local_time_zone => [[Preferences->local_time_zone." (current)" => Preferences->local_time_zone, selected => 'selected' ], [$detected_tz." (auto-discovered)" => $detected_tz], map{ $_ => $_ } DateTime::TimeZone->all_names ] =>  (class => 'form-control') 
+                %= select_field local_time_zone => [[$preferences->local_time_zone." (current)" => $preferences->local_time_zone, selected => 'selected' ], [$detected_tz." (auto-discovered)" => $detected_tz], map{ $_ => $_ } DateTime::TimeZone->all_names ] =>  (class => 'form-control') 
             </div>
             <div class="form-group">
                 %= label_for output_time_format => 'Preferred output date format'
-                %= text_field output_time_format => Preferences->output_time_format  =>  (class => 'form-control') 
+                %= text_field output_time_format => $preferences->output_time_format  =>  (class => 'form-control') 
                 <p class="help-block">For example: last login, last modification. <a href="http://search.cpan.org/~drolsky/DateTime-1.42/lib/DateTime.pm#strftime_Patterns">List of allowed tokens</a>.</p>
             </div>
             <div class="form-group">
                 <button type="submit" class="btn btn-success"> Save <i class="fa fa-floppy-o"></i> </button>
-                <p class="help-block">Currently, preferences cannot be persisted. Sorry.</p>
             </div>
         % end
 

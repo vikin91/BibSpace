@@ -5,7 +5,6 @@ use Data::Dumper;
 use utf8;
 use 5.010;           #because of ~~ and say
 use List::MoreUtils qw(any uniq);
-use BibSpace::Model::Preferences;
 
 use BibSpace::Functions::Core qw(check_password);
 use BibSpace::Model::IEntity;
@@ -43,33 +42,36 @@ has 'tennant_id'        => ( is => 'rw', default => 0 );
 has 'last_login' => (
     is      => 'rw',
     isa     => 'DateTime',
-    traits  => ['DoNotSerialize'],
+    lazy    => 1, # due to preferences
     default => sub {
+        my $self = shift;
         DateTime->now
-            ->set_time_zone(Preferences->local_time_zone);
+            ->set_time_zone($self->preferences->local_time_zone);
     },
 );
 sub get_last_login {
     my $self = shift;
     
     $self->last_login
-        ->set_time_zone(Preferences->local_time_zone)
-        ->strftime(Preferences->output_time_format);
+        ->set_time_zone($self->preferences->local_time_zone)
+        ->strftime($self->preferences->output_time_format);
 }
 
 has 'registration_time' => (
     is      => 'ro',
     isa     => 'DateTime',
-    traits  => ['DoNotSerialize'],
+    lazy    => 1, # due to preferences
     default => sub {
-        DateTime->now;
+        my $self = shift;
+        DateTime->now
+            ->set_time_zone($self->preferences->local_time_zone);
     },
 );
 sub get_registration_time {
     my $self = shift;
     $self->registration_time
-        ->set_time_zone(Preferences->local_time_zone)
-        ->strftime(Preferences->output_time_format);
+        ->set_time_zone($self->preferences->local_time_zone)
+        ->strftime($self->preferences->output_time_format);
 }
 
 ####################################################################################
@@ -133,7 +135,7 @@ sub make_user {
 ####################################################################################
 sub record_logging_in {
     my $self     = shift;
-    $self->last_login( DateTime->now->set_time_zone(Preferences->local_time_zone) );
+    $self->last_login( DateTime->now->set_time_zone($self->preferences->local_time_zone) );
 
 }
 no Moose;

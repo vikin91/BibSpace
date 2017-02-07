@@ -6,7 +6,6 @@ use Data::Dumper;
 use Array::Utils qw(:all);
 
 use BibSpace::Model::Entry;
-use BibSpace::Model::Preferences;
 
 my $t_anyone    = Test::Mojo->new('BibSpace');
 my $self = $t_anyone->app;
@@ -79,11 +78,11 @@ foreach my $entry(@all_entries){
   # just call
   $entry->get_title;
 
-  Preferences->bibitex_html_converter('BibStyleConverter');
+  $self->app->preferences->bibitex_html_converter('BibStyleConverter');
   $entry->regenerate_html( 1, $self->app->bst, $self->app->bibtexConverter );
-  Preferences->bibitex_html_converter('Bibtex2HtmlConverter');
+  $self->app->preferences->bibitex_html_converter('Bibtex2HtmlConverter');
   $entry->regenerate_html( 1, $self->app->bst, $self->app->bibtexConverter );
-  Preferences->bibitex_html_converter('BibStyleConverter');
+  $self->app->preferences->bibitex_html_converter('BibStyleConverter');
   
 
 

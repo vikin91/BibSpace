@@ -970,6 +970,7 @@ sub publications_add_get {
       month = {' . $mons{ get_current_month() } . '},
       day = {1--31},
     }';
+    
   my $e_dummy = $self->app->entityFactory->new_Entry( bib => $bib );
 
   $e_dummy->populate_from_bib();

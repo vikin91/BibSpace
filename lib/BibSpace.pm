@@ -38,7 +38,6 @@ use BibSpace::Model::Converter::BibStyleConverter;
 
 use Storable;
 
-use BibSpace::Model::Preferences;
 use BibSpace::Model::PreferencesInstance;
 use BibSpace::Model::EntityFactory;
 
@@ -50,7 +49,7 @@ use BibSpace::Model::EntityFactory;
 use feature qw( state say );
 
 has preferences => sub {
-    return state $prefs = PreferencesInstance->new;
+    return state $prefs = PreferencesInstance->new->load_maybe;
 };
 
 has is_demo => sub {
@@ -212,7 +211,6 @@ sub startup {
     $self->setup_config;
     $self->setup_plugins;
 
-    Preferences->local_time_zone( DateTime::TimeZone->new( name => 'local' )->name );
     $self->app->preferences->local_time_zone( DateTime::TimeZone->new( name => 'local' )->name );
 
     $self->setup_routes;
@@ -228,8 +226,7 @@ sub startup {
     $self->app->logger->info( "App home is: " . $self->app->home );
     $self->app->logger->info( "Active bst file is: " . $self->app->bst );
 
-    # my $prefs = Preferences->new;
-    # $prefs->store('bibspace_preferences.json');
+
 
     ###############################
     ########### SANDBOX ###########

@@ -13,7 +13,7 @@ use Data::Dumper;
 use Mojo::Base 'Mojolicious::Controller';
 use Storable;
 use BibSpace::Functions::Core;
-use BibSpace::Model::Preferences;
+use BibSpace::Model::PreferencesInstance;
 
 use Class::MOP;
 use Moose::Util qw/does_role/;
@@ -30,7 +30,7 @@ sub index {
     @converterClasses = grep { $_ ne 'IHtmlBibtexConverter' } @converterClasses;
     
 
-    $self->stash( converters => \@converterClasses );
+    $self->stash( preferences => $self->app->preferences, converters => \@converterClasses );
     $self->render( template => 'display/preferences' );
 }
 #################################################################################
@@ -42,14 +42,14 @@ sub save {
 
     # TODO: validate inputs
 
-    Preferences->bibitex_html_converter($bibitex_html_converter);
-    Preferences->local_time_zone($local_time_zone);
-    Preferences->output_time_format($output_time_format);
+    $self->app->preferences->bibitex_html_converter($bibitex_html_converter);
+    $self->app->preferences->local_time_zone($local_time_zone);
+    $self->app->preferences->output_time_format($output_time_format);
 
     # # store to file
-    # my $json_str = Preferences->instance->store('bibspace_preferences.json');
+    # my $json_str = $self->app->preferences->store('bibspace_preferences.json');
 
-    $self->flash( msg_type=>'success', msg => 'Preferences saved!' );
+    $self->stash( preferences => $self->app->preferences, msg_type=>'success', msg => 'Preferences saved!' );
     # $self->render( template => 'display/preferences' );
     $self->redirect_to( $self->get_referrer );
 }

@@ -70,15 +70,15 @@ sub register {
     bibtexConverter => sub {
       my $self = shift;
       try{
-          my $class = Preferences->bibitex_html_converter;
+          my $class = $self->app->preferences->bibitex_html_converter;
           Class::Load::load_class($class);
           if($class->does('IHtmlBibtexConverter')){
-            return $class->new( logger => $self->app->logger);  
+            return $class->new( logger => $self->app->logger );  
           }
           die "Requested class '$class' does not implement interface 'IHtmlBibtexConverter'";
       }
       catch{
-          $self->logger->error("Requested unknown type of bibitex_html_converter: '".Preferences->bibitex_html_converter."'. Error: $_.");
+          $self->logger->error("Requested unknown type of bibitex_html_converter: '".$self->app->preferences->bibitex_html_converter."'. Error: $_.");
       }
       finally{
         return BibStyleConverter->new( logger => $self->app->logger );

@@ -8,7 +8,6 @@ use BibSpace::Model::TagType;
 use BibSpace::Model::Type;
 
 use BibSpace::Functions::Core;
-use BibSpace::Model::Preferences;
 
 use List::MoreUtils qw(any uniq);
 
@@ -50,7 +49,7 @@ sub _bib_changed {
 
     # bib was updated, we need to bump modified_time
     if ( $prev_val and $curr_val ne $prev_val ) {
-        $self->modified_time( DateTime->now->set_time_zone( Preferences->local_time_zone ) );
+        $self->modified_time( DateTime->now->set_time_zone( $self->preferences->local_time_zone ) );
     }
 }
 
@@ -83,35 +82,36 @@ has 'attachments' => (
         attachments_clear   => 'clear',
     },
 );
-has 'attachment_slides' =>
-    ( is => 'rw', isa => 'Maybe[Path::Tiny]', default => undef );
+
 
 has 'creation_time' => (
     is      => 'rw',
     isa     => 'DateTime',
-    traits  => ['DoNotSerialize'],
+    lazy    => 1, # due to preferences
     default => sub {
-        DateTime->now->set_time_zone(Preferences->local_time_zone);
+        my $self = shift;
+        DateTime->now->set_time_zone($self->preferences->local_time_zone);
     },
 );
 
 sub get_creation_time {
     my $self = shift;
-    $self->creation_time->set_time_zone(Preferences->local_time_zone)->strftime(Preferences->output_time_format);
+    $self->creation_time->set_time_zone($self->preferences->local_time_zone)->strftime($self->preferences->output_time_format);
 }
 
 has 'modified_time' => (
     is      => 'rw',
     isa     => 'DateTime',
-    traits  => ['DoNotSerialize'],
+    lazy    => 1, # due to preferences
     default => sub {
-        DateTime->now->set_time_zone(Preferences->local_time_zone);
+        my $self = shift;
+        DateTime->now->set_time_zone($self->preferences->local_time_zone);
     },
 );
 
 sub get_modified_time {
     my $self = shift;
-    $self->modified_time->set_time_zone(Preferences->local_time_zone)->strftime(Preferences->output_time_format);
+    $self->modified_time->set_time_zone($self->preferences->local_time_zone)->strftime($self->preferences->output_time_format);
 }
 
 # not DB fields
