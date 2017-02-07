@@ -33,6 +33,7 @@ sub db_connect {
   my %attr = (RaiseError=>1, AutoCommit=>1); 
   try{
     # $conn = Apache::DBI->connect_on_init("DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
+    print "(Re)connecting to: 'DBI:mysql:database=$db_database;host=$db_host'\n";
     $conn = DBI->connect_cached( "DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
   }
   catch{
