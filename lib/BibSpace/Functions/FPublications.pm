@@ -180,7 +180,7 @@ sub Fhandle_add_edit_publication {
         }
         $e->generate_html( $bst_file, $app->bibtexConverter );
         $e->fix_month();
-        Freassign_authors_to_entries_given_by_array( $repo, 1, [$e] );
+        Freassign_authors_to_entries_given_by_array( $app, 1, [$e] );
         $repo->entries_save($e);
 
         $added_under_id = $e->id;
