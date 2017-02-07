@@ -17,7 +17,7 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw(
   db_connect
   create_main_db
-  purge_and_create_db
+  reset_db_data
   prepare_token_table_mysql
   prepare_user_table_mysql
   prepare_cron_table
@@ -55,37 +55,58 @@ sub db_connect {
   create_main_db($dbh);
   return $dbh;
 }
+
+##########################################################################################
+sub reset_db_data {
+  my ( $dbh ) = @_;
+
+  my @table_names = qw(Author Team Entry Tag TagType Login Author_to_Team Entry_to_Author Entry_to_Tag Exceptions_Entry_to_Team OurType_to_Type );
+  
+  try{
+    $dbh->do(q{SET FOREIGN_KEY_CHECKS = 0;});
+    foreach my $table_name (@table_names){
+      $dbh->do(q{TRUNCATE TABLE } . $table_name);
+    }
+  }
+  catch{
+    warn "Truncation unsuccessful, error: $_";
+  }
+  finally{
+    $dbh->do(q{SET FOREIGN_KEY_CHECKS = 1;});
+  };
+  return $dbh;
+}
+  
 ##########################################################################################
 sub purge_and_create_db {
   my ( $dbh, $db_host, $db_user, $db_database, $db_pass ) = @_;
-  
-  my $drh = DBI->install_driver("mysql");
+  # my $drh = DBI->install_driver("mysql");
 
-  say "!!! DROPPING DATABASE '$db_database'.";
-  try {
-    my $rc = $drh->func( 'dropdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
-  }
-  catch {
-    warn $_;
-  };
+  # say "!!! DROPPING DATABASE '$db_database'.";
+  # try {
+  #   my $rc = $drh->func( 'dropdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
+  # }
+  # catch {
+  #   warn $_;
+  # };
 
-  say "!!! CREATING DATABASE '$db_database'.";
-  try {
-    my $rc = $drh->func( 'createdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
-  }
-  catch {
-    warn $_;
-  };
+  # say "!!! CREATING DATABASE '$db_database'.";
+  # try {
+  #   my $rc = $drh->func( 'createdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
+  # }
+  # catch {
+  #   warn $_;
+  # };
 
-  say "Restarting connection to '$db_database'.";
-  try {
-    $dbh = db_connect( $db_host, $db_user, $db_database, $db_pass );
-    create_main_db($dbh);
+  # say "Restarting connection to '$db_database'.";
+  # try {
+  #   $dbh = db_connect( $db_host, $db_user, $db_database, $db_pass );
+  #   create_main_db($dbh);
     
-  }
-  catch {
-    warn $_;
-  };
+  # }
+  # catch {
+  #   warn $_;
+  # };
 
   
   return $dbh;

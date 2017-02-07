@@ -186,12 +186,8 @@ has layeredRepository => sub {
             backendFactoryName            => "MySQLDAOFactory",
             logger                        => $self->logger,
             handle                        => $self->db,
-            reset_data_callback           => \&purge_and_create_db,
-            reset_data_callback_arguments => [
-                $self->db,                $self->config->{db_host},
-                $self->config->{db_user}, $self->config->{db_database},
-                $self->config->{db_pass}
-            ],
+            reset_data_callback           => \&reset_db_data,
+            reset_data_callback_arguments => [ $self->db ],
         );
         $LR->add_layer($mySQLLayer);
     }

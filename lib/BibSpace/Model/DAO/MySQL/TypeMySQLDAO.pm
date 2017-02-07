@@ -68,7 +68,7 @@ after 'all' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->all" ); }
 sub count {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $sth    = $dbh->prepare("SELECT COUNT(our_type) as num FROM OurType_to_Type LIMIT 1");
+  my $sth    = $dbh->prepare("SELECT COUNT(DISTINCT our_type) as num FROM OurType_to_Type LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
   my $num = $row->{num} // 0;

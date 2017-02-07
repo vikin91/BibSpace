@@ -40,7 +40,7 @@ my $fixture_name = "bibspace_fixture.dat";
 my $fixture_dir = "./fixture/";
 
 note "Drop database and recreate tables";
-ok( purge_and_create_db($dbh, $db_host, $db_user, $db_database, $db_pass), "purge_and_create_db");
+ok( reset_db_data($dbh), "reset_db_data");
 
 SKIP: {
 	note "============ APPLY DATABASE FIXTURE ============";
