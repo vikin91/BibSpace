@@ -21,7 +21,7 @@
     <i class="fa fa-trash "></i>
 </a>
 
-<script>
+%= javascript begin
 
 get_pub_table = function() {
   $.ajax({
@@ -56,5 +56,5 @@ $('.delete_publication').click( function() {
   var id_2_del = $(this).attr('data-id');
     delete_publication(id_2_del);
 });
-</script> 
+%= end
 -->

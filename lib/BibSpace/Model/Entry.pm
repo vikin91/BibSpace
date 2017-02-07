@@ -1,6 +1,5 @@
 package Entry;
 
-use BibSpace::Model::IntegerUidProvider;
 use BibSpace::Model::Tag;
 use BibSpace::Model::Team;
 use BibSpace::Model::Author;
@@ -96,7 +95,8 @@ has 'creation_time' => (
 
 sub get_creation_time {
     my $self = shift;
-    $self->creation_time->set_time_zone($self->preferences->local_time_zone)->strftime($self->preferences->output_time_format);
+    $self->creation_time->set_time_zone($self->preferences->local_time_zone)
+        ->strftime($self->preferences->output_time_format);
 }
 
 has 'modified_time' => (
@@ -111,7 +111,8 @@ has 'modified_time' => (
 
 sub get_modified_time {
     my $self = shift;
-    $self->modified_time->set_time_zone($self->preferences->local_time_zone)->strftime($self->preferences->output_time_format);
+    $self->modified_time->set_time_zone($self->preferences->local_time_zone)
+        ->strftime($self->preferences->output_time_format);
 }
 
 # not DB fields

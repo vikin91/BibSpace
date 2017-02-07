@@ -1,7 +1,7 @@
 package IEntity;
 use namespace::autoclean;
 
-use BibSpace::Model::IntegerUidProvider;
+use BibSpace::Util::IntegerUidProvider;
 use Moose::Role;
 use MooseX::StrictConstructor;
 
@@ -17,7 +17,7 @@ sub _generateUIDEntry {
 }
 
 
-has 'preferences' => ( is => 'ro', isa => 'PreferencesInstance');
+has 'preferences' => ( is => 'ro', isa => 'Preferences');
 
 has 'idProvider' => (
     is       => 'ro',

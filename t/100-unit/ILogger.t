@@ -6,7 +6,7 @@ use Test::Mojo;
 package DummyLogger;
 use namespace::autoclean;
 use Moose;
-use BibSpace::Model::ILogger;
+use BibSpace::Util::ILogger;
 with 'ILogger';
 
 package main;

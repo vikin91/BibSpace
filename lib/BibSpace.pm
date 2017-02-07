@@ -23,25 +23,27 @@ use Path::Tiny;    # for creating directories
 use Mojo::Home;
 use File::Spec;
 
-use BibSpace::Model::DAO::DAOFactory;
-use BibSpace::Model::SmartArray;
 
-use BibSpace::Model::SimpleLogger;
+use BibSpace::Util::SmartArray;
+use BibSpace::Util::SimpleLogger;
+use BibSpace::Util::SmartUidProvider;
+
 use BibSpace::Model::User;
 
-use BibSpace::Model::SmartUidProvider;
-use BibSpace::Model::Repository::LayeredRepository;
-use BibSpace::Model::Repository::RepositoryLayer;
-use BibSpace::Model::Repository::RepositoryFacade;
+use BibSpace::DAO::DAOFactory;
 
-use BibSpace::Model::Converter::IHtmlBibtexConverter;
-use BibSpace::Model::Converter::Bibtex2HtmlConverter;
-use BibSpace::Model::Converter::BibStyleConverter;
+use BibSpace::Repository::LayeredRepository;
+use BibSpace::Repository::RepositoryLayer;
+use BibSpace::Repository::RepositoryFacade;
+
+use BibSpace::Converter::IHtmlBibtexConverter;
+use BibSpace::Converter::Bibtex2HtmlConverter;
+use BibSpace::Converter::BibStyleConverter;
 
 use Storable;
 
-use BibSpace::Model::PreferencesInstance;
-use BibSpace::Model::EntityFactory;
+use BibSpace::Util::Preferences;
+use BibSpace::Util::EntityFactory;
 
 # STATE keyword
 # state declares a lexically scoped variable, just like my. 
@@ -51,7 +53,7 @@ use BibSpace::Model::EntityFactory;
 use feature qw( state say );
 
 has preferences => sub {
-    return state $prefs = PreferencesInstance->new->load_maybe;
+    return state $prefs = Preferences->new->load_maybe;
 };
 
 has is_demo => sub {

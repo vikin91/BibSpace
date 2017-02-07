@@ -13,13 +13,13 @@ use Data::Dumper;
 use Mojo::Base 'Mojolicious::Controller';
 use Storable;
 use BibSpace::Functions::Core;
-use BibSpace::Model::PreferencesInstance;
+use BibSpace::Util::Preferences;
 
 use Class::MOP;
 use Moose::Util qw/does_role/;
 
 
-use BibSpace::Model::Converter::IHtmlBibtexConverter;
+use BibSpace::Converter::IHtmlBibtexConverter;
 
 #################################################################################
 sub index {
