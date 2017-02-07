@@ -30,7 +30,7 @@ sub db_connect {
   my ( $db_host, $db_user, $db_database, $db_pass ) = @_;
   
   my $conn = undef;
-  my %attr = (RaiseError=>1, AutoCommit=>1); 
+  my %attr = (RaiseError=>1, AutoCommit=>1, mysql_auto_reconnect => 1); 
   try{
     # $conn = Apache::DBI->connect_on_init("DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
     print "(Re)connecting to: 'DBI:mysql:database=$db_database;host=$db_host'\n";
