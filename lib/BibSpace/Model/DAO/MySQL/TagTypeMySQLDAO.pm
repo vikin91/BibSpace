@@ -76,11 +76,7 @@ after 'count' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->count" 
 
 sub empty {
   my ($self) = @_;
-
-  die "" . __PACKAGE__ . "->empty not implemented.";
-
-  # TODO: auto-generated method stub. Implement me!
-
+  return $self->count() == 0;
 }
 before 'empty' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->empty" ); };
 after 'empty' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->empty" ); };
