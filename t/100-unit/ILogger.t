@@ -5,6 +5,7 @@ use Test::Mojo;
 
 package DummyLogger;
 use namespace::autoclean;
+use feature qw(current_sub);
 use Moose;
 use BibSpace::Util::ILogger;
 with 'ILogger';

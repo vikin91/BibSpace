@@ -1,8 +1,11 @@
 # This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T15:07:35
 package LayeredRepository;
 use namespace::autoclean;
+use feature qw(current_sub);
 use Moose;
+use feature qw(current_sub);
 use MooseX::ClassAttribute;
+use feature qw(current_sub);
 use MooseX::StrictConstructor;
 use Try::Tiny;
 use List::Util qw(first);
@@ -242,7 +245,7 @@ sub copy_data {
     my $destLayer = $self->get_layer($backendTo);
 
     if(!$srcLayer or !$destLayer){
-        $self->logger->error("Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist.","".__PACKAGE__."->copy_data");
+        $self->logger->error("Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist.","".(caller(0))[3]."");
         return;
     }
 
@@ -260,7 +263,7 @@ sub copy_data {
     
     # ALWAYS: first copy entities, then relations
 
-    $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.","".__PACKAGE__."->copy_data");
+    $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.","".(caller(0))[3]."");
 
     # $self->logger->debug("State before copying:".$self->get_summary_table);
 
@@ -269,7 +272,7 @@ sub copy_data {
         my @resultRead = $srcLayer->all($type);
         my $resultSave = $destLayer->save($type, @resultRead);
         
-        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".__PACKAGE__."->copy_data");
+        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".(caller(0))[3]."");
         
     }
     foreach my $type ( LayeredRepository->get_relations ){
@@ -277,7 +280,7 @@ sub copy_data {
         my @resultRead = $srcLayer->all($type);
         my $resultSave = $destLayer->save($type, @resultRead);
         
-        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".__PACKAGE__."->copy_data");
+        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".(caller(0))[3]."");
         
     }
 }

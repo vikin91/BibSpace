@@ -8,11 +8,13 @@ use v5.16;           # because of ~~ and say
 use List::MoreUtils qw(any uniq);
 use BibSpace::Model::Membership;
 
+use feature qw(current_sub);
 use Moose;
 require BibSpace::Model::IEntity;
 require BibSpace::Model::IAuthored;
 require BibSpace::Model::IMembered;
 with 'IEntity', 'IAuthored', 'IMembered';
+use feature qw(current_sub);
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

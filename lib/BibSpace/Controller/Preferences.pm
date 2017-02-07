@@ -16,6 +16,7 @@ use BibSpace::Functions::Core;
 use BibSpace::Util::Preferences;
 
 use Class::MOP;
+use feature qw(current_sub);
 use Moose::Util qw/does_role/;
 
 

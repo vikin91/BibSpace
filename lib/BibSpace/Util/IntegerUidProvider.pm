@@ -1,4 +1,5 @@
 package IntegerUidProvider;
+use feature qw(current_sub);
 use Moose;
 use BibSpace::Util::IUidProvider;
 with 'IUidProvider';
@@ -6,10 +7,12 @@ use List::Util qw(max);
 use Scalar::Util qw( refaddr );
 use List::MoreUtils qw(any uniq);
 
+use feature qw(current_sub);
 
 use BibSpace::Util::SimpleLogger;
 
-# use MooseX::ClassAttribute;
+# use feature qw(current_sub);
+use MooseX::ClassAttribute;
 
 has 'data' => (
     traits    => ['Hash'],
@@ -30,7 +33,7 @@ has 'data' => (
 
 sub reset {
     my ($self) = @_;
-    $self->logger->warn("Resetting UID record for type '".$self->for_type."' !","".__PACKAGE__."->reset");
+    $self->logger->warn("Resetting UID record for type '".$self->for_type."' !","".(caller(0))[3]."");
     $self->clear;
 }
 
@@ -39,11 +42,11 @@ sub registerUID{
 
     if( !$self->uid_defined($uid) ){
         $self->uid_set($uid => 1);
-        $self->logger->lowdebug("Registered uid '$uid' for type '".$self->for_type."'.","".__PACKAGE__."->registerUID");
+        $self->logger->lowdebug("Registered uid '$uid' for type '".$self->for_type."'.","".(caller(0))[3]."");
     }
     else{
         my $msg = "Cannot registerUID for type '".$self->for_type."'. It exists already! Wanted to reg: $uid. Existing: ". join(' ', sort $self->uid_keys);
-        $self->logger->error($msg,"".__PACKAGE__."->registerUID");
+        $self->logger->error($msg,"".(caller(0))[3]."");
         die $msg;
     }
 }
@@ -65,7 +68,7 @@ sub generateUID{
     my $curr_max  = $self->last_id;
     my $new_uid = $curr_max + 1;
     $self->uid_set($new_uid => 1);
-    $self->logger->debug(__PACKAGE__." (".refaddr($self).") has generated uid '$new_uid' for type '".$self->for_type."'","".__PACKAGE__."->generateUID");
+    $self->logger->debug(__PACKAGE__." (".refaddr($self).") has generated uid '$new_uid' for type '".$self->for_type."'","".(caller(0))[3]."");
     return $new_uid;
 }
 

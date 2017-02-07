@@ -18,7 +18,9 @@ use Try::Tiny;
 use TeX::Encode;
 use Encode;
 
+use feature qw(current_sub);
 use Moose;
+use feature qw(current_sub);
 use Moose::Util::TypeConstraints;
 use BibSpace::Util::ILogger;
 use BibSpace::Converter::IHtmlBibtexConverter;

@@ -219,6 +219,8 @@ sub startup {
     $self->setup_repositories;
     $self->insert_admin;
 
+
+
     
     $self->app->logger->info("Setup done.");
 
@@ -226,7 +228,6 @@ sub startup {
     $self->app->logger->info( "Using CONFIG: " . $self->app->config_file );
     $self->app->logger->info( "App home is: " . $self->app->home );
     $self->app->logger->info( "Active bst file is: " . $self->app->bst );
-
 
 
     ###############################

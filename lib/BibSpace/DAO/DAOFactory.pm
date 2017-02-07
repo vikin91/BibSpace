@@ -2,6 +2,7 @@
 package DAOFactory;
 
 use namespace::autoclean;
+use feature qw(current_sub);
 use Moose;
 use BibSpace::Util::ILogger;
 use BibSpace::DAO::MySQLDAOFactory;
@@ -24,7 +25,7 @@ sub getInstance {
     die "EntityFactory is undef!" unless $self->e_factory;
     die "Factory type not provided!" unless $factoryType;
     die "Connection handle not provided!" unless $handle;
-    # $self->logger->debug("Requesting new concreteDOAFactory of type $factoryType.","".__PACKAGE__."->getInstance");
+    # $self->logger->debug("Requesting new concreteDOAFactory of type $factoryType.","".(caller(0))[3]."");
 
     try{
         my $class = $factoryType;
@@ -35,8 +36,8 @@ sub getInstance {
         die "Requested unknown type of DaoFactory: '$factoryType'.";
     };
 }
-before 'getInstance' => sub { shift->logger->entering("","".__PACKAGE__."->getInstance"); };
-after 'getInstance'  => sub { shift->logger->exiting("","".__PACKAGE__."->getInstance"); };
+before 'getInstance' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'getInstance'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

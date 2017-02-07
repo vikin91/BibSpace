@@ -2,6 +2,7 @@
 package IDAO;
 
 use namespace::autoclean;
+use feature qw(current_sub);
 use Moose::Role; # = this package (class) is an interface
 # Perl interfaces (Roles) can contain attributes =)
 # In Java this interface would differ from other DAO::ENTITY interfaces.

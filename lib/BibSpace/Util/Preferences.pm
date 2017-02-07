@@ -9,8 +9,11 @@ use List::Util qw(first);
 use List::MoreUtils qw(first_index);
 use feature qw( state say );
 
+use feature qw(current_sub);
 use Moose;
+use feature qw(current_sub);
 use Moose::Util::TypeConstraints;
+use feature qw(current_sub);
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

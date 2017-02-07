@@ -6,7 +6,9 @@ use utf8;
 use v5.16;    #because of ~~ and say
 use List::MoreUtils qw(any uniq);
 use List::Util qw(first);
+use feature qw(current_sub);
 use Moose;
+use feature qw(current_sub);
 use MooseX::ClassAttribute;
 use UUID::Tiny ':std';
 

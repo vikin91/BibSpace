@@ -5,6 +5,7 @@ use feature qw( state say );
 use Mojo::Log;
 use Path::Tiny;
 use Term::ANSIColor;
+use feature qw(current_sub);
 use Moose;
 use BibSpace::Util::ILogger;
 with 'ILogger';

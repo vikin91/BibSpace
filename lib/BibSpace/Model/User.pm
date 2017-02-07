@@ -9,10 +9,14 @@ use List::MoreUtils qw(any uniq);
 use BibSpace::Functions::Core qw(check_password);
 use BibSpace::Model::IEntity;
 
+use feature qw(current_sub);
 use Moose;
+use feature qw(current_sub);
 use Moose::Util::TypeConstraints;
+use feature qw(current_sub);
 use MooseX::ClassAttribute;
 with 'IEntity';
+use feature qw(current_sub);
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

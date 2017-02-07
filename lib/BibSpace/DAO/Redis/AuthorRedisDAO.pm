@@ -2,6 +2,7 @@
 package AuthorRedisDAO;
 
 use namespace::autoclean;
+use feature qw(current_sub);
 use Moose;
 use BibSpace::DAO::Interface::IDAO;
 use BibSpace::Model::Author;
@@ -19,12 +20,12 @@ use Try::Tiny;
 sub all {
   my ($self) = @_;
 
-  die "".__PACKAGE__."->all not implemented.";
+  die "".(caller(0))[3]." not implemented.";
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
-after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
+before 'all' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'all'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 =item count
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
@@ -32,12 +33,12 @@ after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
 sub count {
   my ($self) = @_;
 
-  die "".__PACKAGE__."->count not implemented.";
+  die "".(caller(0))[3]." not implemented.";
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
-after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
+before 'count' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'count'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 =item empty
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
@@ -45,12 +46,12 @@ after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
 sub empty {
   my ($self) = @_;
 
-  die "".__PACKAGE__."->empty not implemented.";
+  die "".(caller(0))[3]." not implemented.";
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
-after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
+before 'empty' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'empty'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 =item exists
     Method documentation placeholder.
@@ -59,12 +60,12 @@ after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
 sub exists {
   my ($self, $object) = @_;
   
-  die "".__PACKAGE__."->exists not implemented.";
+  die "".(caller(0))[3]." not implemented.";
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
-after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
+before 'exists' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'exists'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 =item save
     Method documentation placeholder.
@@ -73,12 +74,12 @@ after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); }
 sub save {
   my ($self, @objects) = @_;
 
-  die "".__PACKAGE__."->save not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+  die "".(caller(0))[3]." not implemented. Method was instructed to save ".scalar(@objects)." objects.";
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
-after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
+before 'save' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'save'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 =item update
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
@@ -86,12 +87,12 @@ after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
 sub update {
   my ($self, @objects) = @_;
 
-  die "".__PACKAGE__."->update not implemented. Method was instructed to update ".scalar(@objects)." objects.";
+  die "".(caller(0))[3]." not implemented. Method was instructed to update ".scalar(@objects)." objects.";
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'update' => sub { shift->logger->entering("","".__PACKAGE__."->update"); };
-after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); };
+before 'update' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'update'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 =item delete
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
@@ -99,39 +100,39 @@ after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); }
 sub delete {
   my ($self, @objects) = @_;
 
-  die "".__PACKAGE__."->delete not implemented. Method was instructed to delete ".scalar(@objects)." objects.";
+  die "".(caller(0))[3]." not implemented. Method was instructed to delete ".scalar(@objects)." objects.";
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
-after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };
+before 'delete' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'delete'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 =item filter
     Method documentation placeholder.
 =cut 
 sub filter {
   my ($self, $coderef) = @_;
-  die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+  die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
 
-  die "".__PACKAGE__."->filter not implemented.";
+  die "".(caller(0))[3]." not implemented.";
   # TODO: auto-generated method stub. Implement me!
   
 }
-before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
-after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); };
+before 'filter' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'filter'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 =item find
     Method documentation placeholder.
 =cut 
 sub find {
   my ($self, $coderef) = @_;
-  die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+  die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
 
-  die "".__PACKAGE__."->find not implemented.";
+  die "".(caller(0))[3]." not implemented.";
   # TODO: auto-generated method stub. Implement me!
   
 }
-before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };
-after 'find'  => sub { shift->logger->exiting("","".__PACKAGE__."->find"); };
+before 'find' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'find'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

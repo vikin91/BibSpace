@@ -1,8 +1,11 @@
 # This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T15:07:35
 package RepositoryLayer;
 use namespace::autoclean;
+use feature qw(current_sub);
 use Moose;
+use feature qw(current_sub);
 use MooseX::ClassAttribute;
+use feature qw(current_sub);
 use MooseX::StrictConstructor;
 use Try::Tiny;
 

@@ -4,7 +4,9 @@ use v5.16;    #because of ~~ and say
 use Try::Tiny;
 use Data::Dumper;
 use namespace::autoclean;
+use feature qw(current_sub);
 use Moose;
+use feature qw(current_sub);
 use Moose::Util::TypeConstraints;
 use BibSpace::Model::IBibSpaceBackend;
 require BibSpace::Model::IEntity;
@@ -53,8 +55,8 @@ sub _init {
         $self->set($type, {});
     }
 }
-before '_init' => sub { shift->logger->entering("","".__PACKAGE__."->_init"); };
-after '_init'  => sub { shift->logger->exiting("","".__PACKAGE__."->_init"); };
+before '_init' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after '_init'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 sub all {
     my $self = shift;
@@ -65,8 +67,8 @@ sub all {
     return () if !%{ $href };
     return values %{ $href };
 }
-before 'all' => sub { shift->logger->entering("","".__PACKAGE__."->all"); };
-after 'all'  => sub { shift->logger->exiting("","".__PACKAGE__."->all"); };
+before 'all' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'all'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 sub _add {
     my ($self, @objects) = @_;
@@ -78,8 +80,8 @@ sub _add {
         $href->{$obj->id} = $obj;
     }
 }
-before '_add' => sub { shift->logger->entering("","".__PACKAGE__."->_add"); };
-after '_add'  => sub { shift->logger->exiting("","".__PACKAGE__."->_add"); };
+before '_add' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after '_add'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 sub save {
     my ($self, @objects) = @_;
@@ -95,8 +97,8 @@ sub save {
     }
     return $added;
 }
-before 'save' => sub { shift->logger->entering("","".__PACKAGE__."->save"); };
-after 'save'  => sub { shift->logger->exiting("","".__PACKAGE__."->save"); };
+before 'save' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'save'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 sub count { 
     my ($self, $type) = @_;
@@ -106,15 +108,15 @@ sub count {
     return 0 if !$href->{$type};
     return scalar keys %{ $href->{$type} };
 }
-before 'count' => sub { shift->logger->entering("","".__PACKAGE__."->count"); };
-after 'count'  => sub { shift->logger->exiting("","".__PACKAGE__."->count"); };
+before 'count' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'count'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 sub empty { 
     my ($self, $type) = @_;
     return $self->count($type) == 0;
 }
-before 'empty' => sub { shift->logger->entering("","".__PACKAGE__."->empty"); };
-after 'empty'  => sub { shift->logger->exiting("","".__PACKAGE__."->empty"); };
+before 'empty' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'empty'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 sub exists { 
     my ($self, $object) = @_;
@@ -122,15 +124,15 @@ sub exists {
     my $href = $self->get($type);
     return exists $href->{$object->id};
 }
-before 'exists' => sub { shift->logger->entering("","".__PACKAGE__."->exists"); };
-after 'exists'  => sub { shift->logger->exiting("","".__PACKAGE__."->exists"); };
+before 'exists' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'exists'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 sub update { 
     my ($self, @objects) = @_;
     return $self->_add(@objects);
 }
-before 'update' => sub { shift->logger->entering("","".__PACKAGE__."->update"); };
-after 'update'  => sub { shift->logger->exiting("","".__PACKAGE__."->update"); };
+before 'update' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'update'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 sub delete { 
     my ($self, @objects) = @_; 
@@ -141,26 +143,26 @@ sub delete {
         delete $href->{$obj->id};
     }
 }
-before 'delete' => sub { shift->logger->entering("","".__PACKAGE__."->delete"); };
-after 'delete'  => sub { shift->logger->exiting("","".__PACKAGE__."->delete"); };
+before 'delete' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'delete'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 sub filter { 
     my ($self, $type, $coderef) = @_;
-    # $self->logger->warn("Calling ".__PACKAGE__."->filter with param $type");
+    # $self->logger->warn("Calling ".(caller(0))[3]." with param $type");
     return () if $self->empty($type);
     return grep \&{$coderef}, $self->all($type); 
 }
-before 'filter' => sub { shift->logger->entering("","".__PACKAGE__."->filter"); };
-after 'filter'  => sub { shift->logger->exiting("","".__PACKAGE__."->filter"); };
+before 'filter' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'filter'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 sub find { 
   my ($self, $type, $coderef) = @_;
-  # $self->logger->warn("Calling ".__PACKAGE__."->find with param $type");
+  # $self->logger->warn("Calling ".(caller(0))[3]." with param $type");
   return undef if $self->empty($type);
   return first \&{$coderef}, $self->all($type);
 }
-before 'find' => sub { shift->logger->entering("","".__PACKAGE__."->find"); };
-after 'find'  => sub { shift->logger->exiting("","".__PACKAGE__."->find"); };
+before 'find' => sub { shift->logger->entering("","".(caller(0))[3].""); };
+after 'find'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
 
 # Moose::Meta::Attribute::Native::Trait::Array
 

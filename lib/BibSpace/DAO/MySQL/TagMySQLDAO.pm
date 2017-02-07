@@ -2,6 +2,7 @@
 package TagMySQLDAO;
 
 use namespace::autoclean;
+use feature qw(current_sub);
 use Moose;
 use DBI;
 # use DBIx::Connector;

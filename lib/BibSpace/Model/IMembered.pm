@@ -1,7 +1,9 @@
 package IMembered;
 
 use namespace::autoclean;
+use feature qw(current_sub);
 use Moose::Role;
+use feature qw(current_sub);
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

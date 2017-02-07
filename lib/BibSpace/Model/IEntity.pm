@@ -2,7 +2,9 @@ package IEntity;
 use namespace::autoclean;
 
 use BibSpace::Util::IntegerUidProvider;
+use feature qw(current_sub);
 use Moose::Role;
+use feature qw(current_sub);
 use MooseX::StrictConstructor;
 
 

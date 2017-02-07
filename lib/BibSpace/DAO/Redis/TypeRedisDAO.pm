@@ -2,6 +2,7 @@
 package BibSpace::DAO::Redis::TypeRedisDAO;
 
 use namespace::autoclean;
+use feature qw(current_sub);
 use Moose;
 use BibSpace::DAO::Interface::ITypeDAO;
 use BibSpace::Model::Type;
@@ -16,11 +17,11 @@ with 'BibSpace::DAO::Interface::ITypeDAO';
 =cut 
 sub all {
   my ($self) = @_;
-  $self->logger->entering("","".__PACKAGE__."->all");
-  die "".__PACKAGE__."->all not implemented.";
+  $self->logger->entering("","".(caller(0))[3]."");
+  die "".(caller(0))[3]." not implemented.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->all");
+  $self->logger->exiting("","".(caller(0))[3]."");
 }
 
 =item save
@@ -28,11 +29,11 @@ sub all {
 =cut 
 sub save {
   my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->save");
-  die "".__PACKAGE__."->save not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+  $self->logger->entering("","".(caller(0))[3]."");
+  die "".(caller(0))[3]." not implemented. Method was instructed to save ".scalar(@objects)." objects.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->save");
+  $self->logger->exiting("","".(caller(0))[3]."");
 }
 
 =item update
@@ -40,11 +41,11 @@ sub save {
 =cut 
 sub update {
   my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->update");
-  die "".__PACKAGE__."->update not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+  $self->logger->entering("","".(caller(0))[3]."");
+  die "".(caller(0))[3]." not implemented. Method was instructed to save ".scalar(@objects)." objects.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->update");
+  $self->logger->exiting("","".(caller(0))[3]."");
 }
 
 =item delete
@@ -52,11 +53,11 @@ sub update {
 =cut 
 sub delete {
   my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->delete");
-  die "".__PACKAGE__."->delete not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+  $self->logger->entering("","".(caller(0))[3]."");
+  die "".(caller(0))[3]." not implemented. Method was instructed to save ".scalar(@objects)." objects.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->delete");
+  $self->logger->exiting("","".(caller(0))[3]."");
 }
 
 =item exists
@@ -64,11 +65,11 @@ sub delete {
 =cut 
 sub exists {
   my ($self, @objects) = @_;
-  $self->logger->entering("","".__PACKAGE__."->exists");
-  die "".__PACKAGE__."->exists not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+  $self->logger->entering("","".(caller(0))[3]."");
+  die "".(caller(0))[3]." not implemented. Method was instructed to save ".scalar(@objects)." objects.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->exists");
+  $self->logger->exiting("","".(caller(0))[3]."");
 }
 
 =item filter
@@ -76,12 +77,12 @@ sub exists {
 =cut 
 sub filter {
   my ($self, $coderef) = @_;
-  $self->logger->entering("","".__PACKAGE__."->filter");
-  die "".__PACKAGE__."->filter incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  die "".__PACKAGE__."->filter not implemented.";
+  $self->logger->entering("","".(caller(0))[3]."");
+  die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+  die "".(caller(0))[3]." not implemented.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->filter");
+  $self->logger->exiting("","".(caller(0))[3]."");
 }
 
 =item find
@@ -89,12 +90,12 @@ sub filter {
 =cut 
 sub find {
   my ($self, $coderef) = @_;
-  $self->logger->entering("","".__PACKAGE__."->find");
-  die "".__PACKAGE__."->find incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  die "".__PACKAGE__."->find not implemented.";
+  $self->logger->entering("","".(caller(0))[3]."");
+  die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+  die "".(caller(0))[3]." not implemented.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->find");
+  $self->logger->exiting("","".(caller(0))[3]."");
 }
 
 =item count
@@ -102,12 +103,12 @@ sub find {
 =cut 
 sub count {
   my ($self, $coderef) = @_;
-  $self->logger->entering("","".__PACKAGE__."->count");
-  die "".__PACKAGE__."->count incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
-  die "".__PACKAGE__."->count not implemented.";
+  $self->logger->entering("","".(caller(0))[3]."");
+  die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+  die "".(caller(0))[3]." not implemented.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".__PACKAGE__."->count");
+  $self->logger->exiting("","".(caller(0))[3]."");
 }
 
 __PACKAGE__->meta->make_immutable;

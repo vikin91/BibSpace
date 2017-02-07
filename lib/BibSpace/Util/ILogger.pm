@@ -1,6 +1,7 @@
 package ILogger;
 use namespace::autoclean;
 use DateTime;
+use feature qw(current_sub);
 use Moose::Role;
 
 sub log{

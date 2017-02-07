@@ -24,13 +24,16 @@ use Try::Tiny;
 use TeX::Encode;
 use Encode;
 
+use feature qw(current_sub);
 use Moose;
+use feature qw(current_sub);
 use Moose::Util::TypeConstraints;
 use BibSpace::Model::IEntity;
 use BibSpace::Model::ILabeled;
 use BibSpace::Model::IAuthored;
 use BibSpace::Model::IHavingException;
 with 'IEntity', 'ILabeled', 'IAuthored', 'IHavingException';
+use feature qw(current_sub);
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

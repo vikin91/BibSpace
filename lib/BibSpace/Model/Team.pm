@@ -7,11 +7,13 @@ use utf8;
 use BibSpace::Model::Author;
 use v5.16;    #because of ~~ and say
 use List::MoreUtils qw(any uniq);
+use feature qw(current_sub);
 use Moose;
 use BibSpace::Model::IEntity;
 use BibSpace::Model::IMembered;
 use BibSpace::Model::IHavingException;
 with 'IEntity', 'IMembered', 'IHavingException';
+use feature qw(current_sub);
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
