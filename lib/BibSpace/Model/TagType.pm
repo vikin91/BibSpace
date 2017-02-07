@@ -4,8 +4,7 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use 5.010;           #because of ~~ and say
-use DBI;
-# use DBIx::Connector;
+
 use Moose;
 use BibSpace::Model::IEntity;
 with 'IEntity';

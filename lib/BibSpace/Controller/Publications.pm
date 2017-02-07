@@ -11,8 +11,7 @@ use Try::Tiny;
 use 5.010;           #because of ~~
 use strict;
 use warnings;
-use DBI;
-# use DBIx::Connector;
+
 
 use Scalar::Util qw(looks_like_number);
 

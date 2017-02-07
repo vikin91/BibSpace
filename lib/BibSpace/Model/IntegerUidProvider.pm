@@ -3,7 +3,10 @@ use Moose;
 use BibSpace::Model::IUidProvider;
 with 'IUidProvider';
 use List::Util qw(max);
+use Scalar::Util qw( refaddr );
 use List::MoreUtils qw(any uniq);
+
+
 use BibSpace::Model::SimpleLogger;
 
 # use MooseX::ClassAttribute;
@@ -62,7 +65,7 @@ sub generateUID{
     my $curr_max  = $self->last_id;
     my $new_uid = $curr_max + 1;
     $self->uid_set($new_uid => 1);
-    $self->logger->debug("Generated uid '$new_uid' for type '".$self->for_type."'","".__PACKAGE__."->generateUID");
+    $self->logger->debug(__PACKAGE__." (".refaddr($self).") has generated uid '$new_uid' for type '".$self->for_type."'","".__PACKAGE__."->generateUID");
     return $new_uid;
 }
 

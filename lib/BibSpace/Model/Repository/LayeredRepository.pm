@@ -6,6 +6,7 @@ use MooseX::ClassAttribute;
 use MooseX::StrictConstructor;
 use Try::Tiny;
 use List::Util qw(first);
+use Scalar::Util qw( refaddr );
 
 use BibSpace::Model::IUidProvider;
 use BibSpace::Model::SmartUidProvider;

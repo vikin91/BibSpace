@@ -10,8 +10,7 @@ use 5.010;
 use Try::Tiny;
 use strict;
 use warnings;
-use DBI;
-# use DBIx::Connector;
+
 use File::Copy qw(copy);
 use List::MoreUtils qw(any uniq);
 use List::Util qw(first);

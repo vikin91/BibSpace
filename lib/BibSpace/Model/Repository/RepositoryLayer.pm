@@ -224,7 +224,7 @@ sub get_summary_hash {
 sub get_id_provider_summary_hash {
     my $self = shift;
     my %entities_hash
-        = map { $_ => $self->uidProvider->get_provider($_)->last_id }
+        = map { $_ => $self->uidProvider->get_provider($_)->last_id  }
         LayeredRepository->get_entities;
     my %relations_hash = map { $_ => '---' } LayeredRepository->get_relations;
     my %hash = ( %entities_hash, %relations_hash );

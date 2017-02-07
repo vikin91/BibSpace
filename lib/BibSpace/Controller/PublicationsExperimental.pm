@@ -11,7 +11,6 @@ use Try::Tiny;
 use 5.010;           #because of ~~
 use strict;
 use warnings;
-use DBI;
 
 use List::MoreUtils qw(any uniq);
 

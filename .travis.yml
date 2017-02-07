@@ -71,14 +71,15 @@ notifications:
 script: 
     - export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
     - export BIBSPACE_USE_DUMP=1
-    - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrv t/
+    # - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrv t/
+    - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine bin/bibspace test
 
 after_success:
     - cover -report coveralls
 
-after_failure:
-    - tree
-    - tail -n 1000 log/error.log
-    - tail -n 1000 log/warn.log
-    - tail -n 1000 log/development.log
+# after_failure:
+#     - tree
+#     - tail -n 1000 log/error.log
+#     - tail -n 1000 log/warn.log
+#     - tail -n 1000 log/development.log
 

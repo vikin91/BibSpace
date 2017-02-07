@@ -9,8 +9,7 @@ use DateTime;
 # use File::Slurp;
 
 use 5.010;           #because of ~~
-use DBI;
-# use DBIx::Connector;
+
 use Scalar::Util qw(looks_like_number);
 use List::MoreUtils qw(any uniq);
 

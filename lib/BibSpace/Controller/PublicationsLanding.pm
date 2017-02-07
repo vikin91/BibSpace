@@ -12,9 +12,7 @@ use Try::Tiny;
 use 5.010;           #because of ~~
 use strict;
 use warnings;
-use DBI;
 
-# use DBIx::Connector;
 
 use TeX::Encode;
 use Encode;

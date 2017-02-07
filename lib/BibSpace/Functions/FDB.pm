@@ -9,8 +9,8 @@ use v5.10;
 use Try::Tiny;
 use Data::Dumper;
 use Exporter;
+use DBIx::Connector;
 use DBI;
-# use DBIx::Connector;
 our @ISA = qw( Exporter );
 
 
@@ -32,7 +32,8 @@ sub db_connect {
   my $conn = undef;
   my %attr = (RaiseError=>1, AutoCommit=>1); 
   try{
-    $conn = DBI->connect( "DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
+    # $conn = Apache::DBI->connect_on_init("DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
+    $conn = DBI->connect_cached( "DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
   }
   catch{
     warn "db_connect: could not connect to the database: $_";

@@ -5,8 +5,7 @@ use Try::Tiny;
 use Data::Dumper;
 use namespace::autoclean;
 
-# use BibSpace::Model::IUidProvider;
-# use BibSpace::Model::IntegerUidProvider;
+use Scalar::Util qw( refaddr );
 
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -14,6 +13,13 @@ use List::Util qw(first);
 use List::MoreUtils qw(first_index);
 use MooseX::Storage;
 with Storage( format => 'JSON', 'io' => 'File' );
+
+=item  PROBLEM with 4 workers in hypnotoad
+[Tue Feb  7 10:20:30 2017] WARNING: Id Provider for Tag          has addr '140607898259360', last_id: 231 (Origin: SmartUidProvider->get_provider).
+...
+[Tue Feb  7 10:20:33 2017] WARNING: Id Provider for Tag          has addr '140607891694720', last_id: 0 (Origin: SmartUidProvider->get_provider).
+[Tue Feb  7 10:20:33 2017] DEBUG: IntegerUidProvider (140607891694720) has generated uid '1' for type 'Tag' (Origin: IntegerUidProvider->generateUID)
+=cut
 
 =item
     This is a in-memory data structure (hash) to hold all objects of BibSpace.
@@ -51,7 +57,9 @@ has 'data' => (
 sub get_provider {
     my ( $self, $type ) = @_;
     $self->_init($type);
-    return $self->_get($type);
+    my $provider = $self->_get($type);
+    # $self->logger->warn("Id Provider for ".sprintf('%-12s',$type)." has addr '".refaddr($provider)."', last_id: ".$provider->last_id,"" . __PACKAGE__ . "->get_provider");
+    return $provider;
 }
 
 sub _init {
