@@ -1,9 +1,10 @@
 %   if ($entry_obj->is_hidden() == 1) {
-<tr valign="top" class="hiddenrow"> 
+<tr valign="top" class="hiddenrow" 
 %   }
 %   else{
-<tr valign="top">
+<tr valign="top" 
 %   } 
+class="publication_table_row" publication-table-row-data-id="<%=$entry_obj->id%>">
     <td>
         <button class="btn btn-default btn-sm" 
                 data-toggle="tooltip" data-placement="top" title="Paper ID: <%= $entry_obj->id %>" data-container="body">

@@ -753,6 +753,12 @@ sub setup_routes {
         ->to('publications#all')
         ->name('publications');
 
+    # works nice for all or flitering, but not for recently edited/added 
+    # reason: requires separate template and separate javascript code
+    # $logged_user->get('/publications_ajax')
+    #     ->to('publications#all_ajax')
+    #     ->name('publications_ajax');
+
     $logged_user->get('/publications/recently_added/:num')
         ->to('publications#all_recently_added')
         ->name('recently_added');

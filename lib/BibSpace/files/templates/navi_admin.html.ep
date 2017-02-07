@@ -3,7 +3,9 @@
 <a class="btn btn-warning btn-xs" href="<%= url_for('load_fixture') %>">fixture --> all (restore backup) </a>
 <a class="btn btn-warning btn-xs" href="<%= url_for('save_fixture') %>">fixture <-- smart</a>
 <a class="btn btn-warning btn-xs" href="<%= url_for('copy_mysql_to_smart') %>">mysql --> smart</a>
+
 <a class="btn btn-warning btn-xs" href="<%= url_for('copy_smart_to_mysql') %>">mysql <-- smart</a>
+<a class="btn btn-default btn-xs" id="copy_smart_to_mysql">ajax mysql <-- smart</a>
 
 <a class="btn btn-info btn-xs" href="<%= url_for('persistence_status') %>">status</a>
 <a class="btn btn-default btn-xs" id="get_persistence_backends_status">ajax status</a>
@@ -13,16 +15,37 @@
 
 
 <div id="status_persistence_backends"></div>
+
+
+
 <script>
-$(document).on('click', $('#get_persistence_backends_status'), function() {
-	$.ajax({
-	    type: 'get',
-	    url: "<%= url_for('persistence_status')->query(ajax => 1) %>",
-	    dataType: 'html',
-	    data: $(this).serialize(),
-	    success: function (data) {
-	        $('#status_persistence_backends').html(data);
-	    }
-	});
+
+function copy_smart_to_mysql() {
+  $.ajax({
+      type: 'get',
+      url: "<%= url_for('copy_smart_to_mysql') %>",
+      data: {'ajax': 1},
+      success: function (data) {}
+  });
+}
+
+function persistence_status(){
+  $.ajax({
+      type: 'get',
+      url: "<%= url_for('persistence_status')->query(ajax => 1) %>",
+      dataType: 'html',
+      data: {'ajax': 1},
+      success: function (data) {
+          $('#status_persistence_backends').html(data);
+      }
+  });
+}
+
+$('#get_persistence_backends_status').click( function() {
+  persistence_status()
+});
+
+$('#copy_smart_to_mysql').click( function() {
+    copy_smart_to_mysql()
 });
 </script>

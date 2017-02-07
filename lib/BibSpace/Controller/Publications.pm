@@ -42,6 +42,17 @@ our %mons = (
   12 => 'December'
 );
 ####################################################################################
+# work, but not for now
+# sub all_ajax {
+#   my $self = shift;
+#   my $entry_type = undef;
+#   $entry_type = $self->param('entry_type') // undef;
+#   my @objs = Fget_publications_main_hashed_args( $self, { entry_type => $entry_type } );
+#   $self->stash( entries => \@objs );
+#   my $html = $self->render_to_string( template => 'publications/all_table' );
+#   $self->render( text => $html );
+# }
+####################################################################################
 sub all {
   my $self = shift;
 
@@ -345,15 +356,14 @@ sub all_with_missing_month {
 ####################################################################################
 sub all_candidates_to_delete {
   my $self = shift;
-  my $dbh  = $self->app->db;
 
   $self->app->logger->info("Displaying entries that are candidates_to_delete");
 
 
   my @objs = $self->app->repo->entries_all;
-  @objs = grep { scalar $_->get_tags($dbh) == 0 } @objs;          # no tags
-  @objs = grep { scalar $_->get_teams($dbh) == 0 } @objs;         # no relation to teams
-  @objs = grep { scalar $_->get_exceptions($dbh) == 0 } @objs;    # no exceptions
+  @objs = grep { scalar $_->get_tags == 0 } @objs;          # no tags
+  @objs = grep { scalar $_->get_teams == 0 } @objs;         # no relation to teams
+  @objs = grep { scalar $_->get_exceptions == 0 } @objs;    # no exceptions
 
 
   my $msg = "<p>This list contains papers, that are:</p>
@@ -657,11 +667,11 @@ sub regenerate_html {
 sub delete_sure {
   my $self = shift;
   my $id   = $self->param('id');
-  my $dbh  = $self->app->db;
 
   my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
   if ( !defined $entry ) {
+    $self->app->logger->warn("Entry '$id' does not exist and thus can't be deleted.");
     $self->flash( mgs_type => 'danger', msg => "There is no entry with id $id" );
     $self->redirect_to( $self->get_referrer );
     return;
@@ -677,7 +687,6 @@ sub delete_sure {
 sub show_authors_of_entry {
   my $self = shift;
   my $id   = $self->param('id');
-  my $dbh  = $self->app->db;
   $self->app->logger->info("Showing authors of entry id $id");
 
 
@@ -702,7 +711,6 @@ sub show_authors_of_entry {
 sub manage_tags {
   my $self = shift;
   my $id   = $self->param('id');
-  my $dbh  = $self->app->db;
 
   $self->app->logger->info("Manage tags of entry id $id");
 
@@ -762,7 +770,6 @@ sub add_tag {
   my $self     = shift;
   my $entry_id = $self->param('eid');
   my $tag_id   = $self->param('tid');
-  my $dbh      = $self->app->db;
 
 
   my $entry = $self->app->repo->entries_find( sub { $_->id == $entry_id } );
@@ -789,7 +796,6 @@ sub add_tag {
 sub manage_exceptions {
   my $self = shift;
   my $id   = $self->param('id');
-  my $dbh  = $self->app->db;
 
 
   my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
@@ -857,7 +863,6 @@ sub remove_exception {
   my $self     = shift;
   my $entry_id = $self->param('eid');
   my $team_id  = $self->param('tid');
-  my $dbh      = $self->app->db;
 
 
   my $entry = $self->app->repo->entries_find( sub { $_->id == $entry_id } );
@@ -975,7 +980,6 @@ sub publications_add_post {
   my $param_prev      = $self->param('preview');
   my $param_save      = $self->param('save');
   my $param_check_key = $self->param('check_key');
-  my $dbh             = $self->app->db;
 
   my $action = 'default';
   $action = 'save'      if $param_save;         # user clicks save
@@ -1094,7 +1098,7 @@ sub publications_edit_post {
   my $new_bib         = $self->param('new_bib');
   my $param_prev      = $self->param('preview');
   my $param_save      = $self->param('save');
-  my $param_check_key = my $dbh = $self->app->db;
+  my $param_check_key = $self->param('check_key');
 
   my $action = 'save';    # user clicks save
   $action = 'preview'   if $self->param('preview');      # user clicks preview
