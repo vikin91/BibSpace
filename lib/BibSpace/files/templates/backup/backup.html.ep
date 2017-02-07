@@ -29,7 +29,7 @@
            <button class="btn btn-info" data-toggle="tooltip" data-placement="bottom" title="
            Storable backups are dumps of the 'SmartArray' repository layer. They represent the current state of the system, i.e., BibSpace reads from the 'SmartArray'. 
            
-           Restoring storable backups overwrites the 'SmartArray' layer, but DO NOT push the changes to the database. This may result in a discrepancy, in which database holds different data than the 'SmartArray'."><i class="fa fa-question "></i> Help</button>
+           Restoring storable backups overwrites all layers."><i class="fa fa-question "></i> Help</button>
         </div>
     </div>
 
