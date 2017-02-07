@@ -22,7 +22,6 @@ our @ISA = qw( Exporter );
 # these are exported by default.
 our @EXPORT = qw(
     Freassign_authors_to_entries_given_by_array
-    Fdo_regenerate_html
     FprintBibtexWarnings
     Fhandle_add_edit_publication
     Fget_publications_main_hashed_args_only
@@ -67,18 +66,7 @@ sub Freassign_authors_to_entries_given_by_array {
     }
     return $num_authors_created;
 }
-####################################################################################
-sub Fdo_regenerate_html {
-    my ( $repo, $bst_file, $force, @entries ) = @_;
 
-
-    my $num_fixes = 0;
-    for my $e (@entries) {
-        $e->bst_file($bst_file);
-        $e->regenerate_html( $force, $bst_file );
-    }
-    $repo->save(@entries);
-}
 ####################################################################################
 sub FprintBibtexWarnings {
     my $str = shift;
