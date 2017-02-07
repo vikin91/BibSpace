@@ -8,7 +8,8 @@ use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::FDB;
 use BibSpace::Functions::FPublications;
 
-
+# on test server: 
+# BIBSPACE_CONFIG=/etc/bibspace_test.conf BIBSPACE_USE_DUMP=0 MOJO_MODE=development hypnotoad bin/bibspace
 
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
