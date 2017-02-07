@@ -71,7 +71,7 @@ sub purge_and_create_db {
 
   say "!!! CREATING DATABASE '$db_database'.";
   try {
-    $rc = $drh->func( 'createdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
+    my $rc = $drh->func( 'createdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
   }
   catch {
     warn $_;
