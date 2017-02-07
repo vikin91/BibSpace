@@ -126,7 +126,8 @@ has smartArrayBackend => sub {
 
 has smartIDProvider => sub {
     my $self = shift;
-    return state $sup = SmartUidProvider->new(
+    # return state $sup = SmartUidProvider->new(
+    return SmartUidProvider->new(
         logger              => $self->logger,
         idProviderClassName => 'IntegerUidProvider'
     );

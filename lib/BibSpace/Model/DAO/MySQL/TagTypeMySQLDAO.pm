@@ -52,10 +52,18 @@ after 'all' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->all" ); }
 sub count {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $sth    = $dbh->prepare("SELECT COUNT(*) as num FROM TagType LIMIT 1;");
-  $sth->execute();
-  my $row = $sth->fetchrow_hashref();
-  my $num = $row->{num} // 0;
+
+  my $num = 0;
+  try {
+    my $sth    = $dbh->prepare("SELECT COUNT(id) as num FROM TagType LIMIT 1;");
+    $sth->execute();
+    my $row = $sth->fetchrow_hashref();
+    $num = $row->{num};
+  }
+  catch {
+    $self->logger->error( "Count exception: $_", "" . __PACKAGE__ . "->count" );
+  };
+  
   return $num;
 }
 before 'count' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->count" ); };
@@ -85,12 +93,17 @@ after 'empty' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->empty" 
 sub exists {
   my ($self, $object) = @_;
   my $dbh = $self->handle;
-  my $sth = $dbh->prepare("SELECT EXISTS(SELECT 1 FROM TagType WHERE id=? LIMIT 1) as num;");
-  $sth->execute($object->id);
-  my $row = $sth->fetchrow_hashref();
-  my $num = $row->{num} // 0;
+  my $num = 0;
+  try {
+    my $sth = $dbh->prepare("SELECT EXISTS(SELECT 1 FROM TagType WHERE id=? LIMIT 1) as num;");
+    $sth->execute($object->id);
+    my $row = $sth->fetchrow_hashref();
+    $num = $row->{num};
+  }
+  catch {
+    $self->logger->error( "exists exception: $_", "" . __PACKAGE__ . "->exists" );
+  };
   return $num > 0;
-
 }
 before 'exists' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->exists" ); };
 after 'exists' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->exists" ); };
