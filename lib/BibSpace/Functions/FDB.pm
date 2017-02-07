@@ -60,28 +60,42 @@ sub purge_and_create_db {
   my ( $dbh, $db_host, $db_user, $db_database, $db_pass ) = @_;
   
   my $drh = DBI->install_driver("mysql");
-  try {
 
-    say "!!! DROPPING DATABASE '$db_database'.";
+  say "!!! DROPPING DATABASE '$db_database'.";
+  try {
     my $rc = $drh->func( 'dropdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
-    say "!!! CREATING DATABASE '$db_database'.";
+  }
+  catch {
+    warn $_;
+  };
+
+  say "!!! CREATING DATABASE '$db_database'.";
+  try {
     $rc = $drh->func( 'createdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
   }
   catch {
     warn $_;
-  }
-  finally{
+  };
+
+  say "Restarting connection to '$db_database'.";
+  try {
     $dbh = db_connect( $db_host, $db_user, $db_database, $db_pass );
     create_main_db($dbh);
+    
+  }
+  catch {
+    warn $_;
   };
+
+  
   return $dbh;
 }
 
 ####################################################################################
 sub create_main_db {
-  say "CALL: create_main_db";
   my $dbh = shift;
 
+  say "Recreating DB schema";
 
   $dbh->do(
     "CREATE TABLE IF NOT EXISTS `Author`(
