@@ -1,6 +1,4 @@
 % layout 'admin';
-
-
 <div class="container">
 <H1>Logs</H1>
 

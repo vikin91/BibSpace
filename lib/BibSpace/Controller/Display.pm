@@ -39,7 +39,7 @@ sub test404 {
 sub show_log {
   my $self = shift;
   my $num  = $self->param('num') // 100;
-  my $type = $self->param('type') // 'info';    # default
+  my $type = $self->param('type') // 'general';    # default
 
   my $log_dir = Path::Tiny->new( $self->app->config->{log_dir} );
 

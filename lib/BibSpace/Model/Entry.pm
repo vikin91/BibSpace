@@ -185,15 +185,24 @@ sub discover_attachments {
     my ( $self, $upload_dir ) = @_;
 
     my $id = $self->id;
-    Path::Tiny->new($upload_dir)->mkpath;
+    
+    try {
+        Path::Tiny->new( $upload_dir )->mkpath;
+        Path::Tiny->new( $upload_dir, "papers" )->mkpath;
+        Path::Tiny->new( $upload_dir, "slides" )->mkpath;
+    }
+    catch {
+        warn $_;
+    };
 
     my @discovery_papers;
     try {
-        Path::Tiny->new( $upload_dir, "papers" )->mkpath;
         @discovery_papers = Path::Tiny->new( $upload_dir, "papers" )
             ->children(qr/paper-$id\./);
     }
-    catch { };
+    catch {
+        warn $_;
+    };
 
 
     my @discovery_slides;

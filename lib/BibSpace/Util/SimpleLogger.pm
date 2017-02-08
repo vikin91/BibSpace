@@ -14,13 +14,14 @@ with 'ILogger';
 # this is stored in the fixture - for tests, this must be relative path!!
 
 has '_log_dir' => ( is => 'rw', isa => 'Maybe[Str]', reader => 'log_dir' );
+has 'log_file' => ( is => 'rw', isa => 'Maybe[Path::Tiny]');
 
 sub set_log_dir {
   my ( $self, $dir ) = @_;
-
   $self->{_log_dir} = Path::Tiny->new($dir)->relative();
-
+  $self->log_file( Path::Tiny->new( $self->log_dir, 'general.log' )->relative );
 }
+
 
 # # Log messages
 # $log->debug('Not sure what is happening here');
@@ -29,22 +30,7 @@ sub set_log_dir {
 # $log->error('Garden variety error');
 # $log->fatal('Boom');
 
-sub log_mojo {
-  my $self = shift;
-  my $type = shift;    # info, warn, error, debug
-  my $msg  = shift;    # text to log
 
-  $type =~ s/warning/warn/;
-  $type =~ s/LOW_LEVEL_DEBUG/debug/;
-
-  if ( $self->log_dir ) {
-    my $mojo_log = Mojo::Log->new( level => 'info' );
-
-    my $file = Path::Tiny->new( $self->log_dir, $type . '.log' );
-    $mojo_log->path($file);
-    $mojo_log->emit( 'message', $type, $msg );
-  }
-}
 
 sub log {
   my $self   = shift;
@@ -52,10 +38,11 @@ sub log {
   my $msg    = shift;               # text to log
   my $origin = ( caller(2) )[3];    # method from where the msg originates
 
-  $self->log_mojo( lc($type), $msg );
-
   my $time = localtime;
-  print "[$time] $type: $msg (Origin: $origin).";
+  my $line_file = "[$time] $type: $msg.";
+  my $line_screen = $line_file." (Origin: $origin).";
+  $self->log_file->append($line_file."\n") if $self->log_file;
+  print $line_screen;
   print color('reset');
   print "\n";
 }

@@ -389,20 +389,31 @@ sub fix_file_urls {
 
   my @all_entries = $self->app->repo->entries_all;
 
-  my $str = "";
+  my $big_str = ".\n";
+  my $num_fixes = 0;
 
   for my $entry (@all_entries) {
 
+    my $str;
+    $str .= "Entry ".$entry->id.": ";
     $entry->discover_attachments($self->app->config->{upload_dir});
+    my @discovered_types = $entry->attachments_keys;
 
+    $str .= "has types: (";
+    foreach (@discovered_types){
+      $str .= " $_, ";
+    }
+    $str .= "). Fixed: ";
+
+    # say $str;
+    my $fixed;
     my $file = $entry->get_attachment('paper');
     my $file_url = $self->url_for( 'download_publication_pdf', filetype => "paper", id => $entry->id )->to_abs;
 
     if ( $file and $file->exists and $entry->has_bibtex_field("pdf") ) {
       $entry->add_bibtex_field( "pdf", "$file_url" );
-
-      $str .= "<br/>Fixed: ID $entry->{id}, PDF: " . $file_url;
-      $str .= '<br/>';
+      $fixed = 1;
+      $str .= "\n\tPDF " . $file_url;
     }
 
     $file = $entry->get_attachment('slides');
@@ -410,13 +421,17 @@ sub fix_file_urls {
 
     if ( $file and $file->exists and $entry->has_bibtex_field("slides") ) {
       $entry->add_bibtex_field( "slides", "$file_url" );
-
-      $str .= "<br/>Fixed: ID $entry->{id}, SLIDES: " . $file_url;
-      $str .= '<br/>';
+      $fixed = 1;
+      $str .= "\n\tSLIDES " . $file_url;
     }
+    $str .= "\n";
+    $big_str .= $str if $fixed;
+    ++$num_fixes if $fixed;
   }
 
-  $self->flash( msg_type => 'info', msg => 'Results of fix_attachment_urls:' . $str );
+  $self->app->logger->info("Url fix results $big_str.");
+
+  $self->flash( msg_type => 'info', msg => "Checked $num_fixes entries. Fix results have bees saved to log." );
   $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
