@@ -35,28 +35,20 @@ sub Freassign_authors_to_entries_given_by_array {
     my $entries_arr_ref = shift;
 
 
-    say "Freassign_authors_to_entries_given_by_array";
-
     my @all_entries         = @{$entries_arr_ref};
     my $num_authors_created = 0;
     foreach my $entry (@all_entries) {
         next unless defined $entry;
 
-        say "Freassign_authors_to_entries_given_by_array. Processing: ".$entry->bibtex_key;
-
         my @bibtex_author_name = $entry->author_names_from_bibtex;
 
         for my $author_name (@bibtex_author_name) {
-
-            say "Freassign_authors_to_entries_given_by_array. Found author: ".$author_name;
 
             my $author
                 = $app->repo->authors_find( sub { $_->uid eq $author_name } );
             if ( $create_new == 1 and !defined $author ) {
                 $author
                     = $app->entityFactory->new_Author( uid => $author_name );
-
-                say "Freassign_authors_to_entries_given_by_array. Saving new author: ".$author->uid;
                 $app->repo->authors_save($author);
                 ++$num_authors_created;
             }
@@ -69,7 +61,6 @@ sub Freassign_authors_to_entries_given_by_array {
                     author_id => $author->get_master->id,
                     entry_id  => $entry->id
                 );
-                say "Freassign_authors_to_entries_given_by_array. Saving authorship: ".$authorship->id;
                 $app->repo->authorships_save($authorship);
                 $entry->add_authorship($authorship);
                 $author->add_authorship($authorship);

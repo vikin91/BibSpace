@@ -52,6 +52,8 @@ use BibSpace::Util::EntityFactory;
 # See Persistent Private Variables in perlsub for details.
 use feature qw( state say );
 
+
+## OBJECTS CREATED AND CONTAINED IN HAS METHODS CANNOT BE CHANGED AT RUNTIME!
 has preferences => sub {
     return state $prefs = Preferences->new->load_maybe;
 };
@@ -84,6 +86,8 @@ has backup_dir => sub {
 };
 
 # do not use this - if MySQL server dies during operation, you will be not able to reconnect!
+# use helper 
+## OBJECTS CREATED AND CONTAINED IN HAS METHODS CANNOT BE CHANGED AT RUNTIME!
 # has db => sub {
 #     my $self = shift;
 #     state $db = db_connect(
@@ -144,7 +148,7 @@ has layeredRepository => sub {
         logger             => $self->logger,
         handle             => $self->smartArrayBackend,
 
-# reset_data_callback must be undef if you want to make and restore backups using Storable.
+# reset_data_callback must be undef if you want to create and restore backups using Storable.
         reset_data_callback => undef,
         is_read             => 1
     );
@@ -172,6 +176,7 @@ has layeredRepository => sub {
     return $LR;
 };
 
+# layeredRepository will not change at runtime => repo neither.
 has repo => sub {
     my $self = shift;
     return RepositoryFacade->new( lr => $self->layeredRepository );

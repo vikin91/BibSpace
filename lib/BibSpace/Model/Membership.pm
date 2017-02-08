@@ -27,7 +27,6 @@ has 'author' => (
 );
 has 'start' => ( is => 'rw', isa => 'Int', default => 0 );
 has 'stop'  => ( is => 'rw', isa => 'Int', default => 0 );
-has 'aaa'  => ( is => 'ro', isa => 'Str', builder => 'id', lazy => 1);
 ####################################################################################
 sub id {
   my $self = shift;

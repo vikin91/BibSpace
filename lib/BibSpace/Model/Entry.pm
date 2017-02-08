@@ -455,6 +455,7 @@ sub generate_html {
 
     $converter->convert( $self->bib, $bst_file );
     my $html = $converter->get_html;
+    
     $self->html($html);
     $self->warnings( join( ', ', $converter->get_warnings ) );
 

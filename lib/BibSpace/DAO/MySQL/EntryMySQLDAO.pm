@@ -47,10 +47,7 @@ sub all {
         $sth->execute();
     }
     catch {
-        my $trace = Devel::StackTrace->new;
-        $self->logger->error( "\n=== TRACE ===\n"
-                . $trace->as_string
-                . "\n=== END TRACE ===\n" );    # like carp
+       $self->logger->error( "Select exception: $_" );
     };
 
     # this pattern was used in mysql internally
@@ -103,9 +100,9 @@ sub all {
     return @objs;
 }
 before 'all' =>
-    sub { shift->logger->entering( "", "" . __PACKAGE__ . "->all" ); };
+    sub { shift->logger->entering(""); };
 after 'all' =>
-    sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->all" ); };
+    sub { shift->logger->exiting(""); };
 
 =item count
     Method documentation placeholder.
@@ -122,9 +119,9 @@ sub count {
     return $num;
 }
 before 'count' =>
-    sub { shift->logger->entering( "", "" . __PACKAGE__ . "->count" ); };
+    sub { shift->logger->entering(""); };
 after 'count' =>
-    sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->count" ); };
+    sub { shift->logger->exiting(""); };
 
 =item empty
     Method documentation placeholder.
@@ -141,9 +138,9 @@ sub empty {
     return $num == 0;
 }
 before 'empty' =>
-    sub { shift->logger->entering( "", "" . __PACKAGE__ . "->empty" ); };
+    sub { shift->logger->entering(""); };
 after 'empty' =>
-    sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->empty" ); };
+    sub { shift->logger->exiting(""); };
 
 =item exists
     Method documentation placeholder.
@@ -161,9 +158,9 @@ sub exists {
     return $num > 0;
 }
 before 'exists' =>
-    sub { shift->logger->entering( "", "" . __PACKAGE__ . "->exists" ); };
+    sub { shift->logger->entering(""); };
 after 'exists' =>
-    sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->exists" ); };
+    sub { shift->logger->exiting(""); };
 
 =item save
     Method documentation placeholder.
@@ -177,21 +174,19 @@ sub save {
         if ( $self->exists($obj) ) {
             $self->update($obj);
             $self->logger->lowdebug(
-                "Updated " . ref($obj) . " ID " . $obj->id . " in DB.",
-                "" . __PACKAGE__ . "->save" );
+                "Updated " . ref($obj) . " ID " . $obj->id . " in DB." );
         }
         else {
             $self->_insert($obj);
             $self->logger->lowdebug(
-                "Inserted " . ref($obj) . " ID " . $obj->id . " into DB.",
-                "" . __PACKAGE__ . "->save" );
+                "Inserted " . ref($obj) . " ID " . $obj->id . " into DB." );
         }
     }
 }
 before 'save' =>
-    sub { shift->logger->entering( "", "" . __PACKAGE__ . "->save" ); };
+    sub { shift->logger->entering(""); };
 after 'save' =>
-    sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->save" ); };
+    sub { shift->logger->exiting(""); };
 
 =item _insert
     Method documentation placeholder.
@@ -236,17 +231,16 @@ sub _insert {
             );
         }
         catch {
-            $self->logger->error( "Insert exception: $_",
-                "" . __PACKAGE__ . "->insert" );
+            $self->logger->error( "Insert exception during inserting ID ".$obj->id." bibtex_key: ".$obj->bibtex_key.". Error: $_" );
         };
     }
 
     # $dbh->commit();
 }
 before '_insert' =>
-    sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
+    sub { shift->logger->entering(""); };
 after '_insert' =>
-    sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };
+    sub { shift->logger->exiting(""); };
 
 =item update
     Method documentation placeholder.
@@ -297,9 +291,9 @@ sub update {
 
 }
 before 'update' =>
-    sub { shift->logger->entering( "", "" . __PACKAGE__ . "->update" ); };
+    sub { shift->logger->entering(""); };
 after 'update' =>
-    sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update" ); };
+    sub { shift->logger->exiting(""); };
 
 =item delete
     Method documentation placeholder.
@@ -323,9 +317,9 @@ sub delete {
 
 }
 before 'delete' =>
-    sub { shift->logger->entering( "", "" . __PACKAGE__ . "->delete" ); };
+    sub { shift->logger->entering(""); };
 after 'delete' =>
-    sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->delete" ); };
+    sub { shift->logger->exiting(""); };
 
 =item filter
     Method documentation placeholder.
@@ -347,9 +341,9 @@ sub filter {
 
 }
 before 'filter' =>
-    sub { shift->logger->entering( "", "" . __PACKAGE__ . "->filter" ); };
+    sub { shift->logger->entering(""); };
 after 'filter' =>
-    sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->filter" ); };
+    sub { shift->logger->exiting(""); };
 
 =item find
     Method documentation placeholder.
@@ -370,10 +364,9 @@ sub find {
     # TODO: auto-generated method stub. Implement me!
 
 }
-before 'find' =>
-    sub { shift->logger->entering( "", "" . __PACKAGE__ . "->find" ); };
-after 'find' =>
-    sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->find" ); };
+before 'find' => sub { shift->logger->entering(""); };
+after 'find' => sub { shift->logger->exiting(""); };
+
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;
