@@ -111,8 +111,8 @@ sub copy_smart_to_mysql {
 #################################################################################
 sub insert_random_data {
   my $self = shift;
+  my $num = $self->param('num') // 300;
 
-  my $num = 300;
   my $str_len = 60;
 
   for (1..$num){
