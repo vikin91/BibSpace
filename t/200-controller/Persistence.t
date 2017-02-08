@@ -11,6 +11,7 @@ $t_logged_in->post_ok(
 );
 my $self = $t_logged_in->app;
 $t_logged_in->ua->max_redirects(5);
+$t_logged_in->ua->inactivity_timeout(300);
 
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
