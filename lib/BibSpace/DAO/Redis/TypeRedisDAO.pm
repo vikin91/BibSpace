@@ -17,11 +17,11 @@ with 'BibSpace::DAO::Interface::ITypeDAO';
 =cut 
 sub all {
   my ($self) = @_;
-  $self->logger->entering("","".(caller(0))[3]."");
+  $self->logger->entering("");
   die "".(caller(0))[3]." not implemented.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".(caller(0))[3]."");
+  $self->logger->exiting("");
 }
 
 =item save
@@ -29,11 +29,11 @@ sub all {
 =cut 
 sub save {
   my ($self, @objects) = @_;
-  $self->logger->entering("","".(caller(0))[3]."");
+  $self->logger->entering("");
   die "".(caller(0))[3]." not implemented. Method was instructed to save ".scalar(@objects)." objects.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".(caller(0))[3]."");
+  $self->logger->exiting("");
 }
 
 =item update
@@ -41,11 +41,11 @@ sub save {
 =cut 
 sub update {
   my ($self, @objects) = @_;
-  $self->logger->entering("","".(caller(0))[3]."");
+  $self->logger->entering("");
   die "".(caller(0))[3]." not implemented. Method was instructed to save ".scalar(@objects)." objects.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".(caller(0))[3]."");
+  $self->logger->exiting("");
 }
 
 =item delete
@@ -53,11 +53,11 @@ sub update {
 =cut 
 sub delete {
   my ($self, @objects) = @_;
-  $self->logger->entering("","".(caller(0))[3]."");
+  $self->logger->entering("");
   die "".(caller(0))[3]." not implemented. Method was instructed to save ".scalar(@objects)." objects.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".(caller(0))[3]."");
+  $self->logger->exiting("");
 }
 
 =item exists
@@ -65,11 +65,11 @@ sub delete {
 =cut 
 sub exists {
   my ($self, @objects) = @_;
-  $self->logger->entering("","".(caller(0))[3]."");
+  $self->logger->entering("");
   die "".(caller(0))[3]." not implemented. Method was instructed to save ".scalar(@objects)." objects.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".(caller(0))[3]."");
+  $self->logger->exiting("");
 }
 
 =item filter
@@ -77,12 +77,12 @@ sub exists {
 =cut 
 sub filter {
   my ($self, $coderef) = @_;
-  $self->logger->entering("","".(caller(0))[3]."");
+  $self->logger->entering("");
   die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
   die "".(caller(0))[3]." not implemented.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".(caller(0))[3]."");
+  $self->logger->exiting("");
 }
 
 =item find
@@ -90,12 +90,12 @@ sub filter {
 =cut 
 sub find {
   my ($self, $coderef) = @_;
-  $self->logger->entering("","".(caller(0))[3]."");
+  $self->logger->entering("");
   die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
   die "".(caller(0))[3]." not implemented.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".(caller(0))[3]."");
+  $self->logger->exiting("");
 }
 
 =item count
@@ -103,12 +103,12 @@ sub find {
 =cut 
 sub count {
   my ($self, $coderef) = @_;
-  $self->logger->entering("","".(caller(0))[3]."");
+  $self->logger->entering("");
   die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
   die "".(caller(0))[3]." not implemented.";
 
   # TODO: auto-generated method stub. Implement me!
-  $self->logger->exiting("","".(caller(0))[3]."");
+  $self->logger->exiting("");
 }
 
 __PACKAGE__->meta->make_immutable;

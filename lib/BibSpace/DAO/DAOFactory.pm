@@ -25,7 +25,7 @@ sub getInstance {
     die "EntityFactory is undef!" unless $self->e_factory;
     die "Factory type not provided!" unless $factoryType;
     die "Connection handle not provided!" unless $handle;
-    # $self->logger->debug("Requesting new concreteDOAFactory of type $factoryType.","".(caller(0))[3]."");
+    # $self->logger->debug("Requesting new concreteDOAFactory of type $factoryType.");
 
     try{
         my $class = $factoryType;
@@ -36,8 +36,8 @@ sub getInstance {
         die "Requested unknown type of DaoFactory: '$factoryType'.";
     };
 }
-before 'getInstance' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'getInstance'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'getInstance' => sub { shift->logger->entering(""); };
+after 'getInstance'  => sub { shift->logger->exiting(""); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

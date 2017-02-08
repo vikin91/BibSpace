@@ -34,8 +34,8 @@ sub all {
   }
   return @objs;
 }
-before 'all' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'all'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'all' => sub { shift->logger->entering(""); };
+after 'all'  => sub { shift->logger->exiting(""); };
 =item count
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
@@ -49,8 +49,8 @@ sub count {
   my $num = $row->{num} // 0;
   return $num;
 }
-before 'count' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'count'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'count' => sub { shift->logger->entering(""); };
+after 'count'  => sub { shift->logger->exiting(""); };
 =item empty
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
@@ -64,8 +64,8 @@ sub empty {
   my $num = $row->{num} // 0;
   return $num == 0;
 }
-before 'empty' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'empty'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'empty' => sub { shift->logger->entering(""); };
+after 'empty'  => sub { shift->logger->exiting(""); };
 
 =item exists
     Method documentation placeholder.
@@ -80,8 +80,8 @@ sub exists {
   my $num = $row->{num} // 0;
   return $num > 0;
 }
-before 'exists' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'exists'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'exists' => sub { shift->logger->entering(""); };
+after 'exists'  => sub { shift->logger->exiting(""); };
 
 =item save
     Method documentation placeholder.
@@ -103,8 +103,8 @@ sub save {
   #   }
   # }
 }
-before 'save' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'save'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'save' => sub { shift->logger->entering(""); };
+after 'save'  => sub { shift->logger->exiting(""); };
 
 
 =item _insert
@@ -143,8 +143,8 @@ sub update {
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'update' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'update'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'update' => sub { shift->logger->entering(""); };
+after 'update'  => sub { shift->logger->exiting(""); };
 =item delete
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
@@ -164,8 +164,8 @@ sub delete {
   }
 }
 
-before 'delete' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'delete'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'delete' => sub { shift->logger->entering(""); };
+after 'delete'  => sub { shift->logger->exiting(""); };
 
 =item filter
     Method documentation placeholder.
@@ -178,8 +178,8 @@ sub filter {
   # TODO: auto-generated method stub. Implement me!
   
 }
-before 'filter' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'filter'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'filter' => sub { shift->logger->entering(""); };
+after 'filter'  => sub { shift->logger->exiting(""); };
 =item find
     Method documentation placeholder.
 =cut 
@@ -191,8 +191,8 @@ sub find {
   # TODO: auto-generated method stub. Implement me!
   
 }
-before 'find' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'find'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'find' => sub { shift->logger->entering(""); };
+after 'find'  => sub { shift->logger->exiting(""); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

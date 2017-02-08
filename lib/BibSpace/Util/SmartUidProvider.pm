@@ -128,7 +128,7 @@ sub generateUID {
     my $curr_max  = $self->last_id($type);
     my $new_uid = $curr_max + 1;
     $self->_get($type)->uid_set( $new_uid => 1 );
-    $self->logger->debug("Generated uid '$new_uid' for object type '$type'.","".(caller(0))[3]."");
+    $self->logger->debug("Generated uid '$new_uid' for object type '$type'.");
     return $new_uid;
 }
 

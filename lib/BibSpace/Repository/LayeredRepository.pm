@@ -245,7 +245,7 @@ sub copy_data {
     my $destLayer = $self->get_layer($backendTo);
 
     if(!$srcLayer or !$destLayer){
-        $self->logger->error("Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist.","".(caller(0))[3]."");
+        $self->logger->error("Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist.");
         return;
     }
 
@@ -263,7 +263,7 @@ sub copy_data {
     
     # ALWAYS: first copy entities, then relations
 
-    $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.","".(caller(0))[3]."");
+    $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.");
 
     # $self->logger->debug("State before copying:".$self->get_summary_table);
 
@@ -272,7 +272,7 @@ sub copy_data {
         my @resultRead = $srcLayer->all($type);
         my $resultSave = $destLayer->save($type, @resultRead);
         
-        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".(caller(0))[3]."");
+        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.");
         
     }
     foreach my $type ( LayeredRepository->get_relations ){
@@ -280,7 +280,7 @@ sub copy_data {
         my @resultRead = $srcLayer->all($type);
         my $resultSave = $destLayer->save($type, @resultRead);
         
-        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.","".(caller(0))[3]."");
+        $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.");
         
     }
 }

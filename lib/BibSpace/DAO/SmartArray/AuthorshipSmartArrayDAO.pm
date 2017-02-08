@@ -24,8 +24,8 @@ sub all {
   return $self->handle->all("Authorship");
 
 }
-before 'all' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'all'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'all' => sub { shift->logger->entering(""); };
+after 'all'  => sub { shift->logger->exiting(""); };
 =item count
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
@@ -34,8 +34,8 @@ sub count {
   my ($self) = @_;
   return $self->handle->count("Authorship");
 }
-before 'count' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'count'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'count' => sub { shift->logger->entering(""); };
+after 'count'  => sub { shift->logger->exiting(""); };
 =item empty
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
@@ -44,8 +44,8 @@ sub empty {
   my ($self) = @_;
   return $self->count == 0;
 }
-before 'empty' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'empty'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'empty' => sub { shift->logger->entering(""); };
+after 'empty'  => sub { shift->logger->exiting(""); };
 
 =item exists
     Method documentation placeholder.
@@ -58,8 +58,8 @@ sub exists {
   my $matching = first {$_->equals($object)} @all; 
   return defined $matching;
 }
-before 'exists' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'exists'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'exists' => sub { shift->logger->entering(""); };
+after 'exists'  => sub { shift->logger->exiting(""); };
 
 =item save
     Method documentation placeholder.
@@ -69,8 +69,8 @@ sub save {
   my ($self, @objects) = @_;
   $self->handle->save(@objects);
 }
-before 'save' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'save'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'save' => sub { shift->logger->entering(""); };
+after 'save'  => sub { shift->logger->exiting(""); };
 =item update
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
@@ -79,8 +79,8 @@ sub update {
   my ($self, @objects) = @_;
   # smart array does not require updating! Objects are direct references!
 }
-before 'update' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'update'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'update' => sub { shift->logger->entering(""); };
+after 'update'  => sub { shift->logger->exiting(""); };
 =item delete
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
@@ -91,8 +91,8 @@ sub delete {
   my @diff = grep {not $toDelete{$_} } $self->all;
   $self->handle->data->{'Authorship'} = \@diff;
 }
-before 'delete' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'delete'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'delete' => sub { shift->logger->entering(""); };
+after 'delete'  => sub { shift->logger->exiting(""); };
 
 =item filter
     Method documentation placeholder.
@@ -102,8 +102,8 @@ sub filter {
   die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
   return $self->handle->filter("Authorship", $coderef); 
 }
-before 'filter' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'filter'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'filter' => sub { shift->logger->entering(""); };
+after 'filter'  => sub { shift->logger->exiting(""); };
 =item find
     Method documentation placeholder.
 =cut 
@@ -112,8 +112,8 @@ sub find {
   die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
   return $self->handle->find("Authorship", $coderef);
 }
-before 'find' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'find'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'find' => sub { shift->logger->entering(""); };
+after 'find'  => sub { shift->logger->exiting(""); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

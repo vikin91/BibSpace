@@ -48,7 +48,7 @@ has 'data' => (
 
 sub reset_data {
     my $self = shift;
-    $self->logger->warn("Resetting SmartArray","".(caller(0))[3]."");
+    $self->logger->warn("Resetting SmartArray");
     $self->_clear;
 }
 
@@ -65,8 +65,8 @@ sub _init {
         $self->set($type, []);
     }
 }
-before '_init' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after '_init'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before '_init' => sub { shift->logger->entering(""); };
+after '_init'  => sub { shift->logger->exiting(""); };
 
 sub all {
     my $self = shift;
@@ -76,8 +76,8 @@ sub all {
     my $aref = $self->get($type);
     return @{ $aref };
 }
-before 'all' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'all'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'all' => sub { shift->logger->entering(""); };
+after 'all'  => sub { shift->logger->exiting(""); };
 
 sub _add {
     my ($self, @objects) = @_;
@@ -85,8 +85,8 @@ sub _add {
     $self->_init($type);
     push @{$self->get($type)}, @objects;
 }
-before '_add' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after '_add'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before '_add' => sub { shift->logger->entering(""); };
+after '_add'  => sub { shift->logger->exiting(""); };
 
 sub save {
     my ($self, @objects) = @_;
@@ -116,23 +116,23 @@ sub save {
     
     return $added;
 }
-before 'save' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'save'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'save' => sub { shift->logger->entering(""); };
+after 'save'  => sub { shift->logger->exiting(""); };
 
 sub count { 
     my ($self, $type) = @_;
     die "all requires a type!" unless $type;
     return scalar $self->all($type);
 }
-before 'count' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'count'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'count' => sub { shift->logger->entering(""); };
+after 'count'  => sub { shift->logger->exiting(""); };
 
 sub empty { 
     my ($self, $type) = @_;
     return $self->count($type) == 0;
 }
-before 'empty' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'empty'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'empty' => sub { shift->logger->entering(""); };
+after 'empty'  => sub { shift->logger->exiting(""); };
 
 sub exists { 
     my ($self, $object) = @_;
@@ -141,15 +141,15 @@ sub exists {
     my $found = first {$_->equals($object)} $self->all($type);
     return defined $found;
 }
-before 'exists' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'exists'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'exists' => sub { shift->logger->entering(""); };
+after 'exists'  => sub { shift->logger->exiting(""); };
 
 sub update { 
     my ($self, @objects) = @_;
     # should happen automatically beacuser array keeps references to objects
 }
-before 'update' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'update'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'update' => sub { shift->logger->entering(""); };
+after 'update'  => sub { shift->logger->exiting(""); };
 
 sub delete { 
     my ($self, @objects) = @_; 
@@ -161,8 +161,8 @@ sub delete {
         splice( @{$aref}, $idx, 1) if $idx > -1;
     }
 }
-before 'delete' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'delete'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'delete' => sub { shift->logger->entering(""); };
+after 'delete'  => sub { shift->logger->exiting(""); };
 
 sub filter { 
     my ($self, $type, $coderef) = @_;
@@ -170,8 +170,8 @@ sub filter {
     return () if $self->empty($type);
     return grep &{$coderef}, $self->all($type); 
 }
-before 'filter' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'filter'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'filter' => sub { shift->logger->entering(""); };
+after 'filter'  => sub { shift->logger->exiting(""); };
 
 sub find { 
   my ($self, $type, $coderef) = @_;
@@ -179,8 +179,8 @@ sub find {
   return undef if $self->empty($type);
   return first \&{$coderef}, $self->all($type);
 }
-before 'find' => sub { shift->logger->entering("","".(caller(0))[3].""); };
-after 'find'  => sub { shift->logger->exiting("","".(caller(0))[3].""); };
+before 'find' => sub { shift->logger->entering(""); };
+after 'find'  => sub { shift->logger->exiting(""); };
 
 # Moose::Meta::Attribute::Native::Trait::Array
 
