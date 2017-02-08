@@ -1,11 +1,9 @@
 # This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T15:07:35
 package LayeredRepository;
 use namespace::autoclean;
-use feature qw(current_sub);
 use Moose;
-use feature qw(current_sub);
 use MooseX::ClassAttribute;
-use feature qw(current_sub);
+use feature qw( state say );
 use MooseX::StrictConstructor;
 use Try::Tiny;
 use List::Util qw(first);
@@ -19,7 +17,32 @@ use BibSpace::Util::EntityFactory;
 # logic of the layered repository = read from one layer, write to all layers
 
 has 'logger' => ( is => 'ro', does => 'ILogger', required => 1 );
-has 'e_factory' => ( is => 'ro', isa => 'EntityFactory', required => 1);
+has 'preferences' => ( is => 'ro', isa => 'Preferences', required => 1);
+
+sub BUILD {
+    my $self = shift;
+
+    my $uidP = SmartUidProvider->new(
+        logger              => $self->logger,
+        idProviderClassName => 'IntegerUidProvider'
+    );
+    $self->uidProvider($uidP);
+
+    my $e_factory = EntityFactory->new(
+            logger => $self->logger, 
+            id_provider => $self->uidProvider,
+            preferences => $self->preferences 
+    );
+    $self->e_factory($e_factory);
+}
+# will be set in the post-construction routine BUILD
+has 'uidProvider' => ( is => 'rw', isa => 'SmartUidProvider');
+# will be set in the post-construction routine BUILD
+has 'e_factory' => ( is => 'rw', isa => 'EntityFactory');
+
+
+
+
 
 # layer_name => RepositoryLayer
 has 'layers' => ( 
@@ -29,8 +52,8 @@ has 'layers' => (
         default => sub{ {} } 
 );
 
-has 'uidProvider' => ( is => 'rw', isa => 'SmartUidProvider', required => 1 );
 
+# static methods
 class_has 'entities' => (
         is => 'ro', 
         isa => 'ArrayRef[Str]', 
@@ -108,15 +131,53 @@ sub replace_layer {
 
     my $destLayer = $self->get_layer($name);
     if( ref($destLayer) ne ref($input_layer) ){
-        $self->logger->error("Replacing layers with of different type, this will lead to failure!");
-        die "Replacing layers with of different type, this will lead to failure!";
+        $self->logger->error("Replacing layers with of different type, this will lead to a failure!");
+        die "Replacing layers with of different type, this will lead to a failure!";
     }
     if($destLayer and $input_layer->is_read != $destLayer->is_read){
         $self->logger->warn("Replacing layers with different is_read value! This is experimental!");
     }
+    delete $self->layers->{$name};
     $self->layers->{$name} = $input_layer;
+
+    ## START TRANSACTION - you really need to do all of this together
+    $self->logger->debug("Replacing ID PROVIDER for all layers!");
     $self->replace_uid_provider($input_layer->uidProvider);
+    $self->logger->debug("Replacing E_FACTORY for all layers!");
+    # e_factory has also id_providers, so it must be replaced
+    # I am 95% sure that the id_providers form e_factory are references to $input_layer->uidProvider;
+    # if this is not the case, then we will encounter errors by restoring backups
+    $self->replace_e_factory($input_layer->e_factory); 
+    $self->e_factory->id_provider($input_layer->uidProvider);
+    ## COMMIT TRANSACTION
 }
+
+=item replace_uid_provider
+    Replaces main id provider (loacted in $self->uidProvider) state.
+    This id provider is referenced by all layers!
+=cut
+sub replace_uid_provider {
+    my $self = shift;
+    my $input_id_provider = shift;
+    $self->uidProvider($input_id_provider);
+    foreach my $layer ($self->get_all_layers){
+        $layer->uidProvider($input_id_provider);
+    }
+}
+
+=item replace_uid_provider
+    Replaces main id provider (loacted in $self->uidProvider) state.
+    This id provider is referenced by all layers!
+=cut
+sub replace_e_factory {
+    my $self = shift;
+    my $input_e_factory = shift;
+    $self->e_factory($input_e_factory);
+    foreach my $layer ($self->get_all_layers){
+        $layer->e_factory($input_e_factory);
+    }
+}
+
 
 =item add_layer
     Adds new layer to the layered repository.
@@ -132,22 +193,12 @@ sub add_layer {
     if($layer->is_read and $self->get_read_layer){
         die "There can be only one read layer.";
     }
+    $layer->e_factory($self->e_factory);
     $layer->uidProvider($self->uidProvider);
     $self->layers->{$layer->name} = $layer;
 }
 
-=item replace_uid_provider
-    Replaces main id provider (loacted in $self->uidProvider) state.
-    This id provider is referenced by all layers!
-=cut
-sub replace_uid_provider {
-    my $self = shift;
-    my $input_id_provider = shift;
-    $self->uidProvider($input_id_provider);
-    foreach my $layer ($self->get_all_layers){
-        $layer->uidProvider($input_id_provider);
-    }
-}
+
 
 
 =item reset_uid_providers
@@ -214,6 +265,7 @@ sub get_summary_table {
     }
     for (1..$tab_width) { $str .= "-"; }
     $str .= "\n";
+    $str .= "IF YOU SEE ANY 'NO' IN ANY '_OK' COLUMN THEN MANIPULATING DATA IN THE SYSTEM MAY LEAD TO DATA LOSS OR EXCEPTIONS!";
     return $str;
 }
 
@@ -249,7 +301,11 @@ sub copy_data {
         return;
     }
 
+
+    # $self->logger->debug("State before reset_uid_providers: ".$self->get_summary_table);
+
     if( $srcLayer->creates_on_read ){
+        $self->logger->warn("Resetting all uid providers during copy from layer '$backendFrom' to layer '$backendTo'.");
         $self->reset_uid_providers;
     }
 
@@ -258,6 +314,7 @@ sub copy_data {
     # # B) mysql -> smart
     # $self->replace_uid_provider($srcLayer->uidProvider);
 
+    # $self->logger->debug("State before reset data:".$self->get_summary_table);
     ## avoid data duplication in the destination layer!!
     $destLayer->reset_data; # this has unfortunately no meaning for mysql :( need to implement this
     
@@ -269,7 +326,12 @@ sub copy_data {
 
     foreach my $type ( LayeredRepository->get_entities ){
         
+        # $self->logger->debug("reading from '$backendFrom'.");
+
         my @resultRead = $srcLayer->all($type);
+
+        # $self->logger->debug("saving to '$backendTo'.");
+        
         my $resultSave = $destLayer->save($type, @resultRead);
         
         $self->logger->debug("'$backendFrom'-read ".scalar(@resultRead)." objects '".$type."' ==> '$backendTo'-write $resultSave objects.");

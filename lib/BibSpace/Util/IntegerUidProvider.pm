@@ -1,5 +1,4 @@
 package IntegerUidProvider;
-use feature qw(current_sub);
 use Moose;
 use BibSpace::Util::IUidProvider;
 with 'IUidProvider';
@@ -7,11 +6,11 @@ use List::Util qw(max);
 use Scalar::Util qw( refaddr );
 use List::MoreUtils qw(any uniq);
 
-use feature qw(current_sub);
+use feature qw(say);
 
 use BibSpace::Util::SimpleLogger;
 
-# use feature qw(current_sub);
+# 
 use MooseX::ClassAttribute;
 
 has 'data' => (
@@ -47,7 +46,9 @@ sub registerUID{
     else{
         my $msg = "Cannot registerUID for type '".$self->for_type."'. It exists already! Wanted to reg: $uid. Existing: ". join(' ', sort $self->uid_keys);
         $self->logger->error($msg);
-        die $msg;
+        ### TODO: THIS SHOULD BE DIE!!
+        # warn is only for debugging
+        # die $msg;
     }
 }
 
@@ -68,7 +69,9 @@ sub generateUID{
     my $curr_max  = $self->last_id;
     my $new_uid = $curr_max + 1;
     $self->uid_set($new_uid => 1);
-    $self->logger->debug(__PACKAGE__." (".refaddr($self).") has generated uid '$new_uid' for type '".$self->for_type."'");
+    # this debug msg can break a lot - generated uids are delayed and some older copies are returned... strange
+    # $self->logger->debug(" (".refaddr($self).") has generated uid '$new_uid' for type '".$self->for_type."'");
+    # say " (".refaddr($self).") has generated uid '$new_uid' for type '".$self->for_type."'";
     return $new_uid;
 }
 

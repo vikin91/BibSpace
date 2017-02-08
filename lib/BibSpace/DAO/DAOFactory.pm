@@ -2,7 +2,7 @@
 package DAOFactory;
 
 use namespace::autoclean;
-use feature qw(current_sub);
+
 use Moose;
 use BibSpace::Util::ILogger;
 use BibSpace::DAO::MySQLDAOFactory;

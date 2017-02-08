@@ -16,7 +16,7 @@ use BibSpace::Functions::Core;
 use BibSpace::Util::Preferences;
 
 use Class::MOP;
-use feature qw(current_sub);
+
 use Moose::Util qw/does_role/;
 
 
@@ -40,17 +40,41 @@ sub save {
     my $bibitex_html_converter = $self->param('bibitex_html_converter');
     my $local_time_zone = $self->param('local_time_zone');
     my $output_time_format = $self->param('output_time_format');
+    my $run_in_demo_mode = $self->param('run_in_demo_mode');
 
+    if($run_in_demo_mode and $run_in_demo_mode eq 'on'){
+        $run_in_demo_mode = 1;
+    }
+    else{
+        $run_in_demo_mode = 0;
+    }
+
+    say "run_in_demo_mode: $run_in_demo_mode";
+
+    my $msg = "Preferences saved!";
+    my $msg_type = "success";
+    
+    # only admins can set this!
+    if ( $self->app->is_admin ) {
+        say "THE USER IS ADMIN AND CAN CHANGE PREFERENCE ".$self->app->is_admin;
+        $self->app->preferences->run_in_demo_mode($run_in_demo_mode);
+    }
+    elsif( defined $run_in_demo_mode ){
+        say "ID NOT ADMIN!! self->app->is_admin: ".$self->app->is_admin;
+        $msg = "Only admins can enable/disable temporary demo mode! The rest of preferences has been saved!";
+        $msg_type = 'warning';
+    }
     # TODO: validate inputs
 
     $self->app->preferences->bibitex_html_converter($bibitex_html_converter);
     $self->app->preferences->local_time_zone($local_time_zone);
     $self->app->preferences->output_time_format($output_time_format);
+    
 
     # # store to file
     # my $json_str = $self->app->preferences->store('bibspace_preferences.json');
 
-    $self->stash( preferences => $self->app->preferences, msg_type=>'success', msg => 'Preferences saved!' );
+    $self->stash( preferences => $self->app->preferences, msg_type=>$msg_type, msg =>$msg  );
     # $self->render( template => 'display/preferences' );
     $self->redirect_to( $self->get_referrer );
 }

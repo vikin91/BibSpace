@@ -24,16 +24,16 @@ use Try::Tiny;
 use TeX::Encode;
 use Encode;
 
-use feature qw(current_sub);
+
 use Moose;
-use feature qw(current_sub);
+
 use Moose::Util::TypeConstraints;
 use BibSpace::Model::IEntity;
 use BibSpace::Model::ILabeled;
 use BibSpace::Model::IAuthored;
 use BibSpace::Model::IHavingException;
 with 'IEntity', 'ILabeled', 'IAuthored', 'IHavingException';
-use feature qw(current_sub);
+
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
@@ -300,15 +300,26 @@ sub matches_our_type {
     return defined $match;
 }
 ####################################################################################
-sub populate_from_bib {
+sub has_valid_bibtex {
     my $self = shift;
-
-
     if ( defined $self->bib and $self->bib ne '' ) {
         my $bibtex_entry = new Text::BibTeX::Entry();
         my $s            = $bibtex_entry->parse_s( $self->bib );
 
         return if !$bibtex_entry->parse_ok;
+        return 1;
+    }
+    return;
+}
+####################################################################################
+sub populate_from_bib {
+    my $self = shift;
+
+    return if !$self->has_valid_bibtex;
+
+    if ( defined $self->bib and $self->bib ne '' ) {
+        my $bibtex_entry = new Text::BibTeX::Entry();
+        my $s            = $bibtex_entry->parse_s( $self->bib );
 
         $self->bibtex_key( $bibtex_entry->key );
         my $year_str = $bibtex_entry->get('year');

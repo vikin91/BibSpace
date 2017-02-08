@@ -1,8 +1,8 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T13:56:17
+
 package TagMySQLDAO;
 
 use namespace::autoclean;
-use feature qw(current_sub);
+
 use Moose;
 use DBI;
 # use DBIx::Connector;

@@ -2,7 +2,7 @@ package TagCloud;
 
 use utf8;
 use v5.16;    #because of ~~ and say
-use feature qw(current_sub);
+
 use Moose;
 
 has 'count' => ( is => 'rw', isa => 'Int' );    # number in parenthesis

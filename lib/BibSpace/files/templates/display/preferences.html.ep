@@ -41,8 +41,18 @@
                 <p class="help-block">For example: last login, last modification. <a href="http://search.cpan.org/~drolsky/DateTime-1.42/lib/DateTime.pm#strftime_Patterns">List of allowed tokens</a>.</p>
             </div>
             <div class="form-group">
+                %= label_for run_in_demo_mode => 'Run in demo mode'
+                % if ( $preferences->run_in_demo_mode == 1 ){
+                    %= check_box run_in_demo_mode => checked => 1, id => 'run_in_demo_mode'
+                % }
+                % else{
+                    %= check_box run_in_demo_mode => id => 'run_in_demo_mode'
+                % } 
+            </div>
+            <div class="form-group">
                 <button type="submit" class="btn btn-success"> Save <i class="fa fa-floppy-o"></i> </button>
             </div>
+            
         % end
 
         </div>

@@ -2,7 +2,7 @@
 package SmartArrayDAOFactory;
 
 use namespace::autoclean;
-use feature qw(current_sub);
+
 use Moose;
 use BibSpace::Util::ILogger;
 use BibSpace::DAO::SmartArray::TagTypeSmartArrayDAO;
@@ -27,78 +27,78 @@ sub getTagTypeDao {
   my $self       = shift;
   return TagTypeSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getTagTypeDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getTagTypeDao" ); };
-after 'getTagTypeDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getTagTypeDao" ); };
+before 'getTagTypeDao' => sub { shift->logger->entering( ""); };
+after 'getTagTypeDao' => sub { shift->logger->exiting( ""); };
 
 sub getTeamDao {
   my $self       = shift;
   return TeamSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getTeamDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getTeamDao" ); };
-after 'getTeamDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getTeamDao" ); };
+before 'getTeamDao' => sub { shift->logger->entering( ""); };
+after 'getTeamDao' => sub { shift->logger->exiting( ""); };
 
 sub getAuthorDao {
   my $self       = shift;
   return AuthorSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getAuthorDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getAuthorDao" ); };
-after 'getAuthorDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getAuthorDao" ); };
+before 'getAuthorDao' => sub { shift->logger->entering( ""); };
+after 'getAuthorDao' => sub { shift->logger->exiting( ""); };
 
 sub getAuthorshipDao {
   my $self       = shift;
   return AuthorshipSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getAuthorshipDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getAuthorshipDao" ); };
-after 'getAuthorshipDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getAuthorshipDao" ); };
+before 'getAuthorshipDao' => sub { shift->logger->entering( ""); };
+after 'getAuthorshipDao' => sub { shift->logger->exiting( ""); };
 
 sub getMembershipDao {
   my $self       = shift;
   return MembershipSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getMembershipDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getMembershipDao" ); };
-after 'getMembershipDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getMembershipDao" ); };
+before 'getMembershipDao' => sub { shift->logger->entering( ""); };
+after 'getMembershipDao' => sub { shift->logger->exiting( ""); };
 
 sub getEntryDao {
   my $self       = shift;
   return EntrySmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getEntryDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getEntryDao" ); };
-after 'getEntryDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getEntryDao" ); };
+before 'getEntryDao' => sub { shift->logger->entering( ""); };
+after 'getEntryDao' => sub { shift->logger->exiting( ""); };
 
 sub getLabelingDao {
   my $self       = shift;
   return LabelingSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getLabelingDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getLabelingDao" ); };
-after 'getLabelingDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getLabelingDao" ); };
+before 'getLabelingDao' => sub { shift->logger->entering( ""); };
+after 'getLabelingDao' => sub { shift->logger->exiting( ""); };
 
 sub getTagDao {
   my $self       = shift;
   return TagSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getTagDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getTagDao" ); };
-after 'getTagDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getTagDao" ); };
+before 'getTagDao' => sub { shift->logger->entering( ""); };
+after 'getTagDao' => sub { shift->logger->exiting( ""); };
 
 sub getExceptionDao {
   my $self       = shift;
   return ExceptionSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getExceptionDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getExceptionDao" ); };
-after 'getExceptionDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getExceptionDao" ); };
+before 'getExceptionDao' => sub { shift->logger->entering( ""); };
+after 'getExceptionDao' => sub { shift->logger->exiting( ""); };
 
 sub getTypeDao {
   my $self       = shift;
   return TypeSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getTypeDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getTypeDao" ); };
-after 'getTypeDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getTypeDao" ); };
+before 'getTypeDao' => sub { shift->logger->entering( ""); };
+after 'getTypeDao' => sub { shift->logger->exiting( ""); };
 
 sub getUserDao {
   my $self       = shift;
   return UserSmartArrayDAO->new( logger => $self->logger, handle => $self->handle, e_factory => $self->e_factory );
 }
-before 'getUserDao' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->getUserDao" ); };
-after 'getUserDao' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->getUserDao" ); };
+before 'getUserDao' => sub { shift->logger->entering( ""); };
+after 'getUserDao' => sub { shift->logger->exiting( ""); };
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

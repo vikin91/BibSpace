@@ -148,14 +148,22 @@ sub restore_storable_backup {
 
     my @layers = $app->repo->lr->get_all_layers;
     foreach (@layers){ $_->reset_data };
+    $app->repo->lr->reset_uid_providers;
 
     # say "Smart layer after reset:" . $app->repo->lr->get_layer('smart')->get_summary_table;
 
-    $app->repo->lr->replace_layer('smart', $layer);
+    my $layer_to_replace = $app->repo->lr->get_read_layer;
+    $app->repo->lr->replace_layer($layer_to_replace->name, $layer);
+
+    foreach my $layer (@layers){ 
+        next if $layer->name eq $layer_to_replace->name;
+
+        $app->repo->lr->copy_data( { from => $layer_to_replace->name, to => $layer->name } );
+    };    
 
     # say "Smart layer after replace:" . $app->repo->lr->get_layer('smart')->get_summary_table;
 
-    $app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
+    
 
     say "restore_storable_backup DONE. Smart layer after copy_data:" . $app->repo->lr->get_layer('smart')->get_summary_table;
     say "restore_storable_backup DONE. All layer after copy_data:" . $app->repo->lr->get_summary_table;

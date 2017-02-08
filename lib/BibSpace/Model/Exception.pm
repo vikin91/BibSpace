@@ -8,9 +8,9 @@ use BibSpace::Model::Team;
 
 use Try::Tiny;
 use Devel::StackTrace;
-use feature qw(current_sub);
+
 use Moose;
-use feature qw(current_sub);
+
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

@@ -995,56 +995,6 @@ sub publications_add_post {
   my $existing_id    = -1;
   my $added_under_id = -1;
 
-
-  my $entry = $self->app->entityFactory->new_Entry( bib => $new_bib );
-
-
-  my $bibtex_code_valid = $entry->populate_from_bib();
-
-  if ( !$bibtex_code_valid ) {
-    $status_code_str = 'ERR_BIBTEX';
-  }
-  elsif ( $action eq 'preview' ) {
-    $status_code_str = 'PREVIEW';
-    $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
-  }
-  elsif ( $action eq 'check_key' ) {
-    $status_code_str = 'KEY_OK';
-    $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
-
-    my $entry_conflicting_key
-      = $self->app->repo->entries_find( sub { ( $_->bibtex_key cmp $entry->bibtex_key ) == 0 } );
-    if ( defined $entry_conflicting_key ) {
-      $status_code_str = 'KEY_TAKEN';
-      $existing_id     = $entry_conflicting_key->id;
-    }
-  }
-  elsif ( $action eq 'save' ) {
-
-    $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
-
-    # TODO: duplicated code
-    my $entry_conflicting_key
-      = $self->app->repo->entries_find( sub { ( $_->bibtex_key cmp $entry->bibtex_key ) == 0 } );
-    if ( defined $entry_conflicting_key ) {
-      $status_code_str = 'KEY_TAKEN';
-      $existing_id     = $entry_conflicting_key->id;
-    }
-    else {
-      $status_code_str = 'ADD_OK';
-      $entry->fix_month();
-      Freassign_authors_to_entries_given_by_array($self->app, 1, [ $entry ]);
-      $self->app->repo->entries_save($entry);
-
-      $added_under_id = $entry->id;
-    }
-  }
-
-  my $adding_msg = get_adding_editing_message_for_error_code( $self, $status_code_str, $existing_id );
-
-
-  $self->app->logger->info("Adding publication. Action: > $action <. Status code: $status_code_str.");
-
   # status_code_strings
   # -2 => PREVIEW
   # -1 => ERR_BIBTEX
@@ -1052,24 +1002,87 @@ sub publications_add_post {
   # 1 => EDIT_OK
   # 2 => KEY_OK
   # 3 => KEY_TAKEN
+
+
+  my $entry = $self->app->entityFactory->new_Entry( bib => $new_bib );
+
+  # any action
+  if ( !$entry->has_valid_bibtex ) {
+    $status_code_str = 'ERR_BIBTEX';
+    my $msg = get_adding_editing_message_for_error_code( $self, $status_code_str, $existing_id );
+    my $msg_type = 'danger';
+
+    $self->app->logger->info("Adding publication. Action: > $action <. Status code: $status_code_str.");
+    $self->stash( entry => $entry, msg => $msg, msg_type => $msg_type );
+    $self->render( template => 'publications/add_entry' );
+    return;
+  }
+
+  $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
   my $bibtex_warnings = FprintBibtexWarnings( $entry->warnings );
-  my $msg             = $adding_msg . $bibtex_warnings;
-  my $msg_type        = 'success';
-  $msg_type = 'warning' if $bibtex_warnings =~ m/Warning/;
-  $msg_type = 'danger'
-    if $status_code_str eq 'ERR_BIBTEX'
-    or $status_code_str eq 'KEY_TAKEN'
-    or $bibtex_warnings =~ m/Error/;
 
-  $self->stash( entry => $entry, msg => $msg, msg_type => $msg_type );
+  # any action
+  my $existing_entry = $self->app->repo->entries_find( sub { $_->bibtex_key eq $entry->bibtex_key } );
+  if ( $existing_entry ) {
+      $status_code_str = 'KEY_TAKEN';
+      my $msg_type        = 'danger';
+      $existing_id     = $existing_entry->id;
+      my $msg = get_adding_editing_message_for_error_code( $self, $status_code_str, $existing_id );
 
-  if ( $status_code_str eq 'ADD_OK' ) {
+      $self->app->logger->info("Adding publication. Action: > $action <. Status code: $status_code_str.");
+      $self->stash( entry => $entry, msg => $msg, msg_type => $msg_type );
+      $self->render( template => 'publications/add_entry' );
+      return;
+  }
+    
+
+  if ( $action eq 'preview' or $action eq 'check_key' ) {
+    my $status_code_str = 'PREVIEW';
+    my $msg_type = 'info';
+    $msg_type = 'warning' if $bibtex_warnings;
+    my $msg = get_adding_editing_message_for_error_code( $self, $status_code_str, $existing_id );
+    $msg .= $bibtex_warnings;
+
+    $self->app->logger->info("Adding publication. Action: > $action <. Status code: $status_code_str.");
+    $self->stash( entry => $entry, msg => $msg, msg_type => $msg_type );
+    $self->render( template => 'publications/add_entry' );
+    return;
+  }
+  
+
+  if ( $action eq 'save' ) {
+
+    $status_code_str = 'ADD_OK';
+    $entry->fix_month();
+    $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
+
+    $self->app->repo->entries_save($entry);
+    $added_under_id = $entry->id;
+
+    # !!! the entry must be added before executing Freassign_authors_to_entries_given_by_array
+    # why? beacuse authorship will be unable to map existing entry to the author
+    Freassign_authors_to_entries_given_by_array( $self->app, 1, [$entry] );
+    
+
+    
+    my $msg_type = 'success';
+    $msg_type = 'warning' if $bibtex_warnings;
+    my $msg = get_adding_editing_message_for_error_code( $self, $status_code_str, $existing_id );
+    $msg .= $bibtex_warnings;
+
+    $self->app->logger->info("Adding publication. Action: > $action <. Status code: $status_code_str.");
     $self->flash( msg => $msg, msg_type => $msg_type );
     $self->redirect_to( $self->url_for( 'edit_publication', id => $added_under_id ) );
+    return;
   }
-  else {
-    $self->render( template => 'publications/add_entry' );
-  }
+
+  
+
+
+  
+
+  
+
 }
 ####################################################################################
 sub publications_edit_get {

@@ -14,6 +14,9 @@ use Data::Dumper;
 use Mojo::Base 'Mojolicious::Controller';
 use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::Core;
+use BibSpace::Model::Backup;
+use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
+use BibSpace::Functions::FDB;
 
 #################################################################################
 sub persistence_status {
@@ -42,10 +45,7 @@ sub persistence_status {
 sub load_fixture {
   my $self = shift;
 
-  use BibSpace::Model::Backup;
-  use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
-  use BibSpace::Functions::FDB;
-
+  $self->app->logger->warn("PERSISTENCE CONTROLLER does: load_fixture");
 
   my $fixture_name = "bibspace_fixture.dat";
   my $fixture_dir  = "./fixture/";
@@ -62,9 +62,7 @@ sub load_fixture {
 sub save_fixture {
   my $self = shift;
 
-  use BibSpace::Model::Backup;
-  use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
-  use BibSpace::Functions::FDB;
+  $self->app->logger->warn("PERSISTENCE CONTROLLER does: save_fixture");
 
   my $fixture_name = "bibspace_fixture.dat";
   my $fixture_dir  = "./fixture/";
@@ -75,7 +73,7 @@ sub save_fixture {
   my $layer = $self->app->repo->lr->get_read_layer;
   my $path  = "" . $backup->get_path;
 
-  $Storable::forgive_me = "do store regexp please";
+  $Storable::forgive_me = "do store regexp please, we will not use them anyway";
 
   # if you see any exceptions being thrown here, this might be due to REGEXP caused by DateTime pattern.
   # this should not happen currently however - I think it is fixed now.
@@ -89,10 +87,7 @@ sub save_fixture {
 sub copy_mysql_to_smart {
   my $self = shift;
 
-  # my $smart_layer = $self->app->repo->lr->get_layer('smart');
-  # # reading from mysql registers UIDs - all uid providers must be reset!
-  # $self->app->repo->lr->reset_uid_providers;
-  # $smart_layer->reset_data;
+  $self->app->logger->warn("PERSISTENCE CONTROLLER does: copy_mysql_to_smart");
 
   $self->app->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
   $self->app->link_data;
@@ -112,9 +107,64 @@ sub copy_smart_to_mysql {
   $self->flash( msg_type => 'success', msg => "Copied smart => mysql. $status" );
   $self->redirect_to( $self->get_referrer );
 }
+
+#################################################################################
+sub insert_random_data {
+  my $self = shift;
+
+  my $num = 300;
+  my $str_len = 60;
+
+  for (1..$num){
+    my $obj = $self->app->entityFactory->new_User(
+        login      => random_string($str_len),
+        email      => random_string($str_len).'@example.com',
+        real_name  => random_string($str_len),
+        pass => random_string($str_len),
+        pass2 => random_string($str_len)
+
+    );
+    $self->app->repo->users_save($obj);
+
+    $obj = $self->app->entityFactory->new_Author(
+        uid      => random_string($str_len),
+    );
+    $self->app->repo->authors_save($obj);
+
+    $obj = $self->app->entityFactory->new_Entry(
+        bib      => random_string($str_len),
+    );
+    $self->app->repo->entries_save($obj);
+
+    $obj = $self->app->entityFactory->new_TagType(
+        name      => random_string($str_len),
+    );
+    $self->app->repo->tagTypes_save($obj);
+
+    my $tt = ($self->app->repo->tagTypes_all)[0];
+
+    $obj = $self->app->entityFactory->new_Tag(
+        name      => random_string($str_len),
+        type => $tt->id
+    );
+    $self->app->repo->tags_save($obj);
+
+
+    $obj = $self->app->entityFactory->new_Team(
+        name      => random_string($str_len),
+    );
+    $self->app->repo->teams_save($obj);
+  }
+
+  my $status = "Status: <pre style=\"font-family:monospace;\">" . $self->app->repo->lr->get_summary_table . "</pre>";
+  $self->flash( msg_type => 'success', msg => "Copied smart => mysql. $status" );
+  $self->redirect_to( $self->get_referrer );
+}
 #################################################################################
 sub reset_smart {
   my $self = shift;
+
+  $self->app->logger->warn("PERSISTENCE CONTROLLER does: reset_smart");
 
   my $layer = $self->app->repo->lr->get_layer('smart');
   if ($layer) {
@@ -122,7 +172,13 @@ sub reset_smart {
   }
 
   # no pub_admin user would lock the whole system
-  $self->app->insert_admin;
+  # if you insert it here, it may will cause clash of IDs
+  # $self->app->insert_admin;
+  # instead, do not insert admin and set system in demo mode
+  $self->app->preferences->run_in_demo_mode(1);
+
+  say "setting preferences->run_in_demo_mode to: '".$self->app->preferences->run_in_demo_mode."'";
+
 
   my $status = "Status: <pre style=\"font-family:monospace;\">" . $self->app->repo->lr->get_summary_table . "</pre>";
   $self->flash( msg_type => 'success', msg => $status );
@@ -131,6 +187,8 @@ sub reset_smart {
 #################################################################################
 sub reset_mysql {
   my $self = shift;
+
+  $self->app->logger->warn("PERSISTENCE CONTROLLER does: reset_mysql");
 
   my $layer = $self->app->repo->lr->get_layer('mysql');
   if ($layer) {
@@ -143,6 +201,29 @@ sub reset_mysql {
     $self->flash( msg_type => 'danger', msg => "Reset failed - backend handle undefined. " . $status );
   }
 
+  $self->redirect_to( $self->get_referrer );
+}
+#################################################################################
+sub reset_all {
+  my $self = shift;
+
+  $self->app->logger->warn("PERSISTENCE CONTROLLER does: reset_all");
+
+  my @layers = $self->app->repo->lr->get_all_layers;
+  foreach (@layers){ $_->reset_data };
+  $self->app->repo->lr->reset_uid_providers;
+  
+  
+
+  # no pub_admin user would lock the whole system
+  # if you insert it here, it may will cause clash of IDs
+  # $self->app->insert_admin;
+  # instead, do not insert admin and set system in demo mode
+  $self->app->preferences->run_in_demo_mode(1);
+
+
+  my $status = "Status: <pre style=\"font-family:monospace;\">" . $self->app->repo->lr->get_summary_table . "</pre>";
+  $self->flash( msg_type => 'success', msg => $status );
   $self->redirect_to( $self->get_referrer );
 }
 #################################################################################

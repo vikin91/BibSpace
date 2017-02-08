@@ -1,7 +1,7 @@
 package IAuthored;
 
 use namespace::autoclean;
-use feature qw(current_sub);
+
 use Moose::Role;
 
 has 'authorships' => (

@@ -1,5 +1,5 @@
 package IUidProvider;
-use feature qw(current_sub);
+
 use Moose::Role;
 
 requires 'registerUID';

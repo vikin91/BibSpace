@@ -7,22 +7,16 @@ use namespace::autoclean;
 
 use Scalar::Util qw( refaddr );
 
-use feature qw(current_sub);
+
 use Moose;
-use feature qw(current_sub);
+
 use Moose::Util::TypeConstraints;
 use List::Util qw(first);
 use List::MoreUtils qw(first_index);
-use feature qw(current_sub);
+
 use MooseX::Storage;
 with Storage( format => 'JSON', 'io' => 'File' );
 
-=item  PROBLEM with 4 workers in hypnotoad
-[Tue Feb  7 10:20:30 2017] WARNING: Id Provider for Tag          has addr '140607898259360', last_id: 231 (Origin: SmartUidProvider->get_provider).
-...
-[Tue Feb  7 10:20:33 2017] WARNING: Id Provider for Tag          has addr '140607891694720', last_id: 0 (Origin: SmartUidProvider->get_provider).
-[Tue Feb  7 10:20:33 2017] DEBUG: IntegerUidProvider (140607891694720) has generated uid '1' for type 'Tag' (Origin: IntegerUidProvider->generateUID)
-=cut
 
 =item
     This is a in-memory data structure (hash) to hold all objects of BibSpace.

@@ -23,7 +23,7 @@
       <a class="btn btn-warning btn-xs" href="<%= url_for('copy_smart_to_mysql') %>">mysql <-- smart</a>
     </td>
     <td>
-      <a class="btn btn-danger btn-xs" href="<%= url_for('reset_smart') %>">reset smart</a>
+      <a class="btn btn-danger btn-xs" href="<%= url_for('reset_smart') %>" data-toggle="tooltip" data-placement="bottom" title="WARNING: this will delete all users (including pub_admin) and set your user rank to 0!">reset smart</a>
     </td>
     <td>
       <a class="btn btn-default btn-xs" id="get_persistence_backends_status">ajax status</a>
@@ -37,10 +37,18 @@
       <a class="btn btn-default btn-xs" id="copy_smart_to_mysql">mysql <-- smart (ajax)</a>
     </td>
     <td>
-      
+      <a class="btn btn-danger btn-xs" href="<%= url_for('reset_all') %>">reset ALL</a>
+    </td>
+    <td>
+      <a class="btn btn-success btn-xs" href="<%= url_for('insert_random_data') %>">insert random data</a>
     </td>
   </tr>  
 </table>
+% if( app->preferences->run_in_demo_mode == 1 ){
+  <div class="alert alert-danger" role="alert">
+    YOU RUN IN DEMO MODE - make sure to disable it in preferences. Now anyone can use the system with full admin rights.
+  </div>
+% }
 </br>
 
 

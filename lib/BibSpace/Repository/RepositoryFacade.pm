@@ -1,7 +1,6 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T15:07:35
 package RepositoryFacade;
 use namespace::autoclean;
-use feature qw(current_sub);
+
 use Moose;
 use Try::Tiny;
 

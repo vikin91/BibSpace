@@ -5,11 +5,11 @@ use utf8;
 use Text::BibTeX;    # parsing bib files
 use v5.16;           #because of ~~ and say
 
-use feature qw(current_sub);
+
 use Moose;
 use BibSpace::Model::IEntity;
 with 'IEntity';
-use feature qw(current_sub);
+
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

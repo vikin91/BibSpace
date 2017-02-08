@@ -1,8 +1,8 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T13:56:17
+
 package UserMySQLDAO;
 
 use namespace::autoclean;
-use feature qw(current_sub);
+
 use Moose;
 use BibSpace::DAO::Interface::IDAO;
 use BibSpace::Model::User;
@@ -43,8 +43,7 @@ sub all {
     $sth->execute();
   }
   catch {
-    my $trace = Devel::StackTrace->new;
-    $self->logger->error( "\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n" );    # like carp
+    $self->logger->error( "SELECT exception: $_");
   };
 
 
@@ -80,8 +79,8 @@ sub all {
   }
   return @objs;
 }
-before 'all' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->all" ); };
-after 'all' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->all" ); };
+before 'all' => sub { shift->logger->entering( "" ); };
+after 'all' => sub { shift->logger->exiting( "" ); };
 
 =item count
     Method documentation placeholder.
@@ -97,8 +96,8 @@ sub count {
   my $num = $row->{num} // 0;
   return $num;
 }
-before 'count' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->count" ); };
-after 'count' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->count" ); };
+before 'count' => sub { shift->logger->entering( "" ); };
+after 'count' => sub { shift->logger->exiting( "" ); };
 
 =item empty
     Method documentation placeholder.
@@ -114,8 +113,8 @@ sub empty {
   my $num = $row->{num} // 0;
   return $num == 0;
 }
-before 'empty' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->empty" ); };
-after 'empty' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->empty" ); };
+before 'empty' => sub { shift->logger->entering( "" ); };
+after 'empty' => sub { shift->logger->exiting( "" ); };
 
 =item exists
     Method documentation placeholder.
@@ -131,8 +130,8 @@ sub exists {
   my $num = $row->{num} // 0;
   return $num > 0;
 }
-before 'exists' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->exists" ); };
-after 'exists' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->exists" ); };
+before 'exists' => sub { shift->logger->entering( "" ); };
+after 'exists' => sub { shift->logger->exiting( "" ); };
 
 =item save
     Method documentation placeholder.
@@ -145,16 +144,16 @@ sub save {
   foreach my $obj (@objects) {
     if ( $self->exists($obj) ) {
       $self->update($obj);
-      $self->logger->lowdebug( "Updated ".ref($obj)." ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->lowdebug( "Updated ".ref($obj)." ID " . $obj->id . " in DB." );
     }
     else {
       $self->_insert($obj);
-      $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB." );
     }
   }
 }
-before 'save' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->save" ); };
-after 'save' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->save" ); };
+before 'save' => sub { shift->logger->entering( "" ); };
+after 'save' => sub { shift->logger->exiting( "" ); };
 
 =item _insert
     Method documentation placeholder.
@@ -200,13 +199,13 @@ sub _insert {
       );
     }
     catch {
-      $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
+      $self->logger->error( "Insert exception: $_");
     };
   }
   # $dbh->commit();
 }
-before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
-after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };
+before '_insert' => sub { shift->logger->entering(""); };
+after '_insert' => sub { shift->logger->exiting(""); };
 
 =item update
     Method documentation placeholder.
@@ -218,11 +217,11 @@ sub update {
   my $dbh = $self->handle;
 
   foreach my $obj (@objects) {
-    next if !defined $obj->id;
+    next if !defined $obj->login;
 
     # update field 'modified_time' only if needed
-    my $qry = "UPDATE Login SET
-            login=?, 
+    my $qry = "UPDATE Login SET 
+            login=?,
             registration_time=?, 
             last_login=?, 
             real_name=?, 
@@ -232,8 +231,8 @@ sub update {
             pass3=?, 
             rank=?, 
             master_id=?, 
-            tennant_id=?";
-    $qry .= "WHERE id = ?";
+            tennant_id=?
+          WHERE id = ?";
 
     my $sth = $dbh->prepare($qry);
     try {
@@ -253,13 +252,13 @@ sub update {
       );
     }
     catch {
-      $self->logger->error( "Update exception: $_", "" . __PACKAGE__ . "->update" );
+      $self->logger->error( "Update exception: $_");
     };
   }
 
 }
-before 'update' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->update" ); };
-after 'update' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update" ); };
+before 'update' => sub { shift->logger->entering( ""); };
+after 'update' => sub { shift->logger->exiting( ""); };
 
 =item delete
     Method documentation placeholder.

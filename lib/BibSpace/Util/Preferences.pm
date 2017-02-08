@@ -9,11 +9,11 @@ use List::Util qw(first);
 use List::MoreUtils qw(first_index);
 use feature qw( state say );
 
-use feature qw(current_sub);
+
 use Moose;
-use feature qw(current_sub);
+
 use Moose::Util::TypeConstraints;
-use feature qw(current_sub);
+
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
@@ -28,12 +28,14 @@ sub load_maybe {
   return $self;
 }
 
+has 'run_in_demo_mode' =>
+  ( is => 'rw', isa => 'Int', default => 0, trigger => \&_pref_changed );
+
 has 'bibitex_html_converter' =>
   ( is => 'rw', isa => 'Str', default => 'BibStyleConverter', trigger => \&_pref_changed );
 
-# important for Preferences form
-has 'default_bibitex_html_converter' =>
-  ( is => 'ro', isa => 'Str', default => 'BibStyleConverter', trigger => \&_pref_changed );
+# important for Preferences form to set flag "(default)" by the right list item
+has 'default_bibitex_html_converter' => ( is => 'ro', isa => 'Str', default => 'BibStyleConverter' );
 
 has 'local_time_zone' => ( is => 'rw', isa => 'Str', default => 'Europe/Berlin', trigger => \&_pref_changed );
 

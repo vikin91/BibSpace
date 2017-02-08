@@ -1,5 +1,5 @@
 package IHtmlBibtexConverter;
-use feature qw(current_sub);
+
 use Moose::Role;
 
 requires 'set_template'; # e.g., bst file

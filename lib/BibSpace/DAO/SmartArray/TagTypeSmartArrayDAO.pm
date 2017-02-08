@@ -2,7 +2,7 @@
 package TagTypeSmartArrayDAO;
 
 use namespace::autoclean;
-use feature qw(current_sub);
+
 use Moose;
 use BibSpace::DAO::Interface::IDAO;
 use BibSpace::Model::TagType;

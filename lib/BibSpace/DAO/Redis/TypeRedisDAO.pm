@@ -2,7 +2,7 @@
 package BibSpace::DAO::Redis::TypeRedisDAO;
 
 use namespace::autoclean;
-use feature qw(current_sub);
+
 use Moose;
 use BibSpace::DAO::Interface::ITypeDAO;
 use BibSpace::Model::Type;

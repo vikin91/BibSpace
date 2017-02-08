@@ -2,7 +2,7 @@
 package EntityFactory;
 
 use namespace::autoclean;
-use feature qw(current_sub);
+
 use Moose;
 use BibSpace::Util::ILogger;
 use BibSpace::Util::Preferences;
@@ -13,7 +13,9 @@ use BibSpace::Model::Entry;
 # this class has logger, because it may want to log somethig as well 
 # thic code forces to instantiate the abstract factory first and then calling getInstance
 has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
-has 'id_provider' => ( is => 'ro', isa => 'SmartUidProvider', required => 1);
+
+# this may be rewritten during backup restore = must be rw (or writable in another way)
+has 'id_provider' => ( is => 'rw', isa => 'SmartUidProvider', required => 1);
 has 'preferences' => ( is => 'ro', isa => 'Preferences', required => 1);
 
 
@@ -25,7 +27,6 @@ sub new_Entry {
         %args
     );
 }
-# before 'new_Entry' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->new_Entry" ); };
 
 sub new_TagType {
     my ($self, %args) = @_;

@@ -1,8 +1,8 @@
-# This code was auto-generated using ArchitectureGenerator.pl on 2017-01-15T13:56:17
+
 package AuthorshipMySQLDAO;
 
 use namespace::autoclean;
-use feature qw(current_sub);
+
 use Moose;
 use BibSpace::DAO::Interface::IDAO;
 use BibSpace::Model::Authorship;
@@ -120,13 +120,24 @@ sub _insert {
     INSERT IGNORE INTO Entry_to_Author(author_id, entry_id) VALUES (?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
+
+    # if( $self->exists($obj) ){
+    #   $self->logger->error( "Such object already exist! " . ref($obj) . " " . $obj->id . ".");
+    # }
+    # else{
+    #   $self->logger->info( "This seems to be a new object! " . ref($obj) . " " . $obj->id . ".");
+    # }
     
     try {
+      # $self->logger->debug( "There were ".$self->count." ".ref($obj)."  in DB.");
+
       my $result = $sth->execute( $obj->author_id, $obj->entry_id );
-      $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+
+      # $self->logger->debug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB. Result: $result");
+      # $self->logger->debug( "There are now ".$self->count." ".ref($obj)."  in DB.");
     }
     catch {
-      $self->logger->error( "Insert exception when inserting " . ref($obj) . " " . $obj->id . ": $_", "" . __PACKAGE__ . "->insert" );   
+      $self->logger->error( "Insert exception when inserting " . ref($obj) . " " . $obj->id . ": $_");   
       $dbh->rollback();
     };
   }

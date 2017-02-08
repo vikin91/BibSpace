@@ -27,6 +27,38 @@ sub register {
 
   my ( $self, $app ) = @_;
 
+  # this must be a helper, 
+  # because smartIDprovider can be exchanged during system lifetime (e.g. restore backup), 
+  # so the reference must always point to the currently valid id provider
+  # smartIDProvider must be instantiated INSIDE LayeredRepository
+  $app->helper(
+    smartIDProvider => sub {
+      my $self = shift;
+      return $self->app->layeredRepository->uidProvider;
+    }
+  );
+
+  # this must be a helper, 
+  # because entityFactory can be exchanged during system lifetime (e.g. restore backup), 
+  # so the reference must always point to the currently valid id provider
+  # entityFactory must be instantiated INSIDE LayeredRepository
+  $app->helper(
+    entityFactory => sub {
+      my $self = shift;
+      return $self->app->layeredRepository->e_factory;
+    }
+  );
+
+  $app->helper(
+    is_demo => sub {
+      my $self = shift;
+      return 1 if $self->config->{demo_mode};
+      # say "helper->is_demo: run_in_demo_mode: ".$self->app->preferences->run_in_demo_mode;
+      return 1 if $self->app->preferences->run_in_demo_mode == 1;
+      return;
+    }
+  );
+
   $app->helper(
     db => sub {
       my $self = shift;

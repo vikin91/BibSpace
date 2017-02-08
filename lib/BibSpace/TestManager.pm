@@ -7,7 +7,7 @@ use BibSpace::Model::Backup;
 use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
 use BibSpace::Functions::FDB; # TODO: purge DB etc.
 
-use feature qw(current_sub);
+
 use Moose;
 
 sub apply_fixture {

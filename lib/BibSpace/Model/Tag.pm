@@ -7,12 +7,12 @@ use v5.16;           #because of ~~ and say
 
 use List::MoreUtils qw(any uniq first_index);
 
-use feature qw(current_sub);
+
 use Moose;
 require BibSpace::Model::IEntity;
 require BibSpace::Model::ILabeled;
 with 'IEntity', 'ILabeled';
-use feature qw(current_sub);
+
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

@@ -39,12 +39,14 @@ sub check_is_logged_in {
 # for _under_ -checking
 sub under_check_is_manager {
     my $self = shift;
+    return 1 if $self->app->is_demo;
     return $self->under_check_has_rank( User->manager_rank );
 }
 ####################################################################################
 # for _under_ -checking
 sub under_check_is_admin {
     my $self = shift;
+    return 1 if $self->app->is_demo;
     return $self->under_check_has_rank( User->admin_rank );
 }
 ####################################################################################
@@ -52,6 +54,8 @@ sub under_check_is_admin {
 sub under_check_has_rank {
     my $self          = shift;
     my $required_rank = shift;
+    
+    return 1 if $self->app->is_demo;
 
     my $me = $self->app->repo->users_find(
         sub { $_->login eq $self->session('user') } );

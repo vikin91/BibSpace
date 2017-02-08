@@ -56,11 +56,6 @@ has preferences => sub {
     return state $prefs = Preferences->new->load_maybe;
 };
 
-has is_demo => sub {
-    return 1 if shift->config->{demo_mode};
-    return;
-};
-
 
 has config_file => sub {
     my $self = shift;
@@ -117,7 +112,10 @@ has use_quick_load_fixture => sub {
     return;
 };
 
-
+# please use only a single type of logger at once. 
+# Using multiple may not be supported currently
+# if you really want to use multiple different loggers or state-full loggers (please don't),
+# then you need to move the object construction INTO the LayeredReposity and provide a helper to access it for everywhere.
 has logger => sub { state $logger = SimpleLogger->new() };
 
 
@@ -127,40 +125,18 @@ has smartArrayBackend => sub {
     return SmartArray->new( logger => $self->logger );
 };
 
-has smartIDProvider => sub {
-    my $self = shift;
-    # return state $sup = SmartUidProvider->new(
-    return SmartUidProvider->new(
-        logger              => $self->logger,
-        idProviderClassName => 'IntegerUidProvider'
-    );
-};
-
-has entityFactory => sub {
-    my $self = shift;
-    return state $factory = EntityFactory->new(
-            logger => $self->app->logger, 
-            id_provider => $self->app->smartIDProvider, 
-            preferences => $self->app->preferences 
-    );
-};
-
-
 
 has layeredRepository => sub {
     my $self = shift;
     $self->app->logger->info("Building layeredRepository");
     
-    my $sup = $self->app->smartIDProvider;
 
     my $LR = LayeredRepository->new(
-        e_factory   => $self->entityFactory,
         logger      => $self->logger,
-        uidProvider => $sup
+        preferences => $self->preferences
     );
 
     my $smartArrayLayer = RepositoryLayer->new(
-        e_factory   => $self->entityFactory,
         name               => 'smart',
         priority           => 1,
         creates_on_read    => undef,
@@ -182,7 +158,6 @@ has layeredRepository => sub {
     }
     else {
         my $mySQLLayer = RepositoryLayer->new(
-            e_factory                     => $self->entityFactory,
             name                          => 'mysql',
             priority                      => 99,
             creates_on_read               => 1,
@@ -264,7 +239,7 @@ sub startup {
 sub insert_admin {
     my $self = shift;
     $self->app->logger->info("Add startup admin user...");
-
+ 
     my $admin_exists
         = $self->app->repo->users_find( sub { $_->login eq 'pub_admin' } );
     if ( !$admin_exists ) {
@@ -274,7 +249,7 @@ sub insert_admin {
             login      => 'pub_admin',
             email      => 'pub_admin@example.com',
             real_name  => 'Admin',
-            rank       => 2,
+            rank       => 99,
             pass       => $hash,
             pass2      => $salt
         );
@@ -548,10 +523,17 @@ sub setup_routes {
         ->to('persistence#copy_smart_to_mysql')->name('copy_smart_to_mysql');
     $admin_user->get('/persistence/persistence_status')
         ->to('persistence#persistence_status')->name('persistence_status');
+
     $admin_user->get('/persistence/reset_mysql')
         ->to('persistence#reset_mysql')->name('reset_mysql');
     $admin_user->get('/persistence/reset_smart')
         ->to('persistence#reset_smart')->name('reset_smart');
+    $admin_user->get('/persistence/reset_all')
+        ->to('persistence#reset_all')->name('reset_all');    
+        
+    $admin_user->get('/persistence/insert_random_data')
+        ->to('persistence#insert_random_data')->name('insert_random_data');
+        
 
 
     ################ SETTINGS ################
