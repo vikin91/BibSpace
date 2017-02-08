@@ -279,7 +279,16 @@ sub get_summary_table {
     $str .= "\n";
     for ( 1 .. $tab_width ) { $str .= "-"; }
     $str .= "\n";
-    foreach my $entity ( sort LayeredRepository->get_models ) {
+    foreach my $entity ( LayeredRepository->get_entities ) {
+        $str .= sprintf "| %-15s |", $entity;
+        foreach my $ln ( reverse sort @layer_names ) {
+            $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};
+        }
+        $str .= "\n";
+    }
+    for ( 1 .. $tab_width ) { $str .= "-"; }
+    $str .= "\n";
+    foreach my $entity ( sort LayeredRepository->get_relations ) {
         $str .= sprintf "| %-15s |", $entity;
         foreach my $ln ( reverse sort @layer_names ) {
             $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};

@@ -58,7 +58,8 @@ class_has 'entities' => (
         is => 'ro', 
         isa => 'ArrayRef[Str]', 
         default => sub{
-            ['TagType', 'Team', 'Author', 'Entry', 'Tag', 'Type', 'User']
+            # ORDER IS IMPORTANT!!! TAG MUST BE AFTER TAGTYPE - it references it N:1!
+            ['Author', 'Entry',  'TagType', 'Tag', 'Team', 'Type', 'User']
         },
         traits  => ['Array'],
         handles => {
@@ -69,7 +70,7 @@ class_has 'relations' => (
         is => 'ro', 
         isa => 'ArrayRef[Str]', 
         default => sub{
-            ['Authorship', 'Membership', 'Labeling', 'Exception']
+            ['Authorship', 'Exception', 'Labeling', 'Membership' ]
         },
         traits  => ['Array'],
         handles => {
@@ -230,7 +231,7 @@ sub get_summary_table {
     my $tab_width = 91;
 
     # calc CHECK status
-    foreach my $entity (sort LayeredRepository->get_models ){
+    foreach my $entity ( LayeredRepository->get_models ){
         foreach my $prefix (@prefixes){
             $count_hash{$prefix.'OK'}->{$entity} = 'y';
             my $val;
@@ -256,7 +257,16 @@ sub get_summary_table {
     for (1..$tab_width) { $str .= "-"; }
     $str .= "\n";
     # print data
-    foreach my $entity (sort LayeredRepository->get_models ){
+    foreach my $entity (LayeredRepository->get_entities ){
+        $str .= sprintf "| %-15s |", $entity;
+        foreach my $ln (reverse sort @column_name){
+            $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};
+        }
+        $str .= "\n";
+    }
+    for (1..$tab_width) { $str .= "-"; }
+    $str .= "\n";
+    foreach my $entity (LayeredRepository->get_relations ){
         $str .= sprintf "| %-15s |", $entity;
         foreach my $ln (reverse sort @column_name){
             $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};

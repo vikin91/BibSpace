@@ -512,7 +512,7 @@ sub setup_routes {
     ################ PREFERENCES ################
 
     $manager_user->get('/preferences')->to('preferences#index')->name('preferences');
-    $manager_user->post('/preferences')->to('preferences#save')->name('save_preferences');
+    $admin_user->post('/preferences')->to('preferences#save')->name('save_preferences');
 
     ################ EXPERIMENTAL / PERSISTENCE ################
 

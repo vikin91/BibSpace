@@ -54,12 +54,12 @@ subtest 'PublicationsSEO: public functions' => sub {
 };
 
 ####################################################################
-TODO: {
-    local $TODO
-        = "PublicationsSEO: public functions – decoding is still not 100% ready";
+####################################################################
+subtest 'PublicationsSEO: check decoding of the list' => sub {
 
     my $main_page = $self->url_for('metalist_all_entries');
     $t_anyone->get_ok($main_page)->status_is(200)->content_unlike(qr/\{/i);
-}
+};
 
+ok(1);
 done_testing();

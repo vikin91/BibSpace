@@ -78,19 +78,25 @@ sub fix_bibtex_national_characters {
 
     # /(?<!bar)foo/ matches any occurrence of "foo" that does not follow "bar"
 
-    use utf8; # for :alpha:
+    use utf8; # for \w
 
     # makes sth \'x sth --> sth {\'x} sth
-    $str =~ s/(?<!\{)(\\':alpha:)(?!\})/\{$1\}/g;
+    $str =~ s/(?<!\{)(\\'\w)(?!\})/\{$1\}/g;
+
+    # makes sth \'{x} sth --> sth {\'x} sth
+    $str =~ s/\\'\{(\w+)\}/\{\\'$1\}/g;
+
+    # makes sth \"{x} sth --> sth {\"x} sth
+    $str =~ s/\\"\{(\w+)\}/\{\\"$1\}/g;
 
     # makes sth \"x sth --> sth {\"x} sth
-    $str =~ s/(?<!\{)(\\":alpha:)(?!\})/\{$1\}/g;
+    $str =~ s/(?<!\{)(\\"\w)(?!\})/\{$1\}/g;
 
     # makes sth \^x sth --> sth {\^x} sth
-    $str =~ s/(?<!\{)(\\^:alpha:)(?!\})/\{$1\}/g;
+    $str =~ s/(?<!\{)(\\^\w)(?!\})/\{$1\}/g;
 
     # makes sth \~x sth --> sth {\~x} sth
-    $str =~ s/(?<!\{)(\\~:alpha:)(?!\})/\{$1\}/g;
+    $str =~ s/(?<!\{)(\\~\w)(?!\})/\{$1\}/g;
 
     # makes sth \aa sth --> sth {\aa} sth
     $str =~ s/(?<!\{)\\aa(?!\})/\{\\aa}/g;
@@ -243,7 +249,7 @@ sub decodeLatex {
     use TeX::Encode;
     $str = decode( 'latex', $str );
 
-    $str =~ s/\{(:alpha:)\}/$1/g;         # makes {x} -> x
+    $str =~ s/\{(\w)\}/$1/g;         # makes {x} -> x
     $str =~ s/\{\\\"(u)\}/ü/g;    # makes {\"x} -> xe
     $str =~ s/\{\\\"(U)\}/Ü/g;    # makes {\"x} -> xe
     $str =~ s/\{\\\"(o)\}/ö/g;    # makes {\"x} -> xe
@@ -266,15 +272,15 @@ sub decodeLatex {
     $str =~ s/\\\"(A)/Ä/g;        # makes \"{x} -> xe
 
 
-    $str =~ s/\{\\\'(:alpha:)\}/$1/g;     # makes {\'x} -> x
-    $str =~ s/\\\'(:alpha:)/$1/g;         # makes \'x -> x
-    $str =~ s/\'\'(:alpha:)/$1/g;         # makes ''x -> x
-    $str =~ s/\"(:alpha:)/$1e/g;          # makes "x -> xe
+    $str =~ s/\{\\\'(\w)\}/$1/g;     # makes {\'x} -> x
+    $str =~ s/\\\'(\w)/$1/g;         # makes \'x -> x
+    $str =~ s/\'\'(\w)/$1/g;         # makes ''x -> x
+    $str =~ s/\"(\w)/$1e/g;          # makes "x -> xe
     $str =~ s/\{\\ss\}/ss/g;        # makes {\ss}-> ss
     $str =~ s/\{(.*)\}/$1/g;        # makes {abc..def}-> abc..def
-    $str =~ s/\\\^(:alpha:)(:alpha:)/$1$2/g;    # makes \^xx-> xx
-    $str =~ s/\\\^(:alpha:)/$1/g;         # makes \^x-> x
-    $str =~ s/\\\~(:alpha:)/$1/g;         # makes \~x-> x
+    $str =~ s/\\\^(\w)(\w)/$1$2/g;    # makes \^xx-> xx
+    $str =~ s/\\\^(\w)/$1/g;         # makes \^x-> x
+    $str =~ s/\\\~(\w)/$1/g;         # makes \~x-> x
     $str =~ s/\\//g;                # removes \
 
 
@@ -397,20 +403,20 @@ sub create_user_id {
   $userID =~ s/\\r\{u\}/u/g;    # makes \r{u} -> u # FIXME: make sure that the letter is caught
                                 # $userID =~ s/\\r{u}/u/g;   # makes \r{u} -> u # the same but not escaped
 
-  $userID =~ s/\{(:alpha:)\}/$1/g;         # makes {x} -> x
-  $userID =~ s/\{\\\"(:alpha:)\}/$1e/g;    # makes {\"x} -> xe
-  $userID =~ s/\{\"(:alpha:)\}/$1e/g;      # makes {"x} -> xe
-  $userID =~ s/\\\"(:alpha:)/$1e/g;        # makes \"{x} -> xe
-  $userID =~ s/\{\\\'(:alpha:)\}/$1/g;     # makes {\'x} -> x
-  $userID =~ s/\\\'(:alpha:)/$1/g;         # makes \'x -> x
-  $userID =~ s/\'\'(:alpha:)/$1/g;         # makes ''x -> x
-  $userID =~ s/\"(:alpha:)/$1e/g;          # makes "x -> xe
+  $userID =~ s/\{(\w)\}/$1/g;         # makes {x} -> x
+  $userID =~ s/\{\\\"(\w)\}/$1e/g;    # makes {\"x} -> xe
+  $userID =~ s/\{\"(\w)\}/$1e/g;      # makes {"x} -> xe
+  $userID =~ s/\\\"(\w)/$1e/g;        # makes \"{x} -> xe
+  $userID =~ s/\{\\\'(\w)\}/$1/g;     # makes {\'x} -> x
+  $userID =~ s/\\\'(\w)/$1/g;         # makes \'x -> x
+  $userID =~ s/\'\'(\w)/$1/g;         # makes ''x -> x
+  $userID =~ s/\"(\w)/$1e/g;          # makes "x -> xe
   $userID =~ s/\{\\ss\}/ss/g;        # makes {\ss}-> ss
-  $userID =~ s/\{(:alpha:*)\}/$1/g;        # makes {abc..def}-> abc..def
-  $userID =~ s/\\\^(:alpha:)(:alpha:)/$1$2/g;    # makes \^xx-> xx
+  $userID =~ s/\{(\w*)\}/$1/g;        # makes {abc..def}-> abc..def
+  $userID =~ s/\\\^(\w)(\w)/$1$2/g;    # makes \^xx-> xx
                                      # I am not sure if the next one is necessary
-  $userID =~ s/\\\^(:alpha:)/$1/g;         # makes \^x-> x
-  $userID =~ s/\\\~(:alpha:)/$1/g;         # makes \~x-> x
+  $userID =~ s/\\\^(\w)/$1/g;         # makes \^x-> x
+  $userID =~ s/\\\~(\w)/$1/g;         # makes \~x-> x
   $userID =~ s/\\//g;                # removes \
 
   $userID =~ s/\{//g;                # removes {

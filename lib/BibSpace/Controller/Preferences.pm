@@ -49,23 +49,11 @@ sub save {
         $run_in_demo_mode = 0;
     }
 
-    say "run_in_demo_mode: $run_in_demo_mode";
-
     my $msg = "Preferences saved!";
     my $msg_type = "success";
-    
-    # only admins can set this!
-    if ( $self->app->is_admin ) {
-        say "THE USER IS ADMIN AND CAN CHANGE PREFERENCE ".$self->app->is_admin;
-        $self->app->preferences->run_in_demo_mode($run_in_demo_mode);
-    }
-    elsif( defined $run_in_demo_mode ){
-        say "ID NOT ADMIN!! self->app->is_admin: ".$self->app->is_admin;
-        $msg = "Only admins can enable/disable temporary demo mode! The rest of preferences has been saved!";
-        $msg_type = 'warning';
-    }
-    # TODO: validate inputs
 
+    # TODO: validate inputs
+    $self->app->preferences->run_in_demo_mode($run_in_demo_mode);
     $self->app->preferences->bibitex_html_converter($bibitex_html_converter);
     $self->app->preferences->local_time_zone($local_time_zone);
     $self->app->preferences->output_time_format($output_time_format);

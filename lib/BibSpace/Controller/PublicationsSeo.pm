@@ -51,6 +51,10 @@ sub meta {
 
     # PARSING BIBTEX
 
+    #this should happen earlier!
+    $mentry->bib( fix_bibtex_national_characters( $mentry->bib ) );
+    $mentry->populate_from_bib();
+
     my $bibtex_entry_str = $mentry->bib;
     my $bibtex_entry     = new Text::BibTeX::Entry();
     $bibtex_entry->parse_s($bibtex_entry_str);
@@ -127,9 +131,9 @@ sub meta {
     my $abstract = $bibtex_entry->get('abstract');
     $abstract ||= "This paper has no abstract. The title is: " . $citation_title;
 
+    $abstract = decode( 'latex', $abstract );
     $abstract =~ s/^\{//g;
     $abstract =~ s/\}$//g;
-    $abstract = decode( 'latex', $abstract );
 
     # TYPE
     my $type = $bibtex_entry->type;
