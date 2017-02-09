@@ -36,36 +36,60 @@ sub test404 {
   $self->render( text => 'Oops 404.', status => 404 );
 }
 #################################################################################
-sub show_log {
-  my $self = shift;
-  my $num  = $self->param('num') // 100;
-  my $type = $self->param('type') // 'general';    # default
+sub get_log_lines {
+  my $dir       = shift;
+  my $num       = shift;
+  my $type      = shift;
+  my $filter_re = shift;
 
-  my $log_dir = Path::Tiny->new( $self->app->config->{log_dir} );
+
+  my $log_dir = Path::Tiny->new( $dir );
 
   my @file_list = $log_dir->children(qr/\.log$/);
   my @log_names = map { $_->basename('.log') } @file_list;
-
 
   my $log_2_read;
   $log_2_read = $log_dir->child( $type . ".log" ) if defined $type;
   $log_2_read = $file_list[0] if !$log_2_read or !$log_2_read->exists;
 
-  my @lines;
-  try {
-    # read $num lines from the end
-    @lines = $log_2_read->lines( { count => -1 * $num } );
-    @lines = ( $num >= @lines ) ? reverse @lines : reverse @lines[ -$num .. -1 ];
-    chomp(@lines);
+  die "No log file found " if !-e $log_2_read; # throw
+
+  my @lines = $log_2_read->lines( { count => -1 * $num } );
+  @lines = ( $num >= @lines ) ? reverse @lines : reverse @lines[ -$num .. -1 ];
+  chomp(@lines);
+
+  if( $filter_re ){
+    @lines = grep{ m/$filter_re/ } @lines;    
   }
-  catch {
+  return @lines;
+}
+#################################################################################
+sub show_log {
+  my $self = shift;
+  my $num  = $self->param('num') // 100;
+  my $type = $self->param('type') // 'general';    # default
+  my $filter = $self->param('filter');
+  my $use_ajax = $self->param('ajax');
+
+
+  my @lines;
+  try{
+    @lines = get_log_lines( $self->app->config->{log_dir}, $num, $type, $filter );
+  }
+  catch{
     $self->app->logger->error("Cannot find log '$type'. Error: $_.");
     $self->stash( msg_type => 'danger', msg => "Cannot find log '$type'." );
   };
 
+  my @file_list = Path::Tiny->new( $self->app->config->{log_dir} )->children(qr/\.log$/);
 
-  $self->stash( files => \@file_list, lines => \@lines, curr_file => $log_2_read );
-  $self->render( template => 'display/log' );
+  if( $use_ajax ){
+    $self->render( json =>  \@lines );
+  }
+  else{
+    $self->stash( files => \@file_list, lines => \@lines, curr_file => $type.'.log' );
+    $self->render( template => 'display/log' );  
+  }
 }
 
 #################################################################################

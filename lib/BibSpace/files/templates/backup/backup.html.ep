@@ -63,7 +63,7 @@
             <thead>
               <tr>
                 <td><a class="btn btn-default">Download</a></td>
-                <td><a class="btn btn-default">Type</a></td>
+                <td><a class="btn btn-default">Type / Name</a></td>
                 <td><a class="btn btn-default">Restore</a></td>
                 <td><a class="btn btn-default">Destroy</a></td>
                 <td><a class="btn btn-default">Timestamp</a></td>
@@ -79,7 +79,7 @@
                       </a>
                     </td>
                     <td>
-                        <button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-hdd"></span> <%= $backup->type %></button>
+                        <button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-hdd"></span> <%= $backup->type %> / <%= $backup->name %></button>
                     </td>
                     <td>
                         % if( $backup->is_healthy and $backup->type eq 'storable' ){

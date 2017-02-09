@@ -9,7 +9,7 @@ use Storable;
 
 use Data::Dumper;
 use utf8;
-
+use Path::Tiny;
 use DateTime;
 use Try::Tiny;
 use v5.16;           #because of ~~
@@ -33,84 +33,44 @@ our @EXPORT = qw(
     delete_old_backups
 );
 ## Trivial DAO FIND
-## TODO: port it to Path::Tiny
+## my $filename = "backup_$uuid" . "_$name" . "_$type" . "_$now" . $ext;
 ####################################################################################
 sub find_backup {
     my $uuid = shift;
     my $dir = shift;
 
-    my @file_list;
-    try{
-        opendir(D, "$dir") or die;
-        @file_list = readdir(D);
-        closedir(D);
-    }
-    catch{
-        warn;
-    };
+    my @backup_files = Path::Tiny->new($dir)->children(qr/^backup_$uuid.*\.(dat|sql)$/);
+    return if scalar(@backup_files) == 0;
 
-    my @backups;
-
-    foreach my $file (@file_list){
-        next unless $file =~ /^backup/;
-        next unless $file =~ /\.dat$/ or $file =~ /\.sql$/;
-        next unless $file =~ /$uuid/;
-
-        my $backup;
-        try{
-            $backup = Backup->parse($file);
-            $backup->dir($dir);
-        }
-        catch{
-            # wrong format = wrong file - ignore
-        };
-        return $backup;
-    }
-    return;
+    my $file = shift @backup_files;
+    my $backup = Backup->parse($file->basename);
+    $backup->dir($dir);
+    return $backup;
 }
 ## Trivial DAO ALL
 ####################################################################################
 sub read_backups {
     my $dir = shift;
 
-    my @file_list;
-    try{
-        opendir(D, "$dir") or die;
-        @file_list = readdir(D);
-        closedir(D);
-    }
-    catch{
-        warn;
-    };
-
+    my @backup_files = Path::Tiny->new($dir)->children(qr/^backup_.*\.(dat|sql)$/);
     my @backups;
-
-    foreach my $file (@file_list){
-        next unless $file =~ /^backup/;
-        next unless $file =~ /\.dat$/ or $file =~ /\.sql$/;
-
-        my $backup; 
-        try{
-            $backup = Backup->parse($file);
-            $backup->dir($dir);
-            push @backups, $backup;
-        }
-        catch{
-            # wrong format = wrong file - ignore
-        };
+    foreach my $file (@backup_files){
+        my $backup = Backup->parse($file->basename);
+        $backup->dir($dir);
+        push @backups, $backup;
     }
     return @backups;
 }
+####################################################################################
 ####################################################################################
 sub do_storable_backup {
     my $app = shift;
     my $name = shift // 'normal';
 
-    my $backup_dir_absolute = $app->config->{backups_dir};
-    $backup_dir_absolute =~ s!/*$!/!;  
+    my $backup_dir = Path::Tiny->new( $app->config->{backups_dir})->relative;
 
     my $backup = Backup->create($name, "storable");
-    $backup->dir($backup_dir_absolute);
+    $backup->dir("".$backup_dir);
 
 
     my $layer = $app->repo->lr->get_read_layer;
@@ -126,11 +86,10 @@ sub do_mysql_backup {
     my $app = shift;
     my $name = shift // 'normal';
 
-    my $backup_dir_absolute = $app->config->{backups_dir};
-    $backup_dir_absolute =~ s!/*$!/!;  
+    my $backup_dir = Path::Tiny->new( $app->config->{backups_dir})->relative; 
 
     my $backup = Backup->create($name, "mysql");
-    $backup->dir($backup_dir_absolute);
+    $backup->dir("".$backup_dir);
     dump_mysql_to_file( $backup->get_path, $app->config );
 
     return $backup;

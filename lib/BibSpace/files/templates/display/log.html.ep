@@ -2,9 +2,16 @@
 <div class="container">
 <H1>Logs</H1>
 
+<form>
+  <div class="form-group">
+    <label for="filterexpr">Filter expression</label>
+    <input type="text" class="form-control" id="filterexpr" placeholder="Your perl regular expression here">
+  </div>
+</form>
+
     <ul class="nav nav-tabs">
     % for my $file (@{$files}){
-        % if( $file eq $curr_file ){
+        % if( $file->basename eq $curr_file ){
             <li role="presentation" class="active">
         % }
         % else{
@@ -24,7 +31,7 @@
 
     <div class="row">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-<pre style="font-family:monospace;">
+<pre id="log_lines_pre" style="font-family:monospace;">
 % foreach my $line (@{$lines}){
 <%= $line %>
 % }
@@ -32,3 +39,34 @@
         </div>
     </div>
 </div>
+
+
+<script>
+
+// $manager_user->get('/log/lines')->to('display#get_log_lines')->name('get_log_lines');
+function get_log_lines(fexpr){
+  $.ajax({
+      type: 'GET',
+      url: "<%= url_for('show_log') %>",
+      dataType: 'json',
+      data: {"ajax": 1, "filter": fexpr},
+      cache: false,
+      success: function (data) {
+          $('#log_lines_pre').text(data);
+      }
+  });
+}
+
+var changeTimer = false;
+
+$('#filterexpr').on("keyup",function(){
+    var query = $('this').value;
+    if(changeTimer !== false) clearTimeout(changeTimer);
+    changeTimer = setTimeout(function(){
+        get_log_lines(query);
+        changeTimer = false;
+    },300);
+});
+
+
+</script>

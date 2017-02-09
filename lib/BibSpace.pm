@@ -558,6 +558,7 @@ sub setup_routes {
         ->name('make_admin');
 
     $manager_user->get('/log')->to('display#show_log')->name('show_log');
+        
     $admin_user->get('/settings/fix_months')->to('publications#fixMonths')
         ->name('fix_all_months');
 
