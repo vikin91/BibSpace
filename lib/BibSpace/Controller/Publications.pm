@@ -469,6 +469,8 @@ sub remove_attachment {
   $entry->discover_attachments($self->app->config->{upload_dir});
 
   if( $entry->attachments_has($filetype) ){
+    $self->app->logger->debug("Entry has attachment of type '$filetype'.");
+
     $entry->delete_attachment($filetype);
 
     if($filetype eq 'paper'){
@@ -485,6 +487,7 @@ sub remove_attachment {
     $self->app->logger->info($msg);
   }
   else{
+    $self->app->logger->debug("Entry has NO attachment of type '$filetype'.");
     $msg      = "File not found. Cannot remove attachment. Filetype '$filetype', entry '$id'.";
     $msg_type = 'danger';
     $self->app->logger->warn($msg);
@@ -499,10 +502,20 @@ sub download {
   my $id       = $self->param('id');                     # entry ID
   my $filetype = $self->param('filetype') // 'paper';    # paper, slides
 
-  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
-  $entry->discover_attachments($self->app->config->{upload_dir});
+  $self->app->logger->info("Requested to download attachment of type '$filetype' for entry ID '".$id."'.");
 
-  my $file = $entry->get_attachment($filetype);
+  my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+  my $file;
+
+  if( $entry ){
+    $entry->discover_attachments($self->app->config->{upload_dir});  
+    $file = $entry->get_attachment($filetype);
+  }
+  else{
+    $self->app->logger->error("Cannot download - entry '$id' not found.");
+    $self->render(status => 404, text => "Cannot download - entry '$id' not found.");
+    return;
+  }  
   
   if( $file and -e $file ){
     $self->app->logger->info("Downloading file download '$filetype' for entry '$id'.");
