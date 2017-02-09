@@ -558,6 +558,8 @@ sub setup_routes {
         ->name('make_admin');
 
     $manager_user->get('/log')->to('display#show_log')->name('show_log');
+    # websocket for fun
+    $manager_user->websocket('/wslog/:num')->to('display#show_log_ws')->name('show_log_ws');
         
     $admin_user->get('/settings/fix_months')->to('publications#fixMonths')
         ->name('fix_all_months');
@@ -566,6 +568,11 @@ sub setup_routes {
         ->to('publications#clean_ugly_bibtex')->name('clean_ugly_bibtex');
     $manager_user->get('/settings/regenerate_all_force')
         ->to('publications#regenerate_html_for_all_force');
+
+    # websocket for fun
+    $manager_user->websocket('/settings/regenerate_html_for_all_force_ws')
+        ->to('publications#regenerate_html_for_all_force_ws')->name('regenerate_html_for_all_force_ws');
+    
     $logged_user->get('/settings/regenerate_all')
         ->to('publications#regenerate_html_for_all');
 

@@ -237,6 +237,13 @@
                     <span class="badge">force</span>
                     <span class="glyphicon glyphicon-time"  style="color: red;"></span>
                 </a>
+<!--                 <button id="regenerate_html_for_all_force_ws" data-toggle="tooltip" data-placement="left" title="Regenerates HTML for all entries. Takes some tome...">
+                    <span class="glyphicon glyphicon-refresh"></span> WS Regenerate HTML 
+                    <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
+                    <span class="badge">force</span>
+                    <span class="glyphicon glyphicon-time"  style="color: red;"></span>
+                </button> -->
+                
             </li>
 
             <li>
@@ -393,7 +400,35 @@
             </div>
         </div>
     </div>
-
 % }
-<br/>
 
+<!-- <pre id="messaging_tube" style="font-family:monospace;"></pre>
+
+<script>
+
+var queue = Array.apply( null );
+
+var ws = new WebSocket('<%= url_for('regenerate_html_for_all_force_ws')->to_abs %>');
+
+var log = function (text) {
+  queue.unshift('\n'+text);
+  if(queue.length >= 5){
+    var poped = queue.pop();
+    console.log("poped: "+poped);
+  }
+  $('#messaging_tube').text( queue.toString() );
+};
+
+
+
+$('#regenerate_html_for_all_force_ws').click( function (e) {
+    e.preventDefault();
+    ws = new WebSocket('<%= url_for('regenerate_html_for_all_force_ws')->to_abs %>');
+    ws.onopen = function (msg) {
+      ws.send('something');
+    };
+    ws.onmessage = function (msg) {
+      log(msg.data);
+    };
+});
+</script> -->

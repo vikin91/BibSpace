@@ -89,11 +89,29 @@ sub show_log {
     $self->render( json =>  \@lines );
   }
   else{
-    $self->stash( files => \@file_list, lines => \@lines, curr_file => $type.'.log' );
+    $self->stash( files => \@file_list, lines => \@lines, curr_file => $type.'.log', num => $num);
     $self->render( template => 'display/log' );  
   }
 }
+#################################################################################
+sub show_log_ws {
+  my $self = shift;
+  my $num  = $self->param('num') // 20;
 
+  use Mojo::JSON qw(decode_json encode_json);
+
+  $self->on(message => sub {
+    my ($self, $filter) = @_;
+    
+    my @lines = get_log_lines( $self->app->config->{log_dir}, $num, 'general', $filter );
+    $self->send( Mojo::JSON::encode_json( \@lines ) );
+  });
+
+  $self->on(finish => sub {
+    my ($c, $code, $reason) = @_;
+    say "WS closed";
+  });
+}
 #################################################################################
 
 1;

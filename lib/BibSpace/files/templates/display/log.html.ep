@@ -17,7 +17,7 @@
     <form>
       <div class="form-group">
         <label for="filterexpr">Filter expression</label>
-        <input type="text" class="form-control" id="filterexpr" placeholder="Your perl regular expression here">
+        <input type="text" class="form-control" id="filterexpr" autocomplete="off" placeholder="Your perl regular expression here">
       </div>
     </form>
 
@@ -29,7 +29,8 @@
         % else{
             <li role="presentation">
         % }
-            <a href="<%= url_with->query(type => $file->basename('.log')) %> ">
+            <!-- <a href="<%= url_with->query(type => $file->basename('.log')) %> "> -->
+            <a>
                 <%=$file->basename('.log')%>
                 % my $size_b = -s $file;
                 (<%= sprintf( "%.2f", $size_b /1024 ) %> KB)
@@ -55,34 +56,64 @@
 
 <script>
 
-// $manager_user->get('/log/lines')->to('display#get_log_lines')->name('get_log_lines');
-function get_log_lines(fexpr){
-  $.ajax({
-      type: 'GET',
-      url: "<%= url_for('show_log') %>",
-      dataType: 'json',
-      data: {"ajax": 1, "filter": fexpr},
-      cache: false,
-      success: function (data) {
-        var lines = '';
-        $.each(data, function(i,o) {
-            lines += o+'\n';
-        });
-        $('#log_lines_pre').text(lines);
-      }
-  });
-}
+$(function () {
+    $('#filterexpr').focus();
 
-var changeTimer = false;
+    var log = function (text) {
+      $('#log_lines_pre').text(text);
+    };
 
-$('#filterexpr').on("keyup",function(){
-    var query = $(this).val();
-    if(changeTimer !== false) clearTimeout(changeTimer);
-    changeTimer = setTimeout(function(){
-        get_log_lines(query);
-        changeTimer = false;
-    },300);
+    var ws = new WebSocket("<%= url_for('show_log_ws', num => $num )->to_abs %>");
+
+    ws.onopen = function () {
+      $('#log_lines_pre').text("");
+      ws.send('.*');
+    };
+
+    ws.onmessage = function (msg) {
+      var res = JSON.parse(msg.data);
+      var lines ='';
+      $.each(res, function(i,o) {
+        if(o){ lines += o+'\n';}
+      });
+      log(lines);
+    };
+
+  $('#filterexpr').keyup(function (e) {   
+      ws.send($('#filterexpr').val());
+    });
 });
+</script>
+
+<script>
+// // $manager_user->get('/log/lines')->to('display#get_log_lines')->name('get_log_lines');
+// function get_log_lines(fexpr){
+//   $.ajax({
+//       type: 'GET',
+//       url: "<%= url_for('show_log') %>",
+//       dataType: 'json',
+//       data: {"ajax": 1, "filter": fexpr},
+//       cache: false,
+//       success: function (data) {
+//         var lines = '';
+//         $.each(data, function(i,o) {
+//             lines += o+'\n';
+//         });
+//         $('#log_lines_pre').text(lines);
+//       }
+//   });
+// }
+
+// var changeTimer = false;
+
+// $('#filterexpr').on("keyup",function(){
+//     var query = $(this).val();
+//     if(changeTimer !== false) clearTimeout(changeTimer);
+//     changeTimer = setTimeout(function(){
+//         get_log_lines(query);
+//         changeTimer = false;
+//     },300);
+// });
 
 
 </script>

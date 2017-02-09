@@ -4,6 +4,7 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
+use Mojo::IOLoop;
 
 # use File::Slurp;     # should be replaced in the future
 use Path::Tiny;      # for creating directories
@@ -779,6 +780,42 @@ sub regenerate_html_for_all {
     $self->flash( msg_type => 'info', msg => $msg );
     $self->redirect_to( $self->get_referrer() );
 }
+#################################################################################
+# playgroung - does not work as expected
+# sub regenerate_html_for_all_force_ws {
+#   my $self = shift;
+#   my $converter = $self->app->bibtexConverter;
+
+#   use Mojo::JSON qw(decode_json encode_json);
+
+#   my @entries = $self->app->repo->entries_all;
+
+#   @entries = @entries[1..30]; # for dev tests only
+
+#   $self->on(message => sub {
+#     my ($self, $msg) = @_;
+    
+
+#     while(@entries){
+#         my $entry = shift @entries;
+#         my $s = 'Processing '.$entry->bibtex_key;
+
+#         my $delay2 = Mojo::IOLoop->delay(
+#             sub {
+#                 my $delay = shift;
+#                 say "22 ".$s;
+#                 $self->render_later;
+#                 Mojo::IOLoop->delay(sub{ my $delay = shift; say "11 ".$s; $self->send( $s )})->wait;
+                    
+#                 $entry->bst_file( $self->app->bst );
+#                 $entry->regenerate_html( 1, $self->app->bst, $converter );
+#                 $self->app->repo->entries_save($entry);
+#             }
+#         );
+#         $delay2->wait;
+#     }
+#   });
+# }
 ####################################################################################
 sub regenerate_html_for_all_force {
     my $self      = shift;
