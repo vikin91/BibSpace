@@ -778,27 +778,40 @@ sub setup_routes {
     $logged_user->get('/publications/get/:id')
         ->to('publications#single')
         ->name('get_single_publication');
-    #
+
+    ####### ATTACHMENTS START
+
     $anyone->get('/publications/download/:filetype/:id')
         ->to('publications#download')
         ->name('download_publication');
 
+    # temporary alias
     $anyone->get('/publications/download/:filetype/(:id).pdf')
         ->to('publications#download')
         ->name('download_publication_pdf');
+
+    $manager_user->get('/publications/discover_attachments/:id')
+        ->to('publications#discover_attachments')
+        ->name('discover_attachments');
+        
+    # $anyone->get('/publications/download/:filetype/(:id)\.(#format)' )
+    #     ->to('publications#download')
+    #     ->name('download_publication_pdf');
     #
     $manager_user->get('/publications/remove_attachment/:filetype/:id')
         ->to('publications#remove_attachment')
         ->name('publications_remove_attachment');
 
+    $manager_user->get('/publications/fix_urls')              
+        ->to('publications#fix_file_urls')
+        ->name('fix_attachment_urls');
+
+    ####### ATTACHMENTS END
+
     $manager_user->get('/publications/toggle_hide/:id')
         ->to('publications#toggle_hide')
         ->name('toggle_hide_publication');
 
-    # candidate to be removed
-    $admin_user->get('/publications/fix_urls')              
-        ->to('publications#fix_file_urls')
-        ->name('fix_attachment_urls');
 
 
     $manager_user->get('/publications/add')

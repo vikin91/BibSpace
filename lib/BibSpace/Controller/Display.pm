@@ -57,13 +57,13 @@ sub get_log_lines {
   # my @lines = $log_2_read->lines( { count => -1 * $num } );
   # @lines = ( $num >= @lines ) ? reverse @lines : reverse @lines[ -$num .. -1 ];
   my @lines = $log_2_read->lines();
-  @lines = reverse @lines;
+  # @lines = reverse @lines;
   chomp(@lines);
 
   if( $filter_re ){
     @lines = grep{ m/$filter_re/ } @lines;    
   }
-  return @lines[1..$num];
+  return @lines[-$num..-1];
 }
 #################################################################################
 sub show_log {

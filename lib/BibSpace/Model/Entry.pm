@@ -38,20 +38,22 @@ use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
 
-
 has 'entry_type' => ( is => 'rw', isa => 'Str', default => 'paper' );
 has 'bibtex_key' => ( is => 'rw', isa => 'Maybe[Str]' );
 has '_bibtex_type' =>
     ( is => 'rw', isa => 'Maybe[Str]', reader => 'bibtex_type' );
-has 'bib' =>
-    ( is => 'rw', isa => 'Maybe[Str]', trigger => \&_bib_changed );
+has 'bib' => ( is => 'rw', isa => 'Maybe[Str]', trigger => \&_bib_changed );
 
 sub _bib_changed {
     my ( $self, $curr_val, $prev_val ) = @_;
 
     # bib was updated, we need to bump modified_time
     if ( $prev_val and $curr_val ne $prev_val ) {
-        $self->modified_time( DateTime->now->set_time_zone( $self->preferences->local_time_zone ) );
+        $self->modified_time(
+            DateTime->now->set_time_zone(
+                $self->preferences->local_time_zone
+            )
+        );
     }
 }
 
@@ -87,13 +89,12 @@ has 'attachments' => (
 
 sub get_attachments_debug_string {
     my $self = shift;
-    my $str = "Entry ID ".$self->id." has: \n";
-    foreach my $f_type ($self->attachments_keys){
-        $str .= "\ttype: ".$f_type."\n";
+    my $str  = "Entry ID " . $self->id . " has: ";
+    foreach my $f_type ( $self->attachments_keys ) {
+        $str .= " type: (" . $f_type . ") ";
         my $f_path = $self->attachments_get($f_type);
-        $str .= "\tpath: ".$f_path."\n";
+        $str .= "path: (" . $f_path . "), ";
     }
-    $str .= "\n";
     return $str;
 }
 
@@ -101,33 +102,33 @@ sub get_attachments_debug_string {
 has 'creation_time' => (
     is      => 'rw',
     isa     => 'DateTime',
-    lazy    => 1, # due to preferences
+    lazy    => 1,            # due to preferences
     default => sub {
         my $self = shift;
-        DateTime->now->set_time_zone($self->preferences->local_time_zone);
+        DateTime->now->set_time_zone( $self->preferences->local_time_zone );
     },
 );
 
 sub get_creation_time {
     my $self = shift;
-    $self->creation_time->set_time_zone($self->preferences->local_time_zone)
-        ->strftime($self->preferences->output_time_format);
+    $self->creation_time->set_time_zone( $self->preferences->local_time_zone )
+        ->strftime( $self->preferences->output_time_format );
 }
 
 has 'modified_time' => (
     is      => 'rw',
     isa     => 'DateTime',
-    lazy    => 1, # due to preferences
+    lazy    => 1,            # due to preferences
     default => sub {
         my $self = shift;
-        DateTime->now->set_time_zone($self->preferences->local_time_zone);
+        DateTime->now->set_time_zone( $self->preferences->local_time_zone );
     },
 );
 
 sub get_modified_time {
     my $self = shift;
-    $self->modified_time->set_time_zone($self->preferences->local_time_zone)
-        ->strftime($self->preferences->output_time_format);
+    $self->modified_time->set_time_zone( $self->preferences->local_time_zone )
+        ->strftime( $self->preferences->output_time_format );
 }
 
 # not DB fields
@@ -199,9 +200,11 @@ sub discover_attachments {
     my ( $self, $upload_dir ) = @_;
 
     my $id = $self->id;
-    
+
+    $self->attachments_clear;
+
     try {
-        Path::Tiny->new( $upload_dir )->mkpath;
+        Path::Tiny->new($upload_dir)->mkpath;
         Path::Tiny->new( $upload_dir, "papers" )->mkpath;
         Path::Tiny->new( $upload_dir, "slides" )->mkpath;
     }
@@ -211,35 +214,34 @@ sub discover_attachments {
 
     my @discovery_papers;
     try {
-        @discovery_papers = Path::Tiny->new( $upload_dir, "papers" )
-            ->children(qr/paper-$id\./);
+        my $dir_path = Path::Tiny->new( $upload_dir, "papers" );
+        @discovery_papers = $dir_path->children(qr/paper-$id\./);
     }
     catch {
         warn $_;
     };
+    $self->add_attachment( 'paper',   $_ ) for @discovery_papers;
 
 
     my @discovery_slides;
     try {
-        @discovery_slides = Path::Tiny->new( $upload_dir, "slides" )
-            ->children(qr/slides-paper-$id\./);
+        my $dir_path = Path::Tiny->new( $upload_dir, "slides" );
+        @discovery_slides = $dir_path->children(qr/slides-paper-$id\./);
     }
     catch {
         warn $_;
     };
+    $self->add_attachment( 'slides',  $_ ) for @discovery_slides;
 
 
     my @discovery_other;
     try {
-        @discovery_other = Path::Tiny->new( $upload_dir, "other" )
-            ->children(qr/unknown-$id\./);
+        my $dir_path = Path::Tiny->new( $upload_dir, "unknown" );
+        @discovery_other = $dir_path->children(qr/unknown-$id\./);
     }
     catch {
         warn $_;
     };
-
-    $self->add_attachment( 'slides',  $_ ) for @discovery_slides;
-    $self->add_attachment( 'paper',   $_ ) for @discovery_slides;
     $self->add_attachment( 'unknown', $_ ) for @discovery_other;
 }
 ####################################################################################
@@ -482,7 +484,7 @@ sub generate_html {
 
     $converter->convert( $self->bib, $bst_file );
     my $html = $converter->get_html;
-    
+
     $self->html($html);
     $self->warnings( join( ', ', $converter->get_warnings ) );
 
@@ -564,14 +566,14 @@ sub author_names_from_bibtex {
 ####################################################################################
 sub teams {
     my $self = shift;
-    warn  "entry->teams is deprecated in favor of entry->get_teams";
+    warn "entry->teams is deprecated in favor of entry->get_teams";
     return $self->get_teams;
 }
 ####################################################################################
 sub get_teams {
     my $self = shift;
 
-    my @exception_teams = map{ $_->team } $self->get_exceptions;
+    my @exception_teams = map { $_->team } $self->get_exceptions;
 
     ## Important: this means that entry-teams = teams + exceptions!
     my %final_teams = map { $_->id => $_ } @exception_teams;
@@ -583,8 +585,8 @@ sub get_teams {
             my $left   = $author->left_team($team);
 
             # entry has no year... strange but possible
-            if ( !$self->year ){
-                $final_teams{ $team->id } = $team;   
+            if ( !$self->year ) {
+                $final_teams{ $team->id } = $team;
             }
             elsif ( $joined <= $self->year
                 and ( $left > $self->year or $left == 0 ) )
@@ -642,9 +644,7 @@ sub sort_by_year_month_modified_time {
     # $a and $b exist and are Entry objects
     {
         no warnings 'uninitialized';
-        $a->year <=> $b->year
-            or $a->month <=> $b->month
-            or $a->id <=> $b->id;
+        $a->year <=> $b->year or $a->month <=> $b->month or $a->id <=> $b->id;
     }
 
 # $a->{modified_time} <=> $b->{modified_time}; # needs an extra lib, so we just compare ids as approximation
@@ -658,10 +658,10 @@ sub get_title {
 }
 ####################################################################################
 sub clean_ugly_bibtex_fields {
-    my $self = shift;
+    my $self                         = shift;
     my $field_names_to_clean_arr_ref = shift;
 
-    return $self->remove_bibtex_fields( $field_names_to_clean_arr_ref );
+    return $self->remove_bibtex_fields($field_names_to_clean_arr_ref);
 }
 
 ####################################################################################

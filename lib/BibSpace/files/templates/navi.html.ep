@@ -251,6 +251,7 @@
                     <i class="fa fa-magic"></i> Fix attachment urls
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">for all</span>
+                    <span class="glyphicon glyphicon-time"  style="color: red;"></span>
                 </a>
             </li>
             <li>
@@ -271,12 +272,16 @@
             </li>
             <li>          
                 <a href="#modal-dialog-reassign-navi" data-toggle="modal">
-                <i class="fa fa-refresh fa-spin" style="color: yellow;"></i> Reassign all papers to authors ...
+                  <i class="fa fa-refresh fa-spin" style="color: yellow;"></i> 
+                  Reassign all papers to authors ... 
+                  <span class="glyphicon glyphicon-time"  style="color: red;"></span>
                 </a>
             </li>
             <li>          
                 <a href="#modal-dialog-reassign-and-create-navi" data-toggle="modal">
-                <i class="fa fa-refresh fa-spin" style="color: red;"></i> Reassign all papers to authors (w. creation) ...
+                  <i class="fa fa-refresh fa-spin" style="color: red;"></i> 
+                  Reassign all papers to authors (w. creation) ...
+                  <span class="glyphicon glyphicon-time"  style="color: red;"></span>
                 </a>
             </li>
         % } 
