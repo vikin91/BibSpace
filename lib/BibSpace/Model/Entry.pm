@@ -90,7 +90,7 @@ sub get_attachments_debug_string {
     my $str = "Entry ID ".$self->id." has: \n";
     foreach my $f_type ($self->attachments_keys){
         $str .= "\ttype: ".$f_type."\n";
-        my $f_path = $self->attachments_get;
+        my $f_path = $self->attachments_get($f_type);
         $str .= "\tpath: ".$f_path."\n";
     }
     $str .= "\n";
