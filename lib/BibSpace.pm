@@ -781,14 +781,17 @@ sub setup_routes {
 
     ####### ATTACHMENTS START
 
-    $anyone->get('/publications/download/:filetype/:id')
-        ->to('publications#download')
-        ->name('download_publication');
-
     # temporary alias
     $anyone->get('/publications/download/:filetype/(:id).pdf')
         ->to('publications#download')
         ->name('download_publication_pdf');
+
+        
+    $anyone->get('/publications/download/:filetype/:id')
+        ->to('publications#download')
+        ->name('download_publication');
+
+
 
     $manager_user->get('/publications/discover_attachments/:id')
         ->to('publications#discover_attachments')
