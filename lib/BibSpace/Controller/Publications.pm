@@ -410,28 +410,49 @@ sub fix_file_urls {
     my $file = $entry->get_attachment('paper');
     my $file_url = $self->url_for( 'download_publication_pdf', filetype => "paper", id => $entry->id )->to_abs;
 
-    if ( $file and $file->exists and $entry->has_bibtex_field("pdf") ) {
+    if ( $file and $file->exists){
+      $str .= "\n\t";
+      if( $entry->has_bibtex_field("pdf") ) {
+        $entry->remove_bibtex_fields(['pdf']);
+        $str .= "Rewritten ";
+      }
+      else{
+        $str .= "Added ";
+      }
       $entry->add_bibtex_field( "pdf", "$file_url" );
       $fixed = 1;
-      $str .= "\n\tPDF " . $file_url;
+      $str .= "Bibtex filed PDF " . $file_url;
     }
 
     $file = $entry->get_attachment('slides');
     $file_url = $self->url_for( 'download_publication', filetype => "slides", id => $entry->id )->to_abs;
 
-    if ( $file and $file->exists and $entry->has_bibtex_field("slides") ) {
+    if ( $file and $file->exists ){
+      $str .= "\n\t";
+
+      if( $entry->has_bibtex_field("slides") ) {
+        $entry->remove_bibtex_fields(['slides']);
+        $str .= "Rewritten ";
+      }
+      else{
+        $str .= "Added ";
+      }
       $entry->add_bibtex_field( "slides", "$file_url" );
       $fixed = 1;
-      $str .= "\n\tSLIDES " . $file_url;
+      $str .= "Bibtex filed SLIDES " . $file_url;
     }
     $str .= "\n";
-    $big_str .= $str if $fixed;
-    ++$num_fixes if $fixed;
+
+    if( $fixed ){
+      $big_str .= $str;
+      ++$num_fixes;
+      $entry->regenerate_html( 1, $self->app->bst, $self->app->bibtexConverter );
+    }
   }
 
   $self->app->logger->info("Url fix results $big_str.");
 
-  $self->flash( msg_type => 'info', msg => "Checked $num_fixes entries. Fix results have bees saved to log." );
+  $self->flash( msg_type => 'info', msg => "Fixed $num_fixes entries. Detailed fix results have been saved to log." );
   $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
