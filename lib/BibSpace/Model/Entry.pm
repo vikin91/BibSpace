@@ -85,6 +85,18 @@ has 'attachments' => (
     },
 );
 
+sub get_attachments_debug_string {
+    my $self = shift;
+    my $str = "Entry ID ".$self->id."has: \n";
+    foreach my $f_type ($self->attachments_keys){
+        $str .= "\ttype: ".$f_type."\n";
+        my $f_path = $self->attachments_get;
+        $str .= "\tpath: ".$f_path."\n";
+    }
+    $str .= "\n";
+    return $str;
+}
+
 
 has 'creation_time' => (
     is      => 'rw',
@@ -176,7 +188,9 @@ sub get_attachment {
 sub delete_attachment {
     my ( $self, $type ) = @_;
     if ( $self->attachments_has($type) ) {
-        $self->attachments_get($type)->remove;
+
+        my $fp = $self->attachments_get($type);
+        $fp->remove;
         $self->attachments_delete($type);
     }
 }

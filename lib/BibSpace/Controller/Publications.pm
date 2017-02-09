@@ -468,10 +468,10 @@ sub remove_attachment {
 
   $entry->discover_attachments($self->app->config->{upload_dir});
 
+  $self->app->logger->debug("PRE DELETE Attachments debug: ".$entry->get_attachments_debug_string);
+
   if( $entry->attachments_has($filetype) ){
     $self->app->logger->debug("Entry has attachment of type '$filetype'.");
-
-    $entry->delete_attachment($filetype);
 
     if($filetype eq 'paper'){
       $entry->remove_bibtex_fields( ['pdf'] );
@@ -479,6 +479,8 @@ sub remove_attachment {
     elsif($filetype eq 'slides'){
       $entry->remove_bibtex_fields( ['slides'] );  
     }
+    $entry->delete_attachment($filetype);
+
     $entry->regenerate_html( 1, $self->app->bst, $self->app->bibtexConverter );
     $self->app->repo->entries_save($entry);
 
@@ -488,6 +490,8 @@ sub remove_attachment {
   }
   else{
     $self->app->logger->debug("Entry has NO attachment of type '$filetype'.");
+    $self->app->logger->debug("Attachments debug: ".$entry->get_attachments_debug_string);
+    
     $msg      = "File not found. Cannot remove attachment. Filetype '$filetype', entry '$id'.";
     $msg_type = 'danger';
     $self->app->logger->warn($msg);
@@ -513,6 +517,7 @@ sub download {
   }
   else{
     $self->app->logger->error("Cannot download - entry '$id' not found.");
+    $self->app->logger->debug("Attachments debug: ".$entry->get_attachments_debug_string);
     $self->render(status => 404, text => "Cannot download - entry '$id' not found.");
     return;
   }  
@@ -523,6 +528,7 @@ sub download {
     return;
   }
   $self->app->logger->error("File not found. Requested download for entry '$id', filetype '$filetype'.");
+  $self->app->logger->debug("Attachments debug: ".$entry->get_attachments_debug_string);
   $self->render(status => 404, text => "File not found.  Filetype '$filetype', ID '$id'.");
 }
 ####################################################################################

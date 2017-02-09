@@ -39,8 +39,8 @@ sub log {
   my $origin = ( caller(2) )[3];    # method from where the msg originates
 
   my $time = localtime;
-  my $line_file = "[$time] $type: $msg.";
-  my $line_screen = $line_file." (Origin: $origin).";
+  my $line_file = "[$time] $type: $msg";
+  my $line_screen = $line_file." (Origin: $origin)";
   $self->log_file->append($line_file."\n") if $self->log_file;
   print $line_screen;
   print color('reset');
