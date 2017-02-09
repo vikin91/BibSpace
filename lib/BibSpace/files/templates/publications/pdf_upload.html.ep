@@ -71,12 +71,15 @@
           <a class="btn btn-danger" href="<%= url_for('publications_remove_attachment', filetype=>'slides', id=>$mentry->{id} )%>" data-toggle="tooltip" data-placement="top" title="Warning, there will be no confirmation. Click = delete! This cannot be undone!"><span class="glyphicon glyphicon-trash"></span> Delete slides attachment from server</a>
       </div>
       <div class="col-lg-4 col-md-6 col-xs-12">
-        <a class="btn btn-info" href="<%= url_for('discover_attachments', id=>$mentry->id )%>" >
+        <a class="btn btn-info" href="<%= url_for('discover_attachments', id=>$mentry->id )%>" 
+        data-toggle="tooltip" data-placement="left" title="Show what entry knows about its attachments currently.">
           <span class="glyphicon glyphicon-search"></span> Show attachment debug info
         </a>
-        <a class="btn btn-warning" href="<%= url_for('discover_attachments', id=>$mentry->id )->query(do => 1)%>" > <span class="glyphicon glyphicon-refresh"></span> Discover existing attachments
+        <a class="btn btn-warning" href="<%= url_for('discover_attachments', id=>$mentry->id )->query(do => 1)%>" 
+        data-toggle="tooltip" data-placement="left" title="Search fo files on disk and reattach them to the entry if the ID matches."> <span class="glyphicon glyphicon-refresh"></span> Discover existing attachments
         </a>
-        <a class="btn btn-default" href="<%= url_for('fix_attachment_urls')->query(id => $mentry->id)%>" >
+        <a class="btn btn-default" href="<%= url_for('fix_attachment_urls')->query(id => $mentry->id)%>" 
+        data-toggle="tooltip" data-placement="left" title="Fix url in the Bibtex fields ('pdf' and 'slides') and regenreate html.">
           <i class="fa fa-magic" aria-hidden="true"></i> Fix attachment URLs
         </a>
 
