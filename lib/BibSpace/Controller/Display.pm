@@ -54,14 +54,16 @@ sub get_log_lines {
 
   die "No log file found " if !-e $log_2_read; # throw
 
-  my @lines = $log_2_read->lines( { count => -1 * $num } );
-  @lines = ( $num >= @lines ) ? reverse @lines : reverse @lines[ -$num .. -1 ];
+  # my @lines = $log_2_read->lines( { count => -1 * $num } );
+  # @lines = ( $num >= @lines ) ? reverse @lines : reverse @lines[ -$num .. -1 ];
+  my @lines = $log_2_read->lines();
+  @lines = reverse @lines;
   chomp(@lines);
 
   if( $filter_re ){
     @lines = grep{ m/$filter_re/ } @lines;    
   }
-  return @lines;
+  return @lines[1..$num];
 }
 #################################################################################
 sub show_log {

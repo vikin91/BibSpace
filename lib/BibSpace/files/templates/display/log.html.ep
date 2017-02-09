@@ -52,7 +52,11 @@ function get_log_lines(fexpr){
       data: {"ajax": 1, "filter": fexpr},
       cache: false,
       success: function (data) {
-          $('#log_lines_pre').text(data);
+        var lines = '';
+        $.each(data, function(i,o) {
+            lines += o+'\n';
+        });
+        $('#log_lines_pre').text(lines);
       }
   });
 }
@@ -60,7 +64,7 @@ function get_log_lines(fexpr){
 var changeTimer = false;
 
 $('#filterexpr').on("keyup",function(){
-    var query = $('this').value;
+    var query = $(this).val();
     if(changeTimer !== false) clearTimeout(changeTimer);
     changeTimer = setTimeout(function(){
         get_log_lines(query);
