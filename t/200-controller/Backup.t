@@ -3,6 +3,7 @@ use Test::More;
 use Test::Mojo;
 
 use BibSpace::Functions::MySqlBackupFunctions;
+use BibSpace::Functions::BackupFunctions;
 
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(
@@ -41,6 +42,16 @@ subtest 'backup_do' => sub {
         ->status_isnt( 500, "Checking: 500 $page" );
 };
 
+my @backups = read_backups($self->app->backup_dir);
+ok( scalar(@backups) > 0 );
+my $backup = shift @backups;
+$backup_id = $backup->uuid;
+####################################################################
+subtest 'backup_index again' => sub {
+    $page = $t_logged_in->app->url_for('backup_index');
+    $t_logged_in->get_ok($page)->status_isnt( 404, "Checking: 404 $page" )
+        ->status_isnt( 500, "Checking: 500 $page" );
+};
 ####################################################################
 subtest 'backup_download' => sub {
 
@@ -56,12 +67,10 @@ subtest 'backup_delete' => sub {
 
 	$t_logged_in->delete_ok($page)->status_isnt( 404, "Checking: 404 $page" )
 	    ->status_isnt( 500, "Checking: 500 $page" );
-	    # ->content_unlike(qr/Cannot delete,/i)->content_like(qr/deleted/i); # this does not work :(
 
 	$page = $t_logged_in->app->url_for( 'backup_delete', id => -222 );
 	$t_logged_in->delete_ok($page)->status_isnt( 404, "Checking: 404 $page" )
 	    ->status_isnt( 500, "Checking: 500 $page" );
-	    # ->content_like(qr/Cannot delete,/i); # this does not work :(
 };
 
 
