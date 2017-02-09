@@ -610,6 +610,7 @@ sub add_pdf_post {
     $entry->delete_attachment('paper');
     $destination = $uploads_directory->path("papers", "paper-$id.$extension");
     $uploaded_file->move_to( $destination );
+    $self->app->logger->debug("Attachments file has been moved to: $destination.");
 
     $entry->add_attachment('paper', $destination);
     $file_url = $self->url_for( 'download_publication_pdf', filetype => "paper", id => $entry->id )->to_abs;
@@ -619,6 +620,7 @@ sub add_pdf_post {
     $entry->delete_attachment('slides');
     $destination = $uploads_directory->path("slides", "slides-paper-$id.$extension");
     $uploaded_file->move_to( $destination );
+    $self->app->logger->debug("Attachments file has been moved to: $destination.");
 
     $entry->add_attachment('slides', $destination);
     $file_url = $self->url_for( 'download_publication', filetype => "slides", id => $entry->id )->to_abs;
@@ -628,6 +630,7 @@ sub add_pdf_post {
     $entry->delete_attachment('unknown');
     $destination = $uploads_directory->path("unknown", "unknown-$id.$extension");
     $uploaded_file->move_to( $destination );
+    $self->app->logger->debug("Attachments file has been moved to: $destination.");
 
     $entry->add_attachment('unknown', $destination);
     $file_url = $self->url_for( 'download_publication', filetype => "unknown", id => $entry->id )->to_abs;
@@ -635,11 +638,12 @@ sub add_pdf_post {
   }
 
   $self->app->logger->info("Saving attachment for entry '$id' under: '$destination'.");
+  $self->app->logger->debug("Attachments debug after saving: ".$entry->get_attachments_debug_string);
 
   my $msg = "Successfully uploaded the $sizeKB KB file as <strong><em>$filetype</em></strong>.
       The file was renamed to:  <a href=\"".$file_url. "\">".$destination->basename."</a>";
 
-  $entry->regenerate_html(0, $self->app->bst, $self->app->bibtexConverter);
+  $entry->regenerate_html(1, $self->app->bst, $self->app->bibtexConverter);
   $self->app->repo->entries_save($entry);
 
   $self->flash( msg_type=> 'success', msg => $msg );

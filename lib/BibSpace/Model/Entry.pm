@@ -87,7 +87,7 @@ has 'attachments' => (
 
 sub get_attachments_debug_string {
     my $self = shift;
-    my $str = "Entry ID ".$self->id."has: \n";
+    my $str = "Entry ID ".$self->id." has: \n";
     foreach my $f_type ($self->attachments_keys){
         $str .= "\ttype: ".$f_type."\n";
         my $f_path = $self->attachments_get;
@@ -224,7 +224,9 @@ sub discover_attachments {
         @discovery_slides = Path::Tiny->new( $upload_dir, "slides" )
             ->children(qr/slides-paper-$id\./);
     }
-    catch { };
+    catch {
+        warn $_;
+    };
 
 
     my @discovery_other;
@@ -232,7 +234,9 @@ sub discover_attachments {
         @discovery_other = Path::Tiny->new( $upload_dir, "other" )
             ->children(qr/unknown-$id\./);
     }
-    catch { };
+    catch {
+        warn $_;
+    };
 
     $self->add_attachment( 'slides',  $_ ) for @discovery_slides;
     $self->add_attachment( 'paper',   $_ ) for @discovery_slides;
