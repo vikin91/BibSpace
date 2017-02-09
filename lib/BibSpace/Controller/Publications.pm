@@ -260,13 +260,14 @@ sub all_without_tag {
     $self->app->logger->info("Displaying untagged entries.");
 
     my @all = $self->app->repo->entries_all;
-    my @objs = grep { scalar $_->get_tags($tagtype) == 0 } @all;
+    my @entries = grep { scalar $_->get_tags($tagtype) == 0 } @all;
 
+    @entries = sort_publications(@entries);
 
     my $msg
         = "This list contains papers that have no tags of type $tagtype. Use this list to tag the untagged papers! ";
     $self->stash( msg_type => 'info', msg => $msg );
-    $self->stash( entries => \@objs );
+    $self->stash( entries => \@entries );
     $self->render( template => 'publications/all' );
 }
 ####################################################################################
@@ -301,26 +302,28 @@ sub all_without_tag_for_author {
     # no such master. Assume, that author id was given
 
     my @all_author_entries = $author->get_entries;
-    my @objs
+    my @entries
         = grep { scalar $_->get_tags($tagtype) == 0 } @all_author_entries;
 
+    @entries = sort_publications(@entries);
 
     my $msg
         = "This list contains papers of $author->{master} that miss tags of type $tagtype. ";
-    $self->stash( entries => \@objs, msg_type => 'info', msg => $msg );
+    $self->stash( entries => \@entries, msg_type => 'info', msg => $msg );
     $self->render( template => 'publications/all' );
 }
 ####################################################################################
 sub all_without_author {
     my $self = shift;
 
-    my @objs = $self->app->repo->entries_filter(
+    my @entries = $self->app->repo->entries_filter(
         sub { scalar( $_->get_authors ) == 0 } );
 
+    @entries = sort_publications(@entries);
 
     my $msg
         = "This list contains papers, that are currently not assigned to any of authors.";
-    $self->stash( entries => \@objs, msg => $msg, msg_type => 'info' );
+    $self->stash( entries => \@entries, msg => $msg, msg_type => 'info' );
     $self->render( template => 'publications/all' );
 }
 
@@ -344,6 +347,7 @@ sub show_unrelated_to_team {
     my %inTeam = map { $_ => 1 } @teamEntres;
     my @entriesUnrelated = grep { not $inTeam{$_} } @allEntres;
 
+    @entriesUnrelated = sort_publications(@entriesUnrelated);
 
     my $msg = "This list contains papers, that are:
         <ul>
@@ -367,15 +371,17 @@ sub all_with_missing_month {
     $self->app->logger->info("Displaying entries without month");
 
 
-    my @objs = grep { !defined $_->month or $_->month < 1 or $_->month > 12 }
+    my @entries = grep { !defined $_->month or $_->month < 1 or $_->month > 12 }
         $self->app->repo->entries_all;
+
+    @entries = sort_publications(@entries);
 
     my $msg
         = "This list contains entries with missing BibTeX field 'month'. ";
     $msg .= "Add this data to get the proper chronological sorting.";
 
     $self->stash( msg_type => 'info', msg => $msg );
-    $self->stash( entries => \@objs );
+    $self->stash( entries => \@entries );
     $self->render( template => 'publications/all' );
 }
 ####################################################################################

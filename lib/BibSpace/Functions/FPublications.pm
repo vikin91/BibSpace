@@ -8,7 +8,7 @@ use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
 
-
+use BibSpace::Functions::Core qw( sort_publications );
 use Scalar::Util qw(looks_like_number);
 
 use BibSpace::Functions::Core;
@@ -349,40 +349,8 @@ sub Fget_publications_core {
             return ();
         }
     }
-    if ( $debug == 1 ) {
-        $self->app->logger->debug(
-            "Fget_publications_core Input author = $query_author")
-            if defined $query_author;
-        $self->app->logger->debug(
-            "Fget_publications_core Input year = $query_year")
-            if defined $query_year;
-        $self->app->logger->debug(
-            "Fget_publications_core Input bibtex_type = $query_bibtex_type")
-            if defined $query_bibtex_type;
-        $self->app->logger->debug(
-            "Fget_publications_core Input entry_type = $query_entry_type")
-            if defined $query_entry_type;
-        $self->app->logger->debug(
-            "Fget_publications_core Input tag = $query_tag")
-            if defined $query_tag;
-        $self->app->logger->debug(
-            "Fget_publications_core Input team = $query_team")
-            if defined $query_team;
-        $self->app->logger->debug(
-            "Fget_publications_core Input visible = $query_visible")
-            if defined $query_visible;
-        $self->app->logger->debug(
-            "Fget_publications_core Input permalink = $query_permalink")
-            if defined $query_permalink;
-        $self->app->logger->debug(
-            "Fget_publications_core Input hidden = $query_hidden")
-            if defined $query_hidden;
-        $self->app->logger->debug(
-            "Fget_publications_core Input debug = $debug")
-            if defined $debug;
-        $self->app->logger->debug(
-            "Fget_publications_core Found " . scalar(@entries) . " entries" );
-    }
+
+    @entries = sort_publications(@entries);
 
     return @entries;
 }

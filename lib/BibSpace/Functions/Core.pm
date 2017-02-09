@@ -28,7 +28,7 @@ require TeX::Encode;
 use Encode;
 
 
-use BibSpace::Functions::FPublications;
+# use BibSpace::Functions::FPublications;
 
 use Exporter;
 our @ISA = qw( Exporter );
@@ -39,6 +39,7 @@ use List::MoreUtils qw(any uniq);
 
 # these are exported by default.
 our @EXPORT = qw(
+  sort_publications
   fix_bibtex_national_characters
   get_dir_size
   validate_registration_data
@@ -62,6 +63,12 @@ our @EXPORT = qw(
   get_current_month
 );
 
+
+####################################################################################################
+sub sort_publications {
+  my (@pubs) = @_;
+  return reverse sort{ $a->year <=> $b->year or $a->month <=> $b->month or $a->bibtex_key cmp $b->bibtex_key } @pubs;
+}
 ####################################################################################################
 =item fix_bibtex_national_characters
   This function should help to avoid bibtex=>html warnings of BibStyle, like this:
