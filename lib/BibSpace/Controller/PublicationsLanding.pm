@@ -290,19 +290,19 @@ sub landing_types_obj {    # TODO: clean this mess!
 
     # key: bibtex_type
     # value: description of type
-    my %bibtex_type_to_label = map { $_->our_type => $_->description }
+    my %hash_group_to_description = map { $_->our_type => $_->description }
         grep { defined $_->description } @all_types;
-    $bibtex_type_to_label{'talk'} = "Talks";
+    $hash_group_to_description{'talk'} = "Talks";
 
 
     # key: bibtex_type
     # value: ref to array of entry objects
-    my %bibtex_type_to_entries;
+    my %hash_group_to_entries;
 
-    my @keys_with_papers;
+    
 
 
-    my @keys = keys %bibtex_type_to_label;
+    my @keys = keys %hash_group_to_description;
     if ( defined $bibtex_type ) {
         @keys = ($bibtex_type);
     }
@@ -311,7 +311,8 @@ sub landing_types_obj {    # TODO: clean this mess!
 
     }
 
-    foreach my $key (@keys) {
+    my @keys_with_papers;
+    foreach my $key ( sort reverse @keys ) {
 
         my $bibtexType = undef;    # union of all bibtex types
         my $entryType  = undef;    # union of both types papers+talks
@@ -340,20 +341,20 @@ sub landing_types_obj {    # TODO: clean this mess!
         );
 
         if ( scalar @paper_objs > 0 ) {
-            $bibtex_type_to_entries{$key} = \@paper_objs;
-            if ( !$bibtex_type_to_label{$key} ) {
-                $bibtex_type_to_label{$key}
+            $hash_group_to_entries{$key} = \@paper_objs;
+            if ( !$hash_group_to_description{$key} ) {
+                $hash_group_to_description{$key}
                     = get_generic_type_description($key);
             }
             push @keys_with_papers, $key;
         }
     }
 
-    # bibtex_type_to_entries:  key_bibtex_type -> ref_arr_entry_objects
-    # bibtex_type_to_label:    key_bibtex_type -> description of the type
+    # hash_group_to_entries:  key_bibtex_type -> ref_arr_entry_objects
+    # hash_group_to_description:    key_bibtex_type -> description of the type
     # keys_with_papers: non-empty -> key_bibtex_type
     return $self->display_landing(
-        \%bibtex_type_to_entries, \%bibtex_type_to_label, \@keys_with_papers,
+        \%hash_group_to_entries, \%hash_group_to_description, \@keys_with_papers,
         $self->get_switchlink('years'),
         $self->get_filtering_navbar()
     );
@@ -383,8 +384,8 @@ sub landing_years_obj {
         $max_year = $year;
     }
 
-    my %hash_dict;
-    my %hash_values;
+    my %hash_group_to_description;
+    my %hash_group_to_entries;
     my @allkeys = ( $min_year .. $max_year );
     @allkeys = reverse @allkeys;
 
@@ -404,17 +405,17 @@ sub landing_years_obj {
 
         # delete the year from the @keys array if the year has 0 papers
         if ( scalar @objs > 0 ) {
-            $hash_dict{$yr}   = $yr;
-            $hash_values{$yr} = \@objs;
+            $hash_group_to_description{$yr}   = $yr;
+            $hash_group_to_entries{$yr} = \@objs;
             push @keys, $yr;
         }
     }
 
     my $switchlink = $self->get_switchlink("types");
     my $navbar_html
-        = $self->get_filtering_navbar( \@keys, \%hash_dict, 'years' );
+        = $self->get_filtering_navbar( \@keys, \%hash_group_to_description, 'years' );
 
-    return $self->display_landing( \%hash_values, \%hash_dict, \@keys,
+    return $self->display_landing( \%hash_group_to_entries, \%hash_group_to_description, \@keys,
         $switchlink, $navbar_html );
 }
 ############################################################################################################
@@ -479,8 +480,7 @@ sub display_landing {
     $title .= " Talks "
         if $self->param('entry_type')
         and $self->param('entry_type') eq 'talk';
-    $title .= " Publications and talks" 
-        if !$self->param('entry_type');
+    $title .= " Publications and talks" if !$self->param('entry_type');
 
     $title .= " of team '" . $self->param('team') . "'"
         if defined $self->param('team');
@@ -506,20 +506,18 @@ sub display_landing {
     # my @objs = @{ $hash_values{$year} };
     # foreach my $obj (@objs){
     $self->stash(
-        hash_values => $hash_group_to_entries,
-        hash_dict   => $hash_group_to_description,
-        keys        => $keys_ref,
-        navbar      => $navbar_html,
-        show_title  => $show_title,
-        title       => $title,
-        switch_link => $switchlink
+        hash_group_to_entries     => $hash_group_to_entries,
+        hash_group_to_description => $hash_group_to_description,
+        keys                      => $keys_ref,
+        navbar                    => $navbar_html,
+        show_title                => $show_title,
+        title                     => $title,
+        switch_link               => $switchlink
     );
     $self->res->headers->header( 'Access-Control-Allow-Origin' => '*' );
 
 
-
-    my $html
-        = $self->render_to_string( template => 'publications/landing_obj' );
+    my $html = $self->render_to_string( template => 'publications/landing_obj' );
     $self->render( data => $html );
 
     # $self->render( template => 'publications/landing_obj' );
