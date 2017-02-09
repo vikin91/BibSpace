@@ -42,10 +42,13 @@ subtest 'backup_do' => sub {
         ->status_isnt( 500, "Checking: 500 $page" );
 };
 
+my $backup = do_storable_backup($self->app);
+ok( $backup , "found a backup");
+$backup_id = $backup->id;
+
 my @backups = read_backups($self->app->backup_dir);
-ok( scalar(@backups) > 0 );
-my $backup = shift @backups;
-$backup_id = $backup->uuid;
+ok( scalar(@backups) > 0 , "found some backups in ".$self->app->backup_dir);
+
 ####################################################################
 subtest 'backup_index again' => sub {
     $page = $t_logged_in->app->url_for('backup_index');
@@ -86,4 +89,15 @@ subtest 'backup_cleanup' => sub {
     $t_logged_in->delete_ok($page)->status_isnt( 404, "Checking: 404 $page" )
         ->status_isnt( 500, "Checking: 500 $page" );
 };
+
+# cleanup
+@backups = read_backups($self->app->backup_dir);
+
+foreach my $back (@backups){
+    my $page = $t_logged_in->app->url_for( 'backup_delete', id => $back->uuid );
+    $t_logged_in->delete_ok($page)->status_isnt( 404, "Checking: 404 $page" )
+        ->status_isnt( 500, "Checking: 500 $page" );
+}
+
+ok(1);
 done_testing();

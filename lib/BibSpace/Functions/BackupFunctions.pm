@@ -67,7 +67,8 @@ sub do_storable_backup {
     my $app = shift;
     my $name = shift // 'normal';
 
-    my $backup_dir = Path::Tiny->new( $app->config->{backups_dir})->relative;
+    my $backup_dir = Path::Tiny->new( $app->backup_dir )->relative;
+    $backup_dir =~ s!/*$!/!; # hy do I need to add this???
 
     my $backup = Backup->create($name, "storable");
     $backup->dir("".$backup_dir);
@@ -86,7 +87,8 @@ sub do_mysql_backup {
     my $app = shift;
     my $name = shift // 'normal';
 
-    my $backup_dir = Path::Tiny->new( $app->config->{backups_dir})->relative; 
+    my $backup_dir = Path::Tiny->new( $app->backup_dir )->relative;
+    $backup_dir =~ s!/*$!/!;
 
     my $backup = Backup->create($name, "mysql");
     $backup->dir("".$backup_dir);
