@@ -36,8 +36,8 @@ sub getInstance {
         die "Requested unknown type of DaoFactory: '$factoryType'.";
     };
 }
-before 'getInstance' => sub { shift->logger->entering(""); };
-after 'getInstance'  => sub { shift->logger->exiting(""); };
+
+
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

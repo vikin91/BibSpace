@@ -66,19 +66,27 @@ sub lowdebug {
 sub entering {
   my $self   = shift;
   my $msg    = shift;
+  my $force  = shift;
   my $origin = ( caller(2) )[3];
 
-  # print color('black on_yellow');
-  # $self->log('ENTER', $msg, $origin);
+  if($force){
+    $origin = ( caller($force) )[3];  # this requires an extra level
+    print color('black on_yellow');
+    $self->log('ENTER', $msg, $origin);
+  }
 }
 
 sub exiting {
   my $self   = shift;
   my $msg    = shift;
+  my $force  = shift;
   my $origin = ( caller(2) )[3];
 
-  # print color('black on_yellow');
-  # $self->log('EXIT', $msg, $origin);
+  if($force){
+    $origin = ( caller($force) )[3];
+    print color('black on_yellow');
+    $self->log('EXIT', $msg, $origin);
+  }
 }
 
 sub info {

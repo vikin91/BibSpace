@@ -95,11 +95,11 @@ sub save {
   # foreach my $obj (@objects) {
   #   if ( $self->exists($obj) ) {
   #     $self->update($obj);
-  #     $self->logger->lowdebug( "Updated ".ref($obj)." ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+  #     $self->logger->lowdebug( "Updated ".ref($obj)." ID " . $obj->id . " in DB." );
   #   }
   #   else {
   #     $self->_insert($obj);
-  #     $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+  #     $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB." );
   #   }
   # }
 }
@@ -120,17 +120,17 @@ sub _insert {
   foreach my $obj (@objects) {
     try {
       my $result = $sth->execute( $obj->tag_id, $obj->entry_id );
-      $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB." );
     }
     catch {
-      $self->logger->error( "Insert exception: $_", "" . __PACKAGE__ . "->insert" );
+      $self->logger->error( "Insert exception: $_");
       # $dbh->rollback();
     };
   }
   # $dbh->commit();
 }
-before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
-after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };
+before '_insert' => sub { shift->logger->entering( "" ); };
+after '_insert' => sub { shift->logger->exiting( "" ); };
 
 =item update
     Method documentation placeholder.
@@ -159,7 +159,7 @@ sub delete {
       my $result = $sth->execute( $obj->entry_id, $obj->tag_id );
     }
     catch {
-      $self->logger->error( "Delete exception: $_", "" . __PACKAGE__ . "->delete" );
+      $self->logger->error( "Delete exception: $_" );
     };
   }
 }

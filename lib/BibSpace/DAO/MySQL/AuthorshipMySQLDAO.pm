@@ -98,11 +98,11 @@ sub save {
   # foreach my $obj (@objects) {
   #   if ( $self->exists($obj) ) {
   #     $self->update($obj);
-  #     $self->logger->lowdebug( "Updated object ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+  #     $self->logger->lowdebug( "Updated object ID " . $obj->id . " in DB." );
   #   }
   #   else {
   #     $self->_insert($obj);
-  #     $self->logger->lowdebug( "Inserted object ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+  #     $self->logger->lowdebug( "Inserted object ID " . $obj->id . " into DB." );
   #   }
   # }
 }
@@ -143,8 +143,8 @@ sub _insert {
   }
   # $dbh->commit();
 }
-before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
-after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };
+before '_insert' => sub { shift->logger->entering( "" ); };
+after '_insert' => sub { shift->logger->exiting( "" ); };
 
 =item update
     Method documentation placeholder.
@@ -173,7 +173,7 @@ sub delete {
       my $result = $sth->execute( $obj->entry_id, $obj->author_id );
     }
     catch {
-      $self->logger->error( "Delete exception: $_", "" . __PACKAGE__ . "->delete" );
+      $self->logger->error( "Delete exception: $_" );
     };
   }
 }

@@ -390,24 +390,21 @@ sub login {
     );
        
     
-
-    
-
-    
+    my $auth_result;
     if ( defined $user ){
         $self->app->logger->info("User '$input_login' exists.");
+        $auth_result = $user->authenticate($input_pass);
+    }
 
-        my $auth_result = $user->authenticate($input_pass);
+    
+    if ( defined $user and $auth_result and $auth_result == 1){
+        $self->session( user      => $user->login );
+        $self->session( user_name => $user->real_name );
+        $user->record_logging_in;
 
-        if( $auth_result and $auth_result == 1 ) {
-            $self->session( user      => $user->login );
-            $self->session( user_name => $user->real_name );
-            $user->record_logging_in;
-
-            $self->app->logger->info("Login as '$input_login' success.");
-            $self->redirect_to('/');
-            return;
-        }
+        $self->app->logger->info("Login as '$input_login' success.");
+        $self->redirect_to('/');
+        return;
     }
     else {
         $self->app->logger->info("User '$input_login' does not exist.");

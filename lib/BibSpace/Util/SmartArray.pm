@@ -13,6 +13,7 @@ require BibSpace::Model::IEntity;
 with 'IBibSpaceBackend';
 use List::Util qw(first);
 use List::MoreUtils qw(first_index);
+use feature qw( say );
 
 use MooseX::Storage;
 with Storage( format => 'JSON', 'io' => 'File' );
@@ -58,26 +59,21 @@ sub dump {
 }
 
 sub _init {
-    my $self = shift;
-    my $type = shift;
+    my ($self, $type) = @_;
     die "_init requires a type!" unless $type;
     if(!$self->defined($type)){
         $self->set($type, []);
     }
 }
-before '_init' => sub { shift->logger->entering(""); };
-after '_init'  => sub { shift->logger->exiting(""); };
 
 sub all {
-    my $self = shift;
-    my $type = shift;
+    my ($self, $type) = @_;
+
     $self->logger->error("SmartArray->all requires a type! Type: $type.") unless $type;
     $self->_init($type);
     my $aref = $self->get($type);
     return @{ $aref };
 }
-before 'all' => sub { shift->logger->entering(""); };
-after 'all'  => sub { shift->logger->exiting(""); };
 
 sub _add {
     my ($self, @objects) = @_;
@@ -85,8 +81,6 @@ sub _add {
     $self->_init($type);
     push @{$self->get($type)}, @objects;
 }
-before '_add' => sub { shift->logger->entering(""); };
-after '_add'  => sub { shift->logger->exiting(""); };
 
 sub save {
     my ($self, @objects) = @_;
@@ -116,72 +110,61 @@ sub save {
     
     return $added;
 }
-before 'save' => sub { shift->logger->entering(""); };
-after 'save'  => sub { shift->logger->exiting(""); };
 
 sub count { 
     my ($self, $type) = @_;
     die "all requires a type!" unless $type;
     return scalar $self->all($type);
 }
-before 'count' => sub { shift->logger->entering(""); };
-after 'count'  => sub { shift->logger->exiting(""); };
 
 sub empty { 
     my ($self, $type) = @_;
     return $self->count($type) == 0;
 }
-before 'empty' => sub { shift->logger->entering(""); };
-after 'empty'  => sub { shift->logger->exiting(""); };
 
 ## this is mega slow for relations!!!
 sub exists { 
     my ($self, $object) = @_;
     my $type = ref($object);
-    $self->logger->error("SmartArray->exists requires a type! Object: $object, type: $type.") unless $type;
+    $self->logger->error("SmartArray->exists requires a type! Object: '$object', type: '$type'.") unless $type;
     my $found = first {$_->equals($object)} $self->all($type);
     return defined $found;
 }
-before 'exists' => sub { shift->logger->entering(""); };
-after 'exists'  => sub { shift->logger->exiting(""); };
 
 sub update { 
     my ($self, @objects) = @_;
     # should happen automatically beacuse array keeps references to objects
 }
-before 'update' => sub { shift->logger->entering(""); };
-after 'update'  => sub { shift->logger->exiting(""); };
 
 sub delete { 
     my ($self, @objects) = @_; 
     my $type = ref($objects[0]);
     my $aref = $self->get($type);
-
+    my @removed;
     foreach my $obj (@objects){
         my $idx = first_index { $_ == $obj } @{$aref};
-        splice( @{$aref}, $idx, 1) if $idx > -1;
+        push @removed, splice( @{$aref}, $idx, 1) if $idx > -1;
     }
+    return @removed;
 }
-before 'delete' => sub { shift->logger->entering(""); };
-after 'delete'  => sub { shift->logger->exiting(""); };
 
 sub filter { 
     my ($self, $type, $coderef) = @_;
-    # $self->logger->warn("Calling ".(caller(0))[3]." with param $type");
+    $self->logger->entering("",2);
     return () if $self->empty($type);
-    return grep &{$coderef}, $self->all($type); 
+    my @arr = grep &{$coderef}, $self->all($type); 
+    $self->logger->exiting("",2);
+    return @arr;
 }
-before 'filter' => sub { shift->logger->entering(""); };
-after 'filter'  => sub { shift->logger->exiting(""); };
 
 sub find { 
   my ($self, $type, $coderef) = @_;
-  # $self->logger->warn("Calling ".(caller(0))[3]." with param $type");
+  $self->logger->entering("",2);
   return undef if $self->empty($type);
-  return first \&{$coderef}, $self->all($type);
+  my $obj = first \&{$coderef}, $self->all($type);
+  $self->logger->exiting("",2);
+  return $obj;
 }
-before 'find' => sub { shift->logger->entering(""); };
-after 'find'  => sub { shift->logger->exiting(""); };
 
 # Moose::Meta::Attribute::Native::Trait::Array
 

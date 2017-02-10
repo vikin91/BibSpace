@@ -126,7 +126,7 @@ sub reset_data {
         }
         catch {
             # Only SmartArray supports direct reset
-            if ( ref( $self->handle ) eq 'SmartArray' ) {
+            if ( ref( $self->handle ) eq 'SmartArray' or ref( $self->handle ) eq 'SmartHash' ) {
                 $self->logger->error(
                     "Reset of " . ref( $self->handle ) . " failed. Error $_",
                     "" . __PACKAGE__ . "->hardReset"

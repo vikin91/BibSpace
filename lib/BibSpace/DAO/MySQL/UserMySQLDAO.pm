@@ -275,13 +275,13 @@ sub delete {
       my $result = $sth->execute( $obj->id );
     }
     catch {
-      $self->logger->error( "Delete exception: $_", "" . __PACKAGE__ . "->delete" );
+      $self->logger->error( "Delete exception: $_" );
     };
   }
 
 }
-before 'delete' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->delete" ); };
-after 'delete' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->delete" ); };
+before 'delete' => sub { shift->logger->entering( "" ); };
+after 'delete' => sub { shift->logger->exiting( "" ); };
 
 =item filter
     Method documentation placeholder.
@@ -302,8 +302,8 @@ sub filter {
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'filter' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->filter" ); };
-after 'filter' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->filter" ); };
+before 'filter' => sub { shift->logger->entering( "" ); };
+after 'filter' => sub { shift->logger->exiting( "" ); };
 
 =item find
     Method documentation placeholder.
@@ -324,8 +324,8 @@ sub find {
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'find' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->find" ); };
-after 'find' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->find" ); };
+before 'find' => sub { shift->logger->entering( "" ); };
+after 'find' => sub { shift->logger->exiting( "" ); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

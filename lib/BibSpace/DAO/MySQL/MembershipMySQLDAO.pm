@@ -42,8 +42,8 @@ sub all {
   return @memberships;
 
 }
-before 'all' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->all" ); };
-after 'all' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->all" ); };
+before 'all' => sub { shift->logger->entering( "" ); };
+after 'all' => sub { shift->logger->exiting( "" ); };
 
 =item count
     Method documentation placeholder.
@@ -59,8 +59,8 @@ sub count {
   my $num = $row->{num} // 0;
   return $num;
 }
-before 'count' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->count" ); };
-after 'count' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->count" ); };
+before 'count' => sub { shift->logger->entering( "" ); };
+after 'count' => sub { shift->logger->exiting( "" ); };
 
 =item empty
     Method documentation placeholder.
@@ -76,8 +76,8 @@ sub empty {
   my $num = $row->{num} // 0;
   return $num == 0;
 }
-before 'empty' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->empty" ); };
-after 'empty' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->empty" ); };
+before 'empty' => sub { shift->logger->entering( "" ); };
+after 'empty' => sub { shift->logger->exiting( "" ); };
 
 =item exists
     Method documentation placeholder.
@@ -93,8 +93,8 @@ sub exists {
   my $num = $row->{num} // 0;
   return $num > 0;
 }
-before 'exists' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->exists" ); };
-after 'exists' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->exists" ); };
+before 'exists' => sub { shift->logger->entering( "" ); };
+after 'exists' => sub { shift->logger->exiting( "" ); };
 
 =item save
     Method documentation placeholder.
@@ -107,16 +107,16 @@ sub save {
   foreach my $obj (@objects) {
     if ( $self->exists($obj) ) {
       $self->update($obj);
-      $self->logger->lowdebug( "Updated ".ref($obj)." ID " . $obj->id . " in DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->lowdebug( "Updated ".ref($obj)." ID " . $obj->id . " in DB." );
     }
     else {
       $self->_insert($obj);
-      $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB.", "" . __PACKAGE__ . "->save" );
+      $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB." );
     }
   }
 }
-before 'save' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->save" ); };
-after 'save' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->save" ); };
+before 'save' => sub { shift->logger->entering( "" ); };
+after 'save' => sub { shift->logger->exiting( "" ); };
 
 =item _insert
     Method documentation placeholder.
@@ -135,13 +135,13 @@ sub _insert {
     }
     catch {
       my $obj_str = $obj->toString;
-      $self->logger->error( "Insert exception: $_  Skipped object: $obj_str", "" . __PACKAGE__ . "->insert" );
+      $self->logger->error( "Insert exception: $_  Skipped object: $obj_str" );
     };
   }
   # $dbh->commit();
 }
-before '_insert' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->_insert" ); };
-after '_insert' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->_insert" ); };
+before '_insert' => sub { shift->logger->entering( "" ); };
+after '_insert' => sub { shift->logger->exiting( "" ); };
 
 =item update
     Method documentation placeholder.
@@ -166,12 +166,12 @@ sub update {
       my $result = $sth->execute( $obj->start, $obj->stop, $obj->author_id, $obj->team_id );
     }
     catch {
-      $self->logger->error( "Update exception: $_", "" . __PACKAGE__ . "->update" );
+      $self->logger->error( "Update exception: $_" );
     };
   }
 }
-before 'update' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->update" ); };
-after 'update' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->update" ); };
+before 'update' => sub { shift->logger->entering( "" ); };
+after 'update' => sub { shift->logger->exiting( "" ); };
 
 =item delete
     Method documentation placeholder.
@@ -195,12 +195,12 @@ sub delete {
       }
     }
     catch {
-      $self->logger->error( "Delete exception: $_", "" . __PACKAGE__ . "->delete" );
+      $self->logger->error( "Delete exception: $_" );
     };
   }
 }
-before 'delete' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->delete" ); };
-after 'delete' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->delete" ); };
+before 'delete' => sub { shift->logger->entering( "" ); };
+after 'delete' => sub { shift->logger->exiting( "" ); };
 
 =item filter
     Method documentation placeholder.
@@ -221,8 +221,8 @@ sub filter {
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'filter' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->filter" ); };
-after 'filter' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->filter" ); };
+before 'filter' => sub { shift->logger->entering( "" ); };
+after 'filter' => sub { shift->logger->exiting( "" ); };
 
 =item find
     Method documentation placeholder.
@@ -243,8 +243,8 @@ sub find {
   # TODO: auto-generated method stub. Implement me!
 
 }
-before 'find' => sub { shift->logger->entering( "", "" . __PACKAGE__ . "->find" ); };
-after 'find' => sub { shift->logger->exiting( "", "" . __PACKAGE__ . "->find" ); };
+before 'find' => sub { shift->logger->entering( "" ); };
+after 'find' => sub { shift->logger->exiting( "" ); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

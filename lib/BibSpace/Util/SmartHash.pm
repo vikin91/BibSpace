@@ -13,6 +13,7 @@ require BibSpace::Model::IEntity;
 with 'IBibSpaceBackend';
 use List::Util qw(first);
 use List::MoreUtils qw(any uniq first_index);
+use feature qw( say );
 
 =item
     This is a in-memory data structure (hash) to hold all objects of BibSpace.
@@ -38,9 +39,15 @@ has 'data' => (
         # values  => 'values',
         num     => 'count',
         pairs   => 'kv',
+        _clear  => 'clear',
     },
 );
 
+sub reset_data {
+    my $self = shift;
+    $self->logger->warn("Resetting SmartHash");
+    $self->_clear;
+}
 
 sub dump {
     my $self = shift;
@@ -48,111 +55,107 @@ sub dump {
 }
 
 sub _init {
-    my $self = shift;
-    my $type = shift;
+    my ($self, $type) = @_;
     die "_init requires a type!" unless $type;
     if(!$self->defined($type)){
         $self->set($type, {});
     }
+
 }
-before '_init' => sub { shift->logger->entering(""); };
-after '_init'  => sub { shift->logger->exiting(""); };
 
 sub all {
-    my $self = shift;
-    my $type = shift;
+    my ($self, $type) = @_;
     die "all requires a type!" unless $type;
     $self->_init($type);
     my $href = $self->get($type);
-    return () if !%{ $href };
-    return values %{ $href };
+
+    my @result;
+    if($href){
+        @result = values %$href;
+    }
+    return @result;
 }
-before 'all' => sub { shift->logger->entering(""); };
-after 'all'  => sub { shift->logger->exiting(""); };
 
 sub _add {
     my ($self, @objects) = @_;
+    return if scalar(@objects) == 0;
+
     my $type = ref($objects[0]);
+
     $self->_init($type);
     my $href = $self->get($type);
     
+    my $num_added = 0;
     foreach my $obj (@objects){
         $href->{$obj->id} = $obj;
+        $num_added++;
     }
+    return $num_added;
 }
-before '_add' => sub { shift->logger->entering(""); };
-after '_add'  => sub { shift->logger->exiting(""); };
 
 sub save {
     my ($self, @objects) = @_;
     return $self->_add(@objects);
 }
-before 'save' => sub { shift->logger->entering(""); };
-after 'save'  => sub { shift->logger->exiting(""); };
 
 sub count { 
     my ($self, $type) = @_;
     die "all requires a type!" unless $type;
+    return 0 if $self->empty($type);
+
     $self->_init($type);
     my $href = $self->get($type);
-    return 0 if !$href->{$type};
-    return scalar keys %{ $href->{$type} };
+    return scalar keys %$href;
 }
-before 'count' => sub { shift->logger->entering(""); };
-after 'count'  => sub { shift->logger->exiting(""); };
 
 sub empty { 
     my ($self, $type) = @_;
-    return $self->count($type) == 0;
+    $self->_init($type);
+    my $href = $self->get($type);
+    return scalar(keys %$href) == 0;
 }
-before 'empty' => sub { shift->logger->entering(""); };
-after 'empty'  => sub { shift->logger->exiting(""); };
 
 sub exists { 
     my ($self, $object) = @_;
     my $type = ref($object);
+    $self->logger->error("SmartHash->exists requires a type! Object: '$object', type: '$type'.") unless $type;
     my $href = $self->get($type);
     return exists $href->{$object->id};
 }
-before 'exists' => sub { shift->logger->entering(""); };
-after 'exists'  => sub { shift->logger->exiting (""); };
 
 sub update { 
     my ($self, @objects) = @_;
     return $self->_add(@objects);
 }
-before 'update' => sub { shift->logger->entering(""); };
-after 'update'  => sub { shift->logger->exiting(""); };
 
 sub delete { 
-    my ($self, @objects) = @_; 
+    my ($self, @objects) = @_;
     my $type = ref($objects[0]);
     my $href = $self->get($type);
 
+    my @removed;
     foreach my $obj (@objects){
-        delete $href->{$obj->id};
+        push @removed, delete $href->{$obj->id};
     }
+    
+    return @removed; 
 }
-before 'delete' => sub { shift->logger->entering(""); };
-after 'delete'  => sub { shift->logger->exiting(""); };
 
 sub filter { 
     my ($self, $type, $coderef) = @_;
-    # $self->logger->warn("Calling ".(caller(0))[3]." with param $type");
+    $self->logger->entering("$type",2);
     return () if $self->empty($type);
-    return grep &{$coderef}, $self->all($type); 
+    my @arr = grep &{$coderef}, $self->all($type);
+    $self->logger->exiting("$type",2);
+    return @arr;
 }
-before 'filter' => sub { shift->logger->entering(""); };
-after 'filter'  => sub { shift->logger->exiting(""); };
 
 sub find { 
   my ($self, $type, $coderef) = @_;
-  # $self->logger->warn("Calling ".(caller(0))[3]." with param $type");
   return undef if $self->empty($type);
-  return first \&{$coderef}, $self->all($type);
+  my $obj = first \&{$coderef}, $self->all($type);
+  return $obj;
 }
-before 'find' => sub { shift->logger->entering(""); };
-after 'find'  => sub { shift->logger->exiting(""); };
 
 # Moose::Meta::Attribute::Native::Trait::Array
 
