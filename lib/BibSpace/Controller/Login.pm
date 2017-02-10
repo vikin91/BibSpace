@@ -388,8 +388,9 @@ sub login {
         
     $self->app->logger->info("Trying to login as user '$input_login'");
 
-
-    if ( defined $user and $user->authenticate($input_pass) == 1 ) {
+    my $auth_result = $user->authenticate($input_pass);
+    
+    if ( defined $user and $auth_result and $auth_result == 1 ) {
         $self->session( user      => $user->login );
         $self->session( user_name => $user->real_name );
         $user->record_logging_in;

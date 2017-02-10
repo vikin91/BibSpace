@@ -17,6 +17,8 @@ use BibSpace::Functions::FDB; # TODO: purge DB etc.
 `rm bibspace.dat`;
 
 my $t_logged_in = Test::Mojo->new('BibSpace');
+
+
 $t_logged_in->post_ok(
     '/do_login' => { Accept => '*/*' },
     form        => { user   => 'pub_admin', pass => 'asdf' }
@@ -39,8 +41,13 @@ $dbh = $self->app->db;
 my $fixture_name = "bibspace_fixture.dat";
 my $fixture_dir = "./fixture/";
 
-note "Drop database and recreate tables";
-ok( reset_db_data($dbh), "reset_db_data");
+SKIP: {
+  note "Drop database and recreate tables";
+  skip "System is running in production mode!! Do not test on production!", 1 if $self->mode eq 'production';
+  ok( reset_db_data($dbh), "reset_db_data");
+};
+
+
 
 SKIP: {
 	note "============ APPLY DATABASE FIXTURE ============";
@@ -53,24 +60,10 @@ SKIP: {
   # this restores data to all layers!
   restore_storable_backup($fixture, $self->app);
 
-  # this may make problems on travis - duplicate data in mysql
-  # note "copy 'smart' layer into 'mysql' layer";
-  # my $layer = $self->app->repo->lr->get_layer('mysql');
-  # mysql does not support reset data!!!!!
-  # $layer->reset_data;
-  # $self->app->repo->lr->copy_data( { from => 'smart', to => 'mysql' } );
 
-}
+};
 
 
-
-# my @pages = ('/read/publications/meta');
-# for my $page (@pages){
-#     note "============ Testing page $page ============";
-#     $t_logged_in->get_ok($page, "Get for page $page")
-#       ->status_isnt(404, "Checking: 404 $page")
-#       ->status_isnt(500, "Checking: 500 $page")->content_like(qr/is list is intended for Google Scholar crawler/i);
-# }
 
 ok(1);
 
