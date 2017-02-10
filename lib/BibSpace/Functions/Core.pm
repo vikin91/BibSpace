@@ -67,7 +67,12 @@ our @EXPORT = qw(
 ####################################################################################################
 sub sort_publications {
   my (@pubs) = @_;
-  return reverse sort{ $a->year <=> $b->year or $a->month <=> $b->month or $a->bibtex_key cmp $b->bibtex_key } @pubs;
+  return reverse sort{ 
+    $a->year <=> $b->year || 
+    $a->month <=> $b->month || 
+    $a->bibtex_key cmp $b->bibtex_key ||
+    $a->id cmp $b->id
+  } @pubs;
 }
 ####################################################################################################
 =item fix_bibtex_national_characters

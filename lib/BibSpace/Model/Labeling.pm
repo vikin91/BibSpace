@@ -8,7 +8,7 @@ use BibSpace::Model::Tag;
 use BibSpace::Model::IRelation;
 
 use Try::Tiny;
-use Devel::StackTrace;
+
 
 use Moose;
 with 'IRelation';
@@ -61,19 +61,11 @@ sub toString {
     $str;
 }
 ####################################################################################
-
-=item equals
-    In case of any strange problems: this must return 1 or 0! 
-=cut
-
 sub equals {
     my $self = shift;
     my $obj  = shift;
 
-    my $trace = Devel::StackTrace->new;
-    my $trace_str = "\n=== TRACE ===\n" . $trace->as_string . "\n=== END TRACE ===\n";
-
-    die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj) . "Trace: $trace_str" unless ref($self) eq ref($obj);
+    die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj) . "." unless ref($self) eq ref($obj);
     
     if (    $self->entry
         and $self->tag

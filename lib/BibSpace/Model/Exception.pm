@@ -8,7 +8,7 @@ use BibSpace::Model::Entry;
 use BibSpace::Model::IRelation;
 
 use Try::Tiny;
-use Devel::StackTrace;
+
 
 use Moose;
 with 'IRelation';

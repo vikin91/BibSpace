@@ -9,7 +9,7 @@
             <H1 class="pull-right">Author: </H1>
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <h1> <%= $author->{uid} %> </h1>
+            <h1> <%= $author->uid %> </h1>
         </div>
     </div>
 
@@ -54,7 +54,7 @@
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            % my @ttobjs = get_all_tag_types($self);
+            % my @ttobjs = get_important_tag_types($self);
             % foreach my $ttobj (@ttobjs){
                 <a class="btn btn-default" href="<%= url_for('get_untagged_publications_for_author', author=> $author->{id}, tagtype=>$ttobj->{id} ) %>">
                     <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without "<%=$ttobj->{name}%>"

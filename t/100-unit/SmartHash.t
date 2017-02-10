@@ -58,7 +58,8 @@ my $found = $backend->find($type, sub{$_->id == 3});
 ok(!$found, "not found");
 is( scalar($backend->filter($type, sub{$_->id < 100}) ), 2, "filter ok" );
 
-say Dumper $backend;
+is( $backend->dump, "dump ok" );
+# say Dumper $backend;
 
 ok(1);
 done_testing();

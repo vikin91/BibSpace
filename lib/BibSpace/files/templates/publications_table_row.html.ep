@@ -84,6 +84,6 @@ class="publication_table_row" publication-table-row-data-id="<%=$entry_obj->id%>
     </td>
 
     <td class="bibtexitem">
-      %== $entry_obj->html
+      %== $entry_obj->html // "no data"
     </td>
 </tr>

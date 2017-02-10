@@ -14,7 +14,10 @@
 
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
-            <a class="btn btn-success" href="<%= url_for('/tags/add/')%><%=$type%>"><span class="glyphicon glyphicon-plus"></span> Add new tag</a>
+            <a class="btn btn-success" href="<%= url_for('add_tag_get', type=> $type)%>">
+                <span class="glyphicon glyphicon-plus"></span> 
+                Add new tag
+            </a>
         </div>
     </div>
 
@@ -22,10 +25,15 @@
 
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
-            <a class="btn btn-default btn-sm" href="<%= url_for('/tags/')%><%=($ttobj->{id}) %>">All</a>
+            <a class="btn btn-default btn-sm" href="<%= url_for('all_tags', type =>$ttobj->id )%> ">
+                All
+            </a>
             <div class="btn-group">
             % foreach my $letter (@letters_arr){
-                <a class="btn btn-default btn-sm" href="<%= url_for('/tags/')%><%=($ttobj->{id}) %>?letter=<%= $letter %>"><%= $letter %></a>
+                <a class="btn btn-default btn-sm" 
+                    href="<%= url_for('all_tags', type =>$ttobj->id )->query(letter => $letter)%> ">
+                    <%= $letter %>
+                </a>
             %}
             </div>
         </div>

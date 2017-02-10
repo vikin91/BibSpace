@@ -68,7 +68,7 @@
         </li>
         
         <li class="divider"></li>
-        % my @ttobjs = get_all_tag_types($self);
+        % my @ttobjs = get_important_tag_types($self);
         % foreach my $ttobj (@ttobjs){
             <li>
                 <a href="<%= url_for('/publications/untagged/')%><%=$ttobj->{id}%>" data-toggle="tooltip" data-placement="right" title="Show papers having no tags of type <%=$ttobj->{name}%>"><i class="fa fa-question"></i> Papers with missing <%=$ttobj->{name}%></a>

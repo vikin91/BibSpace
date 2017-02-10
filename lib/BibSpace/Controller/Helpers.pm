@@ -210,9 +210,9 @@ sub register {
   );
 
   $app->helper(
-    get_all_tag_types => sub {
+    get_important_tag_types => sub {
       my $self = shift;
-      return $self->app->repo->tagTypes_all;
+      return $self->app->repo->tagTypes_filter(sub{$_->id < 4});
     }
   );
 

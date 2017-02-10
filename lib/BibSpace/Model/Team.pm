@@ -1,7 +1,7 @@
 package Team;
 
 use Try::Tiny;
-use Devel::StackTrace;
+
 use Data::Dumper;
 use utf8;
 use BibSpace::Model::Author;

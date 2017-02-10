@@ -127,7 +127,7 @@ has logger => sub { state $logger = SimpleLogger->new() };
 
 has smartArrayBackend => sub {
     my $self = shift;
-    return SmartHash->new( logger => $self->logger );
+    return SmartArray->new( logger => $self->logger );
 };
 
 

@@ -14,6 +14,8 @@ use v5.16;           #because of ~~
 use strict;
 use warnings;
 
+# for benchmarking
+use Time::HiRes qw( gettimeofday tv_interval );
 
 use Scalar::Util qw(looks_like_number);
 
@@ -964,15 +966,36 @@ sub remove_tag {
             entry_id => $entry->id,
             tag_id   => $tag->id
         );
+
+        my $t2 = [gettimeofday];
         my $label = $self->app->repo->labelings_find(
             sub { $_->equals($search_label) } );
+        say "Searching label: ".tv_interval ( $t2, [gettimeofday]);
+        # Searching label: 1.765996
+
+        my $t3 = [gettimeofday];
+        my $label2 = $self->app->repo->labelings_find(
+            sub { $_->entry_id == $entry->id and $_->tag_id == $tag->id } );
+        say "Searching label long: ".tv_interval ( $t3, [gettimeofday]);
+        # Searching label long: 0.001456
+        
+        my $t4 = [gettimeofday];
+        my $label3 = $self->app->repo->labelings_find(
+            sub { $_->entry->id == $entry->id and $_->tag->id == $tag->id } );
+        say "Searching label long obj: ".tv_interval ( $t4, [gettimeofday]);
+        # Searching label long obj: 0.00143
 
         if ($label) {
 
-# you should always execute all those three commands together - smells like command pattern...
+            ## you should always execute all those three commands together - smells like command pattern...
+           
+        
+            my $t3 = [gettimeofday];
             $entry->remove_labeling($label);
             $tag->remove_labeling($label);
             $self->app->repo->labelings_delete($label);
+            say "Removing label: ".tv_interval ( $t3, [gettimeofday]);
+
 
             $self->app->logger->info( "Removed tag "
                     . $tag->name
@@ -990,6 +1013,7 @@ sub remove_tag {
         }
 
     }
+    
 
     $self->redirect_to( $self->get_referrer );
 
@@ -1000,7 +1024,7 @@ sub add_tag {
     my $entry_id = $self->param('eid');
     my $tag_id   = $self->param('tid');
 
-
+    my  $t0 = [gettimeofday];
     my $entry = $self->app->repo->entries_find( sub { $_->id == $entry_id } );
     my $tag   = $self->app->repo->tags_find( sub    { $_->id == $tag_id } );
 
@@ -1012,6 +1036,7 @@ sub add_tag {
             tag_id   => $tag->id
         );
         ## you should always execute all those three commands together - smells like command pattern...
+        
         $self->app->repo->labelings_save($label);
         $entry->add_labeling($label);
         $tag->add_labeling($label);
@@ -1022,6 +1047,10 @@ sub add_tag {
             "Cannot add tag $tag_id to entry ID $entry_id - reason: tag or entry not found. "
         );
     }
+
+    my ($seconds, $microseconds) = gettimeofday;
+    my $elapsed = tv_interval ( $t0, [$seconds, $microseconds]);
+    print "Execution time: $elapsed s\n";
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################

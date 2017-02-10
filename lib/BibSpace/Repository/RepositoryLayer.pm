@@ -98,9 +98,7 @@ has 'creates_on_read' => (
 
 sub reset_data {
     my $self = shift;
-    $self->logger->warn(
-        "Conducting HARD RESET of data in layer '" . $self->name . "'!",
-        "" . __PACKAGE__ . "->reset_data" );
+    $self->logger->warn("HARD RESET of data in layer '" . $self->name . "'!");
 
     if ( defined $self->reset_data_callback ) {
         $self->logger->warn(
@@ -127,10 +125,7 @@ sub reset_data {
         catch {
             # Only SmartArray supports direct reset
             if ( ref( $self->handle ) eq 'SmartArray' or ref( $self->handle ) eq 'SmartHash' ) {
-                $self->logger->error(
-                    "Reset of " . ref( $self->handle ) . " failed. Error $_",
-                    "" . __PACKAGE__ . "->hardReset"
-                );
+                $self->logger->error("Reset of " . ref( $self->handle ) . " failed. Error $_");
             }
         };
     }
@@ -140,8 +135,6 @@ sub daoDispatcher {
     my $self        = shift;
     my $factory     = shift;
     my $entity_type = shift;
-
-# $self->logger->debug("Dispatcher searches for: '$entity_type' using factory '$factory'", "" . __PACKAGE__ . "->daoDispatcher");
 
     if ( $entity_type eq 'TagType' ) {
         return $factory->getTagTypeDao(
@@ -187,8 +180,7 @@ sub daoDispatcher {
         return $factory->getUserDao(
             $self->uidProvider->get_provider($entity_type) );
     }
-    $self->logger->error( "Requested unknown entity_type: '$entity_type'",
-        "" . __PACKAGE__ . "->daoDispatcher" );
+    $self->logger->error( "Requested unknown entity_type: '$entity_type'");
     die "Requested unknown entity_type: '$entity_type'";
 }
 

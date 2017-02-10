@@ -5,6 +5,9 @@ use Try::Tiny;
 use Data::Dumper;
 use namespace::autoclean;
 
+# for benchmarking
+use Time::HiRes qw( gettimeofday tv_interval );
+
 use Moose;
 
 use Moose::Util::TypeConstraints;
@@ -148,21 +151,31 @@ sub delete {
     return @removed;
 }
 
+
 sub filter { 
     my ($self, $type, $coderef) = @_;
-    $self->logger->entering("",2);
+
+    my $t0 = [gettimeofday];
+    
     return () if $self->empty($type);
     my @arr = grep &{$coderef}, $self->all($type); 
-    $self->logger->exiting("",2);
+    
+    my $dur = tv_interval ( $t0, [gettimeofday]);
+    say "Filtering in SArray '$type': $dur" if $dur > 0.01;
     return @arr;
 }
 
 sub find { 
   my ($self, $type, $coderef) = @_;
-  $self->logger->entering("",2);
+
+  my $t0 = [gettimeofday];
+  
   return undef if $self->empty($type);
   my $obj = first \&{$coderef}, $self->all($type);
-  $self->logger->exiting("",2);
+  
+  my $dur = tv_interval ( $t0, [gettimeofday]);
+  say "Finding in SArray '$type': $dur" if $dur > 0.01;
+  
   return $obj;
 }
 

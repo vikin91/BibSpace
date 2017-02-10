@@ -55,7 +55,6 @@ sub get_provider {
     my ( $self, $type ) = @_;
     $self->_init($type);
     my $provider = $self->_get($type);
-    # $self->logger->warn("Id Provider for ".sprintf('%-12s',$type)." has addr '".refaddr($provider)."', last_id: ".$provider->last_id,"" . __PACKAGE__ . "->get_provider");
     return $provider;
 }
 
@@ -63,7 +62,7 @@ sub _init {
     my ( $self, $type ) = @_;
 
     if(!$type){
-        $self->logger->error("_init requires a type!","" . __PACKAGE__ . "->_init");
+        $self->logger->error("_init requires a type!");
         die "_init requires a type!";
     }
     if ( !$self->_defined($type) ) {
@@ -75,7 +74,7 @@ sub _init {
         }
         catch {
             my $msg = "Requested unknown type of IUidProvider : '".$self->idProviderClassName."'. Error: $_";
-            $self->logger->error($msg,"" . __PACKAGE__ . "->_init");
+            $self->logger->error($msg);
             die $msg;
         };
     }
@@ -83,7 +82,7 @@ sub _init {
 
 sub reset {
     my $self = shift;
-    $self->logger->warn("Resetting all UID Providers","" . __PACKAGE__ . "->reset");
+    $self->logger->warn("Resetting all UID Providers");
     foreach my $type ($self->_keys){
         $self->_get($type)->clear;    
     }
