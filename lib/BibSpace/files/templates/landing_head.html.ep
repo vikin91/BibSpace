@@ -6,9 +6,9 @@
 
     
   
-    %= stylesheet '/bootstrap_min.css', type=> "text/css"
-    %= stylesheet '/styles.css', type=> "text/css"
-    %= stylesheet '/landing_styles.css', type=> "text/css"
+    %= stylesheet '/css/bootstrap.min.css', type=> "text/css"
+    %= stylesheet '/css/bibspace.css', type=> "text/css"
+    %= stylesheet '/css/bibspace_landing.css', type=> "text/css"
 
   <script type="text/javascript">
          function showAbstract(divid) {
