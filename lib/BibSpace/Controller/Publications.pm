@@ -552,22 +552,29 @@ sub discover_attachments {
     my $do   = $self->param('do');
 
     my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+    $self->app->logger->info("Discovery of attachments for entry ID '$id'." );
 
     my $msg;
+    my $msg_type = 'info';
     if ( $entry and $do and $do == 1 ) {
         $entry->discover_attachments( $self->app->config->{upload_dir} );
         $msg .= "Discovery was run for dir '"
             . $self->app->config->{upload_dir} . "'.";
     }
-    else {
+    elsif( $entry ) {
         $msg .= "Just displaying information. ";
-    }
-
-    $msg
+        $msg
         .= "Attachments debug: <pre style=\"font-family:monospace;\">"
         . $entry->get_attachments_debug_string
         . "</pre>";
-    $self->flash( msg_type => 'info', msg => $msg );
+    }
+    else{
+        $msg = "Cannot discover, entry '$id' not found."; 
+        $msg_type = 'danger';
+        $self->app->logger->error( $msg );
+    }
+    
+    $self->flash( msg_type => $msg_type, msg => $msg );
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
@@ -893,6 +900,12 @@ sub delete_sure {
     }
 
     $entry->delete_all_attachments;
+    my @entry_authorships = $entry->authorships_all;
+    my @entry_labelings = $entry->labellings_all;
+    my @entry_exceptions = $entry->exceptions_all;
+    $self->app->repo->authorships_delete(@entry_authorships);
+    $self->app->repo->labelings_delete(@entry_labelings);
+    $self->app->repo->exceptions_delete(@entry_exceptions);
     $self->app->repo->entries_delete($entry);
 
     $self->app->logger->info("Entry '$id' has been deleted.");
@@ -1005,17 +1018,19 @@ sub add_tag {
     my $tag   = $self->app->repo->tags_find( sub    { $_->id == $tag_id } );
 
     if ( defined $entry and defined $tag ) {
-
+        say "add_tag debug 1";
         my $label = Labeling->new(
             entry    => $entry,
             tag      => $tag,
             entry_id => $entry->id,
             tag_id   => $tag->id
         );
-
-# you should always execute all those three commands together - smells like command pattern...
+        say "add_tag debug 2";
+        ## you should always execute all those three commands together - smells like command pattern...
         $self->app->repo->labelings_save($label);
+        say "add_tag debug 3";
         $entry->add_labeling($label);
+        say "add_tag debug 4";
         $tag->add_labeling($label);
     }
     else {
@@ -1024,6 +1039,7 @@ sub add_tag {
             "Cannot add tag $tag_id to entry ID $entry_id - reason: tag or entry not found. "
         );
     }
+    say "add_tag debug 5";
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
@@ -1338,8 +1354,8 @@ sub publications_add_post {
         $self->app->repo->entries_save($entry);
         $added_under_id = $entry->id;
 
-# !!! the entry must be added before executing Freassign_authors_to_entries_given_by_array
-# why? beacuse authorship will be unable to map existing entry to the author
+        ## !!! the entry must be added before executing Freassign_authors_to_entries_given_by_array
+        ## why? beacuse authorship will be unable to map existing entry to the author
         Freassign_authors_to_entries_given_by_array( $self->app, 1,
             [$entry] );
 

@@ -388,16 +388,21 @@ sub login {
         
     $self->app->logger->info("Trying to login as user '$input_login'");
 
-    my $auth_result = $user->authenticate($input_pass);
     
-    if ( defined $user and $auth_result and $auth_result == 1 ) {
-        $self->session( user      => $user->login );
-        $self->session( user_name => $user->real_name );
-        $user->record_logging_in;
 
-        $self->app->logger->info("Login as '$input_login' success.");
-        $self->redirect_to('/');
-        return;
+    
+    if ( defined $user ){
+        my $auth_result = $user->authenticate($input_pass);
+        
+        if( $auth_result and $auth_result == 1 ) {
+            $self->session( user      => $user->login );
+            $self->session( user_name => $user->real_name );
+            $user->record_logging_in;
+
+            $self->app->logger->info("Login as '$input_login' success.");
+            $self->redirect_to('/');
+            return;
+        }
     }
     else {
         $self->app->logger->info(

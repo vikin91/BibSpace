@@ -3,14 +3,15 @@ package Labeling;
 use Data::Dumper;
 use utf8;
 use v5.16;    #because of ~~ and say
-use BibSpace::Model::Author;
-
+use BibSpace::Model::Entry;
+use BibSpace::Model::Tag;
+use BibSpace::Model::IRelation;
 
 use Try::Tiny;
 use Devel::StackTrace;
 
 use Moose;
-
+with 'IRelation';
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

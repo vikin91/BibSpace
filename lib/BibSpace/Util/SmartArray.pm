@@ -134,6 +134,7 @@ sub empty {
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
 
+## this is mega slow!!!
 sub exists { 
     my ($self, $object) = @_;
     my $type = ref($object);

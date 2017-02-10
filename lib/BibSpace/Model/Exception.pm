@@ -4,13 +4,14 @@ use Data::Dumper;
 use utf8;
 use v5.16;    #because of ~~ and say
 use BibSpace::Model::Team;
-
+use BibSpace::Model::Entry;
+use BibSpace::Model::IRelation;
 
 use Try::Tiny;
 use Devel::StackTrace;
 
 use Moose;
-
+with 'IRelation';
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 

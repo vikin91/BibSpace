@@ -117,14 +117,8 @@ sub Fhandle_add_edit_publication {
     if ( $id > 0 ) {
         $new_entry = $repo->entries_find( sub { $_->id == $id } );
     }
-    if ( !$new_entry ) {
-        if($id>0){
-            $new_entry = $app->entityFactory->new_Entry( id => $id, bib => $new_bib );    
-        }
-        else{
-            $new_entry = $app->entityFactory->new_Entry( bib => $new_bib );
-        }
-        
+    if ( $id <0 or !$new_entry ) {
+        $new_entry = $app->entityFactory->new_Entry( bib => $new_bib );
     }
     $new_entry->bib($new_bib);
 
@@ -175,8 +169,11 @@ sub Fhandle_add_edit_publication {
         }
         $new_entry->generate_html( $bst_file, $app->bibtexConverter );
         $new_entry->fix_month();
-        Freassign_authors_to_entries_given_by_array( $app, 1, [$new_entry] );
         $repo->entries_save($new_entry);
+        ## !!! the entry must be added before executing Freassign_authors_to_entries_given_by_array
+        ## why? beacuse authorship will be unable to map existing entry to the author
+        Freassign_authors_to_entries_given_by_array( $app, 1, [$new_entry] );
+        
 
         $added_under_id = $new_entry->id;
     }

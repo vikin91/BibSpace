@@ -44,7 +44,7 @@ has 'data' => (
 
 sub dump {
     my $self = shift;
-    $self->logger->debug("SmartArray keys: ".join(', ', $self->keys));
+    $self->logger->debug("SmartHash keys: ".join(', ', $self->keys));
 }
 
 sub _init {
@@ -85,17 +85,7 @@ after '_add'  => sub { shift->logger->exiting(""); };
 
 sub save {
     my ($self, @objects) = @_;
-    my $added = 0;
-    foreach my $obj(@objects){
-        if( !$self->exists($obj)){
-            ++$added;
-            $self->_add($obj);
-        }
-        else{
-            $self->update($obj);
-        }
-    }
-    return $added;
+    return $self->_add(@objects);
 }
 before 'save' => sub { shift->logger->entering(""); };
 after 'save'  => sub { shift->logger->exiting(""); };
@@ -125,7 +115,7 @@ sub exists {
     return exists $href->{$object->id};
 }
 before 'exists' => sub { shift->logger->entering(""); };
-after 'exists'  => sub { shift->logger->exiting(""); };
+after 'exists'  => sub { shift->logger->exiting (""); };
 
 sub update { 
     my ($self, @objects) = @_;

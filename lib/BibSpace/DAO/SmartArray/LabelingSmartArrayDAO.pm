@@ -10,6 +10,7 @@ with 'IDAO';
 use Try::Tiny;
 use List::MoreUtils qw(any uniq);
 use List::Util qw(first);
+use feature qw( state say );
 
 # Inherited fields from BibSpace::DAO::Interface::IDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
@@ -69,13 +70,9 @@ after 'exists'  => sub { shift->logger->exiting(""); };
 sub save {
   my ($self, @objects) = @_;
 
-  $self->logger->lowdebug("adding all ".$self->count." existing objects to hash");
   my %existing = map { $_->id =>1} $self->all;
-  $self->logger->lowdebug("grepping new objects that do not exist in hash");
-  my @new_objects = grep { not $existing{$_->id} } @objects;
-  $self->logger->lowdebug("saving with handle");
-  $self->handle->save( @new_objects );
-  $self->logger->lowdebug("saving with handle DONE");
+  @objects = grep { not $existing{$_->id} } @objects;
+  $self->handle->save( @objects );
 }
 before 'save' => sub { shift->logger->entering(""); };
 after 'save'  => sub { shift->logger->exiting(""); };

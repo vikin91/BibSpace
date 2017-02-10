@@ -25,6 +25,7 @@ use File::Spec;
 
 
 use BibSpace::Util::SmartArray;
+use BibSpace::Util::SmartHash;
 use BibSpace::Util::SimpleLogger;
 use BibSpace::Util::SmartUidProvider;
 
