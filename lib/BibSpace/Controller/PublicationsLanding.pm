@@ -279,82 +279,129 @@ sub num_pubs_filtering {
 ############################################################################################################
 ############################################################################################################
 
-sub landing_types_obj {    # TODO: clean this mess!
-
+sub get_papers_for_landing { 
     my $self        = shift;
-    my $bibtex_type = $self->param('bibtex_type') || undef;
-    my $entry_type  = $self->param('entry_type') || undef;
+    my $bibtex_type = $self->param('bibtex_type') // undef; # undef is default -> all types
+
+    return  Fget_publications_main_hashed_args(
+        $self,
+        {   bibtex_type => $bibtex_type,
+            entry_type  => 'paper',
+            visible     => 0,
+            hidden      => 0
+        }
+    );
+}
+############################################################################################################
+
+sub get_talks_for_landing { 
+    my $self        = shift;
+
+    return  Fget_publications_main_hashed_args(
+        $self,
+        {   bibtex_type => undef,
+            entry_type  => 'talk',
+            visible     => 0,
+            hidden      => 0
+        }
+    );
+
+}
+############################################################################################################
+
+sub landing_types_obj {  
+    my $self        = shift;
+    my $bibtex_type = $self->param('bibtex_type') // undef;
+    my $entry_type  = $self->param('entry_type') // undef;
 
     my @all_types
         = $self->app->repo->types_filter( sub { $_->onLanding == 1 } );
 
-    # key: bibtex_type
-    # value: description of type
-    my %hash_group_to_description = map { $_->our_type => $_->description }
-        grep { defined $_->description } @all_types;
-    $hash_group_to_description{'talk'} = "Talks";
-
-
-    # key: bibtex_type
-    # value: ref to array of entry objects
-    my %hash_group_to_entries;
+    # key: our bibtex type
+    # value: description of our bibtex type
+    my %hash_our_type_to_description = map { $_->our_type => $_->description } @all_types;
 
     
+    my @entries_to_show;
+    my @section_names = keys %hash_our_type_to_description;
 
+    ##########
+    # Step 1: define which sections to show on the landing list and get the entire papers set for this filtering query
+    ##########
+    if ( $bibtex_type ) { 
+        # user wants to filter on bibtex_type => user wants to show only papers
+        # we assume that talks do not have bibtex_type - they are special
 
-    my @keys = keys %hash_group_to_description;
-    if ( defined $bibtex_type ) {
-        @keys = ($bibtex_type);
+        @section_names = ($bibtex_type);
+        @entries_to_show = $self->get_papers_for_landing;
     }
-    elsif ( defined $entry_type ) {
-        @keys = ($entry_type);
+    elsif ( $entry_type and $entry_type eq 'talk') { 
+        # user wants to show only talks
 
+        # this needs to be added manually as talks are special
+        $hash_our_type_to_description{'talk'} = "Talks";    
+        @section_names = ('talk');
+        @entries_to_show = $self->get_talks_for_landing;
+    }
+    elsif ( $entry_type and $entry_type eq 'paper') { 
+        # user wants to show only papers
+
+        # this needs to be added manually as talks are special
+        @entries_to_show = $self->get_papers_for_landing;
+    }
+    else{  
+        # user wants to show everything = talks and papers
+
+        # this needs to be added manually as talks are special
+        $hash_our_type_to_description{'talk'} = "Talks";    
+        push @section_names, 'talk';
+        @entries_to_show = ($self->get_talks_for_landing, $self->get_papers_for_landing);   
     }
 
-    my @keys_with_papers;
-    foreach my $key ( sort reverse @keys ) {
-
-        my $bibtexType = undef;    # union of all bibtex types
-        my $entryType  = undef;    # union of both types papers+talks
-
-        if ( $key eq 'talk' ) {
-            $entryType  = 'talk';
-            $bibtexType = undef;
+    ##########
+    # Step 2: set default section descriptions if needed
+    ##########
+    # issue default description if there is no custom description in the system
+    foreach my $section_name ( sort reverse @section_names ) {
+        if ( !exists( $hash_our_type_to_description{ $section_name } ) ) {
+            $hash_our_type_to_description{ $section_name }
+                = get_generic_type_description( $section_name );
         }
-        elsif ( $key eq 'paper' ) {
-            $bibtexType = undef;
-            $entryType  = 'paper';
+    }
+
+
+    # key: our bibtex type
+    # value: ref to array of entry objects
+    my %hash_our_type_to_entries;
+
+    ##########
+    # Step 3: assign papers to given sections
+    ##########
+
+    my @sections_having_entries;
+    foreach my $section_name ( sort reverse @section_names ) {
+
+        # TODO: refactor into: get_entries_for_section
+        my @entries_in_section;
+        if ( $section_name eq 'talk' ) {
+            @entries_in_section = grep { $_->is_talk } @entries_to_show;
         }
         else {
-            $bibtexType = $key;
-            $entryType  = undef;
+            @entries_in_section = grep { $_->is_paper and $_->bibtex_type eq $section_name } @entries_to_show;
         }
 
+        $hash_our_type_to_entries{ $section_name } = \@entries_in_section;
 
-        my @paper_objs = Fget_publications_main_hashed_args(
-            $self,
-            {   bibtex_type => $bibtexType,
-                entry_type  => $entryType,
-                visible     => 0,
-                hidden      => 0
-            }
-        );
-
-        if ( scalar @paper_objs > 0 ) {
-            $hash_group_to_entries{$key} = \@paper_objs;
-            if ( !$hash_group_to_description{$key} ) {
-                $hash_group_to_description{$key}
-                    = get_generic_type_description($key);
-            }
-            push @keys_with_papers, $key;
+        if ( scalar(@entries_in_section) > 0 ) {
+            push @sections_having_entries, $section_name;
         }
     }
 
-    # hash_group_to_entries:  key_bibtex_type -> ref_arr_entry_objects
-    # hash_group_to_description:    key_bibtex_type -> description of the type
-    # keys_with_papers: non-empty -> key_bibtex_type
+    # hash_our_type_to_entries:  our bibtex type string -> ref_arr_entry_objects
+    # hash_our_type_to_description:    our bibtex type string -> our bibtex type description string 
+    # sections_having_entries: array of section names that have more than 0 entries
     return $self->display_landing(
-        \%hash_group_to_entries, \%hash_group_to_description, \@keys_with_papers,
+        \%hash_our_type_to_entries, \%hash_our_type_to_description, \@sections_having_entries,
         $self->get_switchlink('years'),
         $self->get_filtering_navbar()
     );
@@ -384,8 +431,8 @@ sub landing_years_obj {
         $max_year = $year;
     }
 
-    my %hash_group_to_description;
-    my %hash_group_to_entries;
+    my %hash_our_type_to_description;
+    my %hash_our_type_to_entries;
     my @allkeys = ( $min_year .. $max_year );
     @allkeys = reverse @allkeys;
 
@@ -405,24 +452,25 @@ sub landing_years_obj {
 
         # delete the year from the @keys array if the year has 0 papers
         if ( scalar @objs > 0 ) {
-            $hash_group_to_description{$yr}   = $yr;
-            $hash_group_to_entries{$yr} = \@objs;
+            $hash_our_type_to_description{$yr}   = $yr;
+            $hash_our_type_to_entries{$yr} = \@objs;
             push @keys, $yr;
         }
     }
 
     my $switchlink = $self->get_switchlink("types");
     my $navbar_html
-        = $self->get_filtering_navbar( \@keys, \%hash_group_to_description, 'years' );
+        = $self->get_filtering_navbar( \@keys, \%hash_our_type_to_description, 'years' );
 
-    return $self->display_landing( \%hash_group_to_entries, \%hash_group_to_description, \@keys,
+    return $self->display_landing( \%hash_our_type_to_entries, \%hash_our_type_to_description, \@keys,
         $switchlink, $navbar_html );
 }
 ############################################################################################################
 sub display_landing {
     my $self                      = shift;
-    my $hash_group_to_entries     = shift;
-    my $hash_group_to_description = shift;
+    my $hash_our_type_to_entries
+= shift;
+    my $hash_our_type_to_description = shift;
     my $keys_ref                  = shift;
     my $switchlink                = shift;
     my $navbar_html               = shift;
@@ -506,8 +554,9 @@ sub display_landing {
     # my @objs = @{ $hash_values{$year} };
     # foreach my $obj (@objs){
     $self->stash(
-        hash_group_to_entries     => $hash_group_to_entries,
-        hash_group_to_description => $hash_group_to_description,
+        hash_our_type_to_entries
+    => $hash_our_type_to_entries,
+        hash_our_type_to_description => $hash_our_type_to_description,
         keys                      => $keys_ref,
         navbar                    => $navbar_html,
         show_title                => $show_title,

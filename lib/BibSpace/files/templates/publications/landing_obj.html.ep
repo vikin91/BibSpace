@@ -28,17 +28,17 @@
 % my $j = 0;
 
 % foreach my $key ( @$keys ) {
-    % if( defined $key and defined $hash_group_to_description->{$key} ){
+    % if( defined $key and defined $hash_our_type_to_description->{$key} ){
 
-        % $size = scalar( @{ $hash_group_to_entries->{$key} } );
+        % $size = scalar( @{ $hash_our_type_to_entries->{$key} } );
         
         % if($size > 0){
 
-            <h1> <%= $hash_group_to_description->{$key} %> </h1>
+            <h1> <%= $hash_our_type_to_description->{$key} %> </h1>
             <table>
             % $i = 0;
             % $j = $size;
-            % my @objs = @{ $hash_group_to_entries->{$key} };
+            % my @objs = @{ $hash_our_type_to_entries->{$key} };
             % foreach my $obj (@objs){
                 % if (defined $obj) {
                     <tr valign="top">
