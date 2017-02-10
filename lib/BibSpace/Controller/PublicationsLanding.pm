@@ -571,7 +571,7 @@ sub get_entries_for_landing {
         $self,
         {   visible => 0,
             hidden  => 0,
-            debug   => 1,
+            debug   => 0,
 
             # the rest of parameters will be taken from $self
         }
