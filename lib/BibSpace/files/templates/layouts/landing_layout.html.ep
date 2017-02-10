@@ -1,0 +1,18 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <!--default-->
+  %= include 'landing_head'
+  <%= content_for 'landing_head' %>
+  
+
+  <body>
+
+  <%= content %>
+
+
+
+  
+  %= include 'global_footer'
+  </body>
+</html>

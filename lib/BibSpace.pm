@@ -929,17 +929,17 @@ sub setup_routes {
   ######## PublicationsLanding
 
   $anyone->get('/landing/publications')
-    ->to('PublicationsLanding#landing_types_obj')
+    ->to('PublicationsLanding#landing_types')
     ->name('landing_publications');
   $anyone->get('/l/p')
-    ->to('PublicationsLanding#landing_types_obj')
+    ->to('PublicationsLanding#landing_types')
     ->name('lp');
 
   $anyone->get('/landing-years/publications')
-    ->to('PublicationsLanding#landing_years_obj')
+    ->to('PublicationsLanding#landing_years')
     ->name('landing_years_publications');
   $anyone->get('/ly/p')
-    ->to('PublicationsLanding#landing_years_obj');    #ALIAS
+    ->to('PublicationsLanding#landing_years');    #ALIAS
 
   ########
 

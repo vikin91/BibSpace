@@ -47,7 +47,7 @@ has 'bibtexTypes' => (
 ####################################################################################
 sub toString {
     my $self = shift;
-    return "TypeMapping. our: ".$self->our_type." mapsto: [".join(',', $self->bibtexTypes_all)."]\n";
+    return "TypeMapping. our: ".$self->our_type." maps to bibtex: [".join(', ', $self->bibtexTypes_all)."]\n";
 }
 ####################################################################################
 sub equals {

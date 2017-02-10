@@ -1,0 +1,77 @@
+html, body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, pre, a, abbr, acronym, address, big, del, dfn, font, img, ins, kbd, q, s, samp, strike, tt, var, dl, dt, dd, ol, ul, li, table, caption, tbody, tfoot, thead, tr, th, td {
+      font-weight: normal;
+      font-family: Helvetica;
+  }
+
+  body {
+      background-color: #FFF;
+  }
+
+  .landing_selected{
+      background-color: #337ab7;
+      color: #FFF;
+  }
+
+  .landing_normal{
+      
+  }
+
+  .landing_no_papers{
+      color: #DDD;
+  }
+
+
+  .bibtexnumber, .bibtexitem{
+      padding-right: 5px;
+      font-size:1em;
+      font-family: Arial,"Lucida Grande","Lucida Sans",Verdana,Helvetica,sans-serif;
+      line-height:1.231em;
+      font-weight: normal;
+      font-size: 13px;
+      line-height: 16px;
+      color: #4d4d4d;
+      vertical-align: top;
+      text-align: justify;
+  }
+  h1 {
+      font-family: Arial,Helvetica,Verdana,sans-serif;
+      padding-bottom: 20px;
+      /*font-size: 1.692em;*/
+      font-size: 1.3em;
+      line-height: 1em;
+      max-width: 736px;
+      font-weight: bold;
+  }
+
+  a.abstract-a {
+      font-weight: normal;
+      font-family: Helvetica;
+      text-decoration:underline;
+      cursor: pointer; 
+      /*cursor: hand;*/
+      color: #00f;
+  }
+
+  .bibtexnumber a{
+      font-weight: normal;
+      font-family: Helvetica;
+      color:#000;
+  }
+
+  .bibtexnumber a:hover{
+      font-weight: normal;
+      font-family: Helvetica;
+      color:#00F;
+  }
+
+
+  pre {
+      font-weight: normal;
+      font-family: Helvetica;
+      font-size:0.8em;
+      white-space: -moz-pre-wrap; /* Mozilla, supported since 1999 */
+      white-space: -pre-wrap; /* Opera */
+      white-space: -o-pre-wrap; /* Opera */
+      white-space: pre-wrap; /* CSS3 - Text module (Candidate Recommendation) http://www.w3.org/TR/css3-text/#white-space */
+      word-wrap: break-word; /* IE 5.5+ */
+  }

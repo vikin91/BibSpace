@@ -210,8 +210,8 @@ sub Fget_publications_main_hashed_args {    #
         $args->{entry_type}  || $self->param('entry_type')  || undef,
         $args->{tag}         || $self->param('tag')         || undef,
         $args->{team}        || $self->param('team')        || undef,
-        $args->{visible}     || 0,
         $args->{permalink}   || $self->param('permalink')   || undef,
+        $args->{visible}     || 0,
         $args->{hidden},
         $args->{debug},
     );
@@ -226,11 +226,53 @@ sub Fget_publications_core {
     my $query_entry_type  = shift;
     my $query_tag         = shift;
     my $query_team        = shift;
-    my $query_visible     = shift // 0;  # value cannot be set by the end-user
     my $query_permalink   = shift;
-    my $query_hidden      = shift;       # value cannot be set by the end-user
-    my $debug             = shift // 0;  # value cannot be set by the end-user
+    #<<< no perltidy here
+    my $query_visible     = shift // 0;  # value can be set only from code (not from browser)
+    my $query_hidden      = shift;       # value can be set only from code (not from browser)
+    my $debug             = shift // 0;  # value can be set only from code (not from browser)
 
+    # catch bad urls like: ...&entry_type=&tag=&author=
+    $query_author      = undef if defined $query_author      and length( "".$query_author      ) < 1;
+    $query_year        = undef if defined $query_year        and length( "".$query_year        ) < 1;
+    $query_bibtex_type = undef if defined $query_bibtex_type and length( "".$query_bibtex_type ) < 1;
+    $query_entry_type  = undef if defined $query_entry_type  and length( "".$query_entry_type  ) < 1;
+    $query_tag         = undef if defined $query_tag         and length( "".$query_tag         ) < 1;
+    $query_team        = undef if defined $query_team        and length( "".$query_team        ) < 1;
+    $query_permalink   = undef if defined $query_permalink   and length( "".$query_permalink   ) < 1;
+    #>>>
+
+    if ( $debug == 1 ) {
+        $self->app->logger->debug( Dumper $self->req->params );
+
+        $self->app->logger->debug(
+            "Fget_publications_core Input author = '$query_author'")
+            if defined $query_author;
+        $self->app->logger->debug(
+            "Fget_publications_core Input year = '$query_year'")
+            if defined $query_year;
+        $self->app->logger->debug(
+            "Fget_publications_core Input bibtex_type = '$query_bibtex_type'")
+            if defined $query_bibtex_type;
+        $self->app->logger->debug(
+            "Fget_publications_core Input entry_type = '$query_entry_type'")
+            if defined $query_entry_type;
+        $self->app->logger->debug(
+            "Fget_publications_core Input tag = '$query_tag'")
+            if defined $query_tag;
+        $self->app->logger->debug(
+            "Fget_publications_core Input team = '$query_team'")
+            if defined $query_team;
+        $self->app->logger->debug(
+            "Fget_publications_core Input visible = '$query_visible'")
+            if defined $query_visible;
+        $self->app->logger->debug(
+            "Fget_publications_core Input permalink = '$query_permalink'")
+            if defined $query_permalink;
+        $self->app->logger->debug(
+            "Fget_publications_core Input hidden = '$query_hidden'")
+            if defined $query_hidden;
+    }
 
     my $team_obj;
     if ( defined $query_team ) {
@@ -267,7 +309,7 @@ sub Fget_publications_core {
         }
     }
     my $tag_obj_perm;
-    if ( defined $query_permalink ) {
+    if ( $query_permalink ) {
         $tag_obj_perm = $self->app->repo->tags_find(
             sub { $_->permalink eq $query_permalink } );
         if ( !$tag_obj_perm ) {
@@ -275,7 +317,7 @@ sub Fget_publications_core {
         }
     }
 
-# $self->app->logger->debug("==== START new Filtering ====", "Fget_publications_core" );
+    ## $self->app->logger->debug("==== START new Filtering ====", "Fget_publications_core" );
 
 
     my @entries = $self->app->repo->entries_all;
@@ -283,8 +325,8 @@ sub Fget_publications_core {
     ###### filtering
 
 
-# WARNING: this overwrites all entries - this filtering must be done as first!
-    if ($query_author) {
+    ## WARNING: this overwrites all entries - this filtering must be done as first!
+    if ( defined $query_author ) {
         if ($author_obj) {
             @entries = $author_obj->get_entries;
         }
@@ -351,6 +393,11 @@ sub Fget_publications_core {
     }
 
     @entries = sort_publications(@entries);
+
+    if ( $debug == 1 ) {
+        $self->app->logger->debug(
+            "Fget_publications_core Found '" . scalar(@entries) . "' entries" );
+    }
 
     return @entries;
 }

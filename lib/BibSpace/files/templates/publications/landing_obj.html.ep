@@ -1,24 +1,16 @@
-% layout 'landing';
-
-
-
-
-
+% layout 'landing_layout';
 
 
 % if(defined $title and defined $show_title and $show_title==1){
     <H1><%= $title %></H1>
 % }
 
-% if(defined $switch_link and $switch_link ne ""){
+% if(defined $switch_link and $switch_link ne "" and $switch_link ne "0"){
   %== $switch_link
-  <br/>
 % }
 
-% if(defined $navbar and $navbar ne ""){
+% if(defined $navbar and $navbar ne "" and $navbar ne "0"){
   %== $navbar
-  <br/>
-  <br/>
 % }
 
 
@@ -27,31 +19,28 @@
 % my $i = 0;
 % my $j = 0;
 
-% foreach my $key ( @$keys ) {
-    % if( defined $key and defined $hash_our_type_to_description->{$key} ){
+% foreach my $section_name ( @$ordered_section_names ){
 
-        % $size = scalar( @{ $hash_our_type_to_entries->{$key} } );
-        
-        % if($size > 0){
+    % my $our_type = $section_name;
+    % my $entries_arr_ref =  $hash_our_type_to_entries->{ $our_type };
+    % my $section_description = $hash_our_type_to_description->{ $our_type };
 
-            <h1> <%= $hash_our_type_to_description->{$key} %> </h1>
-            <table>
-            % $i = 0;
-            % $j = $size;
-            % my @objs = @{ $hash_our_type_to_entries->{$key} };
-            % foreach my $obj (@objs){
-                % if (defined $obj) {
-                    <tr valign="top">
-                        <td align="right" class="bibtexnumber">[<%= $j %>]</td>
-                        <td class="bibtexitem">
-                            %== $obj->{html} || "no html"
-                        </td>
-                    </tr>
-                    % $i++;
-                    % $j--;
-                %}
-            %}
-            </table> 
-        % }
+    % $size = scalar( @$entries_arr_ref );
+    % if($size > 0){
+        <h1> <%= $section_description %> </h1>
+        <table>
+        % $i = 0;
+        % $j = $size;
+        % foreach my $obj ( @$entries_arr_ref ){
+            <tr valign="top">
+                <td align="right" class="bibtexnumber">[<%= $j %>]</td>
+                <td class="bibtexitem">
+                    %== $obj->{ html } || "no html"
+                </td>
+            </tr>
+            % $i++;
+            % $j--;
+        %}
+        </table> 
     % }
 %}

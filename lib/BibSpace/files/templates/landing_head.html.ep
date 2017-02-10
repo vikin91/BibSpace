@@ -1,0 +1,19 @@
+<head>
+    <!-- this is head -->    
+    <meta name="comment" content="head"/>
+    <meta name="comment" content="mode <%= app->mode %>"/>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+
+    
+  
+    %= stylesheet '/bootstrap_min.css', type=> "text/css"
+    %= stylesheet '/styles.css', type=> "text/css"
+    %= stylesheet '/landing_styles.css', type=> "text/css"
+
+  <script type="text/javascript">
+         function showAbstract(divid) {
+            $('div#'+divid).toggle(); 
+         };
+  </script>
+
+</head>

@@ -174,12 +174,21 @@ sub register {
   $app->helper(
     get_year_of_oldest_entry => sub {
       my $self = shift;
+      my $author = shift;
 
-      my @entryYears = map { $_->year } grep { defined $_->year } $self->app->repo->entries_all;
+      my @entries = $self->app->repo->entries_all;
+
+      if(defined $author){
+
+        my $author_obj = $self->app->repo->authors_find( sub {$_->get_master->uid eq $author} );
+        $author_obj ||= $self->app->repo->authors_find( sub {$_->get_master->id eq $author} );
+        @entries = $author_obj->get_entries;
+      }
+
+      my @entryYears = map { $_->year } grep { defined $_->year } @entries;
       @entryYears = uniq @entryYears;
       @entryYears = sort { $a <=> $b } @entryYears;
       return $entryYears[0];
-
     }
   );
 
@@ -287,7 +296,7 @@ sub register {
   $app->helper(
     num_tags => sub {
       my $self = shift;
-      my $type = shift || 1;
+      my $type = shift // 1;
       return scalar $self->app->repo->tags_filter( sub { $_->type == $type } );
     }
   );
