@@ -112,34 +112,38 @@ sub Fhandle_add_edit_publication {
     # Fhandle_preview
     # Fhandle_preview
 
-    my $e;
-
-    say "Fhandle_add_edit_publication: id $id";
+    my $new_entry;
 
     if ( $id > 0 ) {
-        $e = $repo->entries_find( sub { $_->id == $id } );
+        $new_entry = $repo->entries_find( sub { $_->id == $id } );
     }
-    if ( !$e ) {
-        $e = $app->entityFactory->new_Entry( id => $id, bib => $new_bib );
+    if ( !$new_entry ) {
+        if($id>0){
+            $new_entry = $app->entityFactory->new_Entry( id => $id, bib => $new_bib );    
+        }
+        else{
+            $new_entry = $app->entityFactory->new_Entry( bib => $new_bib );
+        }
+        
     }
-    $e->bib($new_bib);
+    $new_entry->bib($new_bib);
 
 
-    my $bibtex_code_valid = $e->populate_from_bib();
+    my $bibtex_code_valid = $new_entry->populate_from_bib();
 
     # We check Bibtex errors for all requests
     if ( !$bibtex_code_valid ) {
         $status_code_str = 'ERR_BIBTEX';
-        return ( $e, $status_code_str, -1, -1 );
+        return ( $new_entry, $status_code_str, -1, -1 );
     }
 
-    my $tmp_e = $repo->entries_find(
-        sub { ( $_->bibtex_key cmp $e->bibtex_key ) == 0 } );
+    my $conflicting_entry = $repo->entries_find(
+        sub { $_->bibtex_key eq $new_entry->bibtex_key } );
 
-   # grep { $_->{bibtex_key} eq $e->{bibtex_key} } MEntry->static_all( $dbh );
-    $existing_id = $tmp_e->{id} if defined $tmp_e;
+   # grep { $_->{bibtex_key} eq $new_entry->{bibtex_key} } MEntry->static_all( $dbh );
+    $existing_id = $conflicting_entry->id if defined $conflicting_entry;
 
-    if ( $id > 0 and $existing_id == $e->{id} )
+    if ( $id > 0 and $existing_id == $new_entry->id )
     {    # editing mode, key ok, the user will update entry but not the key
         $status_code_str = 'KEY_OK';
     }
@@ -152,14 +156,14 @@ sub Fhandle_add_edit_publication {
     }
     else {
         $status_code_str = 'KEY_TAKEN';
-        $e->generate_html( $bst_file, $app->bibtexConverter );
-        return ( $e, $status_code_str, $existing_id, -1 );
+        $new_entry->generate_html( $bst_file, $app->bibtexConverter );
+        return ( $new_entry, $status_code_str, $existing_id, -1 );
     }
     if ( $action eq 'check_key' or $action eq 'preview' )
     {    # user wanted only to check key - we give him the preview as well
-        $e->generate_html( $bst_file, $app->bibtexConverter );
-        $e->populate_from_bib();
-        return ( $e, $status_code_str, $existing_id, -1 );
+        $new_entry->generate_html( $bst_file, $app->bibtexConverter );
+        $new_entry->populate_from_bib();
+        return ( $new_entry, $status_code_str, $existing_id, -1 );
     }
 
     if ( $action eq 'save' ) {
@@ -169,18 +173,18 @@ sub Fhandle_add_edit_publication {
         else {              #adding
             $status_code_str = 'ADD_OK';
         }
-        $e->generate_html( $bst_file, $app->bibtexConverter );
-        $e->fix_month();
-        Freassign_authors_to_entries_given_by_array( $app, 1, [$e] );
-        $repo->entries_save($e);
+        $new_entry->generate_html( $bst_file, $app->bibtexConverter );
+        $new_entry->fix_month();
+        Freassign_authors_to_entries_given_by_array( $app, 1, [$new_entry] );
+        $repo->entries_save($new_entry);
 
-        $added_under_id = $e->id;
+        $added_under_id = $new_entry->id;
     }
     else {
         warn
             "Fhandle_add_edit_publication_repo action $action does not match the known actions: save, preview, check_key.";
     }    # action save
-    return ( $e, $status_code_str, $existing_id, $added_under_id );
+    return ( $new_entry, $status_code_str, $existing_id, $added_under_id );
 }
 
 ####################################################################################

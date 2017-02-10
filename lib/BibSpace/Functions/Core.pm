@@ -233,18 +233,17 @@ sub split_bibtex_entries {
     my $input = shift;
 
     my @bibtex_codes = ();
+    $input =~ s/^\s*$//g;
     $input =~ s/^\s+|\s+$//g;
-    $input =~ s/^\t//g;
+    $input =~ s/^\t+//g;
+    
 
     for my $b_code ( split /@/, $input ) {
-        next unless length($b_code) > 10;
-        my $entry_code = "@" . $b_code;
-
-        my $entry = new Text::BibTeX::Entry;
-        $entry->parse_s($entry_code);
-        if ( $entry->parse_ok ) {
-            push @bibtex_codes, $entry_code;
-        }
+        # skip bad splitting :P
+        next if length($b_code) < 10;
+        my $entry_code = "@".$b_code;
+        
+        push @bibtex_codes, $entry_code;
     }
 
     return @bibtex_codes;

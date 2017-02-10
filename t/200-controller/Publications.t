@@ -188,6 +188,11 @@ my @pages = (
   $self->url_for('get_untagged_publications_for_author', tagtype=>1, author=>$author->id),
   $self->url_for('get_untagged_publications_for_author', tagtype=>1, author=>'NotExistingAuthor'),
 
+  $self->url_for('discover_attachments', id=>$entry->id),
+  $self->url_for('discover_attachments', id=>0),
+  
+  
+
   "/publications/orphaned",
   "/publications/missing_month",
   "/publications/candidates_to_delete",
