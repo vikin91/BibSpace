@@ -382,18 +382,23 @@ sub login {
         return;
     }
 
-    # get the user with login
-    my $user
-        = $self->app->repo->users_find( sub { $_->login eq $input_login } );
-        
     $self->app->logger->info("Trying to login as user '$input_login'");
+
+    # get the user with login
+    my $user = $self->app->repo->users_find( 
+                sub { $_->login eq $input_login } 
+    );
+       
+    
 
     
 
     
     if ( defined $user ){
+        $self->app->logger->info("User '$input_login' exists.");
+
         my $auth_result = $user->authenticate($input_pass);
-        
+
         if( $auth_result and $auth_result == 1 ) {
             $self->session( user      => $user->login );
             $self->session( user_name => $user->real_name );
@@ -405,6 +410,7 @@ sub login {
         }
     }
     else {
+        $self->app->logger->info("User '$input_login' does not exist.");
         $self->app->logger->info(
             "Wrong user name or password for '$input_login'.");
         $self->flash(

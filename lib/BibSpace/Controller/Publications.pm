@@ -633,7 +633,7 @@ sub add_pdf {
 ####################################################################################
 sub add_pdf_post {
     my $self          = shift;
-    my $id            = $self->param('id') // "unknown";
+    my $id            = $self->param('id');
     my $filetype      = $self->param('filetype');
     my $uploaded_file = $self->param('uploaded_file');
 
@@ -736,20 +736,7 @@ sub add_pdf_post {
         $entry->add_bibtex_field( 'slides', "$file_url" );
     }
     else {
-        $entry->delete_attachment('unknown');
-        $destination
-            = $uploads_directory->path( "unknown", "unknown-$id.$extension" );
-        $uploaded_file->move_to($destination);
-        $self->app->logger->debug(
-            "Attachments file has been moved to: $destination.");
-
-        $entry->add_attachment( 'unknown', $destination );
-        $file_url = $self->url_for(
-            'download_publication',
-            filetype => "unknown",
-            id       => $entry->id
-        )->to_abs;
-        $entry->add_bibtex_field( 'pdf2', "$file_url" );
+        # ignore - we support only pdf and slides so far
     }
 
     $self->app->logger->info(
@@ -901,7 +888,7 @@ sub delete_sure {
 
     $entry->delete_all_attachments;
     my @entry_authorships = $entry->authorships_all;
-    my @entry_labelings = $entry->labellings_all;
+    my @entry_labelings = $entry->labelings_all;
     my @entry_exceptions = $entry->exceptions_all;
     $self->app->repo->authorships_delete(@entry_authorships);
     $self->app->repo->labelings_delete(@entry_labelings);
@@ -1018,19 +1005,15 @@ sub add_tag {
     my $tag   = $self->app->repo->tags_find( sub    { $_->id == $tag_id } );
 
     if ( defined $entry and defined $tag ) {
-        say "add_tag debug 1";
         my $label = Labeling->new(
             entry    => $entry,
             tag      => $tag,
             entry_id => $entry->id,
             tag_id   => $tag->id
         );
-        say "add_tag debug 2";
         ## you should always execute all those three commands together - smells like command pattern...
         $self->app->repo->labelings_save($label);
-        say "add_tag debug 3";
         $entry->add_labeling($label);
-        say "add_tag debug 4";
         $tag->add_labeling($label);
     }
     else {
@@ -1039,7 +1022,6 @@ sub add_tag {
             "Cannot add tag $tag_id to entry ID $entry_id - reason: tag or entry not found. "
         );
     }
-    say "add_tag debug 5";
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################

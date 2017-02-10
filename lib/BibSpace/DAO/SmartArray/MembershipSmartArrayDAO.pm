@@ -39,7 +39,7 @@ after 'count'  => sub { shift->logger->exiting(""); };
 =cut 
 sub empty {
   my ($self) = @_;
-  return $self->count == 0;
+  return $self->handle->empty("Membership");
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -50,10 +50,7 @@ after 'empty'  => sub { shift->logger->exiting(""); };
 =cut 
 sub exists {
   my ($self, $object) = @_;
-  my @all = $self->handle->all("Membership");
-  return if $self->empty;
-  my $matching = first {$_->equals($object)} @all; 
-  return defined $matching;
+  $self->handle->exists($object);
 }
 before 'exists' => sub { shift->logger->entering(""); };
 after 'exists'  => sub { shift->logger->exiting(""); };
@@ -85,9 +82,7 @@ after 'update'  => sub { shift->logger->exiting(""); };
 =cut 
 sub delete {
   my ($self, @objects) = @_;
-  my %toDelete = map {$_->id => 1} @objects;
-  my @diff = grep {not $toDelete{$_} } $self->all;
-  $self->handle->data->{'Membership'} = \@diff;
+  $self->handle->delete(@objects);
 }
 before 'delete' => sub { shift->logger->entering(""); };
 after 'delete'  => sub { shift->logger->exiting(""); };

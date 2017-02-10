@@ -33,7 +33,7 @@ after 'all'  => sub { shift->logger->exiting(""); };
 =cut 
 sub count {
   my ($self) = @_;
-  return scalar $self->handle->all("Entry");
+  return $self->handle->count("Entry");
 }
 before 'count' => sub { shift->logger->entering(""); };
 after 'count'  => sub { shift->logger->exiting(""); };
@@ -43,9 +43,7 @@ after 'count'  => sub { shift->logger->exiting(""); };
 =cut 
 sub empty {
   my ($self) = @_;
-
-  return scalar($self->handle->all("Entry"))==0;
-
+  return $self->handle->empty("Entry");
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -56,10 +54,7 @@ after 'empty'  => sub { shift->logger->exiting(""); };
 =cut 
 sub exists {
   my ($self, $object) = @_;
-  
-  my $matching = first {$_->equals($object)} $self->handle->all("Entry");
-  return defined $matching;
-
+  $self->handle->exists($object);
 }
 before 'exists' => sub { shift->logger->entering(""); };
 after 'exists'  => sub { shift->logger->exiting(""); };
@@ -90,9 +85,7 @@ after 'update'  => sub { shift->logger->exiting(""); };
 =cut 
 sub delete {
   my ($self, @objects) = @_;
-  my %toDelete = map {$_ => 1} @objects;
-  my @diff = grep {not $toDelete{$_} } $self->all;
-  $self->handle->data->{'Entry'} = \@diff;
+  $self->handle->delete(@objects);
 }
 before 'delete' => sub { shift->logger->entering(""); };
 after 'delete'  => sub { shift->logger->exiting(""); };

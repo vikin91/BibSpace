@@ -43,10 +43,7 @@ after 'count'  => sub { shift->logger->exiting(""); };
 =cut 
 sub empty {
   my ($self) = @_;
-
-  die "".(caller(0))[3]." not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  return $self->handle->empty("Exception");
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -57,10 +54,7 @@ after 'empty'  => sub { shift->logger->exiting(""); };
 =cut 
 sub exists {
   my ($self, $object) = @_;
-  
-  die "".(caller(0))[3]." not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  $self->handle->exists($object);
 }
 before 'exists' => sub { shift->logger->entering(""); };
 after 'exists'  => sub { shift->logger->exiting(""); };

@@ -29,7 +29,7 @@ after 'all'  => sub { shift->logger->exiting(""); };
 =cut 
 sub count {
   my ($self) = @_;
-  return scalar $self->handle->all("Type");
+  return $self->handle->count("Type");
 }
 before 'count' => sub { shift->logger->entering(""); };
 after 'count'  => sub { shift->logger->exiting(""); };
@@ -39,7 +39,7 @@ after 'count'  => sub { shift->logger->exiting(""); };
 =cut 
 sub empty {
   my ($self) = @_;
-  return scalar $self->handle->all("Type") == 0;
+  return $self->handle->empty("Type");
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -50,10 +50,7 @@ after 'empty'  => sub { shift->logger->exiting(""); };
 =cut 
 sub exists {
   my ($self, $object) = @_;
-  
-  die "".(caller(0))[3]." not implemented.";
-  # TODO: auto-generated method stub. Implement me!
-
+  $self->handle->exists($object);
 }
 before 'exists' => sub { shift->logger->entering(""); };
 after 'exists'  => sub { shift->logger->exiting(""); };
@@ -84,9 +81,7 @@ after 'update'  => sub { shift->logger->exiting(""); };
 =cut 
 sub delete {
   my ($self, @objects) = @_;
-  my %toDelete = map {$_ => 1} @objects;
-  my @diff = grep {not $toDelete{$_} } $self->all;
-  $self->handle->data->{'Type'} = \@diff;
+  $self->handle->delete(@objects);
 }
 before 'delete' => sub { shift->logger->entering(""); };
 after 'delete'  => sub { shift->logger->exiting(""); };

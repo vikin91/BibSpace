@@ -140,7 +140,7 @@ sub filter {
     my ($self, $type, $coderef) = @_;
     # $self->logger->warn("Calling ".(caller(0))[3]." with param $type");
     return () if $self->empty($type);
-    return grep \&{$coderef}, $self->all($type); 
+    return grep &{$coderef}, $self->all($type); 
 }
 before 'filter' => sub { shift->logger->entering(""); };
 after 'filter'  => sub { shift->logger->exiting(""); };

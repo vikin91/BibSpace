@@ -234,15 +234,15 @@ sub discover_attachments {
     $self->add_attachment( 'slides',  $_ ) for @discovery_slides;
 
 
-    my @discovery_other;
-    try {
-        my $dir_path = Path::Tiny->new( $upload_dir, "unknown" );
-        @discovery_other = $dir_path->children(qr/unknown-$id\./);
-    }
-    catch {
-        warn $_;
-    };
-    $self->add_attachment( 'unknown', $_ ) for @discovery_other;
+    # my @discovery_other;
+    # try {
+    #     my $dir_path = Path::Tiny->new( $upload_dir, "unknown" );
+    #     @discovery_other = $dir_path->children(qr/unknown-$id\./);
+    # }
+    # catch {
+    #     warn $_;
+    # };
+    # $self->add_attachment( 'unknown', $_ ) for @discovery_other;
 }
 ####################################################################################
 

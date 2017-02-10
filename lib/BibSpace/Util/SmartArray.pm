@@ -134,7 +134,7 @@ sub empty {
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
 
-## this is mega slow!!!
+## this is mega slow for relations!!!
 sub exists { 
     my ($self, $object) = @_;
     my $type = ref($object);
@@ -147,7 +147,7 @@ after 'exists'  => sub { shift->logger->exiting(""); };
 
 sub update { 
     my ($self, @objects) = @_;
-    # should happen automatically beacuser array keeps references to objects
+    # should happen automatically beacuse array keeps references to objects
 }
 before 'update' => sub { shift->logger->entering(""); };
 after 'update'  => sub { shift->logger->exiting(""); };

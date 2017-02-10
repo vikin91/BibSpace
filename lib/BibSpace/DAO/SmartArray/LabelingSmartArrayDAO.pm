@@ -44,7 +44,7 @@ after 'count'  => sub { shift->logger->exiting(""); };
 =cut 
 sub empty {
   my ($self) = @_;
-  return $self->handle->count("Labeling") == 0;
+  return $self->handle->empty("Labeling");
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -55,10 +55,7 @@ after 'empty'  => sub { shift->logger->exiting(""); };
 =cut 
 sub exists {
   my ($self, $object) = @_;
-  my @all = $self->handle->all("Labeling");
-  return if $self->empty;
-  my $matching = first {$_->equals($object)} @all; 
-  return defined $matching;
+  $self->handle->exists($object);
 }
 before 'exists' => sub { shift->logger->entering(""); };
 after 'exists'  => sub { shift->logger->exiting(""); };
