@@ -41,13 +41,25 @@ subtest 'backup_do' => sub {
     $t_logged_in->put_ok($page)->status_isnt( 404, "Checking: 404 $page" )
         ->status_isnt( 500, "Checking: 500 $page" );
 };
+####################################################################
+subtest 'backup_do_mysql' => sub {
+    $page = $t_logged_in->app->url_for('backup_do_mysql');
+    $t_logged_in->put_ok($page)->status_isnt( 404, "Checking: 404 $page" )
+        ->status_isnt( 500, "Checking: 500 $page" );
+};
 
+####################################################################
 my $backup = do_storable_backup($self->app);
 ok( $backup , "found a backup");
 $backup_id = $backup->id;
 
-my @backups = read_backups($self->app->backup_dir);
-ok( scalar(@backups) > 0 , "found some backups in ".$self->app->backup_dir);
+
+####################################################################
+subtest 'backup_do_mysql' => sub {
+    my @backups = read_backups($self->app->backup_dir);
+    ok( scalar(@backups) > 0 , "found some backups in ".$self->app->backup_dir);
+};
+
 
 ####################################################################
 subtest 'backup_index again' => sub {
@@ -58,9 +70,16 @@ subtest 'backup_index again' => sub {
 ####################################################################
 subtest 'backup_download' => sub {
 
-$page = $t_logged_in->app->url_for( 'backup_download', id => $backup_id );
-$t_logged_in->get_ok($page)->status_isnt( 404, "Checking: 404 $page" )
-    ->status_isnt( 500, "Checking: 500 $page" );
+    $page = $t_logged_in->app->url_for( 'backup_download', id => $backup_id );
+    $t_logged_in->get_ok($page)
+        ->status_isnt( 404, "Checking: 404 $page" )
+        ->status_isnt( 500, "Checking: 500 $page" );
+
+    $page = $t_logged_in->app->url_for( 'backup_download', id => "xxx" );
+    $t_logged_in->get_ok($page)
+        ->status_isnt( 404, "Checking: 404 $page" )
+        ->status_isnt( 500, "Checking: 500 $page" );
+    # this should give status 200 but a message that backup does not exist or is not healthy
 };
 
 ####################################################################
@@ -90,14 +109,30 @@ subtest 'backup_cleanup' => sub {
         ->status_isnt( 500, "Checking: 500 $page" );
 };
 
-# cleanup
-@backups = read_backups($self->app->backup_dir);
 
-foreach my $back (@backups){
-    my $page = $t_logged_in->app->url_for( 'backup_delete', id => $back->uuid );
-    $t_logged_in->delete_ok($page)->status_isnt( 404, "Checking: 404 $page" )
+####################################################################
+subtest 'backup_restore' => sub {
+    my @backups = read_backups($self->app->backup_dir);
+    my $backup = $backups[0];
+
+    $page = $t_logged_in->app->url_for('backup_restore', id => $backup->uuid );
+    $t_logged_in->put_ok($page)
+        ->status_isnt( 404, "Checking: 404 $page" )
         ->status_isnt( 500, "Checking: 500 $page" );
-}
+};
+
+
+####################################################################
+subtest 'backup_delete to clean' => sub {
+# cleanup
+    my @backups = read_backups($self->app->backup_dir);
+
+    foreach my $back (@backups){
+        my $page = $t_logged_in->app->url_for( 'backup_delete', id => $back->uuid );
+        $t_logged_in->delete_ok($page)->status_isnt( 404, "Checking: 404 $page" )
+            ->status_isnt( 500, "Checking: 500 $page" );
+    }
+};
 
 ok(1);
 done_testing();

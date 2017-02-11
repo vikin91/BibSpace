@@ -578,18 +578,21 @@ sub setup_routes {
         ->to('publications#regenerate_html_for_all');
 
 
-    $manager_user->get('/backups')->to('backup#index')->name('backup_index');
-    $manager_user->put('/backups')->to('backup#save')->name('backup_do');
-    $manager_user->put('/backups/mysql')->to('backup#save_mysql')
-        ->name('backup_do_mysql');
-    $admin_user->get('/backups/:id')->to('backup#backup_download')
-        ->name('backup_download');
-    $admin_user->delete('/backups/:id')->to('backup#delete_backup')
-        ->name('backup_delete');
-    $admin_user->put('/backups/:id')->to('backup#restore_backup')
-        ->name('backup_restore');
-    $admin_user->delete('/backups')->to('backup#cleanup')
-        ->name('backup_cleanup');
+    $manager_user->get('/backups')
+        ->to('backup#index')->name('backup_index');
+    $manager_user->put('/backups')
+        ->to('backup#save')->name('backup_do');
+    $manager_user->put('/backups/mysql')
+        ->to('backup#save_mysql')->name('backup_do_mysql');
+    $manager_user->get('/backups/:id')
+        ->to('backup#backup_download')->name('backup_download');
+
+    $admin_user->delete('/backups/:id')
+        ->to('backup#delete_backup')->name('backup_delete');
+    $admin_user->put('/backups/:id')
+        ->to('backup#restore_backup')->name('backup_restore');
+    $admin_user->delete('/backups')
+        ->to('backup#cleanup')->name('backup_cleanup');
 
 
     ################ TYPES ################

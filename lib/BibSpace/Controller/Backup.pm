@@ -157,7 +157,6 @@ sub delete_backup {
 ####################################################################################
 sub restore_backup {
     my $self = shift;
-    my $dbh  = $self->app->db;
     my $uuid = $self->param('id');
 
 

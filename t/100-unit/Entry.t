@@ -21,7 +21,7 @@ my @all_entries = $repo->entries_all;
 
 my $limit_test_entries = 20;
 
-note "============ Testing ".scalar(@all_entries)." entries ============";
+note "============ Testing ".scalar(@all_entries)." Entries ============";
 
 foreach my $entry(@all_entries){
   last if $limit_test_entries < 0;

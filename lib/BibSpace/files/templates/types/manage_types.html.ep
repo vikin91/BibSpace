@@ -35,7 +35,9 @@
                     <span type="button" class="btn btn-default">
                         <span class="glyphicon glyphicon-book"></span> <%= $a_type_str %>
                     </span>
-                    <a class="btn btn-default" href="<%= url_for('unmap_bibtex_type', our_type=>$type->our_type, bibtex_type=>$a_type_str)%>"><span class="glyphicon glyphicon-remove" style="color: red;"></span></a>
+                    <a class="btn btn-default" href="<%= url_for('unmap_bibtex_type', our_type=>$type->our_type, bibtex_type=>$a_type_str)%>">
+                        <span class="glyphicon glyphicon-remove" style="color: red;"></span>
+                    </a>
                 </div>
             % }
         </div>
@@ -54,7 +56,9 @@
                     <button type="button" class="btn btn-default btn-sm">
                         <span class="glyphicon glyphicon-book" style="color: #5CB85C;"></span> <%= $b_type %>
                     </button>
-                    <a class="btn btn-default btn-sm" href="<%= url_for('typesour_typemapbibtex_type', our_type=>$type->our_type, bibtex_type=>$b_type)%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span></a>
+                    <a class="btn btn-default btn-sm" href="<%= url_for('typesour_typemapbibtex_type', our_type=>$type->our_type, bibtex_type=>$b_type)%>">
+                        <span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span>
+                    </a>
                 </div>
             % }
         </div>

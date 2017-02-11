@@ -18,13 +18,14 @@ my $author2 = ($repo->authors_all)[1];
 my $entry = ($repo->entries_all)[0];
 
 
-my $limit_test_teams = 20;
+my $limit_num_tests = 20;
 
-note "============ Testing ".scalar(@all_teams)." entries ============";
+note "============ Testing ".scalar(@all_teams)." Teams ============";
 
-foreach my $team (@all_teams){
-  last if $limit_test_teams < 0;
-  note ">> Testing Team ID ".$team->id.".";
+foreach my $team (@all_teams) {
+  last if $limit_num_tests < 0;
+
+  note "============ Testing Team ID ".$team->id.".";
 
   ok( $team->toString , "toString");
 
@@ -107,7 +108,7 @@ foreach my $team (@all_teams){
   }
   
 
-
+  $limit_num_tests--;
 }
 
 ok(1);

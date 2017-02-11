@@ -124,17 +124,17 @@ sub is_admin {
 ####################################################################################
 sub make_admin {
     my $self = shift;
-    $self->rank(User->admin_rank);
+    return $self->rank(User->admin_rank);
 }
 ####################################################################################
 sub make_manager {
     my $self = shift;
-    $self->rank(User->manager_rank);
+    return $self->rank(User->manager_rank);
 }
 ####################################################################################
 sub make_user {
     my $self = shift;
-    $self->rank(0);
+    return 0 == $self->rank(User->user_rank);
 }
 ####################################################################################
 sub record_logging_in {

@@ -47,7 +47,7 @@ has 'bibtexTypes' => (
 ####################################################################################
 sub toString {
     my $self = shift;
-    return "TypeMapping. our: ".$self->our_type." maps to bibtex: [".join(', ', $self->bibtexTypes_all)."]\n";
+    return "Type: '".$self->our_type."' maps to ".$self->bibtexTypes_count." bibtex types: [".join(', ', $self->bibtexTypes_all)."]\n";
 }
 ####################################################################################
 sub equals {
@@ -66,16 +66,23 @@ sub get_first_bibtex_type {
     my $self = shift;
     my @all = $self->bibtexTypes_all;
     if ($self->num_bibtex_types > 0){
-        return shift @all;
+        return $all[0];
+    }
+    return;
+}
+####################################################################################
+sub is_original_bibtex_type {
+    my $self = shift;
+    if( $self->num_bibtex_types == 1 and $self->our_type eq $self->get_first_bibtex_type ){
+        return 1;
     }
     return;
 }
 ####################################################################################
 sub can_be_deleted {
     my $self = shift;
-    if( $self->num_bibtex_types == 1 and $self->our_type eq $self->get_first_bibtex_type ){
-        return;
-    }
+    return if $self->num_bibtex_types > 1;
+    return if $self->is_original_bibtex_type;
     return 1;
 }
 

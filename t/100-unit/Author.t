@@ -47,7 +47,7 @@ subtest 'Alone author functions' => sub {
   is($other_author->can_be_deleted, 1, "can_be_deleted");
 };
 
-note "============ Testing ".scalar(@all_authors)." authors ============";
+note "============ Testing ".scalar(@all_authors)." Authors ============";
 
 foreach my $author (@all_authors){
   last if $limit_test_objects < 0;
