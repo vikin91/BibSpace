@@ -22,7 +22,7 @@ before_install:
 - perl -V
 - pwd
 - tree
-- export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
+- export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=0
 before_script:
 - mysql --version
 - mysql -u root -e "SELECT VERSION();"
@@ -42,6 +42,6 @@ script:
 - export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
 - export BIBSPACE_USE_DUMP=1
 # - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine bin/bibspace test
-- PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr
+- PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrv
 after_success:
 - cover -report coveralls

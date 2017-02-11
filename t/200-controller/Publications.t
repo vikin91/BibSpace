@@ -112,7 +112,13 @@ $admin_user->post_ok(
     "Upload simple file OK"
 );
 
-ok( -e "public/uploads/papers/paper-".$entry->id.".pdf", "uploaded file exists");
+ok( -e "public/uploads/papers/paper-".$entry->id.".pdf", "uploaded simple file exists");
+
+`ls -l public`;
+`ls -l public/uploads`;
+`ls -l public/uploads/papers`;
+
+`tree`;
 
 $page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
 $admin_user->get_ok($page, "Download simple file OK: $page")
