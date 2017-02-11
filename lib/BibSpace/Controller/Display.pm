@@ -11,10 +11,11 @@ use List::Util qw(first);
 
 use Data::Dumper;
 
-
+use Mojo::JSON qw(decode_json encode_json);
 use Mojo::Base 'Mojolicious::Controller';
 use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::Core;
+use BibSpace::Util::Statistics;
 
 #################################################################################
 sub index {
@@ -71,7 +72,6 @@ sub show_log {
   my $num  = $self->param('num') // 100;
   my $type = $self->param('type') // 'general';    # default
   my $filter = $self->param('filter');
-  my $use_ajax = $self->param('ajax');
 
 
   my @lines;
@@ -84,26 +84,41 @@ sub show_log {
   };
 
   my @file_list = Path::Tiny->new( $self->app->config->{log_dir} )->children(qr/\.log$/);
+  my $curr_file = Path::Tiny->new( $self->app->config->{log_dir} )->child('general.log');
 
-  if( $use_ajax ){
-    $self->render( json =>  \@lines );
-  }
-  else{
-    $self->stash( files => \@file_list, lines => \@lines, curr_file => $type.'.log', num => $num);
-    $self->render( template => 'display/log' );  
-  }
+  $self->stash( files => \@file_list, lines => \@lines, curr_file => $curr_file, num => $num);
+  $self->render( template => 'display/log' );  
+
 }
 #################################################################################
 sub show_log_ws {
   my $self = shift;
   my $num  = $self->param('num') // 20;
 
-  use Mojo::JSON qw(decode_json encode_json);
 
   $self->on(message => sub {
     my ($self, $filter) = @_;
     
     my @lines = get_log_lines( $self->app->config->{log_dir}, $num, 'general', $filter );
+    $self->send( Mojo::JSON::encode_json( \@lines ) );
+  });
+
+  $self->on(finish => sub {
+    my ($c, $code, $reason) = @_;
+    say "WS closed";
+  });
+}
+#################################################################################
+sub show_stats_websocket {
+  my $self = shift;
+  my $num  = $self->param('num') // 20;
+
+
+  $self->on(message => sub {
+    my ($self, $filter) = @_;
+    
+    my @all_lines = $self->app->statistics->toLines;
+    my @lines = grep{ /$filter/} @all_lines;
     $self->send( Mojo::JSON::encode_json( \@lines ) );
   });
 

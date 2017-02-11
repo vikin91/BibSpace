@@ -28,6 +28,7 @@ use BibSpace::Util::SmartArray;
 use BibSpace::Util::SmartHash;
 use BibSpace::Util::SimpleLogger;
 use BibSpace::Util::SmartUidProvider;
+use BibSpace::Util::Statistics;
 
 use BibSpace::Model::User;
 
@@ -57,6 +58,10 @@ use feature qw( state say );
 ## OBJECTS CREATED AND CONTAINED IN HAS METHODS CANNOT BE CHANGED AT RUNTIME!
 has preferences => sub {
     return state $prefs = Preferences->new->load_maybe;
+};
+
+has statistics => sub {
+    return state $stats = Statistics->new;
 };
 
 
@@ -560,22 +565,30 @@ sub setup_routes {
 
     $manager_user->get('/log')->to('display#show_log')->name('show_log');
     # websocket for fun
-    $manager_user->websocket('/wslog/:num')->to('display#show_log_ws')->name('show_log_ws');
+    $manager_user->websocket('/log_websocket/:num')->to('display#show_log_ws')->name('show_log_websocket');
+    $manager_user->websocket('/statistics/:num')->to('display#show_stats_websocket')->name('show_stats_websocket');
         
-    $admin_user->get('/settings/fix_months')->to('publications#fixMonths')
+    $admin_user->get('/settings/fix_months')
+        ->to('publications#fixMonths')
         ->name('fix_all_months');
 
     $manager_user->get('/settings/clean_all')
-        ->to('publications#clean_ugly_bibtex')->name('clean_ugly_bibtex');
+        ->to('publications#clean_ugly_bibtex')
+        ->name('clean_ugly_bibtex');
+
     $manager_user->get('/settings/regenerate_all_force')
-        ->to('publications#regenerate_html_for_all_force');
+        ->to('publications#regenerate_html_for_all_force')
+        ->name('regenerate_html_for_all_force');
+
+    $logged_user->get('/settings/regenerate_all')
+        ->to('publications#regenerate_html_for_all')
+        ->name('regenerate_html_for_all');
 
     # websocket for fun
-    $manager_user->websocket('/settings/regenerate_html_for_all_force_ws')
-        ->to('publications#regenerate_html_for_all_force_ws')->name('regenerate_html_for_all_force_ws');
+    # $manager_user->websocket('/settings/regenerate_html_for_all_force_ws')
+    #     ->to('publications#regenerate_html_for_all_force_ws')->name('regenerate_html_for_all_force_ws');
     
-    $logged_user->get('/settings/regenerate_all')
-        ->to('publications#regenerate_html_for_all');
+
 
 
     $manager_user->get('/backups')
@@ -967,8 +980,12 @@ sub setup_hooks {
         before_dispatch => sub {
             my $c = shift;
 
-            $c->req->url->base->scheme('https')
-                if $c->req->headers->header('X-Forwarded-HTTPS');
+            if( $c->req->headers->header('X-Forwarded-HTTPS') ){
+                $c->req->url->base->scheme('https');    
+            }
+            $c->app->statistics->log_url($c->req->url->path);
+            
+                
 
             # dirty fix for production deployment in a directory
             # config->{proxy_prefix} stores the proxy prefix, e.g., /app

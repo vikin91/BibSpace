@@ -10,6 +10,7 @@ use DateTime;
 
 use BibSpace::Functions::Core qw( sort_publications );
 use Scalar::Util qw(looks_like_number);
+use List::Util qw(first);
 
 use BibSpace::Functions::Core;
 
@@ -22,6 +23,7 @@ our @ISA = qw( Exporter );
 # these are exported by default.
 our @EXPORT = qw(
     Freassign_authors_to_entries_given_by_array
+    Fregenerate_html_for_array
     FprintBibtexWarnings
     Fhandle_add_edit_publication
     Fget_publications_main_hashed_args_only
@@ -69,7 +71,28 @@ sub Freassign_authors_to_entries_given_by_array {
     }
     return $num_authors_created;
 }
+##############################################################################################################
+sub Fregenerate_html_for_array {
+    my $app             = shift;
+    my $force           = shift // 0;
+    my $converter       = shift;
+    my $entries_arr_ref = shift;
 
+    die "Converter is required!" unless $converter;
+
+    my @entries = @{$entries_arr_ref};
+
+    my $num_entries_regenerated = 0;
+    for my $entry (@entries) {
+        # $entry->bst_file( $app->bst );
+        $num_entries_regenerated = 
+            $num_entries_regenerated + 
+            $entry->regenerate_html( $force, $app->bst, $converter );
+    }
+    $app->repo->entries_save(@entries);
+
+    return $num_entries_regenerated;
+}
 ####################################################################################
 sub FprintBibtexWarnings {
     my $str = shift;
@@ -277,12 +300,11 @@ sub Fget_publications_core {
 
     my $team_obj;
     if ( defined $query_team ) {
-        $team_obj
-            = $self->app->repo->teams_find( sub { $_->name eq $query_team } );
-        if ( !$team_obj ) {
-            $team_obj
-                = $self->app->repo->teams_find( sub { $_->id == $query_team }
-                );
+        if ( Scalar::Util::looks_like_number($query_team) ) {
+            $team_obj = $self->app->repo->teams_find( sub { $_->id == $query_team });
+        }
+        else{
+            $team_obj = $self->app->repo->teams_find( sub { $_->name eq $query_team } );    
         }
     }
     my $author_obj;
@@ -302,19 +324,23 @@ sub Fget_publications_core {
     }
     my $tag_obj;
     if ( defined $query_tag ) {
-        $tag_obj
-            = $self->app->repo->tags_find( sub { $_->name eq $query_tag } );
-        if ( !$tag_obj ) {
+        if ( Scalar::Util::looks_like_number($query_tag) ) {
             $tag_obj
                 = $self->app->repo->tags_find( sub { $_->id == $query_tag } );
         }
+        else{
+            $tag_obj
+            = $self->app->repo->tags_find( sub { $_->name eq $query_tag } );    
+        }
     }
     my $tag_obj_perm;
-    if ( $query_permalink ) {
-        $tag_obj_perm = $self->app->repo->tags_find(
-            sub { $_->permalink eq $query_permalink } );
-        if ( !$tag_obj_perm ) {
-            $self->app->repo->tags_find( sub { $_->id == $query_permalink } );
+    if ( defined $query_permalink ) {
+        if ( Scalar::Util::looks_like_number($query_permalink) ) {
+            $tag_obj_perm = $self->app->repo->tags_find( sub { $_->id == $query_permalink } );
+        }
+        else{
+            my @tags_having_permalink = grep {defined $_->permalink} $self->app->repo->tags_all;
+            $tag_obj_perm = first { $_->permalink eq $query_permalink } @tags_having_permalink;    
         }
     }
 

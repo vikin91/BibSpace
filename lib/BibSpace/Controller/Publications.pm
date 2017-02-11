@@ -422,7 +422,7 @@ sub fix_file_urls {
 
     if ($id) {
         my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
-        push @all_entries, $entry;
+        push @all_entries, $entry if $entry;
     }
     else {
         @all_entries = $self->app->repo->entries_all;
@@ -766,55 +766,13 @@ sub regenerate_html_for_all {
     $self->app->logger->info("regenerate_html_for_all is running");
 
     my @entries   = $self->app->repo->entries_all;
-    my $num_fixes = 0;
-    for my $entry (@entries) {
-        $entry->bst_file( $self->app->bst );
-        $entry->regenerate_html( 0, $self->app->bst, $converter );
-    }
-    $self->app->repo->entries_save(@entries);
+    my $num_regen = Fregenerate_html_for_array($self->app, 0, $converter, \@entries);
 
-    $self->app->logger->info("regenerate_html_for_all has finished");
-
-    my $msg = 'Regeneration of HTML code is complete.';
+    my $msg = "$num_regen entries have been regenerated.";
+    $self->app->logger->info($msg);
     $self->flash( msg_type => 'info', msg => $msg );
     $self->redirect_to( $self->get_referrer() );
 }
-#################################################################################
-# playgroung - does not work as expected
-# sub regenerate_html_for_all_force_ws {
-#   my $self = shift;
-#   my $converter = $self->app->bibtexConverter;
-
-#   use Mojo::JSON qw(decode_json encode_json);
-
-#   my @entries = $self->app->repo->entries_all;
-
-#   @entries = @entries[1..30]; # for dev tests only
-
-#   $self->on(message => sub {
-#     my ($self, $msg) = @_;
-    
-
-#     while(@entries){
-#         my $entry = shift @entries;
-#         my $s = 'Processing '.$entry->bibtex_key;
-
-#         my $delay2 = Mojo::IOLoop->delay(
-#             sub {
-#                 my $delay = shift;
-#                 say "22 ".$s;
-#                 $self->render_later;
-#                 Mojo::IOLoop->delay(sub{ my $delay = shift; say "11 ".$s; $self->send( $s )})->wait;
-                    
-#                 $entry->bst_file( $self->app->bst );
-#                 $entry->regenerate_html( 1, $self->app->bst, $converter );
-#                 $self->app->repo->entries_save($entry);
-#             }
-#         );
-#         $delay2->wait;
-#     }
-#   });
-# }
 ####################################################################################
 sub regenerate_html_for_all_force {
     my $self      = shift;
@@ -822,21 +780,19 @@ sub regenerate_html_for_all_force {
 
     $self->inactivity_timeout(3000);
 
-    $self->app->logger->info("regenerate_html_for_all_force is running");
-
+    $self->app->logger->info("regenerate_html_for_all_force starts");
 
     my @entries   = $self->app->repo->entries_all;
-    my $num_fixes = 0;
-    for my $entry (@entries) {
-        $entry->bst_file( $self->app->bst );
-        $entry->regenerate_html( 1, $self->app->bst, $converter );
+    my $num_regen = Fregenerate_html_for_array($self->app, 1, $converter, \@entries);
+
+    my $msg;
+    if($num_regen == 1){
+        $msg = "$num_regen entry has been regenerated.";
     }
-    $self->app->repo->entries_save(@entries);
-
-
-    $self->app->logger->info("regenerate_html_for_all_force has finished");
-
-    my $msg = 'Regeneration of HTML code is complete.';
+    else{
+        $msg = "$num_regen entries have been regenerated.";   
+    }
+    $self->app->logger->info($msg);
     $self->flash( msg_type => 'info', msg => $msg );
     $self->redirect_to( $self->get_referrer() );
 
@@ -859,10 +815,18 @@ sub regenerate_html {
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    $entry->bst_file( $self->app->bst );
-    $entry->regenerate_html( 1, $self->app->bst,
-        $self->app->bibtexConverter );
-    $self->app->repo->entries_save($entry);
+    my @entries   = ($entry);
+    my $num_regen = Fregenerate_html_for_array($self->app, 1, $converter, \@entries);
+
+    my $msg;
+    if($num_regen == 1){
+        $msg = "$num_regen entry has been regenerated.";
+    }
+    else{
+        $msg = "$num_regen entries have been regenerated.";   
+    }
+    $self->app->logger->info($msg);
+    $self->flash( msg_type => 'info', msg => $msg );
 
     $self->redirect_to( $self->get_referrer );
 }

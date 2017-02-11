@@ -43,9 +43,8 @@ my @pages = (
 	"/logout",
 	"/register",
 	"/log",
-
-	"/settings/regenerate_all_force",
 	
+
 	$self->url_for('add_publication'),
 	$self->url_for('add_many_publications'),
 	$self->url_for('recently_changed', num=>10),
@@ -83,6 +82,10 @@ my @pages = (
 	"/r/b",
 	"/landing/publications",
 	"/landing/publications?entry_type=paper",
+	"/landing/publications?entry_type=paper&team=1",
+	"/landing/publications?entry_type=paper&tag=not-existing",
+	"/landing/publications?entry_type=paper&permalink=B2",
+	"/landing/publications?entry_type=paper&permalink=not-existing",
 	"/landing/publications?entry_type=paper&bibtex_type=inproceedings",
 	"/landing/publications?entry_type=talk",
 	"/landing/publications?entry_type=talk&bibtex_type=misc",
@@ -102,8 +105,16 @@ my @pages = (
 	"/cron/month",
 	$self->url_for('get_authors_for_tag', id=>$some_tag->id, type=>$some_tag_type_obj->id),
 	$self->url_for('get_authors_for_tag_and_team', tag_id=>$some_tag->id, team_id=>$some_team->id),
-	"/settings/regenerate_all"
+
+	# $self->url_for('regenerate_html_for_all_force'), # this will take too long to test
+	$self->url_for('regenerate_html_for_all'),
 );
+
+my $ws_page;
+$ws_page = $self->url_for('show_stats_websocket', num => 10); 
+$t_logged_in->websocket_ok($ws_page, "Websocket OK for $ws_page");
+$ws_page = $self->url_for('show_log_websocket', num => 10); 
+$t_logged_in->websocket_ok($ws_page, "Websocket OK for $ws_page");
 
 for my $page (@pages){
     note "============ Testing page $page ============";

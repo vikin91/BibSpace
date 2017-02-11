@@ -510,7 +510,9 @@ sub regenerate_html {
         or $self->html =~ m/ERROR/ )
     {
         $self->generate_html( $bst_file, $converter );
+        return 1;
     }
+    return 0;
 }
 
 ####################################################################################

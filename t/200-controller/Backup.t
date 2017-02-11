@@ -81,7 +81,16 @@ subtest 'backup_download' => sub {
         ->status_isnt( 500, "Checking: 500 $page" );
     # this should give status 200 but a message that backup does not exist or is not healthy
 };
+####################################################################
+subtest 'backup_restore' => sub {
+    my @backups = read_backups($self->app->backup_dir);
+    my $backup = $backups[0];
 
+    $page = $t_logged_in->app->url_for('backup_restore', id => $backup->uuid );
+    $t_logged_in->put_ok($page)
+        ->status_isnt( 404, "Checking: 404 $page" )
+        ->status_isnt( 500, "Checking: 500 $page" );
+};
 ####################################################################
 subtest 'backup_delete' => sub {
 
@@ -96,12 +105,6 @@ subtest 'backup_delete' => sub {
 };
 
 
-
-# you need to get a valid ID first!
-# $page = $t_logged_in->app->url_for('backup_restore', id=>2);
-# $t_logged_in->put_ok($page)->status_isnt( 404, "Checking: 404 $page" )
-#     ->status_isnt( 500, "Checking: 500 $page" );
-
 ####################################################################
 subtest 'backup_cleanup' => sub {
     $page = $t_logged_in->app->url_for('backup_cleanup');
@@ -110,16 +113,7 @@ subtest 'backup_cleanup' => sub {
 };
 
 
-####################################################################
-subtest 'backup_restore' => sub {
-    my @backups = read_backups($self->app->backup_dir);
-    my $backup = $backups[0];
 
-    $page = $t_logged_in->app->url_for('backup_restore', id => $backup->uuid );
-    $t_logged_in->put_ok($page)
-        ->status_isnt( 404, "Checking: 404 $page" )
-        ->status_isnt( 500, "Checking: 500 $page" );
-};
 
 
 ####################################################################

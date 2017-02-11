@@ -16,6 +16,7 @@ with 'ILogger';
 has '_log_dir' => ( is => 'rw', isa => 'Maybe[Str]', reader => 'log_dir' );
 has 'log_file' => ( is => 'rw', isa => 'Maybe[Path::Tiny]');
 
+
 sub set_log_dir {
   my ( $self, $dir ) = @_;
   $self->{_log_dir} = Path::Tiny->new($dir)->relative();

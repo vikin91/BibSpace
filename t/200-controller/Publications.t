@@ -20,6 +20,11 @@ use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
 
 
+my $test_file = Path::Tiny->new('fixture')->child('test_document.pdf');
+
+ok( -e $test_file, "test pdf document exists");
+
+
 ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'ERR_BIBTEX'));
 ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'PREVIEW'));
 ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code(undef, 'ADD_OK'));
@@ -83,14 +88,40 @@ subtest 'post_upload_pdf' => sub {
 
   note "This is difficult to test due to file upload. We accept some 404 here.";
 
-  my $upload = {filetype=>'paper', uploaded_file => {content => 'test', filename => 'test.pdf'} };
+  my $upload = {
+    filetype=>'paper', 
+    uploaded_file => {
+      content => 'test', 
+      filename => 'test.pdf'
+    } 
+  };
+
+  my $upload_test_file = {
+    filetype=>'paper', 
+    uploaded_file => {
+      file => "".$test_file, 
+      filename => $test_file->basename  
+    }
+  };
+
   $admin_user->post_ok(
-      $self->url_for('post_upload_pdf', id=>$entry->id) => form => $upload
+      $self->url_for('post_upload_pdf', id=>$entry->id) => form => $upload,
+      "Upload simple file OK"
   );
 
-  my $page = $self->url_for('download_publication_pdf', id=>$entry->id);
-  $admin_user->get_ok($page, "Get for page $page")
-      # ->status_isnt(404, "Checking: 404 $page")
+  my $page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
+  $admin_user->get_ok($page, "Download simple file OK: $page")
+      ->status_isnt(404, "Checking: 404 $page")
+      ->status_isnt(500, "Checking: 500 $page");
+
+  $admin_user->post_ok(
+      $self->url_for('post_upload_pdf', id=>$entry->id) => form => $upload_test_file,
+      "Upload real pdf file OK"
+  );
+
+  $page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
+  $admin_user->get_ok($page, "Download real file OK: $page")
+      ->status_isnt(404, "Checking: 404 $page")
       ->status_isnt(500, "Checking: 500 $page");
 
   my $upload2 = {filetype=>'paper', uploaded_file => {content => 'test2', filename => 'test.docx'} };
@@ -196,8 +227,10 @@ my @pages = (
   "/publications/orphaned",
   "/publications/missing_month",
   "/publications/candidates_to_delete",
-  "/settings/regenerate_all",
-  "/publications/fix_urls",
+
+  
+  $self->url_for('regenerate_html_for_all'),
+  $self->url_for('fix_attachment_urls'),
 
   $self->url_for('clean_ugly_bibtex'),
   $self->url_for('fix_all_months'),
@@ -214,6 +247,9 @@ my @pages = (
 
   $self->url_for('manage_attachments', id=>0),
   $self->url_for('manage_attachments', id=>$entry->id),
+
+  $self->url_for('fix_attachment_urls', id=>0),
+  $self->url_for('fix_attachment_urls', id=>$entry->id),
 
   $self->url_for('manage_exceptions', id=>0),
   $self->url_for('manage_exceptions', id=>$entry->id),
@@ -244,5 +280,5 @@ my @pages = (
 
 
 
-
+ok(1);
 done_testing();

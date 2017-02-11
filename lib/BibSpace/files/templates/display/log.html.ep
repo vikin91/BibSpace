@@ -18,27 +18,19 @@
       <div class="form-group">
         <label for="filterexpr">Filter expression</label>
         <input type="text" class="form-control" id="filterexpr" autocomplete="off" placeholder="Your perl regular expression here">
+        
+        
       </div>
     </form>
 
     <ul class="nav nav-tabs">
-    % for my $file (@{$files}){
-        % if( $file->basename eq $curr_file ){
-            <li role="presentation" class="active">
-        % }
-        % else{
-            <li role="presentation">
-        % }
-            <!-- <a href="<%= url_with->query(type => $file->basename('.log')) %> "> -->
-            <a>
-                <%=$file->basename('.log')%>
-                % my $size_b = -s $file;
-                (<%= sprintf( "%.2f", $size_b /1024 ) %> KB)
-            
-            </a>
-        </li>
-        
-    % }
+      <li role="presentation" id="statistics_tab">
+        <a id="statistics_button" class="btn btn-default">Show stats</a>
+      </li>
+      <li role="presentation" class="active" id="log_tab">
+        % my $size_b = -s $curr_file;
+        <a id="log_button" class="btn btn-default">Show log (<%= $curr_file->basename %>, <%= sprintf( "%.2f", $size_b /1024 ) %> KB) </a>
+      </li>
     </ul>
   </div>
 </div>
@@ -59,18 +51,33 @@
 $(function () {
     $('#filterexpr').focus();
 
+    var mode = 'log';
+
     var log = function (text) {
       $('#log_lines_pre').text(text);
     };
 
-    var ws = new WebSocket("<%= url_for('show_log_ws', num => $num )->to_abs %>");
+    var log_ws   = new WebSocket("<%= url_for('show_log_websocket',   num => $num )->to_abs %>");
+    var stats_ws = new WebSocket("<%= url_for('show_stats_websocket', num => $num )->to_abs %>");
 
-    ws.onopen = function () {
+    log_ws.onopen = function () {
       $('#log_lines_pre').text("");
-      ws.send('.*');
+      log_ws.send('.*');
+    };
+    stats_ws.onopen = function () {
+      $('#log_lines_pre').text("");
     };
 
-    ws.onmessage = function (msg) {
+    log_ws.onmessage = function (msg) {
+      var res = JSON.parse(msg.data);
+      var lines ='';
+      $.each(res, function(i,o) {
+        if(o){ lines += o+'\n';}
+      });
+      log(lines);
+    };
+
+    stats_ws.onmessage = function (msg) {
       var res = JSON.parse(msg.data);
       var lines ='';
       $.each(res, function(i,o) {
@@ -80,40 +87,30 @@ $(function () {
     };
 
   $('#filterexpr').keyup(function (e) {   
-      ws.send($('#filterexpr').val());
-    });
+      if(mode == 'log'){
+        log_ws.send($('#filterexpr').val());  
+      }
+      else{
+        stats_ws.send($('#filterexpr').val());
+      }
+  });
+
+  $('#log_button').click(function (e) {   
+      e.preventDefault(e);
+      $('#log_tab').addClass("active");
+      $('#statistics_tab').removeClass("active");
+      log_ws.send($('#filterexpr').val());
+      mode = 'log';
+  });
+  $('#statistics_button').click(function (e) {   
+      e.preventDefault(e);
+      $('#log_tab').removeClass("active");
+      $('#statistics_tab').addClass("active");
+      stats_ws.send($('#filterexpr').val());
+      mode = 'stats';
+  });
 });
 </script>
 
-<script>
-// // $manager_user->get('/log/lines')->to('display#get_log_lines')->name('get_log_lines');
-// function get_log_lines(fexpr){
-//   $.ajax({
-//       type: 'GET',
-//       url: "<%= url_for('show_log') %>",
-//       dataType: 'json',
-//       data: {"ajax": 1, "filter": fexpr},
-//       cache: false,
-//       success: function (data) {
-//         var lines = '';
-//         $.each(data, function(i,o) {
-//             lines += o+'\n';
-//         });
-//         $('#log_lines_pre').text(lines);
-//       }
-//   });
-// }
-
-// var changeTimer = false;
-
-// $('#filterexpr').on("keyup",function(){
-//     var query = $(this).val();
-//     if(changeTimer !== false) clearTimeout(changeTimer);
-//     changeTimer = setTimeout(function(){
-//         get_log_lines(query);
-//         changeTimer = false;
-//     },300);
-// });
 
 
-</script>
