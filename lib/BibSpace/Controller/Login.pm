@@ -400,6 +400,8 @@ sub login {
     if ( defined $user and $auth_result and $auth_result == 1){
         $self->session( user      => $user->login );
         $self->session( user_name => $user->real_name );
+        $self->session(url_history => []);
+        
         $user->record_logging_in;
 
         $self->app->logger->info("Login as '$input_login' success.");

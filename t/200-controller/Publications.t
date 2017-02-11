@@ -3,7 +3,7 @@ use Test::More;
 use Test::Mojo;
 use BibSpace;
 use BibSpace::Functions::Core;
-
+use Data::Dumper;
 
 my $admin_user = Test::Mojo->new('BibSpace');
 $admin_user->post_ok(
@@ -83,75 +83,93 @@ subtest 'edit_publication_post' => sub {
     $self->url_for('edit_publication_post', id=>$entry->id) => form => {new_bib => $bib_content, check_key => 1 }
   );
 };
-####################################################################
-subtest 'post_upload_pdf' => sub {
 
-  note "This is difficult to test due to file upload. We accept some 404 here.";
 
-  my $upload = {
-    filetype=>'paper', 
-    uploaded_file => {
-      content => 'test', 
-      filename => 'test.pdf'
-    } 
-  };
 
-  my $upload_test_file = {
-    filetype=>'paper', 
-    uploaded_file => {
-      file => "".$test_file, 
-      filename => $test_file->basename  
-    }
-  };
 
-  $admin_user->post_ok(
-      $self->url_for('post_upload_pdf', id=>$entry->id) => form => $upload,
-      "Upload simple file OK"
-  );
 
-  my $page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
-  $admin_user->get_ok($page, "Download simple file OK: $page")
-      ->status_isnt(404, "Checking: 404 $page")
-      ->status_isnt(500, "Checking: 500 $page");
 
-  $admin_user->post_ok(
-      $self->url_for('post_upload_pdf', id=>$entry->id) => form => $upload_test_file,
-      "Upload real pdf file OK"
-  );
-
-  $page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
-  $admin_user->get_ok($page, "Download real file OK: $page")
-      ->status_isnt(404, "Checking: 404 $page")
-      ->status_isnt(500, "Checking: 500 $page");
-
-  my $upload2 = {filetype=>'paper', uploaded_file => {content => 'test2', filename => 'test.docx'} };
-  $admin_user->post_ok(
-      $self->url_for('post_upload_pdf', id=>$entry->id) => form => $upload2
-  );
-
-  $page = $self->url_for('download_publication', filetype=>'paper', id=>$entry->id);
-  $admin_user->get_ok($page, "Get for page $page")
-      #->status_isnt(404, "Checking: 404 $page")
-      ->status_isnt(500, "Checking: 500 $page");
-
-  $page = $self->url_for('publications_remove_attachment', filetype=>'paper', id=>$entry->id);
-  $admin_user->get_ok($page, "Get for page $page")
-      ->status_isnt(404, "Checking: 404 $page")
-      ->status_isnt(500, "Checking: 500 $page");
-
-  # call twice to remove the non-existing file
-  $page = $self->url_for('publications_remove_attachment', filetype=>'paper', id=>$entry->id);
-  $admin_user->get_ok($page, "Get for page $page")
-      ->status_isnt(404, "Checking: 404 $page")
-      ->status_isnt(500, "Checking: 500 $page");
-
-  $page = $self->url_for('download_publication', filetype=>'paper', id=>$entry->id);
-  $admin_user->get_ok($page, "Get for page $page")
-      ->status_isnt(500, "Checking: 500 $page")
-      ->status_is(404, "Checking: 404 $page"); # this should give 404, the attachment has been removed
-      
-      
+my $upload = {
+  filetype => 'paper', 
+  uploaded_file => {
+    content => 'test', 
+    filename => 'test.pdf'
+  } 
 };
+
+my $upload_test_file = {
+  filetype => 'paper', 
+  uploaded_file => {
+    file => "".$test_file, 
+    filename => "".$test_file
+  }
+};
+
+
+
+$admin_user->post_ok(
+    $self->url_for('post_upload_pdf', id=>$entry->id) => form => $upload,
+    "Upload simple file OK"
+);
+
+ok( -e "public/uploads/papers/paper-".$entry->id.".pdf", "uploaded file exists");
+
+$page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
+$admin_user->get_ok($page, "Download simple file OK: $page")
+    ->status_isnt(404, "Checking: 404 $page")
+    ->status_isnt(500, "Checking: 500 $page");
+
+$page = $self->url_for('publications_remove_attachment', filetype=>'paper', id=>$entry->id);
+$admin_user->get_ok($page, "Get for page $page")
+    ->status_isnt(404, "Checking: 404 $page")
+    ->status_isnt(500, "Checking: 500 $page");
+
+ok( !-e "public/uploads/papers/paper-".$entry->id.".pdf", "uploaded file was deleted correctly");
+
+say "NOW UPLOADING REAL FILE". Dumper $upload_test_file;
+
+$admin_user->post_ok(
+    $self->url_for('post_upload_pdf',  id=>$entry->id) => form => $upload_test_file,
+    "Upload real pdf file OK"
+);
+
+$page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
+$admin_user->get_ok($page, "Download real file OK: $page")
+    ->status_isnt(404, "Checking: 404 $page")
+    ->status_isnt(500, "Checking: 500 $page");
+
+ok( -e "public/uploads/papers/paper-".$entry->id.".pdf", "file uploaded again exists");
+
+
+
+my $upload2 = {filetype=>'paper', uploaded_file => {content => 'test2', filename => 'test.docx'} };
+
+$admin_user->post_ok(
+    $self->url_for('post_upload_pdf', id=>$entry->id) => form => $upload2
+);
+
+$page = $self->url_for('download_publication', filetype=>'paper', id=>$entry->id);
+$admin_user->get_ok($page, "Get for page $page")
+    #->status_isnt(404, "Checking: 404 $page")
+    ->status_isnt(500, "Checking: 500 $page");
+
+$page = $self->url_for('publications_remove_attachment', filetype=>'paper', id=>$entry->id);
+$admin_user->get_ok($page, "Get for page $page")
+    ->status_isnt(404, "Checking: 404 $page")
+    ->status_isnt(500, "Checking: 500 $page");
+
+# call twice to remove the non-existing file
+$page = $self->url_for('publications_remove_attachment', filetype=>'paper', id=>$entry->id);
+$admin_user->get_ok($page, "Get for page $page")
+    ->status_isnt(404, "Checking: 404 $page")
+    ->status_isnt(500, "Checking: 500 $page");
+
+$page = $self->url_for('download_publication', filetype=>'paper', id=>$entry->id);
+$admin_user->get_ok($page, "Get for page $page")
+    ->status_isnt(500, "Checking: 500 $page")
+    ->status_is(404, "Checking: 404 $page"); # this should give 404, the attachment has been removed
+      
+      
 ####################################################################
 subtest 'add_publication_post' => sub {
 

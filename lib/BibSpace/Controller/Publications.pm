@@ -538,7 +538,7 @@ sub remove_attachment {
         $msg
             = "File not found. Cannot remove attachment. Filetype '$filetype', entry '$id'.";
         $msg_type = 'danger';
-        $self->app->logger->warn($msg);
+        $self->app->logger->error($msg);
     }
 
     $self->flash( msg_type => $msg_type, msg => $msg );
@@ -549,6 +549,7 @@ sub discover_attachments {
     my $self = shift;
     my $id   = $self->param('id');
     my $do   = $self->param('do');
+
 
     my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
     $self->app->logger->info("Discovery of attachments for entry ID '$id'." );
@@ -573,6 +574,7 @@ sub discover_attachments {
         $self->app->logger->error( $msg );
     }
     
+
     $self->flash( msg_type => $msg_type, msg => $msg );
     $self->redirect_to( $self->get_referrer );
 }

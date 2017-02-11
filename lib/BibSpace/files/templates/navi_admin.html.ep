@@ -14,7 +14,7 @@
     </td>
     <td>
       <a class="btn btn-info btn-xs" href="<%= url_for('persistence_status') %>">status</a>
-      <a class="btn btn-default btn-xs" id="get_persistence_backends_status">ajax status</a>
+      <!-- <a class="btn btn-default btn-xs" id="get_persistence_backends_status">ajax status</a> -->
     </td>
   </tr>  
   <!-- ROW 2 -->
@@ -60,7 +60,7 @@
 
 
 
-<div id="status_persistence_backends"></div>
+<!-- <div id="status_persistence_backends"></div>
 
 
 
@@ -94,4 +94,4 @@ $('#get_persistence_backends_status').click( function() {
 $('#copy_smart_to_mysql').click( function() {
     copy_smart_to_mysql()
 });
-</script>
+</script> -->

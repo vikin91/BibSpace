@@ -117,8 +117,37 @@ sub register {
     }
   );
 
+  ## pop the previous GET page from the stack 
+  $app->helper(
+      pop_url_history => sub {
+          my $self     = shift;
+          my $last_url = shift @{ $self->session('url_history') };
+          $last_url //= $self->url_for('start');
+          return $last_url;
+      }
+  );
+
+  ## add url to the stack
+  $app->helper(
+      push_url_history => sub {
+          my $self     = shift;
+          # unshift @{ $self->session('url_history') }, "".$self->req->url->path->absolute;
+          if( $self->session('url_history') ){
+            unshift @{ $self->session('url_history') }, "".$self->req->url;    
+            # say "STACK: " . Dumper $c->session('url_history');
+        } 
+      }
+  );
+
   $app->helper(
       get_referrer => sub {
+        # return shift->pop_url_history;
+        return shift->old_get_referrer;
+      }
+  );
+
+  $app->helper(
+      old_get_referrer => sub {
           my $s   = shift;
           my $ret = $s->url_for('start');
           $ret = $s->req->headers->referrer

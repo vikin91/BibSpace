@@ -976,6 +976,11 @@ sub setup_hooks {
     my $self = shift;
     $self->app->logger->info("Setup hooks...");
 
+    $self->hook(after_render => sub {
+        my ($c, $args) = @_;
+        $c->push_url_history;      
+    });
+
     $self->hook(
         before_dispatch => sub {
             my $c = shift;
@@ -983,9 +988,7 @@ sub setup_hooks {
             if( $c->req->headers->header('X-Forwarded-HTTPS') ){
                 $c->req->url->base->scheme('https');    
             }
-            $c->app->statistics->log_url($c->req->url->path);
-            
-                
+            $c->app->statistics->log_url($c->req->url);
 
             # dirty fix for production deployment in a directory
             # config->{proxy_prefix} stores the proxy prefix, e.g., /app
