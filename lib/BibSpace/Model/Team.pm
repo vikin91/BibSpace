@@ -94,6 +94,8 @@ sub entries {
   foreach my $author (@members) {
     push @myEntries, $author->get_entries;
   }
+  my @exception_entries = map {$_->entry} $self->get_exceptions;
+  @myEntries = (@myEntries, @exception_entries);
   @myEntries = uniq @myEntries;
 
   return @myEntries;

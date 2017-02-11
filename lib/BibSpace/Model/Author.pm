@@ -217,28 +217,20 @@ sub can_be_deleted {
 ####################################################################################
 ####################################################################################
 sub has_entry {
-    my $self = shift;
-    my $e    = shift;
+    my $self  = shift;
+    my $entry = shift;
 
-    return defined $self->authorships_find( sub { $_->equals($e) } );
-}
-####################################################################################
-sub take_entries_from_author {
-    my $self        = shift;
-    my $from_author = shift;
+    my $authorship = $self->authorships_find( 
+        sub { 
+            $_->entry->equals($entry) and 
+            $_->author->equals($self) 
+        } 
+    );
 
-    die "this function must be called from controller-level!";
-
-    # $self->entries_add( $from_author->entries );
-    $from_author->abandon_all_entries;
-}
-
-
-################################################################################
-sub abandon_all_entries {
-    my $self = shift;
-    die "this function must be called from controller-level!";
-    $self->authorships_clear;
+    foreach ($self->authorships_all){
+        say "Author ".$self->id." in has_entry has the follwoign authorship: ".$_->toString;
+    }
+    return defined $authorship;
 }
 ################################################################################
 ################################################################################ TEAMS
@@ -250,11 +242,14 @@ sub joined_team {
 
     return -1 if !defined $team;
 
-    my $mem = $self->memberships_find(
-        sub {
-            $_->team_id == $team->id and $_->author_id == $self->id;
-        }
+    my $query_mem = Membership->new(
+        author    => $self->get_master,
+        team      => $team,
+        author_id => $self->get_master->id,
+        team_id   => $team->id
     );
+    my $mem = $self->memberships_find( sub{ $_->equals($query_mem) } );
+
     return -1 if !defined $mem;
     return $mem->start;
 }
@@ -265,18 +260,16 @@ sub left_team {
 
     return -1 if !defined $team;
 
-    my $mem = $self->memberships_find(
-        sub {
-            $_->team_id == $team->id and $_->author_id == $self->id;
-        }
+    my $query_mem = Membership->new(
+        author    => $self->get_master,
+        team      => $team,
+        author_id => $self->get_master->id,
+        team_id   => $team->id
     );
+    my $mem = $self->memberships_find( sub{ $_->equals($query_mem) } );
+
     return -1 if !defined $mem;
     return $mem->stop;
-}
-################################################################################
-sub abandon_all_teams {
-    my $self = shift;
-    $self->memberships_clear;
 }
 ################################################################################
 sub update_membership {
@@ -285,11 +278,27 @@ sub update_membership {
     my $start = shift;
     my $stop  = shift;
 
-    my $mem = $self->memberships_find(
-        sub {
-            $_->team_id == $team->id and $_->author_id == $self->id;
-        }
+    return if !$team;
+
+    my $query_mem_master = Membership->new(
+        author    => $self->get_master,
+        team      => $team,
+        author_id => $self->get_master->id,
+        team_id   => $team->id
     );
+    my $query_mem_minor = Membership->new(
+        author    => $self,
+        team      => $team,
+        author_id => $self->id,
+        team_id   => $team->id
+    );
+    my $mem_master = $self->memberships_find( sub{ $_->equals($query_mem_master) } );
+    my $mem_minor  = $self->memberships_find( sub{ $_->equals($query_mem_minor) } );
+
+    if( $mem_minor != $mem_master){
+        warn "MEMBERSHIP for master differs to membership of minor!";
+    }
+    my $mem = $mem_master // $mem_minor;
 
     if ( $start < 0 ) {
         die "Invalid start $start: start must be 0 or greater";
@@ -304,10 +313,9 @@ sub update_membership {
         die "Invalid team. Cannot find author membership in that team.";
     }
 
-    if ($mem) {
-        $mem->start($start) if defined $start;
-        $mem->stop($stop)   if defined $stop;
-    }
+    $mem->start($start) if defined $start;
+    $mem->stop($stop)   if defined $stop;
+    return 1;
 }
 
 

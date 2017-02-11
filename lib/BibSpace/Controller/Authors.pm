@@ -298,7 +298,7 @@ sub merge_authors {
           # Adding the authorship to the new author
           $author_destination->add_authorship($src_authorship);
       }
-      $author_source->abandon_all_teams;
+      $author_source->memberships_clear;
       $author_source->set_master($author_destination);
       
       $self->app->repo->authors_save($author_destination);

@@ -31,7 +31,7 @@ my $repo = $self->app->repo;
 
 my @all_authors = $repo->authors_all;
 
-my $limit_test_objects = scalar(@all_authors) + 1;
+my $limit_test_objects = 30;
 
 my $other_author = $self->app->entityFactory->new_Author( uid => "Henry");
 
@@ -45,15 +45,13 @@ subtest 'Author constructor' => sub {
 subtest 'Alone author functions' => sub {
 
   is($other_author->can_be_deleted, 1, "can_be_deleted");
-  dies_ok {$other_author->take_entries_from_author($other_author) } 'take_entries_from_author dies ok';
-  dies_ok {$other_author->abandon_all_entries } 'abandon_all_entries dies ok';
 };
 
 note "============ Testing ".scalar(@all_authors)." authors ============";
 
 foreach my $author (@all_authors){
   last if $limit_test_objects < 0;
-  note ">> Testing Author ID ".$author->id.".";
+  note "============ Testing Author ID ".$author->id.".";
 
   ok($author, "author defined");
   ok($author->toString, "author->toString defined");
@@ -104,8 +102,43 @@ foreach my $author (@all_authors){
   foreach my $team (@teams){
     ok($author->has_team($team), "has_team");
   }
+
+
+  if( $author->get_entries ){
+    my $entry = ($author->get_entries)[0];
+
+    note "Checking entry ".$entry->id;
+
+    my $au = Authorship->new(
+      author    => $author,
+      entry     => $entry,
+      author_id => $author->id,
+      entry_id  => $entry->id
+    );
+
+    ok( $au->validate, 'validate');
+    ok( $au->toString, 'toString');
+    ok( $au->equals($au), 'equals');
+    ok( $au->equals_id($au), 'equals_id');
+    ok( $au->equals_obj($au), 'equals_obj');
+
+    if( !$author->has_authorship($au) ){
+      ok( $author->add_authorship($au), 'add_authorship');
+    }
+    else{
+      ok( !$author->add_authorship($au), 'cant add_authorship'); 
+    }
+    ok( $author->has_entry($entry), 'has_entry');
+    ok( $author->has_authorship($au), 'has_authorship');
+    is( $author->remove_authorship($au), 1, 'remove authorship');
+    ok(!$author->has_authorship($au), 'hasnt authorship');
+    ok(!$author->remove_authorship($au), 'cant remove authorship');
+    ok(!$author->has_authorship($au), 'hasnt authorship');
+    ok(!$author->has_entry($entry), "hasn't entry");
+    
+  }
   
-  
+  $limit_test_objects--;
 }
 
 

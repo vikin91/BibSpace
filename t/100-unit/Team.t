@@ -1,14 +1,114 @@
 use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
+use Test::Exception;
 
-# my $t_anyone    = Test::Mojo->new('BibSpace');
-# my $self = $t_anyone->app;
+my $t_anyone    = Test::Mojo->new('BibSpace');
+my $self = $t_anyone->app;
 
-# use BibSpace::TestManager;
-# TestManager->apply_fixture($self->app);
+use BibSpace::TestManager;
+TestManager->apply_fixture($self->app);
 
 
+my $repo = $self->app->repo;
+my @all_teams = $repo->teams_all;
+
+my $author = ($repo->authors_all)[0];
+my $author2 = ($repo->authors_all)[1];
+my $entry = ($repo->entries_all)[0];
+
+
+my $limit_test_teams = 20;
+
+note "============ Testing ".scalar(@all_teams)." entries ============";
+
+foreach my $team (@all_teams){
+  last if $limit_test_teams < 0;
+  note ">> Testing Team ID ".$team->id.".";
+
+  ok( $team->toString , "toString");
+
+  my $member_author = ($team->get_authors)[0];
+  my $non_member = $repo->authors_find( sub{ !$_->has_team($team) } );
+
+  if( $member_author ){
+
+    isnt( $team->get_membership_end($member_author), -1 );
+    isnt( $team->get_membership_beginning($member_author), -1 );
+    ok( !$team->can_be_deleted  , "can be deleted");
+
+    my $mem = Membership->new(
+      author    => $member_author->get_master,
+      team      => $team,
+      author_id => $member_author->get_master->id,
+      team_id   => $team->id
+    );
+
+    my $mem2 = Membership->new(
+      author    => $member_author->get_master,
+      team      => $team,
+      author_id => $member_author->get_master->id,
+      team_id   => $team->id
+    );
+
+    
+
+    ## testing membership actually...
+    ok( $mem->validate  , "mem validate");
+    ok( $mem->toString  , "mem to string");
+    ok( $mem->equals($mem2) , "mem equals");
+    ok( $mem->equals_id($mem2) , "mem equals id");
+    ok( $mem->equals_obj($mem2) , "mem equals obj");
+
+    ok( $member_author->update_membership($team, 0, 0) , "update mem 0 0");
+    ok( $member_author->update_membership($team, 100, 200), "update mem 100 200");
+
+    dies_ok{ $member_author->update_membership($team,  200,  100) } "update mem bad 200 100";
+    dies_ok{ $member_author->update_membership($team, -100,  100) } "update mem bad 100 pne 100";
+    dies_ok{ $member_author->update_membership($team,  100, -100) } "update mem bad 100 100 pne";
+
+    if( $non_member and !$author->equals($non_member) ){
+      my $mem3 = Membership->new(
+        author    => $non_member->get_master,
+        team      => $team,
+        author_id => $non_member->get_master->id,
+        team_id   => $team->id
+      );
+      ok( $mem->validate, 'mem validate');
+      ok( $mem->toString, 'mem toString');
+      ok( !$mem->equals($mem3), '!equals');
+      ok( !$mem->equals_id($mem3), '!equals_id');
+      ok( !$mem->equals_obj($mem3), '!equals_obj');
+
+      ok( !$team->has_membership($mem3), '!has_membership');
+    }
+
+
+    $team->add_membership($mem);
+    ok( $team->has_membership($mem) , 'has_membership');
+    ok( $team->remove_membership($mem) , 'remove_membership');
+    ok( !$team->remove_membership($mem) , '!remove_membership');
+
+
+
+  }
+  else{
+    ok( $team->can_be_deleted , '!can_be_deleted');
+  }
+
+  if( $team->tags ){
+    ok( $team->tags , 'team has tags');
+    ok( $team->entries , 'team has entries');  
+  }
+
+  if( $team->get_exceptions ){
+    ok( $team->get_exceptions , 'team has exceptions');
+    ok( $team->entries , 'team has entries from exceptions');
+  }
+  
+
+
+}
 
 ok(1);
 done_testing();

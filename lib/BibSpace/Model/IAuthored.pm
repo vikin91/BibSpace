@@ -2,6 +2,9 @@ package IAuthored;
 
 use namespace::autoclean;
 
+use BibSpace::Functions::Core qw( sort_publications );
+
+
 use Moose::Role;
 
 has 'authorships' => (
@@ -24,8 +27,8 @@ has 'authorships' => (
 ####################################################################################
 sub has_authorship {
     my ( $self, $authorship ) = @_;
-    my $idx = $self->authorships_find_index( sub { $_->equals($authorship) } );
-    return $idx >= 0;
+    my $au = $self->authorships_find( sub { $_->equals($authorship) } );
+    return defined $au;
 }
 ####################################################################################
 sub add_authorship {
@@ -62,7 +65,9 @@ sub entries {
 ####################################################################################
 sub get_entries {
     my $self = shift;
-    return map {$_->entry} $self->authorships_all;
+    my @entries = map {$_->entry} $self->authorships_all;
+    @entries = sort_publications(@entries);
+    return @entries;
 }
 ####################################################################################
 1;
