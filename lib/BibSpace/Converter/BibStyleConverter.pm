@@ -149,9 +149,9 @@ sub _clean_bbl {
 
   
   # and here are the custom replacement functions in case something goes wrong...
-  $s = str_replace_german_letters($s);
-  $s = str_replace_polish_letters($s);
-  $s = str_replace_other_lanugages_letters($s);
+  $s = german_letters_latex_to_html($s);
+  $s = polish_letters_latex_to_html($s);
+  $s = other_letters_latex_to_html($s);
 
   $s = str_replace_handle_tilde($s);
 
@@ -304,7 +304,7 @@ sub str_replace_handle_tilde {
   $s;
 }
 ####################################################################################
-sub str_replace_polish_letters {
+sub polish_letters_latex_to_html {
   my $s = shift;
 
 
@@ -343,7 +343,7 @@ sub str_replace_polish_letters {
   $s;
 }
 ####################################################################################
-sub str_replace_german_letters {
+sub german_letters_latex_to_html {
   my $s = shift;
 
   # say "before replace: $s";
@@ -362,7 +362,7 @@ sub str_replace_german_letters {
   $s;
 }
 ####################################################################################
-sub str_replace_other_lanugages_letters {
+sub other_letters_latex_to_html {
   my $s = shift;
   
   $s = delatexify($s, '\'', 'E', '&#201;');  # E with accent line pointing to the right
@@ -399,6 +399,23 @@ sub delatexify {
   $s;
 }
 ####################################################################################
+=item string_replace_with_counting
+  uses counting to do strin replace
+  Example:  
+    single runn of 'string_replace_with_counting' with parameters
+      s = aaa{bbb{cc{dd}}}
+      opening = {
+      closing = }
+      avoid_l = {
+      avoid_r = }
+      opening_replace = ''
+      closing replace = ''
+    returns: aaa{bbb{ccdd}}
+    next run: 
+    returns: aaa{bbbccdd}
+    next run: 
+    returns: aaabbbccdd
+=cut 
 sub string_replace_with_counting {
   my ($s, $opening, $closing, $avoid_l, $avoid_r, $opening_replace, $closing_replace) = @_;
   
@@ -410,7 +427,7 @@ sub string_replace_with_counting {
   # say "======== string_replace_with_counting opening $opening closing $closing  ========";
 
   my $index_opening = -1;
-  my $found_em = 0;
+  my $found_pair = 0;
   my $index_closing = -1;
 
   my @str_arr = split //, $s;
@@ -419,61 +436,56 @@ sub string_replace_with_counting {
   my $l_brackets=0;
   my $r_brackets=0;
 
-  for (my $i=0 ; $i < $max and $index_closing==-1 ; $i=$i+1) {  # we break when we find the first match
-    my $c = $str_arr[$i];
+  for (my $i=0 ; $i < $max and $index_closing==-1 ; $i++) {  # we break when we find the first match
+    my $character = $str_arr[$i];
 
-    # say "$i - $c - L $l_brackets R $r_brackets == $found_em" if $opening eq '{';
+    # say "$i - $character - L $l_brackets R $r_brackets == $found_pair" if $opening eq '{';
 
-    if($found_em==1){
+    if($found_pair==1){
 
-      if($c eq $avoid_l){
-        $l_brackets = $l_brackets + 1;
+      if($character eq $avoid_l){
+        $l_brackets++;
       }
-      if($c eq $avoid_r){
+      if($character eq $avoid_r){
         if($l_brackets==$r_brackets){
           $index_closing = $i;
         }
         if($l_brackets > 0){
-          $r_brackets = $r_brackets + 1;
+          $r_brackets++;
         }
       }
     }
-    # if($c eq '{' and 
+    # if($character eq '{' and 
     #    $i+34 < $max and 
     #    $str_arr[$i+1] eq '\\' and 
     #    $str_arr[$i+2] eq 'e' and
     #    $str_arr[$i+3] eq 'm')
-    if($found_em == 0 and substr($s, $i, $opening_len) eq $opening)
+    if($found_pair == 0 and substr($s, $i, $opening_len) eq $opening)
     {
       $index_opening = $i;
-      $found_em = 1;
+      $found_pair = 1;
     }
   }
-  # say "index_opening: $index_opening";
-  # say "index_closing: $index_closing";
+  # say "s: $s ";
+  # say "index_opening: $index_opening ".$str_arr[$index_opening];
+  # say "index_closing: $index_closing ".$str_arr[$index_closing];
+  # say "found_pair: $found_pair";
 
-  if($found_em == 1){
-    unless(
-            ($index_opening == -1 and $index_closing == -1) or # both -1 are ok = no {\em ..}
-            (  
-              $index_opening > 0 and 
-              $index_closing > 0 and    
-              $index_closing > $index_opening
-            )
-          )
+  if($found_pair == 1){
+    if( 
+        ($index_opening == -1 and $index_closing == -1) or # both -1 are ok = no {\em ..}
+        ($index_opening >= 0 and  $index_closing >= 0 and $index_closing > $index_opening)
+      )
     {
-      my $warn = "Indices are messed! No change made to string: ".substr($s, 0, 30)." ...\n";
-      $warn .= "index_opening $index_opening index_closing $index_closing ".$index_opening*$index_closing."\n";
-
-      warn $warn;
+      substr($s, $index_closing, $closing_len, $closing_replace); # first closing beacuse it changes the index!!!
+      substr($s, $index_opening, $opening_len, $opening_replace);  
+      
 
     }
     else{
-      substr($s, $index_closing, $closing_len, $closing_replace); # first closing beacuse it changes the index!!!
-      substr($s, $index_opening, $opening_len, $opening_replace);  
-
-      # say "CHANGING OK:  $s";
-
+      my $warn = "Indices are messed! No change made to string: ".substr($s, 0, 30)." ...\n";
+      $warn .= "index_opening $index_opening index_closing $index_closing ".$index_opening*$index_closing."\n";
+      warn $warn;
     }
   }
   else{
