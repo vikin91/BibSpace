@@ -21,12 +21,6 @@ my $page = "";
 
 my $backup_id = 1;
 
-# $logged_user->get('/backups')->to('backup#index')->name('backup_index');
-# $anyone->put('/backups')->to('backup#save')->name('backup_do');
-# $logged_user->get('/backups/:id')->to('backup#backup_download')->name('backup_download');
-# $superadmin->delete('/backups/:id')->to('backup#delete_backup')->name('backup_delete');
-# $manager->put('/backups/:id')->to('backup#restore_backup')->name('backup_restore');
-# $manager->delete('/backups')->to('backup#cleanup')->name('backup_cleanup');
 
 ####################################################################
 subtest 'backup_index' => sub {

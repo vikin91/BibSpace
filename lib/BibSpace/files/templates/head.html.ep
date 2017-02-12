@@ -17,10 +17,28 @@
     %= javascript '/js/bootstrap.min.js', type=> "text/javascript"
 
 
-   <script type="text/javascript">
-         function showAbstract(divid) {
-            $('div#'+divid).toggle(); 
-         };
+  <script>
+
+  function showAbstract(bibtex_key) {
+    $('.bibspace-entry-abstract[data-id='+bibtex_key+']').toggle(); 
+  };
+
+  function showBib(bibtex_key) {
+    $('.bibspace-entry-bib[data-id='+bibtex_key+']').toggle(); 
+  };
+
+  $(function () {
+    $('.abstract-preview-link').click(function (e) {  
+      e.preventDefault(e);
+      var bibtex_key = $(this).attr('data-id'); 
+      showAbstract(bibtex_key);
+    });
+    $('.bib-preview-link').click(function (e) {  
+      e.preventDefault(e);
+      var bibtex_key = $(this).attr('data-id'); 
+      showBib(bibtex_key);
+    });
+  });
   </script>
 
   % if(app->mode eq 'test-server'){

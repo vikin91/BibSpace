@@ -13,10 +13,6 @@
 
 <script>
 
-// function showAbstract(divid) {
-//   $('div#'+divid).toggle(); 
-// };
-
 function showAbstract(bibtex_key) {
   $('.bibspace-entry-abstract[data-id='+bibtex_key+']').toggle(); 
 };

@@ -99,12 +99,12 @@ foreach my $team (@all_teams) {
 
   if( $team->tags ){
     ok( $team->tags , 'team has tags');
-    ok( $team->entries , 'team has entries');  
+    ok( $team->get_entries , 'team has entries');  
   }
 
   if( $team->get_exceptions ){
     ok( $team->get_exceptions , 'team has exceptions');
-    ok( $team->entries , 'team has entries from exceptions');
+    ok( $team->get_entries , 'team has entries from exceptions');
   }
   
 
