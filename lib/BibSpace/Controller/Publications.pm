@@ -465,7 +465,7 @@ sub fix_file_urls {
         $entry->discover_attachments( $self->app->get_upload_dir );
         my @discovered_types = $entry->attachments_keys;
 
-        $entry->remove_bibtex_fields( [ 'pdf', 'slides' ] );
+        
 
         $str .= "has types: (";
         foreach (@discovered_types) {
@@ -483,6 +483,7 @@ sub fix_file_urls {
         )->to_abs;
 
         if ( $file and $file->exists ) {
+            $entry->remove_bibtex_fields( ['pdf'] );
             $str .= "\n\t";
             $entry->add_bibtex_field( "pdf", "$file_url" );
             $fixed = 1;
@@ -497,6 +498,7 @@ sub fix_file_urls {
         )->to_abs;
 
         if ( $file and $file->exists ) {
+            $entry->remove_bibtex_fields( ['slides'] );
             $str .= "\n\t";
             $entry->add_bibtex_field( "slides", "$file_url" );
             $fixed = 1;
