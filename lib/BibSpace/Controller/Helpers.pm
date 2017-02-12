@@ -194,12 +194,12 @@ sub register {
   #     }
   # );
 
-  # $app->helper(
-  #     get_referrer => sub {
-  #       my $self = shift;
-  #       return $self->get_referrer_old;
-  #     }
-  # );
+  $app->helper(
+      get_referrer => sub {
+        my $self = shift;
+        return $self->get_referrer_old;
+      }
+  );
 
   $app->helper(
     get_referrer_new => sub {
