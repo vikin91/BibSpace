@@ -4,15 +4,15 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use File::Slurp;
-use Time::Piece;
-use 5.010;           #because of ~~
+# use File::Slurp;
+
+use v5.16;           #because of ~~
 use strict;
 use warnings;
-use DBI;
 
-use BibSpace::Controller::Core;
-use BibSpace::Functions::TagTypeObj;
+
+use BibSpace::Functions::Core;
+use BibSpace::Model::TagType;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -21,21 +21,14 @@ use Mojo::Log;
 ####################################################################################
 sub index {
     my $self = shift;
-    my $dbh  = $self->app->db;
-
-    my @objs = BibSpace::Functions::TagTypeObj->getAll($dbh);
-
-    $self->render( template => 'tagtypes/tagtypes', tto => \@objs );
+    my @tag_types = $self->app->repo->tagTypes_all;
+    $self->render( template => 'tagtypes/tagtypes', tagtypes => \@tag_types );
 }
-
 ####################################################################################
 sub add {
     my $self = shift;
-    my $dbh  = $self->app->db;
-
     $self->render( template => 'tagtypes/add' );
 }
-
 ####################################################################################
 sub add_post {
     my $self    = shift;
@@ -43,31 +36,45 @@ sub add_post {
     my $name    = $self->param('new_name');
     my $comment = $self->param('new_comment');
 
-    my $qry = 'INSERT INTO TagType(name, comment) VALUES (?,?)';
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $name, $comment );
+    my $tt = $self->app->repo->tagTypes_find( sub { $_->name eq $name } );
 
-    $self->redirect_to( $self->get_referrer );
+    if ( defined $tt ) {
+        $self->flash(
+            msg_type => 'error',
+            msg      => 'Tag type with such name already exists.'
+        );
+    }
+    else{
+        $tt = $self->app->entityFactory->new_TagType(name => $name, comment => $comment);
+        $self->app->repo->tagTypes_save($tt);
+        $self->flash( msg_type => 'success', msg => 'Tag type added.' );    
+    }
+    
+    $self->redirect_to( $self->url_for('all_tag_types') );
 }
 
 ####################################################################################
 sub delete {
     my $self = shift;
-    my $dbh  = $self->app->db;
     my $id   = $self->param('id');
 
+    # we do not allow to delete the two first tag types!
     if ( $id == 1 or $id == 2 ) {
-        $self->redirect_to("/tagtypes");
+        $self->flash(
+            msg_type => 'error',
+            msg => 'Tag Types 1 or 2 are essential and cannot be deleted.'
+        );
+        $self->redirect_to( $self->url_for('all_tag_types') );
         return;
     }
 
-    my $qry = 'DELETE FROM Tag WHERE type=?';
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($id);
+    my $tt = $self->app->repo->tagTypes_find( sub { $_->id == $id } );
 
-    my $qry2 = 'DELETE FROM TagType WHERE id=?';
-    my $sth2 = $dbh->prepare($qry2);
-    $sth2->execute($id);
+    my @tags_of_tag_type = $self->app->repo->tags_filter( sub { $_->type == $id } );
+    $self->app->repo->tags_delete(@tags_of_tag_type);
+    $self->app->repo->tagTypes_delete($tt);
+
+    $self->flash( msg_type => 'success', msg => 'Tag type deleted.' );
 
     $self->redirect_to( $self->get_referrer );
 }
@@ -75,26 +82,44 @@ sub delete {
 ####################################################################################
 sub edit {
     my $self = shift;
-    my $dbh  = $self->app->db;
     my $id   = $self->param('id');
 
     my $name    = $self->param('new_name');
     my $comment = $self->param('new_comment');
     my $saved   = 0;
 
-    if ( defined $name and defined $comment ) {
-        my $qry = 'UPDATE TagType SET name=?, comment=? WHERE id=?';
-        my $sth = $dbh->prepare($qry);
-        $sth->execute( $name, $comment, $id );
-        $saved = 1;
+    
+    my $tt = $self->app->repo->tagTypes_find( sub { $_->id == $id } );
+
+    if ( !defined $tt ) {
+        $self->flash(
+            msg_type => 'error',
+            msg      => 'Tag Type does not exist.'
+        );
+        $self->redirect_to( $self->url_for('all_tag_types') );
+        return;
     }
 
-    my $obj = BibSpace::Functions::TagTypeObj->new();
-    $obj = $obj->getById( $dbh, $id );
+    if ( defined $name or defined $comment ) {
+        $tt->name($name)    if defined $name;
+        $tt->comment($comment) if defined $comment;
+        $self->app->repo->tagTypes_update($tt);
 
-    $self->stash( id => $id, obj => $obj, saved => $saved );
+        $self->flash( msg_type => 'success', msg => 'Update successful.' );
+        $self->redirect_to( $self->url_for('all_tag_types') );
+        return;
+    }
+    else {
+        $self->flash(
+            msg_type => 'warning',
+            msg      => 'No change made or empty input.'
+        );
+    }
+
+    $self->stash( obj => $tt );
     $self->render( template => 'tagtypes/edit' );
 
-}
 
+}
+####################################################################################
 1;

@@ -1,26 +1,116 @@
 % layout 'admin';
-
-
 <div class="container">
+<div class="row">
+  <div class="col-lg-2 col-md-2 col-sm-2 col-xs-4">
+    <H1>Logs</H1>
+  </div>
+  <div class="col-lg-6 col-lg-offset-2 col-md-6 col-md-offset-2 col-sm-6 col-xs-8">
+    <i class="fa fa-sort-numeric-asc fa-2x" aria-hidden="true"></i>  
+    Newer entries are at the bottom 
+    <i class="fa fa-sort-numeric-asc fa-2x" aria-hidden="true"></i> 
+  </div>
+</div>
 
-    <div class="row">
-        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-4">
-            <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
-        </div>
-        <div class="col-lg-6 col-lg-offset-2 col-md-6 col-md-offset-2 col-sm-6 col-xs-8">
-            <i class="fa fa-sort-numeric-asc fa-2x"></i>  Newer entries are at the bottom <i class="fa fa-sort-numeric-asc fa-2x"></i> 
-        </div>
-    </div>
 
-    <br>
+<div class="row">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <form>
+      <div class="form-group">
+        <label for="filterexpr">Filter expression</label>
+        <input type="text" class="form-control" id="filterexpr" autocomplete="off" placeholder="Your perl regular expression here">
+        
+        
+      </div>
+    </form>
 
-    <div class="row">
-        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <pre>
-            % foreach my $line (@{$lines}){
-                <%= $line %>
-            % }
-            </pre>
+    <ul class="nav nav-tabs">
+      <li role="presentation" id="statistics_tab">
+        <a id="statistics_button" class="btn btn-default">Show stats</a>
+      </li>
+      <li role="presentation" class="active" id="log_tab">
+        % my $size_b = -s $curr_file;
+        <a id="log_button" class="btn btn-default">Show log (<%= $curr_file->basename %>, <%= sprintf( "%.2f", $size_b /1024 ) %> KB) </a>
+      </li>
+    </ul>
+  </div>
+</div>
+<div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+<pre id="log_lines_pre" style="font-family:monospace;">
+% foreach my $line (@{$lines}){
+<%= $line %>
+% }
+</pre>
         </div>
     </div>
 </div>
+
+
+<script>
+
+$(function () {
+    $('#filterexpr').focus();
+
+    var mode = 'log';
+
+    var log = function (text) {
+      $('#log_lines_pre').text(text);
+    };
+
+    var log_ws   = new WebSocket("<%= url_for('show_log_websocket',   num => $num )->to_abs %>");
+    var stats_ws = new WebSocket("<%= url_for('show_stats_websocket', num => $num )->to_abs %>");
+
+    log_ws.onopen = function () {
+      $('#log_lines_pre').text("");
+      log_ws.send('.*');
+    };
+    stats_ws.onopen = function () {
+      $('#log_lines_pre').text("");
+    };
+
+    log_ws.onmessage = function (msg) {
+      var res = JSON.parse(msg.data);
+      var lines ='';
+      $.each(res, function(i,o) {
+        if(o){ lines += o+'\n';}
+      });
+      log(lines);
+    };
+
+    stats_ws.onmessage = function (msg) {
+      var res = JSON.parse(msg.data);
+      var lines ='';
+      $.each(res, function(i,o) {
+        if(o){ lines += o+'\n';}
+      });
+      log(lines);
+    };
+
+  $('#filterexpr').keyup(function (e) {   
+      if(mode == 'log'){
+        log_ws.send($('#filterexpr').val());  
+      }
+      else{
+        stats_ws.send($('#filterexpr').val());
+      }
+  });
+
+  $('#log_button').click(function (e) {   
+      e.preventDefault(e);
+      $('#log_tab').addClass("active");
+      $('#statistics_tab').removeClass("active");
+      log_ws.send($('#filterexpr').val());
+      mode = 'log';
+  });
+  $('#statistics_button').click(function (e) {   
+      e.preventDefault(e);
+      $('#log_tab').removeClass("active");
+      $('#statistics_tab').addClass("active");
+      stats_ws.send($('#filterexpr').val());
+      mode = 'stats';
+  });
+});
+</script>
+
+
+

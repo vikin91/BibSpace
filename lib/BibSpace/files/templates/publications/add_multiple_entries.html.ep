@@ -32,8 +32,7 @@
                 </div>
                 <div class="form-group">
                     <button name="save" value="save" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Check & Save</button>
-                    <button name="preview" value="preview" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span>Check & Preview</button>
-                    <button name="check_key" value="check_key" type="submit" class="btn btn-default"><i class="fa fa-exclamation-triangle" style="color: red;"></i> Check if BibTeX key exists</button>
+                    <button name="preview" value="preview" type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span>Check </button>
                 </div>
             </div>
             <div class="col-lg-2 col-md-2 col-sm-2 col-xs-6">

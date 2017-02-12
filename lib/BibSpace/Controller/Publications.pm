@@ -4,26 +4,24 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use File::Slurp;     # should be replaced in the future
+use Mojo::IOLoop;
+
+# use File::Slurp;     # should be replaced in the future
 use Path::Tiny;      # for creating directories
 use Try::Tiny;
-use Time::Piece;
-use 5.010;           #because of ~~
+
+use v5.16;           #because of ~~
 use strict;
 use warnings;
-use DBI;
+
+use Scalar::Util qw(looks_like_number);
 
 use TeX::Encode;
 use Encode;
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Functions::FPublications;
-use BibSpace::Model::MEntry;
-use BibSpace::Model::MTag;
 
-use BibSpace::Controller::Set;
-
-use Set::Scalar;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -45,391 +43,41 @@ our %mons = (
     12 => 'December'
 );
 ####################################################################################
-sub fixMonths {
-    say "CALL: fixMonths ";
-    my $self = shift;
-
-    my ( $processed_entries, $fixed_entries ) = Ffix_months( $self->app->db );
-    $self->flash( msg =>
-            'Fixing entries month field finished. Number of entries checked/fixed: '
-            . $processed_entries . "/"
-            . $fixed_entries );
-    $self->redirect_to( $self->get_referrer );
-}
+# work, but not for now
+# sub all_ajax {
+#   my $self = shift;
+#   my $entry_type = undef;
+#   $entry_type = $self->param('entry_type') // undef;
+#   my @objs = Fget_publications_main_hashed_args( $self, { entry_type => $entry_type } );
+#   $self->stash( entries => \@objs );
+#   my $html = $self->render_to_string( template => 'publications/all_table' );
+#   $self->render( text => $html );
+# }
 ####################################################################################
-sub fixEntryType {
-    say "CALL: fixEntryType ";
-    my $self = shift;
-
-    my @objs      = MEntry->static_all( $self->app->db );
-    my $num_fixes = 0;
-    for my $e (@objs) {
-
-       # $num_fixes = $num_fixes + $o->fixEntryTypeBasedOnTag($self->app->db);
-        $num_fixes
-            = $num_fixes + $e->fix_entry_type_based_on_tag( $self->app->db );
-    }
-
-    $self->flash( msg =>
-            'All entries have now their paper/talk type fixed. Number of fixes: '
-            . $num_fixes );
-    $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
-sub unhide {
-    say "CALL: Publications::unhide";
-    my $self = shift;
-    my $id   = $self->param('id');
-    my $dbh  = $self->app->db;
-
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
-    $mentry->unhide($dbh);
-
-    $self->redirect_to( $self->get_referrer );
-}
-
-####################################################################################
-sub hide {
-    my $self = shift;
-    my $id   = $self->param('id');
-
-    my $mentry = MEntry->static_get( $self->app->db, $id );
-    if ( defined $mentry ) {
-        $mentry->hide( $self->app->db );
-    }
-    else {
-        $self->flash( msg => "There is no entry with id $id" );
-    }
-    $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
-sub toggle_hide {
-    say "CALL: Publications::toggle_hide";
-    my $self = shift;
-    my $id   = $self->param('id');
-    my $dbh  = $self->app->db;
-
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
-    $mentry->toggle_hide($dbh);
-
-    $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
-sub make_paper {
-    my $self = shift;
-    my $id   = $self->param('id');
-    my $dbh  = $self->app->db;
-
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
-    $mentry->make_paper($dbh);
-
-    $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
-sub make_talk {
-    my $self = shift;
-    my $id   = $self->param('id');
-    my $dbh  = $self->app->db;
-
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
-    $mentry->make_talk($dbh);
-
-    $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
-sub all_recently_added {
-    say "CALL: all_recently_added ";
-    my $self = shift;
-    my $num  = $self->param('num') || 10;
-    my $dbh  = $self->app->db;
-
-    $self->write_log("Displaying recently added entries num $num");
-
-    my $qry
-        = "SELECT DISTINCT id, bibtex_key, creation_time FROM Entry ORDER BY creation_time DESC LIMIT ?";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($num);
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array, 0 );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-
-sub all_recently_modified {
-    say "CALL: all_recently_modified ";
-    my $self = shift;
-    my $num  = $self->param('num') || 10;
-    my $dbh  = $self->app->db;
-
-    $self->write_log("Displaying recently modified entries num $num");
-
-    my $qry
-        = "SELECT DISTINCT id, bibtex_key, modified_time FROM Entry ORDER BY modified_time DESC LIMIT ?";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($num);
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array, 0 );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-
-####################################################################################
-sub all_without_tag {
-    say "CALL: all_without_tag ";
-    my $self    = shift;
-    my $tagtype = $self->param('tagtype') || 1;
-    my $dbh     = $self->app->db;
-
-    $self->write_log("Displaying papers without any tag of type $tagtype");
-
-    my $qry = "SELECT DISTINCT id, bibtex_key, year
-                FROM Entry
-                WHERE entry_type = 'paper'
-                AND id NOT IN (
-                    SELECT DISTINCT entry_id
-                    FROM Entry_to_Tag
-                    LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
-                    WHERE Tag.type = ?)
-                    ORDER BY year DESC";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute($tagtype);
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-    my $msg
-        = "This list contains papers that have no tags of type $tagtype. Use this list to tag the untagged papers! ";
-
-    # my @objs = Fget_publications_core_from_array_ref($self, \@array);
-    # $self->stash(objs => \@objs, msg => $msg);
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->stash( msg_type => 'info', msg => $msg );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-sub all_without_tag_for_author {
-    say "CALL: all_without_tag_for_author ";
-    my $self        = shift;
-    my $dbh         = $self->app->db;
-    my $master_name = $self->param('author');
-    my $tagtype     = $self->param('tagtype');
-
-    my $author = MAuthor->static_get_by_master( $dbh, $master_name );
-    $author = MAuthor->static_get( $dbh, $master_name )
-        if !defined $author; #no such master. Assume, that author id was given
-
-    my $str
-        = "Displaying papers without any tag of type $tagtype for author id $author->{id}";
-    $self->write_log($str);
-    say $str;
-
-    my $qry = "SELECT DISTINCT id, bibtex_key, year, sort_month
-                FROM Entry
-                LEFT JOIN Entry_to_Author ON Entry.id = Entry_to_Author.entry_id
-                WHERE Entry_to_Author.author_id = ?
-                AND entry_type='paper'
-                AND id NOT IN (
-                    SELECT DISTINCT entry_id
-                    FROM Entry_to_Tag
-                    LEFT JOIN Tag ON Tag.id = Entry_to_Tag.tag_id
-                    WHERE Tag.type = ?)
-                ORDER BY year, sort_month DESC";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute( $author->{id}, $tagtype );
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-    my $msg = "This list contains papers that miss tags of type $tagtype. ";
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->flash( type => 'info ', msg => $msg );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-sub all_without_author {
-    say "CALL: all_without_author ";
-    say "all_without_author ";
-    my $self = shift;
-    my $dbh  = $self->app->db;
-
-    $self->write_log("Displaying papers without any author");
-
-    my $qry
-        = "SELECT DISTINCT id, bibtex_key FROM Entry WHERE id NOT IN (SELECT DISTINCT entry_id FROM Entry_to_Author)";
-    my $sth = $dbh->prepare($qry);
-    $sth->execute();
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-    my $msg
-        = "This list contains papers, that are currently not assigned to any of authors.
-            This doesn't mean that they don't have authors.";
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->stash( msg     => $msg );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-
-####################################################################################
-sub show_unrelated_to_team {
-    say "CALL: show_unrelated_to_team";
-    my $self    = shift;
-    my $team_id = $self->param('teamid');
-
-    $self->write_log(
-        "Displaying entries unrelated to team with it $team_id.");
-
-    my $dbh = $self->app->db;
-
-    my $set_all_papers
-        = Set::Scalar->new( map { $_->{id} } MEntry->static_all($dbh) );
-    my $set_of_related_to_team
-        = get_set_of_papers_for_all_authors_of_team_id( $self, $team_id );
-    my $end_set = $set_all_papers - $set_of_related_to_team;
-
-    my $team_name = "";
-    my $mteam = MTeam->static_get( $dbh, $team_id );
-    $team_name = $mteam->{name} if defined $mteam;
-
-    my $msg = "This list contains papers, that are:
-        <ul>
-            <li>Not assigned to the team "
-        . $team_name . "</li>
-            <li>Not assigned to any author (former or actual) of the team "
-        . $team_name . "</li>
-        </ul>";
-
-    my @objs = Fget_publications_core_from_set( $self, $end_set );
-    $self->stash( msg_type => 'info', msg => $msg );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-sub all_with_missing_month {
-    my $self = shift;
-
-    $self->write_log("Displaying entries without month");
-
-    my @objs     = ();
-    my @all_objs = MEntry->static_all( $self->app->db );
-    for my $o (@all_objs) {
-        if ( !defined $o->{month} or $o->{month} < 1 or $o->{month} > 12 ) {
-            push @objs, $o;
-        }
-    }
-
-    my $msg
-        = "<p>This list contains entries with missing BibTeX field 'month'. Add this data to get the proper chronological sorting.</p> ";
-
-    $self->stash( msg_type => 'info', msg => $msg );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-sub all_candidates_to_delete {
-    say "CALL: all_candidates_to_delete";
-    my $self = shift;
-
-    $self->write_log("Displaying entries that are candidates_to_delete");
-
-    my $set_all_papers = Set::Scalar->new( map { $_->{id} }
-            MEntry->static_all( $self->app->db ) );
-    my $end_set = $set_all_papers;
-
-    # print "A1 ", $end_set, "\n";
-
-    my $set_of_all_teams = get_set_of_all_team_ids( $self->app->db );
-
-    foreach my $teamid ( $set_of_all_teams->members ) {
-        my $set_of_papers_related_to_team
-            = get_set_of_papers_for_all_authors_of_team_id( $self, $teamid );
-        $end_set = $end_set - $set_of_papers_related_to_team;
-    }
-
-    # print "A2 ", $end_set, "\n";
-
-    $end_set = $end_set - get_set_of_papers_with_exceptions($self);
-
-    $end_set = $end_set - get_set_of_tagged_papers($self);
-
-    my $msg = "<p>This list contains papers, that are:</p>
-      <ul>
-          <li>Not assigned to any team AND</li>
-          <li>have exactly 0 tags AND</li>
-          <li>not assigned to any author that is (or was) a member of any team AND </li>
-          <li>have exactly 0 exceptions assigned.</li>
-      </ul>
-      <p>Such entries may wanted to be removed form the system or serve as a help with configuration.</p>";
-
-    my @objs = Fget_publications_core_from_set( $self, $end_set );
-    $self->stash( msg_type => 'info', msg => $msg );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-
-####################################################################################
-
-sub all_bibtex {
-    say "CALL: all_bibtex ";
+sub all {
     my $self = shift;
 
     my $entry_type = undef;
-    $entry_type = $self->param('entry_type') // 'paper';
+    $entry_type = $self->param('entry_type') // undef;
 
-# my ($arr_html, $arr_key, $arr_id, $arr_bib) = get_publications_filter($self);
-
-    # my @objs = get_publications_main($self);
     my @objs = Fget_publications_main_hashed_args( $self,
-        { hidden => 0, entry_type => $entry_type } );
+        { entry_type => $entry_type } );
+
+    $self->stash( entries => \@objs );
+    my $html = $self->render_to_string( template => 'publications/all' );
+    $self->render( data => $html );
+}
+####################################################################################
+
+sub all_bibtex {
+    my $self       = shift;
+    my $entry_type = undef;
+
+    # if entry_type = undef, then this includes papers+talks by default
+    $entry_type = $self->param('entry_type');
+
+    my @objs = Fget_publications_main_hashed_args( $self,
+        { entry_type => $entry_type, hidden => 0 } );
 
     my $big_str = "<pre>\n";
     foreach my $obj (@objs) {
@@ -440,49 +88,29 @@ sub all_bibtex {
     $self->render( text => $big_str );
 }
 ####################################################################################
-sub all {
-    say "CALL: all ";
-    my $self = shift;
-
-    my $entry_type = undef;
-    $entry_type = $self->param('entry_type') // 'paper';
-
-    if ( $self->session('user') ) {
-        my @objs = Fget_publications_main_hashed_args( $self,
-            { entry_type => $entry_type } );
-        $self->stash( entries => \@objs );
-        $self->render( template => 'publications/all' );
-    }
-    else {
-        return $self->all_read();
-    }
-}
-
-####################################################################################
 
 sub all_read {
-    say "CALL: all_read ";
     my $self = shift;
 
-    # my @objs = get_publications_main($self);
+    # this function does filtering !
+    my @objs = Fget_publications_main_hashed_args( $self, { hidden => 0 } );
 
-    my @objs = Fget_publications_main_hashed_args( $self,
-        { hidden => 0, entry_type => undef } );
     $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all_read' );
+    my $html = $self->render_to_string( template => 'publications/all_read' );
+    $self->render( data => $html );
 }
 
 ####################################################################################
 
 sub single {
-    say "CALL: single ";
     my $self = shift;
     my $id   = $self->param('id');
 
-    my @objs = ();
-    my $e = MEntry->static_get( $self->app->db, $id );
-    if ( defined $e ) {
-        push @objs, $e;
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+
+    my @objs;
+    if ( defined $entry ) {
+        push @objs, $entry;
     }
     else {
         $self->stash(
@@ -497,1086 +125,1096 @@ sub single {
 ####################################################################################
 
 sub single_read {
-    say "CALL: single_read ";
     my $self = shift;
     my $id   = $self->param('id');
 
     my @objs = ();
-    my $e = MEntry->static_get( $self->app->db, $id );
 
-    if ( defined $e and $e->is_hidden == 0 ) {
-        push @objs, $e;
-    }
-    else {
-        $self->render( text => 'Entry does not exist.' );
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+
+    if ( defined $entry and $entry->is_hidden == 0 ) {
+        push @objs, $entry;
     }
     $self->stash( entries => \@objs );
     $self->render( template => 'publications/all_read' );
-
 }
-
-############################################################################################################
-
-sub landing_years_obj {
-    say "CALL: landing_years_obj";
+####################################################################################
+sub fixMonths {
     my $self = shift;
-    my $year = $self->param('year') || undef;
 
-# if you want to list talks+papers by default on the landing_years page, use the following line
-# my $entry_type = $self->param('entry_type') || undef;
+    $self->app->logger->info("Fix months in all entries.");
 
-# if you want to list ONLY papers by default on the landing_years page, use the following line
-    my $entry_type = $self->param('entry_type') || 'paper';
+    my @entries = $self->app->repo->entries_all;
 
-    my $min_year = $self->get_year_of_oldest_entry || 0;
-    my $max_year = $self->current_year;
-    if ( $self->current_month > 8 ) {
-        $max_year++;
+    foreach my $entry (@entries) {
+        $entry->fix_month();
     }
+    $self->app->repo->entries_save(@entries);
 
-    if ( defined $year ) {
-        $min_year = $year;
-        $max_year = $year;
-    }
-
-    my %hash_dict;
-    my %hash_values;
-    my @allkeys = ( $min_year .. $max_year );
-    @allkeys = reverse @allkeys;
-
-    my @objs_arr;
-    my @keys;
-
-    foreach my $yr (@allkeys) {
-
-# my @objs = get_publications_main($self, undef, $yr, undef, $entry_type, undef, undef, 0, undef);
-        my @objs = Fget_publications_main_hashed_args(
-            $self,
-            {   year       => $yr,
-                entry_type => $entry_type,
-                visible    => 0,
-                hidden     => 0
-            }
-        );
-
-        # delete the year from the @keys array if the year has 0 papers
-        if ( scalar @objs > 0 ) {
-            $hash_dict{$yr}   = $yr;
-            $hash_values{$yr} = \@objs;
-            push @keys, $yr;
-        }
-    }
-
-    # WARNING, it depends on routing! anti-pattern! Correct it some day
-    # todo: this code is duplicated! fix it!
-    # FIXME! TODO! Catastrophe! use here url_with to fix it!!
-
-    my $url     = $self->url_with('lp');
-    my $url_msg = "Switch to grouping by types";
-    my $switchlink
-        = '<a class="bibtexitem" href="' . $url . '">' . $url_msg . '</a>';
-
-    # NAVBAR
-    my $tmp_year = $self->req->url->query->param('year');
-    $self->req->url->query->remove('year');
-    my $navbar_html
-        = '<a class="bibtexitem" href="'
-        . $self->url_with('current')
-        . '">[show ALL years]</a> ';
-    $self->req->url->query->param( year => $tmp_year )
-        if defined $tmp_year and $tmp_year ne "";
-
-    my $tmp_type = $self->req->url->query->param('bibtex_type');
-    $self->req->url->query->remove('bibtex_type');
-    $navbar_html
-        .= '<a class="bibtexitem" href="'
-        . $self->url_with('current')
-        . '">[show ALL types]</a> ';
-    $navbar_html .= '<br/>';
-    $self->req->url->query->param( bibtex_type => $tmp_type )
-        if defined $tmp_type and $tmp_type ne "";
-
-    foreach my $key ( reverse sort @keys ) {
-
-        $self->req->url->query->param( year => $key );
-        $navbar_html .= '<a class="bibtexitem" href="'
-            . $self->url_with( 'current', bibtex_type => $tmp_type ) . '">';
-        $navbar_html .= '[' . $hash_dict{$key} . ']';
-        $navbar_html .= '</a> ';
-    }
-
-    return $self->display_landing( \%hash_values, \%hash_dict, \@keys,
-        $switchlink, $navbar_html );
+    $self->flash(
+        msg      => 'Fixing entries month field finished.',
+        msg_type => 'info'
+    );
+    $self->redirect_to( $self->get_referrer );
 }
+####################################################################################
+sub toggle_hide {
+    my $self = shift;
+    my $id   = $self->param('id');
 
-############################################################################################################
-sub landing_types_obj {
-    say "CALL: landing_types_obj";
-    my $self        = shift;
-    my $bibtex_type = $self->param('bibtex_type') || undef;
-    my $entry_type  = $self->param('entry_type') || undef;
+    $self->app->logger->info("Toggle hide entry '$id'.");
 
-    # say "bibtex_type $bibtex_type";
-    # say "entry_type $entry_type";
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
-    my %hash_dict
-        ; # key: bibtex_type (SELECT DISTINCT our_type FROM OurType_to_Type WHERE landing=1 ORDER BY our_type ASC)
-          # value: description of type
-    my %hash_values;    # key: bibtex_type
-                        # value: ref to array of entry objects
-
-    my @keys;
-    my @all_keys = get_types_for_landing_page( $self->app->db );
-
-    my @keys_with_papers;
-
-    # shitty ifs
-
-    # include talks only when
-    # 1 - entry_type eq talk
-    # 2 - both types undefined
-
-    # include only one bibtex type when
-    # 1 - bibtex_type defined and entry_type ne talk
-
-    # include all bibtex types but no talks
-    #
-
-    # include everything
-    # 1 - nothing defined
-
-    # only one bibtex type
-    if ( defined $bibtex_type
-        and ( !defined $entry_type or $entry_type eq 'paper' ) )
-    {
-        # no talks
-        # single bibtex type
-        say "OPTION 1 - only one type";
-        my $key = $bibtex_type;
-
-        # $args->{author}
-        # $args->{year}
-        # $args->{bibtex_type}
-        # $args->{entry_type}
-        # $args->{tag}
-        # $args->{team}
-        # $args->{visible}
-        # $args->{permalink}
-        # $args->{hidden}
-
-# my @paper_objs = get_publications_main($self, undef, undef, $bibtex_type, $entry_type, undef, undef, 0, undef);
-        my @paper_objs = Fget_publications_main_hashed_args(
-            $self,
-            {   bibtex_type => $bibtex_type,
-                entry_type  => $entry_type,
-                visible     => 0,
-                hidden      => 0
-            }
-        );
-        if ( scalar @paper_objs > 0 ) {
-            $hash_dict{$key} = get_type_description( $self->app->db, $key );
-            $hash_values{$key} = \@paper_objs;
-            push @keys_with_papers, $key;
-        }
-    }
-
-    # only talks
-    elsif ( defined $entry_type and $entry_type eq 'talk' ) {
-
-        say "OPTION 2 - talks only";
-        my $key = 'talk';
-
-# my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
-        my @talk_objs = Fget_publications_main_hashed_args( $self,
-            { entry_type => 'talk', visible => 0, hidden => 0 } );
-        if ( scalar @talk_objs > 0 ) {
-            $hash_dict{$key}   = "Talks";
-            $hash_values{$key} = \@talk_objs;
-            push @keys_with_papers, $key;
-        }
-    }
-
-    # all but talks
-    elsif (!defined $bibtex_type
-        and defined $entry_type
-        and $entry_type eq 'paper' )
-    {
-
-        say "OPTION 3 - all but talks";
-        @keys = @all_keys;
-
-        foreach my $key (@keys) {
-
-# my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);
-            my @paper_objs = Fget_publications_main_hashed_args(
-                $self,
-                {   bibtex_type => $key,
-                    entry_type  => 'paper',
-                    visible     => 0,
-                    hidden      => 0
-                }
-            );
-            if ( scalar @paper_objs > 0 ) {
-                $hash_dict{$key}
-                    = get_type_description( $self->app->db, $key );
-                $hash_values{$key} = \@paper_objs;
-                push @keys_with_papers, $key;
-            }
-        }
-    }
-
-    # all
-    elsif ( !defined $entry_type and !defined $bibtex_type ) {
-
-        say "OPTION 4 - all";
-        @keys = @all_keys;
-
-        foreach my $key (@keys) {
-
-# my @paper_objs = get_publications_main($self, undef, undef, $key, 'paper', undef, undef, 0, undef);
-            my @paper_objs = Fget_publications_main_hashed_args(
-                $self,
-                {   bibtex_type => $key,
-                    entry_type  => 'paper',
-                    visible     => 0,
-                    hidden      => 0
-                }
-            );
-            if ( scalar @paper_objs > 0 ) {
-                $hash_dict{$key}
-                    = get_type_description( $self->app->db, $key );
-                $hash_values{$key} = \@paper_objs;
-                push @keys_with_papers, $key;
-            }
-        }
-        my $key = 'talk';
-
-# my @talk_objs = get_publications_main($self, undef, undef, undef, 'talk', undef, undef, 0, undef);
-        my @talk_objs = Fget_publications_main_hashed_args( $self,
-            { entry_type => 'talk', visible => 0, hidden => 0 } );
-        if ( scalar @talk_objs > 0 ) {
-            $hash_dict{$key}   = "Talks";
-            $hash_values{$key} = \@talk_objs;
-            push @keys_with_papers, $key;
-        }
+    if ( defined $entry ) {
+        $entry->toggle_hide;
+        $self->app->repo->entries_update($entry);
     }
     else {
-        say "OPTION 5 - else";
+        $self->flash( msg => "There is no entry with id $id" );
     }
 
-    my $url     = $self->url_with('lyp');
-    my $url_msg = "Switch to grouping by years";
-    my $switchlink
-        = '<a class="bibtexitem" href="' . $url . '">' . $url_msg . '</a>';
 
-    # NAVBAR
-
-    my $tmp_year = $self->req->url->query->param('year');
-    $self->req->url->query->remove('year');
-    my $navbar_html
-        = '<a class="bibtexitem" href="'
-        . $self->url_with('current')
-        . '">[show ALL years]</a> ';
-    $self->req->url->query->param( year => $tmp_year )
-        if defined $tmp_year and $tmp_year ne "";
-
-    $self->req->url->query->remove('bibtex_type');
-    $self->req->url->query->remove('entry_type');
-    $navbar_html
-        .= '<a class="bibtexitem" href="'
-        . $self->url_with('current')
-        . '">[show ALL types]</a> ';
-    $navbar_html .= '<br/>';
-
-    foreach my $key ( sort @keys_with_papers ) {
-
-        # say "key in keys_with_papers: $key";
-
-        if ( $key eq 'talk' ) {
-            $self->req->url->query->remove('bibtex_type');
-            $self->req->url->query->param( entry_type => 'talk' );
-            $navbar_html .= '<a class="bibtexitem" href="'
-                . $self->url_with( 'current', entry_type => 'talk' ) . '">';
-        }
-        else {
-            $self->req->url->query->remove('entry_type');
-            $self->req->url->query->param( bibtex_type => $key );
-            $navbar_html .= '<a class="bibtexitem" href="'
-                . $self->url_with( 'current', bibtex_type => $key ) . '">';
-        }
-        $navbar_html .= '[' . $hash_dict{$key} . ']';
-        $navbar_html .= '</a> ';
-    }
-
-    # say $navbar_html;
-
-    # hash_values:  key_bibtex_type -> ref_arr_entry_objects
-    # hash_dict:    key_bibtex_type -> description of the type
-    # keys_with_papers: non-empty -> key_bibtex_type
-    return $self->display_landing(
-        \%hash_values, \%hash_dict, \@keys_with_papers,
-        $switchlink,   $navbar_html
-    );
+    $self->redirect_to( $self->get_referrer );
 }
+####################################################################################
+sub make_paper {
+    my $self = shift;
+    my $id   = $self->param('id');
 
-############################################################################################################
-sub display_landing {
-    say "CALL: display_landing";
-    my $self            = shift;
-    my $hash_values_ref = shift;
-    my $hash_dict_ref   = shift;
-    my $keys_ref        = shift;
-    my $switchlink      = shift || "";
-    my $navbar_html     = shift || "";
+    $self->app->logger->info("Make entry '$id' 'paper'.");
 
-    my $navbar     = $self->param('navbar') || 0;
-    my $show_title = $self->param('title')  || 0;
-    my $show_switch = $self->param('switchlink');
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
-    # if you ommit the switchlink param, assume default = enabled
-    # by 0, do not show
-    # by 1, do show
-    $show_switch = 1 unless defined $show_switch;
+    if ( defined $entry ) {
+        $entry->make_paper();
+        $self->app->repo->entries_update($entry);
+    }
+    else {
+        $self->flash( msg => "There is no entry with id $id" );
+    }
 
-    # reset switchlink if show_switch different to 1
-    $switchlink = "" unless $show_switch == 1;
 
-    $navbar_html = "" unless $navbar == 1;
+    $self->redirect_to( $self->get_referrer );
+}
+####################################################################################
+sub make_talk {
+    my $self = shift;
+    my $id   = $self->param('id');
 
-    my $permalink = $self->param('permalink');
-    my $tag_name = $self->param('tag') || "";
+    $self->app->logger->info("Make entry '$id' 'talk'.");
 
-    my $tag_obj = MTag->static_get_by_permalink( $self->app->db, $permalink );
-    my $tag_name_for_permalink = -1;
-    $tag_name_for_permalink = $tag_obj->{name} if defined $tag_obj;
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
-    $tag_name = $tag_name_for_permalink unless $tag_name_for_permalink == -1;
-    $tag_name = $permalink
-        if !defined $self->param('tag')
-        and $tag_name_for_permalink == -1;
-    $tag_name =~ s/_+/_/g
-        if defined $tag_name
-        and defined $show_title
-        and $show_title == 1;
-    $tag_name =~ s/_/\ /g
-        if defined $tag_name
-        and defined $show_title
-        and $show_title == 1;
+    if ( defined $entry ) {
+        $entry->make_talk();
+        $self->app->repo->entries_update($entry);
+    }
+    else {
+        $self->flash( msg => "There is no entry with id $id" );
+    }
 
-    my $title = "";
-    $title .= " Publications "
-        if defined $self->param('entry_type')
-        and $self->param('entry_type') eq 'paper';
-    $title .= " Talks "
-        if defined $self->param('entry_type')
-        and $self->param('entry_type') eq 'talk';
-    $title .= " Publications and talks"
-        if !defined $self->param('entry_type');
-    $title .= " of team " . $self->param('team')
-        if defined $self->param('team');
-    $title .= " of author " . $self->param('author')
-        if defined $self->param('author');
-    $title .= " tagged as " . $tag_name if defined $self->param('tag');
-    $title .= " in category " . $tag_name
-        if defined $self->param('permalink');
-    $title .= " of type " . $self->param('bibtex_type')
-        if defined $self->param('bibtex_type');
-    $title .= " published in year " . $self->param('year')
-        if defined $self->param('year');
 
-    # my $url = $self->req->url;
-    # say "scheme ".$url->scheme;
-    # say "userinfo ".$url->userinfo;
-    # say "host ".$url->host;
-    # say "port ".$url->port;
-    # say "path ".$url->path;
-    # say "query ".$url->query;
-    # say "fragment ".$url->fragment;
+    $self->redirect_to( $self->get_referrer );
+}
+####################################################################################
+sub all_recently_added {
+    my $self = shift;
+    my $num = $self->param('num') // 10;
 
-    # keys = years
-    # my @objs = @{ $hash_values{$year} };
-    # foreach my $obj (@objs){
-    $self->stash(
-        hash_values => $hash_values_ref,
-        hash_dict   => $hash_dict_ref,
-        keys        => $keys_ref,
-        navbar      => $navbar_html,
-        show_title  => $show_title,
-        title       => $title,
-        switch_link => $switchlink
-    );
-    $self->render( template => 'publications/landing_obj' );
+    $self->app->logger->info("Displaying recently added entries.");
+
+    my @objs = $self->app->repo->entries_all;
+    @objs = sort { $b->creation_time cmp $a->creation_time } @objs;
+    @objs = @objs[ 0 .. $num - 1 ];
+
+    # map {say $_->{creation_time}} @objs;
+
+    $self->stash( entries => \@objs );
+    $self->render( template => 'publications/all' );
+}
+####################################################################################
+
+sub all_recently_modified {
+    my $self = shift;
+    my $num = $self->param('num') // 10;
+
+    $self->app->logger->info("Displaying recently modified entries.");
+
+    my @objs = $self->app->repo->entries_all;
+    @objs = sort { $b->modified_time cmp $a->modified_time } @objs;
+    @objs = @objs[ 0 .. $num - 1 ];
+
+    # map {say $_->{modified_time}} @objs;
+
+    $self->stash( entries => \@objs );
+    $self->render( template => 'publications/all' );
 }
 
 ####################################################################################
-sub replace_urls_to_file_serving_function {
-    say "CALL: replace_urls_to_file_serving_function";
-
-    ##
-    # http://127.0.0.1:3000/publications/download/paper/4/pdf
-
+sub all_without_tag {
     my $self = shift;
-    my $dbh  = $self->app->db;
+    my $tagtype = $self->param('tagtype') || 1;
 
-    my @all_entries = MEntry->static_all($dbh);
+    $self->app->logger->info("Displaying untagged entries.");
 
-    my $str = "";
+    my @all = $self->app->repo->entries_all;
+    my @entries = grep { scalar $_->get_tags($tagtype) == 0 } @all;
 
-    for my $e (@all_entries) {
+    @entries = sort_publications(@entries);
 
-        my $url_pdf = $self->url_for(
-            'download_publication_pdf',
-            filetype => 'paper',
-            id       => $e->{id}
-        )->to_abs;
-        my $url_slides = $self->url_for(
-            'download_publication',
-            filetype => 'slides',
-            id       => $e->{id}
-        )->to_abs;
+    my $msg
+        = "This list contains papers that have no tags of type $tagtype. Use this list to tag the untagged papers! ";
+    $self->stash( msg_type => 'info', msg => $msg );
+    $self->stash( entries => \@entries );
+    $self->render( template => 'publications/all' );
+}
+####################################################################################
+sub all_without_tag_for_author {
+    my $self        = shift;
+    my $master_name = $self->param('author');
+    my $tagtype     = $self->param('tagtype');
 
-        # check if the entry has pdf
-        my $pdf_path = $self->get_paper_pdf_path( $e->{id}, "paper" );
-        if ( $pdf_path ne 0 ) {    # this means that file exists locally
-            if ( $e->bibtex_has_field("pdf") ) {
-                add_field_to_bibtex_code( $dbh, $e->{id}, "pdf", "$url_pdf" );
-                $str .= "id $e->{id}, PDF: " . $url_pdf;
-                $str .= '<br/>';
-            }
+    $self->app->logger->info(
+        "Displaying untagged entries for author '$master_name'.");
+
+    my $author;
+    if ( Scalar::Util::looks_like_number($master_name) ) {
+        $author = $self->app->repo->authors_find(
+            sub { $_->master_id == $master_name } );
+    }
+    else {
+        $author = $self->app->repo->authors_find(
+            sub { $_->master eq $master_name } );
+    }
+
+
+    if ( !defined $author ) {
+        $self->flash(
+            msg      => "Author $master_name does not exist!",
+            msg_type => "danger"
+        );
+        $self->redirect_to( $self->get_referrer );
+        return;
+    }
+
+    # no such master. Assume, that author id was given
+
+    my @all_author_entries = $author->get_entries;
+    my @entries
+        = grep { scalar $_->get_tags($tagtype) == 0 } @all_author_entries;
+
+    @entries = sort_publications(@entries);
+
+    my $msg
+        = "This list contains papers of $author->{master} that miss tags of type $tagtype. ";
+    $self->stash( entries => \@entries, msg_type => 'info', msg => $msg );
+    $self->render( template => 'publications/all' );
+}
+####################################################################################
+sub all_without_author {
+    my $self = shift;
+
+    my @entries = $self->app->repo->entries_filter(
+        sub { scalar( $_->get_authors ) == 0 } );
+
+    @entries = sort_publications(@entries);
+
+    my $msg
+        = "This list contains papers, that are currently not assigned to any of authors.";
+
+    $msg .= '<a href="' . $self->url_for('delete_all_without_author') .'"> Click to delete </a>';
+    $self->stash( entries => \@entries, msg => $msg, msg_type => 'info' );
+    $self->render( template => 'publications/all' );
+}
+####################################################################################
+sub delete_all_without_author {
+    my $self = shift;
+
+    my @entries = $self->app->repo->entries_filter(
+        sub { scalar( $_->get_authors ) == 0 } );
+
+    foreach my $entry (@entries){
+        my @au = $entry->authorships_all;
+        $self->app->repo->authorships_delete(@au);
+        my @ex = $entry->exceptions_all;
+        $self->app->repo->exceptions_delete(@ex);
+        my @la = $entry->labelings_all;
+        $self->app->repo->labelings_delete(@la);
+    }
+
+    my $num_deleted = $self->app->repo->entries_delete(@entries);
+
+    my $msg
+        = "$num_deleted entries have been removed";
+    $self->flash( msg => $msg, msg_type => 'info' );
+    $self->redirect_to( 'all_without_author' );
+    
+}
+####################################################################################
+sub show_unrelated_to_team {
+    my $self    = shift;
+    my $team_id = $self->param('teamid');
+
+    $self->app->logger->info(
+        "Displaying entries unrelated to team '$team_id'.");
+
+
+    my $team_name = "";
+    my $team = $self->app->repo->teams_find( sub { $_->id == $team_id } );
+    $team_name = $team->name if defined $team;
+
+
+    my @allEntres  = $self->app->repo->entries_all;
+    my @teamEntres = $team->get_entries;
+
+    my %inTeam = map { $_ => 1 } @teamEntres;
+    my @entriesUnrelated = grep { not $inTeam{$_} } @allEntres;
+
+    @entriesUnrelated = sort_publications(@entriesUnrelated);
+
+    my $msg = "This list contains papers, that are:
+        <ul>
+            <li>Not assigned to the team "
+        . $team_name . "</li>
+            <li>Not assigned to any author (former or actual) of the team "
+        . $team_name . "</li>
+        </ul>";
+
+    $self->stash(
+        msg_type => 'info',
+        msg      => $msg,
+        entries  => \@entriesUnrelated
+    );
+    $self->render( template => 'publications/all' );
+}
+####################################################################################
+sub all_with_missing_month {
+    my $self = shift;
+
+    $self->app->logger->info("Displaying entries without month");
+
+
+    my @entries = grep { !defined $_->month or $_->month < 1 or $_->month > 12 }
+        $self->app->repo->entries_all;
+
+    @entries = sort_publications(@entries);
+
+    my $msg
+        = "This list contains entries with missing BibTeX field 'month'. ";
+    $msg .= "Add this data to get the proper chronological sorting.";
+
+    $self->stash( msg_type => 'info', msg => $msg );
+    $self->stash( entries => \@entries );
+    $self->render( template => 'publications/all' );
+}
+####################################################################################
+sub all_candidates_to_delete {
+    my $self = shift;
+
+    $self->app->logger->info(
+        "Displaying entries that are candidates_to_delete");
+
+
+    my @objs = $self->app->repo->entries_all;
+    @objs = grep { scalar $_->get_tags == 0 } @objs;    # no tags
+    @objs = grep { scalar $_->get_teams == 0 } @objs;   # no relation to teams
+    @objs = grep { scalar $_->get_exceptions == 0 } @objs;    # no exceptions
+
+
+    my $msg = "<p>This list contains papers, that are:</p>
+      <ul>
+          <li>Not assigned to any team AND</li>
+          <li>have exactly 0 tags AND</li>
+          <li>not assigned to any author that is (or was) a member of any team AND </li>
+          <li>have exactly 0 exceptions assigned.</li>
+      </ul>
+      <p>Such entries may wanted to be removed form the system or serve as a help with configuration.</p>";
+
+    $self->stash( msg_type => 'info', msg => $msg );
+    $self->stash( entries => \@objs );
+    $self->render( template => 'publications/all' );
+}
+
+####################################################################################
+sub fix_file_urls {
+    my $self = shift;
+    my $id   = $self->param('id');
+
+    $self->app->logger->info("Fixing file urls for all entries.");
+
+    my @all_entries;
+
+    if ($id) {
+        my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+        push @all_entries, $entry if $entry;
+    }
+    else {
+        @all_entries = $self->app->repo->entries_all;
+    }
+
+    my $big_str    = ".\n";
+    my $num_fixes  = 0;
+    my $num_checks = 0;
+
+    for my $entry (@all_entries) {
+
+        ++$num_checks;
+        my $str;
+        $str .= "Entry " . $entry->id . ": ";
+        $entry->discover_attachments( $self->app->get_upload_dir );
+        my @discovered_types = $entry->attachments_keys;
+
+        
+
+        $str .= "has types: (";
+        foreach (@discovered_types) {
+            $str .= " $_, ";
         }
-        my $slides_path = $self->get_paper_pdf_path( $e->{id}, "slides" );
-        if ( $slides_path ne 0 ) {    # this means that file exists locally
-            if ( $e->bibtex_has_field("slides") ) {
-                add_field_to_bibtex_code( $dbh, $e->{id}, "slides",
-                    "$url_slides" );
-                $str .= "id $e->{id}, SLI: " . $url_slides;
-                $str .= '<br/>';
-            }
+        $str .= "). Fixed: ";
+
+        # say $str;
+        my $fixed;
+        my $file     = $entry->get_attachment('paper');
+        my $file_url = $self->url_for(
+            'download_publication_pdf',
+            filetype => "paper",
+            id       => $entry->id
+        )->to_abs;
+
+        if ( $file and $file->exists ) {
+            $entry->remove_bibtex_fields( ['pdf'] );
+            $str .= "\n\t";
+            $entry->add_bibtex_field( "pdf", "$file_url" );
+            $fixed = 1;
+            $str .= "Added Bibtex filed PDF " . $file_url;
+        }
+
+        $file     = $entry->get_attachment('slides');
+        $file_url = $self->url_for(
+            'download_publication',
+            filetype => "slides",
+            id       => $entry->id
+        )->to_abs;
+
+        if ( $file and $file->exists ) {
+            $entry->remove_bibtex_fields( ['slides'] );
+            $str .= "\n\t";
+            $entry->add_bibtex_field( "slides", "$file_url" );
+            $fixed = 1;
+            $str .= "Added Bibtex filed SLIDES " . $file_url;
+        }
+        $str .= "\n";
+
+        if ($fixed) {
+            $big_str .= $str;
+            ++$num_fixes;
+            $entry->regenerate_html( 0, $self->app->bst,
+                $self->app->bibtexConverter );
         }
     }
 
-    $self->flash( msg => 'The following urls are now fixed: <br/>' . $str );
+    $self->app->logger->info("Url fix results $big_str.");
+
+    $self->flash(
+        msg_type => 'info',
+        msg =>
+            "Checked $num_checks and regenerated $num_fixes entries. You may need to run regenerate HTML force now. Detailed fix results have been saved to log."
+    );
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
 sub remove_attachment {
     my $self     = shift;
     my $id       = $self->param('id');                     # entry ID
-    my $filetype = $self->param('filetype') || 'paper';    # paper, slides
-    my $dbh      = $self->app->db;
+    my $filetype = $self->param('filetype') // 'paper';    # paper, slides
 
-    my $mentry = MEntry->static_get( $dbh, $id );
+    $self->app->logger->info(
+        "Requested to remove attachment of type '$filetype'.");
 
-    # no check as we want to have the files deleted anyway!
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+    my ( $msg, $msg_type );
 
-    $self->write_log(
-        "Removing attachment to download: filetype $filetype, id $id. ");
-    say "Removing attachment to download: filetype $filetype, id $id. ";
+    $entry->discover_attachments( $self->app->get_upload_dir );
 
-    my $file_path = get_paper_pdf_path( $self, $id, "$filetype" );
-    say "file_path $file_path";
-    my $num_deleted_files = 0;
 
-    if ( !defined $file_path or $file_path eq 0 ) {
-        $self->write_log(
-            "Cannot remove attachment. File does not exist. Filetype $filetype, id $id."
-        );
-        $self->flash( msg =>
-                "File not found. Cannot remove attachment. Filetype $filetype, id $id."
-        );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
-    else {    # file exists
+    if ( $entry->attachments_has($filetype) ) {
+        $self->app->logger->debug(
+            "Entry has attachment of type '$filetype'.");
 
-        $num_deleted_files = $self->remove_attachment_do( $id, $filetype );
-
-        if ( $num_deleted_files > 0 ) {
-            $mentry->regenerate_html( $dbh, 0, $self->app->bst );
-            $mentry->save($dbh);
+        if ( $filetype eq 'paper' ) {
+            $entry->remove_bibtex_fields( ['pdf'] );
         }
+        elsif ( $filetype eq 'slides' ) {
+            $entry->remove_bibtex_fields( ['slides'] );
+        }
+        $entry->delete_attachment($filetype);
 
-        $self->write_log(
-            "$num_deleted_files attachments removed for id $id.");
-        $self->flash( msg =>
-                "There were $num_deleted_files attachments removed for id $id."
-        );
-        $self->redirect_to( $self->get_referrer );
+        $entry->regenerate_html( 1, $self->app->bst,
+            $self->app->bibtexConverter );
+        $self->app->repo->entries_save($entry);
+
+        $msg      = "The attachment has been removed for entry '$id'.";
+        $msg_type = 'success';
+        $self->app->logger->info($msg);
     }
+    else {
+        $self->app->logger->debug(
+            "Entry has NO attachment of type '$filetype'.");
+
+        $msg
+            = "File not found. Cannot remove attachment. Filetype '$filetype', entry '$id'.";
+        $msg_type = 'danger';
+        $self->app->logger->error($msg);
+    }
+
+    $self->flash( msg_type => $msg_type, msg => $msg );
+    $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
-sub remove_attachment_do {
-    say "CALL: remove_attachment_do";
-    my $self     = shift;
-    my $id       = shift;
-    my $filetype = shift;
-    my $dbh      = $self->app->db;
+sub discover_attachments {
+    my $self = shift;
+    my $id   = $self->param('id');
+    my $do   = $self->param('do');
 
-    my $mentry = MEntry->static_get( $dbh, $id );
 
-    my $file_path = get_paper_pdf_path( $self, $id, "$filetype" );
-    say "Found paper type $filetype : $file_path";
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+    $self->app->logger->info("Discovery of attachments for entry ID '$id'." );
 
-    my $num_deleted_files = 0;
-
-    if ( !defined $file_path or $file_path eq 0 ) {
-        return 0;
+    my $msg;
+    my $msg_type = 'info';
+    if ( $entry and $do and $do == 1 ) {
+        $entry->discover_attachments( $self->app->get_upload_dir );
+        $msg .= "Discovery was run for dir '"
+            . $self->app->get_upload_dir . "'.";
     }
-
-    try {
-        unlink $file_path;
-        $num_deleted_files = $num_deleted_files + 1;
-        say "Deleting attachment file: $file_path";
+    elsif( $entry ) {
+        $msg .= "Just displaying information. ";
+        $msg
+        .= "Attachments debug: <pre style=\"font-family:monospace;\">"
+        . $entry->get_attachments_debug_string
+        . "</pre>";
     }
-    catch { };
-
-    # make sure that there is no file
-    my $file_path_after_delete
-        = get_paper_pdf_path( $self, $id, "$filetype" );
-    while ( $file_path_after_delete ne 0 ) {
-        say "File deleted but something is left: $file_path_after_delete";
-        try {
-            unlink $file_path;
-            $num_deleted_files = $num_deleted_files + 1;
-            say "Deleting attachment file: $file_path";
-        }
-        catch { };
-        $file_path_after_delete
-            = get_paper_pdf_path( $self, $id, "$filetype" );
+    else{
+        $msg = "Cannot discover, entry '$id' not found."; 
+        $msg_type = 'danger';
+        $self->app->logger->error( $msg );
     }
+    
 
-    # deleted for sure!
-
-# for safety and privacy reasons, we DO LET to delete files event if the entry does not exist
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
-    if ( $filetype eq 'paper' ) {
-        $mentry->remove_bibtex_fields( $dbh, ['pdf'] );
-    }
-    if ( $filetype eq 'slides' ) {
-        $mentry->remove_bibtex_fields( $dbh, ['slides'] );
-    }
-
-    return $num_deleted_files;
+    $self->flash( msg_type => $msg_type, msg => $msg );
+    $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
 sub download {
     my $self     = shift;
     my $id       = $self->param('id');                     # entry ID
-    my $filetype = $self->param('filetype') || 'paper';    # paper, slides
+    my $filetype = $self->param('filetype');
 
-    # $self->write_log("Requesting download: filetype $filetype, id $id. ");
+    $self->app->logger->info(
+        "Requested to download attachment of type '$filetype' for entry ID '"
+            . $id
+            . "'." );
 
-    my $file_path = $self->get_paper_pdf_path( $id, "$filetype" );
-    say "Found paper type $filetype : $file_path";
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+    my $file;
 
-    if ( !defined $file_path or $file_path eq 0 ) {
-        $self->write_log("Unsuccessful download filetype $filetype, id $id.");
-        $self->render(
-            text =>
-                "File not found. Unsuccessful download filetype $filetype, id $id.",
-            status => 404
-        );
+    if ($entry) {
+        $entry->discover_attachments( $self->app->get_upload_dir );
+        $file = $entry->get_attachment($filetype);
+    }
+    else {
+        $self->app->logger->error("Cannot download - entry '$id' not found.");
+        $self->render( status => 404, text => "File not found." );
         return;
     }
 
-    my $exists = 0;
-    $exists = 1 if -e $file_path;
-
-    if ( $exists == 1 ) {
-
-        # $self->write_log("Serving file $file_path");
-        $self->render_file( 'filepath' => $file_path );
+    if ( $file and -e $file ) {
+        $self->app->logger->info(
+            "Downloading file download '$filetype' for entry '$id'.");
+        $self->render_file( 'filepath' => $file );
+        return;
     }
-    else {
-        $self->redirect_to( $self->get_referrer );
-    }
+    $self->app->logger->error(
+        "File not found. Requested download for entry '$id', filetype '$filetype'."
+    );
+    $self->render( text => "File not found.", status => 404 );
 }
 ####################################################################################
 
 sub add_pdf {
-    say "CALL: add_pdf ";
-    my $self = shift;
-    my $id   = $self->param('id');
-    my $dbh  = $self->app->db;
+    my $self  = shift;
+    my $id    = $self->param('id');
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
-    $self->write_log("Page: add pdf for paper id $id");
+    if ( !defined $entry ) {
+        $self->flash( msg_type => 'danger', msg => "Entry '$id' not found." );
+        $self->redirect_to( $self->get_referrer );
+        return;
+    }
+    $entry->populate_from_bib();
+    $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
 
-    # getting html preview
-    my $sth
-        = $dbh->prepare(
-        "SELECT DISTINCT bibtex_key, html, bibtex_type FROM Entry WHERE id = ?"
-        );
-    $sth->execute($id);
-    my $row = $sth->fetchrow_hashref();
-    my $html_preview
-        = $row->{html} || nohtml( $row->{bibtex_key}, $row->{bibtex_type} );
-    my $key  = $row->{bibtex_key};
-    my $type = $row->{bibtex_type};
-
-    $self->stash(
-        id      => $id,
-        bkey    => $key,
-        btype   => $type,
-        preview => $html_preview
-    );
+    $self->stash( mentry => $entry );
     $self->render( template => 'publications/pdf_upload' );
 }
 ####################################################################################
 sub add_pdf_post {
-    say "CALL: add_pdf_post";
-    my $self     = shift;
-    my $id       = $self->param('id') || "unknown";
-    my $filetype = $self->param('filetype') || undef;
-    my $dbh      = $self->app->db;
+    my $self          = shift;
+    my $id            = $self->param('id');
+    my $filetype      = $self->param('filetype');
+    my $uploaded_file = $self->param('uploaded_file');
 
-    my $uploads_directory = $self->config->{upload_dir};
-    $uploads_directory
-        =~ s!/*$!/!;    # makes sure that there is exactly one / at the end
+    my $uploads_directory
+        = Path::Tiny->new( $self->app->get_upload_dir );
 
-    my $extension;
-
-    $self->write_log("Saving attachment for paper id $id");
+    $self->app->logger->info("Saving attachment for entry '$id'");
 
     # Check file size
     if ( $self->req->is_limit_exceeded ) {
-        $self->write_log(
-            "Saving attachment for paper id $id: limit exceeded!");
+        my $curr_limit_B = $ENV{MOJO_MAX_MESSAGE_SIZE};
+        $curr_limit_B ||= 16777216;
+        my $curr_limit_MB = $curr_limit_B / 1024 / 1024;
+        $self->app->logger->info(
+            "Saving attachment for paper id '$id': limit exceeded. Current limit: $curr_limit_MB MB."
+        );
         $self->flash(
-            message  => "The File is too big and cannot be saved!",
+            msg      => "The File is too big and cannot be saved!",
             msg_type => "danger"
         );
         $self->redirect_to( $self->get_referrer );
         return;
     }
 
-    # Process uploaded file
-    my $uploaded_file = $self->param('uploaded_file');
 
-    unless ($uploaded_file) {
+    if ( !$uploaded_file ) {
         $self->flash(
-            message  => "File upload unsuccessful!",
+            msg      => "File upload unsuccessful!",
             msg_type => "danger"
         );
-        $self->write_log(
-            "Saving attachment for paper id $id FAILED. Unknown reason");
+        $self->app->logger->info(
+            "Saving attachment for paper id '$id' FAILED. Unknown reason");
         $self->redirect_to( $self->get_referrer );
+        return;
     }
 
-    my $size = $uploaded_file->size;
+    my $size   = $uploaded_file->size;
+    my $sizeKB = int( $size / 1024 );
     if ( $size == 0 ) {
         $self->flash(
-            message =>
-                "No file was selected or file has 0 bytes! Not saving!",
+            msg => "No file was selected or file has 0 bytes! Not saving!",
             msg_type => "danger"
         );
-        $self->write_log(
-            "Saving attachment for paper id $id FAILED. File size is 0.");
-        $self->redirect_to( $self->get_referrer );
-    }
-    else {
-        my $sizeKB = int( $size / 1024 );
-        my $name   = $uploaded_file->filename;
-
-        my @dot_arr = split( /\./, $name );
-        my $arr_size = scalar @dot_arr;
-        $extension = $dot_arr[ $arr_size - 1 ];
-
-        my $fname;
-        my $fname_no_ext;
-        my $file_path;
-        my $bibtex_field;
-        my $directory;
-
-        if ( $filetype eq 'paper' ) {
-            $fname_no_ext = "paper-" . $id . ".";
-            $fname        = $fname_no_ext . $extension;
-
-            $directory    = "papers/";
-            $bibtex_field = "pdf";
-        }
-        elsif ( $filetype eq 'slides' ) {
-            $fname_no_ext = "slides-paper-" . $id . ".";
-            $fname        = $fname_no_ext . $extension;
-            $directory    = "slides/";
-            $bibtex_field = "slides";
-        }
-        else {
-            $fname_no_ext = "unknown-" . $id . ".";
-            $fname        = $fname_no_ext . $extension;
-            $directory    = "unknown/";
-
-            $bibtex_field = "pdf2";
-        }
-        try {
-            path( $uploads_directory . $directory )->mkpath;
-        }
-        catch {
-            warn "Exception: cannot create directory $directory. Msg: $_";
-        };
-
-        $file_path = $directory . $fname;
-
-        # remove old file that would match the patterns
-        my $old_file = $self->get_paper_pdf_path( $id, "$filetype" );
-        say "old_file: $old_file";
-        if ( $old_file ne 0 ) {
-
-            # old file exists and must be deleted!
-            try {
-                unlink $old_file;
-                say "Deleting $old_file";
-            }
-            catch { };
-        }
-
-        $uploaded_file->move_to( $uploads_directory . $file_path )
-            ;    ### WORKS!!!
-        my $new_file = $self->get_paper_pdf_path( $id, "$filetype" );
-
-        my $file_url = $self->url_for(
-            'download_publication',
-            filetype => "$filetype",
-            id       => $id
-        )->to_abs;
-        if ( $filetype eq 'paper' ) {    # so that the link looks nicer
-            say "Nicing the url for paper";
-            say "old file_url $file_url";
-            $file_url = $self->url_for(
-                'download_publication_pdf',
-                filetype => "paper",
-                id       => $id
-            )->to_abs;
-            say "file_url $file_url";
-        }
-
-        $self->write_log(
-            "Saving attachment for paper id $id under: $file_url");
-        add_field_to_bibtex_code( $self->app->db, $id, $bibtex_field,
-            "$file_url" );
-
-        my $msg
-            = "Successfully uploaded the $sizeKB KB file <em>$name</em> as <strong><em>$filetype</em></strong>.
-        The file was renamed to: <em>$fname</em>. URL <a href=\""
-            . $file_url . "\">$name</a>";
-
-        my $mentry = MEntry->static_get( $dbh, $id );
-        if ( !defined $mentry ) {
-            $self->flash( msg => "There is no entry with id $id" );
-            $self->redirect_to( $self->get_referrer );
-            return;
-        }
-        $mentry->regenerate_html( $dbh, 0, $self->app->bst );
-        $mentry->save($dbh);
-
-        $self->flash( message => $msg );
-        $self->redirect_to( $self->get_referrer );
-    }
-}
-
-####################################################################################
-####################################################################################
-sub regenerate_html_for_all {
-    my $self = shift;
-    $self->inactivity_timeout(3000);
-    my $dbh = $self->app->db;
-
-    $self->write_log("regenerate_html_for_all is running");
-
-    my @entries = MEntry->static_all($dbh);
-
-    my $bst_file = $self->app->bst;
-
-    # for performance reasons as separate variable. Not benchmarked however.
-
-    for my $e (@entries) {
-        $e->{bst_file} = $bst_file;
-        $e->regenerate_html( $dbh, 0, $self->app->bst );
-        $e->save($dbh);
-    }
-
-    $self->write_log("regenerate_html_for_all has finished");
-
-    $self->flash( msg => 'Regeneration of HTML code finished.' );
-    my $referrer = $self->get_referrer();
-    $self->redirect_to($referrer);
-}
-####################################################################################
-sub regenerate_html_for_all_force {
-    my $self = shift;
-    $self->inactivity_timeout(3000);
-    my $dbh = $self->app->db;
-    $self->write_log("regenerate_html_for_all FORCE is running");
-
-    my $bst_file = $self->app->bst;
-
-    my @entries = MEntry->static_all($dbh);
-    for my $e (@entries) {
-        $e->{bst_file} = $bst_file;
-        $e->regenerate_html( $dbh, 1 );
-        $e->save($dbh);
-    }
-
-
-    $self->write_log("regenerate_html_for_all FORCE has finished");
-    $self->flash( msg => 'Regeneration of HTML code finished.' );
-    my $referrer = $self->get_referrer();
-    $self->redirect_to($referrer);
-}
-####################################################################################
-sub regenerate_html {
-    say "CALL: regenerate_html ";
-    my $self = shift;
-    my $dbh  = $self->app->db;
-    my $id   = $self->param('id');
-
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
+        $self->app->logger->info(
+            "Saving attachment for paper id '$id' FAILED. File size is 0.");
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    $mentry->{bst_file} = $self->app->bst;
-    $mentry->regenerate_html( $dbh, 1 );
-    $mentry->save($dbh);
+
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+
+    if ( !defined $entry ) {
+        $self->flash(
+            msg_type => 'danger',
+            msg      => "Entry '$id' does not exist."
+        );
+        $self->redirect_to( $self->get_referrer );
+        return;
+    }
+
+
+    my $name      = $uploaded_file->filename;
+    my @dot_arr   = split( /\./, $name );
+    my $extension = $dot_arr[-1];
+
+
+    my $file_url;
+    my $destination;
+
+    if ( $filetype eq 'paper' ) {
+        $entry->delete_attachment('paper');
+        $destination
+            = $uploads_directory->path( "papers", "paper-$id.$extension" );
+        $uploaded_file->move_to($destination);
+        $self->app->logger->debug(
+            "Attachments file has been moved to: $destination.");
+
+        $entry->add_attachment( 'paper', $destination );
+        $file_url = $self->url_for(
+            'download_publication_pdf',
+            filetype => "paper",
+            id       => $entry->id
+        )->to_abs;
+        $entry->add_bibtex_field( 'pdf', "$file_url" );
+    }
+    elsif ( $filetype eq 'slides' ) {
+        $entry->delete_attachment('slides');
+        $destination = $uploads_directory->path( "slides",
+            "slides-paper-$id.$extension" );
+        $uploaded_file->move_to($destination);
+        $self->app->logger->debug(
+            "Attachments file has been moved to: $destination.");
+
+        $entry->add_attachment( 'slides', $destination );
+        $file_url = $self->url_for(
+            'download_publication',
+            filetype => "slides",
+            id       => $entry->id
+        )->to_abs;
+        $entry->add_bibtex_field( 'slides', "$file_url" );
+    }
+    else {
+        # ignore - we support only pdf and slides so far
+    }
+
+    $self->app->logger->info(
+        "Saving attachment for entry '$id' under: '$destination'.");
+
+    my $msg
+        = "Successfully uploaded the $sizeKB KB file as <strong><em>$filetype</em></strong>.
+      The file was renamed to:  <a href=\""
+        . $file_url . "\">"
+        . $destination->basename . "</a>";
+
+    $entry->regenerate_html( 1, $self->app->bst,
+        $self->app->bibtexConverter );
+    $self->app->repo->entries_save($entry);
+
+    $self->flash( msg_type => 'success', msg => $msg );
+    $self->redirect_to( $self->get_referrer );
+}
+
+####################################################################################
+sub mark_author_to_regenerate {
+    my $self      = shift;
+    my $author_id = $self->param('author_id');
+    my $converter = $self->app->bibtexConverter;
+
+    my $author = $self->app->repo->authors_find( sub{$_->id == $author_id} );
+
+    my @entries;
+
+    if($author){
+        $self->app->logger->info("Marking entries of author '".$author->uid."' for HTML regeneration.");
+
+        @entries = $author->get_entries;
+        foreach my $entry (@entries){
+            $entry->need_html_regen(1);
+        }
+        $self->app->repo->entries_save(@entries);
+    }
+
+    my $msg = "".scalar(@entries). " entries have been MARKED for regeneration. ";
+    $msg .= "Now you may run 'regenerate all' or 'regenerate in chunks'. ";
+    $msg .= "Regenration in chunks is useful for large set of entries. ";
+
+    $self->app->logger->info($msg);
+    $self->flash( msg_type => 'info', msg => $msg );
+    $self->redirect_to( $self->get_referrer );
+}
+####################################################################################
+sub regenerate_html_for_all {
+    my $self      = shift;
+    my $converter = $self->app->bibtexConverter;
+
+    $self->inactivity_timeout(3000);
+
+    $self->app->logger->info("regenerate_html_for_all is running");
+
+    my @entries   = $self->app->repo->entries_filter( sub{$_->need_html_regen == 1} );
+    my $num_regen = Fregenerate_html_for_array($self->app, 0, $converter, \@entries);
+    my $left_todo = scalar(@entries) - $num_regen;
+
+    my $msg = "$num_regen entries have been regenerated. ";
+    $msg .= "$left_todo furter entries still require regeneration.";
+    $self->app->logger->info($msg);
+    $self->flash( msg_type => 'info', msg => $msg );
+    $self->redirect_to( $self->get_referrer );
+}
+####################################################################################
+sub regenerate_html_in_chunk {
+    my $self      = shift;
+    my $chunk_size = $self->param('chunk_size') // 30;
+
+    my $converter = $self->app->bibtexConverter;
+
+    $self->inactivity_timeout(3000);
+
+    $self->app->logger->info("regenerate_html_in_chunk is running, chunk size $chunk_size ");
+
+    my @entries   = $self->app->repo->entries_filter( sub{ $_->need_html_regen == 1} );
+
+    my $last_entry_index = $chunk_size-1;
+    $last_entry_index = scalar(@entries)-1 if scalar(@entries) < $chunk_size;
+
+    my @portion_of_entries = @entries[ 0 .. $last_entry_index ];
+    @portion_of_entries = grep {defined $_} @portion_of_entries;
+
+    my $num_regen = Fregenerate_html_for_array($self->app, 1, $converter, \@portion_of_entries);
+    my $left_todo = scalar(@entries) - $num_regen;
+
+    my $msg = "$num_regen entries have been regenerated. ";
+    $msg .= "$left_todo furter entries still require regeneration.";
+    $self->app->logger->info($msg);
+    $self->flash( msg_type => 'info', msg => $msg );
+    $self->redirect_to( $self->get_referrer() );
+}
+####################################################################################
+sub mark_all_to_regenerate {
+    my $self      = shift;
+    my $converter = $self->app->bibtexConverter;
+
+    $self->app->logger->info("Marking all entries for HTML regeneration.");
+
+    my @entries   = $self->app->repo->entries_all;
+    foreach my $entry (@entries){
+        $entry->need_html_regen(1);
+        # $self->app->repo->entries_save($entry);
+    }
+    $self->app->repo->entries_save(@entries);
+
+    my $msg = "".scalar(@entries). " entries have been MARKED for regeneration. ";
+    $msg .= "Now you may run 'regenerate all' or 'regenerate in chunks'. ";
+    $msg .= "Regenration in chunks is useful for large set of entries. ";
+    $self->app->logger->info($msg);
+    $self->flash( msg_type => 'info', msg => $msg );
+    $self->redirect_to( $self->get_referrer() );
+
+}
+
+####################################################################################
+sub regenerate_html {
+    my $self      = shift;
+    my $converter = $self->app->bibtexConverter;
+    my $id        = $self->param('id');
+
+
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+
+    if ( !defined $entry ) {
+        $self->flash(
+            msg      => "There is no entry with id $id",
+            msg_type => 'danger'
+        );
+        $self->redirect_to( $self->get_referrer );
+        return;
+    }
+    my @entries   = ($entry);
+    my $num_regen = Fregenerate_html_for_array($self->app, 1, $converter, \@entries);
+
+    my $msg;
+    if($num_regen == 1){
+        $msg = "$num_regen entry has been regenerated.";
+    }
+    else{
+        $msg = "$num_regen entries have been regenerated.";   
+    }
+    $self->app->logger->info($msg);
+    $self->flash( msg_type => 'info', msg => $msg );
 
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
 
 sub delete_sure {
-    say "CALL: delete_sure ";
     my $self = shift;
     my $id   = $self->param('id');
-    my $dbh  = $self->app->db;
 
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $id" );
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
+
+    if ( !defined $entry ) {
+        $self->app->logger->warn(
+            "Entry '$id' does not exist and thus can't be deleted.");
+        $self->flash(
+            mgs_type => 'danger',
+            msg      => "There is no entry with id $id"
+        );
         $self->redirect_to( $self->get_referrer );
         return;
     }
 
-    remove_attachment_do( $self, $id, 'paper' );
-    remove_attachment_do( $self, $id, 'slides' );
-    $mentry->delete($dbh);
+    $entry->delete_all_attachments;
+    my @entry_authorships = $entry->authorships_all;
+    my @entry_labelings = $entry->labelings_all;
+    my @entry_exceptions = $entry->exceptions_all;
+    $self->app->repo->authorships_delete(@entry_authorships);
+    $self->app->repo->labelings_delete(@entry_labelings);
+    $self->app->repo->exceptions_delete(@entry_exceptions);
+    $self->app->repo->entries_delete($entry);
 
-    $self->write_log("delete_sure entry id $id. Entry deleted.");
-
+    $self->app->logger->info("Entry '$id' has been deleted.");
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
 sub show_authors_of_entry {
-    say "CALL: show_authors_of_entry";
     my $self = shift;
     my $id   = $self->param('id');
-    my $dbh  = $self->app->db;
-    $self->write_log("Showing authors of entry id $id");
+    $self->app->logger->info("Showing authors of entry id $id");
 
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
+
+    my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+
+    if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    my $html_preview = $mentry->{html};
-    my $key          = $mentry->{bibtex_key};
 
-    my @authors = $mentry->authors($dbh);  # $self->get_authors_of_entry($id);
-    my $teams_for_paper = get_set_of_teams_for_entry_id( $self, $id );
-    my @teams           = $teams_for_paper->members;
 
-    $self->stash(
-        eid      => $id,
-        key      => $key,
-        preview  => $html_preview,
-        authors  => \@authors,
-        team_ids => \@teams
-    );
+    my @authors = map { $_->author } $entry->authorships_all;
+    my @teams = $entry->get_teams;
+
+    $self->stash( entry => $entry, authors => \@authors, teams => \@teams );
     $self->render( template => 'publications/show_authors' );
 }
 ####################################################################################
-sub manage_exceptions {
-    say "CALL: manage_exceptions";
+####################################################################################
+####################################################################################
+sub manage_tags {
     my $self = shift;
     my $id   = $self->param('id');
-    my $dbh  = $self->app->db;
-    $self->write_log("Manage exceptions of entry id $id");
 
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
+    $self->app->logger->info("Manage tags of entry id $id");
+
+
+    my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+
+    if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    my $html_preview = $mentry->{html};
-    my $key          = $mentry->{bibtex_key};
-    my $btype        = $mentry->{bibtex_type};
 
-    my @current_exceptions = get_exceptions_for_entry_id( $dbh, $id );
-    my $current_exceptions_set = Set::Scalar->new(@current_exceptions);
 
-    my @authors = $self->get_authors_of_entry($id);
-    my $teams_for_paper = get_set_of_teams_for_entry_id( $self, $id );
+    my @tags      = $entry->get_tags;
+    my @tag_types = $self->app->repo->tagTypes_all;
 
-    my @teams = $teams_for_paper->members;
-    my @unassigned_teams
-        = (   get_set_of_all_team_ids( $self->app->db )
-            - $teams_for_paper
-            - $current_exceptions_set )->members;
 
-    $self->stash(
-        eid              => $id,
-        key              => $key,
-        btype            => $btype,
-        preview          => $html_preview,
-        author_ids       => \@authors,
-        exceptions       => \@current_exceptions,
-        team_ids         => \@teams,
-        unassigned_teams => \@unassigned_teams
-    );
-    $self->render( template => 'publications/manage_exceptions' );
-}
-####################################################################################
-sub manage_tags {
-    say "CALL: manage_tags";
-    my $self = shift;
-    my $eid  = $self->param('id');
-    my $dbh  = $self->app->db;
-
-    $self->write_log("Manage tags of entry eid $eid");
-
-    my $mentry = MEntry->static_get( $dbh, $eid );
-    if ( !defined $mentry ) {
-        $self->flash( msg => "There is no entry with id $eid" );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
-
-    my $html_preview = $mentry->{html};
-    my $key          = $mentry->{bibtex_key};
-
-    my @all_tags     = MTag->static_all($dbh);
-    my @all_names    = map { $_->{name} } @all_tags;
-    my @all_ids      = map { $_->{id} } @all_tags;
-    my @all_parrents = map { $_->{parent} } @all_tags;
-
-    # FIXME for compatibility with obsolete code
-    my $all_tags_arrref    = \@all_names;
-    my $all_ids_arrref     = \@all_ids;
-    my $all_parents_arrref = \@all_parrents;
-
-    my @tags_for_entry = $mentry->tags($dbh);
-
-    my @entry_tag_names    = map { $_->{name} } @tags_for_entry;
-    my @entry_tag_ids      = map { $_->{id} } @tags_for_entry;
-    my @entry_tag_parrents = map { $_->{parent} } @tags_for_entry;
-
-    # FIXME for compatibility with obsolete code
-    my $tags_arrref    = \@entry_tag_names;
-    my $ids_arrref     = \@entry_tag_ids;
-    my $parents_arrref = \@entry_tag_parrents;
-
-    my @unassigned_tags_ids;
-
-    for my $tid (@all_ids) {
-        if ( !grep( /^$tid$/, @$ids_arrref ) ) {
-            push @unassigned_tags_ids, $tid;
-        }
-    }
-
-    $self->stash(
-        eid                => $eid,
-        key                => $key,
-        preview            => $html_preview,
-        tags               => $tags_arrref,
-        ids                => $ids_arrref,
-        parents            => $parents_arrref,
-        all_tags           => $all_tags_arrref,
-        unassigned_tag_ids => \@unassigned_tags_ids,
-        all_ids            => $all_ids_arrref,
-        all_parents        => $all_parents_arrref
-    );
+    $self->stash( entry => $entry, tags => \@tags, tag_types => \@tag_types );
     $self->render( template => 'publications/manage_tags' );
 }
 ####################################################################################
 
 sub remove_tag {
-    say "CALL: remove_tag";
-    my $self = shift;
-    my $eid  = $self->param('eid');
-    my $tid  = $self->param('tid');
-    my $dbh  = $self->app->db;
+    my $self     = shift;
+    my $entry_id = $self->param('eid');
+    my $tag_id   = $self->param('tid');
 
-    $self->write_log("Removing tag id $tid from entry eid $eid");
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $entry_id } );
+    my $tag   = $self->app->repo->tags_find( sub    { $_->id == $tag_id } );
 
-    my $sth = $dbh->prepare(
-        "DELETE FROM Entry_to_Tag WHERE entry_id=? AND tag_id=?");
-    $sth->execute( $eid, $tid );
+    if ( defined $entry and defined $tag ) {
 
-    $self->redirect_to( $self->get_referrer );
-
-}
-####################################################################################
-
-sub add_tag {
-    say "CALL: add_tag";
-    my $self = shift;
-    my $eid  = $self->param('eid');
-    my $tid  = $self->param('tid');
-    my $dbh  = $self->app->db;
-
-    $self->write_log("Adding tag id $tid to entry eid $eid");
-
-    my $sth = $dbh->prepare(
-        "INSERT INTO Entry_to_Tag(entry_id, tag_id) VALUES (?,?)");
-    $sth->execute( $eid, $tid );
-    $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
-
-sub add_exception {
-    say "CALL: add_exception";
-    my $self = shift;
-    my $eid  = $self->param('eid');
-    my $tid  = $self->param('tid');
-    my $dbh  = $self->app->db;
-
-    $self->write_log("Adding exception id $tid to entry eid $eid");
-
-    my $sth
-        = $dbh->prepare(
-        "INSERT INTO Exceptions_Entry_to_Team(entry_id, team_id) VALUES (?,?)"
+        my $search_label = Labeling->new(
+            entry    => $entry,
+            tag      => $tag,
+            entry_id => $entry->id,
+            tag_id   => $tag->id
         );
-    $sth->execute( $eid, $tid );
 
+        my $label = $self->app->repo->labelings_find(
+            sub { $_->equals($search_label) } );
+
+        if ($label) {
+
+            ## you should always execute all those three commands together - smells like command pattern...
+            $entry->remove_labeling($label);
+            $tag->remove_labeling($label);
+            $self->app->repo->labelings_delete($label);
+
+
+            $self->app->logger->info( "Removed tag "
+                    . $tag->name
+                    . " from entry ID "
+                    . $entry->id
+                    . ". " );
+        }
+        else {
+            # this paper does not have this tag - do nothing
+            $self->app->logger->warn( "Cannot remove tag "
+                    . $tag->name
+                    . " from entry ID "
+                    . $entry->id
+                    . " - reason: labeling not found. " );
+        }
+
+    }
+    
+
+    $self->redirect_to( $self->get_referrer );
+
+}
+####################################################################################
+sub add_tag {
+    my $self     = shift;
+    my $entry_id = $self->param('eid');
+    my $tag_id   = $self->param('tid');
+
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $entry_id } );
+    my $tag   = $self->app->repo->tags_find( sub    { $_->id == $tag_id } );
+
+    if ( defined $entry and defined $tag ) {
+        my $label = Labeling->new(
+            entry    => $entry,
+            tag      => $tag,
+            entry_id => $entry->id,
+            tag_id   => $tag->id
+        );
+        ## you should always execute all those three commands together - smells like command pattern...
+        
+        $self->app->repo->labelings_save($label);
+        $entry->add_labeling($label);
+        $tag->add_labeling($label);
+    }
+    else {
+        # this paper does not have this tag - do nothing
+        $self->app->logger->warn(
+            "Cannot add tag $tag_id to entry ID $entry_id - reason: tag or entry not found. "
+        );
+    }
+
+    $self->redirect_to( $self->get_referrer );
+}
+####################################################################################
+####################################################################################
+####################################################################################
+sub manage_exceptions {
+    my $self = shift;
+    my $id   = $self->param('id');
+
+
+    my $entry = $self->app->repo->entries_find( sub { $_->{id} == $id } );
+
+    if ( !defined $entry ) {
+        $self->flash( msg => "There is no entry with id $id" );
+        $self->redirect_to( $self->get_referrer );
+        return;
+    }
+
+
+    my @exceptions = $entry->exceptions_all;
+    my @all_teams  = $self->app->repo->teams_all;
+    my @teams      = $entry->get_teams;
+    my @authors    = $entry->get_authors;
+
+    # cannot use objects as keysdue to stringification!
+    my %exceptions_hash = map { $_->team->id => 1 } @exceptions;
+    my @unassigned_teams = grep { not $exceptions_hash{ $_->id } } @all_teams;
+
+
+    $self->stash(
+        entry            => $entry,
+        exceptions       => \@exceptions,
+        teams            => \@teams,
+        all_teams        => \@all_teams,
+        authors          => \@authors,
+        unassigned_teams => \@unassigned_teams
+    );
+    $self->render( template => 'publications/manage_exceptions' );
+}
+####################################################################################
+sub add_exception {
+    my $self     = shift;
+    my $entry_id = $self->param('eid');
+    my $team_id  = $self->param('tid');
+
+
+    my $msg;
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $entry_id } );
+    my $team  = $self->app->repo->teams_find( sub   { $_->id == $team_id } );
+
+    if ( defined $entry and defined $team ) {
+
+        my $exception = Exception->new(
+            entry    => $entry,
+            team     => $team,
+            entry_id => $entry->id,
+            team_id  => $team->id
+        );
+
+        $entry->add_exception($exception);
+        $team->add_exception($exception);
+        $self->app->repo->exceptions_save($exception);
+
+        $msg
+            = "Exception added! Entry ID "
+            . $entry->id
+            . " will be now listed under team '"
+            . $team->name . "'.";
+    }
+    else {
+        $msg
+            = "Cannot find entry or team to create exception. Searched team ID: "
+            . $team_id
+            . " entry ID: "
+            . $entry_id . ".";
+    }
+
+    $self->flash( msg => $msg );
+    $self->app->logger->info($msg);
     $self->redirect_to( $self->get_referrer );
 
 }
 ####################################################################################
 
 sub remove_exception {
-    say "CALL: remove_exception";
-    my $self = shift;
-    my $eid  = $self->param('eid');
-    my $tid  = $self->param('tid');
-    my $dbh  = $self->app->db;
+    my $self     = shift;
+    my $entry_id = $self->param('eid');
+    my $team_id  = $self->param('tid');
 
-    $self->write_log("Removing exception id $tid to entry eid $eid");
 
-    my $sth
-        = $dbh->prepare(
-        "DELETE FROM Exceptions_Entry_to_Team WHERE entry_id=? AND team_id=?"
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $entry_id } );
+    my $team  = $self->app->repo->teams_find( sub   { $_->id == $team_id } );
+
+    my $msg;
+
+    if ( defined $entry and defined $team ) {
+
+        my $ex = Exception->new(
+            team_id  => $team_id,
+            entry_id => $entry_id,
+            team     => $team,
+            entry    => $entry
         );
-    $sth->execute( $eid, $tid );
+
+        my $exception
+            = $self->app->repo->exceptions_find( sub { $_->equals($ex) } );
+
+        if ( defined $exception ) {
+            $entry->remove_exception($exception);
+            $team->remove_exception($exception);
+            $self->app->repo->exceptions_delete($exception);
+
+            $msg
+                = "Removed exception team '"
+                . $team->name
+                . "' from entry ID "
+                . $entry->id . ". ";
+        }
+        else {
+            $msg
+                = "Cannot find exception to remove. Searched team '"
+                . $team->name
+                . "' entry ID: "
+                . $entry->id . ".";
+        }
+    }
+    else {
+        $msg
+            = "Cannot find exception to remove. Searched team ID: "
+            . $team_id
+            . " entry ID: "
+            . $entry_id . ".";
+    }
+
+    $self->flash( msg => $msg );
+    $self->app->logger->info($msg);
 
     $self->redirect_to( $self->get_referrer );
 
 }
-
+####################################################################################
+####################################################################################
 ####################################################################################
 sub get_adding_editing_message_for_error_code {
     my $self        = shift;
@@ -1630,60 +1268,50 @@ sub get_adding_editing_message_for_error_code {
 
 ####################################################################################
 sub publications_add_get {
-    say "CALL: publications_add_get ";
     my $self = shift;
-    $self->write_log("Adding publication");
-    my $dbh = $self->app->db;
-
+    $self->app->logger->info("Open Add Publication");
 
     my $msg = "<strong>Adding mode</strong> You operate on an unsaved entry!";
-    my $e_dummy = MEntry->new();
-    $e_dummy->{id} = -1;
+
     my $bib = '@article{key' . get_current_year() . ',
       author = {Johny Example},
+      journal = {Journal of this and that},
+      publisher = {Printer-at-home publishing},
       title = {{Selected aspects of some methods}},
       year = {' . get_current_year() . '},
       month = {' . $mons{ get_current_month() } . '},
       day = {1--31},
-  }';
-    $e_dummy->{bib}    = $bib;
-    $e_dummy->{hidden} = 0;      # new papers are not hidden by default
-    $e_dummy->populate_from_bib();
-    $e_dummy->generate_html( $self->app->bst );
+    }';
 
-    $self->stash( mentry => $e_dummy, msg => $msg );
-    $self->render( template => 'publications/edit_entry' );
+    my $e_dummy = $self->app->entityFactory->new_Entry( bib => $bib );
+
+    $e_dummy->populate_from_bib();
+    $e_dummy->generate_html( $self->app->bst, $self->app->bibtexConverter );
+
+    $self->stash( entry => $e_dummy, msg => $msg );
+    $self->render( template => 'publications/add_entry' );
 }
 ####################################################################################
 sub publications_add_post {
-    say "CALL: publications_add_post ";
     my $self            = shift;
     my $new_bib         = $self->param('new_bib');
     my $param_prev      = $self->param('preview');
     my $param_save      = $self->param('save');
     my $param_check_key = $self->param('check_key');
-    my $dbh             = $self->app->db;
 
     my $action = 'default';
     $action = 'save'      if $param_save;         # user clicks save
     $action = 'preview'   if $param_prev;         # user clicks preview
     $action = 'check_key' if $param_check_key;    # user clicks check key
 
-    $self->write_log("Adding publication. Action: > $action <.");
+    $self->app->logger->info("Adding publication. Action: > $action <.");
 
     $new_bib =~ s/^\s+|\s+$//g;
     $new_bib =~ s/^\t//g;
 
-    my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-        = Fhandle_add_edit_publication( $dbh, $new_bib, -1, $action,
-        $self->app->bst );
-    my $adding_msg
-        = get_adding_editing_message_for_error_code( $self, $status_code_str,
-        $existing_id );
-
-    $self->write_log(
-        "Adding publication. Action: > $action <. Status code: $status_code_str."
-    );
+    my $status_code_str;
+    my $existing_id    = -1;
+    my $added_under_id = -1;
 
     # status_code_strings
     # -2 => PREVIEW
@@ -1692,75 +1320,145 @@ sub publications_add_post {
     # 1 => EDIT_OK
     # 2 => KEY_OK
     # 3 => KEY_TAKEN
-    my $bibtex_warnings = FprintBibtexWarnings( $mentry->{warnings} );
-    my $msg             = $adding_msg . $bibtex_warnings;
-    my $msg_type        = 'success';
-    $msg_type = 'warning' if $bibtex_warnings =~ m/Warning/;
-    $msg_type = 'danger'  if $status_code_str eq 'ERR_BIBTEX' or $status_code_str eq 'KEY_TAKEN' or$bibtex_warnings =~ m/Error/;
 
-    $self->stash( mentry => $mentry, msg => $msg, msg_type => $msg_type );
 
-    if ( $status_code_str eq 'ADD_OK' ) {
+    my $entry = $self->app->entityFactory->new_Entry( bib => $new_bib );
+
+    # any action
+    if ( !$entry->has_valid_bibtex ) {
+        $status_code_str = 'ERR_BIBTEX';
+        my $msg = get_adding_editing_message_for_error_code( $self,
+            $status_code_str, $existing_id );
+        my $msg_type = 'danger';
+
+        $self->app->logger->info(
+            "Adding publication. Action: > $action <. Status code: $status_code_str."
+        );
+        $self->stash( entry => $entry, msg => $msg, msg_type => $msg_type );
+        $self->render( template => 'publications/add_entry' );
+        return;
+    }
+
+    $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
+    my $bibtex_warnings = FprintBibtexWarnings( $entry->warnings );
+
+    # any action
+    my $existing_entry = $self->app->repo->entries_find(
+        sub { $_->bibtex_key eq $entry->bibtex_key } );
+    if ($existing_entry) {
+        $status_code_str = 'KEY_TAKEN';
+        my $msg_type = 'danger';
+        $existing_id = $existing_entry->id;
+        my $msg = get_adding_editing_message_for_error_code( $self,
+            $status_code_str, $existing_id );
+
+        $self->app->logger->info(
+            "Adding publication. Action: > $action <. Status code: $status_code_str."
+        );
+        $self->stash( entry => $entry, msg => $msg, msg_type => $msg_type );
+        $self->render( template => 'publications/add_entry' );
+        return;
+    }
+
+
+    if ( $action eq 'preview' or $action eq 'check_key' ) {
+        my $status_code_str = 'PREVIEW';
+        my $msg_type        = 'info';
+        $msg_type = 'warning' if $bibtex_warnings;
+        my $msg = get_adding_editing_message_for_error_code( $self,
+            $status_code_str, $existing_id );
+        $msg .= $bibtex_warnings;
+
+        $self->app->logger->info(
+            "Adding publication. Action: > $action <. Status code: $status_code_str."
+        );
+        $self->stash( entry => $entry, msg => $msg, msg_type => $msg_type );
+        $self->render( template => 'publications/add_entry' );
+        return;
+    }
+
+
+    if ( $action eq 'save' ) {
+
+        $status_code_str = 'ADD_OK';
+        $entry->fix_month();
+        $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
+
+        $self->app->repo->entries_save($entry);
+        $added_under_id = $entry->id;
+
+        ## !!! the entry must be added before executing Freassign_authors_to_entries_given_by_array
+        ## why? beacuse authorship will be unable to map existing entry to the author
+        Freassign_authors_to_entries_given_by_array( $self->app, 1,
+            [$entry] );
+
+
+        my $msg_type = 'success';
+        $msg_type = 'warning' if $bibtex_warnings;
+        my $msg = get_adding_editing_message_for_error_code( $self,
+            $status_code_str, $existing_id );
+        $msg .= $bibtex_warnings;
+
+        $self->app->logger->info(
+            "Adding publication. Action: > $action <. Status code: $status_code_str."
+        );
         $self->flash( msg => $msg, msg_type => $msg_type );
         $self->redirect_to(
             $self->url_for( 'edit_publication', id => $added_under_id ) );
+        return;
     }
-    else {
-        $self->render( template => 'publications/edit_entry' );
-    }
+
+
 }
 ####################################################################################
 sub publications_edit_get {
-    say "CALL: publications_edit_get ";
     my $self = shift;
     my $id = $self->param('id') || -1;
 
-    $self->write_log("Editing publication entry id $id");
+    $self->app->logger->info("Editing publication entry id $id");
 
-    my $dbh = $self->app->db;
+    my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
 
-
-    my $mentry = MEntry->static_get( $dbh, $id );
-    if ( !defined $mentry ) {
+    if ( !defined $entry ) {
         $self->flash( msg => "There is no entry with id $id" );
         $self->redirect_to( $self->get_referrer );
         return;
     }
-    $mentry->populate_from_bib();
-    $mentry->generate_html( $self->app->bst );
+    $entry->populate_from_bib();
+    $entry->generate_html( $self->app->bst, $self->app->bibtexConverter );
 
-    $self->stash( mentry => $mentry );
+    $self->stash( entry => $entry );
     $self->render( template => 'publications/edit_entry' );
 }
 ####################################################################################
 sub publications_edit_post {
-    say "CALL: publications_edit_post";
     my $self            = shift;
-    my $id              = $self->param('id') || -1;
+    my $id              = $self->param('id') // -1;
     my $new_bib         = $self->param('new_bib');
     my $param_prev      = $self->param('preview');
     my $param_save      = $self->param('save');
-    my $param_check_key = my $dbh = $self->app->db;
+    my $param_check_key = $self->param('check_key');
 
     my $action = 'save';    # user clicks save
     $action = 'preview' if $self->param('preview');    # user clicks preview
     $action = 'check_key'
         if $self->param('check_key');                  # user clicks check key
 
-    $self->write_log("Editing publication id $id. Action: > $action <.");
+    $self->app->logger->info(
+        "Editing publication id $id. Action: > $action <.");
 
     $new_bib =~ s/^\s+|\s+$//g;
     $new_bib =~ s/^\t//g;
 
+
     my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-        = Fhandle_add_edit_publication( $dbh, $new_bib, $id, $action,
+        = Fhandle_add_edit_publication( $self->app, $new_bib, $id, $action,
         $self->app->bst );
     my $adding_msg
         = get_adding_editing_message_for_error_code( $self, $status_code_str,
         $existing_id );
 
-
-    $self->write_log(
+    $self->app->logger->info(
         "Editing publication id $id. Action: > $action <. Status code: $status_code_str."
     );
 
@@ -1772,75 +1470,42 @@ sub publications_edit_post {
     # 2 => KEY_OK
     # 3 => KEY_TAKEN
 
-    my $bibtex_warnings = FprintBibtexWarnings( $mentry->{warnings} );
+    my $bibtex_warnings = FprintBibtexWarnings( $mentry->warnings );
     my $msg             = $adding_msg . $bibtex_warnings;
     my $msg_type        = 'success';
     $msg_type = 'warning' if $bibtex_warnings =~ m/Warning/;
-    $msg_type = 'danger'  if $status_code_str eq 'ERR_BIBTEX' or $status_code_str eq 'KEY_TAKEN' or$bibtex_warnings =~ m/Error/;
+    $msg_type = 'danger'
+        if $status_code_str eq 'ERR_BIBTEX'
+        or $status_code_str eq 'KEY_TAKEN'
+        or $bibtex_warnings =~ m/Error/;
 
-    $self->stash( mentry => $mentry, msg => $msg, msg_type => $msg_type );
+    $self->stash( entry => $mentry, msg => $msg, msg_type => $msg_type );
     $self->render( template => 'publications/edit_entry' );
 }
 ####################################################################################
 sub clean_ugly_bibtex {
-    say "CALL: clean_ugly_bibtex ";
     my $self = shift;
 
-    my $dbh = $self->app->db;
+    # TODO: put this into config or preferences!
+    my @fields_to_clean
+        = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
 
-    $self->write_log("Cleaning ugly bibtex fields for all entries");
+    $self->app->logger->info("Cleaning ugly bibtex fields for all entries");
 
-    Fclean_ugly_bibtex_fields_for_all_entries($dbh);
+    my @entries     = $self->app->repo->entries_all;
+    my $num_removed = 0;
+    foreach my $entry (@entries) {
+        $num_removed = $num_removed
+            + $entry->clean_ugly_bibtex_fields( \@fields_to_clean );
+    }
 
-    $self->flash( msg => 'All entries have now their Bibtex cleaned.' );
+    $self->flash(
+        msg_type => 'info',
+        msg =>
+            "All entries have now their Bibtex cleaned. I have removed $num_removed fields."
+    );
 
     $self->redirect_to( $self->get_referrer );
-}
-####################################################################################
-sub get_paper_pdf_path {
-    my $self = shift;
-    my $id   = shift;
-    my $type = shift || "paper";
-
-    my $upload_dir = $self->config->{upload_dir};
-    $upload_dir
-        =~ s!/*$!/!;    # makes sure that there is exactly one / at the end
-
-    my $filequery = "";
-    $filequery .= "paper-" . $id . "."        if $type eq "paper";
-    $filequery .= "slides-paper-" . $id . "." if $type eq "slides";
-
-    my $directory = $upload_dir;
-    $directory .= "papers/" if $type eq "paper";
-    $directory .= "slides/" if $type eq "slides";
-    my $filename = undef;
-
-    # make sure that the directories exist
-    try {
-        path($directory)->mkpath;
-    }
-    catch {
-        warn "Exception: cannot create directory $directory. Msg: $_";
-    };
-
-    opendir( DIR, $directory )
-        or die "Cannot open directory $directory :" . $!;
-    while ( my $file = readdir(DIR) ) {
-
-        # Use a regular expression to ignore files beginning with a period
-        next if ( $file =~ m/^\./ );
-        if ( $file =~ /^$filequery.*/ ) {    # filequery contains the dot!
-            say "get_paper_pdf_path MATCH $file $filequery";
-            $filename = $file;
-        }
-    }
-    closedir(DIR);
-    if ( !defined $filename ) {
-        return 0;
-    }
-
-    my $file_path = $directory . $filename;
-    return $file_path;
 }
 ####################################################################################
 1;

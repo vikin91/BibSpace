@@ -1,8 +1,6 @@
 % use Mojo::ByteStream 'b';
 % layout 'admin';
 
-% my @team_ids = @{$team_ids};
-% my @authors = @{$authors};
 
 <div class="container">
 
@@ -10,14 +8,14 @@
         <div class="col-lg-1"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
             <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
-            <a class="btn btn-default" href="<%= url_for('edit_publication', id=>$id) %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the publication</a>
-            <a class="btn btn-default" href="<%= url_for('publicationsregenerateid', id=>$id)%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
+            <a class="btn btn-default" href="<%= url_for('edit_publication', id=>$entry->{id}) %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the publication</a>
+            <a class="btn btn-default" href="<%= url_for('regenerate_publication', id=>$entry->{id})%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
         </div>
     </div>
 
     <hr>
 
-    %= include 'preview_row', preview => $preview, btype=> '', bkey =>$key;
+    %= include 'preview_row', preview => $entry->{html}, btype=> $entry->{bibtex_type}, bkey => $entry->{bibtex_key};
 
     <hr>
 
@@ -25,12 +23,12 @@
         <div class="col-lg-1"></div>
         <div class="col-lg-2 col-md-2 col-xs-2">
             <button type="button" class="btn btn-success">
-                <span class="glyphicon glyphicon-user"></span> Detected authors <span class="badge"><%= scalar @authors %></span>
+                <span class="glyphicon glyphicon-user"></span> Detected authors <span class="badge"><%= scalar @$authors %></span>
             </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
             % my $i = 0;
-            % foreach my $author (@authors){
+            % foreach my $author (@$authors){
                 <a class="btn btn-default" type="button" href="<%= url_for('edit_author', id=>$author->{id})%>">
                     <span class="glyphicon glyphicon-user"></span> 
                     <%= $author->{master} %> 
@@ -47,14 +45,14 @@
         <div class="col-lg-1"></div>
         <div class="col-lg-2 col-md-2 col-xs-2">
             <button type="button" class="btn btn-success">
-                <i class="fa fa-users"></i> Detected teams <span class="badge"><%= scalar @team_ids %></span>
+                <i class="fa fa-users"></i> Detected teams <span class="badge"><%= scalar @$teams %></span>
             </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            % foreach my $team_id (@team_ids){
-                <a class="btn btn-default" type="button" href="<%= url_for('teamseditteamid', teamid=>$team_id)%>">
+            % foreach my $team (@$teams){
+                <a class="btn btn-default" type="button" href="<%= url_for('edit_team', id=>$team->{id} )%>">
                     <i class="fa fa-users"></i>
-                    <%= get_team_name($team_id) %> 
+                    <%= $team->{name} %> 
                     <i class="fa fa-external-link"></i> 
                 </a>
             % }   

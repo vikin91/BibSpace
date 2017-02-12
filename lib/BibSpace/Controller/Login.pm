@@ -3,12 +3,15 @@ package BibSpace::Controller::Login;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
-use BibSpace::Functions::FDB;
-use BibSpace::Functions::UserObj;
+use BibSpace::Model::User;
 
-use WWW::Mechanize;
+use BibSpace::Functions::Core
+    qw(send_email generate_token salt encrypt_password check_password_policy validate_registration_data);
+
+
 use Data::Dumper;
 use Try::Tiny;
+
 
 ####################################################################################
 # for _under_ -checking if user is logged in to access other pages
@@ -16,65 +19,74 @@ sub check_is_logged_in {
     my $self = shift;
     return 1 if $self->app->is_demo;
 
-    return 1 if $self->session('user');
-    $self->redirect_to('badpassword');
-    return 0;
+    # no session
+    if( !defined $self->session('user')){
+        $self->redirect_to('youneedtologin');
+        return;
+    }
+
+    # session exists, but user unknown
+    my $me = $self->app->repo->users_find(sub { $_->login eq $self->session('user') } );
+    if( !defined $me ){
+        $self->session( expires => 1 );
+        $self->redirect_to('youneedtologin');
+        return;
+    }
+
+    return 1;
 }
 ####################################################################################
 # for _under_ -checking
 sub under_check_is_manager {
     my $self = shift;
-    my $dbh  = $self->app->db;
-    return 1 if $self->check_is_manager();
-
-    $self->flash( msg =>
-            "You need to have at least manager rights to access this page! You have just tried to access: "
-            . $self->url_for('current')->to_abs );
-    my $redirect_to = $self->get_referrer;
-    $redirect_to = $self->url_for('/')
-        if $self->get_referrer eq $self->url_for('current')->to_abs
-        or !defined $self->get_referrer;
-    $self->redirect_to($redirect_to);
-    return 0;
-}
-####################################################################################
-sub check_is_manager {
-    my $self = shift;
     return 1 if $self->app->is_demo;
-    my $dbh = $self->app->db;
-    my $rank = $self->users->get_rank( $self->session('user'), $dbh );
-    return 1 if $rank > 0;
-    return 0;
-
+    return $self->under_check_has_rank( User->manager_rank );
 }
 ####################################################################################
 # for _under_ -checking
 sub under_check_is_admin {
     my $self = shift;
-    my $dbh  = $self->app->db;
-    return 1 if $self->check_is_admin();
-
-    $self->flash( msg =>
-            "You need to have admin rights to access this page! You have just tried to access: "
-            . $self->url_for('current')->to_abs );
-    my $redirect_to = $self->get_referrer;
-    $redirect_to = $self->url_for('/')
-        if $self->get_referrer eq $self->url_for('current')->to_abs
-        or !defined $self->get_referrer;
-    $self->redirect_to($redirect_to);
-    return 0;
+    return 1 if $self->app->is_demo;
+    return $self->under_check_has_rank( User->admin_rank );
 }
 ####################################################################################
-sub check_is_admin {
-    my $self = shift;
-    my $dbh  = $self->app->db;
+# for _under_ -checking
+sub under_check_has_rank {
+    my $self          = shift;
+    my $required_rank = shift;
+    
     return 1 if $self->app->is_demo;
 
-    my $rank = $self->users->get_rank( $self->session('user'), $dbh );
-    return 1 if $rank > 1;
-    return 0;
-}
+    my $me = $self->app->repo->users_find(
+        sub { $_->login eq $self->session('user') } );
 
+    if ( $me and $me->rank >= $required_rank ) {
+        return 1;
+    }
+
+    my $your_rank = 'undefined';
+    $your_rank = $me->rank if $me; 
+
+    $self->flash(
+        msg_type => 'danger',
+        msg      => "You need to have rank '"
+            . $required_rank
+            . "' to access this page! "
+            . "Your rank is: '"
+            . $your_rank . "'"
+            . " <br/> You have tried to access: "
+            . $self->url_for('current')->to_abs
+    );
+
+    my $redirect_to = $self->get_referrer;
+
+    if ( $self->get_referrer eq $self->url_for('current')->to_abs ) {
+        $redirect_to = $self->url_for('/');
+    }
+    $self->redirect_to($redirect_to);
+    return;
+
+}
 ####################################################################################
 ####################################################################################
 ####################################################################################
@@ -82,147 +94,127 @@ sub manage_users {
     my $self = shift;
     my $dbh  = $self->app->db;
 
-    my @user_objs = BibSpace::Functions::UserObj->getAll($dbh);
+    my @user_objs = $self->app->repo->users_all;
     $self->stash( user_objs => \@user_objs );
     $self->render( template => 'login/manage_users' );
 }
 ####################################################################################
-sub make_user {
-    my $self       = shift;
-    my $profile_id = $self->param('id');
-    my $dbh        = $self->app->db;
+sub promote_to_rank {
+    my $self = shift;
+    my $rank = shift;
 
-    my $usr_obj = BibSpace::Functions::UserObj->new( { id => $profile_id } );
-    $usr_obj->initFromDB($dbh);
-    if ( $usr_obj->make_user($dbh) == 0 ) {
-        $self->write_log("Setting user \`$usr_obj->{login}\` to rank user.");
+    my $profile_id = $self->param('id');
+    my $user_obj
+        = $self->app->repo->users_find( sub { $_->id == $profile_id } );
+
+    my $me = $self->app->repo->users_find(
+        sub { $_->login eq $self->session('user') } );
+
+    if ( $me->is_admin ) {
+        if ( $me->equals($user_obj) ) {
+            $self->flash(
+                msg_type => 'danger',
+                msg      => "You cannot degrade yourself!"
+            );
+        }
+        else {
+            $user_obj->rank($rank);
+            $self->app->repo->users_update($user_obj);
+
+            my $msg
+                = "User '" . $user_obj->login . "'' has now rank '$rank'.";
+            $self->app->logger->info($msg);
+            $self->flash( msg_type => 'success', msg => $msg );
+        }
     }
     else {
         $self->flash(
-            msg => "User \`$usr_obj->{login}\` cannot become \`user\`." );
+            msg_type => 'danger',
+            msg      => "Only admins can promote/degrade users!"
+        );
     }
     $self->redirect_to('manage_users');
+}
+####################################################################################
+sub make_user {
+    my $self = shift;
+    return $self->promote_to_rank( User->user_rank );
 }
 ####################################################################################
 sub make_manager {
-    my $self       = shift;
-    my $profile_id = $self->param('id');
-    my $dbh        = $self->app->db;
-
-    my $usr_obj = BibSpace::Functions::UserObj->new( { id => $profile_id } );
-    $usr_obj->initFromDB($dbh);
-    if ( $usr_obj->make_manager($dbh) == 0 ) {
-        $self->write_log(
-            "Setting user \`$usr_obj->{login}\` to rank manager.");
-    }
-    else {
-        $self->flash(
-            msg => "User \`$usr_obj->{login}\` cannot become \`manager\`." );
-    }
-    $self->redirect_to('manage_users');
+    my $self = shift;
+    return $self->promote_to_rank( User->manager_rank );
 }
 ####################################################################################
 sub make_admin {
-    my $self       = shift;
-    my $profile_id = $self->param('id');
-    my $dbh        = $self->app->db;
-
-    my $usr_obj = BibSpace::Functions::UserObj->new( { id => $profile_id } );
-    $usr_obj->initFromDB($dbh);
-    if ( $usr_obj->make_admin($dbh) == 0 ) {
-        $self->write_log("Setting user \`$usr_obj->{login}\` to rank admin.");
-    }
-    else {
-        $self->flash(
-            msg => "User \`$usr_obj->{login}\` cannot become \`admin\`." );
-    }
-    $self->redirect_to('manage_users');
+    my $self = shift;
+    return $self->promote_to_rank( User->admin_rank );
 }
 ####################################################################################
 sub delete_user {
     my $self       = shift;
     my $profile_id = $self->param('id');
-    my $dbh        = $self->app->db;
 
-    my $usr_obj = BibSpace::Functions::UserObj->new( { id => $profile_id } );
-    $usr_obj->initFromDB($dbh);
+    my $user_obj
+        = $self->app->repo->users_find( sub { $_->id == $profile_id } );
+    my $me = $self->app->repo->users_find(
+        sub { $_->login eq $self->session('user') } );
 
-    my $message = "";
 
-    if (    $self->users->login_exists( $usr_obj->{login}, $dbh )
-        and $usr_obj->is_admin() == 1 )
-    {
-        $message
-            = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) cannot be deleted. Reason: the user has admin rank.";
+    if ( $me and !$me->is_admin ) {
+        $self->flash( msg_type => 'danger', msg => 'You are not admin!' );
+        $self->redirect_to('manage_users');
+        return;
+    }
+    if ( $user_obj and $user_obj->is_admin ) {
+        $self->flash(
+            msg_type => 'danger',
+            msg      => 'You cannot delete admin user!'
+        );
+        $self->redirect_to('manage_users');
+        return;
+    }
+    if ( $user_obj and $user_obj->equals($me) ) {
+        $self->flash(
+            msg_type => 'danger',
+            msg      => 'You cannot delete yourself!'
+        );
+        $self->redirect_to('manage_users');
+        return;
+    }
+    if ($user_obj) {
+        $self->app->repo->users_delete($user_obj);
+        my $msg
+            = "User '$user_obj->{login}' real name: '$user_obj->{real_name}' has been deleted.";
+        $self->app->logger->info($msg);
+        $self->flash( msg_type => 'success', msg => $msg );
     }
     else {
-
-        if ( $self->users->do_delete_user( $profile_id, $dbh ) ) {
-            $message
-                = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) has been deleted.";
-        }
-        else {
-            $message
-                = "User \`$usr_obj->{login}\` ($usr_obj->{real_name}) could not been deleted.";
-        }
-
+        my $msg
+            = "Cannot delete user. Reason: cannot find user with ID '$profile_id'.";
+        $self->app->logger->info($msg);
+        $self->flash( msg_type => 'danger', msg => $msg );
     }
-    $self->write_log($message);
-    $self->flash( msg => $message );
 
-    # $self->redirect_to('manage_users');
-
-    my @user_objs = BibSpace::Functions::UserObj->getAll($dbh);
-
-    $self->stash( user_objs => \@user_objs );
     $self->redirect_to('manage_users');
-
-    # $self->render(template => 'login/manage_users');
 }
 ####################################################################################
 sub foreign_profile {
     my $self       = shift;
     my $profile_id = $self->param('id');
-    my $dbh        = $self->app->db;
+    my $user_obj
+        = $self->app->repo->users_find( sub { $_->id == $profile_id } );
 
-    my $login = $self->users->get_login_for_id( $profile_id, $dbh );
-
-    my $reg_time = $self->users->get_registration_time( $login, $dbh );
-    my $last_login_time = $self->users->get_last_login( $login, $dbh );
-
-    my $rank = $self->users->get_rank( $login, $dbh );
-    my $email = $self->users->get_email( $login, $dbh );
-
-    $self->stash(
-        user            => $self->users,
-        reg_time        => $reg_time,
-        last_login_time => $last_login_time,
-        rank            => $rank,
-        email           => $email,
-        login           => $login
-    );
-    $self->render( template => 'login/foreign_profile' );
+    $self->stash( usrobj => $user_obj );
+    $self->render( template => 'login/profile' );
 }
 ####################################################################################
 sub profile {
     my $self = shift;
-    my $dbh  = $self->app->db;
+    my $me   = $self->app->repo->users_find(
+        sub { $_->login eq $self->session('user') } );
 
-    my $login           = $self->session('user');
-    my $reg_time        = $self->users->get_registration_time( $login, $dbh );
-    my $last_login_time = $self->users->get_last_login( $login, $dbh );
-
-    my $rank = $self->users->get_rank( $login, $dbh );
-    my $email = $self->users->get_email( $login, $dbh );
-
-    $self->stash(
-        user            => $self->users,
-        reg_time        => $reg_time,
-        last_login_time => $last_login_time,
-        rank            => $rank,
-        email           => $email,
-        login           => $login
-    );
+    $self->stash( usrobj => $me );
     $self->render( template => 'login/profile' );
 }
 ####################################################################################
@@ -233,114 +225,89 @@ sub index {
 ####################################################################################
 sub forgot {
     my $self = shift;
-    $self->write_log("Login: forgot password form opened");
+    $self->app->logger->info("Forgot password form opened");
     $self->render( template => 'login/forgot_request' );
 }
+
 ####################################################################################
 sub post_gen_forgot_token {
     my $self = shift;
 
 # this is called when a user fills the form called "Recovery of forgotten password"
-    my $user  = $self->param('user');
+    my $login = $self->param('user');
     my $email = $self->param('email');
-    my $dbh   = $self->app->db;
 
-    my $do_gen      = 0;
-    my $final_email = "";
 
-    # say "call: post_gen_forgot_token user $user, email $email";
-
-    if ( $self->users->login_exists( $user, $dbh ) == 1 ) {
-        $do_gen = 1;
-
-        # get email of this user
-        $final_email = $self->users->get_email_for_uname( $user, $dbh );
-        $self->write_log("Forgot: requesting new password for user $user");
+    my $user;
+    if ($login) {
+        $self->app->logger->info(
+            "Request to generate forgot-password-token for login '$login'.");
+        $user = $self->app->repo->users_find( sub { $_->login eq $login } );
     }
-    elsif ( $self->users->email_exists( $email, $dbh ) == 1 ) {
-        $do_gen      = 1;
-        $final_email = $email;
-        $self->write_log("Forgot: requesting new password for email $email");
+    if ($email) {
+        $self->app->logger->info(
+            "Request to generate forgot-password-token for email '$email'.");
+        $user = $self->app->repo->users_find( sub { $_->email eq $email } );
+    }
+
+
+    if ( !$user ) {
+        $self->app->logger->warn(
+            "Cannot find user '$login' nor email '$email' to generate forgot-password-token.");
+        $self->flash(
+            msg_type => 'warning',
+            msg      => "User '$login' or email '$email' does not exist. Try again."
+        );
+        $self->redirect_to('forgot');
+        return;
     }
     else {
-        $do_gen = 0;
-    }
-
-    $self->write_log(
-        "Forgot: requested new password for user $user or email $email but none of them found in the database."
-    );
-
-    if ( $do_gen == 1 and $final_email ne "" ) {
-
-        my $token = $self->users->generate_token();
-        $self->users->save_token_email( $token, $final_email, $dbh );
+        # store token in the user object
+        $user->forgot_token(generate_token);
 
         my $email_content = $self->render_to_string( 'email_forgot_password',
-            token => $token );
-        $self->send_email( $token, $final_email, $email_content );
+            token => $user->forgot_token );
+        try {
+            my %email_config = (
+                mailgun_domain => $self->app->config->{mailgun_domain},
+                mailgun_key    => $self->app->config->{mailgun_key},
+                from           => $self->app->config->{mailgun_from},
+                to             => $user->email,
+                content        => $email_content,
+                subject        => 'BibSpace password reset request'
+            );
+            send_email( \%email_config );
+        }
+        catch {
+            $self->app->logger->warn(
+                "Could not sent Email with Mailgun. This is okay for test, but not for production. Error: $_ ."
+            );
+        };
 
-        $self->write_log("Forgot: reset token sent to $final_email");
-        $self->flash( msg =>
+        $self->app->logger->info( "Forgot-password-token '"
+                . $user->forgot_token
+                . "' sent to '"
+                . $user->email
+                . "'." );
+
+        $self->flash(
+            msg_type => 'info',
+            msg =>
                 "Email with password reset instructions has been sent. Expect an email from "
-                . $self->app->config->{mailgun_from} );
+                . $self->app->config->{mailgun_from}
+        );
         $self->redirect_to('/');
 
     }
-    else {
 
-        $self->write_log("Forgot: user does not exist.");
-        $self->flash( msg => 'User or email does not exists. Try again.' );
-        $self->redirect_to('forgot');
-    }
-}
-####################################################################################################
-sub send_email {    #NON_CONTROLLER FUNCTION, but it is usable here
-    my $self          = shift;
-    my $token         = shift;
-    my $email_address = shift;
-    my $email_content = shift;
-
-    my $subject = 'BibSpace password reset request';
-
-    my $uri
-        = "https://api.mailgun.net/v3/"
-        . $self->app->config->{mailgun_domain}
-        . "/messages";
-    my $from = $self->app->config->{mailgun_from};
-    my $to   = $email_address;
-
-    my $mech = WWW::Mechanize->new( ssl_opts => { SSL_version => 'TLSv1' } );
-    $mech->credentials( api => $self->app->config->{mailgun_key} );
-    $mech->ssl_opts( verify_hostname => 0 );
-    try {
-        $mech->post(
-            $uri,
-            [   from    => $from,
-                to      => $to,
-                subject => $subject,
-                html    => $email_content
-            ]
-        );
-    }
-    catch {
-        warn
-            "Could not sent Email with Mailgun. This is okay for test, but not for production. Error: $_ .";
-    };
-
-    # say "Mailgun response: ".$mech->response->as_string;
+    $self->redirect_to('forgot');
 }
 ####################################################################################
 sub token_clicked {
     my $self  = shift;
     my $token = $self->param('token');
-    my $dbh   = $self->app->db;
 
-    say "call: token_clicked";
-
-    # verify if token exists
-    # display form for setting new password.
-
-    $self->write_log("Forgot: reset token clicked ($token)");
+    $self->app->logger->info("Reset token clicked '$token'");
     $self->stash( token => $token );
     $self->render( template => 'login/set_new_password' );
 }
@@ -351,320 +318,247 @@ sub store_password {
     my $token = $self->param('token');
     my $pass1 = $self->param('pass1');
     my $pass2 = $self->param('pass2');
-    my $dbh   = $self->app->db;
 
-    my $email = $self->users->get_email_for_token( $token, $dbh )
-        ;    #get it out of the DB for the token
+    # search for user that has this token
+    my $user;
+    if ($token) {
+        $user = $self->app->repo->users_find(
+            sub { defined $_->forgot_token and $_->forgot_token eq $token } );
+    }
 
-    my $final_error = 1;
 
-    if ( $self->users->email_exists( $email, $dbh ) == 0 ) {
-
-        $self->flash( msg =>
-                'Reset password token is invalid! Abuse will be reported.' );
-
-# $self->stash(msg => 'Reset password token is invalid! Abuse will be reported.');
-        $self->write_log("Forgot: Reset password token is invalid! ($token)");
+    if ( !$user ) {
+        $self->app->logger->warn(
+            "Forgot: Reset password token is invalid! Token: '$token'");
+        $self->flash(
+            msg_type => 'danger',
+            msg =>
+                'Reset password token is invalid! Make sure you click the newest token that you requested.'
+        );
         $self->redirect_to('login_form');
-
-        # $self->render(template => 'login/index');
         return;
     }
 
-    if ( $pass1 eq $pass2 ) {
 
-        if ( $self->users->set_new_password( $email, $pass1, $dbh ) == 1 ) {
+    if ( $pass1 eq $pass2 and check_password_policy($pass1) ) {
 
-            $self->users->remove_token( $token, $dbh );
-            $self->users->remove_all_tokens_for_email( $email, $dbh );
-            $self->flash( msg =>
-                    'Password change successful. All your password reset tokens have been removed. You may login now.'
-            );
-            $self->write_log(
-                "Forgot: Password change successful for token $token.");
-            $self->redirect_to('login_form');
-
-            # $self->render(template => 'login/index');
-            return;
-        }
-    }
-    else {
+        my $salt = salt();
+        my $hash = encrypt_password( $pass1, $salt );
+        $user->pass($pass1);
+        $user->pass2($salt);
+        $user->forgot_token("");
         $self->flash(
-            msg   => 'Passwords are not same. Try again.',
-            type  => 'warning'
+            msg_type => 'success',
+            msg =>
+                'Password change successful. All your password reset tokens have been removed. You may login now.'
         );
-        $self->stash(
-            token => $token
-        );
-        $self->write_log("Forgot: Change failed. Passwords are not same.");
-        $final_error = 0;
-        $self->redirect_to( 'token_clicked', token => $token );
-
-        # $self->render(template => 'login/set_new_password');
-        # return;
-    }
-
-    if ( $final_error == 1 ) {
-        $self->users->remove_token( $token, $dbh );
-        $self->write_log("Forgot: Change failed. Token deleted.");
-        $self->flash(type=>'danger', msg =>
-                'Something went wrong. The password has not been changed. The reset token is no longer valid. You need to request a new one by clicking in \'I forgot my password\'.'
-        );
+        $self->app->logger->info(
+            "Forgot: Password change successful for token $token.");
         $self->redirect_to('login_form');
+        return;
     }
 
-    # $self->render(template => 'login/index');
+    my $msg
+        = 'Passwords are not same or do not obey the password policy. Please try again.';
+    $self->flash( msg => $msg, msg_type => 'warning' );
+    $self->app->logger->info($msg);
+    $self->stash( token => $token );
+    $self->redirect_to( 'token_clicked', token => $token );
+
 }
 
 ####################################################################################
 sub login {
-    my $self = shift;
-    my $user = $self->param('user');
-    my $pass = $self->param('pass');
-    my $dbh  = $self->app->db;
+    my $self        = shift;
+    my $input_login = $self->param('user');
+    my $input_pass  = $self->param('pass');
 
-    say "Login: trying to log in as user $user";
-
-    if ( defined $user and defined $pass ) {
-
-        $self->write_log("Login: trying to log in as user $user");
-
-        if ( $self->users->check( $user, $pass, $dbh ) ) {
-            $self->session( user => $user );
-            $self->session(
-                user_name => $self->users->get_user_real_name( $user, $dbh )
-            );
-            $self->users->record_logging_in( $user, $dbh );
-
-            $self->write_log("Login success");
-            $self->redirect_to('/');
-            return;
-        }
-        else {
-            $self->write_log(
-                "Login: Bad user name or password for user $user");
-            $self->flash( msg_type=>'danger', msg => 'Wrong user name or password' );
-            $self->redirect_to( $self->url_for('login_form') );
-            return;
-        }
-    }
-    else {
-        $self->flash( msg_type=>'info', msg => 'Please login first!' );
+    if ( !$input_login or !$input_pass ) {
+        $self->flash(
+            msg_type => 'warning',
+            msg      => 'Please provide user-name and password.'
+        );
         $self->redirect_to( $self->url_for('login_form') );
         return;
     }
+
+    $self->app->logger->info("Trying to login as user '$input_login'");
+
+    # get the user with login
+    my $user = $self->app->repo->users_find( 
+                sub { $_->login eq $input_login } 
+    );
+       
+    
+    my $auth_result;
+    if ( defined $user ){
+        $self->app->logger->info("User '$input_login' exists.");
+        $auth_result = $user->authenticate($input_pass);
+    }
+
+    
+    if ( defined $user and $auth_result and $auth_result == 1){
+        $self->session( user      => $user->login );
+        $self->session( user_name => $user->real_name );
+        $self->session(url_history => []);
+        
+        $user->record_logging_in;
+
+        $self->app->logger->info("Login as '$input_login' success.");
+        $self->redirect_to('/');
+        return;
+    }
+    else {
+        $self->app->logger->info("User '$input_login' does not exist.");
+        $self->app->logger->info(
+            "Wrong user name or password for '$input_login'.");
+        $self->flash(
+            msg_type => 'danger',
+            msg      => 'Wrong user name or password'
+        );
+        $self->redirect_to( $self->url_for('login_form') );
+        return;
+    }
+
 }
 ####################################################################################
 sub login_form {
     my $self = shift;
-    $self->write_log("Login: displaying login form.");
+    $self->app->logger->info("Displaying login form.");
     $self->render( template => 'login/index' );
 }
 ####################################################################################
 sub bad_password {
     my $self = shift;
 
-    $self->write_log("Login: Bad user name or password! (/badpassword)");
+    $self->app->logger->info("Bad user name or password! (/badpassword)");
 
-    $self->flash( msg_type=>'danger', msg => 'Wrong user name or password' );
+    $self->flash(
+        msg_type => 'danger',
+        msg      => 'Wrong user name or password'
+    );
     $self->redirect_to( $self->url_for('login_form') );
 }
 ####################################################################################
 sub not_logged_in {
     my $self = shift;
-    $self->write_log(
-        "Calling a page that requires login but user is not logged in. Redirecting to login."
+
+    $self->app->logger->info(
+        "Called a page that requires login but user is not logged in. Redirecting to login."
     );
 
-    $self->flash( msg_type=>'danger', msg => 'Wrong username or password' );
+    $self->flash( msg_type => 'danger', msg => 'You need to login first.' );
     $self->redirect_to( $self->url_for('login_form') );
 }
 
 ####################################################################################
 sub logout {
     my $self = shift;
-    $self->write_log("User logs out");
+    $self->app->logger->info("User logs out");
 
     $self->session( expires => 1 );
     $self->redirect_to( $self->url_for('start') );
 }
-
 ####################################################################################
-sub register {
+sub register_disabled {
+    my $self = shift;
+    $self->app->logger->info(
+        "Login: informing that registration is disabled.");
+    $self->render( template => 'login/noregister' );
+}
+####################################################################################
+sub can_register {
     my $self                 = shift;
     my $registration_enabled = $self->app->config->{registration_enabled};
 
-    if ( defined $self->check_is_admin() and $self->check_is_admin() == 1 ) {
-        $self->stash(
-            name      => 'Jonh New',
-            email     => 'test@example.com',
-            login     => 'new_user_000',
-            password1 => 'password1',
-            password2 => 'password1'
+    return 1 if $registration_enabled == 1;
+    my $me;
+    if ( $self->session('user') ) {
+        $me = $self->app->repo->users_find(
+            sub { $_->login eq $self->session('user') } 
         );
-        $self->render( template => 'login/register' );
-        return 0;
     }
-    elsif ( defined $registration_enabled and $registration_enabled == 1 ) {
+    return 1 if $me and $me->is_admin;
+    return;
+}
+####################################################################################
+sub register {
+    my $self = shift;
+
+
+    if ( $self->can_register ) {
         $self->stash(
             name      => 'James Bond',
             email     => 'test@example.com',
-            login     => 'james',
+            login     => 'j.bond007',
             password1 => '',
             password2 => ''
         );
         $self->render( template => 'login/register' );
-        return 0;
-    }
-    else {
-        $self->redirect_to('/noregister');
-    }
-}
-####################################################################################
-sub register_disabled {
-    my $self = shift;
-    $self->write_log("Login: informing that registration is disabled.");
-    $self->render( template => 'login/noregister' );
-}
-
-####################################################################################
-sub post_do_register {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-
-    my $config               = $self->app->config;
-    my $registration_enabled = $config->{registration_enabled};
-
-    if ( $self->check_is_admin() == 0
-        and ( !defined $registration_enabled or $registration_enabled == 0 ) )
-    {
-        $self->redirect_to('/noregister');
         return;
     }
     else {
-
-        my $login     = $self->param('login');
-        my $name      = $self->param('name');
-        my $email     = $self->param('email');
-        my $password1 = $self->param('password1');
-        my $password2 = $self->param('password2');
-
-        my $s
-            = "Login: received registration data from login: $login, email: $email.";
-        say "call: post_do_register: $s";
-        say "call: post_do_register: $s"
-            . " password1 $password1 password2 $password2";
-
-        $self->write_log($s);
-
-        if (    defined $login
-            and length($login) > 0
-            and defined $email
-            and length($email) > 0
-            and defined $password1
-            and defined $password2 )
-        {
-
-            if ( length($password1) == length($password2)
-                and $password2 eq $password1 )
-            {
-
-                if ( length($password1) >= 4 ) {
-                    if ( $self->users->login_exists( $login, $dbh ) == 0 ) {
-                        $self->users->add_new_user( $login, $email, $name,
-                            $password1, 0, $dbh );
-
-                        $self->flash( msg =>
-                                "User created successfully! You may now login using login: $login."
-                        );
-                        $self->write_log(
-                            "Login: registration successful for login: $login."
-                        );
-                        $self->redirect_to('/');
-                    }
-                    else {
-                        # $self->stash(msg => "This login is already taken");
-
-                        $self->flash( msg => "This login is already taken" );
-                        $self->stash(
-                            name      => $name,
-                            email     => $email,
-                            login     => $login,
-                            password1 => $password1,
-                            password2 => $password2
-                        );
-                        $self->write_log(
-                            "Login: registration unsuccessful for login: $login. Login taken."
-                        );
-                        $self->redirect_to('register');
-                    }
-                }
-                else {
-                    # $self->stash(msg => "Password is too short");
-
-                    $self->flash( msg =>
-                            "Password is too short, use minimum 4 symbols" );
-                    $self->stash(
-                        name      => $name,
-                        email     => $email,
-                        login     => $login,
-                        password1 => $password1,
-                        password2 => $password2
-                    );
-                    $self->write_log(
-                        "Login: registration unsuccessful for login: $login. Password too short."
-                    );
-                    $self->redirect_to('register');
-                }
-            }
-            else {
-                # $self->stash(msg => "Passwords don't match!");
-                $self->flash(
-                    msg       => "Passwords don't match!",
-                    name      => $name,
-                    email     => $email,
-                    login     => $login,
-                    password1 => $password1,
-                    password2 => $password2
-                );
-                $self->write_log(
-                    "Login: registration unsuccessful for login: $login. Passwords don't match"
-                );
-                $self->redirect_to('register');
-            }
-        }
-        else {
-            # $self->stash(msg => "Some input is missing!");
-            $self->flash(
-                msg       => "Some input is missing!",
-                name      => $name,
-                email     => $email,
-                login     => $login,
-                password1 => $password1,
-                password2 => $password2
-            );
-            $self->stash(
-                name      => $name,
-                email     => $email,
-                login     => $login,
-                password1 => $password1,
-                password2 => $password2
-            );
-            $self->write_log(
-                "Login: registration unsuccessful for login: $login. Input missing."
-            );
-            $self->redirect_to(
-                'register',
-                msg       => "Some input is missing!",
-                name      => $name,
-                email     => $email,
-                login     => $login,
-                password1 => $password1,
-                password2 => $password2
-            );
-        }
-
+        $self->redirect_to('/noregister');
     }
 }
+####################################################################################
+sub post_do_register {
+    my $self      = shift;
+    my $config    = $self->app->config;
+    my $login     = $self->param('login');
+    my $name      = $self->param('name');
+    my $email     = $self->param('email');
+    my $password1 = $self->param('password1');
+    my $password2 = $self->param('password2');
 
+
+    if ( !$self->can_register ) {
+        $self->redirect_to('/noregister');
+        return;
+    }
+
+
+    $self->app->logger->info(
+        "Received registration data. Login: '$login', email: '$email'.");
+
+    try {
+        # this throws on failure
+        validate_registration_data( $login, $email, $password1, $password2 );
+        my $existing_user
+            = $self->app->repo->users_find( sub { $_->login eq $login } );
+        die "This login is already taken.\n" if $existing_user;
+
+        my $salt     = salt();
+        my $hash     = encrypt_password( $password1, $salt );
+        my $new_user = $self->app->entityFactory->new_User(
+            login      => $login,
+            email      => $email,
+            real_name  => $name,
+            pass       => $hash,
+            pass2      => $salt
+        );
+        $self->app->repo->users_save($new_user);
+
+        $self->flash(
+            msg_type => 'success',
+            msg =>
+                "User created successfully! You may now login using login: $login."
+        );
+        $self->redirect_to('/');
+    }
+    catch {
+        my $failure_reason = $_;
+        $self->app->logger->warn($failure_reason);
+        $self->flash( msg_type => 'danger', msg => $failure_reason );
+        $self->stash(
+            name      => $name,
+            email     => $email,
+            login     => $login,
+            password1 => $password1,
+            password2 => $password2
+        );
+        $self->redirect_to('register');
+    };
+}
+####################################################################################
 1;

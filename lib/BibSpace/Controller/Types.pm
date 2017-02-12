@@ -2,17 +2,12 @@ package BibSpace::Controller::Types;
 
 use Data::Dumper;
 use utf8;
-use Text::BibTeX;    # parsing bib files
-use DateTime;
-use File::Slurp;
-use Time::Piece;
-use 5.010;           #because of ~~
+use v5.16;           #because of ~~
 use strict;
 use warnings;
-use DBI;
-use Set::Scalar;
 
-use BibSpace::Controller::Core;
+use List::MoreUtils qw(any uniq);
+use BibSpace::Functions::Core;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -23,230 +18,165 @@ use Mojo::Log;
 
 ####################################################################################
 sub all_our {
-    my $self = shift;
-    my $dbh  = $self->app->db;
+  my $self = shift;
 
-    my @otypes = get_all_our_types($dbh);
 
-    $self->stash( otypes => \@otypes );
-    $self->render( template => 'types/types' );
+  my @types = sort { $a->our_type cmp $b->our_type } $self->app->repo->types_all;
+
+  $self->stash( otypes => \@types );
+  $self->render( template => 'types/types' );
 }
 ####################################################################################
 sub add_type {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-
-    $self->stash();
-    $self->render( template => 'types/add' );
+  my $self = shift;
+  $self->render( template => 'types/add' );
 }
 ####################################################################################
 sub post_add_type {
-    my $self     = shift;
-    my $new_type = $self->param('new_type');
+  my $self     = shift;
+  my $new_type = $self->param('new_type');
 
-    my $dbh = $self->app->db;
+  my $type =  $self->app->entityFactory->new_Type(our_type => $new_type );
+  $self->app->repo->types_save($type);
 
-    if ( defined $new_type and length($new_type) > 0 ) {
-        my $sth
-            = $dbh->prepare(
-            "INSERT IGNORE INTO OurType_to_Type (our_type, bibtex_type, description, landing) VALUES(?,?,?,?)"
-            );
-        $sth->execute( $new_type, "misc",
-            "Publications of type " . $new_type, 0 );
-    }
-
-    $self->redirect_to( $self->url_for('types') );
+  $self->redirect_to( $self->url_for('all_types') );
 }
 ####################################################################################
 sub manage {
-    my $self = shift;
-    my $type = $self->param('type');
-    my $dbh  = $self->app->db;
+  my $self      = shift;
+  my $type_name = $self->param('name');
 
-    my @all_our_types      = get_all_our_types($dbh);
-    my @all_bibtex_types      = get_all_bibtex_types($dbh);
-    my @assigned_bibtex_types = get_bibtex_types_for_our_type( $dbh, $type );
+  my @all = $self->app->repo->types_all;
+  my $type = $self->app->repo->types_find( sub { $_->our_type eq $type_name } );
 
-    my $set_unassigned_btypes
-        = Set::Scalar->new(@all_bibtex_types) - Set::Scalar->new(@assigned_bibtex_types);
-    my @unassigned_btypes = $set_unassigned_btypes->members;
 
-    $self->stash(
-        all_otypes        => \@all_our_types,
-        unassigned_btypes => \@unassigned_btypes,
-        all_btypes        => \@all_bibtex_types,
-        assigned_btypes   => \@assigned_bibtex_types,
-        type              => $type
-    );
-    $self->render( template => 'types/manage_types' );
+  my @all_our_types         = uniq map { $_->our_type } @all;
+  my @all_bibtex_types      = BibSpace::Functions::Core::official_bibtex_types;
+  my @assigned_bibtex_types = $type->bibtexTypes_all;
+
+
+  # # cannot use objects as keysdue to stringification!
+  my %types_hash = map { $_ => 1 } @assigned_bibtex_types;
+  my @unassigned_btypes = grep { not $types_hash{$_} } @all_bibtex_types;
+
+
+  $self->stash(
+    all_otypes        => \@all_our_types,
+    unassigned_btypes => \@unassigned_btypes,
+    all_btypes        => \@all_bibtex_types,
+    assigned_btypes   => \@assigned_bibtex_types,
+    type              => $type
+  );
+  $self->render( template => 'types/manage_types' );
 }
 
 ####################################################################################
 sub toggle_landing {
-    my $self = shift;
-    my $type = $self->param('type');
+  my $self = shift;
+  my $type_name = $self->param('name');
+  my $type_obj = $self->app->repo->types_find( sub { $_->our_type eq $type_name } );
 
-    my $dbh = $self->app->db;
+  if ( $type_obj->onLanding == 0 ) {
+    $type_obj->onLanding(1);
+  }
+  else {
+    $type_obj->onLanding(0);
+  }
+  $self->app->repo->types_update($type_obj);
 
-    toggle_landing_for_our_type( $dbh, $type );
-
-    $self->redirect_to( $self->get_referrer );
+  $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
 sub post_store_description {
-    my $self        = shift;
-    my $type        = $self->param('our_type');
-    my $description = $self->param('new_description');
+  my $self        = shift;
+  my $type_name   = $self->param('our_type');
+  my $description = $self->param('new_description');
+  my $type_obj    = $self->app->repo->types_find( sub { $_->our_type eq $type_name } );
 
-    my $dbh = $self->app->db;
-
-    if ( defined $type and defined $description ) {
-        my $sth = $dbh->prepare(
-            "UPDATE OurType_to_Type SET description=? WHERE our_type=?");
-        $sth->execute( $description, $type );
-    }
-
-    $self->redirect_to( $self->url_for( 'typesmanagetype', type => $type ) );
+  if ( defined $type_obj and defined $description ) {
+    $type_obj->description($description);
+    $self->app->repo->types_update($type_obj);
+  }
+  $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
 sub delete_type {
-    my $self     = shift;
-    my $type2del = $self->param('type_to_delete');
-    my $msg      = "";
-    my $dbh      = $self->app->db;
+  my $self     = shift;
+  my $type_name = $self->param('name');
 
-    my $type_str = join '',
-        $self->get_bibtex_types_aggregated_for_type($type2del);
-    if (    $self->num_bibtex_types_aggregated_for_type($type2del) == 1
-        and $type_str eq $type2del )
-    {
-        $msg
-            = "<strong>DELETE ERROR</strong>: $type2del is native BibTeX type and cannot be deleted!";
-        $self->flash( message => $msg );
-        $self->redirect_to( $self->get_referrer );
-    }
-    elsif ( $self->num_bibtex_types_aggregated_for_type($type2del) > 1 ) {
-        $msg
-            = "<strong>DELETE ERROR</strong>: please unmap BibTeX types first";
-        $self->flash( message => $msg );
-        $self->redirect_to( $self->get_referrer );
-    }
-    elsif ( defined $type2del ) {
-        do_delete_type( $dbh, $type2del );
-    }
-    $self->redirect_to( $self->url_for('types') );
-}
-####################################################################################
+  my $type_obj = $self->app->repo->types_find( sub { $_->our_type eq $type_name } );
+  if( $type_obj and $type_obj->can_be_deleted ){
+    $self->app->repo->types_delete($type_obj);  
 
-sub do_delete_type {
-    my $dbh      = shift;
-    my $type2del = shift;
-
-    my $sth = $dbh->prepare("DELETE FROM OurType_to_Type WHERE our_type=?");
-    $sth->execute($type2del);
+    $self->flash( msg_type => 'success', message => "$type_name and its mappings have been deleted." );
+  }
+  else{
+    $self->flash( msg_type => 'warning', message => "$type_name cannot be deleted. Possible reasons: mappings exist or it is native bibtex type." );
+  }
+  $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
 sub map_types {
-    my $self   = shift;
-    my $o_type = $self->param('our_type');
-    my $b_type = $self->param('bibtex_type');
-    my $msg    = "";
+  my $self   = shift;
+  my $o_type = $self->param('our_type');
+  my $b_type = $self->param('bibtex_type');
 
-    my $dbh = $self->app->db;
+  my $type_obj = $self->app->repo->types_find( sub { $_->our_type eq $o_type } );
 
-    if (    defined $o_type
-        and length $o_type > 0
-        and defined $b_type
-        and length $b_type > 0 )
-    {
-        # inputs OK
-        # checkin if bibtex type exists
-        my @all_b_types = get_all_existing_bibtex_types();
-        if ( $b_type ~~ @all_b_types ) {
-            do_map_types( $dbh, $o_type, $b_type );
-        }
-        else {
-            $msg
-                = "<strong>MAP ERROR</strong>: $b_type is not a valid bibtex type!";
-            $self->flash( message => $msg );
-            $self->redirect_to( $self->get_referrer );
-            return;
-        }
-    }
+  if ( !$o_type or !$b_type or !$type_obj ) {
+    $self->flash( message => "Cannot map. Incomplete input.", msg_type => 'danger' );
     $self->redirect_to( $self->get_referrer );
-}
+    return;
 
-####################################################################################
-
-sub do_create_type {
-    my $dbh    = shift;
-    my $o_type = shift;
-
-    my $sth = $dbh->prepare(
-        "INSERT INTO OurType_to_Type(our_type, bibtex_type) VALUES (?,NULL)");
-    $sth->execute($o_type);
-}
-####################################################################################
-
-sub do_map_types {
-    my $dbh    = shift;
-    my $o_type = shift;
-    my $b_type = shift;
-
-    my $sth = $dbh->prepare(
-        "INSERT INTO OurType_to_Type(our_type, bibtex_type) VALUES (?,?)");
-    $sth->execute( $o_type, $b_type );
+  }
+  elsif ($type_obj) {
+    use List::Util qw(first);
+    my $found = first { $_ eq $b_type } official_bibtex_types;
+    if ($found) {
+      $type_obj->bibtexTypes_add($b_type);
+      $self->app->repo->types_update($type_obj);
+      $self->flash( message => "Mapping successful!", msg_type => 'success' );
+    }
+    else {
+      $self->flash( message => "MAP ERROR: $b_type is not a valid bibtex type!", msg_type => 'danger' );
+    }
+  }
+  else {
+    $self->flash( message => "Cannot map. Type not found.", msg_type => 'danger' );
+  }
+  $self->redirect_to( $self->get_referrer );
 }
 
 ####################################################################################
 sub unmap_types {
-    my $self   = shift;
-    my $o_type = $self->param('our_type');
-    my $b_type = $self->param('bibtex_type');
-    my $dbh    = $self->app->db;
-    my $msg    = "";
+  my $self   = shift;
+  my $o_type = $self->param('our_type');
+  my $b_type = $self->param('bibtex_type');
 
-    say "unmapping o $o_type b $b_type";
+  my $type_obj = $self->app->repo->types_find( sub { $_->our_type eq $o_type } );
 
-    if (    defined $o_type
-        and length $o_type > 0
-        and defined $b_type
-        and length $b_type > 0 )
-    {
-        if ( $o_type eq $b_type ) {
-            $msg
-                = "<strong>UNMAP ERROR</strong>: Unmapping $b_type from $o_type this would delete $o_type! $o_type cannot be deleted because it is a bibtex type.";
-            $self->flash( message => $msg );
-            $self->redirect_to( $self->get_referrer );
-            return;
-        }
-
-        # inputs OK
-        # checkin if bibtex type exists
-        my @all_b_types = get_all_existing_bibtex_types();
-        if ( $b_type ~~ @all_b_types ) {
-            do_unmap_types( $dbh, $o_type, $b_type );
-        }
-        else {
-            $msg
-                = "<strong>UNMAP ERROR</strong>: $b_type is not a valid bibtex type!";
-            $self->flash( message => $msg );
-            $self->redirect_to( $self->get_referrer );
-        }
-    }
-
+  if ( !$b_type or !$type_obj ) {
+    $self->flash( message => "Cannot unmap. Incomplete input.", msg_type => 'danger' );
     $self->redirect_to( $self->get_referrer );
+    return;
 
-}
-####################################################################################
-sub do_unmap_types {
-    my $dbh    = shift;
-    my $o_type = shift;
-    my $b_type = shift;
+  }
+  elsif ($type_obj) {
+    my $idx_to_del = $type_obj->bibtexTypes_find_index( sub{ $_ eq $b_type } );
+    if( $idx_to_del > -1 ){
+        $type_obj->bibtexTypes_delete($idx_to_del);
+        $self->app->repo->types_update($type_obj);
+        $self->flash( message => "Unmapping successful!", msg_type => 'success' );
+    }
+    else {
+      $self->flash( message => "Unmap error: $b_type is not a valid bibtex type!", msg_type => 'danger' );
+    }
+  }
+  else {
+    $self->flash( message => "Cannot unmap. Type not found.", msg_type => 'danger' );
+  }
+  $self->redirect_to( $self->get_referrer );
 
-    my $sth = $dbh->prepare(
-        "DELETE FROM OurType_to_Type WHERE our_type=? AND bibtex_type=?");
-    $sth->execute( $o_type, $b_type );
 }
 ####################################################################################
 1;

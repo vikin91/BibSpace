@@ -1,27 +1,25 @@
-package BibSpace::Controller::Publicationsexperimental;
+package BibSpace::Controller::PublicationsExperimental;
 
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use File::Slurp;     # should be replaced in the future
+# use File::Slurp;     # should be replaced in the future
 use Path::Tiny;      # for creating directories
 use Try::Tiny;
-use Time::Piece;
-use 5.010;           #because of ~~
+
+use v5.16;           #because of ~~
 use strict;
 use warnings;
-use DBI;
+
+use List::MoreUtils qw(any uniq);
 
 use TeX::Encode;
 use Encode;
 
-use BibSpace::Controller::Core;
+use BibSpace::Functions::Core;
 use BibSpace::Functions::FPublications;
-use BibSpace::Model::MEntry;
 
-use BibSpace::Controller::Set
-    ;    # deprecated but needed so far. TODO: refactor this
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -45,29 +43,29 @@ our %mons = (
 ####################################################################################
 ## ADD form
 sub publications_add_many_get {
-    say "CALL: publications_add_many_get";
     my $self = shift;
-    my $dbh  = $self->app->db;
 
     my $bib1
-        = '@article{key-'
-        . random_string(8) . '-'
+        = '@article{key-ENTRY1-'
         . get_current_year() . ',
       author = {Johny Example},
       title = {{Selected aspects of some methods ' . random_string(8) . '}},
+      journal = {Journal of this and that},
+      publisher = {Printer-at-home publishing},
       year = {' . get_current_year() . '},
-      month = {' . $mons{ get_current_month() } . '},
+      month = {' . $mons{ 12 } . '},
       day = {1--31},
   }';
 
     my $bib2
-        = '@article{key-'
-        . random_string(8) . '-'
+        = '@article{key-ENTRY2-'
         . get_current_year() . ',
       author = {Johny Example},
       title = {{Selected aspects of some methods ' . random_string(8) . '}},
+      journal = {Journal of other things},
+      publisher = {Copy-machine publishing house},
       year = {' . get_current_year() . '},
-      month = {' . $mons{ get_current_month() } . '},
+      month = {' . $mons{ 12 } . '},
       day = {1--31},
   }';
 
@@ -89,41 +87,31 @@ sub publications_add_many_get {
 ############################################################################################################
 
 ## Called after every preview or store command issued by ADD_MULTIPLE form
+##  finish this function using the new way of adding editing
 
-## THIS DOES NOT WORK ! finish this function using the new way of adding editing
 sub publications_add_many_post {
-    say "CALL: publications_add_many_post ";
+
     my $self          = shift;
-    my $id            = $self->param('id') || undef;
+    my $id            = $self->param('id') // undef;
     my $new_bib       = $self->param('new_bib');
-    my $preview_param = $self->param('preview') || undef;
+    my $preview_param = $self->param('preview') // undef;
+    my $save_param    = $self->param('save') // undef;
 
     # my $check_key =  || undef;
     my $preview = 0;
-    my $msg = "<strong>Adding mode</strong> You operate on an unsaved entry!";
+    my $msg = "<strong>Adding mode</strong> You operate on an unsaved entry!<br>";
 
-    $self->write_log("post_add_many_store add publication with bib $new_bib");
+    $self->app->logger->info("Adding multiple publications");
+
+    $self->app->logger->debug("Adding multiple publications with bib $new_bib");
 
     my $debug_str = "";
 
-    my $dbh          = $self->app->db;
     my $html_preview = "";
     my $code         = -2;
 
     my @bibtex_codes = split_bibtex_entries($new_bib);
-    my @key_arr      = ();
 
-    for my $bibtex_code (@bibtex_codes) {
-
-        # $debug_str.="<br>Found code!";
-        my $entry = MEntry->new(bib=>$bibtex_code);
-        $entry->populate_from_bib();
-        $debug_str .= "<br>Found key: $entry->{bibtex_key}";
-
-        push @key_arr, $entry->{bibtex_key};
-    }
-
-    my @mentries = ();
 
     # status_code_strings
     # -2 => PREVIEW
@@ -134,29 +122,48 @@ sub publications_add_many_post {
     # 3 => KEY_TAKEN
     my $num_errors = 0;
     for my $bibtex_code (@bibtex_codes) {
+
         my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-            = Fhandle_add_edit_publication( $dbh, $bibtex_code, -1,
+            = Fhandle_add_edit_publication( $self->app, $bibtex_code, -1,
             'preview' );
 
         if ( $status_code_str eq 'ERR_BIBTEX' ) {
             $debug_str
-                .= "<br>BIBTEX error in <br/><pre> $bibtex_code </pre><br/>";
-            $num_errors = $num_errors + 1;
+                .= "BIBTEX error in <br/><pre> $bibtex_code </pre>";
+            $num_errors++;
         }
         elsif ( $status_code_str eq 'KEY_TAKEN' ) {    # => bibtex OK, key OK
             $debug_str
-                .= "<br>KEY_TAKEN error in <br/><pre> $bibtex_code </pre><br/>";
-            $num_errors = $num_errors + 1;
+                .= "KEY_TAKEN error in <br/><pre> $bibtex_code </pre>";
+            $num_errors++;
+        }
+        else{
+            $debug_str
+                .= "$status_code_str for <br/><pre> $bibtex_code </pre>";
         }
     }
 
     if ( $num_errors > 0 ) {
-        $msg = $debug_str
-            . "Please correct entries before continuing. No changes were written to database.";
+        $msg = "$num_errors have errors. Please correct entries before continuing. No changes were written to database. <br> $debug_str";
         $self->stash(
             bib         => $new_bib,
             existing_id => 0,
             key         => '',
+            msg_type    => 'danger',
+            msg         => $msg,
+            exit_code   => $code,
+            preview     => $html_preview
+        );
+        $self->render( template => 'publications/add_multiple_entries' );
+        return;
+    }
+    if ( defined $preview_param ) {
+        $msg = "Check ready.<br>".$debug_str;
+        $self->stash(
+            bib         => $new_bib,
+            existing_id => 0,
+            key         => '',
+            msg_type    => 'info',
             msg         => $msg,
             exit_code   => $code,
             preview     => $html_preview
@@ -166,6 +173,20 @@ sub publications_add_many_post {
     }
 
     # here all Bibtex entries are OK
+
+    my @key_arr      = ();
+
+    for my $bibtex_code (@bibtex_codes) {
+
+        # $debug_str.="<br>Found code!";
+        my $entry = $self->app->entityFactory->new_Entry( bib=>$bibtex_code );
+        $entry->populate_from_bib;
+        $debug_str .= "<br>Found key: ".$entry->{bibtex_key};
+
+        push @key_arr, $entry->{bibtex_key};
+    }
+
+    my @mentries = ();
 
     my %seen;
     my $are_unique = 0;
@@ -199,6 +220,7 @@ sub publications_add_many_post {
             bib         => $new_bib,
             existing_id => 0,
             key         => '',
+            msg_type    => 'danger',
             msg         => $msg,
             exit_code   => $code,
             preview     => $html_preview
@@ -207,27 +229,36 @@ sub publications_add_many_post {
         return;
     }
 
-    $debug_str .= "<br>Entries ready to add! Starting.";
+    my $msg_type = 'warning';
 
-    for my $bibtex_code (@bibtex_codes) {
-        my ( $mentry, $status_code_str, $existing_id, $added_under_id )
-            = Fhandle_add_edit_publication( $dbh, $bibtex_code, -1, 'save',
-            $self->app->bst );
+    if( defined $save_param ){
+        $debug_str .= "<br>Entries ready to add! Starting.";
 
-        if ( $status_code_str eq 'ADD_OK' ) {
-            $debug_str .= "<br>"
-                . "Added key entry as id $added_under_id successfully!";
-        }
-        else {    # => bibtex OK, key OK
-            $debug_str .= "<br>"
-                . "Something went wrong. Status: $status_code_str<br/>";
+        $msg_type = 'success';
+
+        for my $bibtex_code (@bibtex_codes) {
+            my ( $mentry, $status_code_str, $existing_id, $added_under_id )
+                = Fhandle_add_edit_publication( $self->app, $bibtex_code, -1, 'save',
+                $self->app->bst );
+
+            if ( $status_code_str eq 'ADD_OK' ) {
+                $debug_str .= "<br>"
+                    . "Added key entry as id $added_under_id successfully!";
+            }
+            else {    # => bibtex OK, key OK
+                $debug_str .= "<br>"
+                    . "Something went wrong. Status: $status_code_str<br/>";
+                $msg_type = 'danger';
+            }
         }
     }
-    say "after bibtex codes loop";
+
+
 
     $self->stash(
         bib         => $new_bib,
         existing_id => 0,
+        msg_type    => $msg_type,
         key         => '',
         msg         => $msg . $debug_str,
         exit_code   => $code,
@@ -236,81 +267,6 @@ sub publications_add_many_post {
     $self->render( template => 'publications/add_multiple_entries' );
 }
 ####################################################################################
-sub split_bibtex_entries {
-    say "CALL: split_bibtex_entries";
-    my $input = shift;
 
-    my @bibtex_codes = ();
-    $input =~ s/^\s+|\s+$//g;
-    $input =~ s/^\t//g;
-
-    for my $b_code ( split /@/, $input ) {
-        next unless length($b_code) > 10;
-        my $entry_code = "@" . $b_code;
-
-        my $entry = new Text::BibTeX::Entry;
-        $entry->parse_s($entry_code);
-        if ( $entry->parse_ok ) {
-            push @bibtex_codes, $entry_code;
-        }
-    }
-
-    return @bibtex_codes;
-}
-####################################################################################
-
-### THIS IS ONLY Exemplary FUNCTION TO play with functionalities provided by sets
-sub all_defined_by_set {
-    say "CALL: all_defined_by_set ";
-    my $self = shift;
-
-    my $end_set = get_set_of_papers_for_all_authors_of_team_id( $self, 1 );
-    $end_set = $end_set - get_set_of_papers_for_team( $self, 1 );
-
-    #test
-    my $all_papers = Set::Scalar->new( map { $_->{id} }
-            MEntry->static_all( $self->app->db ) );
-    my $not_relevant_papers = $all_papers
-        - get_set_of_papers_for_all_authors_of_team_id( $self, 1 );
-
-    $end_set = $not_relevant_papers;
-
-    ### TODO!!!
-    # not_relev = not_relev - tagged
-    # not_relev = not_relev - exceptions
-
-    my @objs = Fget_publications_core_from_set( $self, $end_set );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-sub all_with_pdf_on_sdq {
-    say "CALL: all_with_pdf_on_sdq ";
-    my $self = shift;
-    my $num  = $self->param('num') || 10;
-    my $dbh  = $self->app->db;
-
-    $self->write_log("Displaying papers with pdfs on sdq server");
-
-    my $qry = "SELECT id from Entry WHERE html_bib LIKE ?";
-
-    my $sth = $dbh->prepare($qry);
-    $sth->execute("%sdqweb%");
-
-    my @array;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $eid = $row->{id};
-        push @array, $eid;
-    }
-
-    my $msg
-        = "This list contains papers that have pdfs on the sdqweb server. Please use this list to move pdfs to our server - this improves the performance.";
-
-    my @objs = Fget_publications_core_from_array_ref( $self, \@array );
-    $self->stash( msg_type=>'info', msg     => $msg );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
 
 1;

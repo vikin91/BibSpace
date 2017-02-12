@@ -1,88 +1,47 @@
 language: perl
 perl:
-    # - "5.22"
-    - "5.20"
-    # - "5.18"
-    # - "5.16"
-    # - "5.14"
-    # - "5.12"
-    # - "5.10"
-
+- '5.22'
 dist: trusty
-sudo: require # ubuntu
+sudo: required
+services:
+- mysql
 addons:
   apt:
     packages:
-    - mysql-server-5.6
-    - mysql-client-core-5.6
-    - mysql-client-5.6
-    - ocaml 
-    - libbtparse-dev # disallowed in travis # Text::BibTeX  requires it
+    - ocaml
+    - libbtparse-dev
     - libdbd-mysql-perl
-    - tree # just for debugging dir structure
-
+    - tree
 git:
   depth: 3
-
 before_install:
-    # - sudo apt-get update -qq
-    # - sudo apt-get install -y tree
-    # - sudo apt-get install -y ocaml libbtparse-dev libdbd-mysql-perl
-    - bash install-bibtex2html.sh
-    # - git config --global user.name "TravisCI"
-    # - eval $(curl https://travis-perl.github.io/init) --auto # hangs often!
-    - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
-    - source ~/travis-perl-helpers/init
-    - build-perl
-    - perl -V
-    # - build-dist                # does not work anymore - must be some incompatibility due to version changes
-    # - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
-    - pwd
-    - mkdir tmp
-    - touch tmp/data.bib
-    - touch tmp/out.html
-    - touch tmp/out_bib.html
-    - chmod -R 777 tmp
-
-
-install:
-    - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=1
-    - cpan-install --deps # this works well!
-    - cpan-install --coverage
-    - cpanm --quiet --notest --skip-satisfied Dist::Zilla
-    - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
-    - cpanm --quiet --notest --skip-satisfied Module::Build::Mojolicious Module::CPANfile
-    # - dzil listdeps | grep -vP '[^\w:]' | cpanm --notest --skip-satisfied  --verbose # does almost nothing
-    - dzil authordeps --missing | cpanm --notest --skip-satisfied 
-    - cpanm -nq --no-interactive --installdeps .
-    # - cpanm -nq --skip-satisfied --no-interactive Mojolicious DBD::mysql Module::Build::Mojolicious Time::Piece Data::Dumper Crypt::Eksblowfish::Bcrypt Cwd File::Find DateTime File::Copy  Scalar::Util utf8 File::Slurp DBI Exporter Set::Scalar Session::Token LWP::UserAgent Text::BibTeX HTML::TagCloud::Sortable Crypt::Random WWW::Mechanize Test::Differences Test::MockModule Mojolicious::Plugin::RenderFile Path::Tiny 
-    # - cpanm -nq --skip-satisfied --no-interactive Moose Test::Pod::Coverage TeX::Encode Array::Utils File::Spec
-    # - cpanm -nq --skip-satisfied --no-interactive Text::ASCIIMathML Mojo::Redis2
+- sudo apt-get install -y texlive-base bibtex2html
+- git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
+- source ~/travis-perl-helpers/init
+- build-perl
+- perl -V
+- pwd
+- tree
+- export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=0
 before_script:
-    - mysql --version
-    - mysql -u root -e "SELECT VERSION();"
-    - mysql -u root -e 'create database IF NOT EXISTS bibspace;'
-    - mysql -u root -e "CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';"
-    - mysql -u root -e "GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';"
-    - mysql -u root -e "FLUSH PRIVILEGES;"
-    - mojo version
-    - coverage-setup
-
-
+- mysql --version
+- mysql -u root -e "SELECT VERSION();"
+- mysql -u root -e 'create database IF NOT EXISTS bibspace;'
+- mysql -u root -e "CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';"
+- mysql -u root -e "GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';"
+- mysql -u root -e "FLUSH PRIVILEGES;"
+- mojo version
+- coverage-setup
 notifications:
-    email:
-        on_success: always
-        on_failure: always
-
-script: 
-    # works! # 
-    - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr t/
-    # - BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf cover -report coveralls # runs ./Build test that does not work
-
-# after_failure:
-    # - coverage-report
-
+  slack:
+    secure: hwihdXrKIOilNPyIunNh5yqBwtgwj4SnheF8DlsmQI2TqpcyFWgjvspnvquiV7+OEBb5mFUSZeEUj5cgIgJ3VaBFIbcij0nq3TTHAvSmx+oTboAxUkg62zdPaaFV+iK9BpCNm6eGsjE1Wfp6LXzBHOZetCXJ1IgQ02mOknkW2ysztNhF4G/MMUXvDe5ApgTHshGYvkaD+StHcLt2c6Quy4DUkKeU6Djun6Dyp3foSBibBRsQK9q0yXo5ooYkoVllEaSvu94FpxBjsF+lBQJveM2Wc090EgM1An/Oc/ptMVvMmSE0mmM8RR9vM5dUZwmZHd/kECo1cvGQG1nVJZ9qWnrCeWcnJS7M9FkFucEBjFJTzh1FL3tgYKnXkS04uQLaj84byQr7f+l4l8ExsJPUriQia9829+OeiRblOdB3mEEMgHleMhE0trfre7iz5Beob5sPwTq9z7ywrRVGX8vKeDXPEmwDi+5gdYXRw3QwNP7sWAePOdpZPzUBc5fUYZh8kJB22b8zoF1T81gxME0MQOc4nCgSCETtLWih3R8sngooAXXo9kYM3zb38ijoLpPwlOmE0BR9rvcSz8BBp1bVhWZ4k4ploe5uTtb+Mg31Amj6d5I5z9/KwYJQ6Mcy3y8Ijozm7+FpDLfjz70ZjAYguurmHFZsDQJQp4fJUcOFabc=
+  email:
+    on_success: always
+    on_failure: always
+script:
+- export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
+- export BIBSPACE_USE_DUMP=1
+# - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine bin/bibspace test
+- PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr
 after_success:
-    - cover -report coveralls
-    # - coverage-report
-
+- cover -report coveralls

@@ -5,16 +5,17 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use File::Slurp;
-use Time::Piece;
-use 5.010;           #because of ~~
+use Try::Tiny;
+# use File::Slurp;
+
+use v5.16;           #because of ~~
 use strict;
 use warnings;
-use DBI;
 
-use BibSpace::Model::MAuthor;
 
-use BibSpace::Controller::Core;
+use List::MoreUtils qw(any uniq);
+
+use BibSpace::Functions::Core;
 use BibSpace::Controller::Publications;
 
 use BibSpace::Functions::FPublications;
@@ -22,571 +23,571 @@ use BibSpace::Functions::FPublications;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
+
 ##############################################################################################################
-sub show {    # refactored
-    my $self    = shift;
-    my $dbh     = $self->app->db;
-    my $visible = $self->param('visible');
-    my $search  = $self->param('search') || '%';
-    my $letter  = $self->param('letter') || '%';
+sub all_authors {    # refactored
+  my $self    = shift;
+  my $visible = $self->param('visible');
+  my $search  = $self->param('search');
+  my $letter  = $self->param('letter');
+  
 
-    if ( $letter ne '%' ) {
-        $letter .= '%';
-    }
+  my @authors = $self->app->repo->authors_all;
+  if ( defined $visible ) {
+    @authors = grep { $_->display == $visible } @authors;
+  }
+  
+  @authors = grep { $_->is_master } @authors;
 
-    my @authors = MAuthor->static_get_filter( $dbh, $visible, $letter );
+  if ( $letter) {
+    @authors = grep { ( substr( $_->master, 0, 1 ) cmp $letter ) == 0 } @authors;
+  }
+  my @letters;
+  if( defined $visible){
+    @letters = map { substr( $_->master, 0, 1 ) } $self->app->repo->authors_filter(sub{ $_->display == $visible });
+  }
+  else{
+    @letters = map { substr( $_->master, 0, 1 ) } $self->app->repo->authors_all;
+  }
+  @letters = uniq @letters;
+  @letters = sort @letters;
 
-    my @letters = $self->get_set_of_first_letters($visible);
 
-    $self->stash(
-        authors => \@authors,
-        letters => \@letters,
-        visible => $visible
-    );
 
-    $self->render( template => 'authors/authors' );
+  @authors = sort {$a->uid cmp $b->uid} @authors;
+
+  $self->stash( authors => \@authors, letters => \@letters, selected_letter => $letter, visible => $visible );
+
+  $self->render( template => 'authors/authors' );
 }
 ##############################################################################################################
 sub add_author {
-    my $self = shift;
+  my $self = shift;
 
-    my $dbh = $self->app->db;
-
-    $self->stash( master => '', id => '' );
-    $self->render( template => 'authors/add_author' );
+  $self->stash( master => '', id => '' );
+  $self->render( template => 'authors/add_author' );
 }
 
 ##############################################################################################################
 sub add_post {
-    my $self       = shift;
-    my $dbh        = $self->app->db;
-    my $new_master = $self->param('new_master');
+  my $self       = shift;
+  my $new_master = $self->param('new_master');
 
-    if ( defined $new_master ) {
+  if ( defined $new_master and length($new_master) > 0 ) {
 
-        my $a = MAuthor->static_get_by_name( $dbh, $new_master );
+    my $author = $self->app->repo->authors_find( sub { $_->master eq $new_master } );
 
-        if ( !defined $a ) {    # no such user exists yet
+    if ( !defined $author ) {    # no such user exists yet
 
-            $a = MAuthor->new( uid => $new_master );
-            $a->save($dbh);
+      $author = $self->app->entityFactory->new_Author( uid => $new_master );
+      $self->app->repo->authors_save($author);
 
-            if ( !defined $a->{id} ) {
-                $self->flash(
-                    type => 'danger',
-                    msg =>
-                        "Error saving author. Saving to the database returned no insert row id."
-                );
-                $self->redirect_to( $self->url_for('add_author') );
-                return;
-            }
-            $self->write_log(
-                "Added new author with master: $new_master. Author id is "
-                    . $a->{id} );
-            $self->flash(
-                type => 'success',
-                msg  => "Author added successfully!"
-            );
-            $self->redirect_to(
-                $self->url_for( 'edit_author', id => $a->{id} ) );
-            return;
-        }
-        else {    # such user already exists!
-            $self->write_log(
-                "Author with master: $new_master already exists!");
-            $self->flash(
-                msg_type => 'warning',
-                msg =>
-                    "Author with proposed master: $new_master already exists! Pick a different one."
-            );
-            $self->redirect_to( $self->url_for('add_author') );
-            return;
-        }
+      if ( !defined $author->id ) {
+        $self->flash(
+          msg_type => 'danger',
+          msg      => "Error saving author. Saving to the database returned no insert row id."
+        );
+        $self->redirect_to( $self->url_for('add_author') );
+        return;
+      }
+      $self->app->logger->info( "Added new author with master: $new_master. Author id is " . $author->{id} );
+      $self->flash( msg_type => 'success', msg => "Author added successfully!" );
+      $self->redirect_to( $self->url_for( 'edit_author', id => $author->{id} ) );
+      return;
     }
+    else {    # such user already exists!
+      $self->app->logger->info("Author with master: $new_master already exists!");
+      $self->flash(
+        msg_type => 'warning',
+        msg      => "Author with proposed master: $new_master already exists! Pick a different one."
+      );
+      $self->redirect_to( $self->url_for('add_author') );
+      return;
+    }
+  }
 
-    $self->redirect_to( $self->url_for('add_author') );
+  $self->flash( msg_type => 'warning', msg => "Bad input." );
+  $self->redirect_to( $self->url_for('add_author') );
 }
 ##############################################################################################################
 sub edit_author {
-    my $self = shift;
-    my $id   = $self->param('id');
+  my $self = shift;
+  my $id   = $self->param('id');
 
-    my $dbh = $self->app->db;
-    my $author = MAuthor->static_get( $dbh, $id );
-
-    if( defined $author and $author->{id} != $author->{master_id} ){
-        $self->redirect_to( $self->url_for('edit_author', id=>$author->{master_id}) );
-        return;
-    }
+  my $author = $self->app->repo->authors_find( sub { $_->id == $id } );
 
 
-    if ( !defined $author ) {
-        $self->flash(
-            msg      => "Author with id $id does not exist!",
-            msg_type => "danger"
-        );
-        $self->redirect_to( $self->url_for('all_authors') );
-    }
-    else {
+  if ( !defined $author ) {
+    $self->flash( msg => "Author with id $id does not exist!", msg_type => "danger" );
+    $self->redirect_to( $self->url_for('all_authors') );
+  }
+  else {
 
-        my @all_teams    = MTeam->static_all($dbh);
-        my @author_teams = $author->teams($dbh);
-        my @author_tags  = $author->tags($dbh);
 
-        my @minor_authors = $author->all_author_user_ids($dbh);
+    my @all_teams    = $self->app->repo->teams_all;
+    my @author_teams = $author->get_teams;
+    my @author_tags  = $author->get_tags;
 
-        $self->stash(
-            author        => $author,
-            minor_authors => \@minor_authors,
-            teams         => \@author_teams,
-            exit_code     => '',
-            tags          => \@author_tags,
-            all_teams     => \@all_teams
-        );
-        $self->render( template => 'authors/edit_author' );
-    }
-}
-##############################################################################################################
-sub can_be_deleted {
-    my $self = shift;
-    my $id   = shift;
-    my $dbh  = $self->app->db;
+    # cannot use objects as keys due to hash stringification!
+    my %author_teams_hash = map { $_->id => 1 } @author_teams;
+    my @unassigned_teams = grep { not $author_teams_hash{ $_->id } } @all_teams;
 
-    my $author = MAuthor->static_get( $dbh, $id );
-    my $visibility = $author->{display};
 
-    my $num_teams = scalar $author->teams($dbh);
+    my @minor_authors = $self->app->repo->authors_filter( sub { $_->is_minion_of($author) } );
 
-    return 1 if $num_teams == 0 and $visibility == 0;
-    return 0;
+    # $author->all_author_user_ids($dbh);
+
+    $self->stash(
+      author           => $author,
+      minor_authors    => \@minor_authors,
+      teams            => \@author_teams,
+      tags             => \@author_tags,
+      all_teams        => \@all_teams,
+      unassigned_teams => \@unassigned_teams
+    );
+    $self->render( template => 'authors/edit_author' );
+  }
 }
 ##############################################################################################################
 sub add_to_team {
-    my $self      = shift;
-    my $dbh       = $self->app->db;
-    my $master_id = $self->param('id');
-    my $team_id   = $self->param('tid');
+  my $self      = shift;
+  my $master_id = $self->param('id');
+  my $team_id   = $self->param('tid');
 
-    add_team_for_author( $self, $master_id, $team_id );
+  my $author = $self->app->repo->authors_find( sub { $_->id == $master_id } );
+  my $team   = $self->app->repo->teams_find( sub   { $_->id == $team_id } );
 
-    $self->redirect_to( $self->get_referrer );
+  if ( defined $author and defined $team ) {
+    my $membership = Membership->new(
+      author    => $author->get_master,
+      team      => $team,
+      author_id => $author->get_master->id,
+      team_id   => $team->id
+    );
+    $self->app->repo->memberships_save($membership);
+    $team->add_membership($membership);
+    $author->add_membership($membership);
+
+    $self->flash(
+      msg      => "Author <b>" . $author->uid . "</b> has just joined team <b>" . $team->name . "</b>",
+      msg_type => "success"
+    );
+  }
+  else {
+    $self->flash( msg => "Author or team does does not exist!", msg_type => "danger" );
+  }
+  $self->redirect_to( $self->get_referrer );
 }
 ##############################################################################################################
 sub remove_from_team {
-    my $self      = shift;
-    my $dbh       = $self->app->db;
-    my $master_id = $self->param('id');
-    my $team_id   = $self->param('tid');
+  my $self      = shift;
+  my $master_id = $self->param('id');
+  my $team_id   = $self->param('tid');
 
-    remove_team_for_author( $self, $master_id, $team_id );
+  my $author = $self->app->repo->authors_find( sub { $_->id == $master_id } );
+  my $team   = $self->app->repo->teams_find( sub   { $_->id == $team_id } );
 
-    $self->redirect_to( $self->get_referrer );
+  if ( defined $author and defined $team ) {
+    my $membership = $author->memberships_find(sub { $_->team->equals($team) });
+    $author->remove_membership($membership);
+    $team->remove_membership($membership);
+    $self->app->repo->memberships_delete($membership);
+
+    $self->flash(
+      msg      => "Author <b>" . $author->uid . "</b> has just left team <b>" . $team->name . "</b>",
+      msg_type => "success"
+    );
+  }
+  else {
+    $self->flash( msg => "Author or team does does not exist!", msg_type => "danger" );
+  }
+  $self->redirect_to( $self->get_referrer );
 }
 ##############################################################################################################
 sub remove_uid {
-    my $self      = shift;
-    my $dbh       = $self->app->db;
-    my $master_id = $self->param('masterid');
-    my $minor_id  = $self->param('uid');
+  my $self      = shift;
+  my $master_id = $self->param('masterid');
+  my $minor_id  = $self->param('uid');
+ 
 
-    my $author_master = MAuthor->static_get( $dbh, $master_id );
-    my $author_minor  = MAuthor->static_get( $dbh, $minor_id );
+  my $author_master = $self->app->repo->authors_find( sub { $_->id == $master_id } );
+  my $author_minor  = $self->app->repo->authors_find( sub { $_->id == $minor_id } );
 
-   # my $sth = $dbh->prepare('DELETE FROM Author WHERE id=? AND master_id=?');
-   # $sth->execute( $minor_id, $master_id );
+  if ( !defined $author_minor ) {
+    $self->flash( msg => "Cannot remove user_id $minor_id. Reason: such author deos not exist.", msg_type => "danger" );
+  }
+  elsif ( $author_minor->is_master ) {
+    $self->flash( msg => "Cannot remove user_id $minor_id. Reason: it is a master_id.", msg_type => "warning" );
+  }
+  else {
 
-    if ( $author_master == $author_minor ) {
-        $self->flash(
-            msg =>
-                "Cannot remove user_id $minor_id. Reason: it is a master_id.",
-            msg_type => "danger"
-        );
+    my @master_entries = $author_master->get_entries;
+
+    # remove master authorships from both authors
+    foreach my $master_authorship ( $author_master->authorships_all ){
+        $author_master->remove_authorship($master_authorship);
+        $author_minor->remove_authorship($master_authorship);
+
+        $master_authorship->entry->remove_authorship($master_authorship);
+        $self->app->repo->authorships_delete($master_authorship);
     }
-    else {
+    # remove minion authorships from both authors
+    foreach my $minion_authorship ( $author_minor->authorships_all ){
+        $author_minor->remove_authorship($minion_authorship);
+        $author_master->remove_authorship($minion_authorship);
 
-        my @all_entries = $author_master->entries( $dbh );
-        
-        $author_minor->{master_id} = $author_minor->{id};
-        $author_minor->{master}    = $author_minor->{uid};
-        $author_minor->save($dbh);
-        # authors are uncnnected now
-        # ON UPDATE CASCADE has removed all entreis from $author_master and assigned them to $author_minor
-        # All entries of the $author_master from before seperation needs be updated
-        # The $author_minor comes back to the list of all authors and it keeps its entries.
-
-        foreach my $e (@all_entries) {
-            # 0 = no creation of new authors
-            $e->process_authors( $dbh, 0 ); 
-        }
+        $minion_authorship->entry->remove_authorship($minion_authorship);
+        $self->app->repo->authorships_delete($minion_authorship);
     }
-    $self->redirect_to( $self->get_referrer );
+    # unlink authors
+    $author_minor->remove_master;
+    # save changes (minor should be enough)
+    $self->app->repo->authors_update($author_master);
+    $self->app->repo->authors_update($author_minor);
+
+    # calculate proper authorships automatically
+    Freassign_authors_to_entries_given_by_array($self->app, 0, \@master_entries);
+
+  }
+
+  $self->redirect_to( $self->get_referrer );
 }
 ##############################################################################################################
 sub merge_authors {
-    my $self           = shift;
-    my $dbh            = $self->app->db;
-    my $destination_id = $self->param('author_to');
-    my $source_id      = $self->param('author_from');
+  my $self           = shift;
+  my $destination_id = $self->param('author_to');
+  my $source_id      = $self->param('author_from');
 
-    my $author_destination;
-    if ($destination_id =~ m/^\d+$/){
-       $author_destination = MAuthor->static_get( $dbh, $destination_id )  
+  my $author_destination = $self->app->repo->authors_find( sub { $_->id == $destination_id } );
+  $author_destination  ||= $self->app->repo->authors_find( sub { $_->uid eq $destination_id } );
+
+  my $author_source      = $self->app->repo->authors_find( sub { $_->id == $source_id } );
+  $author_source       ||= $self->app->repo->authors_find( sub { $_->uid eq $source_id } );
+
+  my $copy_name = $author_source->uid;
+
+  my $success = 0;
+
+  if ( defined $author_source and defined $author_destination ) {
+    if ( $author_destination->can_merge_authors($author_source) ) {
+
+      my @src_authorships = $author_source->authorships_all;
+      foreach my $src_authorship ( @src_authorships ){
+          # Removing the authorship from the source author
+          $src_authorship->author->remove_authorship($src_authorship);
+          # authorships cannot be updated, so we need to delete and add later
+          $self->app->repo->authorships_delete($src_authorship);
+          # Changing the authorship to point to a new author
+          $src_authorship->author($author_destination);
+          # store changes the authorship in the repo
+          $self->app->repo->authorships_save($src_authorship);
+          # Adding the authorship to the new author
+          $author_destination->add_authorship($src_authorship);
+      }
+      $author_source->memberships_clear;
+      $author_source->set_master($author_destination);
+      
+      $self->app->repo->authors_save($author_destination);
+      $self->app->repo->authors_save($author_source);
+
+      my @entries = $author_destination->get_entries;
+      Freassign_authors_to_entries_given_by_array($self->app, 0, \@entries);
+
+      $self->flash(
+        msg =>
+          "Author <strong>$copy_name</strong> was merged into <strong>$author_destination->{master}</strong>.",
+        msg_type => "success"
+      );
     }
-    else{
-        $author_destination = MAuthor->static_get_by_master( $dbh, $destination_id ) 
+    else {
+      $self->flash( msg => "An author cannot be merged with its self. ", msg_type => "danger" );
     }
 
-    my $author_source;
-    if ($source_id =~ m/^\d+$/){
-       $author_source = MAuthor->static_get( $dbh, $source_id )  
-    }
-    else{
-        $author_source = MAuthor->static_get_by_master( $dbh, $source_id ) 
-    }
-    my $copy_name          = $author_source->{uid};
+  }
+  else {
+    $self->flash( msg => "Authors cannot be merged. One or both authors do not exist.", msg_type => "danger" );
+  }
 
-    my $success = 0;
-
-    if( defined $author_source and defined $author_destination ){
-        $success = $author_destination->merge_authors( $dbh, $author_source );
-    }
-
-    if ($success){
-        $self->flash(
-            msg =>
-                "Authors merged. <strong>$copy_name</strong> was merged into <strong>$author_destination->{master}</strong>.",
-            msg_type => "success"
-        );
-    }
-    else{
-        $self->flash(
-            msg =>
-                "Authors cannot be merged. ",
-            msg_type => "danger"
-        );   
-    }
-
-    $self->redirect_to( $self->get_referrer );
+  $self->redirect_to( $self->get_referrer );
 }
 
 
 ##############################################################################################################
 sub edit_post {
-    my $self        = shift;
-    my $dbh         = $self->app->db;
-    my $id          = $self->param('id');
-    my $new_master  = $self->param('new_master');
-    my $new_user_id = $self->param('new_user_id');
+  my $self        = shift;
+  my $id          = $self->param('id');
+  my $new_master  = $self->param('new_master');
+  my $new_user_id = $self->param('new_user_id');
+  my $visibility  = $self->param('visibility');
 
-    my $visibility = $self->param('visibility');
+  my $author = $self->app->repo->authors_find( sub { $_->id == $id } );
 
-    my $author = MAuthor->static_get( $dbh, $id );
+  if ( defined $author ) {
+    if ( defined $new_master ) {
 
-    if ( defined $author ) {
-        if ( defined $new_master ) {
-            my $status = $author->update_master_name( $dbh, $new_master );
+      my $existing = $self->app->repo->authors_find( sub { ( $_->master cmp $new_master ) == 0 } );
 
-            # status = 0 OK
-            # status > 0 existing master id
+      if ( !defined $existing ) {
+        $author->update_master_name($new_master);
+        $self->app->repo->authors_save($author);
+        $self->flash( msg => "Master name has been updated sucesfully.", msg_type => "success" );
+        $self->redirect_to( $self->url_for( 'edit_author', id => $author->id ) );
+      }
+      else {
 
-            if ( $status == 0 ) {
-                $self->flash(
-                    msg      => "Master name has been updated sucesfully.",
-                    msg_type => "success"
-                );
-                $self->redirect_to(
-                    $self->url_for( 'edit_author', id => $status ) );
-            }
-            elsif ( $status != $id ) {
-                my $existing_author = MAuthor->static_get( $dbh, $status );
-                $self->flash(
-                    msg => "This master name is already taken by <a href=\""
-                        . $self->url_for( 'edit_author', id => $status )
-                        . "\">"
-                        . $existing_author->{master} . "</a>.",
-                    msg_type => "danger"
-                );
-                $self->redirect_to(
-                    $self->url_for( 'edit_author', id => $id ) );
-            }
-            else {
-                $self->flash(
-                    msg      => "Master name has not changed.",
-                    msg_type => "info"
-                );
-            }
+        $self->flash(
+          msg => "This master name is already taken by <a href=\""
+            . $self->url_for( 'edit_author', id => $existing->id ) . "\">"
+            . $existing->master . "</a>.",
+          msg_type => "danger"
+        );
+        $self->redirect_to( $self->url_for( 'edit_author', id => $id ) );
+      }
 
-        }
-        elsif ( defined $visibility ) {
-            $author->toggle_visibility($dbh);
-        }
-        elsif ( defined $new_user_id ) {
-            my $success = $author->add_user_id( $dbh, $new_user_id );
-            if ( !$success ) {
-                $self->flash(
-                    msg =>
-                        "Cannot add user ID $new_user_id. Such ID already exist. Maybe you wan to merge authors?",
-                    msg_type => "warning"
-                );
-            }
-        }
+
     }
-    $self->redirect_to( $self->url_for( 'edit_author', id => $id ) );
+    elsif ( defined $visibility ) {
+      $author->toggle_visibility;
+      $self->app->repo->authors_save($author);
+    }
+    elsif ( defined $new_user_id ) {
+
+      my $existing_author = $self->app->repo->authors_find( sub { $_->uid eq $new_user_id } );
+
+      if ( defined $existing_author ) {
+        $self->flash(
+          msg      => "Cannot add user ID $new_user_id. Such ID already exist. Maybe you wan to merge authors?",
+          msg_type => "warning"
+        );
+      }
+      else {
+        my $minion = $self->app->entityFactory->new_Author( uid => $new_user_id );
+        $author->add_minion($minion);
+        $self->app->repo->authors_save($author);
+        $self->app->repo->authors_save($minion);
+      }
+    }
+  }
+  $self->redirect_to( $self->url_for( 'edit_author', id => $id ) );
 }
 ##############################################################################################################
 sub post_edit_membership_dates {
-    my $self = shift;
-    my $dbh  = $self->app->db;
+  my $self      = shift;
+  my $master_id = $self->param('aid');
+  my $team_id   = $self->param('tid');
+  my $new_start = $self->param('new_start');
+  my $new_stop  = $self->param('new_stop');
 
-    my $aid       = $self->param('aid');
-    my $tid       = $self->param('tid');
-    my $new_start = $self->param('new_start');
-    my $new_stop  = $self->param('new_stop');
+  my $author = $self->app->repo->authors_find( sub { $_->id == $master_id } );
+  my $team   = $self->app->repo->teams_find( sub   { $_->id == $team_id } );
 
-    $self->write_log(
-        "post_edit_membership_dates: aid $aid, tid $tid, new_start $new_start, new_stop $new_stop"
-    );
-
-    if ( defined $aid and $aid > 0 and defined $tid and $tid > 0 ) {
-        if ( $new_start >= 0 and $new_stop >= 0 ) {
-            if ( $new_stop == 0 or $new_start <= $new_stop ) {
-                $self->write_log(
-                    "post_edit_membership_dates: input valid. Changing");
-                $self->do_edit_membership_dates( $aid, $tid, $new_start,
-                    $new_stop );
-            }
-            else {
-                $self->write_log(
-                    "post_edit_membership_dates: input INVALID. start later than stop"
-                );
-            }
-        }
-        else {
-            $self->write_log(
-                "post_edit_membership_dates: input INVALID. start or stop negative"
-            );
-        }
-    }
-    else {
-        $self->write_log(
-            "post_edit_membership_dates: input INVALID. author_id or team_id invalid"
+  if ( $author and $team ) {
+    my $search_mem = Membership->new(
+          author    => $author->get_master,
+          team      => $team,
+          author_id => $author->get_master->id,
+          team_id   => $team->id
         );
-    }
-    $self->redirect_to( $self->url_for('/authors/edit/') . $aid );
-}
-##############################################################################################################
-sub do_edit_membership_dates {
-    my $self      = shift;
-    my $aid       = shift;
-    my $tid       = shift;
-    my $new_start = shift;
-    my $new_stop  = shift;
-    my $dbh       = $self->app->db;
+    my $membership = $self->app->repo->memberships_find( sub { $_->equals($search_mem) } );
 
-    # double check!
-    if (    defined $aid
-        and $aid > 0
-        and defined $tid
-        and $tid > 0
-        and defined $new_start
-        and $new_start >= 0
-        and defined $new_stop
-        and $new_stop >= 0
-        and ( $new_stop == 0 or $new_start <= $new_stop ) )
-    {
-        my $sth
-            = $dbh->prepare(
-            'UPDATE Author_to_Team SET start=?, stop=? WHERE author_id=? AND team_id=?'
-            );
-        $sth->execute( $new_start, $new_stop, $aid, $tid );
+    if( $membership ){
+      
+      $membership->start($new_start);
+      $membership->stop($new_stop);
+      $self->app->repo->memberships_update($membership);  
+      $self->flash( msg => "Membership updated successfully.", msg_type => "success" );
     }
+    else{
+      $self->flash( msg => "Cannot find membership.", msg_type => "danger" );
+    }
+    $self->redirect_to( $self->url_for( 'edit_author', id => $author->id ) );
+    return;
+  }
+  
+  $self->flash( msg => "Cannot update membership: author or team not found.", msg_type => "danger" );
+  $self->redirect_to( $self->get_referrer );
+
 }
 ##############################################################################################################
 sub delete_author {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-    my $id   = $self->param('id');
+  my $self = shift;
+  my $id   = $self->param('id');
 
-    if ( defined $id and $id != -1 and can_be_deleted( $self, $id ) == 1 ) {
-        delete_author_force( $self, $id );
-        return;
-    }
+  my $author = $self->app->repo->authors_find( sub { $_->{id} == $id } );
 
-    $self->redirect_to( $self->get_referrer );
+  if ( $author and $author->can_be_deleted() ) {
+    $self->delete_author_force();
+  }
+  else {
+    $self->flash( msg => "Cannot delete author ID $id.", msg_type => "danger" );
+  }
+
+  $self->redirect_to( $self->url_for('all_authors') );
 
 }
 ##############################################################################################################
 sub delete_author_force {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-    my $id   = $self->param('id');
+  my $self = shift;
+  my $id   = $self->param('id');
 
-    do_delete_author_force( $self, $id );
+  my $author = $self->app->repo->authors_find( sub { $_->{id} == $id } );
 
-    $self->flash( msg => "Author with id $id removed successfully." );
-    $self->write_log("Author with id $id removed successfully.");
+  if ($author) {
 
-    $self->redirect_to( $self->get_referrer );
+    ## TODO: refactor these blocks nicely!
 
-}
-##############################################################################################################
-sub do_delete_author_force {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-    my $id   = shift;
-
-
-    if ( defined $id and $id != -1 ) {
-        my $sth = $dbh->prepare('DELETE FROM Author WHERE master_id=?');
-        $sth->execute($id);
-
-        my $sth2 = $dbh->prepare('DELETE FROM Author WHERE id=?');
-        $sth2->execute($id);
-
-        my $sth3
-            = $dbh->prepare('DELETE FROM Entry_to_Author WHERE author_id=?');
-        $sth3->execute($id);
-
-        my $sth4
-            = $dbh->prepare('DELETE FROM Author_to_Team WHERE author_id=?');
-        $sth4->execute($id);
+    ## Deleting memberships
+    my @memberships = $author->memberships_all;
+    # for each team, remove membership in this team
+    foreach my $membership ( @memberships ){
+        $membership->team->remove_membership($membership);
     }
-}
-##############################################################################################################
-sub add_new_user_id_to_master {
-    my $self        = shift;
-    my $id          = shift;
-    my $new_user_id = shift;
-    my $dbh         = $self->app->db;
+    $self->app->repo->memberships_delete(@memberships);
+    # remove all memberships for this team
+    $author->memberships_clear;
 
-    say "call: add_new_user_id_to_master id=$id new_user_id=$new_user_id";
-
-    # Check if Author with $id can have added the $new_user_id
-
-    # candidate
-    my $author_candidate = MAuthor->static_get_by_name( $dbh, $new_user_id );
-
-    # existing author
-    my $author_obj = MAuthor->static_get( $dbh, $id );
-
-    if ( defined $author_candidate ) {
-
-        # author with new_user_id already exist
-        # move all entries of candidate to this author
-        $author_obj->move_entries_from_author( $dbh, $author_candidate );
-
-        $author_candidate->{master}    = $author_obj->{master};
-        $author_candidate->{master_id} = $author_obj->{master_id};
-
-        # TODO: cleanup author_candidate teams?
-
-        # return add_new_user_id_to_master_force( $self, $id, $new_user_id );
+    ## Deleting authorships
+    my @authorships = $author->authorships_all;
+    # for each team, remove authorship in this team
+    foreach my $authorship ( @authorships ){
+        $authorship->entry->remove_authorship($authorship);
     }
-    else {
-       # we add a new user and assign master and master_id from the author_obj
-       # create new user
-       # assign it to master
-        my $author_candidate = MAuthor->new(
-            uid       => $new_user_id,
-            master    => $author_obj->{master},
-            master_id => $author_obj->{master_id}
-        );
-        $author_candidate->save($dbh);
-        return 0;
-    }
+    $self->app->repo->authorships_delete(@authorships);
+    # remove all authorships for this team
+    $author->authorships_clear;
 
+    # finally delete author
+    $self->app->repo->authors_delete($author);
+
+    $self->app->logger->info( "Author " . $author->uid . " ID $id has been deleted." );
+    $self->flash( msg => "Author " . $author->uid . " ID $id removed successfully.", msg_type => "success" );
+  }
+  else {
+    $self->flash( msg => "Cannot delete author ID $id.", msg_type => "danger" );
+  }
+
+
+  $self->redirect_to( $self->url_for('all_authors') );
 }
 
 
 ##############################################################################################################
+## do not use this on production! this is for making the tests faster!!
+sub delete_invisible_authors {
+  my $self = shift;
 
-sub get_set_of_first_letters {
-    my $self    = shift;
-    my $dbh     = $self->app->db;
-    my $visible = shift or undef;
+  my @authors = $self->app->repo->authors_filter( sub { !$_->is_visible } );
 
-    my $sth = undef;
-    if ( defined $visible and $visible eq '1' ) {
+  foreach my $author (@authors) {
 
-# $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 0, 2) as let FROM Author WHERE display=1 ORDER BY let ASC" );
-        $sth
-            = $dbh->prepare(
-            "SELECT DISTINCT substr(master, 1, 1) as let FROM Author WHERE display=1 ORDER BY let ASC"
-            );
+    ## TODO: refactor these blocks nicely!
+
+    ## Deleting memberships
+    my @memberships = $author->memberships_all;
+    # for each team, remove membership in this team
+    foreach my $membership ( @memberships ){
+        $membership->team->remove_membership($membership);
     }
-    else {
-# $sth = $dbh->prepare( "SELECT DISTINCT substr(master, 0, 2) as let FROM Author ORDER BY let ASC" );
-        $sth
-            = $dbh->prepare(
-            "SELECT DISTINCT substr(master, 1, 1) as let FROM Author ORDER BY let ASC"
-            );
+    $self->app->repo->memberships_delete(@memberships);
+    # remove all memberships for this team
+    $author->memberships_clear;
+
+    ## Deleting authorships
+    my @authorships = $author->authorships_all;
+    # for each team, remove authorship in this team
+    foreach my $authorship ( @authorships ){
+        # my $entry = $authorship->entry;
+        $authorship->entry->remove_authorship($authorship);
+        # $self->app->repo->entries_delete($entry);
     }
-    $sth->execute();
+    $self->app->repo->authorships_delete(@authorships);
+    # remove all authorships for this team
+    $author->authorships_clear;
 
-    my @letters;
-    while ( my $row = $sth->fetchrow_hashref() ) {
-        my $letter = $row->{let} || "*";
-        push @letters, uc($letter);
-    }
-    @letters = uniq(@letters);
-    my @sorted_letters = sort(@letters);
-    return @sorted_letters;
-}
-##############################################################################################################
-sub get_visibility_by_name {
-    my $self = shift;
-    my $name = shift;
+    # finally delete author
+    $self->app->repo->authors_delete($author);
 
-    my $dbh = $self->app->db;
+    $self->flash( msg => "Authors decimated! ", msg_type => "success" );
+  }
 
-    my $sth;
-    $sth = $dbh->prepare(
-        "SELECT display FROM Author WHERE master=? AND uid=?");
-    $sth->execute( $name, $name );
 
-    my $row  = $sth->fetchrow_hashref();
-    my $disp = $row->{display};
-
-    return $disp;
+  $self->redirect_to( $self->url_for('all_authors') );
 
 }
+
 ##############################################################################################################
 sub reassign_authors_to_entries {
-    my $self = shift;
-    my $dbh  = $self->app->db;
+  my $self = shift;
+  my $create_new = shift // 0;
 
-    Fhandle_author_uids_change_for_all_entries( $self->app->db, 0 );
+  my @all_entries         = $self->app->repo->entries_all;
+  my $num_authors_created = Freassign_authors_to_entries_given_by_array($self->app, $create_new, \@all_entries);
 
-    $self->flash( msg => 'Reassignment complete.' );
-    $self->redirect_to( $self->get_referrer );
+  $self->flash( msg =>
+      "Reassignment with author creation has finished. $num_authors_created authors have been created or assigned." );
+  $self->redirect_to( $self->get_referrer );
 }
 ##############################################################################################################
 sub reassign_authors_to_entries_and_create_authors {
-    my $self = shift;
-    my $dbh  = $self->app->db;
-
-    my ( $num_authors_created, $num_authors_assigned )
-        = Fhandle_author_uids_change_for_all_entries( $self->app->db, 1 );
-    $self->flash( msg =>
-            "Reassignment with author creation has finished. $num_authors_created authors have been created and $num_authors_assigned assigned to their entries."
-    );
-    $self->redirect_to( $self->get_referrer );
+  my $self = shift;
+  $self->reassign_authors_to_entries(1);
 }
-
 ##############################################################################################################
+sub fix_masters {
+  my $self = shift;
 
-sub toggle_visibility {    # refactored
-    my $self = shift;
-    my $dbh  = $self->app->db;
-    my $id   = $self->param('id');
+  my @all_authors         = $self->app->repo->authors_all;
 
-    my $author = MAuthor->static_get( $dbh, $id );
-    $author->toggle_visibility($dbh);
+  my @broken_authors_0 = grep { $_->is_minion and !defined $_->masterObj }  @all_authors;
+  # masterObj not set although it should be
+  my @broken_authors_1 = grep { !defined $_->masterObj and $_->master_id != $_->id }  @all_authors;
+  # masterObj set incorrectly
+  my @broken_authors_2 = grep { $_->masterObj and $_->master_id != $_->masterObj->id }  @all_authors;
+
+  my $num_fixes_0 = @broken_authors_0;
+  my $num_fixes_1 = @broken_authors_1;
+  my $num_fixes_2 = @broken_authors_2;
 
 
-    $self->redirect_to( $self->get_referrer );
+  my $msg_type = ($num_fixes_0 + $num_fixes_1 + $num_fixes_2) == 0 ? 'success' : 'danger';
+  my $msg = "Analysis is finished. Authors broken: 
+  <ul>
+    <li>".scalar(@broken_authors_0)." of type 0 (is minion but master undefined)</li>
+    <li>".scalar(@broken_authors_1)." of type 1 (masterObj not set although it should)</li>
+    <li>".scalar(@broken_authors_2)." of type 2 (masterObj set incorrectly)</li>
+  </ul>";
+
+  # we cure all problems with the same medicine...
+  foreach my $author ( (@broken_authors_0, @broken_authors_1, @broken_authors_2) ){
+    my $master = $self->app->repo->authors_find( sub { $_->id == $author->master_id } );
+    if(defined $master){
+      $author->masterObj($master);
+      ++$num_fixes_0;
+      ++$num_fixes_1;
+      ++$num_fixes_2;
+    }
+  }
+  $msg .= "</br>Fixing is finished. Masters were re-added to the authors. Fixed: 
+  <ul>
+    <li>$num_fixes_0 of type 0 (is minion but master undefined)</li>
+    <li>$num_fixes_1 of type 1 (masterObj not set although it should)</li>
+    <li>$num_fixes_2 of type 2 (masterObj set incorrectly)</li>
+  </ul>";
+  
+
+  $self->flash( msg => $msg, msg_type => $msg_type );
+  $self->redirect_to( $self->get_referrer );
 }
+##############################################################################################################
+sub toggle_visibility {
+  my $self = shift;
+  my $id   = $self->param('id');
 
+  my $author = $self->app->repo->authors_find( sub { $_->id == $id } );
+  $author->toggle_visibility();
+  $self->app->repo->authors_update($author);
+  $self->redirect_to( $self->get_referrer );
+}
 ##############################################################################################################
 
 1;

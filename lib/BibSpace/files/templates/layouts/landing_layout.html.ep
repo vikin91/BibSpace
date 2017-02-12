@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <!--default-->
+  %= include 'landing_head'
+  <%= content_for 'landing_head' %>
+  
+
+  <body>
+
+  <%= content %>
+
+
+
+  
+  %= include 'global_footer'
+  </body>
+</html>

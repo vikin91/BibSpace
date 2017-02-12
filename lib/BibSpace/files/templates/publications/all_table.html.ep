@@ -1,0 +1,16 @@
+% my $j = scalar @{$entries};
+<H2>Found <%= $j %> entries.</H2>
+<table class="table table-condensed table-hover">
+<thead>
+</thead>
+<tbody>
+% foreach my $entry ( @{$entries} ){
+%    if (defined $entry) {
+        %=include 'publications_table_row', entry_obj => $entry, j => $j, use_modal => 0;
+%       $j--;
+%    }
+% }
+</tbody>
+</table> 
+
+

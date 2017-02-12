@@ -1,21 +1,21 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
-  "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
   <!--default-admin-->
   %= include 'head'
   <%= content_for 'header' %>
+
   <body>
   %= include 'navi'
   <%= content_for 'navi' %>
-
+  % if(is_admin){
+    %= include 'navi_admin'
+    <%= content_for 'navi_admin' %>
+  % }
   %= include 'message_bar'
   <%= content_for 'message_bar' %>
-
   <%= content %>
-
   %= include 'footer'
   <%= content_for 'footer' %>
-
   %= include 'global_footer'
   </body>
 </html>

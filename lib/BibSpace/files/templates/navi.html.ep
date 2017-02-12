@@ -1,6 +1,5 @@
-% my $str = Time::Piece::localtime->strftime('%Y%m%d-%H%M%S');
-% my $thisY = Time::Piece::localtime->strftime('%Y');
 % use Mojo::ByteStream 'b';
+
 
 <!-- LOGIN BUTTON -->
 % if(session 'user'){
@@ -69,7 +68,7 @@
         </li>
         
         <li class="divider"></li>
-        % my @ttobjs = get_all_tag_types($self);
+        % my @ttobjs = get_important_tag_types($self);
         % foreach my $ttobj (@ttobjs){
             <li>
                 <a href="<%= url_for('/publications/untagged/')%><%=$ttobj->{id}%>" data-toggle="tooltip" data-placement="right" title="Show papers having no tags of type <%=$ttobj->{name}%>"><i class="fa fa-question"></i> Papers with missing <%=$ttobj->{name}%></a>
@@ -89,7 +88,7 @@
         </li>
       <li class="divider"></li>
       <li role="presentation" class="dropdown-header">Papers of visible authors</li>
-      % foreach my $y (get_years_arr){
+      % foreach my $y (get_recent_years_arr){
           <li>
             <a href="<%= url_for('/publications')->query(year=> $y) %>">
             <span class="glyphicon glyphicon-chevron-right"></span> 
@@ -129,13 +128,13 @@
 
         <li class="divider"></li>
         <li role="presentation" class="dropdown-header">Visible authors</li>
-        % foreach my $mid (get_author_mids_arr){
-        % my $master = get_master_for_id($mid);
+        % my @authors = sort {$a->master cmp $b->master} get_visible_authors();
+        % foreach my $author (@authors){
             <li>
-                <a href="<%= url_for('/authors/edit/')%><%=$mid%>" >
-                    <span class="glyphicon glyphicon-user"></span> <%= $master %> 
+                <a href="<%= url_for('edit_author', id=>$author->{master_id})%>" >
+                    <span class="glyphicon glyphicon-user"></span> <%= $author->{master} %> 
                     <span class="badge">
-                        <%= num_pubs_for_author($mid)%>
+                        <%= num_entries_for_author($author)%>
                         <span class="glyphicon glyphicon-file"></span> 
                     </span>
                 </a>
@@ -158,13 +157,13 @@
 
         <li class="divider"></li>
         <li role="presentation" class="dropdown-header">Teams</li>
-        % my @all_teams = MTeam->static_all( get_dbh() );
+        % my @all_teams = $self->app->repo->teams_all;
         % foreach my $team ( @all_teams ){
             <li>
-                <a href="<%= url_for('edit_team', teamid=>$team->{id} )%>">
-                    <i class="fa fa-users"></i> <%= $team->{name} %> 
+                <a href="<%= url_for('edit_team', id=>$team->id )%>">
+                    <i class="fa fa-users"></i> <%= $team->name %> 
                     <span class="badge">
-                        <%= scalar $team->members( get_dbh() ) %>
+                        <%= scalar $team->get_members %>
                         <span class="glyphicon glyphicon-user"></span>
                     </span>
                     
@@ -225,70 +224,66 @@
     </button>
     <ul class="dropdown-menu" role="menu">
         <li>
-            <a href="<%= url_for('/settings/regenerate_all')%>">
-                <span class="glyphicon glyphicon-refresh"></span> Regenrate HTML
-                <span class="glyphicon glyphicon-warning-sign"  style="color: orange;"></span>
+            <a href="<%= url_for('regenerate_html_for_all')%>">
+                <span class="glyphicon glyphicon-refresh"></span> 
+                Regenerate HTML
                 <span class="glyphicon glyphicon-time"  style="color: red;"></span>
+            </a>
+            <a href="<%= url_for('regenerate_html_in_chunk', chunk_size => 50)%>">
+                <span class="glyphicon glyphicon-refresh"></span> 
+                Regenerate HTML in chunk of 50
+            </a>
+            <a href="<%= url_for('mark_all_to_regenerate')%>" data-toggle="tooltip" data-placement="left" title="Sets all entries for regeneration">
+                <i class="fa fa-magic"></i>
+                <span class="glyphicon glyphicon-refresh"></span> 
+                Mark all entries for HTML regeneration
             </a>
         </li>
         % if(is_admin()){
-            <li>
-                <a href="<%= url_for('/settings/regenerate_all_force')%>">
-                    <span class="glyphicon glyphicon-refresh"></span> Regenrate HTML 
-                    <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
-                    <span class="badge">force</span>
-                    <span class="glyphicon glyphicon-warning-sign"  style="color: orange;"></span>
-                    <span class="glyphicon glyphicon-time"  style="color: red;"></span>
-                </a>
-            </li>
-        % }
-        % if(is_admin()){
             <li class="divider"></li>
-            <li role="presentation" class="dropdown-header">Removes ugly BibTeX fields form entries. After cleaning HTML regeneration is required.</li>
             <li>
-                <a href="<%= url_for('/settings/clean_all')%>">
+                <a href="<%= url_for('/settings/clean_all')%>" data-toggle="tooltip" data-placement="left" title="Removes ugly BibTeX fields form entries. After cleaning HTML regeneration is required.">
                     <i class="fa fa-magic"></i> Clean BibTeX fields
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">for all</span>
                 </a>
             </li>
-            <li class="divider"></li>
-            <li role="presentation" class="dropdown-header">Converts download links from direct file access to the file serving function.</li>
             <li>
-                <a href="<%= url_for('fix_attachment_urls')%>">
+                <a href="<%= url_for('fix_attachment_urls')%>" data-toggle="tooltip" data-placement="left" title="Links discovered files to entries. Converts download links from direct file path to the file serving function.">
                     <i class="fa fa-magic"></i> Fix attachment urls
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
                     <span class="badge">for all</span>
+                    <span class="glyphicon glyphicon-time"  style="color: red;"></span>
                 </a>
             </li>
-            <li class="divider"></li>
-            <li role="presentation" class="dropdown-header">Sets entry_type to talk if the entry has tag 'talk'.</li>
             <li>
-                <a href="<%= url_for('/settings/fix_entry_types')%>">
-                    <i class="fa fa-magic"></i> Fix entry_type <i class="fa fa-microphone"></i> <span class="glyphicon glyphicon-file"></span> based on Tag
-                    <span class="badge">for all</span>
-                </a>
-            </li>
-            <li class="divider"></li>
-            <li role="presentation" class="dropdown-header">Calculates integer month field in DB based on bibtex field 'month' .</li>
-            <li>
-                <a href="<%= url_for('/settings/fix_months')%>">
-                    <i class="fa fa-magic"></i> Fix month numbers in DB
+                <a href="<%= url_for('fix_all_months')%>" data-toggle="tooltip" data-placement="left" title="Calculates integer month field in DB based on bibtex field 'month'.">
+                    <i class="fa fa-magic"></i> Fix months
                     <span class="glyphicon glyphicon-flash"  style="color: red;"></span>
-                    <span class="badge">for all</span>
+                    <span class="badge">for all entries</span>
                 </a>
             </li>
         % }
         % if(is_admin()){
             <li class="divider"></li>
+            <li>
+              <a href="<%= url_for('fix_masters')%>" data-toggle="tooltip" data-placement="left" title="Should fix the 'serious warning' issued by accessing 'author->get_master'.">
+                <i class="fa fa-refresh fa-spin" style="color: blue;"></i>
+                 Fix author master relations
+              </a>
+            </li>
             <li>          
                 <a href="#modal-dialog-reassign-navi" data-toggle="modal">
-                <i class="fa fa-refresh fa-spin" style="color: blue;"></i> Reassign all papers to authors ...
+                  <i class="fa fa-refresh fa-spin" style="color: yellow;"></i> 
+                  Reassign all papers to authors ... 
+                  <span class="glyphicon glyphicon-time"  style="color: red;"></span>
                 </a>
             </li>
             <li>          
                 <a href="#modal-dialog-reassign-and-create-navi" data-toggle="modal">
-                <i class="fa fa-refresh fa-spin" style="color: red;"></i> Reassign all papers to authors (w. creation) ...
+                  <i class="fa fa-refresh fa-spin" style="color: red;"></i> 
+                  Reassign all papers to authors (w. creation) ...
+                  <span class="glyphicon glyphicon-time"  style="color: red;"></span>
                 </a>
             </li>
         % } 
@@ -379,11 +374,14 @@
 %} #END OF BIG IF
 
 <a type="button" class="btn btn-default" href="<%= url_for('metalist_all_entries') %>">
-    Meta-info for Webcrawlers
+    <i class="fa fa-map-o"></i> Sitemap
 </a>
 
 % if(session 'user'){
-  <a type="button" class="btn btn-default"><small>Version: <%= $self->app->version %> </small></a>
+  <a type="button" class="btn btn-default" href="<%= url_for('preferences') %>">
+    <i class="fa fa-cog"></i> Preferences
+  </a>
+  <a type="button" class="btn btn-default"><small><%= $self->app->version %> </small></a>
 % }
 
 % unless($config->{demo_msg} eq ''){
@@ -397,7 +395,5 @@
             </div>
         </div>
     </div>
-
 % }
-<br/>
 

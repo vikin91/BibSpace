@@ -1,44 +1,60 @@
 % layout 'admin';
 % use Mojo::ByteStream 'b';
 
-% my @objs = @{$entries};
-% my $size = scalar @objs;
 
 <div class="container">
-
-
     <div class="row">
       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-        <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
-        <a class="btn btn-success" href="<%= url_for('add_publication')%>"><span class="glyphicon glyphicon-plus"></span> Add new publication</a>
-        <br><br>
-
-        <table class="table table-condensed table-hover">
-          <thead>
-            <td ><button class="btn btn-default btn-sm">Controls</button></td>
-            <td ><button class="btn btn-default btn-sm">Paper/Talk</button></td>
-            <td ><button class="btn btn-default btn-sm">ID</button></td>
-            <td ><button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-calendar"></span><span class="glyphicon glyphicon-time"></span></button></td>
-            <td ><button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-calendar"></span> / <span class="glyphicon glyphicon-sort-by-attributes"></span></button></td>
-            <td ><button class="btn btn-default btn-sm">No.</button></td>
-            <td><button class="btn btn-default btn-sm">HTML</button></td>
-          </thead>
-          <tbody>
-         % my $i = 0;
-         % my $j = $size;
-         %
-         % foreach my $obj (@objs){
-         %    if (defined $obj) {
-         %      
-                %= include 'publications_table_row', entry_obj => $obj, j => $j, use_modal => 0;
-                
-                % $i++;
-                % $j--;
-              %}
-          %}
-        </tbody>
-        </table> 
+        <div id="table_placeholder">
+          %= include 'publications/all_table', entries => $entries;
+        </div>
       </div>
     </div>
 </div>
 
+
+
+<!-- 
+
+<a class="btn btn-warning btn-sm delete_publication" 
+    data-toggle="tooltip" data-placement="top" data-id="<%%=$entry_obj->id%>" title="Delete ajax" data-container="body">
+    <i class="fa fa-trash "></i>
+</a>
+
+%= javascript begin
+
+get_pub_table = function() {
+  $.ajax({
+      type: 'get',
+      url: "<%= url_for('publications_ajax') %>",
+      dataType: 'html',
+      data: {'ajax': 1},
+      success: function (data) {
+        $('#table_placeholder').html(data);
+      },
+      error: function (err) {
+        alert(err);
+      }
+  });
+}
+
+delete_publication = function (entry_id) {
+  var call_url = "<%= url_for('delete_publication_sure', id => 'entry_id') %>".replace('entry_id', entry_id);
+  $.ajax({
+      type: 'get',
+      url: call_url,
+      data: {'id': entry_id},
+      success: function (data) {
+        $("[publication-table-row-data-id="+entry_id+"]").remove();
+        get_pub_table();
+      }
+  });
+}
+
+
+$('.delete_publication').click( function() {
+  var id_2_del = $(this).attr('data-id');
+    delete_publication(id_2_del);
+});
+%= end
+-->

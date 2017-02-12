@@ -1,56 +1,47 @@
 % use Mojo::ByteStream 'b';
 % layout 'admin';
 
-% my @all_tags = @{$all_tags};
-% my @all_ids = @{$all_ids};
-% my @all_parents = @{$all_parents};
-
-% my @tags = @{$tags};
-% my @ids = @{$ids};
-% my @parents = @{$parents};
-% my $size = scalar @ids;
+% @$tag_types = sort {$a->id <=> $b->id} @$tag_types;
 
 <div class="container">
 
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
-            <a class="btn btn-default" href="<%= url_for('edit_publication', id=>$id) %>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the publication</a>
-            <a class="btn btn-default" href="<%= url_for('publicationsregenerateid', id=>$id)%>"><span class="glyphicon glyphicon-refresh"></span> Regenerate HTML</a>
+            <a class="btn btn-default" href="<%= get_referrer %>">
+                <span class="glyphicon glyphicon-arrow-left"></span> 
+                Back
+            </a>
         </div>
     </div>
 
     <hr>
 
-    <div class="row">
-        <div class="col-lg-1"></div>
-        <div class="col-lg-10 col-md-10 col-xs-10">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <h3>Preview of entry <%= $key %></h3>
-                    %= b($preview)
-                </div>
-            </div>
-        </div>
-    </div>
+    %= include 'preview_row', preview => $entry->{html}, btype=> $entry->{bibtex_type}, bkey => $entry->bibtex_key;
 
-    % my @ttobjs = get_all_tag_types($self);
-    % foreach my $ttobj (@ttobjs){
+    % foreach my $ttobj ( @$tag_types ){
         <div class="row">
             <div class="col-lg-1"></div>
             <div class="col-lg-2 col-md-2 col-xs-2">
                 <button type="button" class="btn btn-success">
-                    <span class="glyphicon glyphicon-tags"></span> Assigned <%= $ttobj->{name} %>
+                    <span class="glyphicon glyphicon-tags"></span> 
+                    Assigned <%= $ttobj->name %>
                 </button>
             </div>
             <div class="col-lg-8 col-md-8 col-xs-8">
-                % foreach my $tobj (get_tags_of_type_for_paper($eid, $ttobj->{id})){
+                % foreach my $tobj (get_tags_of_type_for_paper($entry->{id}, $ttobj->{id})){
                     <div class="btn-group">
 
-                        <a type="button" class="btn btn-default" href="<%= url_for('publications')->query(tag=>$tobj->{name})%>"><span class="glyphicon glyphicon-tag"></span> <%= $tobj->{name} %> <i class="fa fa-external-link"></i></a>
+                        <a type="button" class="btn btn-default" href="<%= url_for('publications')->query(tag=>$tobj->{name})%>">
+                            <span class="glyphicon glyphicon-tag"></span> 
+                            <%= $tobj->name %> 
+                            <i class="fa fa-external-link"></i>
+                        </a>
                         
-                        <a class="btn btn-default" href="<%= url_for('remove_tag_from_publication', eid=> $eid, tid=>$tobj->{id}) %>"><span class="glyphicon glyphicon-remove" style="color: red;"></span><span style="color: #FFFFFF;">-</span></a>
+                        <a class="btn btn-default" href="<%= url_for('remove_tag_from_publication', eid=> $entry->id, tid=>$tobj->id) %>">
+                            <span class="glyphicon glyphicon-remove" style="color: red;"></span>
+                            <span style="color: #FFFFFF;">-</span>
+                        </a>
                     </div>
                 % }
             </div>
@@ -59,18 +50,17 @@
     % }
 
 
-    % @ttobjs = get_all_tag_types($self);
-    % foreach my $ttobj (@ttobjs){
+    % foreach my $ttobj (@$tag_types){
         <div class="row">
             <div class="col-lg-1"></div>
             <div class="col-lg-2 col-md-2 col-xs-2">
                 <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-tags"></span> Unassigned <%= $ttobj->{name} %> </button>
             </div>
             <div class="col-lg-8 col-md-8 col-xs-8">
-                % foreach my $tobj (get_unassigned_tags_of_type_for_paper($eid, $ttobj->{id})){
+                % foreach my $tobj (get_unassigned_tags_of_type_for_paper($entry->{id}, $ttobj->{id})){
                     <div class="btn-group">
                         <button type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-tag" style="color: #5CB85C;"></span> <%= $tobj->{name} %></button>
-                        <a class="btn btn-default btn-xs" href=" <%= url_for('add_tag_to_publication', eid=>$eid, tid=>$tobj->{id}) %>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span> <span style="color: #FFFFFF;">+</span></a>
+                        <a class="btn btn-default btn-xs" href=" <%= url_for('add_tag_to_publication', eid=>$entry->{id}, tid=>$tobj->{id}) %>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span> <span style="color: #FFFFFF;">+</span></a>
                     </div>
                 % }
             </div>
@@ -78,34 +68,6 @@
         <hr>
     % }
 
-
-    
-
-
-
-
-<!--     <hr>
-
-    <div class="row">
-        <div class="col-lg-1 col-md-1 col-xs-1"></div>
-        <div class="col-lg-6 col-md-6 col-xs-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><strong>Add new tags </strong> and assign them to entry <%= $key %>
-                    <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" title="Already existing tags will be assigned. Not existing wil be added and assigned."></span></h3>
-                </div>
-                <div class="panel-body">
-                <form role="form" action="<%= url_for('/tags/add_and_assign/')%><%=$eid%>">
-                    <div class="form-group">
-                        <label for="user">Tags</label>
-                        <input type="text" class="form-control" style="border-radius:0px" name="new_tags" id="new_tags" placeholder="Separate tags using semicolon. Spaces will be changed to underscores.">
-                    </div>
-                    <button type="submit" class="btn btn-sm btn-default">Add</button>
-                </form>
-                </div>
-            </div>
-        </div>
-    </div> -->
 
 
 </div> <!-- container -->

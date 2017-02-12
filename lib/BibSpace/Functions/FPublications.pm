@@ -1,18 +1,18 @@
 package BibSpace::Functions::FPublications;
 
-use 5.010;    #because of ~~
+use v5.16;    #because of ~~
 use strict;
 use warnings;
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use File::Slurp;
-use Time::Piece;
-use DBI;
 
-use BibSpace::Controller::Core;
-use BibSpace::Model::MEntry;
+use BibSpace::Functions::Core qw( sort_publications );
+use Scalar::Util qw(looks_like_number);
+use List::Util qw(first);
+
+use BibSpace::Functions::Core;
 
 use Exporter;
 our @ISA = qw( Exporter );
@@ -22,67 +22,94 @@ our @ISA = qw( Exporter );
 
 # these are exported by default.
 our @EXPORT = qw(
-    Ffix_months
+    Freassign_authors_to_entries_given_by_array
+    Fregenerate_html_for_array
     FprintBibtexWarnings
     Fhandle_add_edit_publication
     Fget_publications_main_hashed_args_only
     Fget_publications_main_hashed_args
-    Fget_publications_core_from_array_ref
-    Fget_publications_core_from_set
     Fget_publications_core
-    Fclean_ugly_bibtex_fields_for_all_entries
-    Fhandle_author_uids_change_for_all_entries
 );
+##############################################################################################################
+sub Freassign_authors_to_entries_given_by_array {
+    my $app             = shift;
+    my $create_new      = shift // 0;
+    my $entries_arr_ref = shift;
+
+
+    my @all_entries         = @{$entries_arr_ref};
+    my $num_authors_created = 0;
+    foreach my $entry (@all_entries) {
+        next unless defined $entry;
+
+        my @bibtex_author_name = $entry->author_names_from_bibtex;
+
+        for my $author_name (@bibtex_author_name) {
+
+            my $author
+                = $app->repo->authors_find( sub { $_->uid eq $author_name } );
+            if ( $create_new == 1 and !defined $author ) {
+                $author
+                    = $app->entityFactory->new_Author( uid => $author_name );
+                $app->repo->authors_save($author);
+                ++$num_authors_created;
+            }
+            if ( $create_new == 1 or defined $author ) {
+
+
+                my $authorship = Authorship->new(
+                    author    => $author->get_master,
+                    entry     => $entry,
+                    author_id => $author->get_master->id,
+                    entry_id  => $entry->id
+                );
+                $app->repo->authorships_save($authorship);
+                $entry->add_authorship($authorship);
+                $author->add_authorship($authorship);
+            }
+        }
+    }
+    return $num_authors_created;
+}
+##############################################################################################################
+sub Fregenerate_html_for_array {
+    my $app             = shift;
+    my $force           = shift // 0;
+    my $converter       = shift;
+    my $entries_arr_ref = shift;
+
+    die "Converter is required!" unless $converter;
+
+    my @entries = @{$entries_arr_ref};
+
+    my $num_done = 0;
+    for my $entry (@entries) {
+        next unless $entry;
+
+        $num_done = $num_done + $entry->regenerate_html( $force, $app->bst, $converter );
+        $app->repo->entries_save($entry);
+    }
+    
+    return $num_done;
+}
 ####################################################################################
 sub FprintBibtexWarnings {
     my $str = shift;
 
     my $msg = '';
     if ( $str ne '' ) {
-        
+
         $str =~ s/Warning/<br\/>Warning/g;
 
-        $msg .= "<br/><br/>";
+        $msg .= "<br/>";
         $msg .= "<strong>BibTeX Warnings</strong>: $str";
     }
     return $msg;
 }
 ####################################################################################
-sub Ffix_months {
-    my $dbh = shift;
-
-    say "CALL: FPUblications::fix_months";
-
-    my @objs       = MEntry->static_all($dbh);
-    my $num_checks = 0;
-    my $num_fixes  = 0;
-
-    for my $o (@objs) {
-
-        # say " checking fix month $num_checks";
-        $num_fixes = $num_fixes + $o->fix_month();
-        $o->save($dbh);
-        $num_checks = $num_checks + 1;
-    }
-
-    return ( $num_checks, $num_fixes );
-}
-
-# ####################################################################################
-# sub Fget_entry_id_for_bibtex_key{
-#    my $dbh = shift;
-#    my $key = shift;
-
-#    my $e = MEntry->static_get_by_bibtex_key($dbh, $key);
-#    return -1 unless defined $e;
-#    return $e->{id};
-# };
-
-####################################################################################
 sub Fhandle_add_edit_publication {
-    my ( $dbh, $new_bib, $id, $action, $bst_file ) = @_;
-
-    say "CALL Fhandle_add_edit_publication: id $id action $action";
+    my ( $app, $new_bib, $id, $action, $bst_file ) = @_;
+    my $repo = $app->repo;
 
     # var that will be returned
     my $mentry;         # the entry object
@@ -104,24 +131,35 @@ sub Fhandle_add_edit_publication {
     # 2 => KEY_OK
     # 3 => KEY_TAKEN
 
-    my $e;
-    
-    $e = MEntry->static_get( $dbh, $id ) if $id > 0;
-    $e = MEntry->new( id=>$id, bib=>$new_bib ) if $id < 0 or !defined $e;
+    # Fhandle_preview
+    # Fhandle_preview
 
-    $e->{bib} = $new_bib;
-    my $bibtex_code_valid = $e->populate_from_bib();
+    my $new_entry;
+
+    if ( $id > 0 ) {
+        $new_entry = $repo->entries_find( sub { $_->id == $id } );
+    }
+    if ( $id <0 or !$new_entry ) {
+        $new_entry = $app->entityFactory->new_Entry( bib => $new_bib );
+    }
+    $new_entry->bib($new_bib);
+
+
+    my $bibtex_code_valid = $new_entry->populate_from_bib();
 
     # We check Bibtex errors for all requests
-    if ( $bibtex_code_valid == 0 ) {
+    if ( !$bibtex_code_valid ) {
         $status_code_str = 'ERR_BIBTEX';
-        return ( $e, $status_code_str, -1, -1 );
+        return ( $new_entry, $status_code_str, -1, -1 );
     }
 
-    my $tmp_e = MEntry->static_get_by_bibtex_key( $dbh, $e->{bibtex_key} );
-    $existing_id = $tmp_e->{id} if defined $tmp_e;
+    my $conflicting_entry = $repo->entries_find(
+        sub { $_->bibtex_key eq $new_entry->bibtex_key } );
 
-    if ( $id > 0 and $existing_id == $e->{id} )
+   # grep { $_->{bibtex_key} eq $new_entry->{bibtex_key} } MEntry->static_all( $dbh );
+    $existing_id = $conflicting_entry->id if defined $conflicting_entry;
+
+    if ( $id > 0 and $existing_id == $new_entry->id )
     {    # editing mode, key ok, the user will update entry but not the key
         $status_code_str = 'KEY_OK';
     }
@@ -134,22 +172,14 @@ sub Fhandle_add_edit_publication {
     }
     else {
         $status_code_str = 'KEY_TAKEN';
-        $e->generate_html($bst_file);
-        return ( $e, $status_code_str, $existing_id, -1 );
+        $new_entry->generate_html( $bst_file, $app->bibtexConverter );
+        return ( $new_entry, $status_code_str, $existing_id, -1 );
     }
-    if ( $action eq 'check_key' )
+    if ( $action eq 'check_key' or $action eq 'preview' )
     {    # user wanted only to check key - we give him the preview as well
-        $e->generate_html($bst_file);
-        $e->populate_from_bib();
-        return ( $e, $status_code_str, $existing_id, -1 );
-    }
-
-    if ( $action eq 'preview' )
-    {    # user wanted only to check key and get preview
-        $status_code_str = 'PREVIEW';
-        $e->generate_html($bst_file);
-        $e->populate_from_bib();
-        return ( $e, $status_code_str, $existing_id, -1 );
+        $new_entry->generate_html( $bst_file, $app->bibtexConverter );
+        $new_entry->populate_from_bib();
+        return ( $new_entry, $status_code_str, $existing_id, -1 );
     }
 
     if ( $action eq 'save' ) {
@@ -159,24 +189,24 @@ sub Fhandle_add_edit_publication {
         else {              #adding
             $status_code_str = 'ADD_OK';
         }
-        $e->generate_html($bst_file);
-        $e->populate_from_bib();
-        $e->fix_month();
-        $e->save($dbh);    # so we save for sure
+        $new_entry->generate_html( $bst_file, $app->bibtexConverter );
+        $new_entry->fix_month();
+        $repo->entries_save($new_entry);
+        ## !!! the entry must be added before executing Freassign_authors_to_entries_given_by_array
+        ## why? beacuse authorship will be unable to map existing entry to the author
+        Freassign_authors_to_entries_given_by_array( $app, 1, [$new_entry] );
+        
 
-        # these functions require that the object is in the DB
-        $e->postprocess_updated($dbh, $bst_file);    # this has optional save
-        $e->process_authors( $dbh, 1 );
-        $e->save($dbh);    # so we save for sure
-        $added_under_id = $e->{id};
+        $added_under_id = $new_entry->id;
     }
     else {
         warn
-            "Fhandle_add_edit_publication action $action does not match the known actions: save, preview, check_key.";
+            "Fhandle_add_edit_publication_repo action $action does not match the known actions: save, preview, check_key.";
     }    # action save
-    return ( $e, $status_code_str, $existing_id, $added_under_id );
+    return ( $new_entry, $status_code_str, $existing_id, $added_under_id );
 }
 
+####################################################################################
 ####################################################################################
 # this function ignores the parameters given in the $self object
 sub Fget_publications_main_hashed_args_only {
@@ -187,7 +217,7 @@ sub Fget_publications_main_hashed_args_only {
         $self,                $args->{author},     $args->{year},
         $args->{bibtex_type}, $args->{entry_type}, $args->{tag},
         $args->{team},        $args->{visible},    $args->{permalink},
-        $args->{hidden},
+        $args->{hidden},      $args->{debug},
     );
     return @dbg;
 }
@@ -205,124 +235,198 @@ sub Fget_publications_main_hashed_args {    #
         $args->{entry_type}  || $self->param('entry_type')  || undef,
         $args->{tag}         || $self->param('tag')         || undef,
         $args->{team}        || $self->param('team')        || undef,
-        $args->{visible}     || 0,
         $args->{permalink}   || $self->param('permalink')   || undef,
+        $args->{visible}     || 0,
         $args->{hidden},
+        $args->{debug},
     );
-}
-
-####################################################################################
-sub Fget_publications_core_from_array_ref {
-    say
-        "CALL: Fget_publications_core_from_array_ref. This function could be removed...";
-    my $self      = shift;
-    my $array_ref = shift;
-    my $sort      = shift;
-    $sort = 1 unless defined $sort;
-
-    my $dbh = $self->app->db;
-
-    my $keep_order = 0;
-    $keep_order = 1 if $sort == 0;
-
-    return MEntry->static_get_from_id_array( $dbh, $array_ref, $keep_order );
-}
-####################################################################################
-sub Fget_publications_core_from_set {
-    say "CALL: Fget_publications_core_from_set";
-    my $self = shift;
-    my $set  = shift;
-
-    my $dbh   = $self->app->db;
-    my @array = $set->elements;
-
-    # array may be empty here!
-
-    return Fget_publications_core_from_array_ref( $self, \@array );
 }
 ####################################################################################
 
 sub Fget_publications_core {
-    my $self        = shift;
-    my $author      = shift;
-    my $year        = shift;
-    my $bibtex_type = shift;
-    my $entry_type  = shift;
-    my $tag         = shift;
-    my $team        = shift;
-    my $visible     = shift // 0;
-    my $permalink   = shift;
-    my $hidden      = shift;
+    my $self              = shift;
+    my $query_author      = shift;
+    my $query_year        = shift;
+    my $query_bibtex_type = shift;
+    my $query_entry_type  = shift;
+    my $query_tag         = shift;
+    my $query_team        = shift;
+    my $query_permalink   = shift;
+    #<<< no perltidy here
+    my $query_visible     = shift // 0;  # value can be set only from code (not from browser)
+    my $query_hidden      = shift;       # value can be set only from code (not from browser)
+    my $debug             = shift // 0;  # value can be set only from code (not from browser)
 
+    # catch bad urls like: ...&entry_type=&tag=&author=
+    $query_author      = undef if defined $query_author      and length( "".$query_author      ) < 1;
+    $query_year        = undef if defined $query_year        and length( "".$query_year        ) < 1;
+    $query_bibtex_type = undef if defined $query_bibtex_type and length( "".$query_bibtex_type ) < 1;
+    $query_entry_type  = undef if defined $query_entry_type  and length( "".$query_entry_type  ) < 1;
+    $query_tag         = undef if defined $query_tag         and length( "".$query_tag         ) < 1;
+    $query_team        = undef if defined $query_team        and length( "".$query_team        ) < 1;
+    $query_permalink   = undef if defined $query_permalink   and length( "".$query_permalink   ) < 1;
+    #>>>
 
-    # say "CALL: get_publications_core author $author tag $tag";
+    if ( $debug == 1 ) {
+        $self->app->logger->debug( Dumper $self->req->params );
 
-    my $dbh = $self->app->db;
-
-    my $team_obj = MTeam->static_get_by_name( $dbh, $team );
-    if ( !defined $team_obj ){
-        # no such master. Assume, that author id was given
-        $team_obj = MTeam->static_get( $dbh, $team );    
+        $self->app->logger->debug(
+            "Fget_publications_core Input author = '$query_author'")
+            if defined $query_author;
+        $self->app->logger->debug(
+            "Fget_publications_core Input year = '$query_year'")
+            if defined $query_year;
+        $self->app->logger->debug(
+            "Fget_publications_core Input bibtex_type = '$query_bibtex_type'")
+            if defined $query_bibtex_type;
+        $self->app->logger->debug(
+            "Fget_publications_core Input entry_type = '$query_entry_type'")
+            if defined $query_entry_type;
+        $self->app->logger->debug(
+            "Fget_publications_core Input tag = '$query_tag'")
+            if defined $query_tag;
+        $self->app->logger->debug(
+            "Fget_publications_core Input team = '$query_team'")
+            if defined $query_team;
+        $self->app->logger->debug(
+            "Fget_publications_core Input visible = '$query_visible'")
+            if defined $query_visible;
+        $self->app->logger->debug(
+            "Fget_publications_core Input permalink = '$query_permalink'")
+            if defined $query_permalink;
+        $self->app->logger->debug(
+            "Fget_publications_core Input hidden = '$query_hidden'")
+            if defined $query_hidden;
     }
 
-    my $author_obj = MAuthor->static_get_by_master( $dbh, $author );
-    if ( !defined $author_obj ){
-        # no such master. Assume, that author id was given
-        $author_obj = MAuthor->static_get( $dbh, $author );    
+    my $team_obj;
+    if ( defined $query_team ) {
+        if ( Scalar::Util::looks_like_number($query_team) ) {
+            $team_obj = $self->app->repo->teams_find( sub { $_->id == $query_team });
+        }
+        else{
+            $team_obj = $self->app->repo->teams_find( sub { $_->name eq $query_team } );    
+        }
+    }
+    my $author_obj;
+    if ( defined $query_author ) {
+        if ( Scalar::Util::looks_like_number($query_author) ) {
+            $author_obj = $self->app->repo->authors_find(
+                sub { $_->master_id == $query_author } );
+            $author_obj ||= $self->app->repo->authors_find(
+                sub { $_->id == $query_author } );
+        }
+        else {
+            $author_obj = $self->app->repo->authors_find(
+                sub { $_->master eq $query_author } );
+            $author_obj ||= $self->app->repo->authors_find(
+                sub { $_->uid eq $query_author } );
+        }
+    }
+    my $tag_obj;
+    if ( defined $query_tag ) {
+        if ( Scalar::Util::looks_like_number($query_tag) ) {
+            $tag_obj
+                = $self->app->repo->tags_find( sub { $_->id == $query_tag } );
+        }
+        else{
+            $tag_obj
+            = $self->app->repo->tags_find( sub { $_->name eq $query_tag } );    
+        }
+    }
+    my $tag_obj_perm;
+    if ( defined $query_permalink ) {
+        if ( Scalar::Util::looks_like_number($query_permalink) ) {
+            $tag_obj_perm = $self->app->repo->tags_find( sub { $_->id == $query_permalink } );
+        }
+        else{
+            my @tags_having_permalink = grep {defined $_->permalink} $self->app->repo->tags_all;
+            $tag_obj_perm = first { $_->permalink eq $query_permalink } @tags_having_permalink;    
+        }
     }
 
-    my $tag_obj = MTag->static_get_by_name( $dbh, $tag );
-    if ( !defined $tag_obj ){
-        # no such master. Assume, that author id was given
-        $tag_obj = MTag->static_get( $dbh, $tag );    
+    ## $self->app->logger->debug("==== START new Filtering ====", "Fget_publications_core" );
+
+
+    my @entries = $self->app->repo->entries_all;
+
+    ###### filtering
+
+
+    ## WARNING: this overwrites all entries - this filtering must be done as first!
+    if ( defined $query_author ) {
+        if ($author_obj) {
+            @entries = $author_obj->get_entries;
+        }
+        else {
+       # searched for author, but not found any = immediate return empty array
+            return ();
+        }
     }
-    
-    my $teamid = undef;
-    $teamid = $team_obj->{id} if defined $team_obj;    
-
-    my $master_id = undef;
-    $master_id = $author_obj->{id} if defined $author_obj;
-
-    my $tagid = undef;
-    $tagid = $tag_obj->{id} if defined $tag_obj;
-
-    # $teamid    = undef unless defined $team;
-    # $master_id = undef unless defined $author or defined $author_obj;
-    # $tagid     = undef unless defined $tag;
 
 
-    my @dbg = MEntry->static_get_filter(
-        $dbh,   $master_id, $year,    $bibtex_type, $entry_type,
-        $tagid, $teamid,    $visible, $permalink,   $hidden
-    );
-    return @dbg;
-}
-####################################################################################
-sub Fclean_ugly_bibtex_fields_for_all_entries {
-    my $dbh = shift;
-
-    my @entries = MEntry->static_all($dbh);
-    my $num_del = 0;
-    foreach my $e (@entries) {
-        $num_del = $num_del + $e->clean_ugly_bibtex_fields($dbh);
+    # simple filters
+    if ( defined $query_year ) {
+        @entries = grep { ( defined $_->year and $_->year == $query_year ) }
+            @entries;
     }
-    return $num_del;
-}
-####################################################################################
-sub Fhandle_author_uids_change_for_all_entries {
-    my $dbh = shift;
-    my $create_authors = shift // 0;
 
-    my @all_entries = MEntry->static_all($dbh);
-
-    my $num_authors_created  = 0;
-    my $num_authors_assigned = 0;
-
-    foreach my $e (@all_entries) {
-        my ( $cre, $ass ) = $e->process_authors( $dbh, $create_authors );
-        $num_authors_created  = $num_authors_created + $cre;
-        $num_authors_assigned = $num_authors_assigned + $ass;
+    # $bibtex_type - is in fact query for OurType
+    if ( defined $query_bibtex_type ) {
+        @entries = grep {
+            $_->matches_our_type( $query_bibtex_type, $self->app->repo )
+        } @entries;
     }
-    return ( $num_authors_created, $num_authors_assigned );
+    if ( defined $query_entry_type ) {
+        @entries = grep { $_->entry_type eq $query_entry_type } @entries;
+    }
+    if ( defined $query_permalink ) {
+        if ( defined $tag_obj_perm ) {
+            @entries = grep { $_->has_tag($tag_obj_perm) } @entries;
+        }
+        else {
+            return ();
+        }
+    }
+
+    # All entries = hidden + unhidden entries
+    # by default, we return all (e.g., for admin interface)
+    if ( defined $query_hidden ) {
+        @entries = grep { $_->hidden == $query_hidden } @entries;
+    }
+
+    # Entries of visible authors
+    # by default, we return entries of all authors
+    if ( defined $query_visible and $query_visible == 1 ) {
+        @entries = grep { $_->is_visible } @entries;
+    }
+
+    ######## complex filters
+
+    if ( defined $query_tag ) {
+        if ( defined $tag_obj ) {
+            @entries = grep { $_->has_tag($tag_obj) } @entries;
+        }
+        else {
+            return ();
+        }
+    }
+    if ( defined $query_team ) {
+        if ( defined $team_obj ) {
+            @entries = grep { $_->has_team($team_obj) } @entries;
+        }
+        else {
+            return ();
+        }
+    }
+
+    @entries = sort_publications(@entries);
+
+    if ( $debug == 1 ) {
+        $self->app->logger->debug(
+            "Fget_publications_core Found '" . scalar(@entries) . "' entries" );
+    }
+
+    return @entries;
 }
 ####################################################################################

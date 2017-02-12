@@ -18,7 +18,7 @@
 	  			</div>
 	  			<div class="panel-body">
 	  			<!-- FORM -->
-	   			<form role="form" method="POST" action="<%= url_for('/types/add')%>">
+	   			<form role="form" method="POST" action="<%= url_for('add_type_post')%>">
 	  				<div class="form-group">
 	    				<label for="new_type">New Type</label>
 	    				<input type="text" class="form-control" style="border-radius:0px" name="new_type" id="new_type" placeholder="Name the new type. You will define the mapping to BibTeX types later.">

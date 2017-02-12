@@ -86,10 +86,10 @@ BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf hypnotoad ./bin/bibspace
 or using system variable
 
 ```bash
-export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf # please, use absoluthe path here
+export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf # please, use absolute path here
 hypnotoad ./bin/bibspace
 ```
-To **stop BibSpace** ype
+To **stop BibSpace** 
 ```bash
 hypnotoad -s ./bin/bibspace
 ```
