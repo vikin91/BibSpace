@@ -844,7 +844,8 @@ sub regenerate_html_in_chunk {
 
     my @entries   = $self->app->repo->entries_filter( sub{ $_->need_html_regen == 1} );
 
-    my $last_entry_index = $chunk_size-1 > scalar(@entries) ? scalar(@entries) : $chunk_size-1;
+    my $last_entry_index = $chunk_size-1;
+    $last_entry_index = scalar(@entries)-1 if scalar(@entries) < $chunk_size;
 
     my @portion_of_entries = @entries[ 0 .. $last_entry_index ];
     @portion_of_entries = grep {defined $_} @portion_of_entries;

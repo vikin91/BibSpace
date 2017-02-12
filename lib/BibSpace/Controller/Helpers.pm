@@ -165,41 +165,41 @@ sub register {
   );
 
   ## pop the previous GET page from the stack 
-  $app->helper(
-      pop_url_history => sub {
-          my $self     = shift;
-          my $last_url = shift @{ $self->session('url_history') };
-          $last_url //= $self->url_for('start');
-          return $last_url;
-      }
-  );
+  # $app->helper(
+  #     pop_url_history => sub {
+  #         my $self     = shift;
+  #         my $last_url = shift @{ $self->session('url_history') };
+  #         $last_url //= $self->url_for('start');
+  #         return $last_url;
+  #     }
+  # );
 
-  $app->helper(
-      get_url_history => sub {
-          my $self     = shift;
-          return qw(/) unless $self->session('url_history');
-          return @{ $self->session('url_history') };
-      }
-  );
+  # $app->helper(
+  #     get_url_history => sub {
+  #         my $self     = shift;
+  #         return qw(/) unless $self->session('url_history');
+  #         return @{ $self->session('url_history') };
+  #     }
+  # );
 
-  ## add url to the stack
-  $app->helper(
-      push_url_history => sub {
-          my $self     = shift;
-          # unshift @{ $self->session('url_history') }, "".$self->req->url->path->absolute;
-          if( $self->session('url_history') ){
-            unshift @{ $self->session('url_history') }, "".$self->req->url;    
-            # say "STACK: " . Dumper $c->session('url_history');
-        } 
-      }
-  );
+  # ## add url to the stack
+  # $app->helper(
+  #     push_url_history => sub {
+  #         my $self     = shift;
+  #         # unshift @{ $self->session('url_history') }, "".$self->req->url->path->absolute;
+  #         if( $self->session('url_history') ){
+  #           unshift @{ $self->session('url_history') }, "".$self->req->url;    
+  #           # say "STACK: " . Dumper $c->session('url_history');
+  #       } 
+  #     }
+  # );
 
-  $app->helper(
-      get_referrer => sub {
-        my $self = shift;
-        return $self->get_referrer_old;
-      }
-  );
+  # $app->helper(
+  #     get_referrer => sub {
+  #       my $self = shift;
+  #       return $self->get_referrer_old;
+  #     }
+  # );
 
   $app->helper(
     get_referrer_new => sub {
