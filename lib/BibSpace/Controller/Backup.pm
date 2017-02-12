@@ -35,7 +35,7 @@ sub index {
     my $self       = shift;
     my $dbh = $self->app->db;
 
-    my $backup_dir = $self->app->backup_dir;
+    my $backup_dir = $self->app->get_backups_dir;
     my $dir_size = get_dir_size($backup_dir);
     $dir_size = $dir_size >> 20;
 
@@ -106,7 +106,7 @@ sub backup_download {
     my $self       = shift;
     my $uuid  = $self->param('id');
 
-    my $backup =  find_backup($uuid, $self->app->backup_dir);
+    my $backup =  find_backup($uuid, $self->app->get_backups_dir);
 
     if ( $backup and $backup->is_healthy ) {
         $self->app->logger->info("Downloading backup ".$backup->uuid);
@@ -123,7 +123,7 @@ sub delete_backup {
     my $self       = shift;
     my $uuid  = $self->param('id');
 
-    my $backup =  find_backup($uuid, $self->app->backup_dir);
+    my $backup =  find_backup($uuid, $self->app->get_backups_dir);
 
     if ( $backup and $backup->is_healthy ) {
         if( $backup->get_age->days >= $self->app->config->{allow_delete_backups_older_than}){
@@ -160,7 +160,7 @@ sub restore_backup {
     my $uuid = $self->param('id');
 
 
-    my $backup =  find_backup($uuid, $self->app->backup_dir);
+    my $backup =  find_backup($uuid, $self->app->get_backups_dir);
 
     if($backup and $backup->is_healthy){
 

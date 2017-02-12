@@ -130,6 +130,7 @@ sub register {
   $app->helper(
       get_url_history => sub {
           my $self     = shift;
+          return qw(/) unless $self->session('url_history');
           return @{ $self->session('url_history') };
       }
   );

@@ -56,8 +56,8 @@ $backup_id = $backup->id;
 
 ####################################################################
 subtest 'backup_do_mysql' => sub {
-    my @backups = read_backups($self->app->backup_dir);
-    ok( scalar(@backups) > 0 , "found some backups in ".$self->app->backup_dir);
+    my @backups = read_backups($self->app->get_backups_dir);
+    ok( scalar(@backups) > 0 , "found some backups in ".$self->app->get_backups_dir);
 };
 
 
@@ -83,7 +83,7 @@ subtest 'backup_download' => sub {
 };
 ####################################################################
 subtest 'backup_restore' => sub {
-    my @backups = read_backups($self->app->backup_dir);
+    my @backups = read_backups($self->app->get_backups_dir);
     my $backup = $backups[0];
 
     $page = $t_logged_in->app->url_for('backup_restore', id => $backup->uuid );
@@ -119,7 +119,7 @@ subtest 'backup_cleanup' => sub {
 ####################################################################
 subtest 'backup_delete to clean' => sub {
 # cleanup
-    my @backups = read_backups($self->app->backup_dir);
+    my @backups = read_backups($self->app->get_backups_dir);
 
     foreach my $back (@backups){
         my $page = $t_logged_in->app->url_for( 'backup_delete', id => $back->uuid );

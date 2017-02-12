@@ -67,7 +67,7 @@ sub do_storable_backup {
     my $app = shift;
     my $name = shift // 'normal';
 
-    my $backup_dir = Path::Tiny->new( $app->backup_dir )->relative;
+    my $backup_dir = Path::Tiny->new( $app->get_backups_dir )->relative;
     $backup_dir =~ s!/*$!/!; # hy do I need to add this???
 
     my $backup = Backup->create($name, "storable");
@@ -87,7 +87,7 @@ sub do_mysql_backup {
     my $app = shift;
     my $name = shift // 'normal';
 
-    my $backup_dir = Path::Tiny->new( $app->backup_dir )->relative;
+    my $backup_dir = Path::Tiny->new( $app->get_backups_dir )->relative;
     $backup_dir =~ s!/*$!/!;
 
     my $backup = Backup->create($name, "mysql");
@@ -136,7 +136,7 @@ sub delete_old_backups {
 
     my $num_deleted = 0;
 
-    my @backups_arr = sort {$b->date cmp $a->date} read_backups($app->backup_dir);
+    my @backups_arr = sort {$b->date cmp $a->date} read_backups($app->get_backups_dir);
     foreach my $backup (@backups_arr){
         my $age = $backup->get_age->days;
         if( $age >= $age_treshold ){

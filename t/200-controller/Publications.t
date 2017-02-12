@@ -113,13 +113,8 @@ $admin_user->post_ok(
     "Upload simple file OK"
 );
 
-ok( -e "public/uploads/papers/paper-".$entry->id.".pdf", "uploaded simple file exists");
+ok( -e $self->app->get_upload_dir."/papers/paper-".$entry->id.".pdf", "uploaded simple file exists");
 
-say `ls -l public`;
-say `ls -l public/uploads`;
-say `ls -l public/uploads/papers`;
-
-say `tree`;
 
 $page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
 $admin_user->get_ok($page, "Download simple file OK: $page")
@@ -131,7 +126,7 @@ $admin_user->get_ok($page, "Get for page $page")
     ->status_isnt(404, "Checking: 404 $page")
     ->status_isnt(500, "Checking: 500 $page");
 
-ok( !-e "public/uploads/papers/paper-".$entry->id.".pdf", "uploaded file was deleted correctly");
+ok( !-e $self->app->get_upload_dir."/papers/paper-".$entry->id.".pdf", "uploaded file was deleted correctly");
 
 say "NOW UPLOADING REAL FILE". Dumper $upload_test_file;
 
@@ -145,7 +140,7 @@ $admin_user->get_ok($page, "Download real file OK: $page")
     ->status_isnt(404, "Checking: 404 $page")
     ->status_isnt(500, "Checking: 500 $page");
 
-ok( -e "public/uploads/papers/paper-".$entry->id.".pdf", "file uploaded again exists");
+ok( -e $self->app->get_upload_dir."/papers/paper-".$entry->id.".pdf", "file uploaded again exists");
 
 
 

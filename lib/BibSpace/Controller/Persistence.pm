@@ -227,9 +227,9 @@ sub system_status {
   my $self = shift;
 
   my $msg         = "";
-  my $log_dir     = $self->app->config->{log_dir};
+  my $log_dir     = $self->app->get_log_dir;
   my $backups_dir = $self->app->config->{backups_dir};
-  my $upload_dir  = $self->app->config->{upload_dir};
+  my $upload_dir  = $self->app->get_upload_dir;
 
 
   my $backup_dir_absolute = $self->config->{backups_dir};

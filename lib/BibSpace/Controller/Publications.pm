@@ -462,7 +462,7 @@ sub fix_file_urls {
         ++$num_checks;
         my $str;
         $str .= "Entry " . $entry->id . ": ";
-        $entry->discover_attachments( $self->app->config->{upload_dir} );
+        $entry->discover_attachments( $self->app->get_upload_dir );
         my @discovered_types = $entry->attachments_keys;
 
         $entry->remove_bibtex_fields( [ 'pdf', 'slides' ] );
@@ -533,7 +533,7 @@ sub remove_attachment {
     my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
     my ( $msg, $msg_type );
 
-    $entry->discover_attachments( $self->app->config->{upload_dir} );
+    $entry->discover_attachments( $self->app->get_upload_dir );
 
 
     if ( $entry->attachments_has($filetype) ) {
@@ -582,9 +582,9 @@ sub discover_attachments {
     my $msg;
     my $msg_type = 'info';
     if ( $entry and $do and $do == 1 ) {
-        $entry->discover_attachments( $self->app->config->{upload_dir} );
+        $entry->discover_attachments( $self->app->get_upload_dir );
         $msg .= "Discovery was run for dir '"
-            . $self->app->config->{upload_dir} . "'.";
+            . $self->app->get_upload_dir . "'.";
     }
     elsif( $entry ) {
         $msg .= "Just displaying information. ";
@@ -618,7 +618,7 @@ sub download {
     my $file;
 
     if ($entry) {
-        $entry->discover_attachments( $self->app->config->{upload_dir} );
+        $entry->discover_attachments( $self->app->get_upload_dir );
         $file = $entry->get_attachment($filetype);
     }
     else {
@@ -664,7 +664,7 @@ sub add_pdf_post {
     my $uploaded_file = $self->param('uploaded_file');
 
     my $uploads_directory
-        = Path::Tiny->new( $self->app->config->{upload_dir} );
+        = Path::Tiny->new( $self->app->get_upload_dir );
 
     $self->app->logger->info("Saving attachment for entry '$id'");
 

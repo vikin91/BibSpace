@@ -84,11 +84,25 @@ has config_file => sub {
     return;
 };
 
-has backup_dir => sub {
-    my $self                = shift;
-    my $backup_dir_absolute = $self->app->config->{backups_dir};
-    $backup_dir_absolute =~ s!/*$!/!;
-    return $backup_dir_absolute;
+has get_backups_dir => sub {
+  my $self        = shift;
+  my $backups_dir = $self->app->config->{backups_dir};
+  $backups_dir =~ s!/*$!/!;
+  return $backups_dir;
+};
+
+has get_upload_dir => sub {
+  my $c          = shift;
+  my $upload_dir = $c->app->config->{upload_dir};
+  $upload_dir =~ s!/*$!/!;
+  return $upload_dir;
+};
+
+has get_log_dir => sub {
+  my $c       = shift;
+  my $log_dir = $c->app->config->{log_dir};
+  $log_dir =~ s!/*$!/!;
+  return $log_dir;
 };
 
 # do not use this - if MySQL server dies during operation, you will be not able to reconnect!
@@ -439,12 +453,12 @@ sub setup_plugins {
 
     $self->app->logger->info("App version: " . $self->app->version);
     $self->app->logger->info("Creating directories...");
-    for my $dir (
-        (   $self->config->{backups_dir}, $self->config->{upload_dir},
-            $self->config->{log_dir}
-        ))
+    for my $dir ( ( $self->app->get_backups_dir,  
+                    $self->app->get_upload_dir,
+                    $self->app->get_upload_dir."papers",
+                    $self->app->get_upload_dir."slides",
+                    $self->app->get_log_dir)  )
     {
-        $dir =~ s!/*$!/!;
         $self->app->logger->debug("Creating directory: $dir");
         try {
             Path::Tiny->new($dir)->mkpath;
@@ -456,7 +470,7 @@ sub setup_plugins {
 
     # set logging dir in the logger
     $self->app->logger->debug("Setting log dir to the logger");
-    $self->logger->set_log_dir("".Path::Tiny->new($self->config->{log_dir}) );
+    $self->logger->set_log_dir("".Path::Tiny->new($self->get_log_dir) );
 
 
 
@@ -994,7 +1008,7 @@ sub setup_hooks {
     $self->hook(after_render => sub {
         my ($c, $args) = @_;
         $c->push_url_history;
-        say "History of visisited URLS ".$c->get_url_history.":\n".join("\n", $c->get_url_history);
+        # say "History of visisited URLS ".$c->get_url_history.":\n".join("\n", $c->get_url_history);
     });
 
     $self->hook(

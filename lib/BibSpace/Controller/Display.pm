@@ -76,15 +76,15 @@ sub show_log {
 
   my @lines;
   try{
-    @lines = get_log_lines( $self->app->config->{log_dir}, $num, $type, $filter );
+    @lines = get_log_lines( $self->app->get_log_dir, $num, $type, $filter );
   }
   catch{
     $self->app->logger->error("Cannot find log '$type'. Error: $_.");
     $self->stash( msg_type => 'danger', msg => "Cannot find log '$type'." );
   };
 
-  my @file_list = Path::Tiny->new( $self->app->config->{log_dir} )->children(qr/\.log$/);
-  my $curr_file = Path::Tiny->new( $self->app->config->{log_dir} )->child('general.log');
+  my @file_list = Path::Tiny->new( $self->app->get_log_dir )->children(qr/\.log$/);
+  my $curr_file = Path::Tiny->new( $self->app->get_log_dir )->child('general.log');
 
   $self->stash( files => \@file_list, lines => \@lines, curr_file => $curr_file, num => $num);
   $self->render( template => 'display/log' );  
@@ -99,7 +99,7 @@ sub show_log_ws {
   $self->on(message => sub {
     my ($self, $filter) = @_;
     
-    my @lines = get_log_lines( $self->app->config->{log_dir}, $num, 'general', $filter );
+    my @lines = get_log_lines( $self->app->get_log_dir, $num, 'general', $filter );
     $self->send( Mojo::JSON::encode_json( \@lines ) );
   });
 
