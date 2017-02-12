@@ -800,8 +800,8 @@ sub mark_author_to_regenerate {
         @entries = $author->get_entries;
         foreach my $entry (@entries){
             $entry->need_html_regen(1);
-            $self->app->repo->entries_save($entry);
         }
+        $self->app->repo->entries_save(@entries);
     }
 
     my $msg = "".scalar(@entries). " entries have been MARKED for regeneration. ";
@@ -868,8 +868,9 @@ sub mark_all_to_regenerate {
     my @entries   = $self->app->repo->entries_all;
     foreach my $entry (@entries){
         $entry->need_html_regen(1);
-        $self->app->repo->entries_save($entry);
+        # $self->app->repo->entries_save($entry);
     }
+    $self->app->repo->entries_save(@entries);
 
     my $msg = "".scalar(@entries). " entries have been MARKED for regeneration. ";
     $msg .= "Now you may run 'regenerate all' or 'regenerate in chunks'. ";

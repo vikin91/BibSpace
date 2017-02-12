@@ -82,17 +82,15 @@ sub Fregenerate_html_for_array {
 
     my @entries = @{$entries_arr_ref};
 
-    my $num_entries_regenerated = 0;
+    my $num_done = 0;
     for my $entry (@entries) {
         next unless $entry;
-        
-        $num_entries_regenerated = 
-            $num_entries_regenerated + 
-            $entry->regenerate_html( $force, $app->bst, $converter );
-    }
-    $app->repo->entries_save(@entries);
 
-    return $num_entries_regenerated;
+        $num_done = $num_done + $entry->regenerate_html( $force, $app->bst, $converter );
+        $app->repo->entries_save($entry);
+    }
+    
+    return $num_done;
 }
 ####################################################################################
 sub FprintBibtexWarnings {
