@@ -480,13 +480,19 @@ sub generate_html {
     $self->populate_from_bib();
     $self->fix_bibtex_accents;
 
-    $converter->convert( $self->bib, $bst_file );
-    my $html = $converter->get_html;
 
-    $self->html($html);
-    $self->warnings( join( ', ', $converter->get_warnings ) );
+    try{
+        $converter->convert( $self->bib, $bst_file );
+        $self->html($converter->get_html);
+        $self->warnings( join( ', ', $converter->get_warnings ) );
+        $self->need_html_regen(0);
+    }
+    catch{
+        $self->html(nohtml(undef,undef));
+        $self->warnings("WARNING: Converter was unable to convert this entry.");
+        $self->need_html_regen(1);
+    };
 
-    $self->need_html_regen(0);
 
     return ( $self->html, $self->bib );
 }
