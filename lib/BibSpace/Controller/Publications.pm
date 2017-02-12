@@ -783,6 +783,30 @@ sub add_pdf_post {
 }
 
 ####################################################################################
+sub regenerate_html_for_author {
+    my $self      = shift;
+    my $author_id = $self->param('author_id');
+    my $converter = $self->app->bibtexConverter;
+
+    my $author = $self->app->repo->authors_find( sub{$_->id == $author_id} );
+
+    my $num_regen = 0;
+    if($author){
+        $self->inactivity_timeout(3000);
+        $self->app->logger->info("Regenerating HTML for all Author entries. Author: '".$author->uid."'.");
+
+        my @entries   = $author->get_entries;
+        foreach (@entries){
+            $_->need_html_regen(1);
+        }
+        $num_regen = Fregenerate_html_for_array($self->app, 0, $converter, \@entries);
+    }
+
+    my $msg = "$num_regen entries have been regenerated.";
+    $self->app->logger->info($msg);
+    $self->flash( msg_type => 'info', msg => $msg );
+    $self->redirect_to( $self->get_referrer() );
+}
 ####################################################################################
 sub regenerate_html_for_all {
     my $self      = shift;
@@ -810,15 +834,15 @@ sub regenerate_html_for_all_force {
     $self->app->logger->info("regenerate_html_for_all_force starts");
 
     my @entries   = $self->app->repo->entries_all;
-    my $num_regen = Fregenerate_html_for_array($self->app, 1, $converter, \@entries);
 
-    my $msg;
-    if($num_regen == 1){
-        $msg = "$num_regen entry has been regenerated.";
+    # in this way you set all entries for next regeneration
+    foreach (@entries){
+        $_->need_html_regen(1);
     }
-    else{
-        $msg = "$num_regen entries have been regenerated.";   
-    }
+    # if this crashes or times-out then you may repeat normal regenerate and continue from where you stop
+    my $num_regen = Fregenerate_html_for_array($self->app, 0, $converter, \@entries);
+
+    my $msg = "$num_regen entries have been regenerated.";
     $self->app->logger->info($msg);
     $self->flash( msg_type => 'info', msg => $msg );
     $self->redirect_to( $self->get_referrer() );

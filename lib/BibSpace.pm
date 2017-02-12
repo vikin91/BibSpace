@@ -596,6 +596,12 @@ sub setup_routes {
         ->to('publications#regenerate_html_for_all')
         ->name('regenerate_html_for_all');
 
+    $manager_user->get('/settings/regenerate_all/:author_id')
+        ->to('publications#regenerate_html_for_author')
+        ->name('regenerate_html_for_author');
+
+        
+
     # websocket for fun
     # $manager_user->websocket('/settings/regenerate_html_for_all_force_ws')
     #     ->to('publications#regenerate_html_for_all_force_ws')->name('regenerate_html_for_all_force_ws');
