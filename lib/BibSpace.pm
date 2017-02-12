@@ -991,10 +991,11 @@ sub setup_hooks {
     my $self = shift;
     $self->app->logger->info("Setup hooks...");
 
-    # $self->hook(after_render => sub {
-    #     my ($c, $args) = @_;
-    #     $c->push_url_history;      
-    # });
+    $self->hook(after_render => sub {
+        my ($c, $args) = @_;
+        $c->push_url_history;
+        say "History of visisited URLS ".$c->get_url_history.":\n".join("\n", $c->get_url_history);
+    });
 
     $self->hook(
         before_dispatch => sub {
@@ -1004,6 +1005,7 @@ sub setup_hooks {
                 $c->req->url->base->scheme('https');    
             }
             $c->app->statistics->log_url($c->req->url);
+
 
             # dirty fix for production deployment in a directory
             # config->{proxy_prefix} stores the proxy prefix, e.g., /app

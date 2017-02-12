@@ -127,6 +127,13 @@ sub register {
       }
   );
 
+  $app->helper(
+      get_url_history => sub {
+          my $self     = shift;
+          return @{ $self->session('url_history') };
+      }
+  );
+
   ## add url to the stack
   $app->helper(
       push_url_history => sub {
@@ -139,23 +146,31 @@ sub register {
       }
   );
 
-  # $app->helper(
-  #     get_referrer => sub {
-  #       my $self     = shift;
-  #       # return shift->pop_url_history;
-  #       return $self->old_get_referrer;
-  #     }
-  # );
+  $app->helper(
+      get_referrer => sub {
+        my $self = shift;
+        return $self->get_referrer_old;
+      }
+  );
 
   $app->helper(
-    get_referrer => sub {
+    get_referrer_new => sub {
       my $self = shift;
       my $ret  = $self->req->headers->referrer;
       # $ret //= $self->url_for('start');
       return $ret;
     }
   );
-
+  $app->helper(
+    get_referrer_old => sub {
+      my $s   = shift;
+      my $ret = $s->url_for('start');
+      $ret = $s->req->headers->referrer
+          if defined $s->req->headers->referrer
+          and $s->req->headers->referrer ne '';
+      return $ret;
+    }
+  );
 
   $app->helper(
       nohtml => sub {

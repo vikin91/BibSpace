@@ -10,13 +10,14 @@ use Try::Tiny;
 
 use Data::Dumper;
 
-
-use Mojo::Base 'Mojolicious::Controller';
 use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::Core;
 use BibSpace::Model::Backup;
 use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
 use BibSpace::Functions::FDB;
+
+use Mojo::Base 'Mojolicious::Controller';
+
 
 #################################################################################
 sub persistence_status {

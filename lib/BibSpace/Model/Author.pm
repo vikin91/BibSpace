@@ -226,10 +226,6 @@ sub has_entry {
             $_->author->equals($self) 
         } 
     );
-
-    foreach ($self->authorships_all){
-        say "Author ".$self->id." in has_entry has the follwoign authorship: ".$_->toString;
-    }
     return defined $authorship;
 }
 ################################################################################

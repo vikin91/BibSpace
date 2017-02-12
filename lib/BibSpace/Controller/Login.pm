@@ -71,7 +71,7 @@ sub under_check_has_rank {
         msg_type => 'danger',
         msg      => "You need to have rank '"
             . $required_rank
-            . "') to access this page! "
+            . "' to access this page! "
             . "Your rank is: '"
             . $your_rank . "'"
             . " <br/> You have tried to access: "
