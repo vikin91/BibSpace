@@ -797,11 +797,11 @@ sub mark_author_to_regenerate {
     if($author){
         $self->app->logger->info("Marking entries of author '".$author->uid."' for HTML regeneration.");
 
-        @entries  = $author->get_entries;
-        foreach (@entries){
-            $_->need_html_regen(1);
+        @entries = $author->get_entries;
+        foreach my $entry (@entries){
+            $entry->need_html_regen(1);
+            $self->app->repo->entries_save($entry);
         }
-        $self->app->repo->entries_update(@entries);
     }
 
     my $msg = "".scalar(@entries). " entries have been MARKED for regeneration. ";
@@ -849,7 +849,7 @@ sub regenerate_html_in_chunk {
     my @portion_of_entries = @entries[ 0 .. $last_entry_index ];
     @portion_of_entries = grep {defined $_} @portion_of_entries;
 
-    my $num_regen = Fregenerate_html_for_array($self->app, 0, $converter, \@portion_of_entries);
+    my $num_regen = Fregenerate_html_for_array($self->app, 1, $converter, \@portion_of_entries);
     my $left_todo = scalar(@entries) - $num_regen;
 
     my $msg = "$num_regen entries have been regenerated. ";
@@ -866,12 +866,10 @@ sub mark_all_to_regenerate {
     $self->app->logger->info("Marking all entries for HTML regeneration.");
 
     my @entries   = $self->app->repo->entries_all;
-
-    # in this way you set all entries for next regeneration
-    foreach (@entries){
-        $_->need_html_regen(1);
+    foreach my $entry (@entries){
+        $entry->need_html_regen(1);
+        $self->app->repo->entries_save($entry);
     }
-    $self->app->repo->entries_update(@entries);
 
     my $msg = "".scalar(@entries). " entries have been MARKED for regeneration. ";
     $msg .= "Now you may run 'regenerate all' or 'regenerate in chunks'. ";
@@ -1470,7 +1468,7 @@ sub publications_edit_post {
     # 2 => KEY_OK
     # 3 => KEY_TAKEN
 
-    my $bibtex_warnings = FprintBibtexWarnings( $mentry->{warnings} );
+    my $bibtex_warnings = FprintBibtexWarnings( $mentry->warnings );
     my $msg             = $adding_msg . $bibtex_warnings;
     my $msg_type        = 'success';
     $msg_type = 'warning' if $bibtex_warnings =~ m/Warning/;
