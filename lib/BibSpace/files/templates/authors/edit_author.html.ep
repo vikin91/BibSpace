@@ -18,15 +18,13 @@
             <a class="btn btn-info pull-right" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            
-
             <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id) %>">
                 <i class="fa fa-files-o"></i> Show entries <span class="badge"><%= num_entries_for_author($author)%></span>
             </a>
-            <a class="btn btn-success" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'paper') %>">
+            <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'paper') %>">
                 <i class="fa fa-files-o"></i> Show papers <span class="badge"><%= num_papers_for_author($author)%></span>
             </a>
-            <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'talk')%>">
+            <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'talk')%>">
                 <i class="fa fa-microphone"></i> Show talks <span class="badge"><%= num_talks_for_author($author)%></span>
             </a>
             <a class="btn btn-default" href="<%= url_for('tags_for_author', author_id =>$author->id )%>">
@@ -39,38 +37,75 @@
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            
-            <a class="btn btn-default" href="<%= url_for('lp')->query(author=>$author->master) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $author->master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> Landing Page Types</a>
-            
-            <a class="btn btn-default" href="<%= url_for('lyp')->query(author=>$author->master) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $author->master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing Page Years</a>
-
-            <a class="btn btn-default" href="<%= url_for('readbibtex')->query(author=>$author->master)%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $author->master %>"><i class="fa fa-user"></i><span class="glyphicon glyphicon-plane"></span> Landing Page BibTeX
-            </a>
-
-            <a class="btn btn-default" href="<%= url_for('regenerate_html_for_author', author_id => $author->id)%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $author->master %>">
-                <i class="fa fa-user"></i>
-                <span class="glyphicon glyphicon-refresh"></span> 
-                Regenerate HTML for this author
-            </a>
-
-            
-        </div>
-    </div>
-    <br/>
-    <div class="row">
-        <div class="col-lg-2 col-md-2 col-xs-2"></div>
-        <div class="col-lg-10 col-md-10 col-xs-10">
-            % my @ttobjs = get_important_tag_types($self);
-            % foreach my $ttobj (@ttobjs){
-                <a class="btn btn-default" href="<%= url_for('get_untagged_publications_for_author', author=> $author->{id}, tagtype=>$ttobj->{id} ) %>">
-                    <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without "<%=$ttobj->{name}%>"
+            <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    <i class="fa fa-cog"></i>
+                    Actions 
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <a href="<%= url_for('lp')->query(author=>$author->master) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $author->master %>">
+                            <i class="fa fa-user"></i>
+                            <span class="glyphicon glyphicon-plane"></span> 
+                            Landing Page Types
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<%= url_for('lp')->query(author=>$author->master) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $author->master %>">
+                            <i class="fa fa-user"></i>
+                            <span class="glyphicon glyphicon-plane"></span> 
+                            Landing Page Types
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<%= url_for('lyp')->query(author=>$author->master) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $author->master %>">
+                            <i class="fa fa-user"></i>
+                            <span class="glyphicon glyphicon-plane"></span>
+                            <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> 
+                            Landing Page Years
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<%= url_for('readbibtex')->query(author=>$author->master)%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $author->master %>">
+                            <i class="fa fa-user"></i>
+                            <span class="glyphicon glyphicon-plane"></span> 
+                            Landing Page BibTeX
+                        </a>
+                    </li>
+                    <li class="divider"></li>
+                    <li>
+                        <a href="<%= url_for('mark_author_to_regenerate', author_id => $author->id)%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $author->master %>">
+                            <i class="fa fa-user"></i>
+                            <span class="glyphicon glyphicon-refresh"></span> 
+                            Mark entries of this author for HTML regeneration
+                        </a>
+                    </li>
+                    <li class="divider"></li>
+                    % my @ttobjs = get_important_tag_types($self);
+                    % foreach my $ttobj (@ttobjs){
+                        <li>
+                        <a href="<%= url_for('get_untagged_publications_for_author', author=> $author->{id}, tagtype=>$ttobj->{id} ) %>">
+                            <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without "<%=$ttobj->{name}%>"
+                        </a>
+                        </li>
+                    % }
+                </ul>
+            </div> <!-- button group manage -->
+            % if( $author->is_master ){
+                <a  class="btn btn-success">
+                    This author is master
+                </a>
+            % }
+            % else {
+                <a  class="btn btn-danger" href="<%= url_for('edit_author', id=>$author->master_id) %>">
+                    This author is not master. Click to edit master: <%=$author->master%> 
                 </a>
             % }
         </div>
     </div>
 
-    <br/>
-
+    
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
             <H1 class="pull-right">Edit author </H1>
@@ -79,23 +114,6 @@
         </div>
     </div>
   
-
-    <div class="row">
-        <div class="col-lg-2 col-md-2 col-xs-2">
-        </div>
-        <div class="col-lg-10 col-md-10 col-xs-10">
-              % if( $author->is_master ){
-                <a  class="btn btn-success">
-                This author is master
-                </a>
-            % }
-            % else {
-                <a  class="btn btn-danger" href="<%= url_for('edit_author', id=>$author->master_id) %>">
-                This author is not master. Click to edit master: <%=$author->master%> 
-                </a>
-            % }
-        </div>
-    </div>
   <!-- MUID -->
 
 

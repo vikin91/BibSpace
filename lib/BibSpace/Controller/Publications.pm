@@ -785,29 +785,32 @@ sub add_pdf_post {
 }
 
 ####################################################################################
-sub regenerate_html_for_author {
+sub mark_author_to_regenerate {
     my $self      = shift;
     my $author_id = $self->param('author_id');
     my $converter = $self->app->bibtexConverter;
 
     my $author = $self->app->repo->authors_find( sub{$_->id == $author_id} );
 
-    my $num_regen = 0;
-    if($author){
-        $self->inactivity_timeout(3000);
-        $self->app->logger->info("Regenerating HTML for all Author entries. Author: '".$author->uid."'.");
+    my @entries;
 
-        my @entries   = $author->get_entries;
+    if($author){
+        $self->app->logger->info("Marking entries of author '".$author->uid."' for HTML regeneration.");
+
+        @entries  = $author->get_entries;
         foreach (@entries){
             $_->need_html_regen(1);
         }
-        $num_regen = Fregenerate_html_for_array($self->app, 0, $converter, \@entries);
+        $self->app->repo->entries_update(@entries);
     }
 
-    my $msg = "$num_regen entries have been regenerated.";
+    my $msg = "".scalar(@entries). " entries have been MARKED for regeneration. ";
+    $msg .= "Now you may run 'regenerate all' or 'regenerate in chunks'. ";
+    $msg .= "Regenration in chunks is useful for large set of entries. ";
+
     $self->app->logger->info($msg);
     $self->flash( msg_type => 'info', msg => $msg );
-    $self->redirect_to( $self->get_referrer() );
+    $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
 sub regenerate_html_for_all {
@@ -818,22 +821,49 @@ sub regenerate_html_for_all {
 
     $self->app->logger->info("regenerate_html_for_all is running");
 
-    my @entries   = $self->app->repo->entries_all;
+    my @entries   = $self->app->repo->entries_filter( sub{$_->need_html_regen == 1} );
     my $num_regen = Fregenerate_html_for_array($self->app, 0, $converter, \@entries);
+    my $left_todo = scalar(@entries) - $num_regen;
 
-    my $msg = "$num_regen entries have been regenerated.";
+    my $msg = "$num_regen entries have been regenerated. ";
+    $msg .= "$left_todo furter entries still require regeneration.";
+    $self->app->logger->info($msg);
+    $self->flash( msg_type => 'info', msg => $msg );
+    $self->redirect_to( $self->get_referrer );
+}
+####################################################################################
+sub regenerate_html_in_chunk {
+    my $self      = shift;
+    my $chunk_size = $self->param('chunk_size') // 30;
+
+    my $converter = $self->app->bibtexConverter;
+
+    $self->inactivity_timeout(3000);
+
+    $self->app->logger->info("regenerate_html_in_chunk is running, chunk size $chunk_size ");
+
+    my @entries   = $self->app->repo->entries_filter( sub{ $_->need_html_regen == 1} );
+
+    my $last_entry_index = $chunk_size-1 > scalar(@entries) ? scalar(@entries) : $chunk_size-1;
+
+    my @portion_of_entries = @entries[ 0 .. $last_entry_index ];
+    @portion_of_entries = grep {defined $_} @portion_of_entries;
+
+    my $num_regen = Fregenerate_html_for_array($self->app, 0, $converter, \@portion_of_entries);
+    my $left_todo = scalar(@entries) - $num_regen;
+
+    my $msg = "$num_regen entries have been regenerated. ";
+    $msg .= "$left_todo furter entries still require regeneration.";
     $self->app->logger->info($msg);
     $self->flash( msg_type => 'info', msg => $msg );
     $self->redirect_to( $self->get_referrer() );
 }
 ####################################################################################
-sub regenerate_html_for_all_force {
+sub mark_all_to_regenerate {
     my $self      = shift;
     my $converter = $self->app->bibtexConverter;
 
-    $self->inactivity_timeout(3000);
-
-    $self->app->logger->info("regenerate_html_for_all_force starts");
+    $self->app->logger->info("Marking all entries for HTML regeneration.");
 
     my @entries   = $self->app->repo->entries_all;
 
@@ -841,10 +871,11 @@ sub regenerate_html_for_all_force {
     foreach (@entries){
         $_->need_html_regen(1);
     }
-    # if this crashes or times-out then you may repeat normal regenerate and continue from where you stop
-    my $num_regen = Fregenerate_html_for_array($self->app, 0, $converter, \@entries);
+    $self->app->repo->entries_update(@entries);
 
-    my $msg = "$num_regen entries have been regenerated.";
+    my $msg = "".scalar(@entries). " entries have been MARKED for regeneration. ";
+    $msg .= "Now you may run 'regenerate all' or 'regenerate in chunks'. ";
+    $msg .= "Regenration in chunks is useful for large set of entries. ";
     $self->app->logger->info($msg);
     $self->flash( msg_type => 'info', msg => $msg );
     $self->redirect_to( $self->get_referrer() );

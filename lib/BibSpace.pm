@@ -580,6 +580,9 @@ sub setup_routes {
     $manager_user->websocket('/log_websocket/:num')->to('display#show_log_ws')->name('show_log_websocket');
     $manager_user->websocket('/statistics/:num')->to('display#show_stats_websocket')->name('show_stats_websocket');
         
+
+
+    
     $admin_user->get('/settings/fix_months')
         ->to('publications#fixMonths')
         ->name('fix_all_months');
@@ -588,24 +591,24 @@ sub setup_routes {
         ->to('publications#clean_ugly_bibtex')
         ->name('clean_ugly_bibtex');
 
-    $manager_user->get('/settings/regenerate_all_force')
-        ->to('publications#regenerate_html_for_all_force')
-        ->name('regenerate_html_for_all_force');
+    $manager_user->get('/settings/mark_all_to_regenerate')
+        ->to('publications#mark_all_to_regenerate')
+        ->name('mark_all_to_regenerate');
 
-    $logged_user->get('/settings/regenerate_all')
+    $manager_user->get('/settings/mark_author_to_regenerate/:author_id')
+        ->to('publications#mark_author_to_regenerate')
+        ->name('mark_author_to_regenerate');
+
+    $manager_user->get('/settings/regenerate_all')
         ->to('publications#regenerate_html_for_all')
         ->name('regenerate_html_for_all');
 
-    $manager_user->get('/settings/regenerate_all/:author_id')
-        ->to('publications#regenerate_html_for_author')
-        ->name('regenerate_html_for_author');
-
+    $logged_user->get('/settings/regenerate_html_in_chunk/:chunk_size')
+        ->to('publications#regenerate_html_in_chunk')
+        ->name('regenerate_html_in_chunk');
         
 
-    # websocket for fun
-    # $manager_user->websocket('/settings/regenerate_html_for_all_force_ws')
-    #     ->to('publications#regenerate_html_for_all_force_ws')->name('regenerate_html_for_all_force_ws');
-    
+
 
 
 

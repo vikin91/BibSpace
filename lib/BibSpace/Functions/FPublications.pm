@@ -84,7 +84,8 @@ sub Fregenerate_html_for_array {
 
     my $num_entries_regenerated = 0;
     for my $entry (@entries) {
-        # $entry->bst_file( $app->bst );
+        next unless $entry;
+        
         $num_entries_regenerated = 
             $num_entries_regenerated + 
             $entry->regenerate_html( $force, $app->bst, $converter );
