@@ -322,10 +322,35 @@ sub all_without_author {
 
     my $msg
         = "This list contains papers, that are currently not assigned to any of authors.";
+
+    $msg .= '<a href="' . $self->url_for('delete_all_without_author') .'"> Click to delete </a>';
     $self->stash( entries => \@entries, msg => $msg, msg_type => 'info' );
     $self->render( template => 'publications/all' );
 }
+####################################################################################
+sub delete_all_without_author {
+    my $self = shift;
 
+    my @entries = $self->app->repo->entries_filter(
+        sub { scalar( $_->get_authors ) == 0 } );
+
+    foreach my $entry (@entries){
+        my @au = $entry->authorships_all;
+        $self->app->repo->authorships_delete(@au);
+        my @ex = $entry->exceptions_all;
+        $self->app->repo->exceptions_delete(@ex);
+        my @la = $entry->labelings_all;
+        $self->app->repo->labelings_delete(@la);
+    }
+
+    my $num_deleted = $self->app->repo->entries_delete(@entries);
+
+    my $msg
+        = "$num_deleted entries have been removed";
+    $self->flash( msg => $msg, msg_type => 'info' );
+    $self->redirect_to( 'all_without_author' );
+    
+}
 ####################################################################################
 sub show_unrelated_to_team {
     my $self    = shift;

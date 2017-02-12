@@ -27,7 +27,6 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 ##############################################################################################################
 sub all_authors {    # refactored
   my $self    = shift;
-  my $dbh     = $self->app->db;
   my $visible = $self->param('visible');
   my $search  = $self->param('search');
   my $letter  = $self->param('letter');
@@ -72,7 +71,6 @@ sub add_author {
 ##############################################################################################################
 sub add_post {
   my $self       = shift;
-  my $dbh        = $self->app->db;
   my $new_master = $self->param('new_master');
 
   if ( defined $new_master and length($new_master) > 0 ) {
@@ -116,16 +114,7 @@ sub edit_author {
   my $self = shift;
   my $id   = $self->param('id');
 
-  my $dbh = $self->app->db;
   my $author = $self->app->repo->authors_find( sub { $_->id == $id } );
-
-# redirect to master if master is defined for this author
-# if( defined $author and $author->{id} != $author->{master_id} ){
-#     $self->redirect_to( $self->url_for('edit_author', id=>$author->{master_id}) );
-#     return;
-# }
-
-
 
 
   if ( !defined $author ) {
@@ -162,7 +151,6 @@ sub edit_author {
 ##############################################################################################################
 sub add_to_team {
   my $self      = shift;
-  my $dbh       = $self->app->db;
   my $master_id = $self->param('id');
   my $team_id   = $self->param('tid');
 
@@ -193,7 +181,6 @@ sub add_to_team {
 ##############################################################################################################
 sub remove_from_team {
   my $self      = shift;
-  my $dbh       = $self->app->db;
   my $master_id = $self->param('id');
   my $team_id   = $self->param('tid');
 
@@ -219,7 +206,6 @@ sub remove_from_team {
 ##############################################################################################################
 sub remove_uid {
   my $self      = shift;
-  my $dbh       = $self->app->db;
   my $master_id = $self->param('masterid');
   my $minor_id  = $self->param('uid');
  
@@ -329,7 +315,6 @@ sub merge_authors {
 ##############################################################################################################
 sub edit_post {
   my $self        = shift;
-  my $dbh         = $self->app->db;
   my $id          = $self->param('id');
   my $new_master  = $self->param('new_master');
   my $new_user_id = $self->param('new_user_id');
@@ -388,7 +373,6 @@ sub edit_post {
 ##############################################################################################################
 sub post_edit_membership_dates {
   my $self      = shift;
-  my $dbh       = $self->app->db;
   my $master_id = $self->param('aid');
   my $team_id   = $self->param('tid');
   my $new_start = $self->param('new_start');
@@ -427,7 +411,6 @@ sub post_edit_membership_dates {
 ##############################################################################################################
 sub delete_author {
   my $self = shift;
-  my $dbh  = $self->app->db;
   my $id   = $self->param('id');
 
   my $author = $self->app->repo->authors_find( sub { $_->{id} == $id } );
@@ -445,7 +428,6 @@ sub delete_author {
 ##############################################################################################################
 sub delete_author_force {
   my $self = shift;
-  my $dbh  = $self->app->db;
   my $id   = $self->param('id');
 
   my $author = $self->app->repo->authors_find( sub { $_->{id} == $id } );
@@ -482,6 +464,49 @@ sub delete_author_force {
   }
   else {
     $self->flash( msg => "Cannot delete author ID $id.", msg_type => "danger" );
+  }
+
+
+  $self->redirect_to( $self->url_for('all_authors') );
+}
+
+##############################################################################################################
+## do not use this on production! this is for making the tests faster!!
+sub delete_invisible_authors {
+  my $self = shift;
+
+  my @authors = $self->app->repo->authors_filter( sub { !$_->is_visible } );
+
+  foreach my $author (@authors) {
+
+    ## TODO: refactor these blocks nicely!
+
+    ## Deleting memberships
+    my @memberships = $author->memberships_all;
+    # for each team, remove membership in this team
+    foreach my $membership ( @memberships ){
+        $membership->team->remove_membership($membership);
+    }
+    $self->app->repo->memberships_delete(@memberships);
+    # remove all memberships for this team
+    $author->memberships_clear;
+
+    ## Deleting authorships
+    my @authorships = $author->authorships_all;
+    # for each team, remove authorship in this team
+    foreach my $authorship ( @authorships ){
+        # my $entry = $authorship->entry;
+        $authorship->entry->remove_authorship($authorship);
+        # $self->app->repo->entries_delete($entry);
+    }
+    $self->app->repo->authorships_delete(@authorships);
+    # remove all authorships for this team
+    $author->authorships_clear;
+
+    # finally delete author
+    $self->app->repo->authors_delete($author);
+
+    $self->flash( msg => "Authors decimated! ", msg_type => "success" );
   }
 
 

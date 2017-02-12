@@ -30,7 +30,7 @@ TestManager->apply_fixture($self->app);
 
 my @entries = $admin_user->app->repo->entries_all;
 my $entry   = shift @entries;
-my $author  = $admin_user->app->repo->authors_find(sub{$_->uid eq 'RygielskiPiotr'});
+my $author  = ($admin_user->app->repo->authors_all)[0];
 my @teams   = $admin_user->app->repo->teams_all;
 my $team    = shift @teams; 
 my @tags    = $admin_user->app->repo->tags_all;

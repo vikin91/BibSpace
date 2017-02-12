@@ -22,18 +22,18 @@ use BibSpace::Functions::FDB;
 sub persistence_status {
   my $self     = shift;
 
-  my $now = DateTime->now->set_time_zone( $self->app->preferences->local_time_zone )
-    ->strftime( $self->app->preferences->output_time_format );
-
-  my $status = '
-        <pre style="font-family:monospace;">'
-    . $now
-    . ' System backend status:'
-    . $self->app->repo->lr->get_summary_table
-    . '</pre>';
-
+  my $status = "Status: <pre style=\"font-family:monospace;\">" . $self->app->repo->lr->get_summary_table . "</pre>";
+  $self->stash( msg_type => 'success', msg => $status );
   $self->flash( msg_type => 'success', msg => $status );
   $self->redirect_to( $self->get_referrer );
+}
+
+#################################################################################
+sub persistence_status_ajax {
+  my $self     = shift;
+
+  my $status = "Status: <pre style=\"font-family:monospace;\">" . $self->app->repo->lr->get_summary_table . "</pre>";
+  $self->render( text => $status );
 
 }
 #################################################################################

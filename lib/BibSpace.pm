@@ -411,12 +411,6 @@ sub link_data {
     $self->app->logger->info("Linking Finished.");
 }
 ################################################################
-sub setup_cache {
-    my $self = shift;
-    my $app  = $self;
-    $self->app->logger->info("Setup cache...");
-}
-################################################################
 sub setup_config {
     my $self = shift;
     my $app  = $self;
@@ -532,8 +526,12 @@ sub setup_routes {
         ->to('persistence#copy_mysql_to_smart')->name('copy_mysql_to_smart');
     $admin_user->get('/persistence/copy_smart_to_mysql')
         ->to('persistence#copy_smart_to_mysql')->name('copy_smart_to_mysql');
+
     $admin_user->get('/persistence/persistence_status')
         ->to('persistence#persistence_status')->name('persistence_status');
+    $admin_user->get('/persistence/persistence_status_ajax')
+        ->to('persistence#persistence_status_ajax')->name('persistence_status_ajax');
+    
 
     $admin_user->get('/persistence/reset_mysql')
         ->to('persistence#reset_mysql')->name('reset_mysql');
@@ -643,8 +641,21 @@ sub setup_routes {
         ->name('edit_author_post');
     $manager_user->get('/authors/delete/:id')->to('authors#delete_author')
         ->name('delete_author');
-    $manager_user->get('/authors/delete/:id/force')
+
+
+    $admin_user->get('/authors/delete/:id/force')
         ->to('authors#delete_author_force');
+
+
+
+    # for dev only!!        
+    $admin_user->get('/authors/decimate')
+        ->to('authors#delete_invisible_authors');
+        
+        
+
+
+
     $manager_user->post('/authors/edit_membership_dates')
         ->to('authors#post_edit_membership_dates')
         ->name('edit_author_membership_dates');
@@ -783,7 +794,11 @@ sub setup_routes {
         ->name('recently_changed');
 
     $logged_user->get('/publications/orphaned')
-        ->to('publications#all_without_author');
+        ->to('publications#all_without_author')->name('all_without_author');
+
+    $admin_user->get('/publications/orphaned/delete')
+        ->to('publications#delete_all_without_author')->name('delete_all_without_author');
+        
 
     $logged_user->get('/publications/untagged/:tagtype')
         ->to( 'publications#all_without_tag', tagtype => 1 )
@@ -976,10 +991,10 @@ sub setup_hooks {
     my $self = shift;
     $self->app->logger->info("Setup hooks...");
 
-    $self->hook(after_render => sub {
-        my ($c, $args) = @_;
-        $c->push_url_history;      
-    });
+    # $self->hook(after_render => sub {
+    #     my ($c, $args) = @_;
+    #     $c->push_url_history;      
+    # });
 
     $self->hook(
         before_dispatch => sub {

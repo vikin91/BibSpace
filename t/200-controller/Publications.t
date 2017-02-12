@@ -4,6 +4,7 @@ use Test::Mojo;
 use BibSpace;
 use BibSpace::Functions::Core;
 use Data::Dumper;
+use feature qw( state say );
 
 my $admin_user = Test::Mojo->new('BibSpace');
 $admin_user->post_ok(
@@ -36,7 +37,7 @@ ok(BibSpace::Controller::Publications::get_adding_editing_message_for_error_code
 
 my @entries = $admin_user->app->repo->entries_all;
 my $entry   = shift @entries;
-my $author  = $admin_user->app->repo->authors_find(sub{$_->uid eq 'RygielskiPiotr'});
+my $author  = ($admin_user->app->repo->authors_all)[0];
 my @teams   = $admin_user->app->repo->teams_all;
 my $team    = shift @teams; 
 my @tags    = $admin_user->app->repo->tags_all;
@@ -114,11 +115,11 @@ $admin_user->post_ok(
 
 ok( -e "public/uploads/papers/paper-".$entry->id.".pdf", "uploaded simple file exists");
 
-`ls -l public`;
-`ls -l public/uploads`;
-`ls -l public/uploads/papers`;
+say `ls -l public`;
+say `ls -l public/uploads`;
+say `ls -l public/uploads/papers`;
 
-`tree`;
+say `tree`;
 
 $page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
 $admin_user->get_ok($page, "Download simple file OK: $page")

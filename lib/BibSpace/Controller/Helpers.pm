@@ -139,23 +139,23 @@ sub register {
       }
   );
 
-  $app->helper(
-      get_referrer => sub {
-        # return shift->pop_url_history;
-        return shift->old_get_referrer;
-      }
-  );
+  # $app->helper(
+  #     get_referrer => sub {
+  #       my $self     = shift;
+  #       # return shift->pop_url_history;
+  #       return $self->old_get_referrer;
+  #     }
+  # );
 
   $app->helper(
-      old_get_referrer => sub {
-          my $s   = shift;
-          my $ret = $s->url_for('start');
-          $ret = $s->req->headers->referrer
-              if defined $s->req->headers->referrer
-              and $s->req->headers->referrer ne '';
-          return $ret;
-      }
+    get_referrer => sub {
+      my $self = shift;
+      my $ret  = $self->req->headers->referrer;
+      # $ret //= $self->url_for('start');
+      return $ret;
+    }
   );
+
 
   $app->helper(
       nohtml => sub {
