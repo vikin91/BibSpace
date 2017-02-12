@@ -18,11 +18,12 @@ use BibSpace::Util::EntityFactory;
 
 has 'logger'      => ( is => 'ro', does => 'ILogger',     required => 1 );
 has 'preferences' => ( is => 'ro', isa  => 'Preferences', required => 1 );
+has 'id_provider_class' => ( is => 'ro', isa  => 'Str', required => 1 );
 
 sub BUILD {
   my $self = shift;
 
-  my $uidP = SmartUidProvider->new( logger => $self->logger, idProviderClassName => 'IntegerUidProvider' );
+  my $uidP = SmartUidProvider->new( logger => $self->logger, idProviderClassName => $self->id_provider_class );
   $self->uidProvider($uidP);
 
   my $e_factory = EntityFactory->new( logger => $self->logger, id_provider => $self->uidProvider,
@@ -295,11 +296,19 @@ sub copy_data {
   my $srcLayer  = $self->get_layer($backendFrom);
   my $destLayer = $self->get_layer($backendTo);
 
+  if ( $srcLayer eq $destLayer ) {
+    $self->logger->error(
+      "Source and destination layers are the same, cannot copy.");
+    return;
+  }
+
   if ( !$srcLayer or !$destLayer ) {
     $self->logger->error(
       "Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist.");
     return;
   }
+
+
 
 
   # $self->logger->debug("State before reset_uid_providers: ".$self->get_summary_table);
@@ -322,16 +331,8 @@ sub copy_data {
 
   $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.");
 
-  # $self->logger->debug("State before copying:".$self->get_summary_table);
-
   foreach my $type ( LayeredRepository->get_entities ) {
-
-    # $self->logger->debug("reading from '$backendFrom'.");
-
     my @resultRead = $srcLayer->all($type);
-
-    # $self->logger->debug("saving to '$backendTo'.");
-
     my $resultSave = $destLayer->save( $type, @resultRead );
 
     $self->logger->debug( "'$backendFrom'-read "

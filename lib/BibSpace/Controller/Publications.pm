@@ -366,7 +366,7 @@ sub show_unrelated_to_team {
 
 
     my @allEntres  = $self->app->repo->entries_all;
-    my @teamEntres = $team->entries;
+    my @teamEntres = $team->get_entries;
 
     my %inTeam = map { $_ => 1 } @teamEntres;
     my @entriesUnrelated = grep { not $inTeam{$_} } @allEntres;

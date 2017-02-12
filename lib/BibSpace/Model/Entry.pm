@@ -570,12 +570,6 @@ sub author_names_from_bibtex {
     return @author_names;
 }
 ####################################################################################
-sub teams {
-    my $self = shift;
-    warn "entry->teams is deprecated in favor of entry->get_teams";
-    return $self->get_teams;
-}
-####################################################################################
 sub get_teams {
     my $self = shift;
 
@@ -642,18 +636,6 @@ sub tag_names_from_bibtex {
         }
     }
     return @tag_names;
-}
-####################################################################################
-sub sort_by_year_month_modified_time {
-
-    # $a and $b are Perl's standard sorting variables
-    # $a and $b exist and are Entry objects
-    {
-        no warnings 'uninitialized';
-        $a->year <=> $b->year or $a->month <=> $b->month or $a->id <=> $b->id;
-    }
-
-# $a->{modified_time} <=> $b->{modified_time}; # needs an extra lib, so we just compare ids as approximation
 }
 ####################################################################################
 sub get_title {

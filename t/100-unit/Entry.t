@@ -90,6 +90,9 @@ foreach my $entry(@all_entries){
 }
 
 
+my $broken_entry = $self->app->entityFactory->new_Entry( bib => ' ' );
+$broken_entry->regenerate_html( 1, $self->app->bst, $self->app->bibtexConverter );
+
 
 ok(1);
 done_testing();

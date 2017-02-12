@@ -8,7 +8,11 @@ use BibSpace::DAO::Interface::IDAO;
 use BibSpace::Model::Labeling;
 with 'IDAO';
 use Try::Tiny;
-
+use List::Util qw(first);
+use List::MoreUtils qw(first_index);
+use feature qw( say );
+# for benchmarking
+use Time::HiRes qw( gettimeofday tv_interval );
 # Inherited fields from BibSpace::DAO::Interface::IDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);
@@ -174,9 +178,14 @@ sub filter {
   my ($self, $coderef) = @_;
   die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
 
-  die "".(caller(0))[3]." not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  my $t0 = [gettimeofday];
   
+  return () if $self->empty();
+  my @arr = grep &{$coderef}, $self->all(); 
+  
+  my $dur = tv_interval ( $t0, [gettimeofday]);
+  say "Finding in ".__PACKAGE__.": $dur" if $dur > 0.01;
+  return @arr;
 }
 before 'filter' => sub { shift->logger->entering(""); };
 after 'filter'  => sub { shift->logger->exiting(""); };
@@ -187,9 +196,16 @@ sub find {
   my ($self, $coderef) = @_;
   die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
 
-  die "".(caller(0))[3]." not implemented.";
-  # TODO: auto-generated method stub. Implement me!
+  my $t0 = [gettimeofday];
   
+  return undef if $self->empty();
+  my $obj = first \&{$coderef}, $self->all();
+  
+  my $dur = tv_interval ( $t0, [gettimeofday]);
+  say "Finding in ".__PACKAGE__.": $dur" if $dur > 0.01;
+  
+  return $obj;
+
 }
 before 'find' => sub { shift->logger->entering(""); };
 after 'find'  => sub { shift->logger->exiting(""); };

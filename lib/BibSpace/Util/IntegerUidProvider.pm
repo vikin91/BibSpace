@@ -44,7 +44,7 @@ sub registerUID{
         $self->logger->lowdebug("Registered uid '$uid' for type '".$self->for_type."'.");
     }
     else{
-        my $msg = "Cannot registerUID for type '".$self->for_type."'. It exists already! Wanted to reg: $uid. Existing: ". join(' ', sort $self->uid_keys);
+        my $msg = "Cannot registerUID for type '".$self->for_type."'. It exists already! Wanted to reg: $uid.";
         $self->logger->error($msg);
         ### TODO: THIS SHOULD BE DIE!!
         # warn is only for debugging

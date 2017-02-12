@@ -46,21 +46,9 @@ sub remove_authorship {
     return ;
 }
 ####################################################################################
-sub authors {
-    my $self = shift;
-    warn "IAuthored->authors is deprecated in favor of IAuthored->get_authors";
-    return $self->get_authors;
-}
-####################################################################################
 sub get_authors {
     my $self = shift;
     return map {$_->author} $self->authorships_all;
-}
-####################################################################################
-sub entries {
-    my $self = shift;
-    warn "IAuthored->entries is deprecated in favor of IAuthored->get_entries";
-    return $self->get_entries;
 }
 ####################################################################################
 sub get_entries {

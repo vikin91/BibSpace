@@ -86,7 +86,7 @@ sub tags {
   return @myTags;
 }
 ####################################################################################
-sub entries {
+sub get_entries {
   my $self = shift;
 
   my @myEntries;

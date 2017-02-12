@@ -8,6 +8,11 @@ use BibSpace::DAO::Interface::IDAO;
 use BibSpace::Model::User;
 with 'IDAO';
 use Try::Tiny;
+use List::Util qw(first);
+use List::MoreUtils qw(first_index);
+use feature qw( say );
+# for benchmarking
+use Time::HiRes qw( gettimeofday tv_interval );
 
 # Inherited fields from BibSpace::DAO::Interface::IDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
@@ -79,8 +84,6 @@ sub all {
   }
   return @objs;
 }
-before 'all' => sub { shift->logger->entering( "" ); };
-after 'all' => sub { shift->logger->exiting( "" ); };
 
 =item count
     Method documentation placeholder.
@@ -96,8 +99,6 @@ sub count {
   my $num = $row->{num} // 0;
   return $num;
 }
-before 'count' => sub { shift->logger->entering( "" ); };
-after 'count' => sub { shift->logger->exiting( "" ); };
 
 =item empty
     Method documentation placeholder.
@@ -113,8 +114,6 @@ sub empty {
   my $num = $row->{num} // 0;
   return $num == 0;
 }
-before 'empty' => sub { shift->logger->entering( "" ); };
-after 'empty' => sub { shift->logger->exiting( "" ); };
 
 =item exists
     Method documentation placeholder.
@@ -130,8 +129,6 @@ sub exists {
   my $num = $row->{num} // 0;
   return $num > 0;
 }
-before 'exists' => sub { shift->logger->entering( "" ); };
-after 'exists' => sub { shift->logger->exiting( "" ); };
 
 =item save
     Method documentation placeholder.
@@ -152,8 +149,6 @@ sub save {
     }
   }
 }
-before 'save' => sub { shift->logger->entering( "" ); };
-after 'save' => sub { shift->logger->exiting( "" ); };
 
 =item _insert
     Method documentation placeholder.
@@ -204,8 +199,6 @@ sub _insert {
   }
   # $dbh->commit();
 }
-before '_insert' => sub { shift->logger->entering(""); };
-after '_insert' => sub { shift->logger->exiting(""); };
 
 =item update
     Method documentation placeholder.
@@ -257,8 +250,6 @@ sub update {
   }
 
 }
-before 'update' => sub { shift->logger->entering( ""); };
-after 'update' => sub { shift->logger->exiting( ""); };
 
 =item delete
     Method documentation placeholder.
@@ -280,8 +271,6 @@ sub delete {
   }
 
 }
-before 'delete' => sub { shift->logger->entering( "" ); };
-after 'delete' => sub { shift->logger->exiting( "" ); };
 
 =item filter
     Method documentation placeholder.
@@ -289,21 +278,17 @@ after 'delete' => sub { shift->logger->exiting( "" ); };
 
 sub filter {
   my ( $self, $coderef ) = @_;
-  die ""
-    . __PACKAGE__
-    . "->filter incorrect type of argument. Got: '"
-    . ref($coderef)
-    . "', expected: "
-    . ( ref sub { } ) . "."
-    unless ( ref $coderef eq ref sub { } );
 
-  die "" . __PACKAGE__ . "->filter not implemented.";
-
-  # TODO: auto-generated method stub. Implement me!
-
+    my $t0 = [gettimeofday];
+    
+    return () if $self->empty();
+    my @arr = grep &{$coderef}, $self->all(); 
+    
+    my $dur = tv_interval ( $t0, [gettimeofday]);
+    say "Finding in ".__PACKAGE__.": $dur" if $dur > 0.01;
+    return @arr;
+  
 }
-before 'filter' => sub { shift->logger->entering( "" ); };
-after 'filter' => sub { shift->logger->exiting( "" ); };
 
 =item find
     Method documentation placeholder.
@@ -311,21 +296,20 @@ after 'filter' => sub { shift->logger->exiting( "" ); };
 
 sub find {
   my ( $self, $coderef ) = @_;
-  die ""
-    . __PACKAGE__
-    . "->find incorrect type of argument. Got: '"
-    . ref($coderef)
-    . "', expected: "
-    . ( ref sub { } ) . "."
-    unless ( ref $coderef eq ref sub { } );
 
-  die "" . __PACKAGE__ . "->find not implemented.";
+  my $t0 = [gettimeofday];
+  
+  return undef if $self->empty();
+  my $obj = first \&{$coderef}, $self->all();
+  
+  my $dur = tv_interval ( $t0, [gettimeofday]);
+  say "Finding in ".__PACKAGE__.": $dur" if $dur > 0.01;
+  
+  return $obj;
 
-  # TODO: auto-generated method stub. Implement me!
+} 
 
-}
-before 'find' => sub { shift->logger->entering( "" ); };
-after 'find' => sub { shift->logger->exiting( "" ); };
+
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

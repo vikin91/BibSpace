@@ -8,6 +8,11 @@ use BibSpace::DAO::Interface::IDAO;
 use BibSpace::Model::Team;
 with 'IDAO';
 use Try::Tiny;
+use List::Util qw(first);
+use List::MoreUtils qw(first_index);
+use feature qw( say );
+# for benchmarking
+use Time::HiRes qw( gettimeofday tv_interval );
 
 # Inherited fields from BibSpace::DAO::Interface::IDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
@@ -212,18 +217,14 @@ after 'delete' => sub { shift->logger->exiting( "" ); };
 
 sub filter {
   my ( $self, $coderef ) = @_;
-  die ""
-    . __PACKAGE__
-    . "->filter incorrect type of argument. Got: '"
-    . ref($coderef)
-    . "', expected: "
-    . ( ref sub { } ) . "."
-    unless ( ref $coderef eq ref sub { } );
-
-  die "" . __PACKAGE__ . "->filter not implemented.";
-
-  # TODO: auto-generated method stub. Implement me!
-
+  my $t0 = [gettimeofday];
+  
+  return () if $self->empty();
+  my @arr = grep &{$coderef}, $self->all(); 
+  
+  my $dur = tv_interval ( $t0, [gettimeofday]);
+  say "Finding in ".__PACKAGE__.": $dur" if $dur > 0.01;
+  return @arr;
 }
 before 'filter' => sub { shift->logger->entering( "" ); };
 after 'filter' => sub { shift->logger->exiting( "" ); };
@@ -234,17 +235,15 @@ after 'filter' => sub { shift->logger->exiting( "" ); };
 
 sub find {
   my ( $self, $coderef ) = @_;
-  die ""
-    . __PACKAGE__
-    . "->find incorrect type of argument. Got: '"
-    . ref($coderef)
-    . "', expected: "
-    . ( ref sub { } ) . "."
-    unless ( ref $coderef eq ref sub { } );
-
-  die "" . __PACKAGE__ . "->find not implemented.";
-
-  # TODO: auto-generated method stub. Implement me!
+  my $t0 = [gettimeofday];
+  
+  return undef if $self->empty();
+  my $obj = first \&{$coderef}, $self->all();
+  
+  my $dur = tv_interval ( $t0, [gettimeofday]);
+  say "Finding in ".__PACKAGE__.": $dur" if $dur > 0.01;
+  
+  return $obj;
 
 }
 before 'find' => sub { shift->logger->entering( "" ); };

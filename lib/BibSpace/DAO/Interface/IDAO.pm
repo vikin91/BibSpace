@@ -2,6 +2,14 @@ package IDAO;
 
 use namespace::autoclean;
 
+
+use Try::Tiny;
+use List::Util qw(first);
+use List::MoreUtils qw(first_index);
+use feature qw( say );
+# for benchmarking
+use Time::HiRes qw( gettimeofday tv_interval );
+
 use Moose::Role; # = this package (class) is an interface
 # Perl interfaces (Roles) can contain attributes =)
 # In Java this interface would differ from other DAO::ENTITY interfaces.
