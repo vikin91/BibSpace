@@ -42,6 +42,6 @@ script:
 - export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
 - export BIBSPACE_USE_DUMP=1
 # - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine bin/bibspace test
-- PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrv
+- PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr
 after_success:
 - cover -report coveralls

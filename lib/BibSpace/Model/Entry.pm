@@ -479,7 +479,6 @@ sub generate_html {
     $bst_file = $self->bst_file if !defined $bst_file;
 
     $self->populate_from_bib();
-
     $self->fix_bibtex_accents;
 
     $converter->convert( $self->bib, $bst_file );

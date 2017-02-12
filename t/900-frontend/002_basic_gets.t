@@ -26,11 +26,17 @@ $t_logged_in->ua->max_redirects(3);
 my @all_tag_type_objs = $t_logged_in->app->repo->tagTypes_all;
 my $some_tag_type_obj = $all_tag_type_objs[0];
 
-my @tags = $t_logged_in->app->repo->tags_all;
+my @tags = $t_logged_in->app->repo->tags_filter(sub{ scalar($_->get_entries)>0 });
 my $some_tag = $tags[0];
+
+my @tags_permalink = $t_logged_in->app->repo->tags_filter(sub{ defined $_->permalink and length($_->permalink)>1 });
+my $some_permalink = $tags_permalink[0];
 
 my @teams = $t_logged_in->app->repo->teams_all;
 my $some_team = $teams[0];
+
+my @authors = $t_logged_in->app->repo->authors_filter(sub{ scalar($_->get_entries) > 0});
+my $some_author = $authors[0];
 
 # generated with: ./bin/bibspace routes | grep GET | grep -v : 
 my @pages = (
@@ -54,6 +60,7 @@ my @pages = (
 	$self->url_for('fix_all_months'),
 	$self->url_for('fix_attachment_urls'),
 	$self->url_for('clean_ugly_bibtex'),
+	$self->url_for('regenerate_html_for_all'),
 
 	$self->url_for('fix_masters'),
 
@@ -74,40 +81,11 @@ my @pages = (
 	"/publications/candidates_to_delete",
 	"/publications/missing_month",
 	"/read/publications/meta",
-	"/read/publications",
-	"/r/publications",
-	"/r/p",
-	"/read/bibtex",
-	"/r/bibtex",
-	"/r/b",
-	"/landing/publications",
-	"/landing/publications?entry_type=paper",
-	"/landing/publications?entry_type=paper&team=1",
-	"/landing/publications?entry_type=paper&tag=not-existing",
-	"/landing/publications?entry_type=paper&permalink=B2",
-	"/landing/publications?entry_type=paper&permalink=not-existing",
-	"/landing/publications?entry_type=paper&bibtex_type=inproceedings",
-	"/landing/publications?entry_type=talk",
-	"/landing/publications?entry_type=talk&bibtex_type=misc",
-	"/l/p",
-	"/landing-years/publications",
-	"/landing-years/publications?entry_type=paper",
-	"/landing-years/publications?entry_type=paper&year=2013",
-	"/landing-years/publications?entry_type=paper&year=2013&bibtex_type=inproceedings",
-	"/landing-years/publications?entry_type=talk",
-	"/landing-years/publications?entry_type=talk&year=2013",
-	"/landing-years/publications?entry_type=talk&year=2013&bibtex_type=misc",
-	"/ly/p",
 	"/cron",
 	"/cron/day",
 	"/cron/night",
 	"/cron/week",
 	"/cron/month",
-	$self->url_for('get_authors_for_tag', id=>$some_tag->id, type=>$some_tag_type_obj->id),
-	$self->url_for('get_authors_for_tag_and_team', tag_id=>$some_tag->id, team_id=>$some_team->id),
-
-	# $self->url_for('regenerate_html_for_all_force'), # this will take too long to test
-	$self->url_for('regenerate_html_for_all'),
 );
 
 my $ws_page;

@@ -182,6 +182,11 @@ sub _add_html_links {
   $entry->parse_s($bib);
   return -1 unless $entry->parse_ok;
 
+  my $entry_hidden_abstract = new Text::BibTeX::Entry();
+  $entry_hidden_abstract->parse_s($bib);
+  $entry_hidden_abstract->delete('abstract');
+  my $bib_hidden_abstract = $entry_hidden_abstract->print_s;
+
   my $bibtex_key = $entry->key;
 
   $s .= "\n";
@@ -205,15 +210,25 @@ sub _add_html_links {
   my $abstract_preview_div;
   if($entry->exists('abstract')){
     my $content = $entry->get('abstract');
-    $abstract_preview_a = '<a class="abstract-preview-a" onclick="showAbstract(\'abstract-of-'.$bibtex_key.'\')">Abstract</a>';
-    $abstract_preview_div = '<div id="abstract-of-'.$bibtex_key.'" class="inline-bib" style="display:none;"><blockquote>'.$content.'</blockquote></div>';
+    # $abstract_preview_a = '<a class="abstract-preview-a" onclick="showAbstract(\'abstract-of-'.$bibtex_key.'\')">abstract</a>';
+    $abstract_preview_a = '<a class="abstract-preview-link" data-id="'.$bibtex_key.'">abstract</a>';
+    # $abstract_preview_div = '<div id="abstract-of-'.$bibtex_key.'" class="inline-bib" style="display:none;"><pre>'.$content.'</pre></div>';
+
+    $abstract_preview_div = '<div class="bibspace-entry-abstract" data-id="'.$bibtex_key.'" class="inline-bib" style="display:none;">';
+    $abstract_preview_div .= '<pre>'.$content.'</pre>';
+    $abstract_preview_div .= '</div>';
     
   }
 
 
   
-  my $bib_preview_a = '<a class="bib-preview-a" onclick="showAbstract(\'bib-of-'.$bibtex_key.'\')">bib</a>';
-  my $bib_preview_div = '<div id="bib-of-'.$bibtex_key.'" class="inline-bib" style="display:none;"><pre>'.$bib.'</pre></div>';
+  # my $bib_preview_a = '<a class="bib-preview-a" onclick="showAbstract(\'bib-of-'.$bibtex_key.'\')">bib</a>';
+  my $bib_preview_a = '<a class="bib-preview-link" data-id="'.$bibtex_key.'">bib</a>';
+  # my $bib_preview_div = '<div id="bib-of-'.$bibtex_key.'" class="inline-bib" style="display:none;"><pre>'.$bib_hidden_abstract.'</pre></div>';
+  my $bib_preview_div = '<div class="bibspace-entry-bib" data-id="'.$bibtex_key.'" class="inline-bib" style="display:none;">';
+  $bib_preview_div .= '<pre>'.$bib_hidden_abstract.'</pre>';
+  $bib_preview_div .= '</div>';
+
 
   $s .= "[&nbsp;".$bib_preview_a;
   $s .= "&nbsp;|&nbsp;".$abstract_preview_a."\n" if defined $abstract_preview_a;
