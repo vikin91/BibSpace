@@ -40,8 +40,7 @@ with Storage( 'format' => 'JSON', 'io' => 'File' );
 
 has 'entry_type' => ( is => 'rw', isa => 'Str', default => 'paper' );
 has 'bibtex_key' => ( is => 'rw', isa => 'Maybe[Str]' );
-has '_bibtex_type' =>
-    ( is => 'rw', isa => 'Maybe[Str]', reader => 'bibtex_type' );
+has '_bibtex_type' => ( is => 'rw', isa => 'Maybe[Str]', reader => 'bibtex_type' );
 has 'bib' => ( is => 'rw', isa => 'Maybe[Str]', trigger => \&_bib_changed );
 
 sub _bib_changed {

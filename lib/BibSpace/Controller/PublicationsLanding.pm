@@ -76,7 +76,6 @@ sub landing_types {
     my %hash_our_type_to_description
         = map { $_->our_type => $_->description } @all_types;
 
-
     my @entries_to_show;
     my @section_names = keys %hash_our_type_to_description;
 
@@ -116,6 +115,7 @@ sub landing_types {
         @entries_to_show = $self->get_entries_for_landing;
     }
 
+
     ##########
     ## Step 2: set default section descriptions if needed
     ##########
@@ -146,7 +146,7 @@ sub landing_types {
         }
         else {
             @entries_in_section
-                = grep { $_->is_paper and $_->bibtex_type eq $section_name }
+                = grep { $_->is_paper and $_->matches_our_type($section_name, $self->app->repo) }
                 @entries_to_show;
         }
 
@@ -156,6 +156,7 @@ sub landing_types {
             push @sections_having_entries, $section_name;
         }
     }
+
 
     ## hash_our_type_to_entries:  our bibtex type string -> ref_arr_entry_objects
     ## hash_our_type_to_description:    our bibtex type string -> our bibtex type description string
