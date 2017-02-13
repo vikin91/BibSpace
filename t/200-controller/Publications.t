@@ -269,7 +269,7 @@ my @pages = (
 
 
   $self->url_for('all_orphaned'),
-  $self->url_for('delete_all_without_author'),
+  $self->url_for('delete_orphaned'),
   
   
   $self->url_for('regenerate_html_for_all'),

@@ -5,8 +5,10 @@ use Try::Tiny;
 use Data::Dumper;
 use namespace::autoclean;
 
+use List::Util qw(max);
 use Scalar::Util qw( refaddr );
-
+use List::MoreUtils qw(any uniq);
+use feature qw(say);
 
 use Moose;
 
@@ -98,7 +100,7 @@ sub registerUID {
     else {
         my $msg
             = "Cannot registerUID. It exists already! Wanted to reg: $uid. Existing: "
-            . join( ' ', sort $self->uid_keys );
+            . join( ' ', sort $self->_keys );
         $self->logger->error($msg);
         die $msg;
     }

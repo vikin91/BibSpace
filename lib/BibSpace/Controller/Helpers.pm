@@ -50,52 +50,6 @@ sub register {
   );
 
 
-#   $app->attr(layeredRepository => sub {
-#     my $self = shift;
-#     $self->app->logger->info("Building layeredRepository");
-    
-
-#     my $LR = LayeredRepository->new(
-#         logger      => $self->logger,
-#         preferences => $self->preferences
-#     );
-
-#     my $smartArrayLayer = RepositoryLayer->new(
-#         name               => 'smart',
-#         priority           => 1,
-#         creates_on_read    => undef,
-#         backendFactoryName => "SmartArrayDAOFactory",
-#         logger             => $self->logger,
-#         handle             => $self->smartArrayBackend,
-
-# # reset_data_callback must be undef if you want to create and restore backups using Storable.
-#         reset_data_callback => undef,
-#         is_read             => 1
-#     );
-#     $LR->add_layer($smartArrayLayer);
-
-#     if ( !$self->db ) {
-#         $self->logger->error(
-#             "You add SQL layer, but there is no connection to the database! Skipping this layer."
-#             . " You need to start MySQL server and restart BibSpace to use this layer"
-#         );
-#     }
-#     else {
-#         my $mySQLLayer = RepositoryLayer->new(
-#             name                          => 'mysql',
-#             priority                      => 99,
-#             creates_on_read               => 1,
-#             backendFactoryName            => "MySQLDAOFactory",
-#             logger                        => $self->logger,
-#             handle                        => $self->db,
-#             reset_data_callback           => \&reset_db_data,
-#             reset_data_callback_arguments => [ $self->db ],
-#         );
-#         $LR->add_layer($mySQLLayer);
-#     }
-#     return $LR;
-#   });
-
   $app->helper(
     is_demo => sub {
       my $self = shift;

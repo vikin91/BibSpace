@@ -132,7 +132,7 @@ sub all_orphaned {
 
     my $msg
         = "This list contains papers, that are currently not assigned to any of authors.";
-    $msg .= '<a href="' . $self->url_for('delete_all_without_author') .'"> Click to delete </a>';
+    $msg .= '<a href="' . $self->url_for('delete_orphaned') .'"> Click to delete </a>';
 
     $self->stash( msg_type => 'info', msg => $msg );
     $self->stash(entries  => \@filtered, all_entries => \@entries);
@@ -369,7 +369,7 @@ sub make_talk {
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
-sub delete_all_without_author {
+sub delete_orphaned {
     my $self = shift;
 
     my @entries = $self->app->repo->entries_filter(

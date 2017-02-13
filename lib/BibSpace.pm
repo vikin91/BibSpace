@@ -825,7 +825,7 @@ sub setup_routes {
         ->to('publications#all_orphaned')->name('all_orphaned');
 
     $admin_user->get('/publications/orphaned/delete')
-        ->to('publications#delete_all_without_author')->name('delete_all_without_author');
+        ->to('publications#delete_orphaned')->name('delete_orphaned');
         
 
     $logged_user->get('/publications/untagged/(:tagtype)')
