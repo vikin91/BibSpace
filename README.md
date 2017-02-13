@@ -22,10 +22,11 @@ BibSpace is currently undergoing serious refactoring. I try to keep current stat
 
 Goals of the ongoing refactoring:
 - [x] provide clean MVC without SQL in the controller
-– [x] Apply Perl Object-Oriented code design 
-– [~] Improve code orthogonality
-– [~] Remove code duplication
-– [~] Simplify templates thanks to OO
+- [x] Apply Perl Object-Oriented code design 
+- [~] Improve code orthogonality
+- [~] Remove code duplication
+- [~] Simplify templates thanks to OO
+- [] Allow BibSpace to run without Smart* layer
 - [] Provide BibSpace API and separate frontend and backend (Future)
 
 
