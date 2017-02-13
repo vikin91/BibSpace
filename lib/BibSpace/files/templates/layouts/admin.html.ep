@@ -7,10 +7,7 @@
   <body>
   %= include 'navi'
   <%= content_for 'navi' %>
-  % if(is_admin){
-    %= include 'navi_admin'
-    <%= content_for 'navi_admin' %>
-  % }
+
   %= include 'message_bar'
   <%= content_for 'message_bar' %>
   <%= content %>
