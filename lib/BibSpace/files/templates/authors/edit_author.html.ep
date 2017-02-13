@@ -86,7 +86,7 @@
                     % my @ttobjs = get_important_tag_types($self);
                     % foreach my $ttobj (@ttobjs){
                         <li>
-                        <a href="<%= url_for('get_untagged_publications_for_author', author=> $author->{id}, tagtype=>$ttobj->{id} ) %>">
+                        <a href="<%= url_for('get_untagged_publications', tagtype=>$ttobj->id )->query(author=>$author->master) %>">
                             <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without "<%=$ttobj->{name}%>"
                         </a>
                         </li>

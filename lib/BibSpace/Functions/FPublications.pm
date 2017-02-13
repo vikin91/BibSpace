@@ -210,33 +210,42 @@ sub Fhandle_add_edit_publication {
 ####################################################################################
 # this function ignores the parameters given in the $self object
 sub Fget_publications_main_hashed_args_only {
-    my ( $self, $args ) = @_;
+    my ( $self, $args, $publications ) = @_;
 
 
     my @dbg = Fget_publications_core(
         $self,                $args->{author},     $args->{year},
         $args->{bibtex_type}, $args->{entry_type}, $args->{tag},
         $args->{team},        $args->{visible},    $args->{permalink},
-        $args->{hidden},      $args->{debug},
+        $args->{hidden},      $args->{debug}, $publications,
     );
     return @dbg;
 }
 ####################################################################################
 sub Fget_publications_main_hashed_args {    #
-    my ( $self, $args ) = @_;
+    my ( $self, $args, $publications ) = @_;
 
+    $args->{author}      = $self->param('author')      if !exists $args->{author};
+    $args->{year}        = $self->param('year')        if !exists $args->{year};
+    $args->{bibtex_type} = $self->param('bibtex_type') if !exists $args->{bibtex_type};
+    $args->{entry_type}  = $self->param('entry_type')  if !exists $args->{entry_type};
+    $args->{tag}         = $self->param('tag')         if !exists $args->{tag};
+    $args->{team}        = $self->param('team')        if !exists $args->{team};
+    $args->{permalink}   = $self->param('permalink')   if !exists $args->{permalink};
+    $args->{visible}     = 0                           if !exists $args->{visible};
 
 
     return Fget_publications_core(
         $self,
-        $args->{author}      || $self->param('author')      || undef,
-        $args->{year}        || $self->param('year')        || undef,
-        $args->{bibtex_type} || $self->param('bibtex_type') || undef,
-        $args->{entry_type}  || $self->param('entry_type')  || undef,
-        $args->{tag}         || $self->param('tag')         || undef,
-        $args->{team}        || $self->param('team')        || undef,
-        $args->{permalink}   || $self->param('permalink')   || undef,
-        $args->{visible}     || 0,
+        $publications,
+        $args->{author},
+        $args->{year},
+        $args->{bibtex_type},
+        $args->{entry_type},
+        $args->{tag},
+        $args->{team},
+        $args->{permalink},
+        $args->{visible},
         $args->{hidden},
         $args->{debug},
     );
@@ -245,6 +254,7 @@ sub Fget_publications_main_hashed_args {    #
 
 sub Fget_publications_core {
     my $self              = shift;
+    my $publications      = shift;
     my $query_author      = shift;
     my $query_year        = shift;
     my $query_bibtex_type = shift;
@@ -348,7 +358,14 @@ sub Fget_publications_core {
     ## $self->app->logger->debug("==== START new Filtering ====", "Fget_publications_core" );
 
 
-    my @entries = $self->app->repo->entries_all;
+    my @entries;
+    if( defined $publications ){
+        @entries = @{ $publications }; 
+    } 
+    else{
+        @entries = $self->app->repo->entries_all;
+    }
+
 
     ###### filtering
 
@@ -356,7 +373,7 @@ sub Fget_publications_core {
     ## WARNING: this overwrites all entries - this filtering must be done as first!
     if ( defined $query_author ) {
         if ($author_obj) {
-            @entries = $author_obj->get_entries;
+            @entries = grep { $_->has_author($author_obj) } @entries;
         }
         else {
        # searched for author, but not found any = immediate return empty array

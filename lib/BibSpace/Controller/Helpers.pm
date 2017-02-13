@@ -286,18 +286,28 @@ sub register {
 
 
   $app->helper(
-    can_delete_backup_helper => sub {
-      my $self = shift;
-      my $bid  = shift;
-
-      return can_delete_backup( $self->app->db, $bid, $self->app->config );
-    }
-  );
-
-  $app->helper(
     num_pubs => sub {
       my $self = shift;
-      return $self->app->repo->entries_all;
+      my $type = shift;
+      my $year = shift;
+      my $entries_arr_ref = shift;
+
+      my @entries;
+      if($entries_arr_ref){
+        @entries = @$entries_arr_ref;
+      }
+      else{
+        @entries = $self->app->repo->entries_all;  
+      }
+      
+      if($type){
+        @entries = grep {$_->entry_type eq $type} @entries;
+      }
+      if($year){
+        @entries = grep { defined $_->year and $_->year == $year and $_->hidden == 0 } @entries;  
+      }
+      return scalar @entries;
+      
     }
   );
 
@@ -347,7 +357,7 @@ sub register {
   $app->helper(
     num_authors => sub {
       my $self = shift;
-      return $self->app->repo->authors_all;
+      return $self->app->repo->authors_count;
 
       # return $self->storage->authors_all;
 
@@ -393,17 +403,7 @@ sub register {
     }
   );
 
-  $app->helper(
-    num_pubs_for_year => sub {
-      my $self = shift;
-      my $year = shift;
-      return 0 unless defined $year;
 
-      return
-        scalar grep { defined $_->year and $_->year == $year and $_->hidden == 0 }
-        $self->app->repo->entries_all;
-    }
-  );
 
 
 

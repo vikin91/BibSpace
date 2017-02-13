@@ -57,27 +57,178 @@ our %mons = (
 sub all {
     my $self = shift;
 
-    my $entry_type = undef;
-    $entry_type = $self->param('entry_type') // undef;
+    my @all = Fget_publications_main_hashed_args( $self, {year=>undef});
+    my @filtered = Fget_publications_main_hashed_args( $self, {}, \@all);
 
-    my @objs = Fget_publications_main_hashed_args( $self,
-        { entry_type => $entry_type } );
-
-    $self->stash( entries => \@objs );
+    $self->stash( entries => \@filtered, all_entries => \@all);
     my $html = $self->render_to_string( template => 'publications/all' );
     $self->render( data => $html );
 }
 ####################################################################################
+sub all_recently_added {
+    my $self = shift;
+    my $num = $self->param('num') // 10;
 
+    $self->app->logger->info("Displaying recently added entries.");
+
+    my @all = Fget_publications_main_hashed_args( $self, {year=>undef});
+    my @added_entries = sort { $b->creation_time cmp $a->creation_time } @all;
+    @added_entries = @added_entries[ 0 .. $num - 1 ];
+
+    my @filtered = Fget_publications_main_hashed_args( $self, {}, \@added_entries);
+    # special sorting here
+    @filtered = sort { $b->creation_time cmp $a->creation_time } @filtered;
+
+    $self->stash( entries => \@filtered, all_entries => \@added_entries );
+    $self->render( template => 'publications/all' );
+}
+####################################################################################
+
+sub all_recently_modified {
+    my $self = shift;
+    my $num = $self->param('num') // 10;
+
+    $self->app->logger->info("Displaying recently modified entries.");
+
+    
+    my @all = Fget_publications_main_hashed_args( $self, {year=>undef});
+    my @modified_entries = sort { $b->modified_time cmp $a->modified_time } @all;
+    @modified_entries = @modified_entries[ 0 .. $num - 1 ];
+
+    my @filtered = Fget_publications_main_hashed_args( $self, {}, \@modified_entries);
+    # special sorting here
+    @filtered = sort { $b->modified_time cmp $a->modified_time } @filtered;
+
+
+    $self->stash( entries => \@filtered, all_entries => \@modified_entries );
+    $self->render( template => 'publications/all' );
+}
+
+####################################################################################
+sub all_without_tag {
+    my $self         = shift;
+    my $tagtype      = $self->param('tagtype') // 1;
+
+    # this will filter entries based on query
+    my @all = Fget_publications_main_hashed_args( $self, {year=>undef} );
+    
+    my @untagged_entries = grep { scalar $_->get_tags($tagtype) == 0 } @all;
+    my @filtered = Fget_publications_main_hashed_args( $self, {}, \@untagged_entries);
+
+
+    my $msg
+        = "This list contains papers that have no tags of type '$tagtype'. Use this list to tag the untagged papers! ";
+    $self->stash( msg_type => 'info', msg => $msg );
+    $self->stash( entries => \@filtered, all_entries => \@untagged_entries );
+    $self->render( template => 'publications/all'  );
+}
+####################################################################################
+sub all_orphaned {
+    my $self = shift;
+
+    my @all = Fget_publications_main_hashed_args( $self, {year=>undef} );
+    my @entries = grep { scalar( $_->get_authors ) == 0 } @all;
+    my @filtered = Fget_publications_main_hashed_args( $self, {}, \@entries);
+
+    my $msg
+        = "This list contains papers, that are currently not assigned to any of authors.";
+    $msg .= '<a href="' . $self->url_for('delete_all_without_author') .'"> Click to delete </a>';
+
+    $self->stash( msg_type => 'info', msg => $msg );
+    $self->stash(entries  => \@filtered, all_entries => \@entries);
+    $self->render( template => 'publications/all' );
+}
+####################################################################################
+sub show_unrelated_to_team {
+    my $self    = shift;
+    my $team_id = $self->param('teamid');
+
+    $self->app->logger->info(
+        "Displaying entries unrelated to team '$team_id'.");
+
+
+    my $team_name = "";
+    my $team = $self->app->repo->teams_find( sub { $_->id == $team_id } );
+    $team_name = $team->name if defined $team;
+
+
+    my @all = Fget_publications_main_hashed_args( $self, {year=>undef} );
+    my @teamEntres = $team->get_entries;
+
+    my %inTeam = map { $_ => 1 } @teamEntres;
+    my @entriesUnrelated = grep { not $inTeam{$_} } @all;
+
+    # hash destroys order!
+    @entriesUnrelated = sort_publications(@entriesUnrelated);
+    my @filtered = Fget_publications_main_hashed_args( $self, {}, \@entriesUnrelated);
+
+    my $msg = "This list contains papers, that are:
+        <ul>
+            <li>Not assigned to the team "
+        . $team_name . "</li>
+            <li>Not assigned to any author (former or actual) of the team "
+        . $team_name . "</li>
+        </ul>";
+
+    $self->stash( msg_type => 'info', msg => $msg );
+    $self->stash( entries  => \@filtered, all_entries => \@entriesUnrelated);
+    $self->render( template => 'publications/all'  );
+}
+####################################################################################
+sub all_with_missing_month {
+    my $self = shift;
+
+    $self->app->logger->info("Displaying entries without month");
+
+
+    my @all = Fget_publications_main_hashed_args( $self, {year=>undef} );
+    my @entries = grep { !defined $_->month or $_->month < 1 or $_->month > 12 } @all;
+
+    my @filtered = Fget_publications_main_hashed_args( $self, {}, \@entries);
+
+    my $msg
+        = "This list contains entries with missing BibTeX field 'month'. ";
+    $msg .= "Add this data to get the proper chronological sorting.";
+
+    $self->stash( msg_type => 'info', msg => $msg );
+    $self->stash( entries => \@filtered, all_entries => \@entries );
+    $self->render( template => 'publications/all'  );
+}
+####################################################################################
+sub all_candidates_to_delete {
+    my $self = shift;
+
+    $self->app->logger->info(
+        "Displaying entries that are candidates_to_delete");
+
+
+    my @all = Fget_publications_main_hashed_args( $self, {year=>undef} );
+    my @entries = grep { scalar $_->get_tags == 0 } @all;    # no tags
+    @entries = grep { scalar $_->get_teams == 0 } @entries;   # no relation to teams
+    @entries = grep { scalar $_->get_exceptions == 0 } @entries;    # no exceptions
+    my @filtered = Fget_publications_main_hashed_args( $self, {}, \@entries);
+
+
+    my $msg = "<p>This list contains papers, that are:</p>
+      <ul>
+          <li>Not assigned to any team AND</li>
+          <li>have exactly 0 tags AND</li>
+          <li>not assigned to any author that is (or was) a member of any team AND </li>
+          <li>have exactly 0 exceptions assigned.</li>
+      </ul>
+      <p>Such entries may wanted to be removed form the system or serve as a help with configuration.</p>";
+
+    $self->stash( msg_type => 'info', msg => $msg );
+    $self->stash( entries => \@filtered, all_entries => \@entries );
+    $self->render( template => 'publications/all'  );
+}
+####################################################################################
+####################################################################################
+####################################################################################
 sub all_bibtex {
     my $self       = shift;
-    my $entry_type = undef;
 
-    # if entry_type = undef, then this includes papers+talks by default
-    $entry_type = $self->param('entry_type');
-
-    my @objs = Fget_publications_main_hashed_args( $self,
-        { entry_type => $entry_type, hidden => 0 } );
+    my @objs = Fget_publications_main_hashed_args( $self, { hidden => 0 } );
 
     my $big_str = "<pre>\n";
     foreach my $obj (@objs) {
@@ -218,116 +369,6 @@ sub make_talk {
     $self->redirect_to( $self->get_referrer );
 }
 ####################################################################################
-sub all_recently_added {
-    my $self = shift;
-    my $num = $self->param('num') // 10;
-
-    $self->app->logger->info("Displaying recently added entries.");
-
-    my @objs = $self->app->repo->entries_all;
-    @objs = sort { $b->creation_time cmp $a->creation_time } @objs;
-    @objs = @objs[ 0 .. $num - 1 ];
-
-    # map {say $_->{creation_time}} @objs;
-
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-
-sub all_recently_modified {
-    my $self = shift;
-    my $num = $self->param('num') // 10;
-
-    $self->app->logger->info("Displaying recently modified entries.");
-
-    my @objs = $self->app->repo->entries_all;
-    @objs = sort { $b->modified_time cmp $a->modified_time } @objs;
-    @objs = @objs[ 0 .. $num - 1 ];
-
-    # map {say $_->{modified_time}} @objs;
-
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
-
-####################################################################################
-sub all_without_tag {
-    my $self = shift;
-    my $tagtype = $self->param('tagtype') || 1;
-
-    $self->app->logger->info("Displaying untagged entries.");
-
-    my @all = $self->app->repo->entries_all;
-    my @entries = grep { scalar $_->get_tags($tagtype) == 0 } @all;
-
-    @entries = sort_publications(@entries);
-
-    my $msg
-        = "This list contains papers that have no tags of type $tagtype. Use this list to tag the untagged papers! ";
-    $self->stash( msg_type => 'info', msg => $msg );
-    $self->stash( entries => \@entries );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-sub all_without_tag_for_author {
-    my $self        = shift;
-    my $master_name = $self->param('author');
-    my $tagtype     = $self->param('tagtype');
-
-    $self->app->logger->info(
-        "Displaying untagged entries for author '$master_name'.");
-
-    my $author;
-    if ( Scalar::Util::looks_like_number($master_name) ) {
-        $author = $self->app->repo->authors_find(
-            sub { $_->master_id == $master_name } );
-    }
-    else {
-        $author = $self->app->repo->authors_find(
-            sub { $_->master eq $master_name } );
-    }
-
-
-    if ( !defined $author ) {
-        $self->flash(
-            msg      => "Author $master_name does not exist!",
-            msg_type => "danger"
-        );
-        $self->redirect_to( $self->get_referrer );
-        return;
-    }
-
-    # no such master. Assume, that author id was given
-
-    my @all_author_entries = $author->get_entries;
-    my @entries
-        = grep { scalar $_->get_tags($tagtype) == 0 } @all_author_entries;
-
-    @entries = sort_publications(@entries);
-
-    my $msg
-        = "This list contains papers of $author->{master} that miss tags of type $tagtype. ";
-    $self->stash( entries => \@entries, msg_type => 'info', msg => $msg );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-sub all_without_author {
-    my $self = shift;
-
-    my @entries = $self->app->repo->entries_filter(
-        sub { scalar( $_->get_authors ) == 0 } );
-
-    @entries = sort_publications(@entries);
-
-    my $msg
-        = "This list contains papers, that are currently not assigned to any of authors.";
-
-    $msg .= '<a href="' . $self->url_for('delete_all_without_author') .'"> Click to delete </a>';
-    $self->stash( entries => \@entries, msg => $msg, msg_type => 'info' );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
 sub delete_all_without_author {
     my $self = shift;
 
@@ -351,90 +392,7 @@ sub delete_all_without_author {
     $self->redirect_to( 'all_without_author' );
     
 }
-####################################################################################
-sub show_unrelated_to_team {
-    my $self    = shift;
-    my $team_id = $self->param('teamid');
 
-    $self->app->logger->info(
-        "Displaying entries unrelated to team '$team_id'.");
-
-
-    my $team_name = "";
-    my $team = $self->app->repo->teams_find( sub { $_->id == $team_id } );
-    $team_name = $team->name if defined $team;
-
-
-    my @allEntres  = $self->app->repo->entries_all;
-    my @teamEntres = $team->get_entries;
-
-    my %inTeam = map { $_ => 1 } @teamEntres;
-    my @entriesUnrelated = grep { not $inTeam{$_} } @allEntres;
-
-    @entriesUnrelated = sort_publications(@entriesUnrelated);
-
-    my $msg = "This list contains papers, that are:
-        <ul>
-            <li>Not assigned to the team "
-        . $team_name . "</li>
-            <li>Not assigned to any author (former or actual) of the team "
-        . $team_name . "</li>
-        </ul>";
-
-    $self->stash(
-        msg_type => 'info',
-        msg      => $msg,
-        entries  => \@entriesUnrelated
-    );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-sub all_with_missing_month {
-    my $self = shift;
-
-    $self->app->logger->info("Displaying entries without month");
-
-
-    my @entries = grep { !defined $_->month or $_->month < 1 or $_->month > 12 }
-        $self->app->repo->entries_all;
-
-    @entries = sort_publications(@entries);
-
-    my $msg
-        = "This list contains entries with missing BibTeX field 'month'. ";
-    $msg .= "Add this data to get the proper chronological sorting.";
-
-    $self->stash( msg_type => 'info', msg => $msg );
-    $self->stash( entries => \@entries );
-    $self->render( template => 'publications/all' );
-}
-####################################################################################
-sub all_candidates_to_delete {
-    my $self = shift;
-
-    $self->app->logger->info(
-        "Displaying entries that are candidates_to_delete");
-
-
-    my @objs = $self->app->repo->entries_all;
-    @objs = grep { scalar $_->get_tags == 0 } @objs;    # no tags
-    @objs = grep { scalar $_->get_teams == 0 } @objs;   # no relation to teams
-    @objs = grep { scalar $_->get_exceptions == 0 } @objs;    # no exceptions
-
-
-    my $msg = "<p>This list contains papers, that are:</p>
-      <ul>
-          <li>Not assigned to any team AND</li>
-          <li>have exactly 0 tags AND</li>
-          <li>not assigned to any author that is (or was) a member of any team AND </li>
-          <li>have exactly 0 exceptions assigned.</li>
-      </ul>
-      <p>Such entries may wanted to be removed form the system or serve as a help with configuration.</p>";
-
-    $self->stash( msg_type => 'info', msg => $msg );
-    $self->stash( entries => \@objs );
-    $self->render( template => 'publications/all' );
-}
 
 ####################################################################################
 sub fix_file_urls {

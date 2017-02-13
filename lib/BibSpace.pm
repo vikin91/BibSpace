@@ -822,19 +822,16 @@ sub setup_routes {
         ->name('recently_changed');
 
     $logged_user->get('/publications/orphaned')
-        ->to('publications#all_without_author')->name('all_without_author');
+        ->to('publications#all_orphaned')->name('all_orphaned');
 
     $admin_user->get('/publications/orphaned/delete')
         ->to('publications#delete_all_without_author')->name('delete_all_without_author');
         
 
-    $logged_user->get('/publications/untagged/:tagtype')
-        ->to( 'publications#all_without_tag', tagtype => 1 )
+    $logged_user->get('/publications/untagged/(:tagtype)')
+        ->to( 'publications#all_without_tag')
         ->name('get_untagged_publications');
 
-    $logged_user->get('/publications/untagged/:author/:tagtype')
-        ->to('publications#all_without_tag_for_author')
-        ->name('get_untagged_publications_for_author');
 
     $manager_user->get('/publications/candidates_to_delete')
         ->to('publications#all_candidates_to_delete');

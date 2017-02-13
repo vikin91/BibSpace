@@ -216,7 +216,6 @@ my @pages = (
   $self->url_for('publications'),
   $self->url_for('recently_added', num=> 10),
   $self->url_for('recently_changed', num=> 10),
-  $self->url_for('get_untagged_publications'),
 
   $self->url_for('get_single_publication', id=>0),
   $self->url_for('get_single_publication', id=>$entry->id),
@@ -236,15 +235,13 @@ my @pages = (
   $self->url_for('regenerate_publication', id=>$entry->id),
   $self->url_for('regenerate_publication', id=>0),
   
-  $self->url_for('get_untagged_publications_for_author', tagtype=>1, author=>$author->id),
-  $self->url_for('get_untagged_publications_for_author', tagtype=>1, author=>'NotExistingAuthor'),
+  $self->url_for('get_untagged_publications', tagtype=>1)->query(author=>$author->id),
+  $self->url_for('get_untagged_publications', tagtype=>1)->query(author=>'NotExistingAuthor'),
 
   $self->url_for('discover_attachments', id=>$entry->id),
   $self->url_for('discover_attachments', id=>0),
   
   
-
-  "/publications/orphaned",
   "/publications/missing_month",
   "/publications/candidates_to_delete",
 

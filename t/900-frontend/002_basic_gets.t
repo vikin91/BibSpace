@@ -77,7 +77,7 @@ my @pages = (
 	"/teams",
 	"/teams/add",
 	"/publications",
-	"/publications/orphaned",
+	$self->url_for('all_orphaned'),
 	"/publications/candidates_to_delete",
 	"/publications/missing_month",
 	"/read/publications/meta",
