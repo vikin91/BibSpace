@@ -20,7 +20,7 @@
 
   % for my $page_year (reverse (get_year_of_oldest_entry .. current_year+1)){
     % my $num = num_pubs( param('entry_type'), $page_year, $all_entries );
-    % next if $num == 0;
+    % next if $num == 0 and current_year != $page_year;
 
     % if( param('year') and $page_year == param('year') ){
       <li role="presentation" class="active">
