@@ -384,16 +384,5 @@
   <a type="button" class="btn btn-default"><small><%= $self->app->version %> </small></a>
 % }
 
-% unless($config->{demo_msg} eq ''){
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
-              <div class="alert alert-danger">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <i class="fa  fa-exclamation-circle "></i> <%= b($config->{demo_msg}) %>
-              </div>
-            </div>
-        </div>
-    </div>
-% }
+
 
