@@ -389,7 +389,7 @@ sub delete_all_without_author {
     my $msg
         = "$num_deleted entries have been removed";
     $self->flash( msg => $msg, msg_type => 'info' );
-    $self->redirect_to( 'all_without_author' );
+    $self->redirect_to( 'all_orphaned' );
     
 }
 

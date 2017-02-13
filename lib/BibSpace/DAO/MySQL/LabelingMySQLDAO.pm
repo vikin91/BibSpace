@@ -143,7 +143,7 @@ after '_insert' => sub { shift->logger->exiting( "" ); };
 sub update {
   my ($self, @objects) = @_;
 
-  die "".(caller(0))[3]." not implemented. Method was instructed to update ".scalar(@objects)." objects.";
+  warn "".(caller(0))[3]." it makes no sense to update Labeling! Method was instructed to update ".scalar(@objects)." objects.";
   # TODO: auto-generated method stub. Implement me!
 
 }
