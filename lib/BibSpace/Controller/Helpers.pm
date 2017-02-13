@@ -164,35 +164,6 @@ sub register {
     }
   );
 
-  ## pop the previous GET page from the stack 
-  # $app->helper(
-  #     pop_url_history => sub {
-  #         my $self     = shift;
-  #         my $last_url = shift @{ $self->session('url_history') };
-  #         $last_url //= $self->url_for('start');
-  #         return $last_url;
-  #     }
-  # );
-
-  # $app->helper(
-  #     get_url_history => sub {
-  #         my $self     = shift;
-  #         return qw(/) unless $self->session('url_history');
-  #         return @{ $self->session('url_history') };
-  #     }
-  # );
-
-  # ## add url to the stack
-  # $app->helper(
-  #     push_url_history => sub {
-  #         my $self     = shift;
-  #         # unshift @{ $self->session('url_history') }, "".$self->req->url->path->absolute;
-  #         if( $self->session('url_history') ){
-  #           unshift @{ $self->session('url_history') }, "".$self->req->url;    
-  #           # say "STACK: " . Dumper $c->session('url_history');
-  #       } 
-  #     }
-  # );
 
   $app->helper(
       get_referrer => sub {
@@ -220,12 +191,6 @@ sub register {
     }
   );
 
-  $app->helper(
-      nohtml => sub {
-          my $s = shift;
-          return nohtml( shift, shift );
-      }
-  );
 
   $app->helper(
       is_manager => sub {
@@ -378,14 +343,6 @@ sub register {
     }
   );
 
-  $app->helper(
-    get_num_members_for_team => sub {
-      my $self   = shift;
-      my $id     = shift;
-      my $author = $self->storage->authors_find( sub { $_->id == $id } );
-      return scalar $author->teams_count;
-    }
-  );
 
   $app->helper(
     get_num_teams => sub {
@@ -405,9 +362,6 @@ sub register {
 
 
 
-
-
-
   $app->helper(
     num_pubs_for_author_and_tag => sub {
       my $self   = shift;
@@ -416,45 +370,6 @@ sub register {
 
       return
         scalar $author->authorships_filter( sub { defined $_ and defined $_->entry and $_->entry->has_tag($tag) } );
-    }
-  );
-
-  $app->helper(
-    get_recent_years_arr => sub {
-      my $self = shift;
-
-      my @arr = grep { defined $_ } map { $_->year } $self->app->repo->entries_all;
-      @arr = uniq @arr;
-      @arr = sort { $b <=> $a } @arr;
-      my $max = scalar @arr;
-      $max = 10 if $max > 10;
-      return @arr[ 0 .. $max-1 ];
-    }
-  );
-
-  $app->helper(
-    num_entries_for_author => sub {
-      my $self   = shift;
-      my $author = shift;
-
-      return $author->authorships_count;
-    }
-  );
-
-  $app->helper(
-    num_talks_for_author => sub {
-      my $self   = shift;
-      my $author = shift;
-
-      return scalar $author->authorships_filter( sub { $_->entry->is_talk } ) // 0;
-    }
-  );
-
-  $app->helper(
-    num_papers_for_author => sub {
-      my $self   = shift;
-      my $author = shift;
-      return scalar $author->authorships_filter( sub { $_->entry->is_paper } ) // 0;
     }
   );
 
