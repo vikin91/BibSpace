@@ -24,8 +24,8 @@ use Mojo::Home;
 use File::Spec;
 
 
-use BibSpace::Util::SmartArray;
-use BibSpace::Util::SmartHash;
+use BibSpace::Backend::SmartArray;
+use BibSpace::Backend::SmartHash;
 use BibSpace::Util::SimpleLogger;
 use BibSpace::Util::SmartUidProvider;
 use BibSpace::Util::DummyUidProvider;

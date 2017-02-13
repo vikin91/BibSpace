@@ -3,7 +3,7 @@ package User;
 use Try::Tiny;
 use Data::Dumper;
 use utf8;
-use v5.16;           #because of ~~ and say
+use v5.16;           
 use List::MoreUtils qw(any uniq);
 
 use BibSpace::Functions::Core qw(check_password);

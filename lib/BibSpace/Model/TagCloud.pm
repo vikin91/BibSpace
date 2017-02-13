@@ -1,7 +1,7 @@
 package TagCloud;
 
 use utf8;
-use v5.16;    #because of ~~ and say
+use v5.16;    
 
 use Moose;
 
