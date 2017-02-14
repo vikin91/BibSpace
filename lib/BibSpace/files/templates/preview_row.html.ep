@@ -1,6 +1,4 @@
-% my $bibtex_key = $bkey || 'bibtex_key_uknown';
-% my $bibtex_type = $btype || 'bibtex_type_uknown';
-% my $html_preview = $preview || nohtml($bibtex_key, $bibtex_type);
+% my $html_preview = $preview // 'NO HTML - Bibtex may contain errors';
 
 % if($html_preview ne ''){
   <div class="row">

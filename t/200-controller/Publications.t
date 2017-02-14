@@ -106,6 +106,13 @@ my $upload_test_file = {
   }
 };
 
+my $upload_test_slides = {
+  filetype => 'slides', 
+  uploaded_file => {
+    file => "".$test_file, 
+    filename => "".$test_file
+  }
+};
 
 
 $admin_user->post_ok(
@@ -135,7 +142,18 @@ $admin_user->post_ok(
     "Upload real pdf file OK"
 );
 
+$admin_user->post_ok(
+    $self->url_for('post_upload_pdf',  id=>$entry->id) => form => $upload_test_slides,
+    "Upload real pdf with slides file OK"
+);
+
+
 $page = $self->url_for('download_publication_pdf', filetype=>'paper', id=>$entry->id);
+$admin_user->get_ok($page, "Download real file OK: $page")
+    ->status_isnt(404, "Checking: 404 $page")
+    ->status_isnt(500, "Checking: 500 $page");
+
+$page = $self->url_for('download_publication_pdf', filetype=>'slides', id=>$entry->id);
 $admin_user->get_ok($page, "Download real file OK: $page")
     ->status_isnt(404, "Checking: 404 $page")
     ->status_isnt(500, "Checking: 500 $page");
@@ -205,6 +223,10 @@ subtest 'add_publication_post' => sub {
   $admin_user->post_ok(
     $self->url_for('add_publication_post') => form => {new_bib => $bib_content, save => 1 }
   );
+
+  $admin_user->post_ok(
+    $self->url_for('add_publication_post') => form => {new_bib => '@bad_content!', save => 1 }
+  );
 };
 
 
@@ -216,7 +238,6 @@ my @pages = (
   $self->url_for('publications'),
   $self->url_for('recently_added', num=> 10),
   $self->url_for('recently_changed', num=> 10),
-  $self->url_for('get_untagged_publications'),
 
   $self->url_for('get_single_publication', id=>0),
   $self->url_for('get_single_publication', id=>$entry->id),
@@ -236,22 +257,29 @@ my @pages = (
   $self->url_for('regenerate_publication', id=>$entry->id),
   $self->url_for('regenerate_publication', id=>0),
   
-  $self->url_for('get_untagged_publications_for_author', tagtype=>1, author=>$author->id),
-  $self->url_for('get_untagged_publications_for_author', tagtype=>1, author=>'NotExistingAuthor'),
+  $self->url_for('get_untagged_publications', tagtype=>1)->query(author=>$author->id),
+  $self->url_for('get_untagged_publications', tagtype=>1)->query(author=>'NotExistingAuthor'),
 
   $self->url_for('discover_attachments', id=>$entry->id),
   $self->url_for('discover_attachments', id=>0),
   
   
-
-  "/publications/orphaned",
   "/publications/missing_month",
   "/publications/candidates_to_delete",
 
+
+  $self->url_for('all_orphaned'),
+  $self->url_for('delete_orphaned'),
+  
   
   $self->url_for('regenerate_html_for_all'),
-  $self->url_for('fix_attachment_urls'),
 
+  $self->url_for('mark_author_to_regenerate', author_id => $author->id),
+  $self->url_for('regenerate_html_in_chunk', chunk_size => 3),
+  $self->url_for('mark_all_to_regenerate'),
+
+
+  $self->url_for('fix_attachment_urls'),
   $self->url_for('clean_ugly_bibtex'),
   $self->url_for('fix_all_months'),
   $self->url_for('unrelated_papers_for_team', teamid=>$team->id),

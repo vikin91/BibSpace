@@ -380,23 +380,29 @@ sub exists {
 
 sub save {
   my ( $self, $type, @objects ) = @_;
+  my @return;
   foreach my $layer ( $self->get_all_layers ) {
-    $layer->save( $type, @objects );
+    push @return, $layer->save( $type, @objects );
   }
+  return @return;
 }
 
 sub update {
   my ( $self, $type, @objects ) = @_;
+  my @return;
   foreach my $layer ( $self->get_all_layers ) {
-    $layer->update( $type, @objects );
+    push @return, $layer->update( $type, @objects );
   }
+  return @return;
 }
 
 sub delete {
   my ( $self, $type, @objects ) = @_;
+  my @return;
   foreach my $layer ( $self->get_all_layers ) {
-    $layer->delete( $type, @objects );
+    push @return, $layer->delete( $type, @objects );
   }
+  return @return;
 }
 
 

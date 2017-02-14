@@ -12,6 +12,18 @@
 % my $msg_type_s = stash 'msg_type';
 % my $msg_type = defined $msg_type_f ? $msg_type_f : $msg_type_s;
 
+% if( $config->{demo_msg} ne '' ){
+<div class="alert alert-danger">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    <i class="fa  fa-exclamation-circle "></i> <%= b($config->{demo_msg}) %>
+</div>
+% }
+
+% if( app->preferences->run_in_demo_mode == 1 ){
+  <div class="alert alert-danger" role="alert">
+    YOU RUN IN DEMO MODE - make sure to create admin user and disable demo mode in preferences. In this state, anyone can use the system with full admin rights.
+  </div>
+% }
 
 % if (defined $msg) {
 <div class="container">

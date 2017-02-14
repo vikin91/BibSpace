@@ -1,60 +1,45 @@
 % layout 'admin';
 % use Mojo::ByteStream 'b';
 
+% my $all_entries = stash('all_entries');
+% $all_entries = $entries if !defined $all_entries;
 
-<div class="container">
-    <div class="row">
-      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-        <div id="table_placeholder">
-          %= include 'publications/all_table', entries => $entries;
-        </div>
-      </div>
-    </div>
+<div class="text-center">
+  <ul class="nav nav-pills nav-justified" role="tablist">
+    % if( !defined param('year') ){
+      <li role="presentation" class="active">
+    % }
+    % else{
+      <li role="presentation">
+    % }
+      <a href="<%= url_with->query( [year=>undef, entry_type=>param('entry_type')] ) %>"> 
+        All 
+        <span class="badge"><%= num_pubs(undef, undef, $all_entries) %></span>
+      </a>
+    </li>
+
+  % for my $page_year (reverse (get_year_of_oldest_entry .. current_year+1)){
+    % my $num = num_pubs( param('entry_type'), $page_year, $all_entries );
+    % next if $num == 0 and current_year != $page_year;
+
+    % if( param('year') and $page_year == param('year') ){
+      <li role="presentation" class="active">
+    % }
+    % elsif($num==0){
+      <li role="presentation" class="disabled">
+    % }
+    % else{
+      <li role="presentation">
+    % }
+    <a href="<%= url_with->query( [year => $page_year] ) %>">
+      <%= $page_year %> 
+      <span class="badge"><%= $num %></span>
+    </a>
+    </li>
+  %}
+  </ul>
 </div>
 
 
+%= include 'publications/all_table', entries => $entries;
 
-<!-- 
-
-<a class="btn btn-warning btn-sm delete_publication" 
-    data-toggle="tooltip" data-placement="top" data-id="<%%=$entry_obj->id%>" title="Delete ajax" data-container="body">
-    <i class="fa fa-trash "></i>
-</a>
-
-%= javascript begin
-
-get_pub_table = function() {
-  $.ajax({
-      type: 'get',
-      url: "<%= url_for('publications_ajax') %>",
-      dataType: 'html',
-      data: {'ajax': 1},
-      success: function (data) {
-        $('#table_placeholder').html(data);
-      },
-      error: function (err) {
-        alert(err);
-      }
-  });
-}
-
-delete_publication = function (entry_id) {
-  var call_url = "<%= url_for('delete_publication_sure', id => 'entry_id') %>".replace('entry_id', entry_id);
-  $.ajax({
-      type: 'get',
-      url: call_url,
-      data: {'id': entry_id},
-      success: function (data) {
-        $("[publication-table-row-data-id="+entry_id+"]").remove();
-        get_pub_table();
-      }
-  });
-}
-
-
-$('.delete_publication').click( function() {
-  var id_2_del = $(this).attr('data-id');
-    delete_publication(id_2_del);
-});
-%= end
--->

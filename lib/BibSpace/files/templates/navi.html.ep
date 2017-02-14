@@ -44,20 +44,38 @@
             <a href="<%= url_for('/publications/add')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add</span></a>
             <a href="<%= url_for('/publications/add_many')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span> Add multiple</span></a>
         </li>
+        <li class="divider"></li>
         <li>
-            <a href="<%= url_for('/publications')%>">
-                <span class="glyphicon glyphicon-search"></span><span> Show all </span>
+            <a href="<%= url_for('/publications')->query(year=>current_year)%>">
+                <span class="glyphicon glyphicon-search"></span>
+                <span> Show entries </span>
                 <span class="badge"><%= num_pubs()%></span>
-                <span class="glyphicon glyphicon-warning-sign"  style="color: orange;"></span>
-                <span class="glyphicon glyphicon-time"  style="color: red;"></span>
+            </a>
+        </li>
+        <li>
+            <a href="<%= url_for('/publications')->query(entry_type=>'paper', year=>current_year)%>">
+              <i class="fa fa-file"></i> 
+              <span>Show papers</span>
+              <span class="badge"><%= num_pubs('paper')%></span>
+            </a>
+        </li>
+        <li>
+            <a href="<%= url_for('/publications')->query(entry_type=>'talk', year=>current_year)%>">
+              <i class="fa fa-microphone"></i> 
+              <span>Show talks</span>
+              <span class="badge"><%= num_pubs('talk')%></span>
             </a>
         </li>
         <li class="divider"></li>
         <li>
-            <a href="<%= url_for('/publications')->query(team=>'SE-WUERZBURG') %>"><span class="glyphicon glyphicon-heart" style="color: red;"></span> <span>Show team SE-WUERZBURG</span></a>
+            <a href="<%= url_for('/publications/recently_added/10')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> <span>Recently added <span class="badge">10</span></span></a>
         </li>
         <li>
-            <a href="<%= url_for('/publications/orphaned') %>" data-toggle="tooltip" data-placement="right" title="Show papers without relation to any author"><i class="fa fa-chain-broken" style="color: red;"></i> Show orphaned papers</a>
+            <a href="<%= url_for('/publications/recently_modified/10')%>"><span class="glyphicon glyphicon-pencil" style="color: #5BC0DE;"></span><span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> <span>Recently edited <span class="badge">10</span></span></a>
+        </li>
+        <li class="divider"></li>
+        <li>
+            <a href="<%= url_for('all_orphaned') %>" data-toggle="tooltip" data-placement="right" title="Show papers without relation to any author"><i class="fa fa-chain-broken" style="color: red;"></i> Show orphaned papers</a>
         </li>
 
         <li>
@@ -71,32 +89,9 @@
         % my @ttobjs = get_important_tag_types($self);
         % foreach my $ttobj (@ttobjs){
             <li>
-                <a href="<%= url_for('/publications/untagged/')%><%=$ttobj->{id}%>" data-toggle="tooltip" data-placement="right" title="Show papers having no tags of type <%=$ttobj->{name}%>"><i class="fa fa-question"></i> Papers with missing <%=$ttobj->{name}%></a>
+                <a href="<%= url_for('get_untagged_publications', tagtype=>$ttobj->id)%>" data-toggle="tooltip" data-placement="right" title="Show papers having no tags of type <%=$ttobj->{name}%>"><i class="fa fa-question"></i> Papers with missing <%=$ttobj->{name}%></a>
             </li>
         % }
-        <li class="divider"></li>
-        <li>
-            <a href="<%= url_for('/publications/recently_added/10')%>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> <span>Recently added <span class="badge">10</span></span></a>
-        </li>
-        <li>
-            <a href="<%= url_for('/publications/recently_modified/10')%>"><span class="glyphicon glyphicon-pencil" style="color: #5BC0DE;"></span><span class="glyphicon glyphicon-time"  style="color: #5BC0DE;"></span> <span>Recently edited <span class="badge">10</span></span></a>
-        </li>
-
-        <li class="divider"></li>
-        <li>
-            <a href="<%= url_for('/publications')->query(entry_type=>'talk')%>"><i class="fa fa-microphone"></i> <span>Show talks</span></a>
-        </li>
-      <li class="divider"></li>
-      <li role="presentation" class="dropdown-header">Papers of visible authors</li>
-      % foreach my $y (get_recent_years_arr){
-          <li>
-            <a href="<%= url_for('/publications')->query(year=> $y) %>">
-            <span class="glyphicon glyphicon-chevron-right"></span> 
-            <span> Show <%= $y %></span> 
-            <span class="badge"><%= num_pubs_for_year($y)%></span>
-            </a>
-          </li>
-      %}
   </ul>
 </div>
 
@@ -134,7 +129,7 @@
                 <a href="<%= url_for('edit_author', id=>$author->{master_id})%>" >
                     <span class="glyphicon glyphicon-user"></span> <%= $author->{master} %> 
                     <span class="badge">
-                        <%= num_entries_for_author($author)%>
+                        <%= num_pubs( undef, undef, [$author->get_entries] ) %>
                         <span class="glyphicon glyphicon-file"></span> 
                     </span>
                 </a>
@@ -384,16 +379,5 @@
   <a type="button" class="btn btn-default"><small><%= $self->app->version %> </small></a>
 % }
 
-% unless($config->{demo_msg} eq ''){
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10">
-              <div class="alert alert-danger">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <i class="fa  fa-exclamation-circle "></i> <%= b($config->{demo_msg}) %>
-              </div>
-            </div>
-        </div>
-    </div>
-% }
+
 

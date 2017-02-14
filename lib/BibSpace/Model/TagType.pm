@@ -3,7 +3,7 @@ package TagType;
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
-use v5.16;           #because of ~~ and say
+use v5.16;           
 
 
 use Moose;

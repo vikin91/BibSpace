@@ -20,13 +20,19 @@
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
             <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id) %>">
-                <i class="fa fa-files-o"></i> Show entries <span class="badge"><%= num_entries_for_author($author)%></span>
+                <i class="fa fa-files-o"></i> 
+                Show entries 
+                <span class="badge"><%= num_pubs( undef, undef, [$author->get_entries] ) %></span>
             </a>
             <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'paper') %>">
-                <i class="fa fa-files-o"></i> Show papers <span class="badge"><%= num_papers_for_author($author)%></span>
+                <i class="fa fa-files-o"></i> 
+                Show papers 
+                <span class="badge"><%= num_pubs( 'paper', undef, [$author->get_entries] ) %></span>
             </a>
             <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'talk')%>">
-                <i class="fa fa-microphone"></i> Show talks <span class="badge"><%= num_talks_for_author($author)%></span>
+                <i class="fa fa-microphone"></i> 
+                Show talks 
+                <span class="badge"><%= num_pubs( 'talk', undef, [$author->get_entries] ) %></span>
             </a>
             <a class="btn btn-default" href="<%= url_for('tags_for_author', author_id =>$author->id )%>">
                 <i class="fa fa-tags" aria-hidden="true"></i>
@@ -86,7 +92,7 @@
                     % my @ttobjs = get_important_tag_types($self);
                     % foreach my $ttobj (@ttobjs){
                         <li>
-                        <a href="<%= url_for('get_untagged_publications_for_author', author=> $author->{id}, tagtype=>$ttobj->{id} ) %>">
+                        <a href="<%= url_for('get_untagged_publications', tagtype=>$ttobj->id )->query(author=>$author->master) %>">
                             <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without "<%=$ttobj->{name}%>"
                         </a>
                         </li>

@@ -3,7 +3,7 @@ package Backup;
 use Data::Dumper;
 use utf8;
 
-use v5.16;    #because of ~~ and say
+use v5.16;    
 use List::MoreUtils qw(any uniq);
 use List::Util qw(first);
 

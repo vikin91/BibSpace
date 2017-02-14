@@ -53,6 +53,7 @@ subtest 'Checking pages for single publication' => sub {
         ->status_isnt( 404, "Checking: 404 $page" )
         ->status_isnt( 500, "Checking: 500 $page" );
     }
+
     ++$num_done;
   }
 };

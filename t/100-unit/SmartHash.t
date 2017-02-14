@@ -5,8 +5,8 @@ use Test::Exception;
 use Data::Dumper;
 use Array::Utils qw(:all);
 use feature qw( say );
-use BibSpace::Util::SmartArray;
-use BibSpace::Util::SmartHash;
+use BibSpace::Backend::SmartArray;
+use BibSpace::Backend::SmartHash;
 use BibSpace::Util::Thing;
 
 # package Thing;

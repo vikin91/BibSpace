@@ -4,11 +4,12 @@
 % my $detected_tz = DateTime::TimeZone->new( name => 'local' )->name;
 
 <div class="container">
-<H1>Preferences</H1>
 
-
-    <div class="row">
-        <div class="col-lg-12 col-md-12 col-xs-12">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <h3 class="panel-title">Preferences</h3>
+      </div>
+      <div class="panel-body">
 
         %= form_for save_preferences => (method=>'POST') => begin
 
@@ -48,14 +49,34 @@
                 % else{
                     %= check_box run_in_demo_mode => id => 'run_in_demo_mode'
                 % } 
+                <p class="help-block">Unchecking this  may log you out.</p>
             </div>
             <div class="form-group">
                 <button type="submit" class="btn btn-success"> Save <i class="fa fa-floppy-o"></i> </button>
+                <p class="help-block">Save current settings.</p>
             </div>
             
         % end
-
         </div>
     </div>
 
+
+    % if(is_admin){
+
+    <div class="panel panel-danger">
+      <div class="panel-heading">
+        <h3 class="panel-title">Danger Zone</h3>
+      </div>
+      <div class="panel-body">
+        %= include 'display/danger_zone'
+      </div>
+      <div class="panel-footer">Visible only for admins</div>
+    </div>
+
+    % }
+
+
 </div>
+
+
+

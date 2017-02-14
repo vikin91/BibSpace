@@ -18,7 +18,7 @@ use Path::Tiny;
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
-use v5.16;           #because of ~~ and say
+use v5.16;           
 
 use Try::Tiny;
 use TeX::Encode;
@@ -524,11 +524,14 @@ sub has_author {
     my $self   = shift;
     my $author = shift;
 
-    warn
-        "FIXME: Change authorship search method! Use dummy-search authorship object!";
+    my $authorship_to_find = Authorship->new(
+        author    => $author,
+        entry     => $self,
+        author_id => $author->id,
+        entry_id  => $self->id
+    );
 
-    my $authorship = $self->authorships_find(
-        sub { $_->author->equals($author) and $_->entry->equals($self) } );
+    my $authorship = $self->authorships_find(sub { $_->equals($authorship_to_find) } );
     return defined $authorship;
 }
 ####################################################################################
