@@ -5,7 +5,6 @@ with 'IUidProvider';
 use List::Util qw(max);
 use Scalar::Util qw( refaddr );
 use List::MoreUtils qw(any uniq);
-
 use feature qw(say);
 
 use BibSpace::Util::SimpleLogger;

@@ -12,7 +12,7 @@ use File::Spec;
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;
-use v5.16;    #because of ~~ and say
+use v5.16;    
 
 use Try::Tiny;
 use TeX::Encode;

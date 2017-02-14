@@ -2,7 +2,7 @@ package Labeling;
 
 use Data::Dumper;
 use utf8;
-use v5.16;    #because of ~~ and say
+use v5.16;    
 use BibSpace::Model::Entry;
 use BibSpace::Model::Tag;
 use BibSpace::Model::IRelation;

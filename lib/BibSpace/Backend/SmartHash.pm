@@ -1,6 +1,6 @@
 package SmartHash;
 
-use v5.16;    #because of ~~ and say
+use v5.16;    
 use Try::Tiny;
 use Data::Dumper;
 use namespace::autoclean;
@@ -9,9 +9,10 @@ use namespace::autoclean;
 use Time::HiRes qw( gettimeofday tv_interval );
 
 use Moose;
-
 use Moose::Util::TypeConstraints;
-use BibSpace::Model::IBibSpaceBackend;
+
+use BibSpace::Backend::IBibSpaceBackend;
+
 require BibSpace::Model::IEntity;
 with 'IBibSpaceBackend';
 use List::Util qw(first);
