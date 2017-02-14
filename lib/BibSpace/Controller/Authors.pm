@@ -330,7 +330,7 @@ sub edit_post {
       if ( !defined $existing ) {
         $author->update_master_name($new_master);
         $self->app->repo->authors_save($author);
-        $self->flash( msg => "Master name has been updated sucesfully.", msg_type => "success" );
+        $self->flash( msg => "Master name has been updated successfully.", msg_type => "success" );
         $self->redirect_to( $self->url_for( 'edit_author', id => $author->id ) );
       }
       else {
