@@ -9,8 +9,8 @@
 <hr/>
 <i class="fa fa-asterisk"></i> PL <i class="fa fa-asterisk"></i><br/>
 <ul class="list-unstyled">
-  <li>&oacute; <i class="fa fa-hand-o-right"></i> {\\\'o}  </li>
-  <li>&#347; <i class="fa fa-hand-o-right"></i> {\\\'s}   </li>
+  <li>&oacute; <i class="fa fa-hand-o-right"></i> {\'o}  </li>
+  <li>&#347; <i class="fa fa-hand-o-right"></i> {\'s}   </li>
   <li>&#322; <i class="fa fa-hand-o-right"></i> {\l}      </li>
   <li>&#261; <i class="fa fa-hand-o-right"></i> {\k{a}}     </li>
 </ul>
