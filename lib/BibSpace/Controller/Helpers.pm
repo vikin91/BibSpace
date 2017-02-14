@@ -193,7 +193,10 @@ sub register {
 
         my $author_obj = $self->app->repo->authors_find( sub {$_->get_master->uid eq $author} );
         $author_obj ||= $self->app->repo->authors_find( sub {$_->get_master->id eq $author} );
-        @entries = $author_obj->get_entries;
+        if ($author_obj){
+          @entries = $author_obj->get_entries;  
+        }
+        
       }
 
       my @entryYears = map { $_->year } grep { defined $_->year } @entries;
@@ -240,7 +243,7 @@ sub register {
   $app->helper(
     get_tag_type_obj => sub {
       my $self = shift;
-      my $type = shift || 1;
+      my $type = shift // 1;
       return $self->app->repo->tagTypes_find( sub { $_->id == $type } );
     }
   );

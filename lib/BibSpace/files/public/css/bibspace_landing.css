@@ -7,19 +7,6 @@ html, body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, pre, a, abbr, 
       background-color: #FFF;
   }
 
-  .landing_selected{
-      background-color: #337ab7;
-      color: #FFF;
-  }
-
-  .landing_normal{
-      
-  }
-
-  .landing_no_papers{
-      color: #DDD;
-  }
-
 
   .bibtexnumber, .bibtexitem{
       padding-right: 5px;
@@ -74,4 +61,16 @@ html, body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, pre, a, abbr, 
       white-space: -o-pre-wrap; /* Opera */
       white-space: pre-wrap; /* CSS3 - Text module (Candidate Recommendation) http://www.w3.org/TR/css3-text/#white-space */
       word-wrap: break-word; /* IE 5.5+ */
+  }
+
+  .landing_selected{
+      text-decoration: none;
+  }
+
+  .landing_normal{
+      
+  }
+
+  .landing_no_papers{
+      opacity: 0.5;
   }

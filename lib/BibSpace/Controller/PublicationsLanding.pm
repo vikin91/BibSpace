@@ -59,8 +59,13 @@ Peer-Reviewed International Conference, Workshop Papers, and Book Chapters <--- 
 
 our $text_delimiter_l = '';
 our $text_delimiter_r = '';
-our $anchor_delimiter_l = ' [';
-our $anchor_delimiter_r = '] ';
+our $anchor_delimiter_l = '&nbsp;';
+our $anchor_delimiter_r = '&nbsp;';
+
+our $selected_text_delimiter_l = '';
+our $selected_text_delimiter_r = '';
+our $selected_anchor_delimiter_l = '[';
+our $selected_anchor_delimiter_r = ']';
 ############################################################################################################
 ## Controller function
 sub landing_types {
@@ -83,14 +88,12 @@ sub landing_types {
     ## Step 1: define which sections to show on the landing list and get the entire papers set for this filtering query
     ##########
     if ($bibtex_type) {
-
-       # user wants to filter on bibtex_type => user wants to show only papers
-       # we assume that talks do not have bibtex_type - they are special
-
+        # user wants to filter on bibtex_type => user wants to show only papers
+        # we assume that talks do not have bibtex_type - they are special
         @section_names   = ($bibtex_type);
-        @entries_to_show = $self->get_papers_for_landing;
     }
-    elsif ( $entry_type and $entry_type eq 'talk' ) {
+
+    if ( $entry_type and $entry_type eq 'talk' ) {
 
         # user wants to show only talks
 
@@ -102,8 +105,6 @@ sub landing_types {
     elsif ( $entry_type and $entry_type eq 'paper' ) {
 
         # user wants to show only papers
-
-        # this needs to be added manually as talks are special
         @entries_to_show = $self->get_papers_for_landing;
     }
     else {
@@ -114,6 +115,8 @@ sub landing_types {
         push @section_names, 'talk';
         @entries_to_show = $self->get_entries_for_landing;
     }
+
+
 
 
     ##########
@@ -328,18 +331,19 @@ sub get_switchlink_html {
     my $keyword = shift;
 
     my $str;
+    $str .= '<div>';
     $str .= 'Grouping: ';
     
-
+    
     if ( $keyword eq 'years' ) {
-        $str .= $anchor_delimiter_l.'<a class="landing_selected" href="' . $self->url_with('lp') . '">'.$text_delimiter_l.'Types'.$text_delimiter_r.'</a>'.$anchor_delimiter_r;
+        $str .= $selected_anchor_delimiter_l.'<a class="landing_selected" href="' . $self->url_with('lp') . '">'.$selected_text_delimiter_l.'Types'.$selected_text_delimiter_r.'</a>'.$selected_anchor_delimiter_r;
         $str .= $anchor_delimiter_l.'<a class="landing_normal"  href="' . $self->url_with('lyp') . '">'.$text_delimiter_l.'Years'.$text_delimiter_r.'</a>'.$anchor_delimiter_r;
     }
     elsif ( $keyword eq 'types' ) {
         $str .= $anchor_delimiter_l.'<a class="landing_normal"  href="' . $self->url_with('lp') . '">'.$text_delimiter_l.'Types'.$text_delimiter_r.'</a>'.$anchor_delimiter_r;
-        $str .= $anchor_delimiter_l.'<a class="landing_selected" href="' . $self->url_with('lyp') . '">'.$text_delimiter_l.'Years'.$text_delimiter_r.'</a>'.$anchor_delimiter_r;
+        $str .= $selected_anchor_delimiter_l.'<a class="landing_selected" href="' . $self->url_with('lyp') . '">'.$selected_text_delimiter_l.'Years'.$selected_text_delimiter_r.'</a>'.$selected_anchor_delimiter_r;
     }
-    $str .= '</br>';
+    $str .= '</div>';
     return $str;
 }
 ############################################################################################################
@@ -356,9 +360,10 @@ sub get_filtering_navbar_html {
     ############### YEARS
     $str .= $self->get_navbar_years_html;
 
-    $str .= '</br>';
+    $str .= '<div>';
     my $url = $self->url_with->query( [bibtex_type => undef, entry_type => undef, year => undef] );
     $str .= $anchor_delimiter_l.'<a href="'.$url.'">'.$text_delimiter_l.'clear all selections'.$text_delimiter_l.'</a>'.$anchor_delimiter_r;
+    $str .= '</div>';
     return $str;
 }
 ############################################################################################################
@@ -371,7 +376,7 @@ sub get_navbar_kinds_html {
 
     ############### KIND
     my $str;
-
+    $str .= '<div>';
     $str .= 'Kind: ';
     
     
@@ -379,7 +384,7 @@ sub get_navbar_kinds_html {
 
         my $url;
         if($key eq 'Talk'){
-            $url = $self->url_with->query( [entry_type => lc($key), bibtex_type => undef] );
+            $url = $self->url_with->query( [entry_type => lc($key), bibtex_type => 'misc'] );
         }
         else{
             $url = $self->url_with->query( [entry_type => lc($key)] );   
@@ -393,14 +398,16 @@ sub get_navbar_kinds_html {
             $curr_year );
 
         if ( defined $curr_entry_type and lc($key) eq $curr_entry_type ) {
-            $str .= $anchor_delimiter_l.'<a class="landing_selected" href="' . $url . '">'.$text.'</a>'.$anchor_delimiter_r;
+            my $text = $selected_text_delimiter_l . $key . $selected_text_delimiter_r;
+            $str .= $selected_anchor_delimiter_l.'<a class="landing_selected" href="' . $url . '">'.$text.'</a>'.$selected_anchor_delimiter_r;
         }
         else {
+            my $text = $text_delimiter_l . $key . $text_delimiter_r;
             $str .= $anchor_delimiter_l.'<a class="landing_normal" href="' . $url . '">'.$text.'</a>'.$anchor_delimiter_r;
         }
     }
-    $str .= '</br>';
-    $str;
+    $str .= '</div>';
+    return $str;
 }
 ############################################################################################################
 sub get_navbar_types_html {
@@ -423,28 +430,30 @@ sub get_navbar_types_html {
 
     ############### TYPE
     my $str;
-
+    $str .= '<div>';
     $str .= 'Type: ';
 
 
     foreach my $type ( sort { $a->our_type cmp $b->our_type } @landingTypes )
     {
         my $key = $type->our_type;
-        my $num = $self->num_pubs_filtering( $key, 'paper', $curr_year );
+        my $num = $self->num_pubs_filtering( $key, $curr_entry_type, $curr_year );
         my $url = $self->url_with->query( [bibtex_type => $key] );
 
         my $text = $text_delimiter_l . $bibtex_type_to_label{$key} . $text_delimiter_r;
 
         if ( defined $curr_bibtex_type and $key eq $curr_bibtex_type ) {
-          if ($num) {
-                $str .= $anchor_delimiter_l.'<a class="landing_selected" href="' . $url . '">'.$text.'</a>'.$anchor_delimiter_r;
+            my $text = $selected_text_delimiter_l . $bibtex_type_to_label{$key} . $selected_text_delimiter_r;
+            if ($num) {
+                $str .= $selected_anchor_delimiter_l.'<a class="landing_selected" href="' . $url . '">'.$text.'</a>'.$selected_anchor_delimiter_r;
                 
             }
             else{
-                $str .= $anchor_delimiter_l.'<a class="landing_selected landing_no_papers" href="' . $url . '">'.$text.'</a>'.$anchor_delimiter_r;
+                $str .= $selected_anchor_delimiter_l.'<a class="landing_selected landing_no_papers" href="' . $url . '">'.$text.'</a>'.$selected_anchor_delimiter_r;
             }
         }
         else {
+            my $text = $text_delimiter_l . $bibtex_type_to_label{$key} . $text_delimiter_r;
             if ($num) {
                 $str .= $anchor_delimiter_l.'<a href="' . $url . '">'.$text.'</a>'.$anchor_delimiter_r;
             }
@@ -453,8 +462,8 @@ sub get_navbar_types_html {
             }
         }
     }
-    $str .= '</br>';
-    $str;
+    $str .= '</div>';
+    return $str;
 }
 ############################################################################################################
 sub get_navbar_years_html {
@@ -477,6 +486,7 @@ sub get_navbar_years_html {
 
     ############### YEARS
     my $str;
+    $str .= '<div>';
     $str .= 'Year: ';
 
 
@@ -487,31 +497,28 @@ sub get_navbar_years_html {
                     $key );
 
         my $url = $self->url_with->query( [year => $key] );
-        my $text = $text_delimiter_l . $key . $text_delimiter_r;
         
-
         if ( defined $curr_year and $key eq $curr_year ) {
-           if ($num) {
-                $str .= $anchor_delimiter_l.'<a class="landing_selected" href="' . $url . '">';
-                
+            my $text = $selected_text_delimiter_l . $key . $selected_text_delimiter_r;
+            if ($num) {
+                $str .= $selected_anchor_delimiter_l.'<a class="landing_selected" href="' . $url . '">'.$text.'</a>'.$selected_anchor_delimiter_r;
             }
             else{
-                $str .= $anchor_delimiter_l.'<a class="landing_selected landing_no_papers" href="' . $url . '">';
+                $str .= $selected_anchor_delimiter_l.'<a class="landing_selected landing_no_papers" href="' . $url . '">'.$text.'</a>'.$selected_anchor_delimiter_r;
             }
         }
         else {
+            my $text = $text_delimiter_l . $key . $text_delimiter_r;
             if ($num) {
-                $str .= $anchor_delimiter_l.'<a href="' . $url . '">';
+                $str .= $anchor_delimiter_l.'<a href="' . $url . '">'.$text.'</a>'.$anchor_delimiter_r;
             }
             else {
-                $str .= $anchor_delimiter_l.'<a class="landing_no_papers" href="' . $url . '">';
+                $str .= $anchor_delimiter_l.'<a class="landing_no_papers" href="' . $url . '">'.$text.'</a>'.$anchor_delimiter_r;
             }
         }
-        $str .= $text;
-        $str .= '</a>'.$anchor_delimiter_r;
     }
-
-    $str;
+    $str .= '</div>';
+    return $str;
 }
 ############################################################################################################
 sub num_pubs_filtering {
@@ -536,17 +543,11 @@ sub num_pubs_filtering {
 ############################################################################################################
 sub get_papers_for_landing {
     my $self = shift;
-
-    # undef is default, it means: all types
-    my $bibtex_type = $self->param('bibtex_type') // undef;
-
     return Fget_publications_main_hashed_args(
         $self,
-        {   bibtex_type => $bibtex_type,
-            entry_type  => 'paper',
+        {   entry_type  => 'paper',
             visible     => 0,
             hidden      => 0
-
                 # the rest of parameters will be taken from $self
         }
     );
@@ -556,11 +557,9 @@ sub get_talks_for_landing {
     my $self = shift;
     return Fget_publications_main_hashed_args(
         $self,
-        {   bibtex_type => undef,
-            entry_type  => 'talk',
+        {   entry_type  => 'talk',
             visible     => 0,
             hidden      => 0
-
                 # the rest of parameters will be taken from $self
         }
     );
@@ -572,8 +571,6 @@ sub get_entries_for_landing {
         $self,
         {   visible => 0,
             hidden  => 0,
-            debug   => 0,
-
             # the rest of parameters will be taken from $self
         }
     );

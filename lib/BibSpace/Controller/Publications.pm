@@ -127,7 +127,9 @@ sub all_orphaned {
     my $self = shift;
 
     my @all = Fget_publications_main_hashed_args( $self, {year=>undef} );
+
     my @entries = grep { scalar( $_->get_authors ) == 0 } @all;
+    
     my @filtered = Fget_publications_main_hashed_args( $self, {}, \@entries);
 
     my $msg
@@ -1448,7 +1450,7 @@ sub clean_ugly_bibtex {
     my @fields_to_clean
         = qw(bdsk-url-1 bdsk-url-2 bdsk-url-3 date-added date-modified owner tags);
 
-    $self->app->logger->info("Cleaning ugly bibtex fields for all entries");
+    $self->app->logger->info("Cleaning ugly Bibtex fields for all entries");
 
     my @entries     = $self->app->repo->entries_all;
     my $num_removed = 0;
