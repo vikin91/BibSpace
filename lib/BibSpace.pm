@@ -59,12 +59,12 @@ use feature qw( state say );
 ## OBJECTS CREATED AND CONTAINED IN HAS METHODS CANNOT BE CHANGED AT RUNTIME!
 has preferences => sub {
     my $self = shift;
-    return state $prefs = Preferences->new(filename => $self->app->home->rel_file("bibspace_preferences.json"))->load_maybe;
+    return state $prefs = Preferences->new(filename => "".$self->app->home->rel_file("bibspace_preferences.json"))->load_maybe;
 };
 
 has statistics => sub {
     my $self = shift;
-    return state $stats = Statistics->new(filename => $self->app->home->rel_file("bibspace_stats.json"))->load_maybe;
+    return state $stats = Statistics->new(filename => "".$self->app->home->rel_file("bibspace_stats.json"))->load_maybe;
 };
 
 
