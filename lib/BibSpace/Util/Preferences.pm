@@ -17,16 +17,20 @@ use Moose::Util::TypeConstraints;
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
+has 'filename' =>( is => 'ro', isa => 'Str', default => "bibspace_preferences.json");
 
 # I can't name it load due to deep recursion (direct or indirect)
 sub load_maybe {
   my $self = shift;
-  if ( -e 'bibspace_preferences.json' ) {
-    say "Loading prefeerences from file 'bibspace_preferences.json'.";
-    return Preferences->load('bibspace_preferences.json');
+  if ( -e $self->filename ) {
+    return Preferences->load($self->filename);
   }
   return $self;
 }
+
+
+
+
 
 has 'run_in_demo_mode' =>
   ( is => 'rw', isa => 'Int', default => 0, trigger => \&_pref_changed );
@@ -68,7 +72,7 @@ sub _pref_changed {
 
   if ( $prev_val and $curr_val ne $prev_val ) {
     say "A preference changed to '$curr_val'.";
-    $self->store('bibspace_preferences.json');
+    $self->store($self->filename);
   }
 }
 
