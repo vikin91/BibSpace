@@ -58,11 +58,13 @@ use feature qw( state say );
 
 ## OBJECTS CREATED AND CONTAINED IN HAS METHODS CANNOT BE CHANGED AT RUNTIME!
 has preferences => sub {
-    return state $prefs = Preferences->new->load_maybe;
+    my $self = shift;
+    return state $prefs = Preferences->new(filename => $self->app->home->rel_file("bibspace_preferences.json"))->load_maybe;
 };
 
 has statistics => sub {
-    return state $stats = Statistics->new;
+    my $self = shift;
+    return state $stats = Statistics->new(filename => $self->app->home->rel_file("bibspace_stats.json"))->load_maybe;
 };
 
 
@@ -122,7 +124,8 @@ has version => sub {
 };
 
 has quick_load_fixture_filename => sub {
-    return 'bibspace.dat';
+    my $self = shift;
+    return $self->app->home->rel_file('bibspace.dat');
 };
 
 # don't want to read data form DB and wait to link them every reload?
@@ -581,6 +584,7 @@ sub setup_routes {
         ->name('make_admin');
 
     $manager_user->get('/log')->to('display#show_log')->name('show_log');
+    $manager_user->get('/statistics')->to('display#show_stats')->name('show_stats');
     # websocket for fun
     $manager_user->websocket('/log_websocket/:num')->to('display#show_log_ws')->name('show_log_websocket');
     $manager_user->websocket('/statistics/:num')->to('display#show_stats_websocket')->name('show_stats_websocket');

@@ -105,9 +105,20 @@ sub show_log_ws {
 
   $self->on(finish => sub {
     my ($c, $code, $reason) = @_;
-    say "WS closed";
+    say "show_log_ws WS closed";
   });
 }
+#################################################################################
+sub show_stats {
+  my $self = shift;
+  my $num  = $self->param('num') // 20;
+
+  my @lines = $self->app->statistics->toLines;
+
+  $self->stash(  lines => \@lines, num => $num);
+  $self->render( template => 'display/stats' );
+}
+
 #################################################################################
 sub show_stats_websocket {
   my $self = shift;
@@ -124,7 +135,7 @@ sub show_stats_websocket {
 
   $self->on(finish => sub {
     my ($c, $code, $reason) = @_;
-    say "WS closed";
+    say "show_stats_websocket WS closed";
   });
 }
 #################################################################################

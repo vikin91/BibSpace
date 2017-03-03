@@ -571,10 +571,6 @@ sub download {
     my $id       = $self->param('id');                     # entry ID
     my $filetype = $self->param('filetype');
 
-    $self->app->logger->info(
-        "Requested to download attachment of type '$filetype' for entry ID '"
-            . $id
-            . "'." );
 
     my $entry = $self->app->repo->entries_find( sub { $_->id == $id } );
     my $file;
@@ -590,8 +586,6 @@ sub download {
     }
 
     if ( $file and -e $file ) {
-        $self->app->logger->info(
-            "Downloading file download '$filetype' for entry '$id'.");
         $self->render_file( 'filepath' => $file );
         return;
     }

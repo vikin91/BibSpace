@@ -4,7 +4,8 @@ use namespace::autoclean;
 use feature qw( state say );
 
 use Moose;
-
+use MooseX::Storage;
+with Storage( 'format' => 'JSON', 'io' => 'File' );
 
 has 'url_history' => (
     traits    => ['Hash'],
@@ -24,6 +25,16 @@ has 'url_history' => (
     },
 );
 
+has 'filename' =>( is => 'ro', isa => 'Str', default => "bibspace_stats.json");
+
+sub load_maybe {
+  my $self = shift;
+  if ( -e $self->filename ) {
+    return Statistics->load($self->filename);
+  }
+  return $self;
+}
+
 
 sub log_url {
   my $self   = shift;
@@ -36,6 +47,7 @@ sub log_url {
     my $num = $self->get($url); 
     $self->set($url, $num+1); 
   }
+  $self->store($self->filename);
 }
 
 sub toString {
