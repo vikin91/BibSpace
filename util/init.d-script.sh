@@ -1,11 +1,11 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          bibspace
-# Required-Start:    $remote_fs $syslog
-# Required-Stop:     $remote_fs $syslog
+# Required-Start:    $remote_fs $syslog mysql
+# Required-Stop:     $remote_fs $syslog mysql
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Bibspace
+# Short-Description: BibSpace
 # Description:       Publication management system
 ### END INIT INFO
 
@@ -47,6 +47,7 @@ do_start()
         # su piotr -c "BIBSPACE_CONFIG=/etc/bibspace.conf $DAEMON $DAEMON_ARGS &"
 
         export BIBSPACE_CONFIG=/etc/bibspace.conf
+        export BIBSPACE_USE_DUMP=0
         # echo "$DAEMON $DAEMON_ARGS &"
         # $DAEMON $DAEMON_ARGS &
 
