@@ -31,7 +31,7 @@ sub load_maybe {
         my $prefs = Preferences->load( $self->filename );
 
         # the filename should not be stored, so we need to copy it
-        $prefs->filename = $self->filename;
+        $prefs->filename($self->filename);
         return $prefs;
     }
     return $self;
