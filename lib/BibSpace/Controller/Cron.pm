@@ -135,7 +135,6 @@ sub cron_run {
   }
 
   ############ Cron ACTIONS
-  $self->log_cron_usage($level);
   $self->app->logger->info("Cron level $level started");
 
   if ( $level == 0 ) {
@@ -156,6 +155,8 @@ sub cron_run {
   else {
     # do nothing
   }
+  # this may cause: [error] Unable to open file (bibspace_preferences.json) for storing : Permission denied at
+  $self->log_cron_usage($level);
   $self->app->logger->info("Cron level $level has finished");
 
   return $text_to_render;
