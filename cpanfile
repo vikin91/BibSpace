@@ -1,9 +1,10 @@
 requires 'Array::Utils' , '>= 0.0';
 requires 'Apache::DBI' , '>= 0.0';
 requires 'Crypt::Eksblowfish::Bcrypt' , '>= 0.0';
+requires 'Math::Pari' , '== 2.01080900';
 requires 'Crypt::Random' , '>= 0.0';
 requires 'Cwd' , '>= 0.0';
-requires 'DBD::mysql' , '>= 0.0';
+# requires 'DBD::mysql' , '>= 0.0';
 requires 'DBI', '>= 1.619';
 requires 'DBIx::Connector' , '>= 0.0';
 requires 'Data::Dumper' , '>= 0.0';
