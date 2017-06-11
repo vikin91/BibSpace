@@ -179,7 +179,7 @@ has layeredRepository => sub {
         reset_data_callback => undef,
         is_read             => 1
     );
-    # $LR->add_layer($smartArrayLayer);
+    $LR->add_layer($smartArrayLayer);
 
     if ( !$self->db ) {
         $self->logger->error(
@@ -197,7 +197,6 @@ has layeredRepository => sub {
             handle                        => $self->db,
             reset_data_callback           => \&reset_db_data,
             reset_data_callback_arguments => [ $self->db ],
-            is_read             => 1
         );
         $LR->add_layer($mySQLLayer);
     }
