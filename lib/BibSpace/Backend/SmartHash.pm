@@ -151,13 +151,13 @@ sub delete {
 sub filter {
   my ($self, $type, $coderef) = @_;
 
-  my $t0 = [gettimeofday];
+  
 
   return () if $self->empty($type);
   my @arr = grep &{$coderef}, $self->all($type);
 
-  my $dur = tv_interval($t0, [gettimeofday]);
-  say "Filtering in SHash '$type': $dur" if $dur > 0.01;
+  
+  
 
   return @arr;
 }
@@ -165,13 +165,13 @@ sub filter {
 sub find {
   my ($self, $type, $coderef) = @_;
 
-  my $t0 = [gettimeofday];
+  
 
   return if $self->empty($type);
   my $obj = first \&{$coderef}, $self->all($type);
 
-  my $dur = tv_interval($t0, [gettimeofday]);
-  say "Finding in SHash '$type': $dur" if $dur > 0.01;
+  
+  
 
   return $obj;
 }
