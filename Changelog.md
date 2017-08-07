@@ -6,7 +6,7 @@
 * Partial code refactoring: perlcritic severity 4
 
 #### v0.5.1 08.2017 ####
-* Add support for docekrizing
+* Add support for dockerizing
 * Move json files to json_data directory
 
 #### v0.5.0 05.2016 ####
