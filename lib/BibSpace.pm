@@ -61,14 +61,14 @@ use feature qw( state say );
 has preferences => sub {
   my $self = shift;
   my $file 
-      = $self->app->home->rel_file("bibspace_preferences.json");
+      = $self->app->home->rel_file("json_data/bibspace_preferences.json");
   return state $prefs
       = Preferences->new( filename => "" . $file )->load_maybe;
 };
 
 has statistics => sub {
   my $self = shift;
-  my $file = $self->app->home->rel_file("bibspace_stats.json");
+  my $file = $self->app->home->rel_file("json_data/bibspace_stats.json");
   say $file;
   return state $stats = Statistics->new( filename => "" . $file )->load_maybe;
 };

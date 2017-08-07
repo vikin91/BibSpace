@@ -18,7 +18,6 @@ use warnings;
 
 ### Security
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64);
-
 # not crypto secure, but causes less problems than Crypt::Random;
 use Bytes::Random;
 use Session::Token;
@@ -183,9 +182,7 @@ sub generate_token {
 sub encrypt_password {
   my $password = shift;
   my $salt = shift || salt();
-
   # Generate a salt if one is not passed
-
   # Set the cost to 8 and append a NULL
   my $settings = '$2a$08$' . $salt;
 
