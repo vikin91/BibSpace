@@ -130,7 +130,7 @@ sub map_types {
 
   my $type_obj = $self->app->repo->types_find(sub { $_->our_type eq $o_type });
 
-  if (!$o_type or !$b_type or !$type_obj) {
+  if ((!$o_type) or (!$b_type) or (!$type_obj)) {
     $self->flash(
       message  => "Cannot map. Incomplete input.",
       msg_type => 'danger'
@@ -171,7 +171,7 @@ sub unmap_types {
 
   my $type_obj = $self->app->repo->types_find(sub { $_->our_type eq $o_type });
 
-  if (!$b_type or !$type_obj) {
+  if ((!$b_type) or (!$type_obj)) {
     $self->flash(
       message  => "Cannot unmap. Incomplete input.",
       msg_type => 'danger'

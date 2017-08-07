@@ -310,7 +310,7 @@ sub copy_data {
     return;
   }
 
-  if (!$srcLayer or !$destLayer) {
+  if ((!$srcLayer) or (!$destLayer)) {
     $self->logger->error(
       "Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist."
     );

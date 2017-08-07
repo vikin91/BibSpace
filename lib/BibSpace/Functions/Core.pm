@@ -155,10 +155,10 @@ sub validate_registration_data {
   if (!check_password_policy($pass1)) {
     die "Password is too short, use minimum 4 symbols.\n";
   }
-  if (!$login or length($login) == 0) {
+  if ((!$login) or (length($login) == 0)) {
     die "Login is missing.\n";
   }
-  if (!$email or length($email) == 0) {
+  if ((!$email )or (length($email) == 0)) {
     die "Email is missing.\n";
   }
   return 1;
@@ -196,8 +196,10 @@ sub check_password {
   my $plain_password  = shift;
   my $hashed_password = shift;
 
-  return if !defined $plain_password or $plain_password eq '';
-
+  if ((!defined $plain_password) or ($plain_password eq '')){
+    return;  
+  }
+  
   # Regex to extract the salt
   if ($hashed_password =~ m!^\$2a\$\d{2}\$([A-Za-z0-9+\\.\/]{22})!) {
 
