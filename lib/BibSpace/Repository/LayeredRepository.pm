@@ -99,7 +99,9 @@ sub get_read_layer {
 
 sub get_all_layers {
   my $self = shift;
-  return sort { $a->priority <=> $b->priority } values %{$self->layers};
+  my @sorted_layers
+    = sort { $a->priority <=> $b->priority } values %{$self->layers};
+  return @sorted_layers;
 }
 
 =item get_layer
