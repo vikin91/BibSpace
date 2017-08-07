@@ -157,7 +157,7 @@ sub cron_run {
     # do nothing
   }
 
-# this may cause: [error] Unable to open file (json_data/bibspace_preferences.json) for storing : Permission denied at
+# this may cause: [error] Unable to open file (bibspace_preferences.json) for storing : Permission denied at
   $self->log_cron_usage($level);
   $self->app->logger->info("Cron level $level has finished");
 
