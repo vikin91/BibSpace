@@ -1,5 +1,10 @@
 ### Changelog ###
 
+#### v0.5.2 08.2017 ####
+* Code refactoring: perltidy
+* Code refactoring: perlcritic severity 5
+* Partial code refactoring: perlcritic severity 4
+
 #### v0.5.1 08.2017 ####
 * Add support for docekrizing
 * Move json files to json_data directory
