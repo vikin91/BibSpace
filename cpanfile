@@ -43,6 +43,8 @@ on 'test' => sub {
   requires 'Test::Exception' , '>= 0.0';
   requires 'Test::MockModule' , '>= 0.0';
   requires 'Test::Pod::Coverage' , '>= 0.0';
+  requires 'Test::Code::TidyAll' , '>= 0.0';
+  requires 'Perl::Tidy' , '>= 0.0';
 };
 
 on 'develop' => sub {
