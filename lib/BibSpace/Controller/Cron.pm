@@ -76,7 +76,7 @@ sub cron_level {
   my $self  = shift;
   my $level = shift;
 
-  if (!defined $level or $level < 0 or $level > 3) {
+  if ((!defined $level) or ($level < 0) or ($level > 3)) {
     return "";
   }
 

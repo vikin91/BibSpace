@@ -38,7 +38,7 @@ sub meta {
 
   my $mentry = $self->app->repo->entries_find(sub { $_->id == $id });
 
-  if (!defined $mentry or $mentry->is_hidden) {
+  if ((!defined $mentry) or ($mentry->is_hidden)) {
     $self->render(
       text   => 'Cannot find entry ID \'' . $id . '\'.',
       status => 404

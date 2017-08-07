@@ -184,7 +184,7 @@ sub all_with_missing_month {
 
   my @all = Fget_publications_main_hashed_args($self, {year => undef});
   my @entries
-    = grep { !defined $_->month or $_->month < 1 or $_->month > 12 } @all;
+    = grep { (!defined $_->month) or ($_->month < 1) or ($_->month > 12) } @all;
 
   my @filtered = Fget_publications_main_hashed_args($self, {}, \@entries);
 

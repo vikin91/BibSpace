@@ -85,7 +85,6 @@ has config_file => sub {
   return $candidate if -e $candidate;
 
   die "Cannot find Bibspace config!";
-  return;
 };
 
 has get_backups_dir => sub {
@@ -230,32 +229,7 @@ sub startup {
   $self->app->logger->info("App home is: " . $self->app->home);
   $self->app->logger->info("Active bst file is: " . $self->app->bst);
 
-  ###############################
-  ########### SANDBOX ###########
-  ###############################
-
-# # cool!
-# my $author = $self->app->entityFactory->new_Author( uid => "AabakusAston" );
-# say $author->uid;
-# say $author->id;
-# # say $author->preferences;
-
-  # say Dumper $author;
-  # $self->app->repo->authors_save($author);
-
-  # my @users = $self->app->repo->users_all;
-  # $self->logger->warn("All users: ".@users);
-  # map {say $_->toString } @users;
-
-# my @users_to_delete = $self->app->repo->users_filter(sub{$_->email =~ /\@example.com/});
-# $self->logger->warn("To delete: ".@users_to_delete);
-# map {say $_->toString } @users_to_delete;
-# $self->app->repo->users_delete(@users_to_delete);
-
-  # $self->logger->info("this is info");
-  # $self->logger->warn("this is warning");
-  # $self->logger->error("this is error");
-
+  return;
 }
 ################################################################
 sub insert_admin {
@@ -283,6 +257,7 @@ sub insert_admin {
     $admin_exists->make_admin;
     $self->app->repo->users_update($admin_exists);
   }
+  return;
 }
 
 ################################################################
@@ -323,7 +298,7 @@ sub setup_repositories {
     # store current state to file
     store $self->repo->lr->get_read_layer, $self->quick_load_fixture_filename;
   }
-
+  return;
 }
 ################################################################
 sub link_data {
@@ -401,8 +376,8 @@ sub link_data {
   }
 
   $self->app->logger->info("TODO: Linking OurTypes (N) to (1) Entries.");
-
   $self->app->logger->info("Linking Finished.");
+  return;
 }
 ################################################################
 sub setup_config {
@@ -414,6 +389,7 @@ sub setup_config {
   $ENV{MOJO_MAX_MESSAGE_SIZE} = 40 * 1024 * 1024;
   $self->app->logger->info(
     "Setting max upload size to " . $ENV{MOJO_MAX_MESSAGE_SIZE} . " Bytes.");
+  return;
 }
 ################################################################
 sub setup_plugins {
@@ -458,11 +434,9 @@ sub setup_plugins {
 
   # this is supposed to trigger connection to the DB
   $self->app->db;
-
   $self->secrets([$self->config->{key_cookie}]);
-
   $self->helper(proxy_prefix => sub { $self->config->{proxy_prefix} });
-
+  return;
 }
 ################################################################
 ################################################################
@@ -954,6 +928,7 @@ sub setup_routes {
   $anyone->get('/cron/(#level)')->to('cron#cron');
 
    #>>> 
+   return;
 }
 
 ################################################################
@@ -961,12 +936,6 @@ sub setup_routes {
 sub setup_hooks {
   my $self = shift;
   $self->app->logger->info("Setup hooks...");
-
-# $self->hook(after_render => sub {
-#     my ($c, $args) = @_;
-#     $c->push_url_history;
-#     # say "History of visisited URLS ".$c->get_url_history.":\n".join("\n", $c->get_url_history);
-# });
 
   $self->hook(
     before_dispatch => sub {
@@ -990,6 +959,7 @@ sub setup_hooks {
       }
     }
   );
+  return;
 }
 
 1;

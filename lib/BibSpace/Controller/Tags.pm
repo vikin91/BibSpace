@@ -143,7 +143,7 @@ sub get_authors_for_tag_and_team {
     $self->render(text => "Tag $tag_id does not exist", status => 404);
     return;
   }
-  if (defined $team_id and !defined $team) {
+  if ((defined $team_id) and (!defined $team)) {
     $self->render(text => "Team $team_id does not exist", status => 404);
     return;
   }
