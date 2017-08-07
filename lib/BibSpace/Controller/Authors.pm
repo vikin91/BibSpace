@@ -637,8 +637,7 @@ sub fix_masters {
     . scalar(@broken_authors_1)
     . " of type 1 (masterObj not set although it should)</li>
     <li>"
-    . scalar(@broken_authors_2)
-    . " of type 2 (masterObj set incorrectly)</li>
+    . scalar(@broken_authors_2) . " of type 2 (masterObj set incorrectly)</li>
   </ul>";
 
   # we cure all problems with the same medicine...
