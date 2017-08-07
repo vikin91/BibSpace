@@ -56,22 +56,21 @@ use BibSpace::Util::EntityFactory;
 # See Persistent Private Variables in perlsub for details.
 use feature qw( state say );
 
-
 ## OBJECTS CREATED AND CONTAINED IN HAS METHODS CANNOT BE CHANGED AT RUNTIME!
+
 has preferences => sub {
   my $self = shift;
+  my $file 
+      = $self->app->home->rel_file("bibspace_preferences.json");
   return state $prefs
-      = Preferences->new(
-    filename => "" . $self->app->home->rel_file("bibspace_preferences.json") )
-      ->load_maybe;
+      = Preferences->new( filename => "" . $file )->load_maybe;
 };
 
 has statistics => sub {
   my $self = shift;
-  return state $stats
-      = Statistics->new(
-    filename => "" . $self->app->home->rel_file("bibspace_stats.json") )
-      ->load_maybe;
+  my $file = $self->app->home->rel_file("bibspace_stats.json");
+  say $file;
+  return state $stats = Statistics->new( filename => "" . $file )->load_maybe;
 };
 
 
