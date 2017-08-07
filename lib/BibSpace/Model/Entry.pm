@@ -610,10 +610,10 @@ sub tag_names_from_bibtex {
       @tag_names = split(';', $tags_str);
 
       # remove leading and trailing spaces
-      map {s/^\s+|\s+$//g} @tag_names;
+      s/^\s+|\s+$//g for @tag_names;
 
       # change spaces into underscores
-      map { $_ =~ s/\ /_/g } @tag_names;
+      s/\ /_/g for @tag_names;
     }
   }
   return @tag_names;
