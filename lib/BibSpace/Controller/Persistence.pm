@@ -48,7 +48,7 @@ sub load_fixture {
   my $self = shift;
 
   my $fixture_file 
-      = $self->app->home->rel_file('bibspace_fixture.dat');
+      = $self->app->home->rel_file('fixture/bibspace_fixture.dat');
   $self->app->logger->info(
     "Loading fixture from: " . $fixture_file->to_string );
 
@@ -77,7 +77,7 @@ sub save_fixture {
   $self->app->logger->warn("PERSISTENCE CONTROLLER does: save_fixture");
 
   my $fixture_file 
-      = $self->app->home->rel_file('bibspace_fixture.dat');
+      = $self->app->home->rel_file('fixture/bibspace_fixture.dat');
 
   my $backup = Backup->create( 'dummy', "storable" );
   $backup->dir( '' . $fixture_file->dirname );
