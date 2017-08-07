@@ -21,7 +21,7 @@ with Storage( 'format' => 'JSON', 'io' => 'File' );
 has 'filename' => (
   is      => 'rw',
   isa     => 'Str',
-  default => "bibspace_preferences.json",
+  default => "json_data/bibspace_preferences.json",
   traits  => ['DoNotSerialize']
 );
 
