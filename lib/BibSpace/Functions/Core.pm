@@ -6,6 +6,8 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
+
+# use File::Slurp;
 use File::Find;
 
 use v5.16;           #because of ~~
@@ -207,7 +209,8 @@ sub check_password {
 # Use a letter by letter match rather than a complete string match to avoid timing attacks
     my $match = encrypt_password( $plain_password, $1 );
     for ( my $n = 0; $n < length $match; $n++ ) {
-      if ( substr( $match, $n, 1 ) ne substr( $hashed_password, $n, 1 ) ) {
+      if ( substr( $match, $n, 1 ) ne substr( $hashed_password, $n, 1 ) ) 
+      {
         return;
       }
     }
