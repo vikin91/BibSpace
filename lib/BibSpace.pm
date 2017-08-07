@@ -1,4 +1,4 @@
-package BibSpace v0.5.0;
+package BibSpace v0.5.1;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
