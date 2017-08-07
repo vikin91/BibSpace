@@ -10,7 +10,7 @@ use BibSpace;
 
 use BibSpace::Model::Backup;
 use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
-use BibSpace::Functions::FDB; # TODO: purge DB etc.
+use BibSpace::Functions::FDB;    # TODO: purge DB etc.
 
 
 `rm log/*.log`;
@@ -24,48 +24,55 @@ $t_logged_in->post_ok(
     form        => { user   => 'pub_admin', pass => 'asdf' }
 );
 
-my $self = $t_logged_in->app;
-my $dbh = $self->app->db;
+my $self       = $t_logged_in->app;
+my $dbh        = $self->app->db;
 my $app_config = $t_logged_in->app->config;
 
 
-my $db_host     = $self->config->{db_host};
-my $db_user     = $self->config->{db_user};
-my $db_database = $self->config->{db_database};
-my $db_pass     = $self->config->{db_pass};
+my $db_host = $ENV{BIBSPACE_DB_HOST} || $self->app->config->{db_host};
+my $db_user = $ENV{BIBSPACE_DB_USER} || $self->app->config->{db_user};
+my $db_database
+    = $ENV{BIBSPACE_DB_DATABASE} || $self->app->config->{db_database};
+my $db_pass = $ENV{BIBSPACE_DB_PASS} || $self->app->config->{db_pass};
+
 
 note "Check if we can talk to MySQL and proper database exists.";
-ok(db_connect($db_host, $db_user, $db_database, $db_pass), "Can connect to database");
+ok( db_connect( $db_host, $db_user, $db_database, $db_pass ),
+    "Can connect to database" );
 $dbh = $self->app->db;
 
-my $fixture_name = "bibspace_fixture.dat";
-my $fixture_dir = "./fixture/";
+
+my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.dat');
+my $fixture_name = ''.$fixture_file->basename;
+my $fixture_dir  = ''.$fixture_file->dirname;
 
 SKIP: {
-  note "Drop database and recreate tables";
-  skip "System is running in production mode!! Do not test on production!", 1 if $self->mode eq 'production';
-  ok( reset_db_data($dbh), "reset_db_data");
-};
-
+    note "Drop database and recreate tables";
+    skip "System is running in production mode!! Do not test on production!",
+        1
+        if $self->mode eq 'production';
+    ok( reset_db_data($dbh), "reset_db_data" );
+}
 
 
 SKIP: {
-	note "============ APPLY DATABASE FIXTURE ============";
-	skip "Directory $fixture_dir does not exist", 1 if !-e $fixture_dir.$fixture_name;
+    note "============ APPLY DATABASE FIXTURE ============";
+    skip "Directory $fixture_dir does not exist", 1
+        if !-e $fixture_dir . $fixture_name;
 
-	note "Find backup file";
-  my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
-  
-  note "restore_storable_backup - read data into all layers";
-  # this restores data to all layers!
-  restore_storable_backup($fixture, $self->app);
+    note "Find backup file";
+    my $fixture
+        = Backup->new( dir => $fixture_dir, filename => $fixture_name );
+
+    note "restore_storable_backup - read data into all layers";
+
+    # this restores data to all layers!
+    restore_storable_backup( $fixture, $self->app );
 
 
-};
-
+}
 
 
 ok(1);
 
 done_testing();
-

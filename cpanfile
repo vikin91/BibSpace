@@ -1,7 +1,7 @@
 requires 'Array::Utils' , '>= 0.0';
 requires 'Apache::DBI' , '>= 0.0';
 requires 'Crypt::Eksblowfish::Bcrypt' , '>= 0.0';
-requires 'Crypt::Random' , '>= 0.0';
+requires 'Bytes::Random' , '>= 0.0';
 requires 'Cwd' , '>= 0.0';
 requires 'DBD::mysql' , '>= 0.0';
 requires 'DBI', '>= 1.619';
