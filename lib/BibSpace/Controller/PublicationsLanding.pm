@@ -5,7 +5,6 @@ use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
 
-# use File::Slurp;     # should be replaced in the future
 use Path::Tiny;      # for creating directories
 use Try::Tiny;
 

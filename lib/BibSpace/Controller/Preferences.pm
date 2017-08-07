@@ -59,9 +59,6 @@ sub save {
     $self->app->preferences->output_time_format($output_time_format);
     
 
-    # # store to file
-    # my $json_str = $self->app->preferences->store('bibspace_preferences.json');
-
     $self->stash( preferences => $self->app->preferences, msg_type=>$msg_type, msg =>$msg  );
     # $self->render( template => 'display/preferences' );
     $self->redirect_to( $self->get_referrer );

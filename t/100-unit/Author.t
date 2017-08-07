@@ -16,14 +16,6 @@ my $self = $t_anyone->app;
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
 
-# ## THIS SHOULD BE REPEATED FOR EACH TEST!
-# my $fixture_name = "bibspace_fixture.dat";
-# my $fixture_dir = "./fixture/";
-# use BibSpace::Model::Backup;
-# use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
-# my $fixture = Backup->new(dir => $fixture_dir, filename =>$fixture_name);
-# restore_storable_backup($fixture, $self->app);
-
 
 my $repo = $self->app->repo;
 
