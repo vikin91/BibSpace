@@ -59,6 +59,9 @@ sub get_path {
     my $self = shift;
 
     warn "backup->dir not set!" unless defined $self->dir;
+    my $dir  = $self->dir;
+    $dir =~ s!/*$!/!;
+    my $file_path = $dir . $self->filename;
 
     my $file_path = $self->dir . $self->filename;
     return $file_path;
