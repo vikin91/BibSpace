@@ -48,13 +48,13 @@ has 'masterObj' => (
 sub BUILD {
   my $self = shift;
   $self->id;    # trigger lazy execution of idProvider
-  if (!defined $self->master or $self->master eq '') {
+  if ((!defined $self->master) or ($self->master eq '')) {
     $self->master($self->uid);
   }
-  if (!defined $self->master_id and defined $self->{id}) {
+  if ((!defined $self->master_id) and (defined $self->{id})) {
     $self->master_id($self->id);
   }
-  if (defined $self->masterObj and $self->masterObj == $self) {
+  if ((defined $self->masterObj) and ($self->masterObj == $self)) {
     $self->masterObj(undef);
   }
 }
@@ -71,7 +71,7 @@ sub equals {
   my $self = shift;
   my $obj  = shift;
 
-  return undef if !defined $obj;
+  return if !defined $obj;
   die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj)
     unless ref($self) eq ref($obj);
 
@@ -168,9 +168,9 @@ sub can_merge_authors {
   my $self          = shift;
   my $source_author = shift;
 
-  if (  defined $source_author
-    and $source_author->id != $self->id
-    and !$self->equals($source_author))
+  if ( (defined $source_author)
+    and ($source_author->id != $self->id)
+    and (!$self->equals($source_author)))
   {
     return 1;
   }

@@ -221,13 +221,13 @@ after 'delete'  => sub { shift->logger->exiting(""); };
 
 sub filter {
   my ($self, $coderef) = @_;
-  my $t0 = [gettimeofday];
+  
 
   return () if $self->empty();
   my @arr = grep &{$coderef}, $self->all();
 
-  my $dur = tv_interval($t0, [gettimeofday]);
-  say "Finding in " . __PACKAGE__ . ": $dur" if $dur > 0.01;
+  
+  
   return @arr;
 
 }
@@ -240,13 +240,13 @@ after 'filter'  => sub { shift->logger->exiting(""); };
 
 sub find {
   my ($self, $coderef) = @_;
-  my $t0 = [gettimeofday];
+  
 
-  return undef if $self->empty();
+  return if $self->empty();
   my $obj = first \&{$coderef}, $self->all();
 
-  my $dur = tv_interval($t0, [gettimeofday]);
-  say "Finding in " . __PACKAGE__ . ": $dur" if $dur > 0.01;
+  
+  
 
   return $obj;
 

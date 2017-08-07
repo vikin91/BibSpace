@@ -611,11 +611,11 @@ sub fix_masters {
   my @all_authors = $self->app->repo->authors_all;
 
   my @broken_authors_0
-    = grep { $_->is_minion and !defined $_->masterObj } @all_authors;
+    = grep { ($_->is_minion) and (!defined $_->masterObj) } @all_authors;
 
   # masterObj not set although it should be
   my @broken_authors_1
-    = grep { !defined $_->masterObj and $_->master_id != $_->id } @all_authors;
+    = grep { (!defined $_->masterObj) and ($_->master_id != $_->id) } @all_authors;
 
   # masterObj set incorrectly
   my @broken_authors_2

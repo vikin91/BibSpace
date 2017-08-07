@@ -46,7 +46,7 @@ sub Freassign_authors_to_entries_given_by_array {
     for my $author_name (@bibtex_author_name) {
 
       my $author = $app->repo->authors_find(sub { $_->uid eq $author_name });
-      if ($create_new == 1 and !defined $author) {
+      if (($create_new == 1) and (!defined $author)) {
         $author = $app->entityFactory->new_Author(uid => $author_name);
         $app->repo->authors_save($author);
         ++$num_authors_created;
@@ -136,7 +136,7 @@ sub Fhandle_add_edit_publication {
   if ($id > 0) {
     $new_entry = $repo->entries_find(sub { $_->id == $id });
   }
-  if ($id < 0 or !$new_entry) {
+  if (($id < 0) or (!$new_entry)) {
     $new_entry = $app->entityFactory->new_Entry(bib => $new_bib);
   }
   $new_entry->bib($new_bib);

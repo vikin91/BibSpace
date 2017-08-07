@@ -194,13 +194,13 @@ sub filter {
     . "', expected: "
     . (ref sub { }) . "."
     unless (ref $coderef eq ref sub { });
-  my $t0 = [gettimeofday];
+  
 
   return () if $self->empty();
   my @arr = grep &{$coderef}, $self->all();
 
-  my $dur = tv_interval($t0, [gettimeofday]);
-  say "Finding in " . __PACKAGE__ . ": $dur" if $dur > 0.01;
+  
+  
   return @arr;
 }
 before 'filter' => sub { shift->logger->entering(""); };
@@ -220,13 +220,13 @@ sub find {
     . (ref sub { }) . "."
     unless (ref $coderef eq ref sub { });
 
-  my $t0 = [gettimeofday];
+  
 
-  return undef if $self->empty();
+  return if $self->empty();
   my $obj = first \&{$coderef}, $self->all();
 
-  my $dur = tv_interval($t0, [gettimeofday]);
-  say "Finding in " . __PACKAGE__ . ": $dur" if $dur > 0.01;
+  
+  
 
   return $obj;
 

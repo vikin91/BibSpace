@@ -153,7 +153,7 @@ sub delete_user {
   my $me
     = $self->app->repo->users_find(sub { $_->login eq $self->session('user') });
 
-  if ($me and !$me->is_admin) {
+  if ($me and (!$me->is_admin)) {
     $self->flash(msg_type => 'danger', msg => 'You are not admin!');
     $self->redirect_to('manage_users');
     return;
@@ -355,7 +355,7 @@ sub login {
   my $input_login = $self->param('user');
   my $input_pass  = $self->param('pass');
 
-  if (!$input_login or !$input_pass) {
+  if ((!$input_login) or (!$input_pass)) {
     $self->flash(
       msg_type => 'warning',
       msg      => 'Please provide user-name and password.'

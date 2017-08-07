@@ -50,9 +50,11 @@ sub get_log_lines {
 
   my $log_2_read;
   $log_2_read = $log_dir->child($type . ".log") if defined $type;
-  $log_2_read = $file_list[0] if !$log_2_read or !$log_2_read->exists;
+  if ((!$log_2_read) or (!$log_2_read->exists)){
+    $log_2_read = $file_list[0];  
+  }
 
-  die "No log file found " if !-e $log_2_read;    # throw
+  die "No log file found " if (!-e $log_2_read);    # throw
 
  # my @lines = $log_2_read->lines( { count => -1 * $num } );
  # @lines = ( $num >= @lines ) ? reverse @lines : reverse @lines[ -$num .. -1 ];
