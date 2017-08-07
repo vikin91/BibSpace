@@ -60,15 +60,20 @@ sub register {
     }
   );
 
-  $app->helper(
-    db => sub {
-      my $self = shift;
-      return db_connect(
-        $self->app->config->{db_host},     $self->app->config->{db_user},
-        $self->app->config->{db_database}, $self->app->config->{db_pass}
-      );
-    }
-  );
+    $app->helper(
+        db => sub {
+            my $self = shift;
+            my $db_host
+                = $ENV{BIBSPACE_DB_HOST} || $self->app->config->{db_host};
+            my $db_user
+                = $ENV{BIBSPACE_DB_USER} || $self->app->config->{db_user};
+            my $db_database
+                = $ENV{BIBSPACE_DB_DATABASE} || $self->app->config->{db_database};
+            my $db_pass
+                = $ENV{BIBSPACE_DB_PASS} || $self->app->config->{db_pass};
+            return db_connect( $db_host, $db_user, $db_database, $db_pass );
+        }
+    );
 
   $app->helper(
     bst => sub {

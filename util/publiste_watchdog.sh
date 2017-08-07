@@ -15,6 +15,7 @@ fi
 if [ "$RESTART" = true ]; then
     pkill -9 -f "$DIR/bin/bibspace"
     export BIBSPACE_CONFIG=/etc/bibspace.conf
+    # start-stop-daemon --start --chuid piotr --pidfile /home/piotr/perl/bibspace/bibspace.pid --exec /home/piotr/perl/bibspace/bin/bibspace -- daemon -m production -l http:/:8083
     /usr/bin/hypnotoad "$DIR/bin/bibspace"
 fi
 

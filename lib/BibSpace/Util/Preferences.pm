@@ -1,7 +1,8 @@
 package Preferences;
 
-use v5.16;    
+use v5.16;
 use Try::Tiny;
+use Path::Tiny;
 use Data::Dumper;
 use namespace::autoclean;
 
@@ -17,30 +18,60 @@ use Moose::Util::TypeConstraints;
 use MooseX::Storage;
 with Storage( 'format' => 'JSON', 'io' => 'File' );
 
+has 'filename' => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => "bibspace_preferences.json",
+  traits  => ['DoNotSerialize']
+);
 
 # I can't name it load due to deep recursion (direct or indirect)
 sub load_maybe {
   my $self = shift;
-  if ( -e 'bibspace_preferences.json' ) {
-    say "Loading prefeerences from file 'bibspace_preferences.json'.";
-    return Preferences->load('bibspace_preferences.json');
+  my $obj  = undef;
+  try {
+    $obj = Preferences->load( $self->filename );
+    $obj->filename( $self->filename );
   }
-  return $self;
+  catch {
+    $obj = $self;
+    warn "Cannot load preferences form file "
+        . $self->filename
+        . ". Creating new file.\n";
+    Path::Tiny->new( $self->filename )->touchpath;
+  };
+  return $obj;
 }
 
-has 'run_in_demo_mode' =>
-  ( is => 'rw', isa => 'Int', default => 0, trigger => \&_pref_changed );
 
-has 'bibitex_html_converter' =>
-  ( is => 'rw', isa => 'Str', default => 'BibStyleConverter', trigger => \&_pref_changed );
+has 'run_in_demo_mode' =>
+    ( is => 'rw', isa => 'Int', default => 0, trigger => \&_pref_changed );
+
+has 'bibitex_html_converter' => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => 'BibStyleConverter',
+  trigger => \&_pref_changed
+);
 
 # important for Preferences form to set flag "(default)" by the right list item
-has 'default_bibitex_html_converter' => ( is => 'ro', isa => 'Str', default => 'BibStyleConverter' );
+has 'default_bibitex_html_converter' =>
+    ( is => 'ro', isa => 'Str', default => 'BibStyleConverter' );
 
-has 'local_time_zone' => ( is => 'rw', isa => 'Str', default => 'Europe/Berlin', trigger => \&_pref_changed );
+has 'local_time_zone' => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => 'Europe/Berlin',
+  trigger => \&_pref_changed
+);
 
 # http://search.cpan.org/~drolsky/DateTime-1.42/lib/DateTime.pm#strftime_Patterns
-has 'output_time_format' => ( is => 'rw', isa => 'Str', default => '%a %d %b %T, %Y', trigger => \&_pref_changed );
+has 'output_time_format' => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => '%a %d %b %T, %Y',
+  trigger => \&_pref_changed
+);
 
 # cron_level => last_call
 has 'cron' => (
@@ -68,7 +99,15 @@ sub _pref_changed {
 
   if ( $prev_val and $curr_val ne $prev_val ) {
     say "A preference changed to '$curr_val'.";
-    $self->store('bibspace_preferences.json');
+    try {
+      Path::Tiny->new( $self->filename )->touchpath;
+      $self->store( $self->filename );
+    }
+    catch {
+      warn "Cannot touch path "
+          . $self->filename
+          . ". Preferences will not be saved.\n";
+    };
   }
 }
 
