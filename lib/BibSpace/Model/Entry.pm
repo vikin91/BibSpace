@@ -399,7 +399,7 @@ sub get_bibtex_field_value {
     $bibtex_entry->parse_s($this_bib);
     return $bibtex_entry->get($bibtex_field);
   }
-  return undef;
+  return;
 }
 ####################################################################################
 sub remove_bibtex_fields {

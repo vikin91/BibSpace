@@ -247,7 +247,7 @@ sub find {
 
   my $t0 = [gettimeofday];
 
-  return undef if $self->empty();
+  return if $self->empty();
   my $obj = first \&{$coderef}, $self->all();
 
   my $dur = tv_interval($t0, [gettimeofday]);
