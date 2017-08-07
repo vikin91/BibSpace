@@ -52,7 +52,6 @@ sub load_fixture {
   $self->app->logger->info(
     "Loading fixture from: " . $fixture_file->to_string );
 
-
   my $fixture = Backup->new(
     dir      => '' . $fixture_file->dirname,
     filename => '' . $fixture_file->basename

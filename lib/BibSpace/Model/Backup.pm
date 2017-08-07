@@ -61,6 +61,7 @@ sub get_path {
   warn "backup->dir not set!" unless defined $self->dir;
   my $dir = $self->dir;
   $dir =~ s!/*$!/!;
+
   my $file_path = $dir . $self->filename;
   return $file_path;
 }
