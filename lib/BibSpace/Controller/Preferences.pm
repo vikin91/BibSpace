@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use utf8;
 use v5.16;    #because of ~~
-# use File::Slurp;
 use Try::Tiny;
 
 use Data::Dumper;
@@ -58,9 +57,6 @@ sub save {
     $self->app->preferences->local_time_zone($local_time_zone);
     $self->app->preferences->output_time_format($output_time_format);
     
-
-    # # store to file
-    # my $json_str = $self->app->preferences->store('bibspace_preferences.json');
 
     $self->stash( preferences => $self->app->preferences, msg_type=>$msg_type, msg =>$msg  );
     # $self->render( template => 'display/preferences' );

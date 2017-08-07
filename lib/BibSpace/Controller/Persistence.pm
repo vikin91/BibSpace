@@ -41,12 +41,13 @@ sub persistence_status_ajax {
 sub load_fixture {
   my $self = shift;
 
-  $self->app->logger->warn("PERSISTENCE CONTROLLER does: load_fixture");
+  my $fixture_file = $self->app->home->rel_file('bibspace_fixture.dat');
+  $self->app->logger->info("Loading fixture from: ".$fixture_file->to_string);
 
   my $fixture_name = "bibspace_fixture.dat";
   my $fixture_dir  = "./fixture/";
 
-  my $fixture = Backup->new( dir => $fixture_dir, filename => $fixture_name );
+  my $fixture = Backup->new( dir => ''.$fixture_file->dirname, filename => ''.$fixture_file->basename );
 
   restore_storable_backup( $fixture, $self->app );
 
@@ -60,11 +61,11 @@ sub save_fixture {
 
   $self->app->logger->warn("PERSISTENCE CONTROLLER does: save_fixture");
 
-  my $fixture_name = "bibspace_fixture.dat";
-  my $fixture_dir  = "./fixture/";
+  my $fixture_file = $self->app->home->rel_file('bibspace_fixture.dat');
+  
   my $backup       = Backup->create( 'dummy', "storable" );
-  $backup->dir($fixture_dir);
-  $backup->filename($fixture_name);
+  $backup->dir(''.$fixture_file->dirname);
+  $backup->filename(''.$fixture_file->basename);
 
   my $layer = $self->app->repo->lr->get_read_layer;
   my $path  = "" . $backup->get_path;
