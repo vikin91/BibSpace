@@ -15,7 +15,6 @@ use Cwd;
 use strict;
 use warnings;
 
-
 ### Security
 use Crypt::Eksblowfish::Bcrypt qw(bcrypt bcrypt_hash en_base64);
 
@@ -30,7 +29,6 @@ use WWW::Mechanize;
 require TeX::Encode;
 use Encode;
 
-
 # use BibSpace::Functions::FPublications;
 
 use Exporter;
@@ -42,39 +40,38 @@ use List::MoreUtils qw(any uniq);
 
 # these are exported by default.
 our @EXPORT = qw(
-    sort_publications
-    fix_bibtex_national_characters
-    get_dir_size
-    validate_registration_data
-    check_password_policy
-    generate_token
-    encrypt_password
-    salt
-    check_password
-    send_email
-    split_bibtex_entries
-    decodeLatex
-    official_bibtex_types
-    random_string
-    create_user_id
-    uniqlc
-    get_generic_type_description
-    nohtml
-    clean_tag_name
-    get_month_numeric
-    get_current_year
-    get_current_month
+  sort_publications
+  fix_bibtex_national_characters
+  get_dir_size
+  validate_registration_data
+  check_password_policy
+  generate_token
+  encrypt_password
+  salt
+  check_password
+  send_email
+  split_bibtex_entries
+  decodeLatex
+  official_bibtex_types
+  random_string
+  create_user_id
+  uniqlc
+  get_generic_type_description
+  nohtml
+  clean_tag_name
+  get_month_numeric
+  get_current_year
+  get_current_month
 );
-
 
 ####################################################################################################
 sub sort_publications {
   my (@pubs) = @_;
   return reverse sort {
-           $a->year <=> $b->year
-        || $a->month <=> $b->month
-        || $a->bibtex_key cmp $b->bibtex_key
-        || $a->id cmp $b->id
+         $a->year <=> $b->year
+      || $a->month <=> $b->month
+      || $a->bibtex_key cmp $b->bibtex_key
+      || $a->id cmp $b->id
   } @pubs;
 }
 ####################################################################################################
@@ -136,14 +133,13 @@ sub fix_bibtex_national_characters {
   #   say "FIXED OK!";
   # }
 
-
   return $str;
 }
 ####################################################################################################
 sub get_dir_size {
   my $dir  = shift;
   my $size = 0;
-  find( sub { $size += -f $_ ? -s _ : 0 }, $dir );
+  find(sub { $size += -f $_ ? -s _ : 0 }, $dir);
   return $size;
 }
 ####################################################################################################
@@ -153,16 +149,16 @@ sub validate_registration_data {
   my $pass1 = shift;
   my $pass2 = shift;
 
-  if ( $pass1 ne $pass2 ) {
+  if ($pass1 ne $pass2) {
     die "Passwords don't match!\n";
   }
-  if ( !check_password_policy($pass1) ) {
+  if (!check_password_policy($pass1)) {
     die "Password is too short, use minimum 4 symbols.\n";
   }
-  if ( !$login or length($login) == 0 ) {
+  if ((!$login) or (length($login) == 0)) {
     die "Login is missing.\n";
   }
-  if ( !$email or length($email) == 0 ) {
+  if ((!$email )or (length($email) == 0)) {
     die "Email is missing.\n";
   }
   return 1;
@@ -176,7 +172,7 @@ sub check_password_policy {
 ####################################################################################################
 sub generate_token {
   my $self = shift;
-  my $token = Session::Token->new( length => 32 )->get;
+  my $token = Session::Token->new(length => 32)->get;
   return $token;
 }
 ####################################################################################################
@@ -185,32 +181,32 @@ sub encrypt_password {
   my $salt = shift || salt();
 
   # Generate a salt if one is not passed
-
   # Set the cost to 8 and append a NULL
   my $settings = '$2a$08$' . $salt;
 
   # Encrypt it
-  return Crypt::Eksblowfish::Bcrypt::bcrypt( $password, $settings );
+  return Crypt::Eksblowfish::Bcrypt::bcrypt($password, $settings);
 }
 ####################################################################################################
 sub salt {
-  return Crypt::Eksblowfish::Bcrypt::en_base64( random_bytes(16) );
+  return Crypt::Eksblowfish::Bcrypt::en_base64(random_bytes(16));
 }
 ####################################################################################################
 sub check_password {
   my $plain_password  = shift;
   my $hashed_password = shift;
 
-  return if !defined $plain_password or $plain_password eq '';
-
+  if ((!defined $plain_password) or ($plain_password eq '')){
+    return;  
+  }
+  
   # Regex to extract the salt
-  if ( $hashed_password =~ m!^\$2a\$\d{2}\$([A-Za-z0-9+\\.\/]{22})! ) {
+  if ($hashed_password =~ m!^\$2a\$\d{2}\$([A-Za-z0-9+\\.\/]{22})!) {
 
 # Use a letter by letter match rather than a complete string match to avoid timing attacks
-    my $match = encrypt_password( $plain_password, $1 );
-    for ( my $n = 0; $n < length $match; $n++ ) {
-      if ( substr( $match, $n, 1 ) ne substr( $hashed_password, $n, 1 ) ) 
-      {
+    my $match = encrypt_password($plain_password, $1);
+    for (my $n = 0; $n < length $match; $n++) {
+      if (substr($match, $n, 1) ne substr($hashed_password, $n, 1)) {
         return;
       }
     }
@@ -223,18 +219,16 @@ sub check_password {
 sub send_email {
   my $config = shift;
 
-
   my $uri
-      = "https://api.mailgun.net/v3/"
-      . $config->{mailgun_domain}
-      . "/messages";
+    = "https://api.mailgun.net/v3/" . $config->{mailgun_domain} . "/messages";
 
-  my $mech = WWW::Mechanize->new( ssl_opts => { SSL_version => 'TLSv1' } );
-  $mech->credentials( api => $config->{mailgun_key} );
-  $mech->ssl_opts( verify_hostname => 0 );
+  my $mech = WWW::Mechanize->new(ssl_opts => {SSL_version => 'TLSv1'});
+  $mech->credentials(api => $config->{mailgun_key});
+  $mech->ssl_opts(verify_hostname => 0);
   $mech->post(
     $uri,
-    [ from    => $config->{from},
+    [
+      from    => $config->{from},
       to      => $config->{to},
       subject => $config->{subject},
       html    => $config->{content}
@@ -250,8 +244,7 @@ sub split_bibtex_entries {
   $input =~ s/^\s+|\s+$//g;
   $input =~ s/^\t+//g;
 
-
-  for my $b_code ( split /@/, $input ) {
+  for my $b_code (split /@/, $input) {
 
     # skip bad splitting :P
     next if length($b_code) < 10;
@@ -267,7 +260,7 @@ sub decodeLatex {
   my $str = shift;
 
   use TeX::Encode;
-  $str = decode( 'latex', $str );
+  $str = decode('latex', $str);
 
   $str =~ s/\{(\w)\}/$1/g;       # makes {x} -> x
   $str =~ s/\{\\\"(u)\}/ü/g;    # makes {\"x} -> xe
@@ -291,7 +284,6 @@ sub decodeLatex {
   $str =~ s/\\\"(a)/ä/g;        # makes \"{x} -> xe
   $str =~ s/\\\"(A)/Ä/g;        # makes \"{x} -> xe
 
-
   $str =~ s/\{\\\'(\w)\}/$1/g;   # makes {\'x} -> x
   $str =~ s/\\\'(\w)/$1/g;       # makes \'x -> x
   $str =~ s/\'\'(\w)/$1/g;       # makes ''x -> x
@@ -302,7 +294,6 @@ sub decodeLatex {
   $str =~ s/\\\^(\w)/$1/g;       # makes \^x-> x
   $str =~ s/\\\~(\w)/$1/g;       # makes \~x-> x
   $str =~ s/\\//g;               # removes \
-
 
   $str =~ s/\{+//g;
   $str =~ s/\}+//g;
@@ -324,22 +315,22 @@ sub official_bibtex_types {
 sub random_string {
   my $len = shift;
 
-  my @set = ( '0' .. '9', 'A' .. 'Y' );
-  my $str = join '' => map $set[ rand @set ], 1 .. $len;
+  my @set = ('0' .. '9', 'A' .. 'Y');
+  my $str = join '' => map $set[rand @set], 1 .. $len;
   $str;
 }
 ################################################################################
 sub get_current_month {
-  my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst )
-      = localtime();
-  return ( $mon + 1 );
+  my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+    = localtime();
+  return ($mon + 1);
 }
 ################################################################################
 sub get_current_year {
-  my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst )
-      = localtime();
+  my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+    = localtime();
 
-  return ( $year + 1900 );
+  return ($year + 1900);
 }
 ################################################################################
 sub get_month_numeric {
@@ -376,17 +367,17 @@ sub clean_tag_name {
 }
 ################################################################################
 sub uniqlc {
-  return keys %{ { map { lc $_ => 1 } @_ } };
+  return keys %{{map { lc $_ => 1 } @_}};
 }
 ################################################################################
 sub nohtml {
   my $key  = shift // "key-unknown";
   my $type = shift // "no-type";
   return
-        "<span class=\"label label-danger\">"
-      . "NO HTML "
-      . "</span><span class=\"label label-default\">"
-      . "($type) $key</span>" . "<BR>";
+      "<span class=\"label label-danger\">"
+    . "NO HTML "
+    . "</span><span class=\"label label-default\">"
+    . "($type) $key</span>" . "<BR>";
 }
 
 # ################################################################################
@@ -402,7 +393,7 @@ sub create_user_id {
 
   my @first_arr = $name->part('first');
   @first_arr = grep { defined $_ } @first_arr;
-  my $first = join( ' ', @first_arr );
+  my $first = join(' ', @first_arr);
 
   my @von_arr = $name->part('von');
   my $von     = $von_arr[0];
@@ -419,34 +410,33 @@ sub create_user_id {
   $userID .= $first if defined $first;
   $userID .= $jr    if defined $jr;
 
-
   $userID =~ s/\\k\{a\}/a/g;    # makes \k{a} -> a
   $userID =~ s/\\l/l/g;         # makes \l -> l
   $userID =~ s/\\r\{u\}/u/g
-      ;    # makes \r{u} -> u # FIXME: make sure that the letter is caught
-    # $userID =~ s/\\r{u}/u/g;   # makes \r{u} -> u # the same but not escaped
+    ; # makes \r{u} -> u # FIXME: make sure that the letter is caught
+      # $userID =~ s/\\r{u}/u/g;   # makes \r{u} -> u # the same but not escaped
 
-  $userID =~ s/\{(\w)\}/$1/g;          # makes {x} -> x
-  $userID =~ s/\{\\\"(\w)\}/$1e/g;     # makes {\"x} -> xe
-  $userID =~ s/\{\"(\w)\}/$1e/g;       # makes {"x} -> xe
-  $userID =~ s/\\\"(\w)/$1e/g;         # makes \"{x} -> xe
-  $userID =~ s/\{\\\'(\w)\}/$1/g;      # makes {\'x} -> x
-  $userID =~ s/\\\'(\w)/$1/g;          # makes \'x -> x
-  $userID =~ s/\'\'(\w)/$1/g;          # makes ''x -> x
-  $userID =~ s/\"(\w)/$1e/g;           # makes "x -> xe
-  $userID =~ s/\{\\ss\}/ss/g;          # makes {\ss}-> ss
-  $userID =~ s/\{(\w*)\}/$1/g;         # makes {abc..def}-> abc..def
-  $userID =~ s/\\\^(\w)(\w)/$1$2/g;    # makes \^xx-> xx
-                                 # I am not sure if the next one is necessary
-  $userID =~ s/\\\^(\w)/$1/g;    # makes \^x-> x
-  $userID =~ s/\\\~(\w)/$1/g;    # makes \~x-> x
-  $userID =~ s/\\//g;            # removes \
+  $userID =~ s/\{(\w)\}/$1/g;       # makes {x} -> x
+  $userID =~ s/\{\\\"(\w)\}/$1e/g;  # makes {\"x} -> xe
+  $userID =~ s/\{\"(\w)\}/$1e/g;    # makes {"x} -> xe
+  $userID =~ s/\\\"(\w)/$1e/g;      # makes \"{x} -> xe
+  $userID =~ s/\{\\\'(\w)\}/$1/g;   # makes {\'x} -> x
+  $userID =~ s/\\\'(\w)/$1/g;       # makes \'x -> x
+  $userID =~ s/\'\'(\w)/$1/g;       # makes ''x -> x
+  $userID =~ s/\"(\w)/$1e/g;        # makes "x -> xe
+  $userID =~ s/\{\\ss\}/ss/g;       # makes {\ss}-> ss
+  $userID =~ s/\{(\w*)\}/$1/g;      # makes {abc..def}-> abc..def
+  $userID =~ s/\\\^(\w)(\w)/$1$2/g; # makes \^xx-> xx
+                                    # I am not sure if the next one is necessary
+  $userID =~ s/\\\^(\w)/$1/g;       # makes \^x-> x
+  $userID =~ s/\\\~(\w)/$1/g;       # makes \~x-> x
+  $userID =~ s/\\//g;               # removes \
 
-  $userID =~ s/\{//g;            # removes {
-  $userID =~ s/\}//g;            # removes }
+  $userID =~ s/\{//g;               # removes {
+  $userID =~ s/\}//g;               # removes }
 
   $userID =~ s/\(.*\)//g
-      ;    # removes everything between the brackets and the brackets also
+    ;    # removes everything between the brackets and the brackets also
 
   # print "$userID \n";
   return $userID;

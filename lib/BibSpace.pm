@@ -1,7 +1,6 @@
-package BibSpace v0.5.1;
+package BibSpace v0.5.2;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
-
 
 use BibSpace::Functions::Core;
 use BibSpace::Functions::MySqlBackupFunctions;
@@ -14,7 +13,6 @@ use BibSpace::Functions::FPublications;
 use Mojo::Base 'Mojolicious';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
-
 use Data::Dumper;
 
 # use File::Slurp;
@@ -23,7 +21,6 @@ use Try::Tiny;
 use Path::Tiny;    # for creating directories
 use Mojo::Home;
 use File::Spec;
-
 
 use BibSpace::Backend::SmartArray;
 use BibSpace::Backend::SmartHash;
@@ -60,19 +57,16 @@ use feature qw( state say );
 
 has preferences => sub {
   my $self = shift;
-  my $file 
-      = $self->app->home->rel_file("bibspace_preferences.json");
-  return state $prefs
-      = Preferences->new( filename => "" . $file )->load_maybe;
+  my $file = $self->app->home->rel_file("json_data/bibspace_preferences.json");
+  return state $prefs = Preferences->new(filename => "" . $file)->load_maybe;
 };
 
 has statistics => sub {
   my $self = shift;
-  my $file = $self->app->home->rel_file("bibspace_stats.json");
+  my $file = $self->app->home->rel_file("json_data/bibspace_stats.json");
   say $file;
-  return state $stats = Statistics->new( filename => "" . $file )->load_maybe;
+  return state $stats = Statistics->new(filename => "" . $file)->load_maybe;
 };
-
 
 has config_file => sub {
   my $self = shift;
@@ -84,14 +78,13 @@ has config_file => sub {
   return $candidate if -e $candidate;
 
   $candidate
-      = $self->app->home->rel_file('lib/BibSpace/files/config/default.conf');
+    = $self->app->home->rel_file('lib/BibSpace/files/config/default.conf');
   return $candidate if -e $candidate;
 
-  $candidate = $self->app->home->rel_file('config/default.conf'); # for travis
+  $candidate = $self->app->home->rel_file('config/default.conf');   # for travis
   return $candidate if -e $candidate;
 
   die "Cannot find Bibspace config!";
-  return;
 };
 
 has get_backups_dir => sub {
@@ -142,8 +135,7 @@ has use_quick_load_fixture => sub {
   my $self = shift;
   return if $self->mode eq 'production';
 
-  return 1
-      if defined $ENV{BIBSPACE_USE_DUMP} and $ENV{BIBSPACE_USE_DUMP} == 1;
+  return 1 if defined $ENV{BIBSPACE_USE_DUMP} and $ENV{BIBSPACE_USE_DUMP} == 1;
   return;
 };
 
@@ -153,10 +145,9 @@ has use_quick_load_fixture => sub {
 # then you need to move the object construction INTO the LayeredReposity and provide a helper to access it for everywhere.
 has logger => sub { state $logger = SimpleLogger->new() };
 
-
 has smartArrayBackend => sub {
   my $self = shift;
-  return SmartArray->new( logger => $self->logger );
+  return SmartArray->new(logger => $self->logger);
 };
 
 ## I moved this to helpers as app->attr for a while
@@ -164,7 +155,6 @@ has smartArrayBackend => sub {
 has layeredRepository => sub {
   my $self = shift;
   $self->app->logger->info("Building layeredRepository");
-
 
   my $LR = LayeredRepository->new(
     logger      => $self->logger,
@@ -188,10 +178,10 @@ has layeredRepository => sub {
   );
   $LR->add_layer($smartArrayLayer);
 
-  if ( !$self->db ) {
+  if (!$self->db) {
     $self->logger->error(
       "You add SQL layer, but there is no connection to the database! Skipping this layer."
-          . " You need to start MySQL server and restart BibSpace to use this layer"
+        . " You need to start MySQL server and restart BibSpace to use this layer"
     );
   }
   else {
@@ -203,7 +193,7 @@ has layeredRepository => sub {
       logger                        => $self->logger,
       handle                        => $self->db,
       reset_data_callback           => \&reset_db_data,
-      reset_data_callback_arguments => [ $self->db ],
+      reset_data_callback_arguments => [$self->db],
     );
     $LR->add_layer($mySQLLayer);
   }
@@ -213,7 +203,7 @@ has layeredRepository => sub {
 # layeredRepository will not change at runtime => repo neither.
 has repo => sub {
   my $self = shift;
-  return RepositoryFacade->new( lr => $self->layeredRepository );
+  return RepositoryFacade->new(lr => $self->layeredRepository);
 
 };
 
@@ -222,55 +212,24 @@ sub startup {
   my $self = shift;
   $self->app->logger->info("*** Starting BibSpace ***");
 
-
   $self->setup_config;
   $self->setup_plugins;
 
   $self->app->preferences->local_time_zone(
-    DateTime::TimeZone->new( name => 'local' )->name );
+    DateTime::TimeZone->new(name => 'local')->name);
 
   $self->setup_routes;
   $self->setup_hooks;
   $self->setup_repositories;
   $self->insert_admin;
 
-
   $self->app->logger->info("Setup done.");
 
+  $self->app->logger->info("Using CONFIG: " . $self->app->config_file);
+  $self->app->logger->info("App home is: " . $self->app->home);
+  $self->app->logger->info("Active bst file is: " . $self->app->bst);
 
-  $self->app->logger->info( "Using CONFIG: " . $self->app->config_file );
-  $self->app->logger->info( "App home is: " . $self->app->home );
-  $self->app->logger->info( "Active bst file is: " . $self->app->bst );
-
-
-  ###############################
-  ########### SANDBOX ###########
-  ###############################
-
-# # cool!
-# my $author = $self->app->entityFactory->new_Author( uid => "AabakusAston" );
-# say $author->uid;
-# say $author->id;
-# # say $author->preferences;
-
-  # say Dumper $author;
-  # $self->app->repo->authors_save($author);
-
-
-  # my @users = $self->app->repo->users_all;
-  # $self->logger->warn("All users: ".@users);
-  # map {say $_->toString } @users;
-
-
-# my @users_to_delete = $self->app->repo->users_filter(sub{$_->email =~ /\@example.com/});
-# $self->logger->warn("To delete: ".@users_to_delete);
-# map {say $_->toString } @users_to_delete;
-# $self->app->repo->users_delete(@users_to_delete);
-
-  # $self->logger->info("this is info");
-  # $self->logger->warn("this is warning");
-  # $self->logger->error("this is error");
-
+  return;
 }
 ################################################################
 sub insert_admin {
@@ -278,10 +237,10 @@ sub insert_admin {
   $self->app->logger->info("Add startup admin user...");
 
   my $admin_exists
-      = $self->app->repo->users_find( sub { $_->login eq 'pub_admin' } );
-  if ( !$admin_exists ) {
+    = $self->app->repo->users_find(sub { $_->login eq 'pub_admin' });
+  if (!$admin_exists) {
     my $salt     = salt();
-    my $hash     = encrypt_password( 'asdf', $salt );
+    my $hash     = encrypt_password('asdf', $salt);
     my $new_user = $self->app->entityFactory->new_User(
       login     => 'pub_admin',
       email     => 'pub_admin@example.com',
@@ -298,6 +257,7 @@ sub insert_admin {
     $admin_exists->make_admin;
     $self->app->repo->users_update($admin_exists);
   }
+  return;
 }
 
 ################################################################
@@ -306,42 +266,39 @@ sub setup_repositories {
 
   $self->app->logger->info("Setup repositories...");
 
-  if ( -e $self->quick_load_fixture_filename
-    and $self->use_quick_load_fixture )
-  {
+  if (-e $self->quick_load_fixture_filename and $self->use_quick_load_fixture) {
+
 # $self->app->logger->info("Retrieving dump from '".$self->quick_load_fixture_filename."'.");
-    my $layer = retrieve( $self->quick_load_fixture_filename );
+    my $layer = retrieve($self->quick_load_fixture_filename);
 
     # reser read layer = not needed, layer empty by start of the app
     # $self->app->logger->info("Replacing layer 'smart' with the dump.");
-    $self->repo->lr->replace_layer( 'smart', $layer );
+    $self->repo->lr->replace_layer('smart', $layer);
 
 # $self->app->logger->debug("State after replacement:".$self->repo->lr->get_summary_table);
   }
   else {
-    $self->app->logger->info( "We do not use dump file '"
-          . $self->quick_load_fixture_filename
-          . "'." );
+    $self->app->logger->info(
+      "We do not use dump file '" . $self->quick_load_fixture_filename . "'.");
   }
 
   # no data, no fun = no need to copy, link, and store
-  if ( $self->repo->entries_empty ) {
+  if ($self->repo->entries_empty) {
     $self->app->logger->info("Repo has no entries. Reseting read_layer.");
 
-    $self->repo->lr->copy_data( { from => 'mysql', to => 'smart' } );
+    $self->repo->lr->copy_data({from => 'mysql', to => 'smart'});
 
     # Entities and Relations in the smart layer must be linked!
     $self->link_data;
 
-    $self->app->logger->info( "Storing current state to dump file '"
-          . $self->quick_load_fixture_filename
-          . "'." );
+    $self->app->logger->info("Storing current state to dump file '"
+        . $self->quick_load_fixture_filename
+        . "'.");
 
     # store current state to file
     store $self->repo->lr->get_read_layer, $self->quick_load_fixture_filename;
   }
-
-
+  return;
 }
 ################################################################
 sub link_data {
@@ -349,24 +306,21 @@ sub link_data {
   $self->app->logger->info("Linking data...");
 
   $self->app->logger->info("Linking Authors (N) to (1) Authors.");
-  foreach my $author (
-    $self->repo->authors_filter( sub { $_->id != $_->master_id } ) )
+  foreach
+    my $author ($self->repo->authors_filter(sub { $_->id != $_->master_id }))
   {
     my $master
-        = $self->repo->authors_find( sub { $_->id == $author->master_id } );
-    if ( $master and $author ) {
+      = $self->repo->authors_find(sub { $_->id == $author->master_id });
+    if ($master and $author) {
       $author->set_master($master);
     }
   }
 
-
   $self->app->logger->info("Linking Authors (N) to (M) Entries.");
-  foreach my $auth ( $self->repo->authorships_all ) {
-    my $entry
-        = $self->repo->entries_find( sub { $_->id == $auth->entry_id } );
-    my $author
-        = $self->repo->authors_find( sub { $_->id == $auth->author_id } );
-    if ( $entry and $author ) {
+  foreach my $auth ($self->repo->authorships_all) {
+    my $entry  = $self->repo->entries_find(sub { $_->id == $auth->entry_id });
+    my $author = $self->repo->authors_find(sub { $_->id == $auth->author_id });
+    if ($entry and $author) {
       $auth->entry($entry);
       $auth->author($author);
       $entry->authorships_add($auth);
@@ -375,11 +329,11 @@ sub link_data {
   }
 
   $self->app->logger->info("Linking Tags (N) to (M) Entries.");
-  foreach my $labeling ( $self->repo->labelings_all ) {
+  foreach my $labeling ($self->repo->labelings_all) {
     my $entry
-        = $self->repo->entries_find( sub { $_->id == $labeling->entry_id } );
-    my $tag = $self->repo->tags_find( sub { $_->id == $labeling->tag_id } );
-    if ( $entry and $tag ) {
+      = $self->repo->entries_find(sub { $_->id == $labeling->entry_id });
+    my $tag = $self->repo->tags_find(sub { $_->id == $labeling->tag_id });
+    if ($entry and $tag) {
       $labeling->entry($entry);
       $labeling->tag($tag);
       $entry->labelings_add($labeling);
@@ -388,12 +342,11 @@ sub link_data {
   }
 
   $self->app->logger->info("Linking Teams (Exceptions) (N) to (M) Entries.");
-  foreach my $exception ( $self->repo->exceptions_all ) {
+  foreach my $exception ($self->repo->exceptions_all) {
     my $entry
-        = $self->repo->entries_find( sub { $_->id == $exception->entry_id } );
-    my $team
-        = $self->repo->teams_find( sub { $_->id == $exception->team_id } );
-    if ( $entry and $team ) {
+      = $self->repo->entries_find(sub { $_->id == $exception->entry_id });
+    my $team = $self->repo->teams_find(sub { $_->id == $exception->team_id });
+    if ($entry and $team) {
       $exception->entry($entry);
       $exception->team($team);
       $entry->exceptions_add($exception);
@@ -401,15 +354,12 @@ sub link_data {
     }
   }
 
-
   $self->app->logger->info("Linking Teams (N) to (M) Authors.");
-  foreach my $membership ( $self->repo->memberships_all ) {
+  foreach my $membership ($self->repo->memberships_all) {
     my $author
-        = $self->repo->authors_find( sub { $_->id == $membership->author_id }
-        );
-    my $team
-        = $self->repo->teams_find( sub { $_->id == $membership->team_id } );
-    if ( defined $author and defined $team ) {
+      = $self->repo->authors_find(sub { $_->id == $membership->author_id });
+    my $team = $self->repo->teams_find(sub { $_->id == $membership->team_id });
+    if (defined $author and defined $team) {
       $membership->author($author);
       $membership->team($team);
       $author->memberships_add($membership);
@@ -418,27 +368,28 @@ sub link_data {
   }
 
   $self->app->logger->info("Linking TagTypes (N) to (1) Tags.");
-  foreach my $tag ( $self->repo->tags_all ) {
-    my $tagtype = $self->repo->tagTypes_find( sub { $_->id == $tag->type } );
-    if ( $tag and $tagtype ) {
+  foreach my $tag ($self->repo->tags_all) {
+    my $tagtype = $self->repo->tagTypes_find(sub { $_->id == $tag->type });
+    if ($tag and $tagtype) {
       $tag->tagtype($tagtype);
     }
   }
 
   $self->app->logger->info("TODO: Linking OurTypes (N) to (1) Entries.");
-
   $self->app->logger->info("Linking Finished.");
+  return;
 }
 ################################################################
 sub setup_config {
   my $self = shift;
   my $app  = $self;
   $self->app->logger->info("Setup config...");
-  $self->plugin( 'Config' => { file => $self->app->config_file } );
+  $self->plugin('Config' => {file => $self->app->config_file});
 
   $ENV{MOJO_MAX_MESSAGE_SIZE} = 40 * 1024 * 1024;
   $self->app->logger->info(
-    "Setting max upload size to " . $ENV{MOJO_MAX_MESSAGE_SIZE} . " Bytes." );
+    "Setting max upload size to " . $ENV{MOJO_MAX_MESSAGE_SIZE} . " Bytes.");
+  return;
 }
 ################################################################
 sub setup_plugins {
@@ -451,20 +402,21 @@ sub setup_plugins {
   $self->app->plugin('RenderFile');
   $self->plugin('BibSpace::Controller::Helpers');
 
-  push @{ $self->app->static->paths }, $self->app->home->rel_file('public');
+  push @{$self->app->static->paths}, $self->app->home->rel_file('public');
 
   # push @{$self->app->static->paths}, $self->config->{backups_dir};
 
-  $self->app->logger->info( "App version: " . $self->app->version );
+  $self->app->logger->info("App version: " . $self->app->version);
   $self->app->logger->info("Creating directories...");
   for my $dir (
-    ( $self->app->get_backups_dir,
+    (
+      $self->app->get_backups_dir,
       $self->app->get_upload_dir,
       $self->app->get_upload_dir . "papers",
       $self->app->get_upload_dir . "slides",
       $self->app->get_log_dir
     )
-      )
+    )
   {
     $self->app->logger->debug("Creating directory: $dir");
     try {
@@ -478,18 +430,13 @@ sub setup_plugins {
 
   # set logging dir in the logger
   $self->app->logger->debug("Setting log dir to the logger");
-  $self->logger->set_log_dir( "" . Path::Tiny->new( $self->get_log_dir ) );
-
+  $self->logger->set_log_dir("" . Path::Tiny->new($self->get_log_dir));
 
   # this is supposed to trigger connection to the DB
   $self->app->db;
-
-
-  $self->secrets( [ $self->config->{key_cookie} ] );
-
-  $self->helper( proxy_prefix => sub { $self->config->{proxy_prefix} } );
-
-
+  $self->secrets([$self->config->{key_cookie}]);
+  $self->helper(proxy_prefix => sub { $self->config->{proxy_prefix} });
+  return;
 }
 ################################################################
 ################################################################
@@ -500,17 +447,16 @@ sub setup_routes {
   my $anyone = $self->routes;
   $anyone->get('/')->to('display#index')->name('start');
 
-
   $anyone->get('/forgot')->to('login#forgot');
   $anyone->post('/forgot/gen')->to('login#post_gen_forgot_token');
   $anyone->get('/forgot/reset/:token')->to('login#token_clicked')
-      ->name("token_clicked");
+    ->name("token_clicked");
   $anyone->post('/forgot/store')->to('login#store_password');
 
   $anyone->get('/login_form')->to('login#login_form')->name('login_form');
   $anyone->post('/do_login')->to('login#login')->name('do_login');
   $anyone->get('/youneedtologin')->to('login#not_logged_in')
-      ->name('youneedtologin');
+    ->name('youneedtologin');
   $anyone->get('/badpassword')->to('login#bad_password')->name('badpassword');
 
   $anyone->get('/logout')->to('login#logout')->name('logout');
@@ -520,7 +466,7 @@ sub setup_routes {
 
   $anyone->get('/register')->to('login#register')->name('register');
   $anyone->post('/register')->to('login#post_do_register')
-      ->name('post_do_register');
+    ->name('post_do_register');
   $anyone->any('/noregister')->to('login#register_disabled');
 
   my $logged_user  = $anyone->under->to('login#check_is_logged_in');
@@ -530,176 +476,164 @@ sub setup_routes {
   ################ PREFERENCES ################
 
   $manager_user->get('/preferences')->to('preferences#index')
-      ->name('preferences');
+    ->name('preferences');
   $admin_user->post('/preferences')->to('preferences#save')
-      ->name('save_preferences');
+    ->name('save_preferences');
 
   ################ EXPERIMENTAL / PERSISTENCE ################
 
   $anyone->get('/system_status')->to('persistence#system_status')
-      ->name('system_status');
+    ->name('system_status');
   $admin_user->get('/persistence/load')->to('persistence#load_fixture')
-      ->name('load_fixture');
+    ->name('load_fixture');
   $admin_user->get('/persistence/save')->to('persistence#save_fixture')
-      ->name('save_fixture');
+    ->name('save_fixture');
   $admin_user->get('/persistence/copy_mysql_to_smart')
-      ->to('persistence#copy_mysql_to_smart')->name('copy_mysql_to_smart');
+    ->to('persistence#copy_mysql_to_smart')->name('copy_mysql_to_smart');
   $admin_user->get('/persistence/copy_smart_to_mysql')
-      ->to('persistence#copy_smart_to_mysql')->name('copy_smart_to_mysql');
+    ->to('persistence#copy_smart_to_mysql')->name('copy_smart_to_mysql');
 
   $admin_user->get('/persistence/persistence_status')
-      ->to('persistence#persistence_status')->name('persistence_status');
+    ->to('persistence#persistence_status')->name('persistence_status');
   $admin_user->get('/persistence/persistence_status_ajax')
-      ->to('persistence#persistence_status_ajax')
-      ->name('persistence_status_ajax');
-
+    ->to('persistence#persistence_status_ajax')
+    ->name('persistence_status_ajax');
 
   $admin_user->get('/persistence/reset_mysql')->to('persistence#reset_mysql')
-      ->name('reset_mysql');
+    ->name('reset_mysql');
   $admin_user->get('/persistence/reset_smart')->to('persistence#reset_smart')
-      ->name('reset_smart');
+    ->name('reset_smart');
   $admin_user->get('/persistence/reset_all')->to('persistence#reset_all')
-      ->name('reset_all');
+    ->name('reset_all');
 
   $admin_user->get('/persistence/insert_random_data')
-      ->to('persistence#insert_random_data')->name('insert_random_data');
-
+    ->to('persistence#insert_random_data')->name('insert_random_data');
 
   ################ SETTINGS ################
   $logged_user->get('/profile')->to('login#profile');
   $admin_user->get('/manage_users')->to('login#manage_users')
-      ->name('manage_users');
+    ->name('manage_users');
   $admin_user->get('/profile/:id')->to('login#foreign_profile')
-      ->name('show_user_profile');
+    ->name('show_user_profile');
   $admin_user->get('/profile/delete/:id')->to('login#delete_user')
-      ->name('delete_user');
+    ->name('delete_user');
 
   $admin_user->get('/profile/make_user/:id')->to('login#make_user')
-      ->name('make_user');
+    ->name('make_user');
   $admin_user->get('/profile/make_manager/:id')->to('login#make_manager')
-      ->name('make_manager');
+    ->name('make_manager');
   $admin_user->get('/profile/make_admin/:id')->to('login#make_admin')
-      ->name('make_admin');
+    ->name('make_admin');
 
   $manager_user->get('/log')->to('display#show_log')->name('show_log');
   $manager_user->get('/statistics')->to('display#show_stats')
-      ->name('show_stats');
+    ->name('show_stats');
 
   # websocket for fun
   $manager_user->websocket('/log_websocket/:num')->to('display#show_log_ws')
-      ->name('show_log_websocket');
+    ->name('show_log_websocket');
   $manager_user->websocket('/statistics/:num')
-      ->to('display#show_stats_websocket')->name('show_stats_websocket');
-
+    ->to('display#show_stats_websocket')->name('show_stats_websocket');
 
   $admin_user->get('/settings/fix_months')->to('publications#fixMonths')
-      ->name('fix_all_months');
+    ->name('fix_all_months');
 
   $manager_user->get('/settings/clean_all')
-      ->to('publications#clean_ugly_bibtex')->name('clean_ugly_bibtex');
+    ->to('publications#clean_ugly_bibtex')->name('clean_ugly_bibtex');
 
   $manager_user->get('/settings/mark_all_to_regenerate')
-      ->to('publications#mark_all_to_regenerate')
-      ->name('mark_all_to_regenerate');
+    ->to('publications#mark_all_to_regenerate')->name('mark_all_to_regenerate');
 
   $manager_user->get('/settings/mark_author_to_regenerate/:author_id')
-      ->to('publications#mark_author_to_regenerate')
-      ->name('mark_author_to_regenerate');
+    ->to('publications#mark_author_to_regenerate')
+    ->name('mark_author_to_regenerate');
 
   $manager_user->get('/settings/regenerate_all')
-      ->to('publications#regenerate_html_for_all')
-      ->name('regenerate_html_for_all');
+    ->to('publications#regenerate_html_for_all')
+    ->name('regenerate_html_for_all');
 
   $logged_user->get('/settings/regenerate_html_in_chunk/:chunk_size')
-      ->to('publications#regenerate_html_in_chunk')
-      ->name('regenerate_html_in_chunk');
-
+    ->to('publications#regenerate_html_in_chunk')
+    ->name('regenerate_html_in_chunk');
 
   $manager_user->get('/backups')->to('backup#index')->name('backup_index');
   $manager_user->put('/backups')->to('backup#save')->name('backup_do');
   $manager_user->put('/backups/mysql')->to('backup#save_mysql')
-      ->name('backup_do_mysql');
+    ->name('backup_do_mysql');
   $manager_user->get('/backups/:id')->to('backup#backup_download')
-      ->name('backup_download');
+    ->name('backup_download');
 
   $admin_user->delete('/backups/:id')->to('backup#delete_backup')
-      ->name('backup_delete');
+    ->name('backup_delete');
   $admin_user->put('/backups/:id')->to('backup#restore_backup')
-      ->name('backup_restore');
-  $admin_user->delete('/backups')->to('backup#cleanup')
-      ->name('backup_cleanup');
-
+    ->name('backup_restore');
+  $admin_user->delete('/backups')->to('backup#cleanup')->name('backup_cleanup');
 
   ################ TYPES ################
   $logged_user->get('/types')->to('types#all_our')->name('all_types');
-  $manager_user->get('/types/add')->to('types#add_type')
-      ->name('add_type_get');
+  $manager_user->get('/types/add')->to('types#add_type')->name('add_type_get');
   $manager_user->post('/types/add')->to('types#post_add_type')
-      ->name('add_type_post');
+    ->name('add_type_post');
   $manager_user->get('/types/manage/:name')->to('types#manage')
-      ->name('edit_type');
+    ->name('edit_type');
   $manager_user->get('/types/delete/:name')->to('types#delete_type')
-      ->name('delete_type');
+    ->name('delete_type');
 
   $manager_user->post('/types/store_description')
-      ->to('types#post_store_description')->name('update_type_description');
+    ->to('types#post_store_description')->name('update_type_description');
   $manager_user->get('/types/toggle/:name')->to('types#toggle_landing')
-      ->name('toggle_landing_type');
+    ->name('toggle_landing_type');
 
   $manager_user->get('/types/:our_type/map/:bibtex_type')
-      ->to('types#map_types');
+    ->to('types#map_types');
   $manager_user->get('/types/:our_type/unmap/:bibtex_type')
-      ->to('types#unmap_types')->name('unmap_bibtex_type');
+    ->to('types#unmap_types')->name('unmap_bibtex_type');
 
   ################ AUTHORS ################
 
   $logged_user->get('/authors/')->to('authors#all_authors')
-      ->name('all_authors');
+    ->name('all_authors');
   $manager_user->get('/authors/add')->to('authors#add_author')
-      ->name('add_author');
+    ->name('add_author');
   $manager_user->post('/authors/add/')->to('authors#add_post');
 
   $logged_user->get('/authors/edit/:id')->to('authors#edit_author')
-      ->name('edit_author');
+    ->name('edit_author');
   $manager_user->post('/authors/edit/')->to('authors#edit_post')
-      ->name('edit_author_post');
+    ->name('edit_author_post');
   $manager_user->get('/authors/delete/:id')->to('authors#delete_author')
-      ->name('delete_author');
-
+    ->name('delete_author');
 
   $admin_user->get('/authors/delete/:id/force')
-      ->to('authors#delete_author_force');
-
+    ->to('authors#delete_author_force');
 
   # for dev only!!
-  $admin_user->get('/authors/decimate')
-      ->to('authors#delete_invisible_authors');
-
+  $admin_user->get('/authors/decimate')->to('authors#delete_invisible_authors');
 
   $manager_user->post('/authors/edit_membership_dates')
-      ->to('authors#post_edit_membership_dates')
-      ->name('edit_author_membership_dates');
+    ->to('authors#post_edit_membership_dates')
+    ->name('edit_author_membership_dates');
 
   $manager_user->get('/authors/:id/add_to_team/:tid')
-      ->to('authors#add_to_team')->name('add_author_to_team');
+    ->to('authors#add_to_team')->name('add_author_to_team');
   $manager_user->get('/authors/:id/remove_from_team/:tid')
-      ->to('authors#remove_from_team')->name('remove_author_from_team');
+    ->to('authors#remove_from_team')->name('remove_author_from_team');
   $manager_user->get('/authors/:masterid/remove_uid/:uid')
-      ->to('authors#remove_uid')->name('remove_author_uid');
+    ->to('authors#remove_uid')->name('remove_author_uid');
 
   $manager_user->post('/authors/merge/')->to('authors#merge_authors')
-      ->name('merge_authors');
+    ->name('merge_authors');
 
   $admin_user->get('/authors/fix_masters')->to('authors#fix_masters')
-      ->name('fix_masters');
+    ->name('fix_masters');
 
   $manager_user->get('/authors/reassign')
-      ->to('authors#reassign_authors_to_entries');
+    ->to('authors#reassign_authors_to_entries');
   $admin_user->get('/authors/reassign_and_create')
-      ->to('authors#reassign_authors_to_entries_and_create_authors');
+    ->to('authors#reassign_authors_to_entries_and_create_authors');
 
   $manager_user->get('/authors/toggle_visibility/:id')
-      ->to('authors#toggle_visibility')->name('toggle_author_visibility');
+    ->to('authors#toggle_visibility')->name('toggle_author_visibility');
 
   # $logged_user->get('/authors/toggle_visibility')
   #     ->to('authors#toggle_visibility');
@@ -709,22 +643,21 @@ sub setup_routes {
   $logged_user->get('/tagtypes')->to('tagtypes#index')->name('all_tag_types');
   $admin_user->get('/tagtypes/add')->to('tagtypes#add')->name('add_tag_type');
   $admin_user->post('/tagtypes/add')->to('tagtypes#add_post')
-      ->name('add_tag_type_post');
+    ->name('add_tag_type_post');
   $admin_user->get('/tagtypes/delete/:id')->to('tagtypes#delete')
-      ->name('delete_tag_type');
+    ->name('delete_tag_type');
   $manager_user->any('/tagtypes/edit/:id')->to('tagtypes#edit')
-      ->name('edit_tag_type');
+    ->name('edit_tag_type');
 
   ################ TAGS ################
-  $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )
-      ->name('all_tags');
-  $admin_user->get('/tags/add/:type')->to( 'tags#add', type => 1 )
-      ->name('add_tag_get');
-  $admin_user->post('/tags/add/:type')->to( 'tags#add_post', type => 1 )
-      ->name('add_tag_post');
+  $logged_user->get('/tags/:type')->to('tags#index', type => 1)
+    ->name('all_tags');
+  $admin_user->get('/tags/add/:type')->to('tags#add', type => 1)
+    ->name('add_tag_get');
+  $admin_user->post('/tags/add/:type')->to('tags#add_post', type => 1)
+    ->name('add_tag_post');
   $logged_user->get('/tags/authors/:id/:type')
-      ->to( 'tags#get_authors_for_tag', type => 1 )
-      ->name('get_authors_for_tag');
+    ->to('tags#get_authors_for_tag', type => 1)->name('get_authors_for_tag');
   $admin_user->get('/tags/delete/:id')->to('tags#delete')->name('delete_tag');
 
   ### EDIT TAG FORM GOES WITH GET - WTF!?!
@@ -732,31 +665,31 @@ sub setup_routes {
   $manager_user->get('/tags/edit/:id')->to('tags#edit')->name('edit_tag');
 
   $anyone->get('/read/authors-for-tag/:tag_id/:team_id')
-      ->to('tags#get_authors_for_tag_and_team')
-      ->name('get_authors_for_tag_and_team');
+    ->to('tags#get_authors_for_tag_and_team')
+    ->name('get_authors_for_tag_and_team');
 
   #ALIAS
   $anyone->get('/r/a4t/:tag_id/:team_id')
-      ->to('tags#get_authors_for_tag_and_team')
-      ->name('get_authors_for_tag_and_team');
+    ->to('tags#get_authors_for_tag_and_team')
+    ->name('get_authors_for_tag_and_team');
 
   $anyone->get('/read/authors-for-tag/:tag_id/:team_id')
-      ->to('tags#get_authors_for_tag_and_team')
-      ->name('get_authors_for_tag_and_team');
+    ->to('tags#get_authors_for_tag_and_team')
+    ->name('get_authors_for_tag_and_team');
 
   #ALIAS
   $anyone->get('/r/a4t/:tag_id/:team_id')
-      ->to('tags#get_authors_for_tag_and_team')
-      ->name('get_authors_for_tag_and_team');
+    ->to('tags#get_authors_for_tag_and_team')
+    ->name('get_authors_for_tag_and_team');
 
   $anyone->get('/read/tags-for-author/:author_id')
-      ->to('tags#get_tags_for_author_read')->name('tags_for_author');
+    ->to('tags#get_tags_for_author_read')->name('tags_for_author');
 
   #ALIAS
   $anyone->get('/r/t4a/:author_id')->to('tags#get_tags_for_author_read');
 
   $anyone->get('/read/tags-for-team/:team_id')
-      ->to('tags#get_tags_for_team_read')->name('tags_for_team');
+    ->to('tags#get_tags_for_team_read')->name('tags_for_team');
 
   #ALIAS
   $anyone->get('/r/t4t/:team_id')->to('tags#get_tags_for_team_read');
@@ -767,15 +700,14 @@ sub setup_routes {
 
   $manager_user->get('/teams/edit/:id')->to('teams#edit')->name('edit_team');
   $manager_user->get('/teams/delete/:id')->to('teams#delete_team')
-      ->name('delete_team');
-  $manager_user->get('/teams/delete/:id/force')
-      ->to('teams#delete_team_force')->name('delete_team_force');
+    ->name('delete_team');
+  $manager_user->get('/teams/delete/:id/force')->to('teams#delete_team_force')
+    ->name('delete_team_force');
   $logged_user->get('/teams/unrealted_papers/:teamid')
-      ->to('publications#show_unrelated_to_team')
-      ->name('unrelated_papers_for_team');
+    ->to('publications#show_unrelated_to_team')
+    ->name('unrelated_papers_for_team');
 
-  $manager_user->get('/teams/add')->to('teams#add_team')
-      ->name('add_team_get');
+  $manager_user->get('/teams/add')->to('teams#add_team')->name('add_team_get');
   $manager_user->post('/teams/add/')->to('teams#add_team_post');
 
   ################ EDITING PUBLICATIONS ################
@@ -996,6 +928,7 @@ sub setup_routes {
   $anyone->get('/cron/(#level)')->to('cron#cron');
 
    #>>> 
+   return;
 }
 
 ################################################################
@@ -1004,35 +937,29 @@ sub setup_hooks {
   my $self = shift;
   $self->app->logger->info("Setup hooks...");
 
-# $self->hook(after_render => sub {
-#     my ($c, $args) = @_;
-#     $c->push_url_history;
-#     # say "History of visisited URLS ".$c->get_url_history.":\n".join("\n", $c->get_url_history);
-# });
-
   $self->hook(
     before_dispatch => sub {
       my $c = shift;
 
-      if ( $c->req->headers->header('X-Forwarded-HTTPS') ) {
+      if ($c->req->headers->header('X-Forwarded-HTTPS')) {
         $c->req->url->base->scheme('https');
       }
-      $c->app->statistics->log_url( $c->req->url );
-
+      $c->app->statistics->log_url($c->req->url);
 
       # dirty fix for production deployment in a directory
       # config->{proxy_prefix} stores the proxy prefix, e.g., /app
       my $proxy_prefix = $self->config->{proxy_prefix};
-      if ( $proxy_prefix ne "" ) {
+      if ($proxy_prefix ne "") {
 
         # we remove the leading slash
         $proxy_prefix =~ s!^/!!;
 
         # and let Mojolicious add it again
-        push @{ $c->req->url->base->path->trailing_slash(1) }, $proxy_prefix;
+        push @{$c->req->url->base->path->trailing_slash(1)}, $proxy_prefix;
       }
     }
   );
+  return;
 }
 
 1;

@@ -5,6 +5,7 @@ use namespace::autoclean;
 
 use Moose;
 use DBI;
+
 # use DBIx::Connector;
 use BibSpace::DAO::Interface::IDAO;
 use BibSpace::Model::TagType;
@@ -13,6 +14,7 @@ use Try::Tiny;
 use List::Util qw(first);
 use List::MoreUtils qw(first_index);
 use feature qw( say );
+
 # for benchmarking
 use Time::HiRes qw( gettimeofday tv_interval );
 
@@ -35,8 +37,8 @@ sub all {
 
   my @objs;
 
-  while ( my $row = $sth->fetchrow_hashref() ) {
-    
+  while (my $row = $sth->fetchrow_hashref()) {
+
     my $obj = $self->e_factory->new_TagType(
       old_mysql_id => $row->{id},
       id           => $row->{id},
@@ -47,8 +49,8 @@ sub all {
   }
   return @objs;
 }
-before 'all' => sub { shift->logger->entering( "" ); };
-after 'all' => sub { shift->logger->exiting( "" ); };
+before 'all' => sub { shift->logger->entering(""); };
+after 'all'  => sub { shift->logger->exiting(""); };
 
 =item count
     Method documentation placeholder.
@@ -57,23 +59,23 @@ after 'all' => sub { shift->logger->exiting( "" ); };
 
 sub count {
   my ($self) = @_;
-  my $dbh    = $self->handle;
+  my $dbh = $self->handle;
 
   my $num = 0;
   try {
-    my $sth    = $dbh->prepare("SELECT COUNT(id) as num FROM TagType LIMIT 1;");
+    my $sth = $dbh->prepare("SELECT COUNT(id) as num FROM TagType LIMIT 1;");
     $sth->execute();
     my $row = $sth->fetchrow_hashref();
     $num = $row->{num};
   }
   catch {
-    $self->logger->error( "Count exception: $_" );
+    $self->logger->error("Count exception: $_");
   };
-  
+
   return $num;
 }
-before 'count' => sub { shift->logger->entering( "" ); };
-after 'count' => sub { shift->logger->exiting( "" ); };
+before 'count' => sub { shift->logger->entering(""); };
+after 'count'  => sub { shift->logger->exiting(""); };
 
 =item empty
     Method documentation placeholder.
@@ -84,8 +86,8 @@ sub empty {
   my ($self) = @_;
   return $self->count() == 0;
 }
-before 'empty' => sub { shift->logger->entering( "" ); };
-after 'empty' => sub { shift->logger->exiting( "" ); };
+before 'empty' => sub { shift->logger->entering(""); };
+after 'empty'  => sub { shift->logger->exiting(""); };
 
 =item exists
     Method documentation placeholder.
@@ -97,18 +99,19 @@ sub exists {
   my $dbh = $self->handle;
   my $num = 0;
   try {
-    my $sth = $dbh->prepare("SELECT EXISTS(SELECT 1 FROM TagType WHERE id=? LIMIT 1) as num;");
+    my $sth = $dbh->prepare(
+      "SELECT EXISTS(SELECT 1 FROM TagType WHERE id=? LIMIT 1) as num;");
     $sth->execute($object->id);
     my $row = $sth->fetchrow_hashref();
     $num = $row->{num};
   }
   catch {
-    $self->logger->error( "exists exception: $_" );
+    $self->logger->error("exists exception: $_");
   };
   return $num > 0;
 }
-before 'exists' => sub { shift->logger->entering( "" ); };
-after 'exists' => sub { shift->logger->exiting( "" ); };
+before 'exists' => sub { shift->logger->entering(""); };
+after 'exists'  => sub { shift->logger->exiting(""); };
 
 =item save
     Method documentation placeholder.
@@ -116,44 +119,48 @@ after 'exists' => sub { shift->logger->exiting( "" ); };
 =cut 
 
 sub save {
-  my ( $self, @objects ) = @_;
+  my ($self, @objects) = @_;
   my $dbh = $self->handle;
   foreach my $obj (@objects) {
-    if ( $self->exists($obj) ) {
+    if ($self->exists($obj)) {
       $self->update($obj);
-      $self->logger->lowdebug( "Updated ".ref($obj)." ID " . $obj->id . " in DB." );
+      $self->logger->lowdebug(
+        "Updated " . ref($obj) . " ID " . $obj->id . " in DB.");
     }
     else {
       $self->_insert($obj);
-      $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB." );
+      $self->logger->lowdebug(
+        "Inserted " . ref($obj) . " ID " . $obj->id . " into DB.");
     }
   }
 }
-before 'save' => sub { shift->logger->entering( "" ); };
-after 'save' => sub { shift->logger->exiting( "" ); };
+before 'save' => sub { shift->logger->entering(""); };
+after 'save'  => sub { shift->logger->exiting(""); };
 
 =item _insert
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
 =cut 
+
 sub _insert {
-  my ( $self, @objects ) = @_;
+  my ($self, @objects) = @_;
   my $dbh = $self->handle;
   my $qry = "
     INSERT INTO TagType(id, name, comment) VALUES (?,?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
     try {
-      my $result = $sth->execute( $obj->id, $obj->name, $obj->comment);
+      my $result = $sth->execute($obj->id, $obj->name, $obj->comment);
     }
     catch {
-      $self->logger->error( "Insert exception: $_" );
+      $self->logger->error("Insert exception: $_");
     };
   }
+
   # $dbh->commit();
 }
-before '_insert' => sub { shift->logger->entering( "" ); };
-after '_insert' => sub { shift->logger->exiting( "" ); };
+before '_insert' => sub { shift->logger->entering(""); };
+after '_insert'  => sub { shift->logger->exiting(""); };
 
 =item update
     Method documentation placeholder.
@@ -161,7 +168,7 @@ after '_insert' => sub { shift->logger->exiting( "" ); };
 =cut 
 
 sub update {
-  my ( $self, @objects ) = @_;
+  my ($self, @objects) = @_;
   my $dbh = $self->handle;
   foreach my $obj (@objects) {
     next if !defined $obj->id;
@@ -172,15 +179,15 @@ sub update {
 
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute( $obj->name, $obj->comment, $obj->id );
+      my $result = $sth->execute($obj->name, $obj->comment, $obj->id);
     }
     catch {
-      $self->logger->error( "Update exception: $_" );
+      $self->logger->error("Update exception: $_");
     };
   }
 }
-before 'update' => sub { shift->logger->entering( "" ); };
-after 'update' => sub { shift->logger->exiting( "" ); };
+before 'update' => sub { shift->logger->entering(""); };
+after 'update'  => sub { shift->logger->exiting(""); };
 
 =item delete
     Method documentation placeholder.
@@ -188,59 +195,59 @@ after 'update' => sub { shift->logger->exiting( "" ); };
 =cut 
 
 sub delete {
-  my ( $self, @objects ) = @_;
+  my ($self, @objects) = @_;
   my $dbh = $self->handle;
   foreach my $obj (@objects) {
     my $qry = "DELETE FROM TagType WHERE id=?;";
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute( $obj->id );
+      my $result = $sth->execute($obj->id);
     }
     catch {
-      $self->logger->error( "Delete exception: $_" );
+      $self->logger->error("Delete exception: $_");
     };
   }
 }
-before 'delete' => sub { shift->logger->entering( "" ); };
-after 'delete' => sub { shift->logger->exiting( "" ); };
+before 'delete' => sub { shift->logger->entering(""); };
+after 'delete'  => sub { shift->logger->exiting(""); };
 
 =item filter
     Method documentation placeholder.
 =cut 
 
 sub filter {
-  my ( $self, $coderef ) = @_;
-  my $t0 = [gettimeofday];
+  my ($self, $coderef) = @_;
   
+
   return () if $self->empty();
-  my @arr = grep &{$coderef}, $self->all(); 
+  my @arr = grep &{$coderef}, $self->all();
+
   
-  my $dur = tv_interval ( $t0, [gettimeofday]);
-  say "Finding in ".__PACKAGE__.": $dur" if $dur > 0.01;
+  
   return @arr;
 }
-before 'filter' => sub { shift->logger->entering( "" ); };
-after 'filter' => sub { shift->logger->exiting( "" ); };
+before 'filter' => sub { shift->logger->entering(""); };
+after 'filter'  => sub { shift->logger->exiting(""); };
 
 =item find
     Method documentation placeholder.
 =cut 
 
 sub find {
-  my ( $self, $coderef ) = @_;
-  my $t0 = [gettimeofday];
+  my ($self, $coderef) = @_;
   
-  return undef if $self->empty();
+
+  return if $self->empty();
   my $obj = first \&{$coderef}, $self->all();
+
   
-  my $dur = tv_interval ( $t0, [gettimeofday]);
-  say "Finding in ".__PACKAGE__.": $dur" if $dur > 0.01;
   
+
   return $obj;
 
 }
-before 'find' => sub { shift->logger->entering( "" ); };
-after 'find' => sub { shift->logger->exiting( "" ); };
+before 'find' => sub { shift->logger->entering(""); };
+after 'find'  => sub { shift->logger->exiting(""); };
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

@@ -10,18 +10,17 @@ use List::Util qw(first);
 use List::MoreUtils qw(first_index);
 use feature qw( state say );
 
-
 use Moose;
 
 use Moose::Util::TypeConstraints;
 
 use MooseX::Storage;
-with Storage( 'format' => 'JSON', 'io' => 'File' );
+with Storage('format' => 'JSON', 'io' => 'File');
 
 has 'filename' => (
   is      => 'rw',
   isa     => 'Str',
-  default => "bibspace_preferences.json",
+  default => "json_data/bibspace_preferences.json",
   traits  => ['DoNotSerialize']
 );
 
@@ -30,22 +29,21 @@ sub load_maybe {
   my $self = shift;
   my $obj  = undef;
   try {
-    $obj = Preferences->load( $self->filename );
-    $obj->filename( $self->filename );
+    $obj = Preferences->load($self->filename);
+    $obj->filename($self->filename);
   }
   catch {
     $obj = $self;
     warn "Cannot load preferences form file "
-        . $self->filename
-        . ". Creating new file.\n";
-    Path::Tiny->new( $self->filename )->touchpath;
+      . $self->filename
+      . ". Creating new file.\n";
+    Path::Tiny->new($self->filename)->touchpath;
   };
   return $obj;
 }
 
-
 has 'run_in_demo_mode' =>
-    ( is => 'rw', isa => 'Int', default => 0, trigger => \&_pref_changed );
+  (is => 'rw', isa => 'Int', default => 0, trigger => \&_pref_changed);
 
 has 'bibitex_html_converter' => (
   is      => 'rw',
@@ -56,7 +54,7 @@ has 'bibitex_html_converter' => (
 
 # important for Preferences form to set flag "(default)" by the right list item
 has 'default_bibitex_html_converter' =>
-    ( is => 'ro', isa => 'Str', default => 'BibStyleConverter' );
+  (is => 'ro', isa => 'Str', default => 'BibStyleConverter');
 
 has 'local_time_zone' => (
   is      => 'rw',
@@ -95,18 +93,18 @@ has 'cron' => (
 ###### METHODS
 
 sub _pref_changed {
-  my ( $self, $curr_val, $prev_val ) = @_;
+  my ($self, $curr_val, $prev_val) = @_;
 
-  if ( $prev_val and $curr_val ne $prev_val ) {
+  if ($prev_val and $curr_val ne $prev_val) {
     say "A preference changed to '$curr_val'.";
     try {
-      Path::Tiny->new( $self->filename )->touchpath;
-      $self->store( $self->filename );
+      Path::Tiny->new($self->filename)->touchpath;
+      $self->store($self->filename);
     }
     catch {
       warn "Cannot touch path "
-          . $self->filename
-          . ". Preferences will not be saved.\n";
+        . $self->filename
+        . ". Preferences will not be saved.\n";
     };
   }
 }

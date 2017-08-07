@@ -5,7 +5,7 @@ use Try::Tiny;
 use Data::Dumper;
 use utf8;
 use BibSpace::Model::Author;
-use v5.16;    
+use v5.16;
 use List::MoreUtils qw(any uniq);
 
 use Moose;
@@ -15,14 +15,10 @@ use BibSpace::Model::IHavingException;
 with 'IEntity', 'IMembered', 'IHavingException';
 
 use MooseX::Storage;
-with Storage( 'format' => 'JSON', 'io' => 'File' );
+with Storage('format' => 'JSON', 'io' => 'File');
 
-
-has 'name' => ( is => 'rw', isa => 'Str' );
-has 'parent' => ( is => 'rw' );
-
-
-
+has 'name' => (is => 'rw', isa => 'Str');
+has 'parent' => (is => 'rw');
 
 ####################################################################################
 sub toString {
@@ -33,7 +29,8 @@ sub toString {
 sub equals {
   my $self = shift;
   my $obj  = shift;
-  die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj) unless ref($self) eq ref($obj);
+  die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj)
+    unless ref($self) eq ref($obj);
   return $self->name eq $obj->name;
 }
 ####################################################################################
@@ -94,7 +91,7 @@ sub get_entries {
   foreach my $author (@members) {
     push @myEntries, $author->get_entries;
   }
-  my @exception_entries = map {$_->entry} $self->get_exceptions;
+  my @exception_entries = map { $_->entry } $self->get_exceptions;
   @myEntries = (@myEntries, @exception_entries);
   @myEntries = uniq @myEntries;
 

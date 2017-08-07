@@ -4,20 +4,18 @@ use namespace::autoclean;
 use Moose;
 use Try::Tiny;
 
-has 'lr' => ( is => 'ro', isa => 'LayeredRepository', required => 1 );
-
+has 'lr' => (is => 'ro', isa => 'LayeredRepository', required => 1);
 
 sub hardReset {
-    my $self = shift;
-    return $self->lr->hardReset;
+  my $self = shift;
+  return $self->lr->hardReset;
 }
 
 sub _getIdProvider {
-    my $self = shift;
-    my $type = shift;
-    return $self->lr->uidProvider->get_provider($type);
+  my $self = shift;
+  my $type = shift;
+  return $self->lr->uidProvider->get_provider($type);
 }
-
 
 #<<< no perltidy here
 sub authors_all    { my ($self, @params) = @_; return $self->lr->all('Author', @params);    }

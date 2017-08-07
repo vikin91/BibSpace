@@ -16,6 +16,21 @@ Visit [hex64.com](http://www.hex64.com/) and click backend/frontend demo to have
 ## Installation ##
 * See [INSTALL.md](INSTALL.md)
 
+## Using BibSpace with Docker ##
+
+BibSpace has no official docker image on dockerhub (yet), thus you need to build it manually. However, an image with prerequisites exists to ease the process of building. Here are the commands to build BibSpace using docker.
+
+```
+# build BibSpace image
+docker-compose build
+# run it with docker-compose
+docker-compose up -d
+# thats it! Point you browser to http://localhost:8083/ to open BibSpace
+# you may stop the container with 
+docker-compose down
+```
+
+Your MySQL data is stored in `db_data`, whereas preferences and stats in `json_data`.
 
 ## TODOs ##
 BibSpace is currently undergoing serious refactoring. I try to keep current status up to date in [BibSpace Trelo Board](https://trello.com/b/yQ2VPiQ3/bibspace)
