@@ -11,6 +11,7 @@ use Try::Tiny;
 use List::Util qw(first);
 use List::MoreUtils qw(first_index);
 use feature qw( say );
+
 # for benchmarking
 use Time::HiRes qw( gettimeofday tv_interval );
 
@@ -26,7 +27,7 @@ use Time::HiRes qw( gettimeofday tv_interval );
 sub all {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $qry = "SELECT 
+  my $qry    = "SELECT 
               id, 
               login, 
               registration_time, 
@@ -48,22 +49,25 @@ sub all {
     $sth->execute();
   }
   catch {
-    $self->logger->error( "SELECT exception: $_");
+    $self->logger->error("SELECT exception: $_");
   };
-
 
   # this pattern was used in mysql internally
   my $mysqlPattern
-      = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S' );
+    = DateTime::Format::Strptime->new(pattern => '%Y-%m-%d %H:%M:%S');
 
   my @objs;
-  while ( my $row = $sth->fetchrow_hashref() ) {
+  while (my $row = $sth->fetchrow_hashref()) {
+
     # set formatter to parse date/time in the requested format
-    my $rt = $mysqlPattern->parse_datetime( $row->{registration_time} );
-    my $ll = $mysqlPattern->parse_datetime( $row->{last_login} );
-    # set defaults if there is no data in mysql 
-    $rt ||= DateTime->now();# formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
-    $ll ||= DateTime->now();# formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
+    my $rt = $mysqlPattern->parse_datetime($row->{registration_time});
+    my $ll = $mysqlPattern->parse_datetime($row->{last_login});
+
+    # set defaults if there is no data in mysql
+    $rt ||= DateTime->now()
+      ; # formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
+    $ll ||= DateTime->now()
+      ; # formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
 
     my $obj = $self->e_factory->new_User(
       old_mysql_id      => $row->{id},
@@ -121,10 +125,11 @@ sub empty {
 =cut 
 
 sub exists {
-  my ( $self, $object ) = @_;
+  my ($self, $object) = @_;
   my $dbh = $self->handle;
-  my $sth = $dbh->prepare("SELECT EXISTS(SELECT 1 FROM Login WHERE id=? LIMIT 1) as num ");
-  $sth->execute( $object->id );
+  my $sth = $dbh->prepare(
+    "SELECT EXISTS(SELECT 1 FROM Login WHERE id=? LIMIT 1) as num ");
+  $sth->execute($object->id);
   my $row = $sth->fetchrow_hashref();
   my $num = $row->{num} // 0;
   return $num > 0;
@@ -136,16 +141,18 @@ sub exists {
 =cut 
 
 sub save {
-  my ( $self, @objects ) = @_;
+  my ($self, @objects) = @_;
   my $dbh = $self->handle;
   foreach my $obj (@objects) {
-    if ( $self->exists($obj) ) {
+    if ($self->exists($obj)) {
       $self->update($obj);
-      $self->logger->lowdebug( "Updated ".ref($obj)." ID " . $obj->id . " in DB." );
+      $self->logger->lowdebug(
+        "Updated " . ref($obj) . " ID " . $obj->id . " in DB.");
     }
     else {
       $self->_insert($obj);
-      $self->logger->lowdebug( "Inserted ".ref($obj)." ID " . $obj->id . " into DB." );
+      $self->logger->lowdebug(
+        "Inserted " . ref($obj) . " ID " . $obj->id . " into DB.");
     }
   }
 }
@@ -156,7 +163,7 @@ sub save {
 =cut 
 
 sub _insert {
-  my ( $self, @objects ) = @_;
+  my ($self, @objects) = @_;
   my $dbh = $self->handle;
   my $qry = "
     INSERT INTO Login(
@@ -176,27 +183,20 @@ sub _insert {
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
-    
+
     try {
       my $result = $sth->execute(
-        $obj->id,
-        $obj->login,
-        $obj->registration_time,
-        $obj->last_login,
-        $obj->real_name,
-        $obj->email,
-        $obj->pass,
-        $obj->pass2,
-        $obj->pass3,
-        $obj->rank,
-        $obj->master_id,
-        $obj->tennant_id
+        $obj->id,         $obj->login,     $obj->registration_time,
+        $obj->last_login, $obj->real_name, $obj->email,
+        $obj->pass,       $obj->pass2,     $obj->pass3,
+        $obj->rank,       $obj->master_id, $obj->tennant_id
       );
     }
     catch {
-      $self->logger->error( "Insert exception: $_");
+      $self->logger->error("Insert exception: $_");
     };
   }
+
   # $dbh->commit();
 }
 
@@ -206,7 +206,7 @@ sub _insert {
 =cut 
 
 sub update {
-  my ( $self, @objects ) = @_;
+  my ($self, @objects) = @_;
   my $dbh = $self->handle;
 
   foreach my $obj (@objects) {
@@ -230,22 +230,14 @@ sub update {
     my $sth = $dbh->prepare($qry);
     try {
       my $result = $sth->execute(
-        $obj->login,
-        $obj->registration_time,
-        $obj->last_login,
-        $obj->real_name,
-        $obj->email,
-        $obj->pass,
-        $obj->pass2,
-        $obj->pass3,
-        $obj->rank,
-        $obj->master_id,
-        $obj->tennant_id,
-        $obj->id
+        $obj->login,     $obj->registration_time, $obj->last_login,
+        $obj->real_name, $obj->email,             $obj->pass,
+        $obj->pass2,     $obj->pass3,             $obj->rank,
+        $obj->master_id, $obj->tennant_id,        $obj->id
       );
     }
     catch {
-      $self->logger->error( "Update exception: $_");
+      $self->logger->error("Update exception: $_");
     };
   }
 
@@ -257,16 +249,16 @@ sub update {
 =cut 
 
 sub delete {
-  my ( $self, @objects ) = @_;
+  my ($self, @objects) = @_;
   my $dbh = $self->handle;
   foreach my $obj (@objects) {
     my $qry = "DELETE FROM Login WHERE id=?;";
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute( $obj->id );
+      my $result = $sth->execute($obj->id);
     }
     catch {
-      $self->logger->error( "Delete exception: $_" );
+      $self->logger->error("Delete exception: $_");
     };
   }
 
@@ -277,17 +269,17 @@ sub delete {
 =cut 
 
 sub filter {
-  my ( $self, $coderef ) = @_;
+  my ($self, $coderef) = @_;
 
-    my $t0 = [gettimeofday];
-    
-    return () if $self->empty();
-    my @arr = grep &{$coderef}, $self->all(); 
-    
-    my $dur = tv_interval ( $t0, [gettimeofday]);
-    say "Finding in ".__PACKAGE__.": $dur" if $dur > 0.01;
-    return @arr;
-  
+  my $t0 = [gettimeofday];
+
+  return () if $self->empty();
+  my @arr = grep &{$coderef}, $self->all();
+
+  my $dur = tv_interval($t0, [gettimeofday]);
+  say "Finding in " . __PACKAGE__ . ": $dur" if $dur > 0.01;
+  return @arr;
+
 }
 
 =item find
@@ -295,20 +287,19 @@ sub filter {
 =cut 
 
 sub find {
-  my ( $self, $coderef ) = @_;
+  my ($self, $coderef) = @_;
 
   my $t0 = [gettimeofday];
-  
+
   return undef if $self->empty();
   my $obj = first \&{$coderef}, $self->all();
-  
-  my $dur = tv_interval ( $t0, [gettimeofday]);
-  say "Finding in ".__PACKAGE__.": $dur" if $dur > 0.01;
-  
+
+  my $dur = tv_interval($t0, [gettimeofday]);
+  say "Finding in " . __PACKAGE__ . ": $dur" if $dur > 0.01;
+
   return $obj;
 
-} 
-
+}
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

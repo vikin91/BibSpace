@@ -1,5 +1,5 @@
 package IBibSpaceBackend;
-use v5.16;    
+use v5.16;
 use Try::Tiny;
 use Data::Dumper;
 use namespace::autoclean;
@@ -15,7 +15,6 @@ requires 'update';
 requires 'delete';
 requires 'filter';
 requires 'find';
-
 
 1;
 

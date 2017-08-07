@@ -8,12 +8,10 @@ use List::MoreUtils qw(any uniq);
 
 use feature qw(say);
 
-
-sub reset { 1; }
-sub registerUID{ 1; }
-sub last_id { 1; }
-sub generateUID{ 1; }
-
+sub reset       { 1; }
+sub registerUID { 1; }
+sub last_id     { 1; }
+sub generateUID { 1; }
 
 no Moose;
 1;

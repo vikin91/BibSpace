@@ -9,72 +9,76 @@ use File::Path qw/make_path/;
 ###################################
 package main;
 
-my $header
-    = "# This code was auto-generated using ArchitectureGenerator.pl on "
-    . DateTime->now();
+my $header = "# This code was auto-generated using ArchitectureGenerator.pl on "
+  . DateTime->now();
 
-# Methods: 
+# Methods:
 # = first layer: all exists filter find count
 # == no arg: all count
-# == obj arg: exists 
-# == coderef arg: filter find 
-# = all layers: save update delete  
-# == array arg: save update delete  
-
+# == obj arg: exists
+# == coderef arg: filter find
+# = all layers: save update delete
+# == array arg: save update delete
 
 # WARNING: YOU MAY OVERWRITE BIBSPACE::MODEL::REPOSITORY WITH THE GENERATED CODE WITHOUT LOOSING ANYTHING
-# WARNING: YOU MAY __NOT__ OVERWRITE BIBSPACE::MODEL::DAO WITH THE GENERATED CODE. 
+# WARNING: YOU MAY __NOT__ OVERWRITE BIBSPACE::MODEL::DAO WITH THE GENERATED CODE.
 #   IF YOU DO SO, YOU WILL LOOSE THE CODE THAT IS RESPONSIBLE FOR SAVING, READING, .. OF THE BUSINESS ENTITY ENTRIES
 #   YOU MAY HOWEVER OVERWRITE SELECTED PARTS OF IT (FACTORIES, NEW-BACKEND-RELATED CODE), E.G. IF YOU WANT TO ADD A NEW BACKEND
 
 my %be
-    = qw(Entry Entries Author Authors Team Teams Tag Tags TagType TagTypes Authorship Authorships Membership Memberships Labeling Labellings Exception Exceptions);
+  = qw(Entry Entries Author Authors Team Teams Tag Tags TagType TagTypes Authorship Authorships Membership Memberships Labeling Labellings Exception Exceptions);
 my $vars = {
-    header         => $header,
-    app_prefix => 'BibSpace::Model::',
-    logger_interface => 'ILogger',
-    idProvider_interface => 'IUidProvider',
-    repo_package_prefix => 'BibSpace::Model::Repository::',
-    dao_package_prefix => 'BibSpace::Model::DAO::',
-    # plural and singular
-    business_entities_hash => \%be,
-    methods_all  => [qw/all count save update delete exists filter find/],
-    # take no arguments, returns
-    methods_read  => [qw/all count empty/],
-    # take object as argument                 
-    methods_check => [qw/exists/],                 
-    # take object or array of objects as argument
-    methods_write => [qw/save update delete/],
-    # take coderef as argument
-    methods_search => [qw/filter find/],
-    persistence_backends   => [ 'MySQL', 'Redis', 'SmartArray'],
-    repository_types     => ['Layered'],
+  header               => $header,
+  app_prefix           => 'BibSpace::Model::',
+  logger_interface     => 'ILogger',
+  idProvider_interface => 'IUidProvider',
+  repo_package_prefix  => 'BibSpace::Model::Repository::',
+  dao_package_prefix   => 'BibSpace::Model::DAO::',
+
+  # plural and singular
+  business_entities_hash => \%be,
+  methods_all => [qw/all count save update delete exists filter find/],
+
+  # take no arguments, returns
+  methods_read => [qw/all count empty/],
+
+  # take object as argument
+  methods_check => [qw/exists/],
+
+  # take object or array of objects as argument
+  methods_write => [qw/save update delete/],
+
+  # take coderef as argument
+  methods_search       => [qw/filter find/],
+  persistence_backends => ['MySQL', 'Redis', 'SmartArray'],
+  repository_types     => ['Layered'],
 };
 
 my $DAOAbstractFactoryPackageName = "DAOFactory";
-my $DAOAbstractFactoryPackagePath = "BibSpace::Model::DAO::$DAOAbstractFactoryPackageName";
+my $DAOAbstractFactoryPackagePath
+  = "BibSpace::Model::DAO::$DAOAbstractFactoryPackageName";
 
 sub printToFile {
-    my $package  = shift;
-    my $template = shift;
-    my $vars     = shift;
+  my $package  = shift;
+  my $template = shift;
+  my $vars     = shift;
 
-    $package =~ s/::/\//g;
-    my $file = "./$package";
-    my $dir  = dirname($file);
-    make_path($dir);
-    open( my $fh, '>', $file ) or die $_;
-    Template->new( { ENCODING => 'utf8', INTERPOLATE => 0 } )
-        ->process( \$template, $vars, $fh );
-    close $fh;
+  $package =~ s/::/\//g;
+  my $file = "./$package";
+  my $dir  = dirname($file);
+  make_path($dir);
+  open(my $fh, '>', $file) or die $_;
+  Template->new({ENCODING => 'utf8', INTERPOLATE => 0})
+    ->process(\$template, $vars, $fh);
+  close $fh;
 }
 
 ################# DAO ABSTRACT FACTORY
 {
-my $package     = "DAOFactory";
-my $filePackage = "$vars->{dao_package_prefix}$package";
+  my $package     = "DAOFactory";
+  my $filePackage = "$vars->{dao_package_prefix}$package";
 
-my $absDaoFactory = <<CUT;
+  my $absDaoFactory = <<CUT;
 [% SET package = '$package' -%]
 [% header %]
 package [% package %];
@@ -115,13 +119,13 @@ __PACKAGE__->meta->make_immutable;
 no Moose;
 1;
 CUT
-printToFile( "$filePackage.pm", $absDaoFactory, $vars );
+  printToFile("$filePackage.pm", $absDaoFactory, $vars);
 }
 ################# DAO CONCRETE FACTORY
 
-foreach my $backend ( @{ $vars->{persistence_backends} } ){
-  my $package     = "$backend"."DAOFactory";
-  my $filePackage = "$vars->{dao_package_prefix}$package";
+foreach my $backend (@{$vars->{persistence_backends}}) {
+  my $package           = "$backend" . "DAOFactory";
+  my $filePackage       = "$vars->{dao_package_prefix}$package";
   my $backendDaoFactory = <<CUT;
 [% SET backend = '$backend' -%]
 [% SET package = '$package' -%]
@@ -156,15 +160,14 @@ no Moose;
 1;
 CUT
 
-printToFile( "$filePackage.pm", $backendDaoFactory, $vars );
+  printToFile("$filePackage.pm", $backendDaoFactory, $vars);
 }
-
 
 ################# DAO BUSINESS ENTITY DAO INTERFACE
 
 {
-  my $package     = "IDAO";
-  my $filePackage = "$vars->{dao_package_prefix}Interface::$package";
+  my $package            = "IDAO";
+  my $filePackage        = "$vars->{dao_package_prefix}Interface::$package";
   my $entityDaoInterface = <<CUT;
 [% SET package = '$package' -%]
 [% header %]
@@ -186,15 +189,15 @@ has 'idProvider' => ( is => 'ro', does => '[% idProvider_interface %]', required
 1;
 CUT
 
-printToFile( "$filePackage.pm", $entityDaoInterface, $vars );
+  printToFile("$filePackage.pm", $entityDaoInterface, $vars);
 }
 
 ################# DAO BUSINESS ENTITY DAO
 
-foreach my $backend ( @{ $vars->{persistence_backends} } ){
-  foreach my $entity ( keys %{ $vars->{business_entities_hash} } ){
-    my $package     = "$entity"."$backend"."DAO";
-    my $filePackage = "$vars->{dao_package_prefix}$backend"."::$package";
+foreach my $backend (@{$vars->{persistence_backends}}) {
+  foreach my $entity (keys %{$vars->{business_entities_hash}}) {
+    my $package          = "$entity" . "$backend" . "DAO";
+    my $filePackage      = "$vars->{dao_package_prefix}$backend" . "::$package";
     my $entityDaoBackend = <<CUT;
 [% SET entity = '$entity' -%]
 [% SET backend = '$backend' -%]
@@ -281,7 +284,7 @@ no Moose;
 1;
 CUT
 
-    printToFile( "$filePackage.pm", $entityDaoBackend, $vars );
+    printToFile("$filePackage.pm", $entityDaoBackend, $vars);
   }
 }
 
@@ -289,13 +292,11 @@ CUT
 ############################# REPOSITORY ############################################
 #####################################################################################
 
-
-
 ################# ABSTRACT REPOSITORY FACTORY
 {
-my $package        = "RepositoryFactory";
-my $filePackage        = "$vars->{repo_package_prefix}$package";
-my $absRepoFactory = <<CUT;
+  my $package        = "RepositoryFactory";
+  my $filePackage    = "$vars->{repo_package_prefix}$package";
+  my $absRepoFactory = <<CUT;
 [% SET package = '$package' -%]
 [% header %]
 package [% package %];
@@ -346,14 +347,14 @@ __PACKAGE__->meta->make_immutable;
 no Moose;
 1;
 CUT
-printToFile( "$filePackage.pm", $absRepoFactory, $vars );
+  printToFile("$filePackage.pm", $absRepoFactory, $vars);
 }
 ################# CONCRETE REPOSITORY FACTORY
 
-foreach my $repoType ( @{ $vars->{repository_types} } ) {
-    my $package        = "$repoType" . "RepositoryFactory";
-    my $filePackage        = "$vars->{repo_package_prefix}$package";
-    my $repoTypeConcreteFactory = <<CUT;
+foreach my $repoType (@{$vars->{repository_types}}) {
+  my $package                 = "$repoType" . "RepositoryFactory";
+  my $filePackage             = "$vars->{repo_package_prefix}$package";
+  my $repoTypeConcreteFactory = <<CUT;
 [% SET backend = '$repoType' -%]
 [% SET package = '$package' -%]
 [% header %]
@@ -433,16 +434,16 @@ no Moose;
 1;
 CUT
 
-    printToFile( "$filePackage.pm", $repoTypeConcreteFactory, $vars );
+  printToFile("$filePackage.pm", $repoTypeConcreteFactory, $vars);
 }
 
 #################  REPOSITORY INTERFACE
 
-# foreach my $entity ( keys %{ $vars->{business_entities_hash} } ) 
+# foreach my $entity ( keys %{ $vars->{business_entities_hash} } )
 {
-my $package        = "IRepository";
-my $filePackage        = "$vars->{repo_package_prefix}Interface::$package";
-my $entityRespositoryInterface = <<CUT;
+  my $package     = "IRepository";
+  my $filePackage = "$vars->{repo_package_prefix}Interface::$package";
+  my $entityRespositoryInterface = <<CUT;
 [% SET package = '$package' -%]
 [% SET DAOAbstractFactoryPackageName = '$DAOAbstractFactoryPackageName' -%]
 [% SET DAOAbstractFactoryPackagePath = '$DAOAbstractFactoryPackagePath' -%]
@@ -494,17 +495,21 @@ sub getBackendsArray{
 1;
 CUT
 
-    printToFile( "$filePackage.pm", $entityRespositoryInterface, $vars );
+  printToFile("$filePackage.pm", $entityRespositoryInterface, $vars);
 }
 
 ################# BUSINESS ENTITY Repo
 
-foreach my $backend ( @{ $vars->{repository_types} } ) {
-    foreach my $entity ( keys %{ $vars->{business_entities_hash} } ) {
-        
-        my $package   = "$vars->{business_entities_hash}->{$entity}" . "$backend" . "Repository";
-        my $filePackage = "$vars->{repo_package_prefix}$backend" . "::". "$package";
-        my $entityRepoBackend = <<CUT;
+foreach my $backend (@{$vars->{repository_types}}) {
+  foreach my $entity (keys %{$vars->{business_entities_hash}}) {
+
+    my $package
+      = "$vars->{business_entities_hash}->{$entity}"
+      . "$backend"
+      . "Repository";
+    my $filePackage
+      = "$vars->{repo_package_prefix}$backend" . "::" . "$package";
+    my $entityRepoBackend = <<CUT;
 [% SET entity = '$entity' -%]
 [% SET backend = '$backend' -%]
 [% SET package = '$package' -%]
@@ -698,7 +703,7 @@ no Moose;
 1;
 CUT
 
-        printToFile( "$filePackage.pm", $entityRepoBackend, $vars );
-    }
+    printToFile("$filePackage.pm", $entityRepoBackend, $vars);
+  }
 }
 

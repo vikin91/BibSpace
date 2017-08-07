@@ -17,36 +17,44 @@ use Try::Tiny;
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
 =cut 
+
 sub all {
   my ($self) = @_;
 
-  die "".(caller(0))[3]." not implemented.";
+  die "" . (caller(0))[3] . " not implemented.";
+
   # TODO: auto-generated method stub. Implement me!
 
 }
 before 'all' => sub { shift->logger->entering(""); };
 after 'all'  => sub { shift->logger->exiting(""); };
+
 =item count
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
 =cut 
+
 sub count {
   my ($self) = @_;
 
-  die "".(caller(0))[3]." not implemented.";
+  die "" . (caller(0))[3] . " not implemented.";
+
   # TODO: auto-generated method stub. Implement me!
 
 }
 before 'count' => sub { shift->logger->entering(""); };
 after 'count'  => sub { shift->logger->exiting(""); };
+
 =item empty
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
 =cut 
+
 sub empty {
   my ($self) = @_;
 
-  die "".(caller(0))[3]." not implemented.";
+  die "" . (caller(0))[3] . " not implemented.";
+
   # TODO: auto-generated method stub. Implement me!
 
 }
@@ -57,10 +65,12 @@ after 'empty'  => sub { shift->logger->exiting(""); };
     Method documentation placeholder.
     This method takes single object as argument and returns a scalar.
 =cut 
+
 sub exists {
   my ($self, $object) = @_;
-  
-  die "".(caller(0))[3]." not implemented.";
+
+  die "" . (caller(0))[3] . " not implemented.";
+
   # TODO: auto-generated method stub. Implement me!
 
 }
@@ -71,36 +81,56 @@ after 'exists'  => sub { shift->logger->exiting(""); };
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
 =cut 
+
 sub save {
   my ($self, @objects) = @_;
 
-  die "".(caller(0))[3]." not implemented. Method was instructed to save ".scalar(@objects)." objects.";
+  die ""
+    . (caller(0))[3]
+    . " not implemented. Method was instructed to save "
+    . scalar(@objects)
+    . " objects.";
+
   # TODO: auto-generated method stub. Implement me!
 
 }
 before 'save' => sub { shift->logger->entering(""); };
 after 'save'  => sub { shift->logger->exiting(""); };
+
 =item update
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
 =cut 
+
 sub update {
   my ($self, @objects) = @_;
 
-  die "".(caller(0))[3]." not implemented. Method was instructed to update ".scalar(@objects)." objects.";
+  die ""
+    . (caller(0))[3]
+    . " not implemented. Method was instructed to update "
+    . scalar(@objects)
+    . " objects.";
+
   # TODO: auto-generated method stub. Implement me!
 
 }
 before 'update' => sub { shift->logger->entering(""); };
 after 'update'  => sub { shift->logger->exiting(""); };
+
 =item delete
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
 =cut 
+
 sub delete {
   my ($self, @objects) = @_;
 
-  die "".(caller(0))[3]." not implemented. Method was instructed to delete ".scalar(@objects)." objects.";
+  die ""
+    . (caller(0))[3]
+    . " not implemented. Method was instructed to delete "
+    . scalar(@objects)
+    . " objects.";
+
   # TODO: auto-generated method stub. Implement me!
 
 }
@@ -110,26 +140,43 @@ after 'delete'  => sub { shift->logger->exiting(""); };
 =item filter
     Method documentation placeholder.
 =cut 
+
 sub filter {
   my ($self, $coderef) = @_;
-  die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+  die ""
+    . (caller(0))[3]
+    . " incorrect type of argument. Got: '"
+    . ref($coderef)
+    . "', expected: "
+    . (ref sub { }) . "."
+    unless (ref $coderef eq ref sub { });
 
-  die "".(caller(0))[3]." not implemented.";
+  die "" . (caller(0))[3] . " not implemented.";
+
   # TODO: auto-generated method stub. Implement me!
-  
+
 }
 before 'filter' => sub { shift->logger->entering(""); };
 after 'filter'  => sub { shift->logger->exiting(""); };
+
 =item find
     Method documentation placeholder.
 =cut 
+
 sub find {
   my ($self, $coderef) = @_;
-  die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+  die ""
+    . (caller(0))[3]
+    . " incorrect type of argument. Got: '"
+    . ref($coderef)
+    . "', expected: "
+    . (ref sub { }) . "."
+    unless (ref $coderef eq ref sub { });
 
-  die "".(caller(0))[3]." not implemented.";
+  die "" . (caller(0))[3] . " not implemented.";
+
   # TODO: auto-generated method stub. Implement me!
-  
+
 }
 before 'find' => sub { shift->logger->entering(""); };
 after 'find'  => sub { shift->logger->exiting(""); };

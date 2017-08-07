@@ -8,7 +8,5 @@ use Test::Mojo;
 # use BibSpace::TestManager;
 # TestManager->apply_fixture($self->app);
 
-
-
 ok(1);
 done_testing();

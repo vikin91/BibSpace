@@ -9,6 +9,7 @@ use BibSpace::Model::Membership;
 with 'IDAO';
 use Try::Tiny;
 use List::Util qw(first);
+
 # Inherited fields from BibSpace::DAO::Interface::IDAO Mixin:
 # has 'logger' => ( is => 'ro', does => 'ILogger', required => 1);
 # has 'handle' => ( is => 'ro', required => 1);
@@ -17,26 +18,31 @@ use List::Util qw(first);
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
 =cut 
+
 sub all {
   my ($self) = @_;
   return $self->handle->all("Membership");
 }
 before 'all' => sub { shift->logger->entering(""); };
 after 'all'  => sub { shift->logger->exiting(""); };
+
 =item count
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
 =cut 
+
 sub count {
   my ($self) = @_;
   return $self->handle->count("Membership");
 }
 before 'count' => sub { shift->logger->entering(""); };
 after 'count'  => sub { shift->logger->exiting(""); };
+
 =item empty
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
 =cut 
+
 sub empty {
   my ($self) = @_;
   return $self->handle->empty("Membership");
@@ -48,6 +54,7 @@ after 'empty'  => sub { shift->logger->exiting(""); };
     Method documentation placeholder.
     This method takes single object as argument and returns a scalar.
 =cut 
+
 sub exists {
   my ($self, $object) = @_;
   $self->handle->exists($object);
@@ -59,6 +66,7 @@ after 'exists'  => sub { shift->logger->exiting(""); };
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
 =cut 
+
 sub save {
   my ($self, @objects) = @_;
   $self->handle->save(@objects);
@@ -70,16 +78,20 @@ after 'save'  => sub { shift->logger->exiting(""); };
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
 =cut 
+
 sub update {
   my ($self, @objects) = @_;
+
   # smart array does not require updating! Objects are direct references!
 }
 before 'update' => sub { shift->logger->entering(""); };
 after 'update'  => sub { shift->logger->exiting(""); };
+
 =item delete
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
 =cut 
+
 sub delete {
   my ($self, @objects) = @_;
   $self->handle->delete(@objects);
@@ -90,19 +102,34 @@ after 'delete'  => sub { shift->logger->exiting(""); };
 =item filter
     Method documentation placeholder.
 =cut 
+
 sub filter {
   my ($self, $coderef) = @_;
-  die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+  die ""
+    . (caller(0))[3]
+    . " incorrect type of argument. Got: '"
+    . ref($coderef)
+    . "', expected: "
+    . (ref sub { }) . "."
+    unless (ref $coderef eq ref sub { });
   return $self->handle->filter("Membership", $coderef);
 }
 before 'filter' => sub { shift->logger->entering(""); };
 after 'filter'  => sub { shift->logger->exiting(""); };
+
 =item find
     Method documentation placeholder.
 =cut 
+
 sub find {
   my ($self, $coderef) = @_;
-  die "".(caller(0))[3]." incorrect type of argument. Got: '".ref($coderef)."', expected: ".(ref sub{})."." unless (ref $coderef eq ref sub{} );
+  die ""
+    . (caller(0))[3]
+    . " incorrect type of argument. Got: '"
+    . ref($coderef)
+    . "', expected: "
+    . (ref sub { }) . "."
+    unless (ref $coderef eq ref sub { });
   return $self->handle->find("Membership", $coderef);
 }
 before 'find' => sub { shift->logger->entering(""); };
