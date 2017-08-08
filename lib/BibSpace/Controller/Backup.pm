@@ -29,7 +29,6 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::Log;
 
-
 ####################################################################################
 sub index {
   my $self = shift;
@@ -42,8 +41,8 @@ sub index {
   my @backups_arr = sort { $b->date cmp $a->date } read_backups($backup_dir);
 
   foreach my $backup (@backups_arr) {
-    if ( $backup->get_age->days
-      >= $self->app->config->{allow_delete_backups_older_than} )
+    if ($backup->get_age->days
+      >= $self->app->config->{allow_delete_backups_older_than})
     {
       $backup->allow_delete(1);
     }
@@ -52,24 +51,21 @@ sub index {
     }
   }
 
-  $self->stash( backups_arr => \@backups_arr, dir_size => $dir_size );
-  $self->render( template => 'backup/backup' );
+  $self->stash(backups_arr => \@backups_arr, dir_size => $dir_size);
+  $self->render(template => 'backup/backup');
 }
 
 ####################################################################################
 sub save {
   my $self = shift;
 
-  my $backup = do_storable_backup( $self->app );
+  my $backup = do_storable_backup($self->app);
 
-  if ( $backup->is_healthy ) {
-    $self->flash(
-      msg_type => 'success',
-      msg      => "Backup created successfully"
-    );
+  if ($backup->is_healthy) {
+    $self->flash(msg_type => 'success', msg => "Backup created successfully");
   }
   else {
-    $self->flash( msg_type => 'danger', msg => "Backup create failed!" );
+    $self->flash(msg_type => 'danger', msg => "Backup create failed!");
   }
   $self->redirect_to('backup_index');
 }
@@ -77,16 +73,13 @@ sub save {
 sub save_mysql {
   my $self = shift;
 
-  my $backup = do_mysql_backup( $self->app );
+  my $backup = do_mysql_backup($self->app);
 
-  if ( $backup->is_healthy ) {
-    $self->flash(
-      msg_type => 'success',
-      msg      => "Backup created successfully"
-    );
+  if ($backup->is_healthy) {
+    $self->flash(msg_type => 'success', msg => "Backup created successfully");
   }
   else {
-    $self->flash( msg_type => 'danger', msg => "Backup create failed!" );
+    $self->flash(msg_type => 'danger', msg => "Backup create failed!");
   }
   $self->redirect_to('backup_index');
 }
@@ -94,9 +87,9 @@ sub save_mysql {
 sub cleanup {
   my $self = shift;
   my $age_treshold
-      = $self->config->{backup_age_in_days_to_delete_automatically};
+    = $self->config->{backup_age_in_days_to_delete_automatically};
 
-  my $num_deleted = delete_old_backups( $self->app, $age_treshold );
+  my $num_deleted = delete_old_backups($self->app, $age_treshold);
 
   $self->app->logger->info(
     "Deleting old backups.  $num_deleted backups have been cleaned.");
@@ -116,18 +109,18 @@ sub backup_download {
   my $self = shift;
   my $uuid = $self->param('id');
 
-  my $backup = find_backup( $uuid, $self->app->get_backups_dir );
+  my $backup = find_backup($uuid, $self->app->get_backups_dir);
 
-  if ( $backup and $backup->is_healthy ) {
-    $self->app->logger->info( "Downloading backup " . $backup->uuid );
-    $self->render_file( 'filepath' => $backup->get_path );
+  if ($backup and $backup->is_healthy) {
+    $self->app->logger->info("Downloading backup " . $backup->uuid);
+    $self->render_file('filepath' => $backup->get_path);
   }
   else {
     $self->flash(
       msg_type => 'danger',
       msg      => "Cannot download backup $uuid - backup not healthy."
     );
-    $self->redirect_to( $self->get_referrer );
+    $self->redirect_to($self->get_referrer);
   }
 }
 
@@ -136,25 +129,22 @@ sub delete_backup {
   my $self = shift;
   my $uuid = $self->param('id');
 
-  my $backup = find_backup( $uuid, $self->app->get_backups_dir );
+  my $backup = find_backup($uuid, $self->app->get_backups_dir);
 
-  if ( $backup and $backup->is_healthy ) {
-    if ( $backup->get_age->days
-      >= $self->app->config->{allow_delete_backups_older_than} )
+  if ($backup and $backup->is_healthy) {
+    if ($backup->get_age->days
+      >= $self->app->config->{allow_delete_backups_older_than})
     {
       $backup->allow_delete(1);
     }
     else {
       $backup->allow_delete(undef);
     }
-    if ( $backup->allow_delete ) {
+    if ($backup->allow_delete) {
       try {
         unlink $backup->get_path;
-        $self->app->logger->info( "Deleting backup " . $backup->uuid );
-        $self->flash(
-          msg_type => 'success',
-          msg      => "Backup id $uuid deleted!"
-        );
+        $self->app->logger->info("Deleting backup " . $backup->uuid);
+        $self->flash(msg_type => 'success', msg => "Backup id $uuid deleted!");
       }
       catch {
         $self->flash(
@@ -178,7 +168,7 @@ sub delete_backup {
   }
 
   $self->res->code(303);
-  $self->redirect_to( $self->url_for('backup_index') );
+  $self->redirect_to($self->url_for('backup_index'));
 }
 
 ####################################################################################
@@ -186,24 +176,23 @@ sub restore_backup {
   my $self = shift;
   my $uuid = $self->param('id');
 
+  my $backup = find_backup($uuid, $self->app->get_backups_dir);
 
-  my $backup = find_backup( $uuid, $self->app->get_backups_dir );
+  if ($backup and $backup->is_healthy) {
 
-  if ( $backup and $backup->is_healthy ) {
+    restore_storable_backup($backup, $self->app);
 
-    restore_storable_backup( $backup, $self->app );
-
-    $self->app->logger->info( "Restoring backup " . $backup->uuid );
+    $self->app->logger->info("Restoring backup " . $backup->uuid);
 
     my $status
-        = "Status: <pre style=\"font-family:monospace;\">"
-        . $self->app->repo->lr->get_summary_table
-        . "</pre>";
+      = "Status: <pre style=\"font-family:monospace;\">"
+      . $self->app->repo->lr->get_summary_table
+      . "</pre>";
 
     $self->flash(
       msg_type => 'success',
       msg =>
-          "Backup restored successfully. Database recreated, persistence layers in sync. $status"
+        "Backup restored successfully. Database recreated, persistence layers in sync. $status"
     );
   }
   else {

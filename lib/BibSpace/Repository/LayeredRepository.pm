@@ -16,31 +16,40 @@ use BibSpace::Util::EntityFactory;
 
 # logic of the layered repository = read from one layer, write to all layers
 
-has 'logger'      => ( is => 'ro', does => 'ILogger',     required => 1 );
-has 'preferences' => ( is => 'ro', isa  => 'Preferences', required => 1 );
-has 'id_provider_class' => ( is => 'ro', isa  => 'Str', required => 1 );
+has 'logger'            => (is => 'ro', does => 'ILogger',     required => 1);
+has 'preferences'       => (is => 'ro', isa  => 'Preferences', required => 1);
+has 'id_provider_class' => (is => 'ro', isa  => 'Str',         required => 1);
 
 sub BUILD {
   my $self = shift;
 
-  my $uidP = SmartUidProvider->new( logger => $self->logger, idProviderClassName => $self->id_provider_class );
+  my $uidP = SmartUidProvider->new(
+    logger              => $self->logger,
+    idProviderClassName => $self->id_provider_class
+  );
   $self->uidProvider($uidP);
 
-  my $e_factory = EntityFactory->new( logger => $self->logger, id_provider => $self->uidProvider,
-    preferences => $self->preferences );
+  my $e_factory = EntityFactory->new(
+    logger      => $self->logger,
+    id_provider => $self->uidProvider,
+    preferences => $self->preferences
+  );
   $self->e_factory($e_factory);
 }
 
 # will be set in the post-construction routine BUILD
-has 'uidProvider' => ( is => 'rw', isa => 'SmartUidProvider' );
+has 'uidProvider' => (is => 'rw', isa => 'SmartUidProvider');
 
 # will be set in the post-construction routine BUILD
-has 'e_factory' => ( is => 'rw', isa => 'EntityFactory' );
-
+has 'e_factory' => (is => 'rw', isa => 'EntityFactory');
 
 # layer_name => RepositoryLayer
-has 'layers' => ( is => 'ro', isa => 'HashRef[RepositoryLayer]', traits => ['DoNotSerialize'], default => sub { {} } );
-
+has 'layers' => (
+  is      => 'ro',
+  isa     => 'HashRef[RepositoryLayer]',
+  traits  => ['DoNotSerialize'],
+  default => sub { {} }
+);
 
 # static methods
 class_has 'entities' => (
@@ -49,31 +58,30 @@ class_has 'entities' => (
   default => sub {
 
     # ORDER IS IMPORTANT!!! TAG MUST BE AFTER TAGTYPE - it references it N:1!
-    [ 'Author', 'Entry', 'TagType', 'Tag', 'Team', 'Type', 'User' ];
+    ['Author', 'Entry', 'TagType', 'Tag', 'Team', 'Type', 'User'];
   },
   traits  => ['Array'],
-  handles => { get_entities => 'elements', },
+  handles => {get_entities => 'elements',},
 );
 class_has 'relations' => (
   is      => 'ro',
   isa     => 'ArrayRef[Str]',
   default => sub {
-    [ 'Authorship', 'Exception', 'Labeling', 'Membership' ];
+    ['Authorship', 'Exception', 'Labeling', 'Membership'];
   },
   traits  => ['Array'],
-  handles => { get_relations => 'elements', },
+  handles => {get_relations => 'elements',},
 );
 
 class_has 'models' => (
   is      => 'ro',
   isa     => 'ArrayRef[Str]',
   default => sub {
-    return [ LayeredRepository->get_entities, LayeredRepository->get_relations ];
+    return [LayeredRepository->get_entities, LayeredRepository->get_relations];
   },
   traits  => ['Array'],
-  handles => { get_models => 'elements', },
+  handles => {get_models => 'elements',},
 );
-
 
 =item get_read_layer
     Returns layer designated for reading. Throws exception if no read layer found
@@ -91,7 +99,9 @@ sub get_read_layer {
 
 sub get_all_layers {
   my $self = shift;
-  return sort { $a->priority <=> $b->priority } values %{ $self->layers };
+  my @sorted_layers
+    = sort { $a->priority <=> $b->priority } values %{$self->layers};
+  return @sorted_layers;
 }
 
 =item get_layer
@@ -101,12 +111,11 @@ sub get_all_layers {
 sub get_layer {
   my $self = shift;
   my $name = shift;
-  if ( exists $self->layers->{$name} ) {
+  if (exists $self->layers->{$name}) {
     return $self->layers->{$name};
   }
   return;
 }
-
 
 =item replace_layer
     Replaces layer named $name in the repo with an input_layer object (e.g., from backup).
@@ -119,24 +128,26 @@ sub replace_layer {
   my $input_layer = shift;
 
   my $destLayer = $self->get_layer($name);
-  if ( ref($destLayer) ne ref($input_layer) ) {
-    $self->logger->error("Replacing layers with of different type, this will lead to a failure!");
+  if (ref($destLayer) ne ref($input_layer)) {
+    $self->logger->error(
+      "Replacing layers with of different type, this will lead to a failure!");
     die "Replacing layers with of different type, this will lead to a failure!";
   }
-  if ( $destLayer and $input_layer->is_read != $destLayer->is_read ) {
-    $self->logger->error("Replacing layers with different is_read value! This is experimental!");
+  if ($destLayer and $input_layer->is_read != $destLayer->is_read) {
+    $self->logger->error(
+      "Replacing layers with different is_read value! This is experimental!");
   }
   delete $self->layers->{$name};
   $self->layers->{$name} = $input_layer;
 
   ## START TRANSACTION - you really need to do all of this together
   # $self->logger->debug("Replacing ID PROVIDER for all layers!");
-  $self->replace_uid_provider( $input_layer->uidProvider );
+  $self->replace_uid_provider($input_layer->uidProvider);
 
   # $self->logger->debug("Replacing E_FACTORY for all layers!");
   # e_factory has also id_providers, so it must be replaced
-  $self->replace_e_factory( $input_layer->e_factory );
-  $self->e_factory->id_provider( $input_layer->uidProvider );
+  $self->replace_e_factory($input_layer->e_factory);
+  $self->e_factory->id_provider($input_layer->uidProvider);
   ## COMMIT TRANSACTION
 }
 
@@ -149,7 +160,7 @@ sub replace_uid_provider {
   my $self              = shift;
   my $input_id_provider = shift;
   $self->uidProvider($input_id_provider);
-  foreach my $layer ( $self->get_all_layers ) {
+  foreach my $layer ($self->get_all_layers) {
     $layer->uidProvider($input_id_provider);
   }
 }
@@ -163,11 +174,10 @@ sub replace_e_factory {
   my $self            = shift;
   my $input_e_factory = shift;
   $self->e_factory($input_e_factory);
-  foreach my $layer ( $self->get_all_layers ) {
+  foreach my $layer ($self->get_all_layers) {
     $layer->e_factory($input_e_factory);
   }
 }
-
 
 =item add_layer
     Adds new layer to the layered repository.
@@ -178,17 +188,16 @@ sub add_layer {
   my $self  = shift;
   my $layer = shift;
 
-  if ( exists $self->layers->{ $layer->name } ) {
+  if (exists $self->layers->{$layer->name}) {
     die "Layer with such name already exist.";
   }
-  if ( $layer->is_read and $self->get_read_layer ) {
+  if ($layer->is_read and $self->get_read_layer) {
     die "There can be only one read layer.";
   }
-  $layer->e_factory( $self->e_factory );
-  $layer->uidProvider( $self->uidProvider );
-  $self->layers->{ $layer->name } = $layer;
+  $layer->e_factory($self->e_factory);
+  $layer->uidProvider($self->uidProvider);
+  $self->layers->{$layer->name} = $layer;
 }
-
 
 =item reset_uid_providers
     Resets main id provider (loacted in $self->uidProvider) state.
@@ -212,66 +221,65 @@ sub get_summary_table {
   my %count_hash;    #layer_name => summary_hash
   my @prefixes = qw(CNT_ ID_);
   my @column_name = map { $_ . "OK" } @prefixes;
-  foreach my $layer ( $self->get_all_layers ) {
+  foreach my $layer ($self->get_all_layers) {
     push @column_name, "CNT_" . $layer->name;
     push @column_name, "ID_" . $layer->name;
-    $count_hash{ "CNT_" . $layer->name } = $layer->get_summary_hash;
-    $count_hash{ "ID_" . $layer->name }  = $layer->get_id_provider_summary_hash;
+    $count_hash{"CNT_" . $layer->name} = $layer->get_summary_hash;
+    $count_hash{"ID_" . $layer->name}  = $layer->get_id_provider_summary_hash;
   }
 
   my $tab_width = 91;
 
   # calc CHECK status
-  foreach my $entity ( LayeredRepository->get_models ) {
+  foreach my $entity (LayeredRepository->get_models) {
     foreach my $prefix (@prefixes) {
-      $count_hash{ $prefix . 'OK' }->{$entity} = 'y';
+      $count_hash{$prefix . 'OK'}->{$entity} = 'y';
       my $val;
-      foreach my $ln ( reverse sort map { $_->name } $self->get_all_layers ) {
-        if ( !defined $val ) {
-          $val = "" . $count_hash{ $prefix . $ln }->{$entity};
+      foreach my $ln (reverse sort map { $_->name } $self->get_all_layers) {
+        if (!defined $val) {
+          $val = "" . $count_hash{$prefix . $ln}->{$entity};
         }
-        if ( $count_hash{ $prefix . $ln }->{$entity} ne $val ) {
-          $count_hash{ $prefix . 'OK' }->{$entity} = 'NO';
+        if ($count_hash{$prefix . $ln}->{$entity} ne $val) {
+          $count_hash{$prefix . 'OK'}->{$entity} = 'NO';
         }
       }
     }
   }
 
   # print column names
-  for ( 1 .. $tab_width ) { $str .= "-"; }
+  for (1 .. $tab_width) { $str .= "-"; }
   $str .= "\n";
   $str .= sprintf "| %-15s |", 'entity';
-  foreach my $ln ( reverse sort @column_name ) {
+  foreach my $ln (reverse sort @column_name) {
     $str .= sprintf " %-9s |", $ln;
   }
   $str .= "\n";
-  for ( 1 .. $tab_width ) { $str .= "-"; }
+  for (1 .. $tab_width) { $str .= "-"; }
   $str .= "\n";
 
   # print data
-  foreach my $entity ( LayeredRepository->get_entities ) {
+  foreach my $entity (LayeredRepository->get_entities) {
     $str .= sprintf "| %-15s |", $entity;
-    foreach my $ln ( reverse sort @column_name ) {
+    foreach my $ln (reverse sort @column_name) {
       $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};
     }
     $str .= "\n";
   }
-  for ( 1 .. $tab_width ) { $str .= "-"; }
+  for (1 .. $tab_width) { $str .= "-"; }
   $str .= "\n";
-  foreach my $entity ( LayeredRepository->get_relations ) {
+  foreach my $entity (LayeredRepository->get_relations) {
     $str .= sprintf "| %-15s |", $entity;
-    foreach my $ln ( reverse sort @column_name ) {
+    foreach my $ln (reverse sort @column_name) {
       $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};
     }
     $str .= "\n";
   }
-  for ( 1 .. $tab_width ) { $str .= "-"; }
+  for (1 .. $tab_width) { $str .= "-"; }
   $str .= "\n";
   $str
     .= "IF YOU SEE ANY 'NO' IN ANY '_OK' COLUMN THEN MANIPULATING DATA IN THE SYSTEM MAY LEAD TO DATA LOSS OR EXCEPTIONS!";
   return $str;
 }
-
 
 =item copy_data
     Copies data between layers of repositories. 
@@ -296,25 +304,25 @@ sub copy_data {
   my $srcLayer  = $self->get_layer($backendFrom);
   my $destLayer = $self->get_layer($backendTo);
 
-  if ( $srcLayer eq $destLayer ) {
+  if ($srcLayer eq $destLayer) {
     $self->logger->error(
       "Source and destination layers are the same, cannot copy.");
     return;
   }
 
-  if ( !$srcLayer or !$destLayer ) {
+  if ((!$srcLayer) or (!$destLayer)) {
     $self->logger->error(
-      "Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist.");
+      "Cannot copy data from layer '$backendFrom' to layer '$backendTo' - one or more layers do not exist."
+    );
     return;
   }
 
+# $self->logger->debug("State before reset_uid_providers: ".$self->get_summary_table);
 
-
-
-  # $self->logger->debug("State before reset_uid_providers: ".$self->get_summary_table);
-
-  if ( $srcLayer->creates_on_read ) {
-    $self->logger->warn("Resetting all uid providers during copy from layer '$backendFrom' to layer '$backendTo'.");
+  if ($srcLayer->creates_on_read) {
+    $self->logger->warn(
+      "Resetting all uid providers during copy from layer '$backendFrom' to layer '$backendTo'."
+    );
     $self->reset_uid_providers;
   }
 
@@ -325,37 +333,38 @@ sub copy_data {
 
   # $self->logger->debug("State before reset data:".$self->get_summary_table);
   ## avoid data duplication in the destination layer!!
-  $destLayer->reset_data;    # this has unfortunately no meaning for mysql :( need to implement this
+  $destLayer->reset_data
+    ;    # this has unfortunately no meaning for mysql :( need to implement this
 
   # ALWAYS: first copy entities, then relations
 
-  $self->logger->debug("Copying data from layer '$backendFrom' to layer '$backendTo'.");
+  $self->logger->debug(
+    "Copying data from layer '$backendFrom' to layer '$backendTo'.");
 
-  foreach my $type ( LayeredRepository->get_entities ) {
+  foreach my $type (LayeredRepository->get_entities) {
     my @resultRead = $srcLayer->all($type);
-    my $resultSave = $destLayer->save( $type, @resultRead );
+    my $resultSave = $destLayer->save($type, @resultRead);
 
-    $self->logger->debug( "'$backendFrom'-read "
+    $self->logger->debug("'$backendFrom'-read "
         . scalar(@resultRead)
         . " objects '"
         . $type
-        . "' ==> '$backendTo'-write $resultSave objects." );
+        . "' ==> '$backendTo'-write $resultSave objects.");
 
   }
-  foreach my $type ( LayeredRepository->get_relations ) {
+  foreach my $type (LayeredRepository->get_relations) {
 
     my @resultRead = $srcLayer->all($type);
-    my $resultSave = $destLayer->save( $type, @resultRead );
+    my $resultSave = $destLayer->save($type, @resultRead);
 
-    $self->logger->debug( "'$backendFrom'-read "
+    $self->logger->debug("'$backendFrom'-read "
         . scalar(@resultRead)
         . " objects '"
         . $type
-        . "' ==> '$backendTo'-write $resultSave objects." );
+        . "' ==> '$backendTo'-write $resultSave objects.");
 
   }
 }
-
 
 sub all {
   my $self = shift;
@@ -364,58 +373,56 @@ sub all {
 }
 
 sub count {
-  my ( $self, $type ) = @_;
+  my ($self, $type) = @_;
   return $self->get_read_layer->count($type);
 }
 
 sub empty {
-  my ( $self, $type ) = @_;
+  my ($self, $type) = @_;
   return $self->get_read_layer->empty($type);
 }
 
 sub exists {
-  my ( $self, $type, $obj ) = @_;
-  return $self->get_read_layer->exists( $type, $obj );
+  my ($self, $type, $obj) = @_;
+  return $self->get_read_layer->exists($type, $obj);
 }
 
 sub save {
-  my ( $self, $type, @objects ) = @_;
+  my ($self, $type, @objects) = @_;
   my @return;
-  foreach my $layer ( $self->get_all_layers ) {
-    push @return, $layer->save( $type, @objects );
+  foreach my $layer ($self->get_all_layers) {
+    push @return, $layer->save($type, @objects);
   }
   return @return;
 }
 
 sub update {
-  my ( $self, $type, @objects ) = @_;
+  my ($self, $type, @objects) = @_;
   my @return;
-  foreach my $layer ( $self->get_all_layers ) {
-    push @return, $layer->update( $type, @objects );
+  foreach my $layer ($self->get_all_layers) {
+    push @return, $layer->update($type, @objects);
   }
   return @return;
 }
 
 sub delete {
-  my ( $self, $type, @objects ) = @_;
+  my ($self, $type, @objects) = @_;
   my @return;
-  foreach my $layer ( $self->get_all_layers ) {
-    push @return, $layer->delete( $type, @objects );
+  foreach my $layer ($self->get_all_layers) {
+    push @return, $layer->delete($type, @objects);
   }
   return @return;
 }
 
-
 sub filter {
-  my ( $self, $type, $coderef ) = @_;
-  return $self->get_read_layer->filter( $type, $coderef );
+  my ($self, $type, $coderef) = @_;
+  return $self->get_read_layer->filter($type, $coderef);
 }
 
 sub find {
-  my ( $self, $type, $coderef ) = @_;
-  return $self->get_read_layer->find( $type, $coderef );
+  my ($self, $type, $coderef) = @_;
+  return $self->get_read_layer->find($type, $coderef);
 }
-
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

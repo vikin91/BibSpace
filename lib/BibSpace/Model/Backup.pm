@@ -15,29 +15,23 @@ use UUID::Tiny ':std';
 use DateTime::Format::Strptime;
 use DateTime;
 
-class_has 'date_format_pattern' =>
-    ( is => 'ro', default => '%Y-%m-%d-%H-%M-%S' );
+class_has 'date_format_pattern' => (is => 'ro', default => '%Y-%m-%d-%H-%M-%S');
 
-
-has 'uuid' => (
-  is      => 'rw',
-  isa     => 'Str',
-  default => sub { create_uuid_as_string(UUID_V4) }
-);
-has 'name' => ( is => 'rw', isa => 'Str', default => 'normal' );
-has 'type' => ( is => 'rw', isa => 'Str', default => 'storable' );
-has 'filename'     => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'dir'          => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'allow_delete' => ( is => 'rw', isa => 'Bool', default => 1 );
+has 'uuid' =>
+  (is => 'rw', isa => 'Str', default => sub { create_uuid_as_string(UUID_V4) });
+has 'name' => (is => 'rw', isa => 'Str', default => 'normal');
+has 'type' => (is => 'rw', isa => 'Str', default => 'storable');
+has 'filename'     => (is => 'rw', isa => 'Maybe[Str]');
+has 'dir'          => (is => 'rw', isa => 'Maybe[Str]');
+has 'allow_delete' => (is => 'rw', isa => 'Bool', default => 1);
 has 'date' => (
   is      => 'rw',
   isa     => 'Str',
   default => sub {
-    my $now = DateTime->now(
-      formatter => DateTime::Format::Strptime->new(
-        pattern => Backup->date_format_pattern
-      )
-    );
+    my $now
+      = DateTime->now(formatter =>
+        DateTime::Format::Strptime->new(pattern => Backup->date_format_pattern)
+      );
     return "$now";
   },
 );
@@ -51,7 +45,7 @@ sub get_size {
   my $size = -s $self->get_path;
   $size = 0 + $size;
   $size = $size / 1024 / 1024;
-  $size = sprintf( "%.2f", $size );
+  $size = sprintf("%.2f", $size);
   return $size;
 }
 ####################################################################################
@@ -61,6 +55,7 @@ sub get_path {
   warn "backup->dir not set!" unless defined $self->dir;
   my $dir = $self->dir;
   $dir =~ s!/*$!/!;
+
   my $file_path = $dir . $self->filename;
   return $file_path;
 }
@@ -77,25 +72,24 @@ sub get_date_readable {
   my $self = shift;
 
   # parses from our format to default format
-  my $date = DateTime::Format::Strptime->new(
-    pattern => Backup->date_format_pattern )->parse_datetime( $self->date );
+  my $date
+    = DateTime::Format::Strptime->new(pattern => Backup->date_format_pattern)
+    ->parse_datetime($self->date);
 
   # sets readable format for serialization
   $date->set_formatter(
-    DateTime::Format::Strptime->new( pattern => '%d.%m.%Y %H:%M:%S' ) );
+    DateTime::Format::Strptime->new(pattern => '%d.%m.%Y %H:%M:%S'));
   return "$date";
 }
 ####################################################################################
 sub get_age {
   my $self = shift;
 
-  my $now = DateTime->now(
-    formatter => DateTime::Format::Strptime->new(
-      pattern => Backup->date_format_pattern
-    )
-  );
-  my $then = DateTime::Format::Strptime->new(
-    pattern => Backup->date_format_pattern )->parse_datetime( $self->date );
+  my $now = DateTime->now(formatter =>
+      DateTime::Format::Strptime->new(pattern => Backup->date_format_pattern));
+  my $then
+    = DateTime::Format::Strptime->new(pattern => Backup->date_format_pattern)
+    ->parse_datetime($self->date);
 
   my $diff = $now->subtract_datetime($then);
   return $diff;
@@ -111,12 +105,10 @@ sub create {
 
   my $uuid = create_uuid_as_string(UUID_V4);
 
-  my $now = ""
-      . DateTime->now(
-    formatter => DateTime::Format::Strptime->new(
-      pattern => Backup->date_format_pattern
-    )
-      );
+  my $now
+    = ""
+    . DateTime->now(formatter =>
+      DateTime::Format::Strptime->new(pattern => Backup->date_format_pattern));
   my $now_str = "$now";
 
   my $filename = "backup_$uuid" . "_$name" . "_$type" . "_$now" . $ext;
@@ -136,25 +128,24 @@ sub parse {
 
   # say "Backup->parse: $filename";
 
-  my @tokens = split( '_', $filename );
+  my @tokens = split('_', $filename);
   die "Parse exception: wrong filename format. Probably not BibSpace backup."
-      unless scalar(@tokens) == 5;
+    unless scalar(@tokens) == 5;
   my $prefix = shift @tokens;
   my $uuid   = shift @tokens;
   my $name   = shift @tokens;
   my $type   = shift @tokens;
   my $date   = shift @tokens;
 
-
   $date =~ s/\.dat//g;
   $date =~ s/\.sql//g;
 
 # my $now = DateTime->now(formatter => DateTime::Format::Strptime->new( pattern => Backup->date_format_pattern ));
-  my $now = DateTime::Format::Strptime->new(
-    pattern => Backup->date_format_pattern )->parse_datetime($date);
+  my $now
+    = DateTime::Format::Strptime->new(pattern => Backup->date_format_pattern)
+    ->parse_datetime($date);
   $now->set_formatter(
-    DateTime::Format::Strptime->new( pattern => Backup->date_format_pattern )
-  );
+    DateTime::Format::Strptime->new(pattern => Backup->date_format_pattern));
   my $now_str = "$now";
 
   return Backup->new(
@@ -175,7 +166,7 @@ sub equals {
   my $self = shift;
   my $obj  = shift;
   die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj)
-      unless ref($self) eq ref($obj);
+    unless ref($self) eq ref($obj);
   return $self->filename eq $obj->filename;
 }
 ####################################################################################

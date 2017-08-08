@@ -13,10 +13,8 @@ use v5.16;           #because of ~~
 use strict;
 use warnings;
 
-
 use BibSpace::Functions::FPublications;
 use BibSpace::Functions::BackupFunctions;
-
 
 use Mojo::Base 'Mojolicious::Controller';
 
@@ -34,7 +32,8 @@ sub index {
 
   use JSON -convert_blessed_universally;
   my $json_text
-    = JSON->new->allow_blessed(1)->convert_blessed(1)->utf8(1)->pretty(1)->encode( $self->app->preferences );
+    = JSON->new->allow_blessed(1)->convert_blessed(1)->utf8(1)->pretty(1)
+    ->encode($self->app->preferences);
   say $json_text;
 
   $self->stash(
@@ -43,7 +42,7 @@ sub index {
     lr_2 => $self->get_last_cron_run(2),
     lr_3 => $self->get_last_cron_run(3)
   );
-  $self->render( template => 'display/cron' );
+  $self->render(template => 'display/cron');
 }
 ##########################################################################################
 sub cron {
@@ -59,13 +58,16 @@ sub cron {
   $num_level = 2 if $level_param eq 'week'  or $level_param eq '2';
   $num_level = 3 if $level_param eq 'month' or $level_param eq '3';
 
-
   my $result = $self->cron_level($num_level);
-  if ( !$result ) {
-    $self->render( text => "Error 404. Incorrect cron job level: $level_param (numeric: $num_level)", status => 404 );
+  if (!$result) {
+    $self->render(
+      text =>
+        "Error 404. Incorrect cron job level: $level_param (numeric: $num_level)",
+      status => 404
+    );
   }
   else {
-    $self->render( text => $result, status => 200 );
+    $self->render(text => $result, status => 200);
   }
 
 }
@@ -74,30 +76,29 @@ sub cron_level {
   my $self  = shift;
   my $level = shift;
 
-
-  if ( !defined $level or $level < 0 or $level > 3 ) {
+  if ((!defined $level) or ($level < 0) or ($level > 3)) {
     return "";
   }
 
   my $call_freq = 99999;
 
-  if ( $level == 0 ) {
+  if ($level == 0) {
     $call_freq = $self->config->{cron_day_freq_lock};
   }
-  elsif ( $level == 1 ) {
+  elsif ($level == 1) {
     $call_freq = $self->config->{cron_night_freq_lock};
   }
-  elsif ( $level == 2 ) {
+  elsif ($level == 2) {
     $call_freq = $self->config->{cron_week_freq_lock};
   }
-  elsif ( $level == 3 ) {
+  elsif ($level == 3) {
     $call_freq = $self->config->{cron_month_freq_lock};
   }
   else {
     # should never happen
   }
 
-  my $message_string = $self->cron_run( $level, $call_freq );
+  my $message_string = $self->cron_run($level, $call_freq);
 
   # place to debug
   return $message_string;
@@ -117,7 +118,7 @@ sub cron_run {
   my $last_call       = $self->get_last_cron_run($level);
 
   # stupid library.... You need to convert units manually
-  if ( defined $last_call ) {
+  if (defined $last_call) {
     $last_call_hours = calc_hours($last_call);
   }
   my $left = $call_freq - $last_call_hours;
@@ -125,7 +126,7 @@ sub cron_run {
   my $text_to_render;
 
   ############ Cron ACTIONS
-  if ( $last_call_hours < $call_freq ) {
+  if ($last_call_hours < $call_freq) {
     $text_to_render
       = "Cron level $level called too often. Last call $last_call_hours hours ago. Come back in $left hours\n";
     return $text_to_render;
@@ -137,25 +138,26 @@ sub cron_run {
   ############ Cron ACTIONS
   $self->app->logger->info("Cron level $level started");
 
-  if ( $level == 0 ) {
+  if ($level == 0) {
     $self->do_cron_day();
   }
-  elsif ( $level == 1 ) {
-    Mojo::IOLoop->stream( $self->tx->connection )->timeout(3600);
+  elsif ($level == 1) {
+    Mojo::IOLoop->stream($self->tx->connection)->timeout(3600);
     $self->do_cron_night();
   }
-  elsif ( $level == 2 ) {
-    Mojo::IOLoop->stream( $self->tx->connection )->timeout(3600);
+  elsif ($level == 2) {
+    Mojo::IOLoop->stream($self->tx->connection)->timeout(3600);
     $self->do_cron_week();
   }
-  elsif ( $level == 3 ) {
-    Mojo::IOLoop->stream( $self->tx->connection )->timeout(3600);
+  elsif ($level == 3) {
+    Mojo::IOLoop->stream($self->tx->connection)->timeout(3600);
     $self->do_cron_month();
   }
   else {
     # do nothing
   }
-  # this may cause: [error] Unable to open file (bibspace_preferences.json) for storing : Permission denied at
+
+# this may cause: [error] Unable to open file (bibspace_preferences.json) for storing : Permission denied at
   $self->log_cron_usage($level);
   $self->app->logger->info("Cron level $level has finished");
 
@@ -165,7 +167,7 @@ sub cron_run {
 sub do_cron_day {
   my $self = shift;
 
-  my $backup1 = do_storable_backup( $self->app, "cron" );
+  my $backup1 = do_storable_backup($self->app, "cron");
 
 }
 ##########################################################################################
@@ -175,16 +177,15 @@ sub do_cron_night {
   my @entries = $self->app->repo->entries_all;
 
   for my $e (@entries) {
-    $e->regenerate_html( 0, $self->app->bst, $self->app->bibtexConverter );
+    $e->regenerate_html(0, $self->app->bst, $self->app->bibtexConverter);
   }
 }
 ##########################################################################################
 sub do_cron_week {
   my $self = shift;
 
-
-  my $backup1 = do_mysql_backup( $self->app, "cron" );
-  my $num_deleted = delete_old_backups( $self->app );
+  my $backup1 = do_mysql_backup($self->app, "cron");
+  my $num_deleted = delete_old_backups($self->app);
 
 }
 ##########################################################################################
@@ -201,12 +202,13 @@ sub log_cron_usage {
   my $self  = shift;
   my $level = shift;
 
-  my $now          = DateTime->now->set_time_zone( $self->app->preferences->local_time_zone );
+  my $now
+    = DateTime->now->set_time_zone($self->app->preferences->local_time_zone);
   my $fomatted_now = DateTime::Format::HTTP->format_datetime($now);
 
   say "Storing cron usage level '$level' as '$fomatted_now'.";
 
-  $self->app->preferences->cron_set( $level, $fomatted_now );
+  $self->app->preferences->cron_set($level, $fomatted_now);
 }
 ##########################################################################################
 sub get_last_cron_run {
@@ -214,20 +216,22 @@ sub get_last_cron_run {
   my $level = shift;
 
   # constant :P
-  my $long_time_ago = DateTime::Duration->new( years => 10 );
+  my $long_time_ago = DateTime::Duration->new(years => 10);
 
   my $last_call_str = $self->app->preferences->cron_get($level);
   return $long_time_ago if !$last_call_str;
 
-
-  my $now = DateTime->now->set_time_zone( $self->app->preferences->local_time_zone );
+  my $now
+    = DateTime->now->set_time_zone($self->app->preferences->local_time_zone);
   my $last_call;
   try {
     $last_call = DateTime::Format::HTTP->parse_datetime($last_call_str);
   }
   catch {
     warn;
-    $self->app->logger->error("Cannot parse date of last cron usage. Parser got input: '$last_call_str', error: $_ ");
+    $self->app->logger->error(
+      "Cannot parse date of last cron usage. Parser got input: '$last_call_str', error: $_ "
+    );
   };
   return $long_time_ago if !$last_call;
 
@@ -241,7 +245,6 @@ sub get_last_cron_run {
 
 #     my $last_call_str = $self->app->preferences->cron_get($level);
 #     return 0 if !$last_call_str;
-
 
 #     my $now = DateTime->now->set_time_zone($self->app->preferences->local_time_zone);
 #     my $last_call;
