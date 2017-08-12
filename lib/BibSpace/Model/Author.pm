@@ -168,7 +168,7 @@ sub can_merge_authors {
   my $self          = shift;
   my $source_author = shift;
 
-  if ( (defined $source_author)
+  if (  (defined $source_author)
     and ($source_author->id != $self->id)
     and (!$self->equals($source_author)))
   {

@@ -67,7 +67,7 @@ sub add_team_post {
 
   $self->app->repo->teams_save($new_mteam);
   my $new_team_id = $new_mteam->id;
-  if ( (!defined $new_team_id) or $new_team_id <= 0) {
+  if ((!defined $new_team_id) or $new_team_id <= 0) {
     $self->flash(msg =>
         "Something went wrong. The Team $new_team_name has not been added.");
     $self->redirect_to($self->url_for('add_team_get'));

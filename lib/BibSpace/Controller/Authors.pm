@@ -615,7 +615,8 @@ sub fix_masters {
 
   # masterObj not set although it should be
   my @broken_authors_1
-    = grep { (!defined $_->masterObj) and ($_->master_id != $_->id) } @all_authors;
+    = grep { (!defined $_->masterObj) and ($_->master_id != $_->id) }
+    @all_authors;
 
   # masterObj set incorrectly
   my @broken_authors_2

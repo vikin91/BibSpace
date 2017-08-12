@@ -158,26 +158,17 @@ sub delete {
 sub filter {
   my ($self, $type, $coderef) = @_;
 
-  
-
   return () if $self->empty($type);
   my @arr = grep &{$coderef}, $self->all($type);
 
-  
-  
   return @arr;
 }
 
 sub find {
   my ($self, $type, $coderef) = @_;
 
-  
-
   return if $self->empty($type);
   my $obj = first \&{$coderef}, $self->all($type);
-
-  
-  
 
   return $obj;
 }

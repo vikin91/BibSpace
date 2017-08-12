@@ -215,13 +215,10 @@ after 'delete'  => sub { shift->logger->exiting(""); };
 
 sub filter {
   my ($self, $coderef) = @_;
-  
 
   return () if $self->empty();
   my @arr = grep &{$coderef}, $self->all();
 
-  
-  
   return @arr;
 }
 before 'filter' => sub { shift->logger->entering(""); };
@@ -233,13 +230,9 @@ after 'filter'  => sub { shift->logger->exiting(""); };
 
 sub find {
   my ($self, $coderef) = @_;
-  
 
   return if $self->empty();
   my $obj = first \&{$coderef}, $self->all();
-
-  
-  
 
   return $obj;
 

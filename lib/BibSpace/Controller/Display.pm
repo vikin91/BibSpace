@@ -50,8 +50,8 @@ sub get_log_lines {
 
   my $log_2_read;
   $log_2_read = $log_dir->child($type . ".log") if defined $type;
-  if ((!$log_2_read) or (!$log_2_read->exists)){
-    $log_2_read = $file_list[0];  
+  if ((!$log_2_read) or (!$log_2_read->exists)) {
+    $log_2_read = $file_list[0];
   }
 
   die "No log file found " if (!-e $log_2_read);    # throw
