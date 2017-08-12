@@ -5,6 +5,8 @@ use BibSpace::Model::Backup;
 use BibSpace::Functions::Core;
 use BibSpace::Functions::FDB;
 
+use JSON -convert_blessed_universally;
+use BibSpace::Model::SerializableBase::BibSpaceDTO;
 use Storable;
 
 use Data::Dumper;
@@ -28,6 +30,7 @@ our @EXPORT = qw(
   find_backup
   read_backups
   do_storable_backup
+  do_json_backup
   do_mysql_backup
   restore_storable_backup
   delete_old_backups
@@ -40,7 +43,7 @@ sub find_backup {
   my $dir  = shift;
 
   my @backup_files
-    = Path::Tiny->new($dir)->children(qr/^backup_$uuid.*\.(dat|sql)$/);
+    = Path::Tiny->new($dir)->children(qr/^backup_$uuid.*\.(dat|sql|json)$/);
   return if scalar(@backup_files) == 0;
 
   my $file   = shift @backup_files;
@@ -48,13 +51,13 @@ sub find_backup {
   $backup->dir($dir);
   return $backup;
 }
-## Trivial DAO ALL
 
+## Trivial DAO ALL
 sub read_backups {
   my $dir = shift;
 
   my @backup_files
-    = Path::Tiny->new($dir)->children(qr/^backup_.*\.(dat|sql)$/);
+    = Path::Tiny->new($dir)->children(qr/^backup_.*\.(dat|sql|json)$/);
   my @backups;
   foreach my $file (@backup_files) {
     my $backup = Backup->parse($file->basename);
@@ -62,6 +65,24 @@ sub read_backups {
     push @backups, $backup;
   }
   return @backups;
+}
+
+sub do_json_backup {
+  my $app = shift;
+  my $name = shift // 'normal';
+
+  my $backup_dir = Path::Tiny->new($app->get_backups_dir)->relative;
+  $backup_dir =~ s!/*$!/!;
+
+  my $backup = Backup->create($name, "json");
+  $backup->dir("" . $backup_dir);
+  my $path = "" . $backup->get_path;
+
+  my $dtoObject  = BibSpaceDTO->fromLayeredRepo($app->repo);
+  my $jsonString = $dtoObject->toJSON;
+  path($backup->get_path)->spew($jsonString);
+
+  return $backup;
 }
 
 sub do_storable_backup {

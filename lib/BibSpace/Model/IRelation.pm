@@ -1,6 +1,5 @@
 package IRelation;
 use namespace::autoclean;
-
 use Moose::Role;
 
 requires 'id';

@@ -1,5 +1,11 @@
 ### Changelog ###
 
+### v0.5.3 08.2017 ###
+* Internal: Add SerializableBase to BibSpace Entities
+* Feature: Add support for independent JSON backup and restore
+* Fix: Show recenlty added/modified works correctly for less than 10 objects in system
+* Fix: Harden tests for less than 10 objects in system
+
 #### v0.5.2 08.2017 ####
 * Code refactoring: perltidy
 * Code refactoring: perlcritic severity 5

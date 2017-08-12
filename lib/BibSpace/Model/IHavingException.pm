@@ -1,7 +1,6 @@
 package IHavingException;
 
 use namespace::autoclean;
-
 use Moose::Role;
 
 has 'exceptions' => (

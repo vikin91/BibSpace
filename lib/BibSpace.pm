@@ -1,4 +1,4 @@
-package BibSpace v0.5.2;
+package BibSpace v0.5.3;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
@@ -557,6 +557,8 @@ sub setup_routes {
   $manager_user->put('/backups')->to('backup#save')->name('backup_do');
   $manager_user->put('/backups/mysql')->to('backup#save_mysql')
     ->name('backup_do_mysql');
+  $manager_user->put('/backups/json')->to('backup#save_json')
+    ->name('backup_do_json');
   $manager_user->get('/backups/:id')->to('backup#backup_download')
     ->name('backup_download');
 
@@ -724,7 +726,7 @@ sub setup_routes {
         ->to('publications#all')
         ->name('publications');
 
-    # works nice for all or flitering, but not for recently edited/added 
+    # works nice for all or flitering, but not for recently edited/added
     # reason: requires separate template and separate javascript code
     # $logged_user->get('/publications_ajax')
     #     ->to('publications#all_ajax')
@@ -743,7 +745,7 @@ sub setup_routes {
 
     $admin_user->get('/publications/orphaned/delete')
         ->to('publications#delete_orphaned')->name('delete_orphaned');
-        
+
 
     $logged_user->get('/publications/untagged/(:tagtype)')
         ->to( 'publications#all_without_tag')
@@ -767,7 +769,7 @@ sub setup_routes {
         ->to('publications#download')
         ->name('download_publication_pdf');
 
-        
+
     $anyone->get('/publications/download/:filetype/:id')
         ->to('publications#download')
         ->name('download_publication');
@@ -777,7 +779,7 @@ sub setup_routes {
     $manager_user->get('/publications/discover_attachments/:id')
         ->to('publications#discover_attachments')
         ->name('discover_attachments');
-        
+
     # $anyone->get('/publications/download/:filetype/(:id)\.(#format)' )
     #     ->to('publications#download')
     #     ->name('download_publication_pdf');
@@ -786,7 +788,7 @@ sub setup_routes {
         ->to('publications#remove_attachment')
         ->name('publications_remove_attachment');
 
-    $manager_user->get('/publications/fix_urls')              
+    $manager_user->get('/publications/fix_urls')
         ->to('publications#fix_file_urls')
         ->name('fix_attachment_urls');
 
@@ -872,7 +874,7 @@ sub setup_routes {
         ->to('publications#show_authors_of_entry')
         ->name('show_authors_of_entry');
 
-   
+
   ################ OPEN ACCESS ################
 
   # contains meta info for every paper. Optimization for google scholar
@@ -924,7 +926,7 @@ sub setup_routes {
   $anyone->get('/cron')->to('cron#index');
   $anyone->get('/cron/(#level)')->to('cron#cron');
 
-   #>>> 
+   #>>>
   return;
 }
 

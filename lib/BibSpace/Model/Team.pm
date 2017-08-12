@@ -1,29 +1,29 @@
 package Team;
 
 use Try::Tiny;
-
-use Data::Dumper;
 use utf8;
 use BibSpace::Model::Author;
 use v5.16;
 use List::MoreUtils qw(any uniq);
-
 use Moose;
+use MooseX::Storage;
+with Storage;
 use BibSpace::Model::IEntity;
 use BibSpace::Model::IMembered;
 use BibSpace::Model::IHavingException;
 with 'IEntity', 'IMembered', 'IHavingException';
+use BibSpace::Model::SerializableBase::TeamSerializableBase;
+extends 'TeamSerializableBase';
 
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return TeamSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
+}
 
 has 'name' => (is => 'rw', isa => 'Str');
 has 'parent' => (is => 'rw');
-
-sub toString {
-  my $self = shift;
-  $self->freeze;
-}
 
 sub equals {
   my $self = shift;

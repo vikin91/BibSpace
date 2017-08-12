@@ -33,7 +33,6 @@ sub index {
   my $json_text
     = JSON->new->allow_blessed(1)->convert_blessed(1)->utf8(1)->pretty(1)
     ->encode($self->app->preferences);
-  say $json_text;
 
   $self->stash(
     lr_0 => $self->get_last_cron_run(0),

@@ -2,7 +2,6 @@ package TagCloud;
 
 use utf8;
 use v5.16;
-
 use Moose;
 
 has 'count' => (is => 'rw', isa => 'Int');    # number in parenthesis

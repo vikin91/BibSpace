@@ -11,8 +11,16 @@ use Try::Tiny;
 use Moose;
 with 'IRelation';
 
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+use BibSpace::Model::SerializableBase::AuthorshipSerializableBase;
+extends 'AuthorshipSerializableBase';
+
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return AuthorshipSerializableBase->meta->rebless_instance_back($copy)
+    ->TO_JSON;
+}
 
 # the fileds below are used for linking process
 has 'entry_id'  => (is => 'ro', isa => 'Int');
@@ -54,15 +62,6 @@ sub validate {
     }
   }
   return 1;
-}
-
-sub toString {
-  my $self = shift;
-  my $str  = $self->freeze;
-  $str .= "\n";
-  $str .= "\n\t (ENTRY): " . $self->entry->id if defined $self->entry;
-  $str .= "\n\t (AUTHOR): " . $self->author->id if defined $self->author;
-  $str;
 }
 
 sub equals {

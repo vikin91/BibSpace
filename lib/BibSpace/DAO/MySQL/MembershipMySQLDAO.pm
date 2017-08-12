@@ -147,8 +147,7 @@ sub _insert {
         $obj->stop);
     }
     catch {
-      my $obj_str = $obj->toString;
-      $self->logger->error("Insert exception: $_  Skipped object: $obj_str");
+      $self->logger->error("Insert exception: $_");
     };
   }
 

@@ -5,26 +5,21 @@ use BibSpace::Model::Team;
 use BibSpace::Model::Author;
 use BibSpace::Model::TagType;
 use BibSpace::Model::Type;
-
 use BibSpace::Functions::Core;
 
 use List::MoreUtils qw(any uniq);
-
 use DateTime::Format::Strptime;
 use DateTime;
 use Path::Tiny;
-
 use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use v5.16;
-
 use Try::Tiny;
 use TeX::Encode;
 use Encode;
 
 use Moose;
-
 use Moose::Util::TypeConstraints;
 use BibSpace::Model::IEntity;
 use BibSpace::Model::ILabeled;
@@ -32,8 +27,15 @@ use BibSpace::Model::IAuthored;
 use BibSpace::Model::IHavingException;
 with 'IEntity', 'ILabeled', 'IAuthored', 'IHavingException';
 
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+use BibSpace::Model::SerializableBase::EntrySerializableBase;
+extends 'EntrySerializableBase';
+
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return EntrySerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
+}
 
 has 'entry_type' => (is => 'rw', isa => 'Str', default => 'paper');
 has 'bibtex_key' => (is => 'rw', isa => 'Maybe[Str]');

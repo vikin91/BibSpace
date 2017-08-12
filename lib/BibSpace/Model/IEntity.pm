@@ -2,10 +2,14 @@ package IEntity;
 use namespace::autoclean;
 
 use BibSpace::Util::IntegerUidProvider;
-
 use Moose::Role;
-
 use MooseX::StrictConstructor;
+
+require BibSpace::Model::SerializableBase::IEntitySerializableBase;
+with 'IEntitySerializableBase';
+
+requires 'equals';
+requires 'TO_JSON';
 
 sub _generateUIDEntry {
   my $self = shift;
@@ -17,7 +21,8 @@ sub _generateUIDEntry {
   return $self->idProvider->generateUID();
 }
 
-has 'preferences' => (is => 'ro', isa => 'Preferences');
+has 'preferences' =>
+  (is => 'ro', isa => 'Preferences', traits => ['DoNotSerialize']);
 
 has 'idProvider' => (
   is       => 'ro',
@@ -25,7 +30,9 @@ has 'idProvider' => (
   required => 1,
   traits   => ['DoNotSerialize'],
 );
+
 has 'old_mysql_id' => (is => 'ro', isa => 'Maybe[Int]', default => undef);
+
 has 'id' => (
   is       => 'ro',
   isa      => 'Int',
@@ -33,8 +40,6 @@ has 'id' => (
   lazy     => 1,
   init_arg => undef
 );
-
-requires 'equals';
 
 # called after the default constructor
 sub BUILD {
