@@ -31,9 +31,13 @@ subtest 'Fregenerate_html_for_array' => sub {
   is(Fregenerate_html_for_array($app, 1, $app->bibtexConverter, \@entries),
     2, "regen 2 entries ok");
 
-  @entries = @all_entries[3 .. 5];
-  is(Fregenerate_html_for_array($app, 1, $app->bibtexConverter, \@entries),
-    3, "regen 3 entries ok");
+  SKIP: {
+    skip "Not enough entries to test this", 1 unless scalar @entries > 6;
+
+    @entries = @all_entries[3 .. 5];
+    is(Fregenerate_html_for_array($app, 1, $app->bibtexConverter, \@entries),
+      3, "regen 3 entries ok");
+  }
 
   @entries = ();
   is(Fregenerate_html_for_array($app, 1, $app->bibtexConverter, \@entries),
