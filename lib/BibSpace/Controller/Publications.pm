@@ -71,7 +71,9 @@ sub all_recently_added {
 
   my @all = Fget_publications_main_hashed_args($self, {year => undef});
   my @added_entries = sort { $b->creation_time cmp $a->creation_time } @all;
-  @added_entries = @added_entries[0 .. $num - 1];
+  my $num_found = scalar @added_entries;
+  my $limit = $num < $num_found ? $num : $num_found;
+  @added_entries = @added_entries[0 .. $limit - 1];
 
   my @filtered = Fget_publications_main_hashed_args($self, {}, \@added_entries);
 
@@ -90,7 +92,9 @@ sub all_recently_modified {
 
   my @all = Fget_publications_main_hashed_args($self, {year => undef});
   my @modified_entries = sort { $b->modified_time cmp $a->modified_time } @all;
-  @modified_entries = @modified_entries[0 .. $num - 1];
+  my $num_found = scalar @modified_entries;
+  my $limit = $num < $num_found ? $num : $num_found;
+  @modified_entries = @modified_entries[0 .. $limit - 1];
 
   my @filtered
     = Fget_publications_main_hashed_args($self, {}, \@modified_entries);
