@@ -77,7 +77,7 @@ sub get_registration_time {
     ->strftime($self->preferences->output_time_format);
 }
 
-####################################################################################
+
 sub toString {
   my $self = shift;
   my $str  = "User >> login: ";
@@ -87,7 +87,7 @@ sub toString {
   $str .= sprintf "'%32s'.", $self->email;
   return $str;
 }
-####################################################################################
+
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -95,7 +95,7 @@ sub equals {
     unless ref($self) eq ref($obj);
   return $self->login eq $obj->login;
 }
-####################################################################################
+
 sub authenticate {
   my $self       = shift;
   my $input_pass = shift;
@@ -109,35 +109,35 @@ sub authenticate {
   # bad password
   return;
 }
-####################################################################################
+
 sub is_manager {
   my $self = shift;
   return 1 if $self->rank >= User->manager_rank;
   return;
 }
-####################################################################################
+
 # for _under_ -checking
 sub is_admin {
   my $self = shift;
   return 1 if $self->rank >= User->admin_rank;
   return;
 }
-####################################################################################
+
 sub make_admin {
   my $self = shift;
   return $self->rank(User->admin_rank);
 }
-####################################################################################
+
 sub make_manager {
   my $self = shift;
   return $self->rank(User->manager_rank);
 }
-####################################################################################
+
 sub make_user {
   my $self = shift;
   return 0 == $self->rank(User->user_rank);
 }
-####################################################################################
+
 sub record_logging_in {
   my $self = shift;
   $self->last_login(

@@ -22,7 +22,7 @@ use BibSpace::Functions::FPublications;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
-##############################################################################################################
+
 sub all_authors {    # refactored
   my $self    = shift;
   my $visible = $self->param('visible');
@@ -61,7 +61,7 @@ sub all_authors {    # refactored
 
   $self->render(template => 'authors/authors');
 }
-##############################################################################################################
+
 sub add_author {
   my $self = shift;
 
@@ -69,7 +69,7 @@ sub add_author {
   $self->render(template => 'authors/add_author');
 }
 
-##############################################################################################################
+
 sub add_post {
   my $self       = shift;
   my $new_master = $self->param('new_master');
@@ -116,7 +116,7 @@ sub add_post {
   $self->flash(msg_type => 'warning', msg => "Bad input.");
   $self->redirect_to($self->url_for('add_author'));
 }
-##############################################################################################################
+
 sub edit_author {
   my $self = shift;
   my $id   = $self->param('id');
@@ -156,7 +156,7 @@ sub edit_author {
     $self->render(template => 'authors/edit_author');
   }
 }
-##############################################################################################################
+
 sub add_to_team {
   my $self      = shift;
   my $master_id = $self->param('id');
@@ -192,7 +192,7 @@ sub add_to_team {
   }
   $self->redirect_to($self->get_referrer);
 }
-##############################################################################################################
+
 sub remove_from_team {
   my $self      = shift;
   my $master_id = $self->param('id');
@@ -223,7 +223,7 @@ sub remove_from_team {
   }
   $self->redirect_to($self->get_referrer);
 }
-##############################################################################################################
+
 sub remove_uid {
   my $self      = shift;
   my $master_id = $self->param('masterid');
@@ -284,7 +284,7 @@ sub remove_uid {
 
   $self->redirect_to($self->get_referrer);
 }
-##############################################################################################################
+
 sub merge_authors {
   my $self           = shift;
   my $destination_id = $self->param('author_to');
@@ -358,7 +358,7 @@ sub merge_authors {
   $self->redirect_to($self->get_referrer);
 }
 
-##############################################################################################################
+
 sub edit_post {
   my $self        = shift;
   my $id          = $self->param('id');
@@ -421,7 +421,7 @@ sub edit_post {
   }
   $self->redirect_to($self->url_for('edit_author', id => $id));
 }
-##############################################################################################################
+
 sub post_edit_membership_dates {
   my $self      = shift;
   my $master_id = $self->param('aid');
@@ -466,7 +466,7 @@ sub post_edit_membership_dates {
   $self->redirect_to($self->get_referrer);
 
 }
-##############################################################################################################
+
 sub delete_author {
   my $self = shift;
   my $id   = $self->param('id');
@@ -483,7 +483,7 @@ sub delete_author {
   $self->redirect_to($self->url_for('all_authors'));
 
 }
-##############################################################################################################
+
 sub delete_author_force {
   my $self = shift;
   my $id   = $self->param('id');
@@ -535,7 +535,7 @@ sub delete_author_force {
   $self->redirect_to($self->url_for('all_authors'));
 }
 
-##############################################################################################################
+
 ## do not use this on production! this is for making the tests faster!!
 sub delete_invisible_authors {
   my $self = shift;
@@ -584,7 +584,7 @@ sub delete_invisible_authors {
 
 }
 
-##############################################################################################################
+
 sub reassign_authors_to_entries {
   my $self = shift;
   my $create_new = shift // 0;
@@ -599,12 +599,12 @@ sub reassign_authors_to_entries {
   );
   $self->redirect_to($self->get_referrer);
 }
-##############################################################################################################
+
 sub reassign_authors_to_entries_and_create_authors {
   my $self = shift;
   $self->reassign_authors_to_entries(1);
 }
-##############################################################################################################
+
 sub fix_masters {
   my $self = shift;
 
@@ -664,7 +664,7 @@ sub fix_masters {
   $self->flash(msg => $msg, msg_type => $msg_type);
   $self->redirect_to($self->get_referrer);
 }
-##############################################################################################################
+
 sub toggle_visibility {
   my $self = shift;
   my $id   = $self->param('id');
@@ -674,6 +674,6 @@ sub toggle_visibility {
   $self->app->repo->authors_update($author);
   $self->redirect_to($self->get_referrer);
 }
-##############################################################################################################
+
 
 1;

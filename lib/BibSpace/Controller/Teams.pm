@@ -16,7 +16,7 @@ use BibSpace::Model::Team;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
-################################################################################################################
+
 
 sub show {
   my $self  = shift;
@@ -24,7 +24,7 @@ sub show {
   $self->stash(teams => \@teams);
   $self->render(template => 'teams/teams', layout => 'admin');
 }
-################################################################################################################
+
 sub edit {
   my $self = shift;
   my $id   = $self->param('id');
@@ -42,12 +42,12 @@ sub edit {
   $self->stash(members => \@team_members, team => $team);
   $self->render(template => 'teams/members');
 }
-################################################################################################################
+
 sub add_team {
   my $self = shift;
   $self->render(template => 'teams/add_team');
 }
-##############################################################################################################
+
 sub add_team_post {
   my $self          = shift;
   my $new_team_name = $self->param('new_team');
@@ -79,7 +79,7 @@ sub add_team_post {
   $self->redirect_to('edit_team', id => $new_team_id);
 }
 
-##############################################################################################################
+
 sub delete_team {
   my $self = shift;
   my $id   = $self->param('id');
@@ -99,7 +99,7 @@ sub delete_team {
   $self->redirect_to($self->url_for('all_teams'));
 }
 
-##############################################################################################################
+
 sub delete_team_force {
   my $self = shift;
   my $dbh  = $self->app->db;
@@ -119,7 +119,7 @@ sub delete_team_force {
   $self->redirect_to($self->url_for('all_teams'));
 
 }
-##############################################################################################################
+
 sub do_delete_team {
   my $self = shift;
   my $team = shift;
@@ -137,6 +137,6 @@ sub do_delete_team {
   $team->memberships_clear;
   $self->app->repo->teams_delete($team);
 }
-##############################################################################################################
+
 
 1;

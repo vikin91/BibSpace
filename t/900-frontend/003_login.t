@@ -11,7 +11,7 @@ my $self     = $t_anyone->app;
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
 
-####################################################################
+
 subtest 'login: start page asking to login' => sub {
   $t_anyone->get_ok('/')->status_is(200);
   $t_anyone->get_ok('/logout')->status_isnt(404)->status_isnt(500);
@@ -19,7 +19,7 @@ subtest 'login: start page asking to login' => sub {
     ->content_like(qr/Please login or register/i);
 };
 
-####################################################################
+
 subtest 'login: pub_admin bad password' => sub {
 
   $t_anyone->post_ok(
@@ -32,7 +32,7 @@ subtest 'login: pub_admin bad password' => sub {
     ;    # accepts username and user name
 };
 
-####################################################################
+
 subtest 'login: pub_admin login' => sub {
 
   $t_anyone->ua->max_redirects(10);

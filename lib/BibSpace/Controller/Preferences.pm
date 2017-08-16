@@ -21,7 +21,7 @@ use Moose::Util qw/does_role/;
 
 use BibSpace::Converter::IHtmlBibtexConverter;
 
-#################################################################################
+
 sub index {
   my $self = shift;
 
@@ -36,7 +36,7 @@ sub index {
   );
   $self->render(template => 'display/preferences');
 }
-#################################################################################
+
 sub save {
   my $self                   = shift;
   my $bibitex_html_converter = $self->param('bibitex_html_converter');
@@ -69,5 +69,5 @@ sub save {
   # $self->render( template => 'display/preferences' );
   $self->redirect_to($self->get_referrer);
 }
-#################################################################################
+
 1;

@@ -17,7 +17,7 @@ TestManager->apply_fixture($self->app);
 
 my @all_teams = $self->app->repo->teams_all;
 
-####################################################################
+
 subtest 'FRONTEND Tag Clouds TEAMS' => sub {
 
   plan 'skip_all' => "There are no teams" if scalar @all_teams == 0;
@@ -32,7 +32,7 @@ subtest 'FRONTEND Tag Clouds TEAMS' => sub {
 
 my @all_authors = $self->app->repo->authors_all;
 
-####################################################################
+
 subtest 'FRONTEND Tag Clouds AUTHOR' => sub {
 
   plan 'skip_all' => "There are no authors" if scalar @all_authors == 0;

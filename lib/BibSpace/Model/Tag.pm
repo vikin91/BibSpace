@@ -22,12 +22,12 @@ has 'permalink' => (is => 'rw', isa => 'Maybe[Str]');
 has 'tagtype' =>
   (is => 'rw', isa => 'Maybe[TagType]', traits => ['DoNotSerialize'],);
 
-####################################################################################
+
 sub toString {
   my $self = shift;
   $self->freeze;
 }
-####################################################################################
+
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -35,7 +35,7 @@ sub equals {
     unless ref($self) eq ref($obj);
   return $self->name eq $obj->name;
 }
-####################################################################################
+
 sub get_authors {
   my $self = shift;
 
@@ -43,12 +43,12 @@ sub get_authors {
   my @authors = map { $_->get_authors } @entries;
   return uniq @authors;
 }
-####################################################################################
+
 sub get_entries {
   my $self = shift;
   return map { $_->entry } $self->labelings_all;
 }
-####################################################################################
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

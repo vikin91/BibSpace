@@ -34,7 +34,7 @@ our @EXPORT = qw(
 );
 ## Trivial DAO FIND
 ## my $filename = "backup_$uuid" . "_$name" . "_$type" . "_$now" . $ext;
-####################################################################################
+
 sub find_backup {
   my $uuid = shift;
   my $dir  = shift;
@@ -49,7 +49,7 @@ sub find_backup {
   return $backup;
 }
 ## Trivial DAO ALL
-####################################################################################
+
 sub read_backups {
   my $dir = shift;
 
@@ -63,8 +63,8 @@ sub read_backups {
   }
   return @backups;
 }
-####################################################################################
-####################################################################################
+
+
 sub do_storable_backup {
   my $app = shift;
   my $name = shift // 'normal';
@@ -83,7 +83,7 @@ sub do_storable_backup {
 
   return $backup;
 }
-####################################################################################
+
 sub do_mysql_backup {
   my $app = shift;
   my $name = shift // 'normal';
@@ -97,7 +97,7 @@ sub do_mysql_backup {
 
   return $backup;
 }
-####################################################################################
+
 sub restore_storable_backup {
   my $backup = shift;
   my $app    = shift;
@@ -131,7 +131,7 @@ sub restore_storable_backup {
   say "restore_storable_backup DONE. All layer after copy_data:"
     . $app->repo->lr->get_summary_table;
 }
-####################################################################################
+
 sub delete_old_backups {
   my $app          = shift;
   my $age_treshold = shift
@@ -150,5 +150,5 @@ sub delete_old_backups {
   }
   return $num_deleted;
 }
-####################################################################################
+
 1;

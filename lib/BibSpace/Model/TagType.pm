@@ -15,7 +15,7 @@ with Storage('format' => 'JSON', 'io' => 'File');
 has 'name'    => (is => 'rw', isa => 'Str');
 has 'comment' => (is => 'rw', isa => 'Maybe[Str]');
 
-####################################################################################
+
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -25,7 +25,7 @@ sub equals {
   return 1 if $self->name eq $obj->name;
   return;
 }
-####################################################################################
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

@@ -28,14 +28,14 @@ has 'tag' => (
   isa    => 'Maybe[Tag]',
   traits => ['DoNotSerialize']    # due to cycyles
 );
-####################################################################################
+
 sub id {
   my $self = shift;
   return "(" . $self->entry_id . "-" . $self->tag->name . ")"
     if defined $self->tag;
   return "(" . $self->entry_id . "-" . $self->tag_id . ")";
 }
-####################################################################################
+
 sub validate {
   my $self = shift;
   if (defined $self->entry and defined $self->tag) {
@@ -56,7 +56,7 @@ sub validate {
   }
   return 1;
 }
-####################################################################################
+
 sub toString {
   my $self = shift;
   my $str  = $self->freeze;
@@ -65,7 +65,7 @@ sub toString {
   $str .= "\n\t (TEAM): " . $self->tag->id if defined $self->tag;
   $str;
 }
-####################################################################################
+
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -81,7 +81,7 @@ sub equals {
   }
   return $self->equals_id($obj);
 }
-####################################################################################
+
 sub equals_id {
   my $self = shift;
   my $obj  = shift;
@@ -89,7 +89,7 @@ sub equals_id {
   return if $self->tag_id != $obj->tag_id;
   return 1;
 }
-####################################################################################
+
 sub equals_obj {
   my $self = shift;
   my $obj  = shift;
@@ -97,7 +97,7 @@ sub equals_obj {
   return if !$self->tag->equals($obj->tag);
   return 1;
 }
-####################################################################################
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

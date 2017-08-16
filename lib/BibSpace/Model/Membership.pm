@@ -28,14 +28,14 @@ has 'author' => (
 );
 has 'start' => (is => 'rw', isa => 'Int', default => 0);
 has 'stop'  => (is => 'rw', isa => 'Int', default => 0);
-####################################################################################
+
 sub id {
   my $self = shift;
   return "(" . $self->team->name . "-" . $self->author->uid . ")"
     if defined $self->author and defined $self->team;
   return "(" . $self->team_id . "-" . $self->author_id . ")";
 }
-####################################################################################
+
 sub validate {
   my $self = shift;
   if (defined $self->author and defined $self->team) {
@@ -56,7 +56,7 @@ sub validate {
   }
   return 1;
 }
-####################################################################################
+
 sub toString {
   my $self = shift;
   my $str  = $self->freeze;
@@ -64,7 +64,7 @@ sub toString {
   $str .= "\n\t (AUTHOR): " . $self->author->id if defined $self->author;
   $str;
 }
-####################################################################################
+
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -76,7 +76,7 @@ sub equals {
   }
   return $self->equals_id($obj);
 }
-####################################################################################
+
 sub equals_id {
   my $self = shift;
   my $obj  = shift;
@@ -85,7 +85,7 @@ sub equals_id {
   return if $self->author_id != $obj->author_id;
   return 1;
 }
-####################################################################################
+
 sub equals_obj {
   my $self = shift;
   my $obj  = shift;
@@ -94,7 +94,7 @@ sub equals_obj {
   return if !$self->author->equals($obj->author);
   return 1;
 }
-####################################################################################
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

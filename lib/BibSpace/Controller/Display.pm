@@ -17,7 +17,7 @@ use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::Core;
 use BibSpace::Util::Statistics;
 
-#################################################################################
+
 sub index {
   my $self = shift;
   if ($self->app->is_demo) {
@@ -26,17 +26,17 @@ sub index {
   }
   $self->render(template => 'display/start');
 }
-#################################################################################
+
 sub test500 {
   my $self = shift;
   $self->render(text => 'Oops 500.', status => 500);
 }
-#################################################################################
+
 sub test404 {
   my $self = shift;
   $self->render(text => 'Oops 404.', status => 404);
 }
-#################################################################################
+
 sub get_log_lines {
   my $dir       = shift;
   my $num       = shift;
@@ -68,7 +68,7 @@ sub get_log_lines {
   }
   return @lines[-$num .. -1];
 }
-#################################################################################
+
 sub show_log {
   my $self   = shift;
   my $num    = $self->param('num') // 100;
@@ -98,7 +98,7 @@ sub show_log {
   $self->render(template => 'display/log');
 
 }
-#################################################################################
+
 sub show_log_ws {
   my $self = shift;
   my $num = $self->param('num') // 20;
@@ -120,7 +120,7 @@ sub show_log_ws {
     }
   );
 }
-#################################################################################
+
 sub show_stats {
   my $self = shift;
   my $num = $self->param('num') // 20;
@@ -131,7 +131,7 @@ sub show_stats {
   $self->render(template => 'display/stats');
 }
 
-#################################################################################
+
 sub show_stats_websocket {
   my $self = shift;
   my $num = $self->param('num') // 20;
@@ -153,6 +153,6 @@ sub show_stats_websocket {
     }
   );
 }
-#################################################################################
+
 
 1;

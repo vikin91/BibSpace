@@ -35,11 +35,11 @@ has 'id' => (
 );
 
 requires 'equals';
-####################################################################################
+
 # called after the default constructor
 sub BUILD {
   my $self = shift;
   $self->id;    # trigger lazy execution of idProvider
 }
-####################################################################################
+
 1;

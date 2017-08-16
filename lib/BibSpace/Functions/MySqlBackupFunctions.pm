@@ -27,7 +27,7 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw(
   dump_mysql_to_file
 );
-####################################################################################
+
 sub dump_mysql_to_file {
   my $fname  = shift;
   my $config = shift;
@@ -59,7 +59,7 @@ sub dump_mysql_to_file {
   };
   return $fname;
 }
-####################################################################################
+
 # This is the old function (version <0.5) used to restroee backups.
 # It does not work with all MySQL server configurations, so we dont use it.
 # sub do_restore_backup_from_file {
@@ -122,5 +122,5 @@ sub dump_mysql_to_file {
 #         return;
 #     }
 # }
-####################################################################################
+
 1;

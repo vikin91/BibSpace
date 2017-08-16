@@ -20,12 +20,12 @@ with Storage('format' => 'JSON', 'io' => 'File');
 has 'name' => (is => 'rw', isa => 'Str');
 has 'parent' => (is => 'rw');
 
-####################################################################################
+
 sub toString {
   my $self = shift;
   $self->freeze;
 }
-####################################################################################
+
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -33,19 +33,19 @@ sub equals {
     unless ref($self) eq ref($obj);
   return $self->name eq $obj->name;
 }
-####################################################################################
+
 sub can_be_deleted {
   my $self = shift;
 
   return if $self->memberships_count > 0;
   return 1;
 }
-####################################################################################
+
 sub get_members {
   my $self = shift;
   return map { $_->author } $self->memberships_all;
 }
-####################################################################################
+
 sub get_membership_beginning {
   my $self   = shift;
   my $author = shift;
@@ -54,7 +54,7 @@ sub get_membership_beginning {
 
   return $author->joined_team($self);
 }
-####################################################################################
+
 sub get_membership_end {
   my $self   = shift;
   my $author = shift;
@@ -63,12 +63,12 @@ sub get_membership_end {
 
   return $author->left_team($self);
 }
-####################################################################################
+
 sub get_authors {
   my $self = shift;
   return map { $_->author } $self->memberships_all;
 }
-####################################################################################
+
 sub tags {
   my $self = shift;
   my $type = shift // 1;
@@ -82,7 +82,7 @@ sub tags {
 
   return @myTags;
 }
-####################################################################################
+
 sub get_entries {
   my $self = shift;
 
@@ -97,7 +97,7 @@ sub get_entries {
 
   return @myEntries;
 }
-####################################################################################
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

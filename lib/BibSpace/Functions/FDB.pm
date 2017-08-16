@@ -23,7 +23,7 @@ our @EXPORT = qw(
 
 );
 
-##########################################################################################
+
 sub db_connect {
   my ($db_host, $db_user, $db_database, $db_pass) = @_;
 
@@ -60,7 +60,7 @@ sub db_connect {
   return $dbh;
 }
 
-##########################################################################################
+
 sub reset_db_data {
   my ($dbh) = @_;
 
@@ -82,7 +82,7 @@ sub reset_db_data {
   return $dbh;
 }
 
-##########################################################################################
+
 sub purge_and_create_db {
   my ($dbh, $db_host, $db_user, $db_database, $db_pass) = @_;
 
@@ -117,7 +117,7 @@ sub purge_and_create_db {
   return $dbh;
 }
 
-####################################################################################
+
 sub create_main_db {
   my $dbh = shift;
 
@@ -276,7 +276,7 @@ sub create_main_db {
   # $dbh->commit();
 }
 
-####################################################################################################
+
 # sub prepare_token_table_mysql {
 #   my $user_dbh = shift;
 
@@ -290,7 +290,7 @@ sub create_main_db {
 #       )"
 #   );
 # }
-##########################################################################################
+
 sub prepare_cron_table {
   my $dbh = shift;
   try {
@@ -319,7 +319,7 @@ sub prepare_cron_table {
   catch { };
 
 }
-####################################################################################################
+
 sub prepare_user_table_mysql {
   my $dbh = shift;
 

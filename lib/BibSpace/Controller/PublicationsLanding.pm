@@ -63,7 +63,7 @@ our $selected_text_delimiter_l   = '';
 our $selected_text_delimiter_r   = '';
 our $selected_anchor_delimiter_l = '[';
 our $selected_anchor_delimiter_r = ']';
-############################################################################################################
+
 ## Controller function
 sub landing_types {
   my $self        = shift;
@@ -163,7 +163,7 @@ sub landing_types {
     $self->get_filtering_navbar_html()
   );
 }
-############################################################################################################
+
 ## Controller function
 sub landing_years {
   my $self   = shift;
@@ -214,7 +214,7 @@ sub landing_years {
   return $self->display_landing(\%hash_year_to_entries,
     \%hash_year_to_description, \@sections_sorted, $switchlink, $navbar_html);
 }
-############################################################################################################
+
 sub display_landing {
   my $self                         = shift;
   my $hash_our_type_to_entries     = shift;
@@ -304,9 +304,9 @@ sub display_landing {
 
   # $self->render( template => 'publications/landing_obj' );
 }
-############################################################################################################
+
 ####################################### HELPER functions for this controller ###############################
-############################################################################################################
+
 
 sub get_switchlink_html {
   my $self    = shift;
@@ -351,9 +351,9 @@ sub get_switchlink_html {
   $str .= '</div>';
   return $str;
 }
-############################################################################################################
-############################################################################################################
-############################################################################################################
+
+
+
 sub get_filtering_navbar_html {
   my $self = shift;
 
@@ -379,7 +379,7 @@ sub get_filtering_navbar_html {
   $str .= '</div>';
   return $str;
 }
-############################################################################################################
+
 sub get_navbar_kinds_html {
   my $self = shift;
 
@@ -429,7 +429,7 @@ sub get_navbar_kinds_html {
   $str .= '</div>';
   return $str;
 }
-############################################################################################################
+
 sub get_navbar_types_html {
   my $self = shift;
 
@@ -507,7 +507,7 @@ sub get_navbar_types_html {
   $str .= '</div>';
   return $str;
 }
-############################################################################################################
+
 sub get_navbar_years_html {
   my $self = shift;
 
@@ -580,7 +580,7 @@ sub get_navbar_years_html {
   $str .= '</div>';
   return $str;
 }
-############################################################################################################
+
 sub num_pubs_filtering {
   my $self             = shift;
   my $curr_bibtex_type = shift;
@@ -598,9 +598,9 @@ sub num_pubs_filtering {
     }
   );
 }
-############################################################################################################
-############################################################################################################
-############################################################################################################
+
+
+
 sub get_papers_for_landing {
   my $self = shift;
   return Fget_publications_main_hashed_args(
@@ -614,7 +614,7 @@ sub get_papers_for_landing {
     }
   );
 }
-############################################################################################################
+
 sub get_talks_for_landing {
   my $self = shift;
   return Fget_publications_main_hashed_args(
@@ -628,7 +628,7 @@ sub get_talks_for_landing {
     }
   );
 }
-############################################################################################################
+
 sub get_entries_for_landing {
   my $self = shift;
   return Fget_publications_main_hashed_args(
@@ -641,5 +641,5 @@ sub get_entries_for_landing {
     }
   );
 }
-############################################################################################################
+
 1;

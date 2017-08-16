@@ -64,7 +64,7 @@ our @EXPORT = qw(
   get_current_month
 );
 
-####################################################################################################
+
 sub sort_publications {
   my (@pubs) = @_;
   return reverse sort {
@@ -74,7 +74,7 @@ sub sort_publications {
       || $a->id cmp $b->id
   } @pubs;
 }
-####################################################################################################
+
 
 =item fix_bibtex_national_characters
   This function should help to avoid bibtex=>html warnings of BibStyle, like this:
@@ -135,14 +135,14 @@ sub fix_bibtex_national_characters {
 
   return $str;
 }
-####################################################################################################
+
 sub get_dir_size {
   my $dir  = shift;
   my $size = 0;
   find(sub { $size += -f $_ ? -s _ : 0 }, $dir);
   return $size;
 }
-####################################################################################################
+
 sub validate_registration_data {
   my $login = shift;
   my $email = shift;
@@ -163,19 +163,19 @@ sub validate_registration_data {
   }
   return 1;
 }
-####################################################################################################
+
 sub check_password_policy {
   my $pass = shift;
   return 1 if length($pass) > 3;
   return;
 }
-####################################################################################################
+
 sub generate_token {
   my $self = shift;
   my $token = Session::Token->new(length => 32)->get;
   return $token;
 }
-####################################################################################################
+
 sub encrypt_password {
   my $password = shift;
   my $salt = shift || salt();
@@ -187,11 +187,11 @@ sub encrypt_password {
   # Encrypt it
   return Crypt::Eksblowfish::Bcrypt::bcrypt($password, $settings);
 }
-####################################################################################################
+
 sub salt {
   return Crypt::Eksblowfish::Bcrypt::en_base64(random_bytes(16));
 }
-####################################################################################################
+
 sub check_password {
   my $plain_password  = shift;
   my $hashed_password = shift;
@@ -214,8 +214,8 @@ sub check_password {
   }
   return;
 }
-####################################################################################################
-####################################################################################################
+
+
 sub send_email {
   my $config = shift;
 
@@ -235,7 +235,7 @@ sub send_email {
     ]
   );
 }
-####################################################################################
+
 sub split_bibtex_entries {
   my $input = shift;
 
@@ -255,7 +255,7 @@ sub split_bibtex_entries {
 
   return @bibtex_codes;
 }
-################################################################################
+
 sub decodeLatex {
   my $str = shift;
 
@@ -299,7 +299,7 @@ sub decodeLatex {
   $str =~ s/\}+//g;
   return $str;
 }
-################################################################################
+
 sub official_bibtex_types {
 
   ## defined by bibtex and constant
@@ -311,7 +311,7 @@ sub official_bibtex_types {
     'techreport',    'unpublished'
   );
 }
-####################################################################################
+
 sub random_string {
   my $len = shift;
 
@@ -319,20 +319,20 @@ sub random_string {
   my $str = join '' => map $set[rand @set], 1 .. $len;
   $str;
 }
-################################################################################
+
 sub get_current_month {
   my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
     = localtime();
   return ($mon + 1);
 }
-################################################################################
+
 sub get_current_year {
   my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
     = localtime();
 
   return ($year + 1900);
 }
-################################################################################
+
 sub get_month_numeric {
   my $str = shift;
   $str = lc($str);
@@ -353,7 +353,7 @@ sub get_month_numeric {
 
   return 0;
 }
-################################################################################
+
 sub clean_tag_name {
   my $tag = shift;
   $tag =~ s/^\s+|\s+$//g;
@@ -365,11 +365,11 @@ sub clean_tag_name {
 
   return ucfirst($tag);
 }
-################################################################################
+
 sub uniqlc {
   return keys %{{map { lc $_ => 1 } @_}};
 }
-################################################################################
+
 sub nohtml {
   my $key  = shift // "key-unknown";
   my $type = shift // "no-type";
@@ -386,7 +386,7 @@ sub get_generic_type_description {
   return "Talks " if $type_desc eq 'talk';
   return "Publications of type " . $type_desc;
 }
-################################################################################
+
 
 sub create_user_id {
   my ($name) = @_;
@@ -441,6 +441,6 @@ sub create_user_id {
   # print "$userID \n";
   return $userID;
 }
-################################################################################
+
 
 1;

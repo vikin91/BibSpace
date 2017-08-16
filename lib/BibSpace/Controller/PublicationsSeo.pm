@@ -19,7 +19,7 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::UserAgent;
 use Mojo::Log;
 
-####################################################################################
+
 sub metalist {
   my $self = shift;
 
@@ -30,7 +30,7 @@ sub metalist {
   $self->render(template => 'publicationsSEO/metalist');
 }
 
-####################################################################################
+
 
 sub meta {
   my $self = shift;
@@ -268,6 +268,6 @@ sub meta {
   $self->render(template => 'publicationsSEO/meta');
 
 }
-####################################################################################
+
 
 1;

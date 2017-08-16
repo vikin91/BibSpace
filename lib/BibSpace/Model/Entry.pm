@@ -134,7 +134,7 @@ has 'bst_file' => (
   traits  => ['DoNotSerialize']
 );
 
-####################################################################################
+
 
 sub equals {
   my $self = shift;
@@ -143,7 +143,7 @@ sub equals {
     unless ref($self) eq ref($obj);
   return $self->equals_bibtex($obj);
 }
-####################################################################################
+
 
 =item equals_bibtex
     Assumes that both objects are equal if the bibtex code is identical
@@ -156,8 +156,8 @@ sub equals_bibtex {
     unless ref($self) eq ref($obj);
   return $self->bib eq $obj->bib;
 }
-####################################################################################
-####################################################################################
+
+
 sub delete_all_attachments {
   my $self = shift;
 
@@ -166,17 +166,17 @@ sub delete_all_attachments {
   }
   $self->attachments_clear;
 }
-####################################################################################
+
 sub add_attachment {
   my ($self, $type, $obj) = @_;
   $self->attachments_set($type, $obj);
 }
-####################################################################################
+
 sub get_attachment {
   my ($self, $type) = @_;
   $self->attachments_get($type);
 }
-####################################################################################
+
 sub delete_attachment {
   my ($self, $type) = @_;
   if ($self->attachments_has($type)) {
@@ -186,7 +186,7 @@ sub delete_attachment {
     $self->attachments_delete($type);
   }
 }
-####################################################################################
+
 sub discover_attachments {
   my ($self, $upload_dir) = @_;
 
@@ -233,7 +233,7 @@ sub discover_attachments {
   # };
   # $self->add_attachment( 'unknown', $_ ) for @discovery_other;
 }
-####################################################################################
+
 
 =item is_visible
     Entry is visible if at least one of its authors is visible
@@ -246,22 +246,22 @@ sub is_visible {
   return 1 if defined $visible_author;
   return;
 }
-####################################################################################
+
 sub is_hidden {
   my $self = shift;
   return $self->hidden == 1;
 }
-####################################################################################
+
 sub hide {
   my $self = shift;
   $self->hidden(1);
 }
-####################################################################################
+
 sub unhide {
   my $self = shift;
   $self->hidden(0);
 }
-####################################################################################
+
 sub toggle_hide {
   my $self = shift;
   if ($self->is_hidden == 1) {
@@ -271,29 +271,29 @@ sub toggle_hide {
     $self->hide();
   }
 }
-####################################################################################
+
 sub make_paper {
   my $self = shift;
   $self->entry_type('paper');
 }
-####################################################################################
+
 sub is_paper {
   my $self = shift;
   return 1 if $self->entry_type eq 'paper';
   return;
 }
-####################################################################################
+
 sub make_talk {
   my $self = shift;
   $self->entry_type('talk');
 }
-####################################################################################
+
 sub is_talk {
   my $self = shift;
   return 1 if $self->entry_type eq 'talk';
   return;
 }
-####################################################################################
+
 sub matches_our_type {
   my $self  = shift;
   my $oType = shift;
@@ -316,7 +316,7 @@ sub matches_our_type {
 
   return defined $match;
 }
-####################################################################################
+
 sub has_valid_bibtex {
   my $self = shift;
   if (defined $self->bib and $self->bib ne '') {
@@ -328,7 +328,7 @@ sub has_valid_bibtex {
   }
   return;
 }
-####################################################################################
+
 sub populate_from_bib {
   my $self = shift;
 
@@ -356,7 +356,7 @@ sub populate_from_bib {
   }
   return;
 }
-####################################################################################
+
 sub add_bibtex_field {
   my $self  = shift;
   my $field = shift;
@@ -373,7 +373,7 @@ sub add_bibtex_field {
   $self->bib($new_bib);
   $self->populate_from_bib();
 }
-####################################################################################
+
 sub has_bibtex_field {
 
   # returns 1 if bibtex of this entry has filed
@@ -386,7 +386,7 @@ sub has_bibtex_field {
   return 1 if $bibtex_entry->exists($bibtex_field);
   return;
 }
-####################################################################################
+
 sub get_bibtex_field_value {
 
   # returns 1 if bibtex of this entry has filed
@@ -401,7 +401,7 @@ sub get_bibtex_field_value {
   }
   return;
 }
-####################################################################################
+
 sub remove_bibtex_fields {
   my $self                         = shift;
   my $arr_ref_bib_fields_to_delete = shift;
@@ -427,7 +427,7 @@ sub remove_bibtex_fields {
   }
   return $num_deleted;
 }
-####################################################################################
+
 sub fix_month {
   my $self         = shift;
   my $bibtex_entry = new Text::BibTeX::Entry();
@@ -448,12 +448,12 @@ sub fix_month {
 
   return $num_fixes;
 }
-####################################################################################
+
 sub fix_bibtex_accents {
   my $self = shift;
   $self->bib(fix_bibtex_national_characters($self->bib));
 }
-####################################################################################
+
 sub generate_html {
   my $self      = shift;
   my $bst_file  = shift;
@@ -479,7 +479,7 @@ sub generate_html {
 
   return ($self->html, $self->bib);
 }
-####################################################################################
+
 sub regenerate_html {
   my $self      = shift;
   my $force     = shift;
@@ -499,7 +499,7 @@ sub regenerate_html {
   return 0;
 }
 
-####################################################################################
+
 sub has_author {
   my $self   = shift;
   my $author = shift;
@@ -515,16 +515,16 @@ sub has_author {
     = $self->authorships_find(sub { $_->equals($authorship_to_find) });
   return defined $authorship;
 }
-####################################################################################
+
 sub has_master_author {
   my $self   = shift;
   my $author = shift;
 
   return $self->has_author($author->get_master);
 }
-####################################################################################
-####################################################################################
-####################################################################################
+
+
+
 sub author_names_from_bibtex {
   my $self = shift;
 
@@ -552,7 +552,7 @@ sub author_names_from_bibtex {
   }
   return @author_names;
 }
-####################################################################################
+
 sub get_teams {
   my $self = shift;
 
@@ -578,7 +578,7 @@ sub get_teams {
   }
   return values %final_teams;
 }
-####################################################################################
+
 sub has_team {
   my $self = shift;
   my $team = shift;
@@ -586,9 +586,9 @@ sub has_team {
   return 1 if any { $_->equals($team) } $self->get_teams;
   return;
 }
-####################################################################################
-####################################################################################
-####################################################################################
+
+
+
 sub tag_names_from_bibtex {
   my $self = shift;
 
@@ -618,14 +618,14 @@ sub tag_names_from_bibtex {
   }
   return @tag_names;
 }
-####################################################################################
+
 sub get_title {
   my $self      = shift;
   my $raw_title = $self->title;
   $raw_title = decodeLatex($raw_title);
   return $raw_title;
 }
-####################################################################################
+
 sub clean_ugly_bibtex_fields {
   my $self                         = shift;
   my $field_names_to_clean_arr_ref = shift;
@@ -633,7 +633,7 @@ sub clean_ugly_bibtex_fields {
   return $self->remove_bibtex_fields($field_names_to_clean_arr_ref);
 }
 
-####################################################################################
+
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

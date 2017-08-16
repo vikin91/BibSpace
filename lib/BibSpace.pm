@@ -207,7 +207,7 @@ has repo => sub {
 
 };
 
-################################################################
+
 sub startup {
   my $self = shift;
   $self->app->logger->info("*** Starting BibSpace ***");
@@ -231,7 +231,7 @@ sub startup {
 
   return;
 }
-################################################################
+
 sub insert_admin {
   my $self = shift;
   $self->app->logger->info("Add startup admin user...");
@@ -260,7 +260,7 @@ sub insert_admin {
   return;
 }
 
-################################################################
+
 sub setup_repositories {
   my $self = shift;
 
@@ -300,7 +300,7 @@ sub setup_repositories {
   }
   return;
 }
-################################################################
+
 sub link_data {
   my $self = shift;
   $self->app->logger->info("Linking data...");
@@ -379,7 +379,7 @@ sub link_data {
   $self->app->logger->info("Linking Finished.");
   return;
 }
-################################################################
+
 sub setup_config {
   my $self = shift;
   my $app  = $self;
@@ -391,7 +391,7 @@ sub setup_config {
     "Setting max upload size to " . $ENV{MOJO_MAX_MESSAGE_SIZE} . " Bytes.");
   return;
 }
-################################################################
+
 sub setup_plugins {
   my $self = shift;
   $self->app->logger->info("Setup plugins...");
@@ -438,8 +438,8 @@ sub setup_plugins {
   $self->helper(proxy_prefix => sub { $self->config->{proxy_prefix} });
   return;
 }
-################################################################
-################################################################
+
+
 sub setup_routes {
   my $self = shift;
   $self->app->logger->info("Setup routes...");
@@ -931,7 +931,7 @@ sub setup_routes {
   return;
 }
 
-################################################################
+
 
 sub setup_hooks {
   my $self = shift;

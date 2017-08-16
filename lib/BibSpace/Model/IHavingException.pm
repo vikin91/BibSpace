@@ -21,20 +21,20 @@ has 'exceptions' => (
   },
 );
 
-####################################################################################
+
 sub has_exception {
   my ($self, $exception) = @_;
   my $idx = $self->exceptions_find_index(sub { $_->equals($exception) });
   return $idx >= 0;
 }
-####################################################################################
+
 sub add_exception {
   my ($self, $exception) = @_;
   if (!$self->has_exception($exception)) {
     $self->exceptions_add($exception);
   }
 }
-####################################################################################
+
 sub remove_exception {
   my ($self, $exception) = @_;
 
@@ -43,10 +43,10 @@ sub remove_exception {
   return 1 if $self->exceptions_delete($index);
   return;
 }
-####################################################################################
+
 sub get_exceptions {
   my $self = shift;
   return $self->exceptions_all;
 }
-####################################################################################
+
 1;

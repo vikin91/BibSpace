@@ -23,26 +23,26 @@ has 'memberships' => (
     memberships_clear      => 'clear',
   },
 );
-################################################################################
 
-################################################################################
+
+
 sub get_teams {
   my $self = shift;
   return map { $_->team } $self->memberships_all;
 }
-####################################################################################
+
 sub has_team {
   my $self = shift;
   my $team = shift;
   return defined $self->memberships_find(sub { $_->team->equals($team) });
 }
-####################################################################################
+
 sub has_membership {
   my ($self, $membership) = @_;
   my $idx = $self->memberships_find_index(sub { $_->equals($membership) });
   return $idx >= 0;
 }
-####################################################################################
+
 sub add_membership {
   my ($self, $membership) = @_;
 
@@ -50,7 +50,7 @@ sub add_membership {
     $self->memberships_add($membership);
   }
 }
-####################################################################################
+
 sub remove_membership {
   my ($self, $membership) = @_;
 
@@ -61,5 +61,5 @@ sub remove_membership {
   return 1 if $self->memberships_delete($index);
   return;
 }
-####################################################################################
+
 1;

@@ -21,26 +21,26 @@ has 'labelings' => (
   },
 );
 
-####################################################################################
+
 sub has_tag {
   my $self = shift;
   my $tag  = shift;
   return defined $self->labelings_find(sub { $_->tag->equals($tag) });
 }
-####################################################################################
+
 sub has_labeling {
   my ($self, $labeling) = @_;
   my $idx = $self->labelings_find_index(sub { $_->equals($labeling) });
   return $idx >= 0;
 }
-####################################################################################
+
 sub add_labeling {
   my ($self, $labeling) = @_;
   if (!$self->has_labeling($labeling)) {
     $self->labelings_add($labeling);
   }
 }
-####################################################################################
+
 sub remove_labeling {
   my ($self, $labeling) = @_;
 
@@ -49,7 +49,7 @@ sub remove_labeling {
   return 1 if $self->labelings_delete($index);
   return;
 }
-####################################################################################
+
 sub get_tags {
   my $self     = shift;
   my $tag_type = shift;
@@ -60,5 +60,5 @@ sub get_tags {
   }
   return @tags;
 }
-####################################################################################
+
 1;

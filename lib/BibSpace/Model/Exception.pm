@@ -28,14 +28,14 @@ has 'team' => (
   isa    => 'Maybe[Team]',
   traits => ['DoNotSerialize']    # due to cycyles
 );
-####################################################################################
+
 sub id {
   my $self = shift;
   return "(" . $self->entry_id . "-" . $self->team->name . ")"
     if defined $self->team;
   return "(" . $self->entry_id . "-" . $self->team_id . ")";
 }
-####################################################################################
+
 sub toString {
   my $self = shift;
   my $str  = $self->freeze;
@@ -44,7 +44,7 @@ sub toString {
   $str .= "\n\t (TEAM): " . $self->team->id if defined $self->team;
   $str;
 }
-####################################################################################
+
 
 =item equals
     In case of any strange problems: this must return 1 or 0! 
@@ -60,7 +60,7 @@ sub equals {
   }
   return $self->equals_id($obj);
 }
-####################################################################################
+
 sub equals_id {
   my $self = shift;
   my $obj  = shift;
@@ -70,7 +70,7 @@ sub equals_id {
   return if $self->team_id != $obj->team_id;
   return 1;
 }
-####################################################################################
+
 sub equals_obj {
   my $self = shift;
   my $obj  = shift;
@@ -80,7 +80,7 @@ sub equals_obj {
   return if !$self->team->equals($obj->team);
   return 1;
 }
-####################################################################################
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;
