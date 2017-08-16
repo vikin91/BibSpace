@@ -75,8 +75,13 @@ subtest 'backup_restore' => sub {
   $page = $t_logged_in->app->url_for('backup_restore', id => $backup->uuid);
   $t_logged_in->put_ok($page)->status_isnt(404, "Checking: 404 $page")
     ->status_isnt(500, "Checking: 500 $page");
+  SKIP: {
+    skip "Skip if backup is not restorable" if !$backup || $backup->type eq 'mysql';
+    $page = $t_logged_in->app->url_for('backup_restore', id => $backup->uuid);
 
-  sleep(2);
+    $t_logged_in->put_ok($page)->status_isnt(404, "Checking: 404 $page")
+      ->status_isnt(500, "Checking: 500 $page");
+  }
 
   # this test sometimes fail without reason. This sleep might help with it
 # ./t/200-controller/Backup.t .................... 8/?
