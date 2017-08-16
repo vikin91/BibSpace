@@ -16,7 +16,6 @@ use Mojo::Log;
 #  ALTER TABLE OurType_to_Type ADD COLUMN description TEXT DEFAULT NULL;
 #  ALTER TABLE OurType_to_Type ADD COLUMN landing INTEGER DEFAULT 0;
 
-
 sub all_our {
   my $self = shift;
 
@@ -66,7 +65,6 @@ sub manage {
   );
   $self->render(template => 'types/manage_types');
 }
-
 
 sub toggle_landing {
   my $self      = shift;
@@ -162,7 +160,6 @@ sub map_types {
   }
   $self->redirect_to($self->get_referrer);
 }
-
 
 sub unmap_types {
   my $self   = shift;

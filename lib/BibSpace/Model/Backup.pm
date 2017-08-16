@@ -170,7 +170,6 @@ sub equals {
   return $self->filename eq $obj->filename;
 }
 
-
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

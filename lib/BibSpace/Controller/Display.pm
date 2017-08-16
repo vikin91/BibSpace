@@ -17,7 +17,6 @@ use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::Core;
 use BibSpace::Util::Statistics;
 
-
 sub index {
   my $self = shift;
   if ($self->app->is_demo) {
@@ -131,7 +130,6 @@ sub show_stats {
   $self->render(template => 'display/stats');
 }
 
-
 sub show_stats_websocket {
   my $self = shift;
   my $num = $self->param('num') // 20;
@@ -153,6 +151,5 @@ sub show_stats_websocket {
     }
   );
 }
-
 
 1;

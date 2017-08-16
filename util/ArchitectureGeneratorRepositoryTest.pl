@@ -85,8 +85,6 @@ sub debug {
 __PACKAGE__->meta->make_immutable;
 no Moose;
 
-
-
 package main;
 
 ## lets see if this generates properly

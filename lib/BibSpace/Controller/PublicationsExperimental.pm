@@ -79,7 +79,6 @@ sub publications_add_many_get {
   $self->render(template => 'publications/add_multiple_entries');
 }
 
-
 ## Called after every preview or store command issued by ADD_MULTIPLE form
 ##  finish this function using the new way of adding editing
 
@@ -251,6 +250,5 @@ sub publications_add_many_post {
   );
   $self->render(template => 'publications/add_multiple_entries');
 }
-
 
 1;

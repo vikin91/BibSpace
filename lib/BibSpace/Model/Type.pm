@@ -43,7 +43,6 @@ has 'bibtexTypes' => (
   },
 );
 
-
 sub toString {
   my $self = shift;
   return
@@ -93,7 +92,6 @@ sub can_be_deleted {
   return if $self->is_original_bibtex_type;
   return 1;
 }
-
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

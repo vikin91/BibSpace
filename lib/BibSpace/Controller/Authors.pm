@@ -22,7 +22,6 @@ use BibSpace::Functions::FPublications;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
-
 sub all_authors {    # refactored
   my $self    = shift;
   my $visible = $self->param('visible');
@@ -68,7 +67,6 @@ sub add_author {
   $self->stash(master => '', id => '');
   $self->render(template => 'authors/add_author');
 }
-
 
 sub add_post {
   my $self       = shift;
@@ -358,7 +356,6 @@ sub merge_authors {
   $self->redirect_to($self->get_referrer);
 }
 
-
 sub edit_post {
   my $self        = shift;
   my $id          = $self->param('id');
@@ -535,7 +532,6 @@ sub delete_author_force {
   $self->redirect_to($self->url_for('all_authors'));
 }
 
-
 ## do not use this on production! this is for making the tests faster!!
 sub delete_invisible_authors {
   my $self = shift;
@@ -583,7 +579,6 @@ sub delete_invisible_authors {
   $self->redirect_to($self->url_for('all_authors'));
 
 }
-
 
 sub reassign_authors_to_entries {
   my $self = shift;
@@ -674,6 +669,5 @@ sub toggle_visibility {
   $self->app->repo->authors_update($author);
   $self->redirect_to($self->get_referrer);
 }
-
 
 1;

@@ -64,7 +64,6 @@ our @EXPORT = qw(
   get_current_month
 );
 
-
 sub sort_publications {
   my (@pubs) = @_;
   return reverse sort {
@@ -74,7 +73,6 @@ sub sort_publications {
       || $a->id cmp $b->id
   } @pubs;
 }
-
 
 =item fix_bibtex_national_characters
   This function should help to avoid bibtex=>html warnings of BibStyle, like this:
@@ -214,7 +212,6 @@ sub check_password {
   }
   return;
 }
-
 
 sub send_email {
   my $config = shift;
@@ -387,7 +384,6 @@ sub get_generic_type_description {
   return "Publications of type " . $type_desc;
 }
 
-
 sub create_user_id {
   my ($name) = @_;
 
@@ -441,6 +437,5 @@ sub create_user_id {
   # print "$userID \n";
   return $userID;
 }
-
 
 1;

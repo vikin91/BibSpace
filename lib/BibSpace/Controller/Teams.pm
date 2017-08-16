@@ -16,8 +16,6 @@ use BibSpace::Model::Team;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
-
-
 sub show {
   my $self  = shift;
   my @teams = $self->app->repo->teams_all;
@@ -79,7 +77,6 @@ sub add_team_post {
   $self->redirect_to('edit_team', id => $new_team_id);
 }
 
-
 sub delete_team {
   my $self = shift;
   my $id   = $self->param('id');
@@ -98,7 +95,6 @@ sub delete_team {
 
   $self->redirect_to($self->url_for('all_teams'));
 }
-
 
 sub delete_team_force {
   my $self = shift;
@@ -137,6 +133,5 @@ sub do_delete_team {
   $team->memberships_clear;
   $self->app->repo->teams_delete($team);
 }
-
 
 1;

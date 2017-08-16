@@ -23,7 +23,6 @@ has 'authorships' => (
   },
 );
 
-
 sub has_authorship {
   my ($self, $authorship) = @_;
   my $au = $self->authorships_find(sub { $_->equals($authorship) });

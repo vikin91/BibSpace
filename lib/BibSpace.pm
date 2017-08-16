@@ -207,7 +207,6 @@ has repo => sub {
 
 };
 
-
 sub startup {
   my $self = shift;
   $self->app->logger->info("*** Starting BibSpace ***");
@@ -259,7 +258,6 @@ sub insert_admin {
   }
   return;
 }
-
 
 sub setup_repositories {
   my $self = shift;
@@ -438,7 +436,6 @@ sub setup_plugins {
   $self->helper(proxy_prefix => sub { $self->config->{proxy_prefix} });
   return;
 }
-
 
 sub setup_routes {
   my $self = shift;
@@ -930,8 +927,6 @@ sub setup_routes {
    #>>> 
   return;
 }
-
-
 
 sub setup_hooks {
   my $self = shift;

@@ -82,7 +82,6 @@ sub all_recently_added {
   $self->render(template => 'publications/all');
 }
 
-
 sub all_recently_modified {
   my $self = shift;
   my $num = $self->param('num') // 10;
@@ -102,7 +101,6 @@ sub all_recently_modified {
   $self->stash(entries => \@filtered, all_entries => \@modified_entries);
   $self->render(template => 'publications/all');
 }
-
 
 sub all_without_tag {
   my $self = shift;
@@ -221,8 +219,6 @@ sub all_candidates_to_delete {
   $self->render(template => 'publications/all');
 }
 
-
-
 sub all_bibtex {
   my $self = shift;
 
@@ -237,7 +233,6 @@ sub all_bibtex {
   $self->render(text => $big_str);
 }
 
-
 sub all_read {
   my $self = shift;
 
@@ -248,8 +243,6 @@ sub all_read {
   my $html = $self->render_to_string(template => 'publications/all_read');
   $self->render(data => $html);
 }
-
-
 
 sub single {
   my $self = shift;
@@ -267,8 +260,6 @@ sub single {
   $self->stash(entries => \@objs);
   $self->render(template => 'publications/all');
 }
-
-
 
 sub single_read {
   my $self = shift;
@@ -383,7 +374,6 @@ sub delete_orphaned {
   $self->redirect_to('all_orphaned');
 
 }
-
 
 sub fix_file_urls {
   my $self = shift;
@@ -572,7 +562,6 @@ sub download {
   $self->render(text => "File not found.", status => 404);
 }
 
-
 sub add_pdf {
   my $self  = shift;
   my $id    = $self->param('id');
@@ -702,7 +691,6 @@ sub add_pdf_post {
   $self->redirect_to($self->get_referrer);
 }
 
-
 sub mark_author_to_regenerate {
   my $self      = shift;
   my $author_id = $self->param('author_id');
@@ -810,7 +798,6 @@ sub mark_all_to_regenerate {
 
 }
 
-
 sub regenerate_html {
   my $self      = shift;
   my $converter = $self->app->bibtexConverter;
@@ -839,7 +826,6 @@ sub regenerate_html {
 
   $self->redirect_to($self->get_referrer);
 }
-
 
 sub delete_sure {
   my $self = shift;
@@ -888,8 +874,6 @@ sub show_authors_of_entry {
   $self->render(template => 'publications/show_authors');
 }
 
-
-
 sub manage_tags {
   my $self = shift;
   my $id   = $self->param('id');
@@ -910,7 +894,6 @@ sub manage_tags {
   $self->stash(entry => $entry, tags => \@tags, tag_types => \@tag_types);
   $self->render(template => 'publications/manage_tags');
 }
-
 
 sub remove_tag {
   my $self     = shift;
@@ -988,8 +971,6 @@ sub add_tag {
   $self->redirect_to($self->get_referrer);
 }
 
-
-
 sub manage_exceptions {
   my $self = shift;
   my $id   = $self->param('id');
@@ -1064,7 +1045,6 @@ sub add_exception {
 
 }
 
-
 sub remove_exception {
   my $self     = shift;
   my $entry_id = $self->param('eid');
@@ -1120,8 +1100,6 @@ sub remove_exception {
 
 }
 
-
-
 sub get_adding_editing_message_for_error_code {
   my $self        = shift;
   my $exit_code   = shift;
@@ -1169,7 +1147,6 @@ sub get_adding_editing_message_for_error_code {
   }
 
 }
-
 
 sub publications_add_get {
   my $self = shift;

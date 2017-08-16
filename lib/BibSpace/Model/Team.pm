@@ -20,7 +20,6 @@ with Storage('format' => 'JSON', 'io' => 'File');
 has 'name' => (is => 'rw', isa => 'Str');
 has 'parent' => (is => 'rw');
 
-
 sub toString {
   my $self = shift;
   $self->freeze;

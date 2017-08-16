@@ -26,7 +26,6 @@ use Mojo::Base 'Mojolicious::Controller';
 # 5 2 * * 0 curl http://146.185.144.116:8080/cron/week
 # 10 2 1 * * curl http://146.185.144.116:8080/cron/month
 
-
 sub index {
   my $self = shift;
 
@@ -194,10 +193,6 @@ sub do_cron_month {
 
 }
 
-
-
-
-
 sub log_cron_usage {
   my $self  = shift;
   my $level = shift;
@@ -261,6 +256,5 @@ sub get_last_cron_run {
 #     my $hours = $diff->hours;
 #     return $hours;
 # }
-
 
 1;

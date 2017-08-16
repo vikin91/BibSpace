@@ -21,7 +21,6 @@ use Moose::Util qw/does_role/;
 
 use BibSpace::Converter::IHtmlBibtexConverter;
 
-
 sub index {
   my $self = shift;
 

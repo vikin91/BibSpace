@@ -24,8 +24,6 @@ has 'memberships' => (
   },
 );
 
-
-
 sub get_teams {
   my $self = shift;
   return map { $_->team } $self->memberships_all;

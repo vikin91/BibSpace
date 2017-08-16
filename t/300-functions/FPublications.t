@@ -14,7 +14,6 @@ TestManager->apply_fixture($self->app);
 
 use BibSpace::Functions::FPublications;
 
-
 subtest 'Fregenerate_html_for_array' => sub {
 
   my @all_entries = $t_logged_in->app->repo->entries_all;
@@ -41,7 +40,6 @@ subtest 'Fregenerate_html_for_array' => sub {
     0, "regen 0 entries ok");
 
 };
-
 
 $t_logged_in->app->repo->entries_delete($t_logged_in->app->repo->entries_all);
 

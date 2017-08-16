@@ -64,7 +64,6 @@ sub read_backups {
   return @backups;
 }
 
-
 sub do_storable_backup {
   my $app = shift;
   my $name = shift // 'normal';

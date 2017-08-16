@@ -21,13 +21,11 @@ my $page = "";
 
 my $backup_id = 1;
 
-
 subtest 'backup_index' => sub {
   $page = $t_logged_in->app->url_for('backup_index');
   $t_logged_in->get_ok($page)->status_isnt(404, "Checking: 404 $page")
     ->status_isnt(500, "Checking: 500 $page");
 };
-
 
 subtest 'backup_do' => sub {
   $page = $t_logged_in->app->url_for('backup_do');
@@ -41,18 +39,15 @@ subtest 'backup_do_mysql' => sub {
     ->status_isnt(500, "Checking: 500 $page");
 };
 
-
 my $backup = do_storable_backup($self->app);
 ok($backup, "found a backup");
 $backup_id = $backup->id;
-
 
 subtest 'backup_do_mysql' => sub {
   my @backups = read_backups($self->app->get_backups_dir);
   ok(scalar(@backups) > 0,
     "found some backups in " . $self->app->get_backups_dir);
 };
-
 
 subtest 'backup_index again' => sub {
   $page = $t_logged_in->app->url_for('backup_index');
@@ -107,13 +102,11 @@ subtest 'backup_delete' => sub {
     ->status_isnt(500, "Checking: 500 $page");
 };
 
-
 subtest 'backup_cleanup' => sub {
   $page = $t_logged_in->app->url_for('backup_cleanup');
   $t_logged_in->delete_ok($page)->status_isnt(404, "Checking: 404 $page")
     ->status_isnt(500, "Checking: 500 $page");
 };
-
 
 subtest 'backup_delete to clean' => sub {
 

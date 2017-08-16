@@ -29,7 +29,6 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::Log;
 
-
 sub index {
   my $self = shift;
   my $dbh  = $self->app->db;
@@ -54,7 +53,6 @@ sub index {
   $self->stash(backups_arr => \@backups_arr, dir_size => $dir_size);
   $self->render(template => 'backup/backup');
 }
-
 
 sub save {
   my $self = shift;
@@ -103,8 +101,6 @@ sub cleanup {
   $self->redirect_to('backup_index');
 }
 
-
-
 sub backup_download {
   my $self = shift;
   my $uuid = $self->param('id');
@@ -123,7 +119,6 @@ sub backup_download {
     $self->redirect_to($self->get_referrer);
   }
 }
-
 
 sub delete_backup {
   my $self = shift;
@@ -171,7 +166,6 @@ sub delete_backup {
   $self->redirect_to($self->url_for('backup_index'));
 }
 
-
 sub restore_backup {
   my $self = shift;
   my $uuid = $self->param('id');
@@ -203,7 +197,5 @@ sub restore_backup {
   }
   $self->redirect_to('backup_index');
 }
-
-
 
 1;

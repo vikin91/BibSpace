@@ -307,7 +307,6 @@ sub display_landing {
 
 ####################################### HELPER functions for this controller ###############################
 
-
 sub get_switchlink_html {
   my $self    = shift;
   my $keyword = shift;
@@ -351,8 +350,6 @@ sub get_switchlink_html {
   $str .= '</div>';
   return $str;
 }
-
-
 
 sub get_filtering_navbar_html {
   my $self = shift;
@@ -598,8 +595,6 @@ sub num_pubs_filtering {
     }
   );
 }
-
-
 
 sub get_papers_for_landing {
   my $self = shift;

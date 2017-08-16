@@ -28,7 +28,6 @@ has 'author' => (
   traits => ['DoNotSerialize']    # due to cycyles
 );
 
-
 sub id {
   my $self = shift;
   return "(" . $self->entry_id . "-" . $self->author->id . ")"

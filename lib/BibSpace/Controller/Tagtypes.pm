@@ -18,7 +18,6 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::Log;
 
-
 sub index {
   my $self      = shift;
   my @tag_types = $self->app->repo->tagTypes_all;
@@ -56,7 +55,6 @@ sub add_post {
   $self->redirect_to($self->url_for('all_tag_types'));
 }
 
-
 sub delete {
   my $self = shift;
   my $id   = $self->param('id');
@@ -81,7 +79,6 @@ sub delete {
 
   $self->redirect_to($self->get_referrer);
 }
-
 
 sub edit {
   my $self = shift;

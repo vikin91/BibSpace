@@ -134,8 +134,6 @@ has 'bst_file' => (
   traits  => ['DoNotSerialize']
 );
 
-
-
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -143,7 +141,6 @@ sub equals {
     unless ref($self) eq ref($obj);
   return $self->equals_bibtex($obj);
 }
-
 
 =item equals_bibtex
     Assumes that both objects are equal if the bibtex code is identical
@@ -156,7 +153,6 @@ sub equals_bibtex {
     unless ref($self) eq ref($obj);
   return $self->bib eq $obj->bib;
 }
-
 
 sub delete_all_attachments {
   my $self = shift;
@@ -233,7 +229,6 @@ sub discover_attachments {
   # };
   # $self->add_attachment( 'unknown', $_ ) for @discovery_other;
 }
-
 
 =item is_visible
     Entry is visible if at least one of its authors is visible
@@ -499,7 +494,6 @@ sub regenerate_html {
   return 0;
 }
 
-
 sub has_author {
   my $self   = shift;
   my $author = shift;
@@ -522,8 +516,6 @@ sub has_master_author {
 
   return $self->has_author($author->get_master);
 }
-
-
 
 sub author_names_from_bibtex {
   my $self = shift;
@@ -587,8 +579,6 @@ sub has_team {
   return;
 }
 
-
-
 sub tag_names_from_bibtex {
   my $self = shift;
 
@@ -632,8 +622,6 @@ sub clean_ugly_bibtex_fields {
 
   return $self->remove_bibtex_fields($field_names_to_clean_arr_ref);
 }
-
-
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

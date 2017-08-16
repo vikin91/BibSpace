@@ -45,7 +45,6 @@ sub toString {
   $str;
 }
 
-
 =item equals
     In case of any strange problems: this must return 1 or 0! 
 =cut

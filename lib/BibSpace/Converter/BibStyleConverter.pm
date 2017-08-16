@@ -81,8 +81,6 @@ sub _convert_bib_to_bbl {
   return ($bbl_dirty, $dirty_bbl_array_ref, $warnings_arr_ref);
 }
 
-
-
 sub _clean_bbl {
   my ($bbl_arr_ref) = @_;
 
@@ -170,7 +168,6 @@ sub _clean_bbl {
 
   return $s;
 }
-
 
 sub _add_html_links {
   my ($bbl_clean, $bib) = @_;
@@ -404,7 +401,6 @@ sub delatexify {
   $s;
 }
 
-
 =item string_replace_with_counting
   uses counting to do strin replace
   Example:  
@@ -515,7 +511,6 @@ sub string_replace_with_counting {
   # say "======== string_replace_with_counting END ========";
   return $s;
 }
-
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

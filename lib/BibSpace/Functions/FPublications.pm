@@ -201,8 +201,6 @@ sub Fhandle_add_edit_publication {
   return ($new_entry, $status_code_str, $existing_id, $added_under_id);
 }
 
-
-
 # this function ignores the parameters given in the $self object
 sub Fget_publications_main_hashed_args_only {
   my ($self, $args, $publications) = @_;
@@ -237,7 +235,6 @@ sub Fget_publications_main_hashed_args {    #
     $args->{visible}, $args->{hidden},      $args->{debug},
   );
 }
-
 
 sub Fget_publications_core {
   my $self              = shift;

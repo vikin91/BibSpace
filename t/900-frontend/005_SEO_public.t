@@ -17,7 +17,6 @@ use BibSpace::Functions::Core;
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
 
-
 subtest 'PublicationsSEO: public functions' => sub {
 
   my @entries      = $self->app->repo->entries_all;
@@ -48,8 +47,6 @@ subtest 'PublicationsSEO: public functions' => sub {
 
   }
 };
-
-
 
 subtest 'PublicationsSEO: check decoding of the list' => sub {
 

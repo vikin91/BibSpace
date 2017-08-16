@@ -15,7 +15,6 @@ with Storage('format' => 'JSON', 'io' => 'File');
 has 'name'    => (is => 'rw', isa => 'Str');
 has 'comment' => (is => 'rw', isa => 'Maybe[Str]');
 
-
 sub equals {
   my $self = shift;
   my $obj  = shift;

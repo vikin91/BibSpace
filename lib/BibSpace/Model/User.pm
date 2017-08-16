@@ -77,7 +77,6 @@ sub get_registration_time {
     ->strftime($self->preferences->output_time_format);
 }
 
-
 sub toString {
   my $self = shift;
   my $str  = "User >> login: ";

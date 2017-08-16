@@ -22,7 +22,6 @@ has 'permalink' => (is => 'rw', isa => 'Maybe[Str]');
 has 'tagtype' =>
   (is => 'rw', isa => 'Maybe[TagType]', traits => ['DoNotSerialize'],);
 
-
 sub toString {
   my $self = shift;
   $self->freeze;

@@ -43,7 +43,6 @@ has 'masterObj' => (
   documentation => q{Author's master author object.}
 );
 
-
 # called after the default constructor
 sub BUILD {
   my $self = shift;
@@ -78,10 +77,6 @@ sub equals {
   my $result = $self->uid eq $obj->uid;
   return $result;
 }
-
-
-
-
 
 sub set_master {
   my $self          = shift;
@@ -177,8 +172,6 @@ sub can_merge_authors {
   return;
 }
 
-
-
 sub toggle_visibility {
   my $self = shift;
 
@@ -207,8 +200,6 @@ sub can_be_deleted {
   return;
 }
 
-
-
 sub has_entry {
   my $self  = shift;
   my $entry = shift;
@@ -222,7 +213,6 @@ sub has_entry {
 }
 
 ################################################################################ TEAMS
-
 
 sub joined_team {
   my $self = shift;
@@ -306,7 +296,6 @@ sub update_membership {
   $mem->stop($stop)   if defined $stop;
   return 1;
 }
-
 
 #################################################################################### TAGS
 

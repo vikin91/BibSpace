@@ -22,8 +22,6 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::Log;
 
-
-
 sub index {
   my $self   = shift;
   my $dbh    = $self->app->db;
@@ -44,7 +42,6 @@ sub index {
   $self->render(template => 'tags/tags');
 }
 
-
 sub add {
   my $self = shift;
   my $dbh  = $self->app->db;
@@ -52,7 +49,6 @@ sub add {
 
   $self->render(template => 'tags/add', type => $type);
 }
-
 
 sub add_post {
   my $self        = shift;
@@ -97,8 +93,6 @@ sub add_post {
   # $self->render(template => 'tags/add');
 }
 
-
-
 sub edit {
   my $self = shift;
   my $id   = $self->param('id');
@@ -122,7 +116,6 @@ sub edit {
   $self->render(template => 'tags/edit');
 
 }
-
 
 sub get_authors_for_tag_and_team {
   my $self    = shift;
@@ -324,7 +317,6 @@ sub get_authors_for_tag {
   $self->stash(tag => $tag, authors => \@authors);
   $self->render(template => 'tags/authors_having_tag');
 }
-
 
 sub delete {
   my $self = shift;

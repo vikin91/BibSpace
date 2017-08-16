@@ -21,7 +21,6 @@ has 'exceptions' => (
   },
 );
 
-
 sub has_exception {
   my ($self, $exception) = @_;
   my $idx = $self->exceptions_find_index(sub { $_->equals($exception) });

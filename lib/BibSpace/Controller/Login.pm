@@ -11,7 +11,6 @@ use BibSpace::Functions::Core
 use Data::Dumper;
 use Try::Tiny;
 
-
 # for _under_ -checking if user is logged in to access other pages
 sub check_is_logged_in {
   my $self = shift;
@@ -86,8 +85,6 @@ sub under_check_has_rank {
   return;
 
 }
-
-
 
 sub manage_users {
   my $self = shift;
@@ -214,7 +211,6 @@ sub forgot {
   $self->render(template => 'login/forgot_request');
 }
 
-
 sub post_gen_forgot_token {
   my $self = shift;
 
@@ -296,7 +292,6 @@ sub token_clicked {
   $self->render(template => 'login/set_new_password');
 }
 
-
 sub store_password {
   my $self  = shift;
   my $token = $self->param('token');
@@ -348,7 +343,6 @@ sub store_password {
   $self->redirect_to('token_clicked', token => $token);
 
 }
-
 
 sub login {
   my $self        = shift;
@@ -421,7 +415,6 @@ sub not_logged_in {
   $self->flash(msg_type => 'danger', msg => 'You need to login first.');
   $self->redirect_to($self->url_for('login_form'));
 }
-
 
 sub logout {
   my $self = shift;

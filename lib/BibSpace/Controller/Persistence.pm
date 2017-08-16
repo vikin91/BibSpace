@@ -18,7 +18,6 @@ use BibSpace::Functions::FDB;
 
 use Mojo::Base 'Mojolicious::Controller';
 
-
 sub persistence_status {
   my $self = shift;
 
@@ -30,7 +29,6 @@ sub persistence_status {
   $self->flash(msg_type => 'success', msg => $status);
   $self->redirect_to($self->get_referrer);
 }
-
 
 sub persistence_status_ajax {
   my $self = shift;
@@ -126,7 +124,6 @@ sub copy_smart_to_mysql {
   $self->flash(msg_type => 'success', msg => "Copied smart => mysql. $status");
   $self->redirect_to($self->get_referrer);
 }
-
 
 sub insert_random_data {
   my $self = shift;
@@ -327,6 +324,5 @@ sub system_status {
     $self->render(text => $msg, status => 200);
   }
 }
-
 
 1;

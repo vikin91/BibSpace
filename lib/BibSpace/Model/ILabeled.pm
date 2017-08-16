@@ -21,7 +21,6 @@ has 'labelings' => (
   },
 );
 
-
 sub has_tag {
   my $self = shift;
   my $tag  = shift;
