@@ -42,7 +42,7 @@ my $some_author = $authors[0];
 # generated with: ./bin/bibspace routes | grep GET | grep -v :
 my @pages = (
   $self->url_for('start'), $self->url_for('system_status'), "/forgot",
-  "/login_form", "/youneedtologin", "/badpassword", "/logout", "/register",
+  "/login_form", "/youneedtologin", "/badpassword",  "/register",
   "/log",
 
   $self->url_for('add_publication'), $self->url_for('add_many_publications'),
@@ -61,7 +61,9 @@ my @pages = (
   $self->url_for('all_orphaned'), "/publications/candidates_to_delete",
   "/publications/missing_month", "/read/publications/meta", "/cron",
   "/cron/day", "/cron/night", "/cron/week", "/cron/month",
+  "/logout",
 );
+# Logout must be last!
 
 my $ws_page;
 $ws_page = $self->url_for('show_stats_websocket', num => 10);
