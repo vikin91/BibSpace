@@ -31,6 +31,16 @@ has 'master' => (
   documentation => q{Author master name. Redundant field.}
 );
 
+# has 'master_id' => (
+#   is            => 'rw',
+#   isa           => 'Maybe[Int]',
+#   documentation => q{Id of author's master object}
+# );
+has 'masterObj' => (
+  is      => 'rw',
+  isa     => 'Maybe[Author]',
+  default => sub {undef},
+
 has 'masterObj' => (
   is            => 'rw',
   isa           => 'Maybe[Author]',
@@ -45,9 +55,6 @@ sub BUILD {
   $self->id;    # trigger lazy execution of idProvider
   if ((!defined $self->master) or ($self->master eq '')) {
     $self->master($self->uid);
-  }
-  if ((!defined $self->master_id) and (defined $self->{id})) {
-    $self->master_id($self->id);
   }
   if ((defined $self->masterObj) and ($self->masterObj == $self)) {
     $self->masterObj(undef);
@@ -66,37 +73,35 @@ sub equals {
   return $result;
 }
 
+sub master_id {
+  my $self = shift;
+  return $self->get_master->id;
+}
+
 sub set_master {
   my $self          = shift;
   my $master_author = shift;
 
   $self->masterObj($master_author);
-
   $self->master($master_author->uid);
-  $self->master_id($master_author->id);
 }
 
 sub get_master {
   my $self = shift;
 
-  return $self if $self->is_master;
-  return $self->masterObj if $self->masterObj;
+  # Author either has masterObj = is minion
+  return $self->masterObj if defined $self->masterObj;
 
-  warn "SERIOUS WARNING! Cannot derive master for "
-    . $self->uid
-    . ". Author is not master, but masterObj is undef. id '"
-    . $self->id
-    . "' master_id '"
-    . $self->master_id . "'.";
-  return;
+  # or is master itself
+  return $self;
 }
 
 sub is_master {
   my $self = shift;
 
-  if ($self->equals($self->masterObj) or $self->master_id == $self->id) {
-    return 1;
-  }
+  return 1 if (!$self->masterObj);
+  return 1 if ($self->equals($self->masterObj));
+
   return;
 }
 
@@ -135,7 +140,6 @@ sub remove_master {
 
   $self->masterObj(undef);
   $self->master($self->uid);
-  $self->master_id($self->id);
 }
 
 sub add_minion {

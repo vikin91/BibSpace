@@ -152,6 +152,7 @@ sub _insert {
   foreach my $obj (@objects) {
     try {
       my $result = $sth->execute($obj->id, $obj->name, $obj->parent);
+      $obj->id($sth->{mysql_insertid});
     }
     catch {
       $self->logger->error("Insert exception: $_");

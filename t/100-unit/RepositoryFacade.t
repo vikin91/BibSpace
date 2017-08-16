@@ -14,13 +14,20 @@ my $self     = $t_anyone->app;
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
 
-my $mock_obj_authors = $self->app->entityFactory->new_Author(uid => 'test');
-my $mock_obj_entries = $self->app->entityFactory->new_Entry(bib => 'test');
-my $mock_obj_tags = $self->app->entityFactory->new_Tag(name => 'test');
-my $mock_obj_tagTypes = $self->app->entityFactory->new_TagType(name => 'test');
-my $mock_obj_teams = $self->app->entityFactory->new_Team(name => 'test');
-my $mock_obj_types = $self->app->entityFactory->new_Type(our_type => 'test');
+my $mock_obj_authors
+  = $self->app->entityFactory->new_Author(id => -1, uid => 'test');
+my $mock_obj_entries
+  = $self->app->entityFactory->new_Entry(id => -1, bib => 'test');
+my $mock_obj_tags
+  = $self->app->entityFactory->new_Tag(id => -1, name => 'test');
+my $mock_obj_tagTypes
+  = $self->app->entityFactory->new_TagType(id => -1, name => 'test');
+my $mock_obj_teams
+  = $self->app->entityFactory->new_Team(id => -1, name => 'test');
+my $mock_obj_types
+  = $self->app->entityFactory->new_Type(id => -1, our_type => 'test');
 my $mock_obj_users = $self->app->entityFactory->new_User(
+  id    => -1,
   login => 'test',
   email => 'test',
   pass  => 'test',

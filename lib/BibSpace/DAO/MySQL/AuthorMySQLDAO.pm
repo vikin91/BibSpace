@@ -111,9 +111,9 @@ sub exists {
   my $dbh = $self->handle;
   my $sth = $dbh->prepare(
     "SELECT EXISTS(SELECT 1 FROM Author WHERE id=? LIMIT 1) as num ");
-  $sth->execute($object->id);
-  my $row = $sth->fetchrow_hashref();
-  my $num = $row->{num} // 0;
+  my $result = $sth->execute($object->id);
+  my $row    = $sth->fetchrow_hashref();
+  my $num    = $row->{num} // 0;
   return $num > 0;
 
 }
@@ -159,22 +159,19 @@ sub _insert {
     INSERT INTO Author(
     id,
     uid,
-    master_id,
-    master,
     display
     ) 
-    VALUES (?,?,?,?,?);";
+    VALUES (?,?,?);";
   my $sth   = $dbh->prepare($qry);
   my $added = 0;
   foreach my $obj (@objects) {
     try {
-      my $result
-        = $sth->execute($obj->id, $obj->uid, $obj->master_id, $obj->master,
-        $obj->display);
+      $sth->execute($obj->id, $obj->uid, $obj->display);
+      $obj->id($sth->{mysql_insertid});
       ++$added;
     }
     catch {
-      $self->logger->error("Insert exception: $_");
+      $self->logger->error("Author insert exception: $_");
     };
   }
   return $added;

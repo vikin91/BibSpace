@@ -1228,6 +1228,7 @@ sub publications_add_post {
   # any action
   my $existing_entry = $self->app->repo->entries_find(
     sub { $_->bibtex_key eq $entry->bibtex_key });
+
   if ($existing_entry) {
     $status_code_str = 'KEY_TAKEN';
     my $msg_type = 'danger';
@@ -1269,7 +1270,7 @@ sub publications_add_post {
     $added_under_id = $entry->id;
 
     ## !!! the entry must be added before executing Freassign_authors_to_entries_given_by_array
-    ## why? beacuse authorship will be unable to map existing entry to the author
+    ## why? because authorship will be unable to map existing entry to the author
     Freassign_authors_to_entries_given_by_array($self->app, 1, [$entry]);
 
     my $msg_type = 'success';

@@ -139,6 +139,7 @@ sub _insert {
         my $result
           = $sth->execute($bibtex_type, $obj->our_type, $obj->onLanding,
           $obj->description);
+        $obj->id($sth->{mysql_insertid});
       }
       catch {
         $self->logger->error("Insert exception: $_");

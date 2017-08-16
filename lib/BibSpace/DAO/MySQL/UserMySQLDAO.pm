@@ -167,7 +167,7 @@ sub _insert {
   my $dbh = $self->handle;
   my $qry = "
     INSERT INTO Login(
-      id, 
+    id,
       login, 
       registration_time, 
       last_login, 
@@ -191,6 +191,7 @@ sub _insert {
         $obj->pass,       $obj->pass2,     $obj->pass3,
         $obj->rank,       $obj->master_id, $obj->tennant_id
       );
+      $obj->id($sth->{mysql_insertid});
     }
     catch {
       $self->logger->error("Insert exception: $_");

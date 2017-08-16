@@ -7,19 +7,7 @@ use MooseX::StrictConstructor;
 
 require BibSpace::Model::SerializableBase::IEntitySerializableBase;
 with 'IEntitySerializableBase';
-
-requires 'equals';
-requires 'TO_JSON';
-
-sub _generateUIDEntry {
-  my $self = shift;
-
-  if (defined $self->old_mysql_id and $self->old_mysql_id > 0) {
-    $self->idProvider->registerUID($self->old_mysql_id);
-    return $self->old_mysql_id;
-  }
-  return $self->idProvider->generateUID();
-}
+# Responsibility for ID management is moved to the storage backend
 
 has 'preferences' =>
   (is => 'ro', isa => 'Preferences', traits => ['DoNotSerialize']);
@@ -32,19 +20,8 @@ has 'idProvider' => (
 );
 
 has 'old_mysql_id' => (is => 'ro', isa => 'Maybe[Int]', default => undef);
+has 'id'           => (is => 'rw', isa => 'Maybe[Int]', default => undef,);
 
-has 'id' => (
-  is       => 'ro',
-  isa      => 'Int',
-  builder  => '_generateUIDEntry',
-  lazy     => 1,
-  init_arg => undef
-);
-
-# called after the default constructor
-sub BUILD {
-  my $self = shift;
-  $self->id;    # trigger lazy execution of idProvider
-}
+requires 'equals';
 
 1;

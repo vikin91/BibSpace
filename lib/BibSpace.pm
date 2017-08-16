@@ -34,9 +34,9 @@ use BibSpace::Model::User;
 
 use BibSpace::DAO::DAOFactory;
 
-use BibSpace::Repository::LayeredRepository;
+use BibSpace::Repository::FlatRepository;
 use BibSpace::Repository::RepositoryLayer;
-use BibSpace::Repository::RepositoryFacade;
+use BibSpace::Repository::FlatRepositoryFacade;
 
 use BibSpace::Converter::IHtmlBibtexConverter;
 use BibSpace::Converter::Bibtex2HtmlConverter;
@@ -140,71 +140,38 @@ has use_quick_load_fixture => sub {
   return;
 };
 
-# please use only a single type of logger at once.
-# Using multiple may not be supported currently
-# if you really want to use multiple different loggers or state-full loggers (please don't),
-# then you need to move the object construction INTO the LayeredReposity and provide a helper to access it for everywhere.
+# Using multiple is not be supported currently.
+# Use only stateless loggers.
 has logger => sub { state $logger = SimpleLogger->new() };
-
-has smartArrayBackend => sub {
-  my $self = shift;
-  return SmartArray->new(logger => $self->logger);
-};
 
 ## I moved this to helpers as app->attr for a while
 
-has layeredRepository => sub {
+has flatRepository => sub {
   my $self = shift;
-  $self->app->logger->info("Building layeredRepository");
+  $self->app->logger->info("Building flatRepository");
 
-  my $LR = LayeredRepository->new(
-    logger      => $self->logger,
-    preferences => $self->preferences,
+  my $mySQLLayer = RepositoryLayer->new(
+    name                          => 'mysql',
+    priority                      => 99,
+    creates_on_read               => 1,
+    backendFactoryName            => "MySQLDAOFactory",
+    logger                        => $self->logger,
+    handle                        => $self->db,
+    reset_data_callback           => \&reset_db_data,
+    reset_data_callback_arguments => [$self->db],
+  );
 
-    # id_provider_class => 'DummyUidProvider',
+  return FlatRepository->new(
+    logger            => $self->logger,
+    preferences       => $self->preferences,
     id_provider_class => 'IntegerUidProvider',
+    layer             => $mySQLLayer
   );
-
-  my $smartArrayLayer = RepositoryLayer->new(
-    name               => 'smart',
-    priority           => 1,
-    creates_on_read    => undef,
-    backendFactoryName => "SmartArrayDAOFactory",
-    logger             => $self->logger,
-    handle             => $self->smartArrayBackend,
-
-# reset_data_callback must be undef if you want to create and restore backups using Storable.
-    reset_data_callback => undef,
-    is_read             => 1
-  );
-  $LR->add_layer($smartArrayLayer);
-
-  if (!$self->db) {
-    $self->logger->error(
-      "You add SQL layer, but there is no connection to the database! Skipping this layer."
-        . " You need to start MySQL server and restart BibSpace to use this layer"
-    );
-  }
-  else {
-    my $mySQLLayer = RepositoryLayer->new(
-      name                          => 'mysql',
-      priority                      => 99,
-      creates_on_read               => 1,
-      backendFactoryName            => "MySQLDAOFactory",
-      logger                        => $self->logger,
-      handle                        => $self->db,
-      reset_data_callback           => \&reset_db_data,
-      reset_data_callback_arguments => [$self->db],
-    );
-    $LR->add_layer($mySQLLayer);
-  }
-  return $LR;
 };
 
-# layeredRepository will not change at runtime => repo neither.
 has repo => sub {
   my $self = shift;
-  return RepositoryFacade->new(lr => $self->layeredRepository);
+  return FlatRepositoryFacade->new(lr => $self->flatRepository);
 
 };
 
@@ -220,7 +187,6 @@ sub startup {
 
   $self->setup_routes;
   $self->setup_hooks;
-  $self->setup_repositories;
   $self->insert_admin;
 
   $self->app->logger->info("Setup done.");
@@ -257,56 +223,6 @@ sub insert_admin {
     $admin_exists->make_admin;
     $self->app->repo->users_update($admin_exists);
   }
-  return;
-}
-
-sub setup_repositories {
-  my $self = shift;
-
-  $self->app->logger->info("Setup repositories...");
-
-  if (-e $self->quick_load_fixture_filename and $self->use_quick_load_fixture) {
-
-# $self->app->logger->info("Retrieving dump from '".$self->quick_load_fixture_filename."'.");
-    my $layer = retrieve($self->quick_load_fixture_filename);
-
-    # reser read layer = not needed, layer empty by start of the app
-    # $self->app->logger->info("Replacing layer 'smart' with the dump.");
-    $self->repo->lr->replace_layer('smart', $layer);
-
-# $self->app->logger->debug("State after replacement:".$self->repo->lr->get_summary_table);
-  }
-  else {
-    $self->app->logger->info(
-      "We do not use dump file '" . $self->quick_load_fixture_filename . "'.");
-  }
-
-  # no data, no fun = no need to copy, link, and store
-  if ($self->repo->entries_empty) {
-    $self->app->logger->info("Repo has no entries. Reseting read_layer.");
-
-    $self->repo->lr->copy_data({from => 'mysql', to => 'smart'});
-
-    # Entities and Relations in the smart layer must be linked!
-    $self->link_data;
-
-    $self->app->logger->info("Storing current state to dump file '"
-        . $self->quick_load_fixture_filename
-        . "'.");
-
-    # store current state to file
-    store $self->repo->lr->get_read_layer, $self->quick_load_fixture_filename;
-  }
-  return;
-}
-
-sub link_data {
-  my $self = shift;
-  $self->app->logger->info("Linking data...");
-  BibSpace::Backend::SmartBackendHelper::linkData($self->app);
-  # BackendHelper::linkData($self->app);
-  # linkData($self->app);
-  $self->app->logger->info("Linking Finished.");
   return;
 }
 

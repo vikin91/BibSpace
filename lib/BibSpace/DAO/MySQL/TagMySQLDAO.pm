@@ -147,6 +147,7 @@ sub _insert {
     try {
       my $result
         = $sth->execute($obj->id, $obj->name, $obj->type, $obj->permalink);
+      $obj->id($sth->{mysql_insertid});
     }
     catch {
       $self->logger->error("Insert exception: $_");

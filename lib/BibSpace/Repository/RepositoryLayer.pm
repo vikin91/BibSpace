@@ -200,7 +200,7 @@ sub getDao {
 
 sub get_summary_hash {
   my $self = shift;
-  my %hash = map { $_ => $self->count($_) } LayeredRepository->get_models;
+  my %hash = map { $_ => $self->count($_) } FlatRepository->get_models;
   return \%hash;
 }
 
@@ -213,8 +213,8 @@ sub get_id_provider_summary_hash {
   my $self = shift;
   my %entities_hash
     = map { $_ => $self->uidProvider->get_provider($_)->last_id }
-    LayeredRepository->get_entities;
-  my %relations_hash = map { $_ => '---' } LayeredRepository->get_relations;
+    FlatRepository->get_entities;
+  my %relations_hash = map { $_ => '---' } FlatRepository->get_relations;
   my %hash = (%entities_hash, %relations_hash);
   return \%hash;
 }
@@ -263,7 +263,7 @@ sub get_summary_table {
   $str .= "\n";
   for (1 .. $tab_width) { $str .= "-"; }
   $str .= "\n";
-  foreach my $entity (LayeredRepository->get_entities) {
+  foreach my $entity (FlatRepository->get_entities) {
     $str .= sprintf "| %-15s |", $entity;
     foreach my $ln (reverse sort @layer_names) {
       $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};
@@ -272,7 +272,7 @@ sub get_summary_table {
   }
   for (1 .. $tab_width) { $str .= "-"; }
   $str .= "\n";
-  foreach my $entity (sort LayeredRepository->get_relations) {
+  foreach my $entity (sort FlatRepository->get_relations) {
     $str .= sprintf "| %-15s |", $entity;
     foreach my $ln (reverse sort @layer_names) {
       $str .= sprintf " %9s |", $count_hash{$ln}->{$entity};

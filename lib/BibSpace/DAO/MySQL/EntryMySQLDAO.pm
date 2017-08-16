@@ -66,10 +66,10 @@ sub all {
     my $mt = $mysqlPattern->parse_datetime($row->{modified_time});
 
     # set defaults if there is no data in mysql
-    $ct ||= DateTime->now()
-      ; # formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
-    $mt ||= DateTime->now()
-      ; # formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
+    $ct ||= DateTime->now();
+
+# formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
+    $mt ||= DateTime->now();
 
     # ct and mt are not in DateTime's internal format
 
@@ -84,10 +84,9 @@ sub all {
     # add default
     my $month = $row->{month} // 0;
 
-    push @objs,
-      $self->e_factory->new_Entry(
-      old_mysql_id    => $row->{id},
+    my $obj = $self->e_factory->new_Entry(
       id              => $row->{id},
+      old_mysql_id    => $row->{id},
       entry_type      => $row->{entry_type},
       bibtex_key      => $row->{bibtex_key},
       _bibtex_type    => $row->{bibtex_type},
@@ -102,7 +101,11 @@ sub all {
       creation_time   => $ct,
       modified_time   => $mt,
       need_html_regen => $row->{need_html_regen},
-      );
+    );
+
+    # Factory sets id to undef, so extra rewrite is needed
+    # $obj->{id} = $row->{id};
+    push @objs, $obj;
   }
   return @objs;
 }
@@ -223,6 +226,7 @@ sub _insert {
         $obj->hidden,         $obj->year,          $obj->month,
         $obj->creation_time,  $obj->modified_time, $obj->need_html_regen,
       );
+      $obj->id($sth->{mysql_insertid});
     }
     catch {
       $self->logger->error("Insert exception during inserting ID "

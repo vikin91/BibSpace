@@ -46,11 +46,8 @@ sub db_connect {
         'admin');
     }
     catch {
-      die "FATAL: DB Recreation falied: $_";
+      die "FATAL: DB Recreation failed: $_";
     };
-
-    # we catch and throw...
-
   };
   my $dbh = $conn;
 
@@ -80,40 +77,6 @@ sub reset_db_data {
   return $dbh;
 }
 
-sub purge_and_create_db {
-  my ($dbh, $db_host, $db_user, $db_database, $db_pass) = @_;
-
-  # my $drh = DBI->install_driver("mysql");
-
-# say "!!! DROPPING DATABASE '$db_database'.";
-# try {
-#   my $rc = $drh->func( 'dropdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
-# }
-# catch {
-#   warn $_;
-# };
-
-# say "!!! CREATING DATABASE '$db_database'.";
-# try {
-#   my $rc = $drh->func( 'createdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
-# }
-# catch {
-#   warn $_;
-# };
-
-  # say "Restarting connection to '$db_database'.";
-  # try {
-  #   $dbh = db_connect( $db_host, $db_user, $db_database, $db_pass );
-  #   create_main_db($dbh);
-
-  # }
-  # catch {
-  #   warn $_;
-  # };
-
-  return $dbh;
-}
-
 sub create_main_db {
   my $dbh = shift;
 
@@ -121,8 +84,8 @@ sub create_main_db {
 
   $dbh->do(
     "CREATE TABLE IF NOT EXISTS `Author`(
-         id INTEGER(5) PRIMARY KEY AUTO_INCREMENT, 
-         uid VARCHAR(250), 
+         id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,
+         uid VARCHAR(250),
          display INTEGER(1) DEFAULT 0,
          master TEXT(250) DEFAULT NULL,
          master_id INTEGER(8),
@@ -140,8 +103,8 @@ sub create_main_db {
   );
   $dbh->do(
     "CREATE TABLE IF NOT EXISTS `Author_to_Team`(
-         author_id INTEGER, 
-         team_id INTEGER, 
+         author_id INTEGER,
+         team_id INTEGER,
          start INTEGER DEFAULT 0,
          stop INTEGER DEFAULT 0,
          FOREIGN KEY(author_id) REFERENCES Author(master_id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -156,9 +119,9 @@ sub create_main_db {
       "CREATE TABLE IF NOT EXISTS `Entry`(
           id INTEGER(8) PRIMARY KEY AUTO_INCREMENT,
           entry_type ENUM('paper', 'talk') NOT NULL,
-          bibtex_key VARCHAR(250), 
-          bibtex_type VARCHAR(50)DEFAULT NULL, 
-          bib TEXT, 
+          bibtex_key VARCHAR(250),
+          bibtex_type VARCHAR(50)DEFAULT NULL,
+          bib TEXT,
           html TEXT,
           html_bib TEXT,
           abstract TEXT,
@@ -183,9 +146,9 @@ sub create_main_db {
       "CREATE TABLE IF NOT EXISTS `Entry`(
           id INTEGER(8) PRIMARY KEY AUTO_INCREMENT,
           entry_type ENUM('paper', 'talk') NOT NULL,
-          bibtex_key VARCHAR(250), 
-          bibtex_type VARCHAR(50)DEFAULT NULL, 
-          bib TEXT, 
+          bibtex_key VARCHAR(250),
+          bibtex_type VARCHAR(50)DEFAULT NULL,
+          bib TEXT,
           html TEXT,
           html_bib TEXT,
           abstract TEXT,
@@ -207,9 +170,9 @@ sub create_main_db {
 
   $dbh->do(
     "CREATE TABLE IF NOT EXISTS `Entry_to_Author`(
-         entry_id INTEGER NOT NULL, 
-         author_id INTEGER NOT NULL, 
-         FOREIGN KEY(entry_id) REFERENCES Entry(id) ON UPDATE CASCADE ON DELETE CASCADE, 
+         entry_id INTEGER NOT NULL,
+         author_id INTEGER NOT NULL,
+         FOREIGN KEY(entry_id) REFERENCES Entry(id) ON UPDATE CASCADE ON DELETE CASCADE,
          FOREIGN KEY(author_id) REFERENCES Author(master_id) ON UPDATE CASCADE ON DELETE CASCADE,
          PRIMARY KEY (entry_id, author_id),
          KEY idx_e2a_entry (entry_id),
@@ -235,9 +198,9 @@ sub create_main_db {
   );
   $dbh->do(
     "CREATE TABLE IF NOT EXISTS `Entry_to_Tag`(
-         entry_id INTEGER(8) NOT NULL, 
-         tag_id INTEGER(8) NOT NULL, 
-         FOREIGN KEY(entry_id) REFERENCES Entry(id) ON UPDATE CASCADE ON DELETE CASCADE, 
+         entry_id INTEGER(8) NOT NULL,
+         tag_id INTEGER(8) NOT NULL,
+         FOREIGN KEY(entry_id) REFERENCES Entry(id) ON UPDATE CASCADE ON DELETE CASCADE,
          FOREIGN KEY(tag_id) REFERENCES Tag(id) ON UPDATE CASCADE ON DELETE CASCADE,
          PRIMARY KEY (entry_id, tag_id)
          )"
@@ -253,9 +216,9 @@ sub create_main_db {
   );
   $dbh->do(
     "CREATE TABLE IF NOT EXISTS `OurType_to_Type`(
-         bibtex_type VARCHAR(250), 
-         our_type VARCHAR(250), 
-         description TEXT DEFAULT NULL, 
+         bibtex_type VARCHAR(250),
+         our_type VARCHAR(250),
+         description TEXT DEFAULT NULL,
          landing INTEGER DEFAULT 0,
          PRIMARY KEY (bibtex_type, our_type)
          )"
