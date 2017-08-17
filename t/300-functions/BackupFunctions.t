@@ -44,4 +44,28 @@ TODO: {
   }
 };
 
+subtest 'restore_json_backup' => sub {
+  my $dir        = $t_logged_in->app->get_backups_dir;
+  my @json_paths = path($dir)->children(qr/\.json$/);
+
+  # use Data::Dumper;
+  # $Data::Dumper::MaxDepth = 2;
+  # print Dumper \@json_paths;
+SKIP: {
+    skip "There is no json backup available to test restoring",
+      if scalar @json_paths eq 0;
+
+    my $some_backup = Backup->parse("" . $json_paths[0]);
+    my $jsonString  = path($json_paths[0])->slurp_utf8;
+    my $dto         = BibSpaceDTO->new();
+    my $decodedDTO  = $dto->toLayeredRepo($jsonString, $t_logged_in->app->repo);
+    ok($decodedDTO);    # this doesn't test much...
+    ok(
+      scalar $decodedDTO->get('Entry') > 0,
+      "should restore at least one entry"
+    );
+  }
+  ok(1);
+};
+
 done_testing();

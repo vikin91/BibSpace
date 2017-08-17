@@ -218,11 +218,29 @@ sub controller_restore_json_backup {
   my $self   = shift;
   my $backup = shift;
 
-  my $msg_type = 'warn';
-  my $msg      = 'Restore json backup currently not supported';
+  my $msg_type = 'success';
+  my $msg      = '';
 
+  if ($backup and $backup->is_healthy) {
+    $self->app->logger->info("Restoring JSON backup " . $backup->uuid);
+    my $success = restore_json_backup($backup, $self->app);
+    if ($success) {
+      $msg_type = 'success';
+      $msg      = 'Backup restored succesfully, despite being in beta phase';
+    }
+    else {
+      $msg_type = 'danger';
+      $msg
+        = 'Something went wrong during restoring... system might be in unknown state';
+    }
+  }
+  else {
+    $msg_type = 'warning';
+    $msg      = 'Cannot restore - backup not found or not healthy!';
+  }
   $self->flash(msg_type => $msg_type, msg => $msg,);
   $self->redirect_to('backup_index');
+  return;
 }
 
 sub controller_restore_storable_backup {
@@ -233,7 +251,7 @@ sub controller_restore_storable_backup {
 
     restore_storable_backup($backup, $self->app);
 
-    $self->app->logger->info("Restoring backup " . $backup->uuid);
+    $self->app->logger->info("Restoring storable backup " . $backup->uuid);
 
     my $status
       = "Status: <pre style=\"font-family:monospace;\">"

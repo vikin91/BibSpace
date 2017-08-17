@@ -32,6 +32,7 @@ our @EXPORT = qw(
   do_storable_backup
   do_json_backup
   do_mysql_backup
+  restore_json_backup
   restore_storable_backup
   delete_old_backups
 );
@@ -116,6 +117,43 @@ sub do_mysql_backup {
   dump_mysql_to_file($backup->get_path, $app->config);
 
   return $backup;
+}
+
+sub restore_json_backup {
+  my $backup = shift;
+  my $app    = shift;
+
+  # 1) get filename
+  # 2) open file
+  # 3) read json contents
+  my $jsonString = '{}';
+  my $file       = path($backup->get_path);
+  if (not $file->exists or not $file->is_file) {
+    $app->logger->warn("Cannot restore JSON backup from file "
+        . $file
+        . " - file does not exist.");
+    return;
+  }
+  $jsonString = $file->slurp_utf8;
+
+  my $success;
+  my $dto = BibSpaceDTO->new();
+  my $decodedDTO;
+  try {
+    $decodedDTO = $dto->toLayeredRepo($jsonString, $app->repo);
+    use Data::Dumper;
+    $Data::Dumper::MaxDepth = 2;
+    print Dumper $decodedDTO;
+    $success = 1;
+  }
+  catch {
+    $app->logger->error("Exception during json restore: $_");
+    $success = undef;
+  };
+
+  # TODO: WIP! move data from decodedDTO to the layers!!
+  #
+  return $success;
 }
 
 sub restore_storable_backup {
