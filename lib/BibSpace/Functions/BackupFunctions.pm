@@ -126,6 +126,8 @@ sub restore_json_backup {
   # 1) get filename
   # 2) open file
   # 3) read json contents
+  # 4) Create DTO containg rich objects compatible with current repo
+  # 5) Copy objects into the repo
   my $jsonString = '{}';
   my $file       = path($backup->get_path);
   if (not $file->exists or not $file->is_file) {
@@ -141,9 +143,10 @@ sub restore_json_backup {
   my $decodedDTO;
   try {
     $decodedDTO = $dto->toLayeredRepo($jsonString, $app->repo);
-    use Data::Dumper;
-    $Data::Dumper::MaxDepth = 2;
-    print Dumper $decodedDTO;
+
+    # use Data::Dumper;
+    # $Data::Dumper::MaxDepth = 2;
+    # print Dumper $decodedDTO;
     $success = 1;
   }
   catch {
@@ -151,8 +154,13 @@ sub restore_json_backup {
     $success = undef;
   };
 
-  # TODO: WIP! move data from decodedDTO to the layers!!
-  #
+  # First Models, then Relations
+  for my $type (@{$app->repo->entities}, @{$app->repo->relations}) {
+    my $arrayRef = $decodedDTO->data->{$type};
+    for my $object (@$arrayRef) {
+      $app->repo->lr->save($type, $object);
+    }
+  }
   return $success;
 }
 

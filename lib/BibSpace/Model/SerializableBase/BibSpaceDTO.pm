@@ -13,8 +13,9 @@ has 'formatVersion' => (is => 'ro', isa => 'Str', default => '1');
 
 # Format %T is default by serializing
 # FIXME: This parameter is ignored by serialization!
+# Temp fix: %Y-%m-%dT%T is a default format used by serialization
 # This parameter is crucial for deserialization!
-has 'dateTimeFormat' => (is => 'rw', isa => 'Str', default => '%T');
+has 'dateTimeFormat' => (is => 'rw', isa => 'Str', default => '%Y-%m-%dT%T');
 
 # The hash has form: 'ClassName' => Array[InstanceofClassName]
 has 'data' => (
@@ -34,6 +35,7 @@ has 'data' => (
   },
 );
 
+# Converts BibSpaceDTO object into JSON string
 sub toJSON {
   my $self = shift;
 
@@ -42,16 +44,12 @@ sub toJSON {
   return $json_obj->encode($self);
 }
 
+# Static constructor method that creates BibSpaceDTO from LayeredRepo
 sub fromLayeredRepo {
   my $self       = shift;
   my $sourceRepo = shift;
 
-  # PLAN:
-  # 1) Pack all objects into DTO
-  # 2) Serialize DTO
-
   my $dto = BibSpaceDTO->new('FormatVersion' => 1);
-
   for my $type ($sourceRepo->get_models) {
     my @all = $sourceRepo->lr->all($type);
     $dto->set($type, []);
@@ -60,22 +58,27 @@ sub fromLayeredRepo {
   return $dto;
 }
 
+# Static constructor method that creates BibSpaceDTO from JSON string
+# Resulting DTO will hold rich objects (not SerializableBase) and thus
+# requires additionall data from the repository
 sub toLayeredRepo {
   my $self            = shift;
   my $jsonString      = shift;
   my $destinationRepo = shift // die "Need to provide destination repository";
 
+  # This parses a shallow BibSpaceDTO
   my $parsedDTO = bless(JSON->new->decode($jsonString), 'BibSpaceDTO');
-  my $dto = BibSpaceDTO->new('FormatVersion' => 1);
 
   # Each array (type => array) holds hashes
   # Hases need to be blessed to become objects
   # Json gives <ObjType>SerializableBase
   # Here, we bless into <ObjType>
+  # This will hold rich objects constructed from data from shallow object
+  my $dto = BibSpaceDTO->new('FormatVersion' => 1);
 
-  print "###############\n";
-  use Data::Dumper;
-  $Data::Dumper::Maxdepth = 2;
+  # print "###############\n";
+  # use Data::Dumper;
+  # $Data::Dumper::Maxdepth = 2;
 
   # Init containers for objects
   for my $className ($parsedDTO->keys) {
@@ -91,10 +94,6 @@ sub toLayeredRepo {
   for my $className ($parsedDTO->keys) {
     my $arrayRef = $parsedDTO->data->{$className};
     for my $objHash (@$arrayRef) {
-
-#       print "<<<<< Processing object of type $className.\n Input hash: \n";
-#       print Dumper $objHash;
-
       my $blessedObj = bless($objHash, $className);
 
       # Load className and call constructor
@@ -108,12 +107,7 @@ sub toLayeredRepo {
       # Call normal constructor to create rich object
       my $mooseObj = $self->_hashToMooseObject($className, $objHash,
         {idProvider => $idProvider, preferences => $preferences});
-
-#       print ">>>>> Moose from $className is: \n";
-#       print Dumper $mooseObj;
-
       push @{$dto->get($className)}, $mooseObj;
-
     }
   }
   return $dto;
@@ -122,20 +116,21 @@ sub toLayeredRepo {
 sub _hashToMooseObject {
   my $self      = shift;
   my $className = shift;
-  my $obj       = shift;
-  my $args      = shift;
-  my %hashObj   = %{$obj};
-  my %hashArgs  = %{$args};
+  my $obj  = shift;    # holds hash to be passed into the respective constructor
+  my $args = shift;    # additional parameters that will be merged with obj hash
 
+  my %hashObj  = %{$obj};
+  my %hashArgs = %{$args};
   my $mooseObj;
   try {
+    # Try calling constructor that creates DateTime rich fields from string
     $mooseObj = $className->new__DateTime_from_string($self->dateTimeFormat,
       (%hashObj, %hashArgs));
   }
   catch {
+    # Some objects do not have DateTime fileds, so call default constructor
     $mooseObj = $className->new((%hashObj, %hashArgs));
   };
-
   return $mooseObj;
 }
 

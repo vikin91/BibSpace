@@ -63,7 +63,7 @@ has 'local_time_zone' => (
   trigger => \&_pref_changed
 );
 
-# http://search.cpan.org/~drolsky/DateTime-1.42/lib/DateTime.pm#strftime_Patterns
+# http://search.cpan.org/~drolsky/DateTime/lib/DateTime.pm#strftime_Patterns
 has 'output_time_format' => (
   is      => 'rw',
   isa     => 'Str',
