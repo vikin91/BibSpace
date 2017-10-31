@@ -1,6 +1,10 @@
 ### Changelog ###
 
-### v0.5.3 08.2017 ###
+### v0.5.3 10.2017 ###
+* TODO: Type->bibtexTypes are not exported to JSON
+* TODO: Add tests for restore from JSON into Layered repository
+
+* Fix: External link to DateTime formats uses now permalink to CPAN
 * Internal: Add SerializableBase to BibSpace Entities
 * Feature: Add support for independent JSON backup and restore
 * Fix: Show recenlty added/modified works correctly for less than 10 objects in system
@@ -40,10 +44,10 @@
 * Code refactoring - removed small parts of unused code
 * add systemd .service profile
 * add cpanfile stub
-* rebuild edit author page 
-* fix remove user id from author 
-* add function merge authors 
-* add tab-pane with bibtex help for adding publications 
+* rebuild edit author page
+* fix remove user id from author
+* add function merge authors
+* add tab-pane with bibtex help for adding publications
 * minor fixes and improvements # i love to write this :P
 
 
