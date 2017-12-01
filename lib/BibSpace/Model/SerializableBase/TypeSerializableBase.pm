@@ -5,6 +5,8 @@ use v5.16;
 use Moose;
 use Moose::Util::TypeConstraints;
 use BibSpace::Model::SerializableBase::IEntitySerializableBase;
+use MooseX::Storage;
+with Storage('format' => 'JSON');
 with 'IEntitySerializableBase';
 
 has 'our_type'    => (is => 'ro', isa => 'Str');

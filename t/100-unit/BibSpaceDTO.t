@@ -29,6 +29,21 @@ subtest 'DTO  create' => sub {
   "JSON string should be blessable back to BibSpaceDTO";
 };
 
+subtest 'Type Objects Should have arrays serialized properly' => sub {
+  my $type = $self->app->entityFactory->new_Type(our_type => "test");
+  is($type->get_first_bibtex_type, undef);
+  $type->bibtexTypes_add("Article");
+  is($type->get_first_bibtex_type, 'Article');
+
+  use JSON -convert_blessed_universally;
+  my $json_obj = JSON->new->convert_blessed->utf8->pretty;
+  my $jStr = $json_obj->encode($type);
+
+  unlike($jStr, qr/bibtexTypes" : \[\]/, "JSON should not contain empty 'bibtexTypes' arrays");
+  like($jStr, qr/bibtexTypes" : \[Article\]/, "JSON should not contain empty 'bibtexTypes' arrays");
+  # unlike($jsonString, qr/bibtexTypes" : \[\]/, "JSON should not contain empty 'bibtexTypes' arrays");
+};
+
 subtest 'DTO  restore from JSON' => sub {
   use Try::Tiny;
   my $decodedJson;

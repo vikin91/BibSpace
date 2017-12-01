@@ -4,7 +4,7 @@ use namespace::autoclean;
 use Moose::Role;
 use MooseX::StrictConstructor;
 
-# Required, weven without explicit import MooseX::Storgae
+# Required, even without explicit import MooseX::Storgae
 use MooseX::Storage::Engine;
 MooseX::Storage::Engine->add_custom_type_handler(
   'DateTime' => (
@@ -14,6 +14,6 @@ MooseX::Storage::Engine->add_custom_type_handler(
 );
 
 has 'old_mysql_id' => (is => 'ro', isa => 'Maybe[Int]', default => undef);
-has 'id'           => (is => 'rw', isa => 'Maybe[Int]', default => undef,);
+has 'id'           => (is => 'rw', isa => 'Maybe[Int]', default => undef);
 
 1;
