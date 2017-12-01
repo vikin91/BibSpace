@@ -64,7 +64,10 @@ sub fromLayeredRepo {
 sub toLayeredRepo {
   my $self            = shift;
   my $jsonString      = shift;
-  my $destinationRepo = shift // die "Need to provide destination repository";
+  my $repoUidProvider = shift
+    // die "Need to provide UID provider of destination repository";
+  my $repoPreferences = shift
+    // die "Need to provide Preferences of destination repository";
 
   # This parses a shallow BibSpaceDTO
   my $parsedDTO = bless(JSON->new->decode($jsonString), 'BibSpaceDTO');
@@ -86,9 +89,7 @@ sub toLayeredRepo {
   }
 
   # Reset ID providers for all classes - only once!
-  my $smartUidProvider = $destinationRepo->lr->uidProvider;
-  $smartUidProvider->reset;
-  my $preferences = $destinationRepo->lr->preferences;
+  $repoUidProvider->reset;
 
   # Fill containers with objects
   for my $className ($parsedDTO->keys) {
@@ -101,12 +102,12 @@ sub toLayeredRepo {
 
       # Rich objects require several additional objects in their constructor
       # See IEntity.pm for details
-      my $idProvider = $smartUidProvider->get_provider($className);
+      my $idProvider = $repoUidProvider->get_provider($className);
 
       # BlessedObj has only SerializableBase
       # Call normal constructor to create rich object
       my $mooseObj = $self->_hashToMooseObject($className, $objHash,
-        {idProvider => $idProvider, preferences => $preferences});
+        {idProvider => $idProvider, preferences => $repoPreferences});
       push @{$dto->get($className)}, $mooseObj;
     }
   }

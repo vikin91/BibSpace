@@ -142,7 +142,11 @@ sub restore_json_backup {
   my $dto = BibSpaceDTO->new();
   my $decodedDTO;
   try {
-    $decodedDTO = $dto->toLayeredRepo($jsonString, $app->repo);
+    $decodedDTO = $dto->toLayeredRepo(
+      $jsonString,
+      $app->repo->lr->uidProvider,
+      $app->repo->lr->preferences
+    );
 
     # use Data::Dumper;
     # $Data::Dumper::MaxDepth = 2;

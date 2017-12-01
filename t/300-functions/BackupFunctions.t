@@ -58,7 +58,11 @@ SKIP: {
     my $some_backup = Backup->parse("" . $json_paths[0]);
     my $jsonString  = path($json_paths[0])->slurp_utf8;
     my $dto         = BibSpaceDTO->new();
-    my $decodedDTO  = $dto->toLayeredRepo($jsonString, $t_logged_in->app->repo);
+    my $decodedDTO  = $dto->toLayeredRepo(
+      $jsonString,
+      $t_logged_in->app->repo->lr->uidProvider,
+      $t_logged_in->app->repo->lr->preferences
+    );
     ok($decodedDTO);    # this doesn't test much...
     ok(
       scalar $decodedDTO->get('Entry') > 0,
