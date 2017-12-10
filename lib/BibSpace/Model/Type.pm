@@ -14,7 +14,10 @@ extends 'TypeSerializableBase';
 sub TO_JSON {
   my $self = shift;
   my $copy = $self->meta->clone_object($self);
-  return TypeSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
+  # The bibtexTypes array is not cloned by default, so this needs to be added as fix
+  $copy->bibtexTypes($self->bibtexTypes);
+  my $tsb_debug = TypeSerializableBase->meta->rebless_instance_back($copy);
+  return $tsb_debug->TO_JSON;
 }
 
 sub equals {

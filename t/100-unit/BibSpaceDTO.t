@@ -37,11 +37,20 @@ subtest 'Type Objects Should have arrays serialized properly' => sub {
 
   use JSON -convert_blessed_universally;
   my $json_obj = JSON->new->convert_blessed->utf8->pretty;
-  my $jStr = $json_obj->encode($type);
+  my $jStr     = $json_obj->encode($type);
 
-  unlike($jStr, qr/bibtexTypes" : \[\]/, "JSON should not contain empty 'bibtexTypes' arrays");
-  like($jStr, qr/bibtexTypes" : \[Article\]/, "JSON should not contain empty 'bibtexTypes' arrays");
-  # unlike($jsonString, qr/bibtexTypes" : \[\]/, "JSON should not contain empty 'bibtexTypes' arrays");
+  unlike(
+    $jStr,
+    qr/bibtexTypes" : \[\]/,
+    "JSON should not contain empty 'bibtexTypes' arrays"
+  );
+  like(
+    $jStr,
+    qr/bibtexTypes" : \[\W*Article\W*\]/s,
+    "JSON should contain 'Article' in the 'bibtexTypes' array"
+  );
+
+# unlike($jsonString, qr/bibtexTypes" : \[\]/, "JSON should not contain empty 'bibtexTypes' arrays");
 };
 
 subtest 'DTO  restore from JSON' => sub {
