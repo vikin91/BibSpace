@@ -104,9 +104,6 @@ subtest 'DTO  restore from JSON' => sub {
     is(ref $obj, ref $exObj, "->data->{$entity}->[0] should be " . ref $exObj);
   }
 
-  # Additional test for entity if further blessing is needed
-# TODO: {
-#     local $TODO = "Do not bless but use constructor instead!";
   my $oTest     = $decodedDTO->data->{'Entry'}->[0]->creation_time;
   my $oExpected = $bibspaceDTOObject->data->{'Entry'}->[0]->creation_time;
   is(
@@ -115,29 +112,27 @@ subtest 'DTO  restore from JSON' => sub {
     "->data->{Entry}->[0]->creation_time should be " . ref $oExpected
   );
 
-#   }
+  TODO: {
+    local $TODO = "Do not bless but use constructor instead!";
+    my $oTest     = $decodedDTO->data->{'Entry'}->[0]->attachments;
+    my $oExpected = $bibspaceDTOObject->data->{'Entry'}->[0]->attachments;
+    is(
+      ref $oTest,
+      ref $oExpected,
+      "->data->{Entry}->[0]->attachments should be " . ref $oExpected
+    );
+  };
 
-  # TODO: {
-  #     local $TODO = "Do not bless but use constructor instead!";
-  #     my $oTest     = $decodedDTO->data->{'Entry'}->[0]->attachments;
-  #     my $oExpected = $bibspaceDTOObject->data->{'Entry'}->[0]->attachments;
-  #     is(
-  #       ref $oTest,
-  #       ref $oExpected,
-  #       "->data->{Entry}->[0]->attachments should be " . ref $oExpected
-  #     );
-  #   }
-  #
-  # TODO: {
-  #     local $TODO = "Do not bless but use constructor instead!";
-  #     my $oTest     = $decodedDTO->data->{'Entry'}->[0]->title;
-  #     my $oExpected = $bibspaceDTOObject->data->{'Entry'}->[0]->title;
-  #     is(
-  #       ref $oTest,
-  #       ref $oExpected,
-  #       "->data->{Entry}->[0]->title should be " . ref $oExpected
-  #     );
-  #   }
+  TODO: {
+    local $TODO = "Do not bless but use constructor instead!";
+    my $oTest     = $decodedDTO->data->{'Entry'}->[0]->title;
+    my $oExpected = $bibspaceDTOObject->data->{'Entry'}->[0]->title;
+    is(
+      ref $oTest,
+      ref $oExpected,
+      "->data->{Entry}->[0]->title should be " . ref $oExpected
+    );
+  };
 };
 my $singleEntryJSON = <<'EOS';
 {

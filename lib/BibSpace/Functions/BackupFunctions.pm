@@ -4,6 +4,7 @@ use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Model::Backup;
 use BibSpace::Functions::Core;
 use BibSpace::Functions::FDB;
+use BibSpace::Backend::SmartBackendHelper;
 
 use JSON -convert_blessed_universally;
 use BibSpace::Model::SerializableBase::BibSpaceDTO;
@@ -123,11 +124,6 @@ sub restore_json_backup {
   my $backup = shift;
   my $app    = shift;
 
-  # 1) get filename
-  # 2) open file
-  # 3) read json contents
-  # 4) Create DTO containg rich objects compatible with current repo
-  # 5) Copy objects into the repo
   my $jsonString = '{}';
   my $file       = path($backup->get_path);
   if (not $file->exists or not $file->is_file) {
@@ -147,23 +143,50 @@ sub restore_json_backup {
       $app->repo->lr->uidProvider,
       $app->repo->lr->preferences
     );
-
-    # use Data::Dumper;
-    # $Data::Dumper::MaxDepth = 2;
-    # print Dumper $decodedDTO;
     $success = 1;
   }
   catch {
-    $app->logger->error("Exception during json restore: $_");
+    $app->logger->error("Exception during JSON restore: $_");
     $success = undef;
   };
 
   # First Models, then Relations
-  for my $type (@{$app->repo->entities}, @{$app->repo->relations}) {
-    my $arrayRef = $decodedDTO->data->{$type};
-    for my $object (@$arrayRef) {
-      $app->repo->lr->save($type, $object);
+  if (defined $success and $success == 1){
+    my @layers = $app->repo->lr->get_all_layers;
+    foreach (@layers) { $_->reset_data }
+    # $app->repo->lr->reset_uid_providers;
+
+    for my $type (@{$app->repo->entities}, @{$app->repo->relations}) {
+      my $arrayRef = $decodedDTO->data->{$type};
+      # Authors reference each other, so the order of restoring is important
+      # First masters, because they always reference themselves, and then minions
+      my @waitingLine;
+      for my $object (@$arrayRef) {
+        try {
+          if ($type eq "Author" && $object->is_minion){
+            print "Putting $object->{uid} to waiting line\n";
+            push @waitingLine, $object;
+          }
+          else {
+            $app->repo->lr->save($type, $object);
+          }
+        }
+        catch {
+           $app->logger->warn("Skipped restoring object of type '$type' from JSON backup. Error: $_");
+        };
+      }
+      for my $object (@waitingLine) {
+        try {
+          print "Adding $object->{uid} from waiting line\n";
+          $app->repo->lr->save($type, $object);
+        }
+        catch {
+           $app->logger->warn("Could not restore minion Author from waitingLine. Error: $_");
+        };
+      }
     }
+    BibSpace::Backend::SmartBackendHelper::linkData($app);
+    # TODO: Do linking in the smart layer!
   }
   return $success;
 }

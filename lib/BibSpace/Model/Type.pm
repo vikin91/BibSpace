@@ -16,6 +16,15 @@ sub TO_JSON {
   my $copy = $self->meta->clone_object($self);
   # The bibtexTypes array is not cloned by default, so this needs to be added as fix
   $copy->bibtexTypes($self->bibtexTypes);
+  # Why this is not copied automatically?
+  $copy->onLanding($self->onLanding);
+  # Suprisingly, some types may miss the obligatory field, so we provide a default vaule
+  if($self->our_type){
+    $copy->our_type($self->our_type);
+  }
+  else{
+    $copy->our_type('Unnamed');
+  }
   my $tsb_debug = TypeSerializableBase->meta->rebless_instance_back($copy);
   return $tsb_debug->TO_JSON;
 }

@@ -4,6 +4,7 @@ use namespace::autoclean;
 use feature qw( state say );
 use Mojo::Log;
 use Path::Tiny;
+use Try::Tiny;
 use Term::ANSIColor;
 
 use Moose;
@@ -37,7 +38,12 @@ sub log {
   my $time        = localtime;
   my $line_file   = "[$time] $type: $msg";
   my $line_screen = $line_file . " (Origin: $origin)";
-  $self->log_file->append($line_file . "\n") if $self->log_file;
+  try {
+    $self->log_file->append($line_file . "\n") if $self->log_file;
+  }
+  catch {
+    print "Problems writing to log. Error: $_\nNext line contains the log message that coulnd be logged to file.\n";
+  };
   print $line_screen;
   print color('reset');
   print "\n";

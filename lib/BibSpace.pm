@@ -24,6 +24,7 @@ use File::Spec;
 
 use BibSpace::Backend::SmartArray;
 use BibSpace::Backend::SmartHash;
+use BibSpace::Backend::SmartBackendHelper;
 use BibSpace::Util::SimpleLogger;
 use BibSpace::Util::SmartUidProvider;
 use BibSpace::Util::DummyUidProvider;
@@ -302,78 +303,9 @@ sub setup_repositories {
 sub link_data {
   my $self = shift;
   $self->app->logger->info("Linking data...");
-
-  $self->app->logger->info("Linking Authors (N) to (1) Authors.");
-  foreach
-    my $author ($self->repo->authors_filter(sub { $_->id != $_->master_id }))
-  {
-    my $master
-      = $self->repo->authors_find(sub { $_->id == $author->master_id });
-    if ($master and $author) {
-      $author->set_master($master);
-    }
-  }
-
-  $self->app->logger->info("Linking Authors (N) to (M) Entries.");
-  foreach my $auth ($self->repo->authorships_all) {
-    my $entry  = $self->repo->entries_find(sub { $_->id == $auth->entry_id });
-    my $author = $self->repo->authors_find(sub { $_->id == $auth->author_id });
-    if ($entry and $author) {
-      $auth->entry($entry);
-      $auth->author($author);
-      $entry->authorships_add($auth);
-      $author->authorships_add($auth);
-    }
-  }
-
-  $self->app->logger->info("Linking Tags (N) to (M) Entries.");
-  foreach my $labeling ($self->repo->labelings_all) {
-    my $entry
-      = $self->repo->entries_find(sub { $_->id == $labeling->entry_id });
-    my $tag = $self->repo->tags_find(sub { $_->id == $labeling->tag_id });
-    if ($entry and $tag) {
-      $labeling->entry($entry);
-      $labeling->tag($tag);
-      $entry->labelings_add($labeling);
-      $tag->labelings_add($labeling);
-    }
-  }
-
-  $self->app->logger->info("Linking Teams (Exceptions) (N) to (M) Entries.");
-  foreach my $exception ($self->repo->exceptions_all) {
-    my $entry
-      = $self->repo->entries_find(sub { $_->id == $exception->entry_id });
-    my $team = $self->repo->teams_find(sub { $_->id == $exception->team_id });
-    if ($entry and $team) {
-      $exception->entry($entry);
-      $exception->team($team);
-      $entry->exceptions_add($exception);
-      $team->exceptions_add($exception);
-    }
-  }
-
-  $self->app->logger->info("Linking Teams (N) to (M) Authors.");
-  foreach my $membership ($self->repo->memberships_all) {
-    my $author
-      = $self->repo->authors_find(sub { $_->id == $membership->author_id });
-    my $team = $self->repo->teams_find(sub { $_->id == $membership->team_id });
-    if (defined $author and defined $team) {
-      $membership->author($author);
-      $membership->team($team);
-      $author->memberships_add($membership);
-      $team->memberships_add($membership);
-    }
-  }
-
-  $self->app->logger->info("Linking TagTypes (N) to (1) Tags.");
-  foreach my $tag ($self->repo->tags_all) {
-    my $tagtype = $self->repo->tagTypes_find(sub { $_->id == $tag->type });
-    if ($tag and $tagtype) {
-      $tag->tagtype($tagtype);
-    }
-  }
-
-  $self->app->logger->info("TODO: Linking OurTypes (N) to (1) Entries.");
+  BibSpace::Backend::SmartBackendHelper::linkData($self->app);
+  # BackendHelper::linkData($self->app);
+  # linkData($self->app);
   $self->app->logger->info("Linking Finished.");
   return;
 }

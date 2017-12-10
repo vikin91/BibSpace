@@ -9,7 +9,7 @@ use MooseX::Storage;
 with Storage('format' => 'JSON');
 with 'IEntitySerializableBase';
 
-has 'our_type'    => (is => 'ro', isa => 'Str');
+has 'our_type'    => (is => 'rw', isa => 'Str', default => 'Unnamed');
 has 'description' => (is => 'rw', isa => 'Maybe[Str]');
 has 'onLanding'   => (is => 'rw', isa => 'Int', default => 0);
 

@@ -63,6 +63,7 @@ has 'month'           => (is => 'rw', isa => 'Int', default => 0);
 has 'need_html_regen' => (is => 'rw', isa => 'Int', default => 1);
 
 # name => Path::Tiny object
+# This in not stored in DB, thus we do not serialize this
 has 'attachments' => (
   is      => 'rw',
   traits  => ['Hash'],
