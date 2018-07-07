@@ -294,7 +294,7 @@ sub setup_routes {
 
   $anyone->get('/forgot')->to('login#forgot');
   $anyone->post('/forgot/gen')->to('login#post_gen_forgot_token');
-  $anyone->get('/forgot/reset/:token')->to('login#token_clicked')
+  $anyone->get('/forgot/reset/<:token>')->to('login#token_clicked')
     ->name("token_clicked");
   $anyone->post('/forgot/store')->to('login#store_password');
 
@@ -358,16 +358,16 @@ sub setup_routes {
   $logged_user->get('/profile')->to('login#profile');
   $admin_user->get('/manage_users')->to('login#manage_users')
     ->name('manage_users');
-  $admin_user->get('/profile/:id')->to('login#foreign_profile')
+  $admin_user->get('/profile/<:id>')->to('login#foreign_profile')
     ->name('show_user_profile');
-  $admin_user->get('/profile/delete/:id')->to('login#delete_user')
+  $admin_user->get('/profile/delete/<:id>')->to('login#delete_user')
     ->name('delete_user');
 
-  $admin_user->get('/profile/make_user/:id')->to('login#make_user')
+  $admin_user->get('/profile/make_user/<:id>')->to('login#make_user')
     ->name('make_user');
-  $admin_user->get('/profile/make_manager/:id')->to('login#make_manager')
+  $admin_user->get('/profile/make_manager/<:id>')->to('login#make_manager')
     ->name('make_manager');
-  $admin_user->get('/profile/make_admin/:id')->to('login#make_admin')
+  $admin_user->get('/profile/make_admin/<:id>')->to('login#make_admin')
     ->name('make_admin');
 
   $manager_user->get('/log')->to('display#show_log')->name('show_log');
@@ -375,9 +375,9 @@ sub setup_routes {
     ->name('show_stats');
 
   # websocket for fun
-  $manager_user->websocket('/log_websocket/:num')->to('display#show_log_ws')
+  $manager_user->websocket('/log_websocket/<:num>')->to('display#show_log_ws')
     ->name('show_log_websocket');
-  $manager_user->websocket('/statistics/:num')
+  $manager_user->websocket('/statistics/<:num>')
     ->to('display#show_stats_websocket')->name('show_stats_websocket');
 
   $admin_user->get('/settings/fix_months')->to('publications#fixMonths')
@@ -389,7 +389,7 @@ sub setup_routes {
   $manager_user->get('/settings/mark_all_to_regenerate')
     ->to('publications#mark_all_to_regenerate')->name('mark_all_to_regenerate');
 
-  $manager_user->get('/settings/mark_author_to_regenerate/:author_id')
+  $manager_user->get('/settings/mark_author_to_regenerate/<:author_id>')
     ->to('publications#mark_author_to_regenerate')
     ->name('mark_author_to_regenerate');
 
@@ -397,7 +397,7 @@ sub setup_routes {
     ->to('publications#regenerate_html_for_all')
     ->name('regenerate_html_for_all');
 
-  $logged_user->get('/settings/regenerate_html_in_chunk/:chunk_size')
+  $logged_user->get('/settings/regenerate_html_in_chunk/<:chunk_size>')
     ->to('publications#regenerate_html_in_chunk')
     ->name('regenerate_html_in_chunk');
 
@@ -407,12 +407,12 @@ sub setup_routes {
     ->name('backup_do_mysql');
   $manager_user->put('/backups/json')->to('backup#save_json')
     ->name('backup_do_json');
-  $manager_user->get('/backups/:id')->to('backup#backup_download')
+  $manager_user->get('/backups/<:id>')->to('backup#backup_download')
     ->name('backup_download');
 
-  $admin_user->delete('/backups/:id')->to('backup#delete_backup')
+  $admin_user->delete('/backups/<:id>')->to('backup#delete_backup')
     ->name('backup_delete');
-  $admin_user->put('/backups/:id')->to('backup#restore_backup')
+  $admin_user->put('/backups/<:id>')->to('backup#restore_backup')
     ->name('backup_restore');
   $admin_user->delete('/backups')->to('backup#cleanup')->name('backup_cleanup');
 
@@ -421,19 +421,19 @@ sub setup_routes {
   $manager_user->get('/types/add')->to('types#add_type')->name('add_type_get');
   $manager_user->post('/types/add')->to('types#post_add_type')
     ->name('add_type_post');
-  $manager_user->get('/types/manage/:name')->to('types#manage')
+  $manager_user->get('/types/manage/<:name>')->to('types#manage')
     ->name('edit_type');
-  $manager_user->get('/types/delete/:name')->to('types#delete_type')
+  $manager_user->get('/types/delete/<:name>')->to('types#delete_type')
     ->name('delete_type');
 
   $manager_user->post('/types/store_description')
     ->to('types#post_store_description')->name('update_type_description');
-  $manager_user->get('/types/toggle/:name')->to('types#toggle_landing')
+  $manager_user->get('/types/toggle/<:name>')->to('types#toggle_landing')
     ->name('toggle_landing_type');
 
-  $manager_user->get('/types/:our_type/map/:bibtex_type')
+  $manager_user->get('/types/<:our_type>/map/<:bibtex_type>')
     ->to('types#map_types');
-  $manager_user->get('/types/:our_type/unmap/:bibtex_type')
+  $manager_user->get('/types/<:our_type>/unmap/<:bibtex_type>')
     ->to('types#unmap_types')->name('unmap_bibtex_type');
 
   ################ AUTHORS ################
@@ -444,14 +444,14 @@ sub setup_routes {
     ->name('add_author');
   $manager_user->post('/authors/add/')->to('authors#add_post');
 
-  $logged_user->get('/authors/edit/:id')->to('authors#edit_author')
+  $logged_user->get('/authors/edit/<:id>')->to('authors#edit_author')
     ->name('edit_author');
   $manager_user->post('/authors/edit/')->to('authors#edit_post')
     ->name('edit_author_post');
-  $manager_user->get('/authors/delete/:id')->to('authors#delete_author')
+  $manager_user->get('/authors/delete/<:id>')->to('authors#delete_author')
     ->name('delete_author');
 
-  $admin_user->get('/authors/delete/:id/force')
+  $admin_user->get('/authors/delete/<:id>/force')
     ->to('authors#delete_author_force');
 
   # for dev only!!
@@ -461,11 +461,11 @@ sub setup_routes {
     ->to('authors#post_edit_membership_dates')
     ->name('edit_author_membership_dates');
 
-  $manager_user->get('/authors/:id/add_to_team/:tid')
+  $manager_user->get('/authors/<:id>/add_to_team/<:tid>')
     ->to('authors#add_to_team')->name('add_author_to_team');
-  $manager_user->get('/authors/:id/remove_from_team/:tid')
+  $manager_user->get('/authors/<:id>/remove_from_team/<:tid>')
     ->to('authors#remove_from_team')->name('remove_author_from_team');
-  $manager_user->get('/authors/:masterid/remove_uid/:uid')
+  $manager_user->get('/authors/<:masterid>/remove_uid/<:uid>')
     ->to('authors#remove_uid')->name('remove_author_uid');
 
   $manager_user->post('/authors/merge/')->to('authors#merge_authors')
@@ -479,7 +479,7 @@ sub setup_routes {
   $admin_user->get('/authors/reassign_and_create')
     ->to('authors#reassign_authors_to_entries_and_create_authors');
 
-  $manager_user->get('/authors/toggle_visibility/:id')
+  $manager_user->get('/authors/toggle_visibility/<:id>')
     ->to('authors#toggle_visibility')->name('toggle_author_visibility');
 
   # $logged_user->get('/authors/toggle_visibility')
@@ -491,66 +491,66 @@ sub setup_routes {
   $admin_user->get('/tagtypes/add')->to('tagtypes#add')->name('add_tag_type');
   $admin_user->post('/tagtypes/add')->to('tagtypes#add_post')
     ->name('add_tag_type_post');
-  $admin_user->get('/tagtypes/delete/:id')->to('tagtypes#delete')
+  $admin_user->get('/tagtypes/delete/<:id>')->to('tagtypes#delete')
     ->name('delete_tag_type');
-  $manager_user->any('/tagtypes/edit/:id')->to('tagtypes#edit')
+  $manager_user->any('/tagtypes/edit/<:id>')->to('tagtypes#edit')
     ->name('edit_tag_type');
 
   ################ TAGS ################
-  $logged_user->get('/tags/:type')->to('tags#index', type => 1)
+  $logged_user->get('/tags/<:type>')->to('tags#index', type => 1)
     ->name('all_tags');
-  $admin_user->get('/tags/add/:type')->to('tags#add', type => 1)
+  $admin_user->get('/tags/add/<:type>')->to('tags#add', type => 1)
     ->name('add_tag_get');
-  $admin_user->post('/tags/add/:type')->to('tags#add_post', type => 1)
+  $admin_user->post('/tags/add/<:type>')->to('tags#add_post', type => 1)
     ->name('add_tag_post');
-  $logged_user->get('/tags/authors/:id/:type')
+  $logged_user->get('/tags/authors/<:id>/<:type>')
     ->to('tags#get_authors_for_tag', type => 1)->name('get_authors_for_tag');
-  $admin_user->get('/tags/delete/:id')->to('tags#delete')->name('delete_tag');
+  $admin_user->get('/tags/delete/<:id>')->to('tags#delete')->name('delete_tag');
 
   ### EDIT TAG FORM GOES WITH GET - WTF!?!
   # FIXME: FIX THIS
-  $manager_user->get('/tags/edit/:id')->to('tags#edit')->name('edit_tag');
+  $manager_user->get('/tags/edit/<:id>')->to('tags#edit')->name('edit_tag');
 
-  $anyone->get('/read/authors-for-tag/:tag_id/:team_id')
+  $anyone->get('/read/authors-for-tag/<:tag_id>/<:team_id>')
     ->to('tags#get_authors_for_tag_and_team')
     ->name('get_authors_for_tag_and_team');
 
   #ALIAS
-  $anyone->get('/r/a4t/:tag_id/:team_id')
+  $anyone->get('/r/a4t/<:tag_id>/<:team_id>')
     ->to('tags#get_authors_for_tag_and_team')
     ->name('get_authors_for_tag_and_team');
 
-  $anyone->get('/read/authors-for-tag/:tag_id/:team_id')
+  $anyone->get('/read/authors-for-tag/<:tag_id>/<:team_id>')
     ->to('tags#get_authors_for_tag_and_team')
     ->name('get_authors_for_tag_and_team');
 
   #ALIAS
-  $anyone->get('/r/a4t/:tag_id/:team_id')
+  $anyone->get('/r/a4t/<:tag_id>/<:team_id>')
     ->to('tags#get_authors_for_tag_and_team')
     ->name('get_authors_for_tag_and_team');
 
-  $anyone->get('/read/tags-for-author/:author_id')
+  $anyone->get('/read/tags-for-author/<:author_id>')
     ->to('tags#get_tags_for_author_read')->name('tags_for_author');
 
   #ALIAS
-  $anyone->get('/r/t4a/:author_id')->to('tags#get_tags_for_author_read');
+  $anyone->get('/r/t4a/<:author_id>')->to('tags#get_tags_for_author_read');
 
-  $anyone->get('/read/tags-for-team/:team_id')
+  $anyone->get('/read/tags-for-team/<:team_id>')
     ->to('tags#get_tags_for_team_read')->name('tags_for_team');
 
   #ALIAS
-  $anyone->get('/r/t4t/:team_id')->to('tags#get_tags_for_team_read');
+  $anyone->get('/r/t4t/<:team_id>')->to('tags#get_tags_for_team_read');
 
   ################ TEAMS ################
   $logged_user->get('/teams')->to('teams#show')->name('all_teams');
-  $logged_user->get('/teams/members/:teamid')->to('teams#team_members');
+  $logged_user->get('/teams/members/<:teamid>')->to('teams#team_members');
 
-  $manager_user->get('/teams/edit/:id')->to('teams#edit')->name('edit_team');
-  $manager_user->get('/teams/delete/:id')->to('teams#delete_team')
+  $manager_user->get('/teams/edit/<:id>')->to('teams#edit')->name('edit_team');
+  $manager_user->get('/teams/delete/<:id>')->to('teams#delete_team')
     ->name('delete_team');
-  $manager_user->get('/teams/delete/:id/force')->to('teams#delete_team_force')
+  $manager_user->get('/teams/delete/<:id>/force')->to('teams#delete_team_force')
     ->name('delete_team_force');
-  $logged_user->get('/teams/unrealted_papers/:teamid')
+  $logged_user->get('/teams/unrealted_papers/<:teamid>')
     ->to('publications#show_unrelated_to_team')
     ->name('unrelated_papers_for_team');
 
@@ -580,11 +580,11 @@ sub setup_routes {
     #     ->to('publications#all_ajax')
     #     ->name('publications_ajax');
 
-    $logged_user->get('/publications/recently_added/:num')
+    $logged_user->get('/publications/recently_added/<:num>')
         ->to('publications#all_recently_added')
         ->name('recently_added');
 
-    $logged_user->get('/publications/recently_modified/:num')
+    $logged_user->get('/publications/recently_modified/<:num>')
         ->to('publications#all_recently_modified')
         ->name('recently_changed');
 
@@ -595,7 +595,7 @@ sub setup_routes {
         ->to('publications#delete_orphaned')->name('delete_orphaned');
 
 
-    $logged_user->get('/publications/untagged/(:tagtype)')
+    $logged_user->get('/publications/untagged/<:tagtype>')
         ->to( 'publications#all_without_tag')
         ->name('get_untagged_publications');
 
@@ -606,33 +606,33 @@ sub setup_routes {
     $manager_user->get('/publications/missing_month')
         ->to('publications#all_with_missing_month');
 
-    $logged_user->get('/publications/get/:id')
+    $logged_user->get('/publications/get/<:id>')
         ->to('publications#single')
         ->name('get_single_publication');
 
     ####### ATTACHMENTS START
 
     # temporary alias
-    $anyone->get('/publications/download/:filetype/(:id).pdf')
+    $anyone->get('/publications/download/<:filetype>/<:id>.pdf')
         ->to('publications#download')
         ->name('download_publication_pdf');
 
 
-    $anyone->get('/publications/download/:filetype/:id')
+    $anyone->get('/publications/download/<:filetype>/<:id>')
         ->to('publications#download')
         ->name('download_publication');
 
 
 
-    $manager_user->get('/publications/discover_attachments/:id')
+    $manager_user->get('/publications/discover_attachments/<:id>')
         ->to('publications#discover_attachments')
         ->name('discover_attachments');
 
-    # $anyone->get('/publications/download/:filetype/(:id)\.(#format)' )
+    # $anyone->get('/publications/download/<:filetype>/<:id>\.<#format>' )
     #     ->to('publications#download')
     #     ->name('download_publication_pdf');
     #
-    $manager_user->get('/publications/remove_attachment/:filetype/:id')
+    $manager_user->get('/publications/remove_attachment/<:filetype>/<:id>')
         ->to('publications#remove_attachment')
         ->name('publications_remove_attachment');
 
@@ -642,7 +642,7 @@ sub setup_routes {
 
     ####### ATTACHMENTS END
 
-    $manager_user->get('/publications/toggle_hide/:id')
+    $manager_user->get('/publications/toggle_hide/<:id>')
         ->to('publications#toggle_hide')
         ->name('toggle_hide_publication');
 
@@ -656,69 +656,69 @@ sub setup_routes {
         ->to('publications#publications_add_post')
         ->name('add_publication_post');
 
-    $manager_user->get('/publications/edit/:id')
+    $manager_user->get('/publications/edit/<:id>')
         ->to('publications#publications_edit_get')
         ->name('edit_publication');
 
-    $manager_user->post('/publications/edit/:id')
+    $manager_user->post('/publications/edit/<:id>')
         ->to('publications#publications_edit_post')
         ->name('edit_publication_post');
 
-    $manager_user->get('/publications/make_paper/:id')
+    $manager_user->get('/publications/make_paper/<:id>')
         ->to('publications#make_paper')
         ->name('make_paper');
 
-    $manager_user->get('/publications/make_talk/:id')
+    $manager_user->get('/publications/make_talk/<:id>')
         ->to('publications#make_talk')
         ->name('make_talk');
 
-    $manager_user->get('/publications/regenerate/:id')
+    $manager_user->get('/publications/regenerate/<:id>')
         ->to('publications#regenerate_html')
         ->name('regenerate_publication');
 
 
     # change to POST or DELETE
-    $manager_user->get('/publications/delete_sure/:id')
+    $manager_user->get('/publications/delete_sure/<:id>')
         ->to('publications#delete_sure')
         ->name('delete_publication_sure');
 
-    $manager_user->get('/publications/attachments/:id')
+    $manager_user->get('/publications/attachments/<:id>')
         ->to('publications#add_pdf')
         ->name('manage_attachments');
 
-    $manager_user->post('/publications/add_pdf/do/:id')
+    $manager_user->post('/publications/add_pdf/do/<:id>')
         ->to('publications#add_pdf_post')
         ->name('post_upload_pdf');
 
-    $manager_user->get('/publications/manage_tags/:id')
+    $manager_user->get('/publications/manage_tags/<:id>')
         ->to('publications#manage_tags')
         ->name('manage_tags');
 
     # change to POST or DELETE
-    $manager_user->get('/publications/:eid/remove_tag/:tid')
+    $manager_user->get('/publications/<:eid>/remove_tag/<:tid>')
         ->to('publications#remove_tag')
         ->name('remove_tag_from_publication');
 
     # change to POST or UPDATE
-    $manager_user->get('/publications/:eid/add_tag/:tid')
+    $manager_user->get('/publications/<:eid>/add_tag/<:tid>')
         ->to('publications#add_tag')
         ->name('add_tag_to_publication');
 
-    $manager_user->get('/publications/manage_exceptions/:id')
+    $manager_user->get('/publications/manage_exceptions/<:id>')
         ->to('publications#manage_exceptions')
         ->name('manage_exceptions');
 
     # change to POST or DELETE
-    $manager_user->get('/publications/:eid/remove_exception/:tid')
+    $manager_user->get('/publications/<:eid>/remove_exception/<:tid>')
         ->to('publications#remove_exception')
         ->name('remove_exception_from_publication');
 
     # change to POST or UPDATE
-    $manager_user->get('/publications/:eid/add_exception/:tid')
+    $manager_user->get('/publications/<:eid>/add_exception/<:tid>')
         ->to('publications#add_exception')
         ->name('add_exception_to_publication');
 
-    $logged_user->get('/publications/show_authors/:id')
+    $logged_user->get('/publications/show_authors/<:id>')
         ->to('publications#show_authors_of_entry')
         ->name('show_authors_of_entry');
 
@@ -730,7 +730,7 @@ sub setup_routes {
     ->to('PublicationsSeo#metalist')
     ->name("metalist_all_entries");
 
-  $anyone->get('/read/publications/meta/:id')
+  $anyone->get('/read/publications/meta/<:id>')
     ->to('PublicationsSeo#meta')
     ->name("metalist_entry");
 
@@ -744,10 +744,10 @@ sub setup_routes {
   $anyone->get('/r/bibtex')->to('publications#all_bibtex');        #ALIAS
   $anyone->get('/r/b')->to('publications#all_bibtex');             #ALIAS
 
-  $anyone->get('/read/publications/get/:id')
+  $anyone->get('/read/publications/get/<:id>')
     ->to('publications#single_read')
     ->name('get_single_publication_read');
-  $anyone->get('/r/p/get/:id')
+  $anyone->get('/r/p/get/<:id>')
     ->to('publications#single_read');
 
   ######## PublicationsLanding
@@ -772,7 +772,7 @@ sub setup_routes {
   ################ CRON ################
 
   $anyone->get('/cron')->to('cron#index');
-  $anyone->get('/cron/(#level)')->to('cron#cron');
+  $anyone->get('/cron/<#level>')->to('cron#cron');
 
    #>>>
   return;
