@@ -8,6 +8,7 @@ Use it to migrate your data from 0.5.x to 0.6.x.
 * Deprecation: Storable backups are marked as deprecated now. Use JSON backup instead.
 * Feature: Add support for independent JSON backup and restore
 
+* Fix: Non-ANSI usernames are now properly encoded with UTF-8 on the Publications page
 * Fix: External link to DateTime formats uses now permalink to CPAN
 * Fix: Show recenlty added/modified works correctly for less than 10 objects in system
 * Fix: Harden tests for less than 10 objects in system

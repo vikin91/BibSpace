@@ -4,10 +4,7 @@ BibSpace is an Online Bibtex Publications Management Software for Authors and Re
 
 ## Build status ##
 
-Branch | Status | Test coverage
---- | --- | ---
-*master* | [![Build Status](https://travis-ci.org/vikin91/BibSpace.svg?branch=master)](https://travis-ci.org/vikin91/BibSpace) | [![Coverage Status](https://coveralls.io/repos/github/vikin91/BibSpace/badge.svg?branch=master)](https://coveralls.io/github/vikin91/BibSpace?branch=master)
-*dev* | [![Build Status](https://travis-ci.org/vikin91/BibSpace.svg?branch=dev)](https://travis-ci.org/vikin91/BibSpace) | [![Coverage Status](https://coveralls.io/repos/github/vikin91/BibSpace/badge.svg?branch=dev)](https://coveralls.io/github/vikin91/BibSpace?branch=dev)
+[![Build Status](https://travis-ci.org/vikin91/BibSpace.svg?branch=master)](https://travis-ci.org/vikin91/BibSpace) [![Coverage Status](https://coveralls.io/repos/github/vikin91/BibSpace/badge.svg?branch=master)](https://coveralls.io/github/vikin91/BibSpace?branch=master)
 
 ## Installation ##
 * See [INSTALL.md](INSTALL.md)
@@ -30,11 +27,22 @@ Your MySQL data is stored in `db_data`, whereas preferences and stats in `json_d
 
 ## Updating
 
+Make sure to backup your data (regular backup + copy all `json` files) before updating.
+
 ### From Version <=0.5.2 to 0.6.x
 
 Update first to version 0.5.3.
 Then backup your data to JSON format and make sure that data can be restored correctly.
 Next, update to version 0.6.0 and restore data from the JSON backup.
+
+### From Version 0.5.0 to >0.5.0
+
+Update normally, then execute the following:
+
+```
+mkdir -p json_data
+mv *.json json_data/
+```
 
 ## TODOs ##
 BibSpace is currently undergoing serious refactoring.
