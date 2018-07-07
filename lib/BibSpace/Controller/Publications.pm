@@ -59,8 +59,7 @@ sub all {
   my @filtered = Fget_publications_main_hashed_args($self, {}, \@all);
 
   $self->stash(entries => \@filtered, all_entries => \@all);
-  my $html = $self->render_to_string(template => 'publications/all');
-  $self->render(data => $html);
+  $self->render(template => 'publications/all');
 }
 
 sub all_recently_added {
