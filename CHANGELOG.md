@@ -1,14 +1,17 @@
 ### Changelog ###
 
-### v0.5.3 10.2017 ###
-* TODO: Type->bibtexTypes are not exported to JSON
-* TODO: Add tests for restore from JSON into Layered repository
+### v0.5.3 07.2018 ###
+
+This version is probably the only one that supports both types of backups: Storable and JSON.
+Use it to migrate your data from 0.5.x to 0.6.x.
+
+* Deprecation: Storable backups are marked as deprecated now. Use JSON backup instead.
+* Feature: Add support for independent JSON backup and restore
 
 * Fix: External link to DateTime formats uses now permalink to CPAN
-* Internal: Add SerializableBase to BibSpace Entities
-* Feature: Add support for independent JSON backup and restore
 * Fix: Show recenlty added/modified works correctly for less than 10 objects in system
 * Fix: Harden tests for less than 10 objects in system
+* Internal: Add SerializableBase to BibSpace Entities
 
 #### v0.5.2 08.2017 ####
 * Code refactoring: perltidy
