@@ -648,8 +648,7 @@ sub fix_masters {
       ++$num_fixes_2;
     }
   }
-  $msg
-    .= "</br>Fixing is finished. Masters were re-added to the authors. Fixed:
+  $msg .= "</br>Fixing is finished. Masters were re-added to the authors. Fixed:
   <ul>
     <li>$num_fixes_0 of type 0 (is minion but master undefined)</li>
     <li>$num_fixes_1 of type 1 (masterObj not set although it should)</li>

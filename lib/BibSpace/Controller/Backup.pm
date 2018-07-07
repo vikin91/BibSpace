@@ -239,7 +239,8 @@ sub controller_restore_storable_backup {
 
   $self->flash(
     msg_type => 'danger',
-    msg      => "Backup of type 'storable' is no longer supported. Please use JSON backup."
+    msg =>
+      "Backup of type 'storable' is no longer supported. Please use JSON backup."
   );
   $self->redirect_to('backup_index');
   return;

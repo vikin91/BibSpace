@@ -44,7 +44,8 @@ sub persistence_status_ajax {
 sub load_fixture {
   my $self = shift;
 
-  my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.json');
+  my $fixture_file
+    = $self->app->home->rel_file('fixture/bibspace_fixture.json');
   $self->app->logger->info("Loading fixture from: " . $fixture_file->to_string);
 
   my $fixture = Backup->new(
@@ -70,7 +71,8 @@ sub save_fixture {
 
   $self->app->logger->warn("PERSISTENCE CONTROLLER does: save_fixture");
 
-  my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.json');
+  my $fixture_file
+    = $self->app->home->rel_file('fixture/bibspace_fixture.json');
 
   my $backup = Backup->create('dummy', "json");
   $backup->dir('' . $fixture_file->dirname);
