@@ -46,9 +46,11 @@ EOS
 
 subtest 'DTO restore Entry from JSON and non-standard date-time format' => sub {
   use Try::Tiny;
+
   # Filling DTO object with data from the system
   my $bibspaceDTOObject = BibSpaceDTO->fromLayeredRepo($self->repo);
-  # Serializing DTO object into JSON 
+
+  # Serializing DTO object into JSON
   my $jsonString = $bibspaceDTOObject->toJSON();
   my $decodedJson;
   try {

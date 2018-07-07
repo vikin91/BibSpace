@@ -11,10 +11,10 @@ use Try::Tiny;
 # Class attribute is not serialized
 has 'formatVersion' => (is => 'ro', isa => 'Str', default => '1');
 
-# Format %T is default by serializing
-# FIXME: This parameter is ignored by serialization!
-# Temp fix: %Y-%m-%dT%T is a default format used by serialization
-# This parameter is crucial for deserialization!
+# This parameter is used in backup restoring (deserialization)
+# It is used for deserializing dateTime objects
+# Always set this parameter to a value that is default for serialization in class 'DateTime'
+# Currently, it is '%Y-%m-%dT%T'
 has 'dateTimeFormat' => (is => 'rw', isa => 'Str', default => '%Y-%m-%dT%T');
 
 # The hash has form: 'ClassName' => Array[InstanceofClassName]
