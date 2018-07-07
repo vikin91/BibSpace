@@ -30,7 +30,7 @@ our @EXPORT = qw(
   Fget_publications_main_hashed_args
   Fget_publications_core
 );
-##############################################################################################################
+
 sub Freassign_authors_to_entries_given_by_array {
   my $app             = shift;
   my $create_new      = shift // 0;
@@ -67,7 +67,7 @@ sub Freassign_authors_to_entries_given_by_array {
   }
   return $num_authors_created;
 }
-##############################################################################################################
+
 sub Fregenerate_html_for_array {
   my $app             = shift;
   my $force           = shift // 0;
@@ -89,7 +89,7 @@ sub Fregenerate_html_for_array {
 
   return $num_done;
 }
-####################################################################################
+
 sub FprintBibtexWarnings {
   my $str = shift;
 
@@ -103,7 +103,7 @@ sub FprintBibtexWarnings {
   }
   return $msg;
 }
-####################################################################################
+
 sub Fhandle_add_edit_publication {
   my ($app, $new_bib, $id, $action, $bst_file) = @_;
   my $repo = $app->repo;
@@ -201,8 +201,6 @@ sub Fhandle_add_edit_publication {
   return ($new_entry, $status_code_str, $existing_id, $added_under_id);
 }
 
-####################################################################################
-####################################################################################
 # this function ignores the parameters given in the $self object
 sub Fget_publications_main_hashed_args_only {
   my ($self, $args, $publications) = @_;
@@ -215,7 +213,7 @@ sub Fget_publications_main_hashed_args_only {
   );
   return @dbg;
 }
-####################################################################################
+
 sub Fget_publications_main_hashed_args {    #
   my ($self, $args, $publications) = @_;
 
@@ -237,7 +235,6 @@ sub Fget_publications_main_hashed_args {    #
     $args->{visible}, $args->{hidden},      $args->{debug},
   );
 }
-####################################################################################
 
 sub Fget_publications_core {
   my $self              = shift;
@@ -429,4 +426,4 @@ sub Fget_publications_core {
 
   return @entries;
 }
-####################################################################################
+

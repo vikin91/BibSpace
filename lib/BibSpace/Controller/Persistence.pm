@@ -18,7 +18,6 @@ use BibSpace::Functions::FDB;
 
 use Mojo::Base 'Mojolicious::Controller';
 
-#################################################################################
 sub persistence_status {
   my $self = shift;
 
@@ -31,7 +30,6 @@ sub persistence_status {
   $self->redirect_to($self->get_referrer);
 }
 
-#################################################################################
 sub persistence_status_ajax {
   my $self = shift;
 
@@ -42,7 +40,7 @@ sub persistence_status_ajax {
   $self->render(text => $status);
 
 }
-#################################################################################
+
 sub load_fixture {
   my $self = shift;
 
@@ -66,7 +64,7 @@ sub load_fixture {
   );
   $self->redirect_to($self->get_referrer);
 }
-#################################################################################
+
 sub save_fixture {
   my $self = shift;
 
@@ -97,7 +95,7 @@ sub save_fixture {
   );
   $self->redirect_to($self->get_referrer);
 }
-#################################################################################
+
 sub copy_mysql_to_smart {
   my $self = shift;
 
@@ -113,7 +111,7 @@ sub copy_mysql_to_smart {
   $self->flash(msg_type => 'success', msg => "Copied mysql => smart. $status");
   $self->redirect_to($self->get_referrer);
 }
-#################################################################################
+
 sub copy_smart_to_mysql {
   my $self = shift;
 
@@ -127,7 +125,6 @@ sub copy_smart_to_mysql {
   $self->redirect_to($self->get_referrer);
 }
 
-#################################################################################
 sub insert_random_data {
   my $self = shift;
   my $num = $self->param('num') // 300;
@@ -178,7 +175,7 @@ sub insert_random_data {
   $self->flash(msg_type => 'success', msg => "Copied smart => mysql. $status");
   $self->redirect_to($self->get_referrer);
 }
-#################################################################################
+
 sub reset_smart {
   my $self = shift;
 
@@ -205,7 +202,7 @@ sub reset_smart {
   $self->flash(msg_type => 'success', msg => $status);
   $self->redirect_to($self->get_referrer);
 }
-#################################################################################
+
 sub reset_mysql {
   my $self = shift;
 
@@ -233,7 +230,7 @@ sub reset_mysql {
 
   $self->redirect_to($self->get_referrer);
 }
-#################################################################################
+
 sub reset_all {
   my $self = shift;
 
@@ -256,7 +253,7 @@ sub reset_all {
   $self->flash(msg_type => 'success', msg => $status);
   $self->redirect_to($self->get_referrer);
 }
-#################################################################################
+
 sub system_status {
   my $self = shift;
 
@@ -327,6 +324,5 @@ sub system_status {
     $self->render(text => $msg, status => 200);
   }
 }
-#################################################################################
 
 1;

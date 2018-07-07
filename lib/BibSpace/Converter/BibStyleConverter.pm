@@ -60,7 +60,7 @@ sub get_warnings {
   my $self = shift;
   return @{$self->warnings};
 }
-####################################################################################
+
 sub _convert_bib_to_bbl {
   my ($input_bib, $bst_file_path) = @_;
 
@@ -81,8 +81,6 @@ sub _convert_bib_to_bbl {
   return ($bbl_dirty, $dirty_bbl_array_ref, $warnings_arr_ref);
 }
 
-####################################################################################
-####################################################################################
 sub _clean_bbl {
   my ($bbl_arr_ref) = @_;
 
@@ -171,7 +169,6 @@ sub _clean_bbl {
   return $s;
 }
 
-####################################################################################
 sub _add_html_links {
   my ($bbl_clean, $bib) = @_;
 
@@ -255,7 +252,7 @@ sub _add_html_links {
 
   $s;
 }
-####################################################################################
+
 sub build_link {
   my $name  = shift;
   my $value = shift;
@@ -265,7 +262,7 @@ sub build_link {
 }
 
 ####### CORE
-####################################################################################
+
 sub str_replace_as_pod_latex {
   my $s = shift;
 
@@ -302,14 +299,14 @@ sub str_replace_as_pod_latex {
 
   $s;
 }
-####################################################################################
+
 sub str_replace_handle_tilde {
   my $s = shift;
   $s =~ s!~!&nbsp;!g;
 
   $s;
 }
-####################################################################################
+
 sub polish_letters_latex_to_html {
   my $s = shift;
 
@@ -348,7 +345,7 @@ sub polish_letters_latex_to_html {
 
   $s;
 }
-####################################################################################
+
 sub german_letters_latex_to_html {
   my $s = shift;
 
@@ -366,7 +363,7 @@ sub german_letters_latex_to_html {
 
   $s;
 }
-####################################################################################
+
 sub other_letters_latex_to_html {
   my $s = shift;
 
@@ -391,7 +388,7 @@ sub other_letters_latex_to_html {
 
   $s;
 }
-####################################################################################
+
 sub delatexify {
   my ($s, $accent, $src, $dest) = @_;
 
@@ -403,7 +400,6 @@ sub delatexify {
 
   $s;
 }
-####################################################################################
 
 =item string_replace_with_counting
   uses counting to do strin replace
@@ -515,7 +511,6 @@ sub string_replace_with_counting {
   # say "======== string_replace_with_counting END ========";
   return $s;
 }
-####################################################################################
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

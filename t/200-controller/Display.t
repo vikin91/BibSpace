@@ -17,14 +17,12 @@ TestManager->apply_fixture($self->app);
 
 my $page;
 
-####################################################################
 subtest 'start' => sub {
   $page = $t_logged_in->app->url_for('start');
   $t_logged_in->get_ok($page)->status_isnt(404, "Checking: 404 $page")
     ->status_isnt(500, "Checking: 500 $page");
 };
 
-####################################################################
 subtest 'show_log' => sub {
   $page = $t_logged_in->app->url_for('show_log', num => 10);
   $t_logged_in->get_ok($page)->status_isnt(404, "Checking: 404 $page")
@@ -39,7 +37,6 @@ subtest 'show_log' => sub {
   $t_logged_in->get_ok($page)->status_isnt(404, "Checking: 404 $page")
     ->status_isnt(500, "Checking: 500 $page");
 };
-####################################################################
 
 $page = $t_logged_in->app->url_for('error500');
 $t_logged_in->get_ok($page)->status_isnt(404, "Checking: 404 $page")

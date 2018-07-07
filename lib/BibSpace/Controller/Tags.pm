@@ -22,8 +22,6 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::Log;
 
-####################################################################################
-
 sub index {
   my $self   = shift;
   my $dbh    = $self->app->db;
@@ -44,7 +42,6 @@ sub index {
   $self->render(template => 'tags/tags');
 }
 
-####################################################################################
 sub add {
   my $self = shift;
   my $dbh  = $self->app->db;
@@ -53,7 +50,6 @@ sub add {
   $self->render(template => 'tags/add', type => $type);
 }
 
-####################################################################################
 sub add_post {
   my $self        = shift;
   my $tag_type    = $self->param('type') // 1;
@@ -97,8 +93,6 @@ sub add_post {
   # $self->render(template => 'tags/add');
 }
 
-####################################################################################
-
 sub edit {
   my $self = shift;
   my $id   = $self->param('id');
@@ -123,7 +117,6 @@ sub edit {
 
 }
 
-####################################################################################
 sub get_authors_for_tag_and_team {
   my $self    = shift;
   my $dbh     = $self->app->db;
@@ -154,7 +147,7 @@ sub get_authors_for_tag_and_team {
   $self->stash(tag => $tag, authors => \@authors);
   $self->render(template => 'tags/authors_having_tag_read');
 }
-####################################################################################
+
 sub get_tags_for_author_read {
   my $self      = shift;
   my $author_id = $self->param('author_id');
@@ -225,7 +218,7 @@ sub get_tags_for_author_read {
   $self->render(template => 'tags/author_tags_read');
 
 }
-####################################################################################
+
 # we mean here tags of type 1
 sub get_tags_for_team_read {
   my $self     = shift;
@@ -296,7 +289,7 @@ sub get_tags_for_team_read {
   $self->render(template => 'tags/author_tags_read');
 
 }
-####################################################################################
+
 sub get_authors_for_tag {
   my $self   = shift;
   my $tag_id = $self->param('id');
@@ -324,7 +317,6 @@ sub get_authors_for_tag {
   $self->stash(tag => $tag, authors => \@authors);
   $self->render(template => 'tags/authors_having_tag');
 }
-####################################################################################
 
 sub delete {
   my $self = shift;
@@ -359,5 +351,5 @@ sub delete {
 
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 1;

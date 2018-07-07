@@ -38,7 +38,7 @@ our %mons = (
   11 => 'November',
   12 => 'December'
 );
-####################################################################################
+
 ## ADD form
 sub publications_add_many_get {
   my $self = shift;
@@ -78,7 +78,6 @@ sub publications_add_many_get {
   $self->stash(msg_type => 'warning', msg => $msg);
   $self->render(template => 'publications/add_multiple_entries');
 }
-############################################################################################################
 
 ## Called after every preview or store command issued by ADD_MULTIPLE form
 ##  finish this function using the new way of adding editing
@@ -251,6 +250,5 @@ sub publications_add_many_post {
   );
   $self->render(template => 'publications/add_multiple_entries');
 }
-####################################################################################
 
 1;

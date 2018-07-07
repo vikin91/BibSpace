@@ -18,18 +18,17 @@ use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 use Mojo::Log;
 
-####################################################################################
 sub index {
   my $self      = shift;
   my @tag_types = $self->app->repo->tagTypes_all;
   $self->render(template => 'tagtypes/tagtypes', tagtypes => \@tag_types);
 }
-####################################################################################
+
 sub add {
   my $self = shift;
   $self->render(template => 'tagtypes/add');
 }
-####################################################################################
+
 sub add_post {
   my $self    = shift;
   my $dbh     = $self->app->db;
@@ -56,7 +55,6 @@ sub add_post {
   $self->redirect_to($self->url_for('all_tag_types'));
 }
 
-####################################################################################
 sub delete {
   my $self = shift;
   my $id   = $self->param('id');
@@ -82,7 +80,6 @@ sub delete {
   $self->redirect_to($self->get_referrer);
 }
 
-####################################################################################
 sub edit {
   my $self = shift;
   my $id   = $self->param('id');
@@ -119,5 +116,5 @@ sub edit {
   $self->render(template => 'tagtypes/edit');
 
 }
-####################################################################################
+
 1;

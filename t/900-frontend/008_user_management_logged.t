@@ -28,15 +28,11 @@ my $token = generate_token();
 ok(defined $token);
 is(length($token), 32);
 
-########################################################
-
-####################################################################
 subtest 'User management: noregister' => sub {
   $t_logged_in->get_ok("/noregister")->status_is(200)
     ->content_like(qr/Registration is disabled/i);
 };
 
-####################################################################
 subtest 'User management: admin registration' => sub {
 
   my $token = generate_token;

@@ -105,10 +105,8 @@ $admin_user->get_ok($page, "Get for page $page")
   ->status_isnt(404, "Checking: 404 $page")
   ->status_isnt(500, "Checking: 500 $page");
 
-####################################################################
 # subtest 'aaa' => sub {
 # };
-####################################################################
 
 ok(1);
 done_testing();

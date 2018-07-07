@@ -16,15 +16,13 @@ use BibSpace::Model::Team;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
 
-################################################################################################################
-
 sub show {
   my $self  = shift;
   my @teams = $self->app->repo->teams_all;
   $self->stash(teams => \@teams);
   $self->render(template => 'teams/teams', layout => 'admin');
 }
-################################################################################################################
+
 sub edit {
   my $self = shift;
   my $id   = $self->param('id');
@@ -42,12 +40,12 @@ sub edit {
   $self->stash(members => \@team_members, team => $team);
   $self->render(template => 'teams/members');
 }
-################################################################################################################
+
 sub add_team {
   my $self = shift;
   $self->render(template => 'teams/add_team');
 }
-##############################################################################################################
+
 sub add_team_post {
   my $self          = shift;
   my $new_team_name = $self->param('new_team');
@@ -67,7 +65,7 @@ sub add_team_post {
 
   $self->app->repo->teams_save($new_mteam);
   my $new_team_id = $new_mteam->id;
-  if ( (!defined $new_team_id) or $new_team_id <= 0) {
+  if ((!defined $new_team_id) or $new_team_id <= 0) {
     $self->flash(msg =>
         "Something went wrong. The Team $new_team_name has not been added.");
     $self->redirect_to($self->url_for('add_team_get'));
@@ -79,7 +77,6 @@ sub add_team_post {
   $self->redirect_to('edit_team', id => $new_team_id);
 }
 
-##############################################################################################################
 sub delete_team {
   my $self = shift;
   my $id   = $self->param('id');
@@ -99,7 +96,6 @@ sub delete_team {
   $self->redirect_to($self->url_for('all_teams'));
 }
 
-##############################################################################################################
 sub delete_team_force {
   my $self = shift;
   my $dbh  = $self->app->db;
@@ -119,7 +115,7 @@ sub delete_team_force {
   $self->redirect_to($self->url_for('all_teams'));
 
 }
-##############################################################################################################
+
 sub do_delete_team {
   my $self = shift;
   my $team = shift;
@@ -137,6 +133,5 @@ sub do_delete_team {
   $team->memberships_clear;
   $self->app->repo->teams_delete($team);
 }
-##############################################################################################################
 
 1;

@@ -13,7 +13,7 @@ has 'bib' => (is => 'rw', isa => 'Str');
 has 'year' => (is => 'rw', isa => 'Int', default => 2017);
 __PACKAGE__->meta->make_immutable;
 no Moose;
-###################################
+
 package BibSpace::Model::ILogger;
 use Moose::Role;
 use DateTime;
@@ -70,7 +70,7 @@ sub error {
 }
 
 no Moose;
-###################################
+
 package BibSpace::Model::SimpleLogger;
 use Moose;
 with 'BibSpace::Model::ILogger';
@@ -84,9 +84,7 @@ sub debug {
 
 __PACKAGE__->meta->make_immutable;
 no Moose;
-###################################
 
-###################################
 package main;
 
 ## lets see if this generates properly

@@ -147,8 +147,7 @@ sub _insert {
         $obj->stop);
     }
     catch {
-      my $obj_str = $obj->toString;
-      $self->logger->error("Insert exception: $_  Skipped object: $obj_str");
+      $self->logger->error("Insert exception: $_");
     };
   }
 
@@ -223,13 +222,10 @@ after 'delete'  => sub { shift->logger->exiting(""); };
 
 sub filter {
   my ($self, $coderef) = @_;
-  
 
   return () if $self->empty();
   my @arr = grep &{$coderef}, $self->all();
 
-  
-  
   return @arr;
 }
 before 'filter' => sub { shift->logger->entering(""); };
@@ -241,13 +237,9 @@ after 'filter'  => sub { shift->logger->exiting(""); };
 
 sub find {
   my ($self, $coderef) = @_;
-  
 
   return if $self->empty();
   my $obj = first \&{$coderef}, $self->all();
-
-  
-  
 
   return $obj;
 

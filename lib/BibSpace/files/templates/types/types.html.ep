@@ -25,7 +25,7 @@
                             <a class="btn btn-success btn-sm" href="<%= url_for('edit_type', name=>$otype->our_type)%>" data-toggle="tooltip" data-placement="top" title="Edit types aggregation">
                                 <span class="glyphicon glyphicon-pencil"></span>
                             </a>
-                            
+
                             % if( $otype->onLanding ){
                                 <a href="<%= url_for('toggle_landing_type', name=>$otype->our_type)%>" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="bottom" title="Toggle appearing on landing page">
                                     <span class="glyphicon glyphicon-heart"></span>
@@ -36,7 +36,7 @@
                                     <span class="glyphicon glyphicon-eye-close"></span>
                                 </a>
                             %}
-                            
+
                             % if( $otype->is_original_bibtex_type ){
                                 <a class="btn btn-default btn-sm" href="#" data-toggle="tooltip" data-placement="right" title="Original BibTeX type cannot be deleted">
                                     <span class="glyphicon glyphicon-trash"></span>
@@ -54,8 +54,8 @@
                                     </a>
                                 </span>
                             % }
-                            
-                            
+
+
                         </div>
 
 
@@ -65,13 +65,13 @@
                             <span class="badge"><%= $otype->num_bibtex_types %></span>
                         </span>
                     </td>
-                    
+
                     <td>
                         <p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-book"></span> <%= $otype->our_type %></p>
                     </td>
                     <td>
                         <a class="btn btn-default btn-sm" href="<%= url_for('publications')->query(bibtex_type=>$otype->our_type) %>">
-                        <span class="glyphicon glyphicon-list-alt"></span> Show papers 
+                        <span class="glyphicon glyphicon-list-alt"></span> Show papers
                         </a>
                     </td>
                     <td>
@@ -110,7 +110,7 @@
               <h3>Are you sure you want to delete?</h3>
           </div>
           <div class="modal-body">
-              <pre><%= $otype->toString %></pre>
+              <pre>'<%= $otype->our_type  %>' => maps to bibtex types => [<%= join(', ', $otype->bibtexTypes_all) %>] </pre>
               <div class="modal-footer">
                 <a class="btn btn-danger" href="<%= url_for('delete_type', name=>$otype->our_type )%>"><i class="fa fa-trash"></i> Yes, delete this type</a>
                 <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, leave it alone</a>

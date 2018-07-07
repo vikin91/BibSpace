@@ -2,9 +2,43 @@ package RepositoryFacade;
 use namespace::autoclean;
 
 use Moose;
+use MooseX::ClassAttribute;
 use Try::Tiny;
 
 has 'lr' => (is => 'ro', isa => 'LayeredRepository', required => 1);
+
+# static methods
+class_has 'entities' => (
+  is      => 'ro',
+  isa     => 'ArrayRef[Str]',
+  default => sub {
+
+    # ORDER IS IMPORTANT!!! TAG MUST BE AFTER TAGTYPE - it references it N:1!
+    ['Author', 'Entry', 'TagType', 'Tag', 'Team', 'Type', 'User'];
+  },
+  traits  => ['Array'],
+  handles => {get_entities => 'elements',},
+);
+
+class_has 'relations' => (
+  is      => 'ro',
+  isa     => 'ArrayRef[Str]',
+  default => sub {
+    ['Authorship', 'Exception', 'Labeling', 'Membership'];
+  },
+  traits  => ['Array'],
+  handles => {get_relations => 'elements',},
+);
+
+class_has 'models' => (
+  is      => 'ro',
+  isa     => 'ArrayRef[Str]',
+  default => sub {
+    return [RepositoryFacade->get_entities, RepositoryFacade->get_relations];
+  },
+  traits  => ['Array'],
+  handles => {get_models => 'elements',},
+);
 
 sub hardReset {
   my $self = shift;

@@ -30,7 +30,6 @@ BibSpace::Controller::Cron::do_cron_month($self);
 
 note "============ Testing statistics output ============";
 ok($self->app->statistics->toLines);
-ok($self->app->statistics->toString);
 
 note "============ Leftovers... ============";
 

@@ -25,8 +25,6 @@ foreach my $team (@all_teams) {
 
   note "============ Testing Team ID " . $team->id . ".";
 
-  ok($team->toString, "toString");
-
   my $member_author = ($team->get_authors)[0];
   my $non_member = $repo->authors_find(sub { !$_->has_team($team) });
 
@@ -52,7 +50,6 @@ foreach my $team (@all_teams) {
 
     ## testing membership actually...
     ok($mem->validate,          "mem validate");
-    ok($mem->toString,          "mem to string");
     ok($mem->equals($mem2),     "mem equals");
     ok($mem->equals_id($mem2),  "mem equals id");
     ok($mem->equals_obj($mem2), "mem equals obj");
@@ -76,7 +73,6 @@ foreach my $team (@all_teams) {
         team_id   => $team->id
       );
       ok($mem->validate,           'mem validate');
-      ok($mem->toString,           'mem toString');
       ok(!$mem->equals($mem3),     '!equals');
       ok(!$mem->equals_id($mem3),  '!equals_id');
       ok(!$mem->equals_obj($mem3), '!equals_obj');

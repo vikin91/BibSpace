@@ -40,7 +40,7 @@ our %mons = (
   11 => 'November',
   12 => 'December'
 );
-####################################################################################
+
 # work, but not for now
 # sub all_ajax {
 #   my $self = shift;
@@ -51,7 +51,7 @@ our %mons = (
 #   my $html = $self->render_to_string( template => 'publications/all_table' );
 #   $self->render( text => $html );
 # }
-####################################################################################
+
 sub all {
   my $self = shift;
 
@@ -62,7 +62,7 @@ sub all {
   my $html = $self->render_to_string(template => 'publications/all');
   $self->render(data => $html);
 }
-####################################################################################
+
 sub all_recently_added {
   my $self = shift;
   my $num = $self->param('num') // 10;
@@ -71,7 +71,9 @@ sub all_recently_added {
 
   my @all = Fget_publications_main_hashed_args($self, {year => undef});
   my @added_entries = sort { $b->creation_time cmp $a->creation_time } @all;
-  @added_entries = @added_entries[0 .. $num - 1];
+  my $num_found     = scalar @added_entries;
+  my $limit         = $num < $num_found ? $num : $num_found;
+  @added_entries = @added_entries[0 .. $limit - 1];
 
   my @filtered = Fget_publications_main_hashed_args($self, {}, \@added_entries);
 
@@ -81,7 +83,6 @@ sub all_recently_added {
   $self->stash(entries => \@filtered, all_entries => \@added_entries);
   $self->render(template => 'publications/all');
 }
-####################################################################################
 
 sub all_recently_modified {
   my $self = shift;
@@ -91,7 +92,9 @@ sub all_recently_modified {
 
   my @all = Fget_publications_main_hashed_args($self, {year => undef});
   my @modified_entries = sort { $b->modified_time cmp $a->modified_time } @all;
-  @modified_entries = @modified_entries[0 .. $num - 1];
+  my $num_found        = scalar @modified_entries;
+  my $limit            = $num < $num_found ? $num : $num_found;
+  @modified_entries = @modified_entries[0 .. $limit - 1];
 
   my @filtered
     = Fget_publications_main_hashed_args($self, {}, \@modified_entries);
@@ -103,7 +106,6 @@ sub all_recently_modified {
   $self->render(template => 'publications/all');
 }
 
-####################################################################################
 sub all_without_tag {
   my $self = shift;
   my $tagtype = $self->param('tagtype') // 1;
@@ -121,7 +123,7 @@ sub all_without_tag {
   $self->stash(entries  => \@filtered, all_entries => \@untagged_entries);
   $self->render(template => 'publications/all');
 }
-####################################################################################
+
 sub all_orphaned {
   my $self = shift;
 
@@ -142,7 +144,7 @@ sub all_orphaned {
   $self->stash(entries  => \@filtered, all_entries => \@entries);
   $self->render(template => 'publications/all');
 }
-####################################################################################
+
 sub show_unrelated_to_team {
   my $self    = shift;
   my $team_id = $self->param('teamid');
@@ -176,7 +178,7 @@ sub show_unrelated_to_team {
   $self->stash(entries  => \@filtered, all_entries => \@entriesUnrelated);
   $self->render(template => 'publications/all');
 }
-####################################################################################
+
 sub all_with_missing_month {
   my $self = shift;
 
@@ -195,7 +197,7 @@ sub all_with_missing_month {
   $self->stash(entries  => \@filtered, all_entries => \@entries);
   $self->render(template => 'publications/all');
 }
-####################################################################################
+
 sub all_candidates_to_delete {
   my $self = shift;
 
@@ -220,9 +222,7 @@ sub all_candidates_to_delete {
   $self->stash(entries  => \@filtered, all_entries => \@entries);
   $self->render(template => 'publications/all');
 }
-####################################################################################
-####################################################################################
-####################################################################################
+
 sub all_bibtex {
   my $self = shift;
 
@@ -236,7 +236,6 @@ sub all_bibtex {
   $big_str .= "\n</pre>";
   $self->render(text => $big_str);
 }
-####################################################################################
 
 sub all_read {
   my $self = shift;
@@ -248,8 +247,6 @@ sub all_read {
   my $html = $self->render_to_string(template => 'publications/all_read');
   $self->render(data => $html);
 }
-
-####################################################################################
 
 sub single {
   my $self = shift;
@@ -268,8 +265,6 @@ sub single {
   $self->render(template => 'publications/all');
 }
 
-####################################################################################
-
 sub single_read {
   my $self = shift;
   my $id   = $self->param('id');
@@ -284,7 +279,7 @@ sub single_read {
   $self->stash(entries => \@objs);
   $self->render(template => 'publications/all_read');
 }
-####################################################################################
+
 sub fixMonths {
   my $self = shift;
 
@@ -303,7 +298,7 @@ sub fixMonths {
   );
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub toggle_hide {
   my $self = shift;
   my $id   = $self->param('id');
@@ -322,7 +317,7 @@ sub toggle_hide {
 
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub make_paper {
   my $self = shift;
   my $id   = $self->param('id');
@@ -341,7 +336,7 @@ sub make_paper {
 
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub make_talk {
   my $self = shift;
   my $id   = $self->param('id');
@@ -360,7 +355,7 @@ sub make_talk {
 
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub delete_orphaned {
   my $self = shift;
 
@@ -384,7 +379,6 @@ sub delete_orphaned {
 
 }
 
-####################################################################################
 sub fix_file_urls {
   my $self = shift;
   my $id   = $self->param('id');
@@ -468,7 +462,7 @@ sub fix_file_urls {
   );
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub remove_attachment {
   my $self     = shift;
   my $id       = $self->param('id');                     # entry ID
@@ -512,7 +506,7 @@ sub remove_attachment {
   $self->flash(msg_type => $msg_type, msg => $msg);
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub discover_attachments {
   my $self = shift;
   my $id   = $self->param('id');
@@ -543,7 +537,7 @@ sub discover_attachments {
   $self->flash(msg_type => $msg_type, msg => $msg);
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub download {
   my $self     = shift;
   my $id       = $self->param('id');         # entry ID
@@ -571,7 +565,6 @@ sub download {
   );
   $self->render(text => "File not found.", status => 404);
 }
-####################################################################################
 
 sub add_pdf {
   my $self  = shift;
@@ -589,7 +582,7 @@ sub add_pdf {
   $self->stash(mentry => $entry);
   $self->render(template => 'publications/pdf_upload');
 }
-####################################################################################
+
 sub add_pdf_post {
   my $self          = shift;
   my $id            = $self->param('id');
@@ -702,7 +695,6 @@ sub add_pdf_post {
   $self->redirect_to($self->get_referrer);
 }
 
-####################################################################################
 sub mark_author_to_regenerate {
   my $self      = shift;
   my $author_id = $self->param('author_id');
@@ -733,7 +725,7 @@ sub mark_author_to_regenerate {
   $self->flash(msg_type => 'info', msg => $msg);
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub regenerate_html_for_all {
   my $self      = shift;
   my $converter = $self->app->bibtexConverter;
@@ -754,7 +746,7 @@ sub regenerate_html_for_all {
   $self->flash(msg_type => 'info', msg => $msg);
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub regenerate_html_in_chunk {
   my $self = shift;
   my $chunk_size = $self->param('chunk_size') // 30;
@@ -785,7 +777,7 @@ sub regenerate_html_in_chunk {
   $self->flash(msg_type => 'info', msg => $msg);
   $self->redirect_to($self->get_referrer());
 }
-####################################################################################
+
 sub mark_all_to_regenerate {
   my $self      = shift;
   my $converter = $self->app->bibtexConverter;
@@ -810,7 +802,6 @@ sub mark_all_to_regenerate {
 
 }
 
-####################################################################################
 sub regenerate_html {
   my $self      = shift;
   my $converter = $self->app->bibtexConverter;
@@ -839,7 +830,6 @@ sub regenerate_html {
 
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
 
 sub delete_sure {
   my $self = shift;
@@ -867,7 +857,7 @@ sub delete_sure {
   $self->app->logger->info("Entry '$id' has been deleted.");
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub show_authors_of_entry {
   my $self = shift;
   my $id   = $self->param('id');
@@ -887,9 +877,7 @@ sub show_authors_of_entry {
   $self->stash(entry => $entry, authors => \@authors, teams => \@teams);
   $self->render(template => 'publications/show_authors');
 }
-####################################################################################
-####################################################################################
-####################################################################################
+
 sub manage_tags {
   my $self = shift;
   my $id   = $self->param('id');
@@ -910,7 +898,6 @@ sub manage_tags {
   $self->stash(entry => $entry, tags => \@tags, tag_types => \@tag_types);
   $self->render(template => 'publications/manage_tags');
 }
-####################################################################################
 
 sub remove_tag {
   my $self     = shift;
@@ -956,7 +943,7 @@ sub remove_tag {
   $self->redirect_to($self->get_referrer);
 
 }
-####################################################################################
+
 sub add_tag {
   my $self     = shift;
   my $entry_id = $self->param('eid');
@@ -987,9 +974,7 @@ sub add_tag {
 
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
-####################################################################################
-####################################################################################
+
 sub manage_exceptions {
   my $self = shift;
   my $id   = $self->param('id');
@@ -1021,7 +1006,7 @@ sub manage_exceptions {
   );
   $self->render(template => 'publications/manage_exceptions');
 }
-####################################################################################
+
 sub add_exception {
   my $self     = shift;
   my $entry_id = $self->param('eid');
@@ -1063,7 +1048,6 @@ sub add_exception {
   $self->redirect_to($self->get_referrer);
 
 }
-####################################################################################
 
 sub remove_exception {
   my $self     = shift;
@@ -1119,9 +1103,7 @@ sub remove_exception {
   $self->redirect_to($self->get_referrer);
 
 }
-####################################################################################
-####################################################################################
-####################################################################################
+
 sub get_adding_editing_message_for_error_code {
   my $self        = shift;
   my $exit_code   = shift;
@@ -1170,7 +1152,6 @@ sub get_adding_editing_message_for_error_code {
 
 }
 
-####################################################################################
 sub publications_add_get {
   my $self = shift;
   $self->app->logger->info("Open Add Publication");
@@ -1195,7 +1176,7 @@ sub publications_add_get {
   $self->stash(entry => $e_dummy, msg => $msg);
   $self->render(template => 'publications/add_entry');
 }
-####################################################################################
+
 sub publications_add_post {
   my $self            = shift;
   my $new_bib         = $self->param('new_bib');
@@ -1308,7 +1289,7 @@ sub publications_add_post {
   }
 
 }
-####################################################################################
+
 sub publications_edit_get {
   my $self = shift;
   my $id = $self->param('id') || -1;
@@ -1328,7 +1309,7 @@ sub publications_edit_get {
   $self->stash(entry => $entry);
   $self->render(template => 'publications/edit_entry');
 }
-####################################################################################
+
 sub publications_edit_post {
   my $self            = shift;
   my $id              = $self->param('id') // -1;
@@ -1377,7 +1358,7 @@ sub publications_edit_post {
   $self->stash(entry => $mentry, msg => $msg, msg_type => $msg_type);
   $self->render(template => 'publications/edit_entry');
 }
-####################################################################################
+
 sub clean_ugly_bibtex {
   my $self = shift;
 
@@ -1402,5 +1383,5 @@ sub clean_ugly_bibtex {
 
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 1;

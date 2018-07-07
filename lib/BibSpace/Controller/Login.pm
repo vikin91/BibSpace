@@ -11,7 +11,6 @@ use BibSpace::Functions::Core
 use Data::Dumper;
 use Try::Tiny;
 
-####################################################################################
 # for _under_ -checking if user is logged in to access other pages
 sub check_is_logged_in {
   my $self = shift;
@@ -34,21 +33,21 @@ sub check_is_logged_in {
 
   return 1;
 }
-####################################################################################
+
 # for _under_ -checking
 sub under_check_is_manager {
   my $self = shift;
   return 1 if $self->app->is_demo;
   return $self->under_check_has_rank(User->manager_rank);
 }
-####################################################################################
+
 # for _under_ -checking
 sub under_check_is_admin {
   my $self = shift;
   return 1 if $self->app->is_demo;
   return $self->under_check_has_rank(User->admin_rank);
 }
-####################################################################################
+
 # for _under_ -checking
 sub under_check_has_rank {
   my $self          = shift;
@@ -86,9 +85,7 @@ sub under_check_has_rank {
   return;
 
 }
-####################################################################################
-####################################################################################
-####################################################################################
+
 sub manage_users {
   my $self = shift;
   my $dbh  = $self->app->db;
@@ -97,7 +94,7 @@ sub manage_users {
   $self->stash(user_objs => \@user_objs);
   $self->render(template => 'login/manage_users');
 }
-####################################################################################
+
 sub promote_to_rank {
   my $self = shift;
   my $rank = shift;
@@ -129,22 +126,22 @@ sub promote_to_rank {
   }
   $self->redirect_to('manage_users');
 }
-####################################################################################
+
 sub make_user {
   my $self = shift;
   return $self->promote_to_rank(User->user_rank);
 }
-####################################################################################
+
 sub make_manager {
   my $self = shift;
   return $self->promote_to_rank(User->manager_rank);
 }
-####################################################################################
+
 sub make_admin {
   my $self = shift;
   return $self->promote_to_rank(User->admin_rank);
 }
-####################################################################################
+
 sub delete_user {
   my $self       = shift;
   my $profile_id = $self->param('id');
@@ -184,7 +181,7 @@ sub delete_user {
 
   $self->redirect_to('manage_users');
 }
-####################################################################################
+
 sub foreign_profile {
   my $self       = shift;
   my $profile_id = $self->param('id');
@@ -193,7 +190,7 @@ sub foreign_profile {
   $self->stash(usrobj => $user_obj);
   $self->render(template => 'login/profile');
 }
-####################################################################################
+
 sub profile {
   my $self = shift;
   my $me
@@ -202,19 +199,18 @@ sub profile {
   $self->stash(usrobj => $me);
   $self->render(template => 'login/profile');
 }
-####################################################################################
+
 sub index {
   my $self = shift;
   $self->render(template => 'login/index');
 }
-####################################################################################
+
 sub forgot {
   my $self = shift;
   $self->app->logger->info("Forgot password form opened");
   $self->render(template => 'login/forgot_request');
 }
 
-####################################################################################
 sub post_gen_forgot_token {
   my $self = shift;
 
@@ -286,7 +282,7 @@ sub post_gen_forgot_token {
 
   $self->redirect_to('forgot');
 }
-####################################################################################
+
 sub token_clicked {
   my $self  = shift;
   my $token = $self->param('token');
@@ -296,7 +292,6 @@ sub token_clicked {
   $self->render(template => 'login/set_new_password');
 }
 
-####################################################################################
 sub store_password {
   my $self  = shift;
   my $token = $self->param('token');
@@ -349,7 +344,6 @@ sub store_password {
 
 }
 
-####################################################################################
 sub login {
   my $self        = shift;
   my $input_login = $self->param('user');
@@ -395,13 +389,13 @@ sub login {
   }
 
 }
-####################################################################################
+
 sub login_form {
   my $self = shift;
   $self->app->logger->info("Displaying login form.");
   $self->render(template => 'login/index');
 }
-####################################################################################
+
 sub bad_password {
   my $self = shift;
 
@@ -410,7 +404,7 @@ sub bad_password {
   $self->flash(msg_type => 'danger', msg => 'Wrong user name or password');
   $self->redirect_to($self->url_for('login_form'));
 }
-####################################################################################
+
 sub not_logged_in {
   my $self = shift;
 
@@ -422,7 +416,6 @@ sub not_logged_in {
   $self->redirect_to($self->url_for('login_form'));
 }
 
-####################################################################################
 sub logout {
   my $self = shift;
   $self->app->logger->info("User logs out");
@@ -430,13 +423,13 @@ sub logout {
   $self->session(expires => 1);
   $self->redirect_to($self->url_for('start'));
 }
-####################################################################################
+
 sub register_disabled {
   my $self = shift;
   $self->app->logger->info("Login: informing that registration is disabled.");
   $self->render(template => 'login/noregister');
 }
-####################################################################################
+
 sub can_register {
   my $self                 = shift;
   my $registration_enabled = $self->app->config->{registration_enabled};
@@ -451,7 +444,7 @@ sub can_register {
   return 1 if $me and $me->is_admin;
   return;
 }
-####################################################################################
+
 sub register {
   my $self = shift;
 
@@ -470,7 +463,7 @@ sub register {
     $self->redirect_to('/noregister');
   }
 }
-####################################################################################
+
 sub post_do_register {
   my $self      = shift;
   my $config    = $self->app->config;
@@ -488,6 +481,7 @@ sub post_do_register {
   $self->app->logger->info(
     "Received registration data. Login: '$login', email: '$email'.");
 
+  my $failure_reason = '';
   try {
     # this throws on failure
     validate_registration_data($login, $email, $password1, $password2);
@@ -513,18 +507,20 @@ sub post_do_register {
     $self->redirect_to('/');
   }
   catch {
-    my $failure_reason = $_;
+    $failure_reason = $_;
     $self->app->logger->warn($failure_reason);
-    $self->flash(msg_type => 'danger', msg => $failure_reason);
-    $self->stash(
-      name      => $name,
-      email     => $email,
-      login     => $login,
-      password1 => $password1,
-      password2 => $password2
-    );
-    $self->redirect_to('register');
   };
+  $self->flash(msg_type => 'danger', msg => "$failure_reason");
+  $self->stash(
+    name      => $name,
+    email     => $email,
+    login     => $login,
+    password1 => $password1,
+    password2 => $password2
+  );
+
+  $self->redirect_to('register');
+  return;
 }
-####################################################################################
+
 1;

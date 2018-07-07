@@ -271,13 +271,9 @@ sub delete {
 sub filter {
   my ($self, $coderef) = @_;
 
-  
-
   return () if $self->empty();
   my @arr = grep &{$coderef}, $self->all();
 
-  
-  
   return @arr;
 
 }
@@ -289,13 +285,8 @@ sub filter {
 sub find {
   my ($self, $coderef) = @_;
 
-  
-
   return if $self->empty();
   my $obj = first \&{$coderef}, $self->all();
-
-  
-  
 
   return $obj;
 

@@ -35,11 +35,15 @@ has 'date' => (
     return "$now";
   },
 );
-####################################################################################
+
 sub id {
   shift->uuid;
 }
-####################################################################################
+
+sub sha {
+  return substr(shift->uuid, 0, 7);
+}
+
 sub get_size {
   my $self = shift;
   my $size = -s $self->get_path;
@@ -48,7 +52,7 @@ sub get_size {
   $size = sprintf("%.2f", $size);
   return $size;
 }
-####################################################################################
+
 sub get_path {
   my $self = shift;
 
@@ -59,7 +63,7 @@ sub get_path {
   my $file_path = $dir . $self->filename;
   return $file_path;
 }
-####################################################################################
+
 sub is_healthy {
   my $self = shift;
   my $dir  = $self->dir;
@@ -67,7 +71,7 @@ sub is_healthy {
   my $file_path = $dir . $self->filename;
   return -e $file_path;
 }
-####################################################################################
+
 sub get_date_readable {
   my $self = shift;
 
@@ -81,7 +85,7 @@ sub get_date_readable {
     DateTime::Format::Strptime->new(pattern => '%d.%m.%Y %H:%M:%S'));
   return "$date";
 }
-####################################################################################
+
 sub get_age {
   my $self = shift;
 
@@ -94,14 +98,15 @@ sub get_age {
   my $diff = $now->subtract_datetime($then);
   return $diff;
 }
-####################################################################################
+
 sub create {
   my $self = shift;
   my $name = shift;
   my $type = shift // 'storable';
 
   my $ext = '.dat';
-  $ext = '.sql' if $type eq 'mysql';
+  $ext = '.sql'  if $type eq 'mysql';
+  $ext = '.json' if $type eq 'json';
 
   my $uuid = create_uuid_as_string(UUID_V4);
 
@@ -121,7 +126,7 @@ sub create {
     date     => $now_str
   );
 }
-####################################################################################
+
 sub parse {
   my $self     = shift;
   my $filename = shift;
@@ -139,6 +144,7 @@ sub parse {
 
   $date =~ s/\.dat//g;
   $date =~ s/\.sql//g;
+  $date =~ s/\.json//g;
 
 # my $now = DateTime->now(formatter => DateTime::Format::Strptime->new( pattern => Backup->date_format_pattern ));
   my $now
@@ -156,12 +162,7 @@ sub parse {
     date     => $now_str
   );
 }
-####################################################################################
-sub toString {
-  my $self = shift;
-  return "Backup filename '" . $self->filename . "'";
-}
-####################################################################################
+
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -169,7 +170,6 @@ sub equals {
     unless ref($self) eq ref($obj);
   return $self->filename eq $obj->filename;
 }
-####################################################################################
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

@@ -1,31 +1,30 @@
 package Team;
 
 use Try::Tiny;
-
-use Data::Dumper;
 use utf8;
 use BibSpace::Model::Author;
 use v5.16;
 use List::MoreUtils qw(any uniq);
-
 use Moose;
+use MooseX::Storage;
+with Storage;
 use BibSpace::Model::IEntity;
 use BibSpace::Model::IMembered;
 use BibSpace::Model::IHavingException;
 with 'IEntity', 'IMembered', 'IHavingException';
+use BibSpace::Model::SerializableBase::TeamSerializableBase;
+extends 'TeamSerializableBase';
 
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return TeamSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
+}
 
 has 'name' => (is => 'rw', isa => 'Str');
 has 'parent' => (is => 'rw');
 
-####################################################################################
-sub toString {
-  my $self = shift;
-  $self->freeze;
-}
-####################################################################################
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -33,19 +32,19 @@ sub equals {
     unless ref($self) eq ref($obj);
   return $self->name eq $obj->name;
 }
-####################################################################################
+
 sub can_be_deleted {
   my $self = shift;
 
   return if $self->memberships_count > 0;
   return 1;
 }
-####################################################################################
+
 sub get_members {
   my $self = shift;
   return map { $_->author } $self->memberships_all;
 }
-####################################################################################
+
 sub get_membership_beginning {
   my $self   = shift;
   my $author = shift;
@@ -54,7 +53,7 @@ sub get_membership_beginning {
 
   return $author->joined_team($self);
 }
-####################################################################################
+
 sub get_membership_end {
   my $self   = shift;
   my $author = shift;
@@ -63,12 +62,12 @@ sub get_membership_end {
 
   return $author->left_team($self);
 }
-####################################################################################
+
 sub get_authors {
   my $self = shift;
   return map { $_->author } $self->memberships_all;
 }
-####################################################################################
+
 sub tags {
   my $self = shift;
   my $type = shift // 1;
@@ -82,7 +81,7 @@ sub tags {
 
   return @myTags;
 }
-####################################################################################
+
 sub get_entries {
   my $self = shift;
 
@@ -97,7 +96,7 @@ sub get_entries {
 
   return @myEntries;
 }
-####################################################################################
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

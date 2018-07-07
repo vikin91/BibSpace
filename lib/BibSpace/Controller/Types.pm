@@ -16,7 +16,6 @@ use Mojo::Log;
 #  ALTER TABLE OurType_to_Type ADD COLUMN description TEXT DEFAULT NULL;
 #  ALTER TABLE OurType_to_Type ADD COLUMN landing INTEGER DEFAULT 0;
 
-####################################################################################
 sub all_our {
   my $self = shift;
 
@@ -26,12 +25,12 @@ sub all_our {
   $self->stash(otypes => \@types);
   $self->render(template => 'types/types');
 }
-####################################################################################
+
 sub add_type {
   my $self = shift;
   $self->render(template => 'types/add');
 }
-####################################################################################
+
 sub post_add_type {
   my $self     = shift;
   my $new_type = $self->param('new_type');
@@ -41,7 +40,7 @@ sub post_add_type {
 
   $self->redirect_to($self->url_for('all_types'));
 }
-####################################################################################
+
 sub manage {
   my $self      = shift;
   my $type_name = $self->param('name');
@@ -67,7 +66,6 @@ sub manage {
   $self->render(template => 'types/manage_types');
 }
 
-####################################################################################
 sub toggle_landing {
   my $self      = shift;
   my $type_name = $self->param('name');
@@ -84,7 +82,7 @@ sub toggle_landing {
 
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub post_store_description {
   my $self        = shift;
   my $type_name   = $self->param('our_type');
@@ -98,7 +96,7 @@ sub post_store_description {
   }
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub delete_type {
   my $self      = shift;
   my $type_name = $self->param('name');
@@ -122,7 +120,7 @@ sub delete_type {
   }
   $self->redirect_to($self->get_referrer);
 }
-####################################################################################
+
 sub map_types {
   my $self   = shift;
   my $o_type = $self->param('our_type');
@@ -163,7 +161,6 @@ sub map_types {
   $self->redirect_to($self->get_referrer);
 }
 
-####################################################################################
 sub unmap_types {
   my $self   = shift;
   my $o_type = $self->param('our_type');
@@ -203,5 +200,5 @@ sub unmap_types {
   $self->redirect_to($self->get_referrer);
 
 }
-####################################################################################
+
 1;

@@ -24,7 +24,6 @@ $t_logged_in->ua->inactivity_timeout(3600);
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
 
-####################################################################
 subtest 'Checking pages for single publication' => sub {
 
   # local $TODO = "Testing gets for single publications";

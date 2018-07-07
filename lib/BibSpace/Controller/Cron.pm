@@ -26,7 +26,6 @@ use Mojo::Base 'Mojolicious::Controller';
 # 5 2 * * 0 curl http://146.185.144.116:8080/cron/week
 # 10 2 1 * * curl http://146.185.144.116:8080/cron/month
 
-##########################################################################################
 sub index {
   my $self = shift;
 
@@ -34,7 +33,6 @@ sub index {
   my $json_text
     = JSON->new->allow_blessed(1)->convert_blessed(1)->utf8(1)->pretty(1)
     ->encode($self->app->preferences);
-  say $json_text;
 
   $self->stash(
     lr_0 => $self->get_last_cron_run(0),
@@ -44,7 +42,7 @@ sub index {
   );
   $self->render(template => 'display/cron');
 }
-##########################################################################################
+
 sub cron {
   my $self        = shift;
   my $level_param = $self->param('level');    # or shift;
@@ -71,7 +69,7 @@ sub cron {
   }
 
 }
-##########################################################################################
+
 sub cron_level {
   my $self  = shift;
   my $level = shift;
@@ -103,12 +101,12 @@ sub cron_level {
   # place to debug
   return $message_string;
 }
-##########################################################################################
+
 sub calc_hours {
   my $duration = shift;
   return $duration->years * 365 * 24 + $duration->days * 24 + $duration->hours;
 }
-##########################################################################################
+
 sub cron_run {
   my $self      = shift;
   my $level     = shift;
@@ -163,14 +161,14 @@ sub cron_run {
 
   return $text_to_render;
 }
-##########################################################################################
+
 sub do_cron_day {
   my $self = shift;
 
   my $backup1 = do_storable_backup($self->app, "cron");
 
 }
-##########################################################################################
+
 sub do_cron_night {
   my $self = shift;
 
@@ -180,7 +178,7 @@ sub do_cron_night {
     $e->regenerate_html(0, $self->app->bst, $self->app->bibtexConverter);
   }
 }
-##########################################################################################
+
 sub do_cron_week {
   my $self = shift;
 
@@ -188,16 +186,12 @@ sub do_cron_week {
   my $num_deleted = delete_old_backups($self->app);
 
 }
-##########################################################################################
+
 sub do_cron_month {
   my $self = shift;
 
 }
-##########################################################################################
-##########################################################################################
-##########################################################################################
-##########################################################################################
-##########################################################################################
+
 sub log_cron_usage {
   my $self  = shift;
   my $level = shift;
@@ -210,7 +204,7 @@ sub log_cron_usage {
 
   $self->app->preferences->cron_set($level, $fomatted_now);
 }
-##########################################################################################
+
 sub get_last_cron_run {
   my $self  = shift;
   my $level = shift;
@@ -238,7 +232,7 @@ sub get_last_cron_run {
   my $diff = $now->subtract_datetime($last_call);
   return $diff;
 }
-##########################################################################################
+
 # sub get_last_cron_run_in_hours {
 #     my $self   = shift;
 #     my $level = shift;
@@ -262,5 +256,4 @@ sub get_last_cron_run {
 #     return $hours;
 # }
 
-##########################################################################################
 1;

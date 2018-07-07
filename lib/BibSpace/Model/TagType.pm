@@ -2,20 +2,24 @@ package TagType;
 
 use Data::Dumper;
 use utf8;
-use Text::BibTeX;    # parsing bib files
+use Text::BibTeX;
 use v5.16;
-
 use Moose;
 use BibSpace::Model::IEntity;
 with 'IEntity';
+use BibSpace::Model::SerializableBase::TagTypeSerializableBase;
+extends 'TagTypeSerializableBase';
 
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return TagTypeSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
+}
 
 has 'name'    => (is => 'rw', isa => 'Str');
 has 'comment' => (is => 'rw', isa => 'Maybe[Str]');
 
-####################################################################################
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -25,7 +29,7 @@ sub equals {
   return 1 if $self->name eq $obj->name;
   return;
 }
-####################################################################################
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

@@ -24,8 +24,6 @@ my $token = generate_token();
 ok(defined $token);
 is(length($token), 32);
 
-########################################################
-
 subtest 'Requesting password reset' => sub {
 
   note "============ FORGOT GEN 1 ============";
@@ -55,8 +53,6 @@ subtest 'Requesting password reset' => sub {
 };
 
 note "============ SET NEW PW ============";
-
-########################################################
 
 subtest 'Setting new password' => sub {
 
@@ -99,13 +95,11 @@ subtest 'Setting new password' => sub {
     "Trying invalid token");
 };
 
-########################################################
 note "============ Registration anyone ============";
 
 $t_anyone->get_ok("/noregister")->status_is(200)
   ->content_like(qr/Registration is disabled/i);
 
-####################################################################
 subtest 'User management: public registration' => sub {
   if ($t_anyone->app->config->{registration_enabled} == 1) {
 

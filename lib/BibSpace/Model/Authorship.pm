@@ -11,8 +11,16 @@ use Try::Tiny;
 use Moose;
 with 'IRelation';
 
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+use BibSpace::Model::SerializableBase::AuthorshipSerializableBase;
+extends 'AuthorshipSerializableBase';
+
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return AuthorshipSerializableBase->meta->rebless_instance_back($copy)
+    ->TO_JSON;
+}
 
 # the fileds below are used for linking process
 has 'entry_id'  => (is => 'ro', isa => 'Int');
@@ -28,14 +36,13 @@ has 'author' => (
   traits => ['DoNotSerialize']    # due to cycyles
 );
 
-####################################################################################
 sub id {
   my $self = shift;
   return "(" . $self->entry_id . "-" . $self->author->id . ")"
     if defined $self->author;
   return "(" . $self->entry_id . "-" . $self->author_id . ")";
 }
-####################################################################################
+
 sub validate {
   my $self = shift;
   if (defined $self->author and defined $self->entry) {
@@ -56,16 +63,7 @@ sub validate {
   }
   return 1;
 }
-####################################################################################
-sub toString {
-  my $self = shift;
-  my $str  = $self->freeze;
-  $str .= "\n";
-  $str .= "\n\t (ENTRY): " . $self->entry->id if defined $self->entry;
-  $str .= "\n\t (AUTHOR): " . $self->author->id if defined $self->author;
-  $str;
-}
-####################################################################################
+
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -76,7 +74,7 @@ sub equals {
   }
   return $self->equals_id($obj);
 }
-####################################################################################
+
 sub equals_id {
   my $self = shift;
   my $obj  = shift;
@@ -85,7 +83,7 @@ sub equals_id {
   return if $self->author_id != $obj->author_id;
   return 1;
 }
-####################################################################################
+
 sub equals_obj {
   my $self = shift;
   my $obj  = shift;
@@ -94,7 +92,7 @@ sub equals_obj {
   return if !$self->author->equals($obj->author);
   return 1;
 }
-####################################################################################
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

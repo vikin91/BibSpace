@@ -23,8 +23,7 @@ foreach my $exception (@all_exceptions) {
 
   note "============ Testing Exception ID " . $exception->id . ".";
 
-  ok($exception->id,       "id");
-  ok($exception->toString, "toString");
+  ok($exception->id, "id");
 
   # lives_ok( sub { $exception->validate }, 'validate expecting to live' );
   lives_ok(sub { $exception->equals($exception) }, 'equals expecting to live');

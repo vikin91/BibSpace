@@ -6,7 +6,6 @@ use DateTime;
 use File::Basename;
 use File::Path qw/make_path/;
 
-###################################
 package main;
 
 my $header = "# This code was auto-generated using ArchitectureGenerator.pl on "
@@ -288,9 +287,7 @@ CUT
   }
 }
 
-#####################################################################################
 ############################# REPOSITORY ############################################
-#####################################################################################
 
 ################# ABSTRACT REPOSITORY FACTORY
 {

@@ -69,7 +69,6 @@ $admin_user->get_ok($page, "Get for page $page")
   ->status_isnt(404, "Checking: 404 $page")
   ->status_isnt(500, "Checking: 500 $page");
 
-####################################################################
 subtest 'edit_publication_post' => sub {
 
   my @entries = $admin_user->app->repo->entries_all;
@@ -222,7 +221,6 @@ $admin_user->get_ok($page, "Get for page $page")
   ->status_is(404, "Checking: 404 $page")
   ;    # this should give 404, the attachment has been removed
 
-####################################################################
 subtest 'add_publication_post' => sub {
 
   my $random_string = random_string(16);
@@ -350,7 +348,6 @@ my @pages = (
   $self->url_for('delete_publication_sure', id => $entry->id),
 );
 
-####################################################################
 # subtest 'loop over pages' => sub {
 for my $page (@pages) {
   note "============ Testing page $page ============";
