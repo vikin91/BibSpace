@@ -164,9 +164,7 @@ sub cron_run {
 
 sub do_cron_day {
   my $self = shift;
-
-  my $backup1 = do_storable_backup($self->app, "cron");
-
+  do_json_backup($self->app, "cron");
 }
 
 sub do_cron_night {

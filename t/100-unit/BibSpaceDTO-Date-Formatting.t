@@ -66,11 +66,9 @@ subtest 'DTO restore Entry from JSON and non-standard date-time format' => sub {
   "Json string should be blessable into BibSpaceDTO class";
 
   # Creates DTO. Requires repo only for uid provider and preferences
-  $decodedDTO = $bibspaceDTOObject->toLayeredRepo(
-    $singleEntryJSON_non_standard_date_time,
-    $self->repo->lr->uidProvider,
-    $self->repo->lr->preferences
-  );
+  $decodedDTO
+    = $bibspaceDTOObject->toLayeredRepo($singleEntryJSON_non_standard_date_time,
+    $self->repo);
   isa_ok($decodedDTO, 'BibSpaceDTO',
     "Decoded class should be BibSpaceDTO, but is " . ref $decodedDTO);
   is(

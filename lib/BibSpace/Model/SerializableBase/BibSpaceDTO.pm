@@ -62,18 +62,18 @@ sub fromLayeredRepo {
 # Resulting DTO will hold rich objects (not SerializableBase) and thus
 # requires additionall data from the repository
 sub toLayeredRepo {
-  my $self            = shift;
-  my $jsonString      = shift;
-  my $repoUidProvider = shift
-    // die "Need to provide UID provider of destination repository";
-  my $repoPreferences = shift
-    // die "Need to provide Preferences of destination repository";
+  my $self       = shift;
+  my $jsonString = shift;
+  my $repoFacade = shift
+    // die "Need to provide repoFacade of destination repository";
+  my $repoUidProvider = $repoFacade->lr->uidProvider;
+  my $repoPreferences = $repoFacade->lr->preferences;
 
   # This parses a shallow BibSpaceDTO
   my $parsedDTO = bless(JSON->new->decode($jsonString), 'BibSpaceDTO');
 
   # Each array (type => array) holds hashes
-  # Hases need to be blessed to become objects
+  # Hashes need to be blessed to become objects
   # Json gives <ObjType>SerializableBase
   # Here, we bless into <ObjType>
   # This will hold rich objects constructed from data from shallow object
@@ -106,8 +106,15 @@ sub toLayeredRepo {
 
       # BlessedObj has only SerializableBase
       # Call normal constructor to create rich object
-      my $mooseObj = $self->_hashToMooseObject($className, $objHash,
-        {idProvider => $idProvider, preferences => $repoPreferences});
+      my $mooseObj = $self->_hashToMooseObject(
+        $className,
+        $objHash,
+        {
+          idProvider  => $idProvider,
+          preferences => $repoPreferences,
+          repo        => $repoFacade
+        }
+      );
       push @{$dto->get($className)}, $mooseObj;
     }
   }

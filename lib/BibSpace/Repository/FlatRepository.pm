@@ -17,6 +17,8 @@ use BibSpace::Util::EntityFactory;
 has 'logger'            => (is => 'ro', does => 'ILogger',     required => 1);
 has 'preferences'       => (is => 'ro', isa  => 'Preferences', required => 1);
 has 'id_provider_class' => (is => 'ro', isa  => 'Str',         required => 1);
+has 'facade' =>
+  (is => 'rw', isa => 'Maybe[FlatRepositoryFacade]', default => undef);
 
 sub BUILD {
   my $self = shift;
@@ -35,6 +37,14 @@ sub BUILD {
   );
   $self->e_factory($e_factory);
   $self->layer->e_factory($e_factory);
+}
+
+sub set_facade {
+  my $self   = shift;
+  my $facade = shift;
+  $self->facade($facade);
+  $self->e_factory->facade($facade);
+  $self->layer->e_factory->facade($facade);
 }
 
 # will be set in the post-construction routine BUILD
@@ -163,7 +173,7 @@ sub replace_e_factory {
 
 =item reset_uid_providers
     Resets main id provider (loacted in $self->uidProvider) state.
-    This id provider is referenced by all layers! 
+    This id provider is referenced by all layers!
     You reset here, and all id_provider references in the layers will be reset as well.
 =cut
 

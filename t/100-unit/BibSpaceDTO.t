@@ -68,11 +68,7 @@ subtest 'DTO  restore from JSON' => sub {
   }
   "Json string should be blessable into BibSpaceDTO class";
 
-  $decodedDTO = $bibspaceDTOObject->toLayeredRepo(
-    $jsonString,
-    $self->repo->lr->uidProvider,
-    $self->repo->lr->preferences
-  );
+  $decodedDTO = $bibspaceDTOObject->toLayeredRepo($jsonString, $self->repo);
   isa_ok($decodedDTO, 'BibSpaceDTO',
     "Decoded class should be BibSpaceDTO, but is " . ref $decodedDTO);
   is(
@@ -179,11 +175,8 @@ subtest 'DTO restore Entry from JSON and check blessing to DateTime' => sub {
   "Json string should be blessable into BibSpaceDTO class";
 
   # Creates DTO. Requires repo only for uid provider and preferences
-  $decodedDTO = $bibspaceDTOObject->toLayeredRepo(
-    $singleEntryJSON,
-    $self->repo->lr->uidProvider,
-    $self->repo->lr->preferences
-  );
+  $decodedDTO
+    = $bibspaceDTOObject->toLayeredRepo($singleEntryJSON, $self->repo);
   isa_ok($decodedDTO, 'BibSpaceDTO',
     "Decoded class should be BibSpaceDTO, but is " . ref $decodedDTO);
   is(

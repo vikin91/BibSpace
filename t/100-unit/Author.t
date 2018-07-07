@@ -20,13 +20,18 @@ my @all_authors = $repo->authors_all;
 
 my $limit_test_objects = 30;
 
-my $other_author = $self->app->entityFactory->new_Author(uid => "Henry");
+my $other_author
+  = $self->app->entityFactory->new_Author(uid => "Henry");
+ok($self->app->repo->lr->facade, "Repository layer has facade set");
 
 subtest 'Author constructor' => sub {
 
+  ok($other_author->id >= 1,  "id should be >= 1 but is " . $other_author->id);
+  ok($other_author->master_id >= 1,  "master_id should be >= 1");
   is($other_author->master,    $other_author->uid, "master name same as uid");
   is($other_author->master_id, $other_author->id,  "master_id name same as id");
-  is($other_author->masterObj, undef,              "masterObj empty");
+  isnt($other_author->get_master, undef, "masterObj should never be empty");
+  is($other_author->get_master, $other_author, "get_master should return self");
 };
 
 subtest 'Alone author functions' => sub {
@@ -42,13 +47,14 @@ foreach my $author (@all_authors) {
 
   ok($author,             "author defined");
   ok($author->get_master, "author->get_master defined");
+  is($author->get_master, $author, "get_master should return self");
 
   $author->set_master($other_author);
   isnt($author->is_master, 1, "isnt master");
-  is($author->is_minion,                   1, "is minion");
+  is($author->get_master, $other_author, "get_master should return master, self is " . $author->id . " master should be " . $other_author->id . " but is " . $author->get_master->id);
+  is($author->is_minion,  1,             "is minion");
   is($author->is_minion_of($other_author), 1, "is_minion_of");
   isnt($author->is_minion_of($author), 1, "isnt_minion_of");
-  is($author->get_master, $other_author, "get_master");
 
   is($author->update_master_name("John"), 1, "update master name");
   isnt($author->master, "John");

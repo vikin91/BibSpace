@@ -7,6 +7,12 @@ use Try::Tiny;
 
 has 'lr' => (is => 'ro', isa => 'FlatRepository', required => 1);
 
+# Inject facade into layer
+sub BUILD {
+  my $self = shift;
+  $self->lr->set_facade($self);
+}
+
 # static methods
 class_has 'entities' => (
   is      => 'ro',

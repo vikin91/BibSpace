@@ -73,15 +73,7 @@ sub save_json {
 
 sub save_storable {
   my $self = shift;
-
-  my $backup = do_storable_backup($self->app);
-
-  if ($backup->is_healthy) {
-    $self->flash(msg_type => 'success', msg => "Backup created successfully");
-  }
-  else {
-    $self->flash(msg_type => 'danger', msg => "Backup create failed!");
-  }
+  $self->flash(msg_type => 'danger', msg => "Backup type no longer supported!");
   $self->redirect_to('backup_index');
 }
 
@@ -193,10 +185,7 @@ sub restore_backup {
   my $msg      = '';
 
   if ($backup and $backup->is_healthy) {
-    if ($backup->type eq 'storable') {
-      return $self->controller_restore_storable_backup($backup);
-    }
-    elsif ($backup->type eq 'json') {
+    if ($backup->type eq 'json') {
       return $self->controller_restore_json_backup($backup);
     }
     else {
@@ -248,29 +237,10 @@ sub controller_restore_storable_backup {
   my $self   = shift;
   my $backup = shift;
 
-  if ($backup and $backup->is_healthy) {
-
-    restore_storable_backup($backup, $self->app);
-
-    $self->app->logger->info("Restoring storable backup " . $backup->uuid);
-
-    my $status
-      = "Status: <pre style=\"font-family:monospace;\">"
-      . $self->app->repo->lr->get_summary_table
-      . "</pre>";
-
-    $self->flash(
-      msg_type => 'success',
-      msg =>
-        "Backup restored successfully. Database recreated, persistence layers in sync. $status"
-    );
-  }
-  else {
-    $self->flash(
-      msg_type => 'danger',
-      msg      => "Cannot restore - backup not healthy!"
-    );
-  }
+  $self->flash(
+    msg_type => 'danger',
+    msg      => "Backup of type 'storable' is no longer supported. Please use JSON backup."
+  );
   $self->redirect_to('backup_index');
   return;
 }

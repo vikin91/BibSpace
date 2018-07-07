@@ -11,9 +11,9 @@ use Try::Tiny;
 use Data::Dumper;
 
 use BibSpace::Functions::MySqlBackupFunctions;
+use BibSpace::Functions::BackupFunctions qw/restore_json_backup/;
 use BibSpace::Functions::Core;
 use BibSpace::Model::Backup;
-use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
 use BibSpace::Functions::FDB;
 
 use Mojo::Base 'Mojolicious::Controller';
@@ -44,7 +44,7 @@ sub persistence_status_ajax {
 sub load_fixture {
   my $self = shift;
 
-  my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.dat');
+  my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.json');
   $self->app->logger->info("Loading fixture from: " . $fixture_file->to_string);
 
   my $fixture = Backup->new(
@@ -52,7 +52,7 @@ sub load_fixture {
     filename => '' . $fixture_file->basename
   );
 
-  restore_storable_backup($fixture, $self->app);
+  restore_json_backup($fixture, $self->app);
 
   my $status
     = "Status: <pre style=\"font-family:monospace;\">"
@@ -70,20 +70,19 @@ sub save_fixture {
 
   $self->app->logger->warn("PERSISTENCE CONTROLLER does: save_fixture");
 
-  my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.dat');
+  my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.json');
 
-  my $backup = Backup->create('dummy', "storable");
+  my $backup = Backup->create('dummy', "json");
   $backup->dir('' . $fixture_file->dirname);
   $backup->filename('' . $fixture_file->basename);
 
   my $layer = $self->app->repo->lr->get_read_layer;
   my $path  = "" . $backup->get_path;
 
-  $Storable::forgive_me = "do store regexp please, we will not use them anyway";
-
-# if you see any exceptions being thrown here, this might be due to REGEXP caused by DateTime pattern.
-# this should not happen currently however - I think it is fixed now.
-  Storable::store $layer, $path;
+  # Doing backup
+  my $dtoObject  = BibSpaceDTO->fromLayeredRepo($self->app->repo);
+  my $jsonString = $dtoObject->toJSON;
+  Path::Tiny::path($backup->get_path)->spew($jsonString);
 
   my $status
     = "Status: <pre style=\"font-family:monospace;\">"

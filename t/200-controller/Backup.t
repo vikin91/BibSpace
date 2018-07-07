@@ -39,8 +39,8 @@ subtest 'backup_do_mysql' => sub {
     ->status_isnt(500, "Checking: 500 $page");
 };
 
-my $backup = do_storable_backup($self->app);
-ok($backup, "found a backup");
+my $backup = do_json_backup($self->app);
+ok($backup, "just made backup should be found");
 $backup_id = $backup->id;
 
 subtest 'backup_do_mysql' => sub {

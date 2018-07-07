@@ -53,9 +53,6 @@ sub Freassign_authors_to_entries_given_by_array {
       }
       if ($create_new == 1 or defined $author) {
 
-        warn "Author->id " . $author->id;
-        warn "Master id " . $author->get_master->id;
-
         my $authorship = Authorship->new(
           author    => $author->get_master,
           entry     => $entry,

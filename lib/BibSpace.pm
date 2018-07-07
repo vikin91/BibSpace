@@ -121,7 +121,7 @@ has get_log_dir => sub {
 # };
 
 has version => sub {
-  return $BibSpace::VERSION // "0.5.0";
+  return $BibSpace::VERSION // "0.6.0";
 };
 
 has quick_load_fixture_filename => sub {
@@ -172,7 +172,6 @@ has flatRepository => sub {
 has repo => sub {
   my $self = shift;
   return FlatRepositoryFacade->new(lr => $self->flatRepository);
-
 };
 
 sub startup {
@@ -548,8 +547,8 @@ sub setup_routes {
   $manager_user->get('/teams/edit/<:id>')->to('teams#edit')->name('edit_team');
   $manager_user->get('/teams/delete/<:id>')->to('teams#delete_team')
     ->name('delete_team');
-  $manager_user->get('/teams/delete/<:id>/force')->to('teams#delete_team_force')
-    ->name('delete_team_force');
+  $manager_user->get('/teams/delete/<:id>/force')
+    ->to('teams#delete_team_force')->name('delete_team_force');
   $logged_user->get('/teams/unrealted_papers/<:teamid>')
     ->to('publications#show_unrelated_to_team')
     ->name('unrelated_papers_for_team');

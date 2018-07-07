@@ -606,16 +606,16 @@ sub fix_masters {
   my @all_authors = $self->app->repo->authors_all;
 
   my @broken_authors_0
-    = grep { ($_->is_minion) and (!defined $_->masterObj) } @all_authors;
+    = grep { ($_->is_minion) and (!defined $_->get_master) } @all_authors;
 
   # masterObj not set although it should be
   my @broken_authors_1
-    = grep { (!defined $_->masterObj) and ($_->master_id != $_->id) }
+    = grep { (!defined $_->get_master) and ($_->master_id != $_->id) }
     @all_authors;
 
   # masterObj set incorrectly
   my @broken_authors_2
-    = grep { $_->masterObj and $_->master_id != $_->masterObj->id }
+    = grep { $_->get_master and $_->master_id != $_->get_master->id }
     @all_authors;
 
   my $num_fixes_0 = @broken_authors_0;
@@ -624,7 +624,7 @@ sub fix_masters {
 
   my $msg_type
     = ($num_fixes_0 + $num_fixes_1 + $num_fixes_2) == 0 ? 'success' : 'danger';
-  my $msg = "Analysis is finished. Authors broken: 
+  my $msg = "Analysis is finished. Authors broken:
   <ul>
     <li>"
     . scalar(@broken_authors_0)
@@ -642,14 +642,14 @@ sub fix_masters {
     my $master
       = $self->app->repo->authors_find(sub { $_->id == $author->master_id });
     if (defined $master) {
-      $author->masterObj($master);
+      $author->set_master($master);
       ++$num_fixes_0;
       ++$num_fixes_1;
       ++$num_fixes_2;
     }
   }
   $msg
-    .= "</br>Fixing is finished. Masters were re-added to the authors. Fixed: 
+    .= "</br>Fixing is finished. Masters were re-added to the authors. Fixed:
   <ul>
     <li>$num_fixes_0 of type 0 (is minion but master undefined)</li>
     <li>$num_fixes_1 of type 1 (masterObj not set although it should)</li>

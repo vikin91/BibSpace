@@ -17,12 +17,15 @@ has 'logger' => (is => 'ro', does => 'ILogger', required => 1);
 # this may be rewritten during backup restore = must be rw (or writable in another way)
 has 'id_provider' => (is => 'rw', isa => 'SmartUidProvider', required => 1);
 has 'preferences' => (is => 'ro', isa => 'Preferences',      required => 1);
+has 'facade' =>
+  (is => 'rw', isa => 'Maybe[FlatRepositoryFacade]', default => undef);
 
 sub new_Entry {
   my ($self, %args) = @_;
   return Entry->new(
     idProvider  => $self->id_provider->get_provider('Entry'),
     preferences => $self->preferences,
+    repo        => $self->facade,
     %args
   );
 }
@@ -32,6 +35,7 @@ sub new_TagType {
   return TagType->new(
     idProvider  => $self->id_provider->get_provider('TagType'),
     preferences => $self->preferences,
+    repo        => $self->facade,
     %args
   );
 }
@@ -41,6 +45,7 @@ sub new_Team {
   return Team->new(
     idProvider  => $self->id_provider->get_provider('Team'),
     preferences => $self->preferences,
+    repo        => $self->facade,
     %args
   );
 }
@@ -50,6 +55,7 @@ sub new_Author {
   return Author->new(
     idProvider  => $self->id_provider->get_provider('Author'),
     preferences => $self->preferences,
+    repo        => $self->facade,
     %args
   );
 }
@@ -59,6 +65,7 @@ sub new_Tag {
   return Tag->new(
     idProvider  => $self->id_provider->get_provider('Tag'),
     preferences => $self->preferences,
+    repo        => $self->facade,
     %args
   );
 }
@@ -68,6 +75,7 @@ sub new_Type {
   return Type->new(
     idProvider  => $self->id_provider->get_provider('Type'),
     preferences => $self->preferences,
+    repo        => $self->facade,
     %args
   );
 }
@@ -77,6 +85,7 @@ sub new_User {
   return User->new(
     idProvider  => $self->id_provider->get_provider('User'),
     preferences => $self->preferences,
+    repo        => $self->facade,
     %args
   );
 }

@@ -21,6 +21,7 @@ requires 'Mojolicious' , '>= 7.22';
 requires 'Mojolicious::Plugin::RenderFile' , '>= 0.0';
 requires 'Moose' , '>= 0.0';
 requires 'MooseX::ClassAttribute' , '>= 0.0';
+requires 'MooseX::Privacy' , '>=0.0';
 requires 'MooseX::Singleton' , '>= 0.0';
 requires 'MooseX::Storage' , '>= 0.0';
 requires 'MooseX::StrictConstructor' , '>= 0.0';

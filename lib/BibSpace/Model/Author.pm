@@ -8,6 +8,7 @@ use List::MoreUtils qw(any uniq);
 use BibSpace::Model::Membership;
 use Moose;
 use MooseX::Storage;
+use MooseX::Privacy;
 with Storage;
 require BibSpace::Model::IEntity;
 require BibSpace::Model::IAuthored;
@@ -23,25 +24,20 @@ sub TO_JSON {
   return AuthorSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
 }
 
-has 'master' => (
-  is            => 'rw',
-  isa           => 'Maybe[Str]',
-  default       => sub { shift->{uid} },
-  traits        => ['DoNotSerialize'],
-  documentation => q{Author master name. Redundant field.}
-);
-
-# has 'master_id' => (
+# has 'master' => (
 #   is            => 'rw',
-#   isa           => 'Maybe[Int]',
-#   documentation => q{Id of author's master object}
+#   isa           => 'Maybe[Str]',
+#   default       => sub { shift->{uid} },
+#   traits        => ['DoNotSerialize'],
+#   documentation => q{Author master name. Redundant field.}
 # );
 
+# A placeholder for master object. This will be lazily populated on first read
 has 'masterObj' => (
   is            => 'rw',
   isa           => 'Maybe[Author]',
   default       => sub {undef},
-  traits        => ['DoNotSerialize'],
+  traits        => [qw/DoNotSerialize/, qw/Private/],
   documentation => q{Author's master author object.}
 );
 
@@ -49,11 +45,8 @@ has 'masterObj' => (
 sub BUILD {
   my $self = shift;
   $self->id;    # trigger lazy execution of idProvider
-  if ((!defined $self->master) or ($self->master eq '')) {
-    $self->master($self->uid);
-  }
-  if ((defined $self->masterObj) and ($self->masterObj == $self)) {
-    $self->masterObj(undef);
+  if (not defined $self->master_id or $self->master_id < 1) {
+    $self->master_id($self->id);
   }
 }
 
@@ -69,35 +62,36 @@ sub equals {
   return $result;
 }
 
-sub master_id {
+sub master {
   my $self = shift;
-  return $self->get_master->id;
+  return $self->get_master->uid;
 }
 
 sub set_master {
-  my $self          = shift;
-  my $master_author = shift;
-
-  $self->masterObj($master_author);
-  $self->master($master_author->uid);
+  my $self   = shift;
+  my $master = shift;
+  $self->masterObj($master);
+  $self->master_id($master->id);
 }
 
 sub get_master {
   my $self = shift;
 
-  # Author either has masterObj = is minion
+  if ( not defined $self->master_id
+    or $self->master_id < 1
+    or $self->master_id == $self->id)
+  {
+    $self->set_master($self);
+    return $self;
+  }
   return $self->masterObj if defined $self->masterObj;
-
-  # or is master itself
-  return $self;
+  my $master = $self->repo->authors_filter(sub { $_->id == $self->master_id });
+  return $master || $self;
 }
 
 sub is_master {
   my $self = shift;
-
-  return 1 if (!$self->masterObj);
-  return 1 if ($self->equals($self->masterObj));
-
+  return 1 if ($self->id == $self->master_id);
   return;
 }
 
@@ -109,10 +103,7 @@ sub is_minion {
 sub is_minion_of {
   my $self   = shift;
   my $master = shift;
-
-  if ($self->masterObj and $self->masterObj->equals($master)) {
-    return 1;
-  }
+  return 1 if $self->master_id == $master->id;
   return;
 }
 
@@ -134,8 +125,7 @@ sub update_master_name {
 sub remove_master {
   my $self = shift;
 
-  $self->masterObj(undef);
-  $self->master($self->uid);
+  $self->master_id = $self->id;
 }
 
 sub add_minion {
@@ -152,6 +142,8 @@ sub can_merge_authors {
   my $source_author = shift;
 
   if (  (defined $source_author)
+    and (defined $source_author->id)
+    and (defined $self->id)
     and ($source_author->id != $self->id)
     and (!$self->equals($source_author)))
   {

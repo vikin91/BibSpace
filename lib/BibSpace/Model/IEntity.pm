@@ -21,8 +21,10 @@ has 'idProvider' => (
 );
 
 has 'old_mysql_id' => (is => 'ro', isa => 'Maybe[Int]', default => undef);
-has 'id'           => (is => 'rw', isa => 'Maybe[Int]', default => undef,);
+has 'id'           => (is => 'rw', isa => 'Maybe[Int]', default => undef);
 
 requires 'equals';
+
+has 'repo' => (is => 'ro', isa => 'FlatRepositoryFacade', required => 1);
 
 1;
