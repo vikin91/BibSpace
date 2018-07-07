@@ -30,11 +30,22 @@ Your MySQL data is stored in `db_data`, whereas preferences and stats in `json_d
 
 ## Updating
 
+Make sure to backup your data (regular backup + copy all `json` files) before updating.
+
 ### From Version <=0.5.2 to 0.6.x
 
 Update first to version 0.5.3.
 Then backup your data to JSON format and make sure that data can be restored correctly.
 Next, update to version 0.6.0 and restore data from the JSON backup.
+
+### From Version 0.5.0 to >0.5.0
+
+Update normally, then execute the following:
+
+```
+mkdir -p json_data
+mv *.json json_data/
+```
 
 ## TODOs ##
 BibSpace is currently undergoing serious refactoring.
