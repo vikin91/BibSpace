@@ -36,10 +36,6 @@ has 'master' => (
 #   isa           => 'Maybe[Int]',
 #   documentation => q{Id of author's master object}
 # );
-has 'masterObj' => (
-  is      => 'rw',
-  isa     => 'Maybe[Author]',
-  default => sub {undef},
 
 has 'masterObj' => (
   is            => 'rw',
