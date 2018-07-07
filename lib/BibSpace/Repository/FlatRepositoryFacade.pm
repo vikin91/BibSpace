@@ -2,9 +2,44 @@ package FlatRepositoryFacade;
 use namespace::autoclean;
 
 use Moose;
+use MooseX::ClassAttribute;
 use Try::Tiny;
 
 has 'lr' => (is => 'ro', isa => 'FlatRepository', required => 1);
+
+# static methods
+class_has 'entities' => (
+  is      => 'ro',
+  isa     => 'ArrayRef[Str]',
+  default => sub {
+
+    # ORDER IS IMPORTANT!!! TAG MUST BE AFTER TAGTYPE - it references it N:1!
+    ['Author', 'Entry', 'TagType', 'Tag', 'Team', 'Type', 'User'];
+  },
+  traits  => ['Array'],
+  handles => {get_entities => 'elements',},
+);
+
+class_has 'relations' => (
+  is      => 'ro',
+  isa     => 'ArrayRef[Str]',
+  default => sub {
+    ['Authorship', 'Exception', 'Labeling', 'Membership'];
+  },
+  traits  => ['Array'],
+  handles => {get_relations => 'elements',},
+);
+
+class_has 'models' => (
+  is      => 'ro',
+  isa     => 'ArrayRef[Str]',
+  default => sub {
+    return [FlatRepositoryFacade->get_entities,
+      FlatRepositoryFacade->get_relations];
+  },
+  traits  => ['Array'],
+  handles => {get_models => 'elements',},
+);
 
 sub hardReset {
   my $self = shift;
@@ -27,7 +62,7 @@ sub authors_update { my ($self, @params) = @_; return $self->lr->update('Author'
 sub authors_delete { my ($self, @params) = @_; return $self->lr->delete('Author', @params); }
 sub authors_filter { my ($self, @params) = @_; return $self->lr->filter('Author', @params); }
 sub authors_find   { my ($self, @params) = @_; return $self->lr->find('Author', @params);   }
-#>>> 
+#>>>
 
 #<<< no perltidy here
 sub authorships_all    { my ($self, @params) = @_; return $self->lr->all('Authorship', @params);    }
@@ -39,7 +74,7 @@ sub authorships_update { my ($self, @params) = @_; return $self->lr->update('Aut
 sub authorships_delete { my ($self, @params) = @_; return $self->lr->delete('Authorship', @params); }
 sub authorships_filter { my ($self, @params) = @_; return $self->lr->filter('Authorship', @params); }
 sub authorships_find   { my ($self, @params) = @_; return $self->lr->find('Authorship', @params);   }
-#>>> 
+#>>>
 
 #<<< no perltidy here
 sub entries_all    { my ($self, @params) = @_; return $self->lr->all('Entry', @params);    }
@@ -51,7 +86,7 @@ sub entries_update { my ($self, @params) = @_; return $self->lr->update('Entry',
 sub entries_delete { my ($self, @params) = @_; return $self->lr->delete('Entry', @params); }
 sub entries_filter { my ($self, @params) = @_; return $self->lr->filter('Entry', @params); }
 sub entries_find   { my ($self, @params) = @_; return $self->lr->find('Entry', @params);   }
-#>>> 
+#>>>
 
 #<<< no perltidy here
 sub exceptions_all    { my ($self, @params) = @_; return $self->lr->all('Exception', @params);    }
