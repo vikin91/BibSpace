@@ -226,7 +226,8 @@ sub controller_restore_json_backup {
     my $success = restore_json_backup($backup, $self->app);
     if ($success) {
       $msg_type = 'success';
-      $msg      = 'Backup restored succesfully. You may want to run now Settings -> Fix attachment URLs to automatically map attachments to entries.';
+      $msg
+        = 'Backup restored succesfully. You may want to run now Settings -> Fix attachment URLs to automatically map attachments to entries.';
     }
     else {
       $msg_type = 'danger';

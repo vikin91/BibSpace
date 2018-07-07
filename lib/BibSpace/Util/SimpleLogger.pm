@@ -42,7 +42,8 @@ sub log {
     $self->log_file->append($line_file . "\n") if $self->log_file;
   }
   catch {
-    print "Problems writing to log. Error: $_\nNext line contains the log message that coulnd be logged to file.\n";
+    print
+      "Problems writing to log. Error: $_\nNext line contains the log message that coulnd be logged to file.\n";
   };
   print $line_screen;
   print color('reset');

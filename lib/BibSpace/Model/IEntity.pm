@@ -7,6 +7,7 @@ use MooseX::StrictConstructor;
 
 require BibSpace::Model::SerializableBase::IEntitySerializableBase;
 with 'IEntitySerializableBase';
+
 # Responsibility for ID management is moved to the storage backend
 
 has 'preferences' =>
