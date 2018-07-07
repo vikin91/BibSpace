@@ -30,8 +30,6 @@ foreach my $user (@all_users) {
 
   note "============ Testing User ID " . $user->id . ".";
 
-  ok($user->toString, "toString");
-
   if (!$user->equals($me)) {
     ok($user->make_admin,   "make_admin");
     ok($user->make_manager, "make_manager");

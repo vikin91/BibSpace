@@ -1,33 +1,28 @@
 package Membership;
 
-use Data::Dumper;
 use utf8;
 use v5.16;
 use BibSpace::Model::Author;
 use BibSpace::Model::Team;
 use BibSpace::Model::IRelation;
 use Try::Tiny;
-
 use Moose;
 with 'IRelation';
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+use BibSpace::Model::SerializableBase::MembershipSerializableBase;
+extends 'MembershipSerializableBase';
 
-# the fileds below are used for linking process
-has 'team_id'   => (is => 'ro', isa => 'Int');
-has 'author_id' => (is => 'ro', isa => 'Int');
-has 'team'      => (
-  is     => 'rw',
-  isa    => 'Maybe[Team]',
-  traits => ['DoNotSerialize']    # due to cycyles
-);
-has 'author' => (
-  is     => 'rw',
-  isa    => 'Maybe[Author]',
-  traits => ['DoNotSerialize']    # due to cycyles
-);
-has 'start' => (is => 'rw', isa => 'Int', default => 0);
-has 'stop'  => (is => 'rw', isa => 'Int', default => 0);
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return MembershipSerializableBase->meta->rebless_instance_back($copy)
+    ->TO_JSON;
+}
+
+has 'team' => (is => 'rw', isa => 'Maybe[Team]', traits => ['DoNotSerialize']);
+
+has 'author' =>
+  (is => 'rw', isa => 'Maybe[Author]', traits => ['DoNotSerialize']);
 
 sub id {
   my $self = shift;
@@ -55,14 +50,6 @@ sub validate {
     }
   }
   return 1;
-}
-
-sub toString {
-  my $self = shift;
-  my $str  = $self->freeze;
-  $str .= "\n\t (TEAM): " . $self->team->id     if defined $self->team;
-  $str .= "\n\t (AUTHOR): " . $self->author->id if defined $self->author;
-  $str;
 }
 
 sub equals {

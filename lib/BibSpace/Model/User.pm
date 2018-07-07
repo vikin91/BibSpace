@@ -1,23 +1,24 @@
 package User;
 
 use Try::Tiny;
-use Data::Dumper;
 use utf8;
 use v5.16;
 use List::MoreUtils qw(any uniq);
-
 use BibSpace::Functions::Core qw(check_password);
 use BibSpace::Model::IEntity;
-
 use Moose;
-
 use Moose::Util::TypeConstraints;
-
 use MooseX::ClassAttribute;
 with 'IEntity';
+use BibSpace::Model::SerializableBase::UserSerializableBase;
+extends 'UserSerializableBase';
 
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return UserSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
+}
 
 use DateTime::Format::Strptime;
 use DateTime;
@@ -75,16 +76,6 @@ sub get_registration_time {
   my $self = shift;
   $self->registration_time->set_time_zone($self->preferences->local_time_zone)
     ->strftime($self->preferences->output_time_format);
-}
-
-sub toString {
-  my $self = shift;
-  my $str  = "User >> login: ";
-  $str .= sprintf "'%32s',", $self->login;
-  $str .= " rank: '" . $self->rank . "'";
-  $str .= " email: ";
-  $str .= sprintf "'%32s'.", $self->email;
-  return $str;
 }
 
 sub equals {

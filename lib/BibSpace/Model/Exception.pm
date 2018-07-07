@@ -6,17 +6,18 @@ use v5.16;
 use BibSpace::Model::Team;
 use BibSpace::Model::Entry;
 use BibSpace::Model::IRelation;
-
 use Try::Tiny;
-
 use Moose;
 with 'IRelation';
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+use BibSpace::Model::SerializableBase::ExceptionSerializableBase;
+extends 'ExceptionSerializableBase';
 
-# the two fields below are crucial for linking
-has 'entry_id' => (is => 'ro', isa => 'Int');
-has 'team_id'  => (is => 'ro', isa => 'Int');
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return ExceptionSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
+}
 
 has 'entry' => (
   is     => 'rw',
@@ -36,17 +37,8 @@ sub id {
   return "(" . $self->entry_id . "-" . $self->team_id . ")";
 }
 
-sub toString {
-  my $self = shift;
-  my $str  = $self->freeze;
-  $str .= "\n";
-  $str .= "\n\t (ENTRY): " . $self->entry->id if defined $self->entry;
-  $str .= "\n\t (TEAM): " . $self->team->id if defined $self->team;
-  $str;
-}
-
 =item equals
-    In case of any strange problems: this must return 1 or 0! 
+    In case of any strange problems: this must return 1 or 0!
 =cut
 
 sub equals {

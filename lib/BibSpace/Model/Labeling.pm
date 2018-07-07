@@ -1,24 +1,25 @@
 package Labeling;
 
-use Data::Dumper;
 use utf8;
 use v5.16;
 use BibSpace::Model::Entry;
 use BibSpace::Model::Tag;
 use BibSpace::Model::IRelation;
-
 use Try::Tiny;
 
 use Moose;
 with 'IRelation';
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+use BibSpace::Model::SerializableBase::LabelingSerializableBase;
+extends 'LabelingSerializableBase';
 
-# the fileds below are crucial, beacuse static_all has access only to tag/author ids and not to objects
-# MTagMembership->load($dbh) should then fill the objects based on ids
-has 'entry_id' => (is => 'ro', isa => 'Int');
-has 'tag_id'   => (is => 'ro', isa => 'Int');
-has 'entry'    => (
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return LabelingSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
+}
+
+has 'entry' => (
   is     => 'rw',
   isa    => 'Maybe[Entry]',
   traits => ['DoNotSerialize']    # due to cycyles
@@ -55,15 +56,6 @@ sub validate {
     }
   }
   return 1;
-}
-
-sub toString {
-  my $self = shift;
-  my $str  = $self->freeze;
-  $str .= "\n";
-  $str .= "\n\t (ENTRY): " . $self->entry->id if defined $self->entry;
-  $str .= "\n\t (TEAM): " . $self->tag->id if defined $self->tag;
-  $str;
 }
 
 sub equals {

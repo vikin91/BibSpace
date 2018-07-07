@@ -1,13 +1,12 @@
 package ILabeled;
 
 use namespace::autoclean;
-
 use Moose::Role;
 
 has 'labelings' => (
   is      => 'rw',
   isa     => 'ArrayRef[Labeling]',
-  traits  => ['Array'],
+  traits  => ['Array', 'DoNotSerialize'],
   default => sub { [] },
   handles => {
     labelings_all        => 'elements',

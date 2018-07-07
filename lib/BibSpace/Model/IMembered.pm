@@ -1,16 +1,12 @@
 package IMembered;
 
 use namespace::autoclean;
-
 use Moose::Role;
-
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
 
 has 'memberships' => (
   is      => 'rw',
   isa     => 'ArrayRef[Membership]',
-  traits  => ['Array'],
+  traits  => ['Array', 'DoNotSerialize'],
   default => sub { [] },
   handles => {
     memberships_all        => 'elements',

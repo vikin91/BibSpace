@@ -20,8 +20,6 @@ before_install:
 - source ~/travis-perl-helpers/init
 - build-perl
 - perl -V
-- pwd
-- tree
 - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=0
 before_script:
 - mysql --version
@@ -33,8 +31,6 @@ before_script:
 - mojo version
 - coverage-setup
 notifications:
-  # slack:
-  #   secure: hwihdXrKIOilNPyIunNh5yqBwtgwj4SnheF8DlsmQI2TqpcyFWgjvspnvquiV7+OEBb5mFUSZeEUj5cgIgJ3VaBFIbcij0nq3TTHAvSmx+oTboAxUkg62zdPaaFV+iK9BpCNm6eGsjE1Wfp6LXzBHOZetCXJ1IgQ02mOknkW2ysztNhF4G/MMUXvDe5ApgTHshGYvkaD+StHcLt2c6Quy4DUkKeU6Djun6Dyp3foSBibBRsQK9q0yXo5ooYkoVllEaSvu94FpxBjsF+lBQJveM2Wc090EgM1An/Oc/ptMVvMmSE0mmM8RR9vM5dUZwmZHd/kECo1cvGQG1nVJZ9qWnrCeWcnJS7M9FkFucEBjFJTzh1FL3tgYKnXkS04uQLaj84byQr7f+l4l8ExsJPUriQia9829+OeiRblOdB3mEEMgHleMhE0trfre7iz5Beob5sPwTq9z7ywrRVGX8vKeDXPEmwDi+5gdYXRw3QwNP7sWAePOdpZPzUBc5fUYZh8kJB22b8zoF1T81gxME0MQOc4nCgSCETtLWih3R8sngooAXXo9kYM3zb38ijoLpPwlOmE0BR9rvcSz8BBp1bVhWZ4k4ploe5uTtb+Mg31Amj6d5I5z9/KwYJQ6Mcy3y8Ijozm7+FpDLfjz70ZjAYguurmHFZsDQJQp4fJUcOFabc=
   email:
     on_success: always
     on_failure: always

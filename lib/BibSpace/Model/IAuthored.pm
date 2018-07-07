@@ -1,15 +1,13 @@
 package IAuthored;
 
 use namespace::autoclean;
-
 use BibSpace::Functions::Core qw( sort_publications );
-
 use Moose::Role;
 
 has 'authorships' => (
   is      => 'rw',
   isa     => 'ArrayRef[Authorship]',
-  traits  => ['Array'],
+  traits  => ['Array', 'DoNotSerialize'],
   default => sub { [] },
   handles => {
     authorships_all        => 'elements',
