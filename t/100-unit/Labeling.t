@@ -21,8 +21,7 @@ foreach my $labeling (@all_labelings) {
 
   note "============ Testing Labeling ID " . $labeling->id . ".";
 
-  ok($labeling->id,       "id");
-  ok($labeling->toString, "toString");
+  ok($labeling->id, "id");
 
   lives_ok(sub { $labeling->validate },          'validate expecting to live');
   lives_ok(sub { $labeling->equals($labeling) }, 'equals expecting to live');

@@ -4,42 +4,38 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use v5.16;           # because of ~~ and say
-
 use List::MoreUtils qw(any uniq);
 use BibSpace::Model::Membership;
-
 use Moose;
+use MooseX::Storage;
+with Storage;
 require BibSpace::Model::IEntity;
 require BibSpace::Model::IAuthored;
 require BibSpace::Model::IMembered;
 with 'IEntity', 'IAuthored', 'IMembered';
+use BibSpace::Model::SerializableBase::AuthorSerializableBase;
+extends 'AuthorSerializableBase';
 
-use MooseX::Storage;
-with Storage('format' => 'JSON', 'io' => 'File');
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
+  my $self = shift;
+  my $copy = $self->meta->clone_object($self);
+  return AuthorSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
+}
 
-has 'uid' => (is => 'rw', isa => 'Str', documentation => q{Author name});
-has 'display' => (
-  is            => 'rw',
-  default       => 0,
-  documentation => q{If 1, the author will be displayed in menu.}
-);
 has 'master' => (
   is            => 'rw',
   isa           => 'Maybe[Str]',
   default       => sub { shift->{uid} },
+  traits        => ['DoNotSerialize'],
   documentation => q{Author master name. Redundant field.}
 );
-has 'master_id' => (
-  is            => 'rw',
-  isa           => 'Maybe[Int]',
-  documentation => q{Id of author's master object}
-);
-has 'masterObj' => (
-  is      => 'rw',
-  isa     => 'Maybe[Author]',
-  default => sub {undef},
 
-  # traits  => ['DoNotSerialize'],
+has 'masterObj' => (
+  is            => 'rw',
+  isa           => 'Maybe[Author]',
+  default       => sub {undef},
+  traits        => ['DoNotSerialize'],
   documentation => q{Author's master author object.}
 );
 
@@ -56,14 +52,6 @@ sub BUILD {
   if ((defined $self->masterObj) and ($self->masterObj == $self)) {
     $self->masterObj(undef);
   }
-}
-
-sub toString {
-  my $self = shift;
-  my $str  = $self->freeze;
-  $str .= "\n\t (MASTER): " . $self->masterObj->freeze
-    if defined $self->masterObj;
-  return $str;
 }
 
 sub equals {

@@ -1,5 +1,18 @@
 ### Changelog ###
 
+### v0.5.3 07.2018 ###
+
+This version is probably the only one that supports both types of backups: Storable and JSON.
+Use it to migrate your data from 0.5.x to 0.6.x.
+
+* Deprecation: Storable backups are marked as deprecated now. Use JSON backup instead.
+* Feature: Add support for independent JSON backup and restore
+
+* Fix: External link to DateTime formats uses now permalink to CPAN
+* Fix: Show recenlty added/modified works correctly for less than 10 objects in system
+* Fix: Harden tests for less than 10 objects in system
+* Internal: Add SerializableBase to BibSpace Entities
+
 #### v0.5.2 08.2017 ####
 * Code refactoring: perltidy
 * Code refactoring: perlcritic severity 5
@@ -34,10 +47,10 @@
 * Code refactoring - removed small parts of unused code
 * add systemd .service profile
 * add cpanfile stub
-* rebuild edit author page 
-* fix remove user id from author 
-* add function merge authors 
-* add tab-pane with bibtex help for adding publications 
+* rebuild edit author page
+* fix remove user id from author
+* add function merge authors
+* add tab-pane with bibtex help for adding publications
 * minor fixes and improvements # i love to write this :P
 
 

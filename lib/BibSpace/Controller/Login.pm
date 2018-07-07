@@ -481,6 +481,7 @@ sub post_do_register {
   $self->app->logger->info(
     "Received registration data. Login: '$login', email: '$email'.");
 
+  my $failure_reason = '';
   try {
     # this throws on failure
     validate_registration_data($login, $email, $password1, $password2);
@@ -506,18 +507,20 @@ sub post_do_register {
     $self->redirect_to('/');
   }
   catch {
-    my $failure_reason = $_;
+    $failure_reason = $_;
     $self->app->logger->warn($failure_reason);
-    $self->flash(msg_type => 'danger', msg => $failure_reason);
-    $self->stash(
-      name      => $name,
-      email     => $email,
-      login     => $login,
-      password1 => $password1,
-      password2 => $password2
-    );
-    $self->redirect_to('register');
   };
+  $self->flash(msg_type => 'danger', msg => "$failure_reason");
+  $self->stash(
+    name      => $name,
+    email     => $email,
+    login     => $login,
+    password1 => $password1,
+    password2 => $password2
+  );
+
+  $self->redirect_to('register');
+  return;
 }
 
 1;

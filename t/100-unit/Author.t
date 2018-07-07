@@ -41,7 +41,6 @@ foreach my $author (@all_authors) {
   note "============ Testing Author ID " . $author->id . ".";
 
   ok($author,             "author defined");
-  ok($author->toString,   "author->toString defined");
   ok($author->get_master, "author->get_master defined");
 
   $author->set_master($other_author);
@@ -102,7 +101,6 @@ foreach my $author (@all_authors) {
     );
 
     ok($au->validate,        'validate');
-    ok($au->toString,        'toString');
     ok($au->equals($au),     'equals');
     ok($au->equals_id($au),  'equals_id');
     ok($au->equals_obj($au), 'equals_obj');

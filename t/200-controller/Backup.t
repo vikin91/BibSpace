@@ -72,27 +72,23 @@ subtest 'backup_restore' => sub {
   my @backups = read_backups($self->app->get_backups_dir);
   my $backup  = $backups[0];
 
-  $page = $t_logged_in->app->url_for('backup_restore', id => $backup->uuid);
-  $t_logged_in->put_ok($page)->status_isnt(404, "Checking: 404 $page")
-    ->status_isnt(500, "Checking: 500 $page");
   SKIP: {
     skip "Skip if backup is not restorable" if !$backup || $backup->type eq 'mysql';
     $page = $t_logged_in->app->url_for('backup_restore', id => $backup->uuid);
-
     $t_logged_in->put_ok($page)->status_isnt(404, "Checking: 404 $page")
       ->status_isnt(500, "Checking: 500 $page");
   }
 
   # this test sometimes fail without reason. This sleep might help with it
-# ./t/200-controller/Backup.t .................... 8/?
-#     #   Failed test 'Checking: 500 http://127.0.0.1:49271/backups/150102cb-4380-41c4-b94b-9d38d2e232b5'
-#     #   at ./t/200-controller/Backup.t line 84.
-#     #          got: '500'
-#     #     expected: anything else
-#     # Looks like you failed 1 test of 3.
+  # ./t/200-controller/Backup.t .................... 8/?
+  #     #   Failed test 'Checking: 500 http://127.0.0.1:49271/backups/150102cb-4380-41c4-b94b-9d38d2e232b5'
+  #     #   at ./t/200-controller/Backup.t line 84.
+  #     #          got: '500'
+  #     #     expected: anything else
+  #     # Looks like you failed 1 test of 3.
 
-# #   Failed test 'backup_restore'
-# #   at ./t/200-controller/Backup.t line 87.
+  # #   Failed test 'backup_restore'
+  # #   at ./t/200-controller/Backup.t line 87.
 };
 
 subtest 'backup_delete' => sub {

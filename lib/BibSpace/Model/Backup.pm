@@ -40,6 +40,10 @@ sub id {
   shift->uuid;
 }
 
+sub sha {
+  return substr(shift->uuid, 0, 7);
+}
+
 sub get_size {
   my $self = shift;
   my $size = -s $self->get_path;
@@ -101,7 +105,8 @@ sub create {
   my $type = shift // 'storable';
 
   my $ext = '.dat';
-  $ext = '.sql' if $type eq 'mysql';
+  $ext = '.sql'  if $type eq 'mysql';
+  $ext = '.json' if $type eq 'json';
 
   my $uuid = create_uuid_as_string(UUID_V4);
 
@@ -139,6 +144,7 @@ sub parse {
 
   $date =~ s/\.dat//g;
   $date =~ s/\.sql//g;
+  $date =~ s/\.json//g;
 
 # my $now = DateTime->now(formatter => DateTime::Format::Strptime->new( pattern => Backup->date_format_pattern ));
   my $now
@@ -155,11 +161,6 @@ sub parse {
     type     => $type,
     date     => $now_str
   );
-}
-
-sub toString {
-  my $self = shift;
-  return "Backup filename '" . $self->filename . "'";
 }
 
 sub equals {

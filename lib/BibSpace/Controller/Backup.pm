@@ -20,8 +20,6 @@ use BibSpace::Functions::Core;
 use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::BackupFunctions;
 
-# use BibSpace::Functions::FDB;
-
 use BibSpace::Model::Backup;
 use Storable;
 
@@ -55,6 +53,25 @@ sub index {
 }
 
 sub save {
+  my $self = shift;
+  return $self->save_storable;
+}
+
+sub save_json {
+  my $self = shift;
+
+  my $backup = do_json_backup($self->app);
+
+  if ($backup->is_healthy) {
+    $self->flash(msg_type => 'success', msg => "Backup created successfully");
+  }
+  else {
+    $self->flash(msg_type => 'danger', msg => "Backup create failed!");
+  }
+  $self->redirect_to('backup_index');
+}
+
+sub save_storable {
   my $self = shift;
 
   my $backup = do_storable_backup($self->app);
@@ -166,17 +183,75 @@ sub delete_backup {
   $self->redirect_to($self->url_for('backup_index'));
 }
 
+# This is called for all types of backups
 sub restore_backup {
   my $self = shift;
   my $uuid = $self->param('id');
 
-  my $backup = find_backup($uuid, $self->app->get_backups_dir);
+  my $backup   = find_backup($uuid, $self->app->get_backups_dir);
+  my $msg_type = '';
+  my $msg      = '';
+
+  if ($backup and $backup->is_healthy) {
+    if ($backup->type eq 'storable') {
+      return $self->controller_restore_storable_backup($backup);
+    }
+    elsif ($backup->type eq 'json') {
+      return $self->controller_restore_json_backup($backup);
+    }
+    else {
+      $msg_type = 'danger';
+      $msg = 'Unknown backup type: ', $backup->type;
+    }
+
+  }
+  else {
+    $msg_type = 'danger';
+    $msg      = 'Backup not found or unhealthy';
+  }
+  $self->flash(msg_type => $msg_type, msg => $msg,);
+  $self->redirect_to('backup_index');
+  return;
+}
+
+sub controller_restore_json_backup {
+  my $self   = shift;
+  my $backup = shift;
+
+  my $msg_type = 'success';
+  my $msg      = '';
+
+  if ($backup and $backup->is_healthy) {
+    $self->app->logger->info("Restoring JSON backup " . $backup->uuid);
+    my $success = restore_json_backup($backup, $self->app);
+    if ($success) {
+      $msg_type = 'success';
+      $msg      = 'Backup restored succesfully. You may want to run now Settings -> Fix attachment URLs to automatically map attachments to entries.';
+    }
+    else {
+      $msg_type = 'danger';
+      $msg
+        = 'Something went wrong during restoring... system might be in unknown state';
+    }
+  }
+  else {
+    $msg_type = 'warning';
+    $msg      = 'Cannot restore - backup not found or not healthy!';
+  }
+  $self->flash(msg_type => $msg_type, msg => $msg,);
+  $self->redirect_to('backup_index');
+  return;
+}
+
+sub controller_restore_storable_backup {
+  my $self   = shift;
+  my $backup = shift;
 
   if ($backup and $backup->is_healthy) {
 
     restore_storable_backup($backup, $self->app);
 
-    $self->app->logger->info("Restoring backup " . $backup->uuid);
+    $self->app->logger->info("Restoring storable backup " . $backup->uuid);
 
     my $status
       = "Status: <pre style=\"font-family:monospace;\">"
@@ -196,6 +271,7 @@ sub restore_backup {
     );
   }
   $self->redirect_to('backup_index');
+  return;
 }
 
 1;

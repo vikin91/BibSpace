@@ -25,7 +25,6 @@ foreach my $type (@all_types) {
 
   note "============ Testing Type ID " . $type->id . ".";
 
-  ok($type->toString,      "toString");
   ok($type->equals($type), "equals");
 
   if ($type->bibtexTypes_count == 1) {
@@ -36,13 +35,11 @@ foreach my $type (@all_types) {
     if ($type->get_first_bibtex_type eq $type->our_type) {
       ok(!$type->can_be_deleted,
             "allowed deletion of custom 1:1 mapping \n\t"
-          . $type->toString
           . "\t - should not allow to delete");
     }
     else {
       ok($type->can_be_deleted,
             "disalowed deletion of custom 1:1 mapping \n\t"
-          . $type->toString
           . "\t - should allow to delete");
     }
 
@@ -53,9 +50,7 @@ foreach my $type (@all_types) {
     ok($type->get_first_bibtex_type, "get_first_bibtex_type");
     ok(!$type->can_be_deleted,
           "allowed deletion of 1:N mapping \n\t"
-        . $type->toString
         . "\t - should not allow to delete");
-
   }
   else {
     is($type->num_bibtex_types, 0, "num_bibtex_types");

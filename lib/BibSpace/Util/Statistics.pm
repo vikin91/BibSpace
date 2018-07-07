@@ -70,11 +70,6 @@ sub log_url {
   };
 }
 
-sub toString {
-  my $self = shift;
-  return join("\n", $self->toLines);
-}
-
 sub toLines {
   my $self = shift;
   my @lines;
