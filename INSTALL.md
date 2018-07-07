@@ -7,13 +7,13 @@
 cd ~
 sudo aptitude update
 sudo aptitude upgrade
-sudo aptitude install git curl vim cpanminus mysql-server mysql-client libssl-dev bibtex2html libbtparse-dev libdbd-mysql-perl
+sudo aptitude install build-essential make git curl vim cpanminus mysql-server mysql-client libssl-dev bibtex2html libbtparse-dev libdbd-mysql-perl
 
 # get code
 git clone https://github.com/vikin91/BibSpace.git --depth 1
 cd BibSpace
 
-# install prerequisites 
+# install prerequisites
 cpanm -nq --no-interactive --installdeps .
 
 # config mysql
@@ -30,14 +30,14 @@ If all tests are passed then you may finally **start BibSpace**
 
 ```bash
 # provide config
-export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf 
+export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
 # using hypnotoad (currently not recomended for version 0.5.0 due to prefork)
 hypnotoad ./bin/bibspace
 # using built-in server
 bin/bibspace daemon -m production -l http://*:8080
 ```
 
-To **stop BibSpace** 
+To **stop BibSpace**
 ```bash
 hypnotoad -s ./bin/bibspace
 ```
@@ -46,7 +46,7 @@ hypnotoad -s ./bin/bibspace
 you may also run it in **developer mode** to see errors, debug messages etc.
 ```bash
 morbo -l http://*:8080 ./bin/bibspace
-# or 
+# or
 bin/bibspace daemon -m development -l http://*:8080
 ```
 
