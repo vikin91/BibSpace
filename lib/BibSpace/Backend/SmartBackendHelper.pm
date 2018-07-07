@@ -4,15 +4,14 @@ use v5.16;
 use Try::Tiny;
 use namespace::autoclean;
 
-sub linkData{
+sub linkData {
   my $app = shift;
 
   $app->logger->info("Linking Authors (N) to (1) Authors.");
   foreach
     my $author ($app->repo->authors_filter(sub { $_->id != $_->master_id }))
   {
-    my $master
-      = $app->repo->authors_find(sub { $_->id == $author->master_id });
+    my $master = $app->repo->authors_find(sub { $_->id == $author->master_id });
     if ($master and $author) {
       $author->set_master($master);
     }
@@ -32,9 +31,8 @@ sub linkData{
 
   $app->app->logger->info("Linking Tags (N) to (M) Entries.");
   foreach my $labeling ($app->repo->labelings_all) {
-    my $entry
-      = $app->repo->entries_find(sub { $_->id == $labeling->entry_id });
-    my $tag = $app->repo->tags_find(sub { $_->id == $labeling->tag_id });
+    my $entry = $app->repo->entries_find(sub { $_->id == $labeling->entry_id });
+    my $tag   = $app->repo->tags_find(sub    { $_->id == $labeling->tag_id });
     if ($entry and $tag) {
       $labeling->entry($entry);
       $labeling->tag($tag);

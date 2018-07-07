@@ -61,6 +61,7 @@ my @pages = (
   "/publications/missing_month", "/read/publications/meta", "/cron",
   "/cron/day", "/cron/night", "/cron/week", "/cron/month", "/logout",
 );
+
 # Logout must be last!
 
 # Logout must be last!

@@ -304,6 +304,7 @@ sub link_data {
   my $self = shift;
   $self->app->logger->info("Linking data...");
   BibSpace::Backend::SmartBackendHelper::linkData($self->app);
+
   # BackendHelper::linkData($self->app);
   # linkData($self->app);
   $self->app->logger->info("Linking Finished.");
