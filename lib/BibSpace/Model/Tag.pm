@@ -42,7 +42,15 @@ sub get_authors {
 
 sub get_entries {
   my $self = shift;
-  return map { $_->entry } $self->labelings_all;
+  my @entry_ids = map { $_->entry_id }
+    $self->repo->labelings_filter(sub { $_->tag_id == $self->id });
+
+  return $self->repo->entries_filter(
+    sub {
+      my $e = $_;
+      return grep { $_ eq $e->id } @entry_ids;
+    }
+  );
 }
 
 no Moose;

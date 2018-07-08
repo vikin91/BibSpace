@@ -870,8 +870,8 @@ sub show_authors_of_entry {
     return;
   }
 
-  my @authors = map { $_->author } $entry->authorships_all;
-  my @teams = $entry->get_teams;
+  my @authors = $entry->get_authors;
+  my @teams   = $entry->get_teams;
 
   $self->stash(entry => $entry, authors => \@authors, teams => \@teams);
   $self->render(template => 'publications/show_authors');

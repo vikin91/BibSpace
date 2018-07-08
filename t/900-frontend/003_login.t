@@ -10,6 +10,7 @@ my $t_anyone = Test::Mojo->new('BibSpace');
 my $self     = $t_anyone->app;
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
+$self->preferences->run_in_demo_mode(0);
 
 subtest 'login: start page asking to login' => sub {
   $t_anyone->get_ok('/')->status_is(200);

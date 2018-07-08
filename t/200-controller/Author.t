@@ -10,6 +10,10 @@ $admin_user->post_ok(
   form        => {user   => 'pub_admin', pass => 'asdf'}
 );
 
+sub aDump {
+  JSON->new->convert_blessed->utf8->pretty->encode(shift);
+}
+
 my $self       = $admin_user->app;
 my $app_config = $admin_user->app->config;
 $admin_user->ua->max_redirects(3);
@@ -56,13 +60,24 @@ foreach my $a (@visible_authors_helper) {
   ok($a->get_master_id >= 1, "master_id should be >= 1");
   isnt($a->get_master, undef, "MasterObj should never be undef");
 
-  if ($a->is_master) {
-    isnt($a->master, undef);
-    is($a->master, $a->uid);
+  if ($a->is_minion) {
+    note "Testing a minion author";
+    isnt($a->master, undef,
+      "Master object should not be undef. Dump: " . aDump($a));
+    isnt($a->master, $a,
+      "Master object should not be undef. Dump: " . aDump($a));
+    isnt($a->master->name, $a->uid,
+      "Master name should be different of minion name. Dump: " . aDump($a));
+    isnt($a->get_master_id, $a->id,
+      "Master id should be different to minion id. Dump: " . aDump($a));
   }
   else {
-    isnt($a->master, $a->uid);
-    is($a->get_master, $a);
+    note "Testing a master author";
+    is($a->master, $a, "Master object of master should equal to self");
+    is($a->get_master_id, $a->id, "master id should point at own id");
+    is($a->get_master->name, $a->name,
+      "Master name should be equal to own name");
+    is($a->get_master->uid, $a->uid, "Master name should be equal to own name");
   }
 }
 

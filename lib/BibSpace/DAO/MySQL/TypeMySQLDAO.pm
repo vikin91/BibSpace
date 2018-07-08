@@ -100,8 +100,8 @@ sub empty {
   my $sth    = $dbh->prepare("SELECT 1 as num FROM OurType_to_Type LIMIT 1;");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
-  return if $row->{num} > 0;
-  return 1;
+  return 1 if not defined $row;
+  return;
 }
 
 before 'empty' => sub { shift->logger->entering(""); };
@@ -203,20 +203,22 @@ after 'update'  => sub { shift->logger->exiting(""); };
 
 sub delete {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
-  my $qry = "
+  my $dbh    = $self->handle;
+  my $result = 0;
+  my $qry    = "
     DELETE FROM OurType_to_Type WHERE our_type=?;";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
     try {
-      my $result = $sth->execute($obj->our_type);
+      $result = $sth->execute($obj->our_type);
     }
     catch {
+      $result = 0;
       $self->logger->error("Delete exception: $_");
     };
   }
-
-  # $dbh->commit();
+  return 1 if $result > 0;
+  return;
 }
 before 'delete' => sub { shift->logger->entering(""); };
 after 'delete'  => sub { shift->logger->exiting(""); };

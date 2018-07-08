@@ -80,8 +80,8 @@ sub empty {
   my $sth    = $dbh->prepare("SELECT 1 as num FROM Author_to_Team LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
-  return if $row->{num} > 0;
-  return 1;
+  return 1 if not defined $row;
+  return;
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -195,24 +195,27 @@ after 'update'  => sub { shift->logger->exiting(""); };
 
 sub delete {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
-
+  my $dbh    = $self->handle;
+  my $result = 0;
   foreach my $obj (@objects) {
     next if !defined $obj;
     my $qry = "DELETE FROM Author_to_Team WHERE author_id=? AND team_id=?;";
     my $sth = $dbh->prepare($qry);
     try {
       if (defined $obj->author and defined $obj->team) {
-        $sth->execute($obj->author->id, $obj->team->id);
+        $result = $sth->execute($obj->author->id, $obj->team->id);
       }
       else {
-        $sth->execute($obj->author_id, $obj->team_id);
+        $result = $sth->execute($obj->author_id, $obj->team_id);
       }
     }
     catch {
+      $result = 0;
       $self->logger->error("Delete exception: $_");
     };
   }
+  return 1 if $result > 0;
+  return;
 }
 before 'delete' => sub { shift->logger->entering(""); };
 after 'delete'  => sub { shift->logger->exiting(""); };

@@ -115,8 +115,8 @@ sub empty {
   my $sth    = $dbh->prepare("SELECT 1 as num FROM Login LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
-  return if $row->{num} > 0;
-  return 1;
+  return 1 if not defined $row;
+  return;
 }
 
 =item exists
@@ -251,18 +251,21 @@ sub update {
 
 sub delete {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
+  my $dbh    = $self->handle;
+  my $result = 0;
   foreach my $obj (@objects) {
     my $qry = "DELETE FROM Login WHERE id=?;";
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute($obj->id);
+      $result = $sth->execute($obj->id);
     }
     catch {
+      $result = 0;
       $self->logger->error("Delete exception: $_");
     };
   }
-
+  return 1 if $result > 0;
+  return;
 }
 
 =item filter

@@ -24,14 +24,6 @@ sub TO_JSON {
   return AuthorSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
 }
 
-# has 'master' => (
-#   is            => 'rw',
-#   isa           => 'Maybe[Str]',
-#   default       => sub { shift->{uid} },
-#   traits        => ['DoNotSerialize'],
-#   documentation => q{Author master name. Redundant field.}
-# );
-
 # A placeholder for master object. This will be lazily populated on first read
 has 'masterObj' => (
   is            => 'rw',
@@ -45,12 +37,15 @@ has 'masterObj' => (
 sub BUILD {
   my $self = shift;
   $self->name($self->uid);
-  $self->id;    # trigger lazy execution of idProvider
-  if ( not defined $self->get_master_id
-    or $self->get_master_id < 1
-    or not defined $self->master)
-  {
-    $self->set_master($self);
+}
+
+# Entitiy receives ID first on save to DB
+# This can be fixed with generating UUID on object creation and referencing master using uuid as FK
+sub post_insert_hook {
+  my $self = shift;
+  if (defined $self->id and $self->id > 0) {
+    $self->get_master_id;    # sets master_id if unset
+    $self->repo->authors_update($self);
   }
 }
 
@@ -178,15 +173,51 @@ sub can_be_deleted {
   return;
 }
 
+sub has_team {
+  my $self = shift;
+  my $team = shift;
+  return grep { $_->id eq $team->id } $self->get_teams;
+}
+
+sub get_teams {
+  my $self = shift;
+  my @team_ids
+    = map { $_->team_id }
+    $self->repo->memberships_filter(
+    sub { $_->author_id == $self->id or $_->author_id == $self->get_master_id }
+    );
+  return $self->repo->teams_filter(
+    sub {
+      my $t = $_;
+      return grep { $_ eq $t->id } @team_ids;
+    }
+  );
+}
+
+sub get_entries {
+  my $self = shift;
+  my @entry_ids = map { $_->entry_id }
+    $self->repo->authorships_filter(sub { $_->author_id == $self->id });
+  return $self->repo->entries_filter(
+    sub {
+      my $e = $_;
+      return grep { $_ eq $e->id } @entry_ids;
+    }
+  );
+}
+
 sub has_entry {
   my $self  = shift;
   my $entry = shift;
 
-  my $authorship = $self->authorships_find(
-    sub {
-      $_->entry->equals($entry) and $_->author->equals($self);
-    }
+  my $authorship_to_find = Authorship->new(
+    author    => $self,
+    entry     => $entry,
+    author_id => $self->id,
+    entry_id  => $entry->id
   );
+  my $authorship
+    = $self->repo->authorships_find(sub { $_->equals_id($authorship_to_find) });
   return defined $authorship;
 }
 
@@ -204,7 +235,7 @@ sub joined_team {
     author_id => $self->get_master->id,
     team_id   => $team->id
   );
-  my $mem = $self->memberships_find(sub { $_->equals($query_mem) });
+  my $mem = $self->repo->memberships_find(sub { $_->equals($query_mem) });
 
   return -1 if !defined $mem;
   return $mem->start;
@@ -222,7 +253,7 @@ sub left_team {
     author_id => $self->get_master->id,
     team_id   => $team->id
   );
-  my $mem = $self->memberships_find(sub { $_->equals($query_mem) });
+  my $mem = $self->repo->memberships_find(sub { $_->equals($query_mem) });
 
   return -1 if !defined $mem;
   return $mem->stop;
@@ -249,10 +280,12 @@ sub update_membership {
     team_id   => $team->id
   );
   my $mem_master
-    = $self->memberships_find(sub { $_->equals($query_mem_master) });
-  my $mem_minor = $self->memberships_find(sub { $_->equals($query_mem_minor) });
+    = $self->repo->memberships_find(sub { $_->equals($query_mem_master) });
+  my $mem_minor
+    = $self->repo->memberships_find(sub { $_->equals($query_mem_minor) });
 
-  if ($mem_minor != $mem_master) {
+  if (defined $mem_minor and defined $mem_master and $mem_minor != $mem_master)
+  {
     warn "MEMBERSHIP for master differs to membership of minor!";
   }
   my $mem = $mem_master // $mem_minor;
@@ -272,6 +305,7 @@ sub update_membership {
 
   $mem->start($start) if defined $start;
   $mem->stop($stop)   if defined $stop;
+  $self->repo->memberships_update($mem);
   return 1;
 }
 

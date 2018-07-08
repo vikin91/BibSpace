@@ -80,18 +80,11 @@ after 'count'  => sub { shift->logger->exiting(""); };
 sub empty {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $num    = 0;
-  try {
-    my $sth = $dbh->prepare("SELECT 1 as num FROM Team LIMIT 1");
-    $sth->execute();
-    my $row = $sth->fetchrow_hashref();
-    $num = $row->{num};
-  }
-  catch {
-    $self->logger->error("Empty exception: $_");
-  };
-  return if $num > 0;
-  return 1;
+  my $sth    = $dbh->prepare("SELECT 1 as num FROM Team LIMIT 1");
+  $sth->execute();
+  my $row = $sth->fetchrow_hashref();
+  return 1 if not defined $row;
+  return;
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -201,18 +194,21 @@ after 'update'  => sub { shift->logger->exiting(""); };
 
 sub delete {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
+  my $dbh    = $self->handle;
+  my $result = 0;
   foreach my $obj (@objects) {
     my $qry = "DELETE FROM Team WHERE id=?;";
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute($obj->id);
+      $result = $sth->execute($obj->id);
     }
     catch {
+      $result = 0;
       $self->logger->error("Delete exception: $_");
     };
   }
-
+  return 1 if $result > 0;
+  return;
 }
 before 'delete' => sub { shift->logger->entering(""); };
 after 'delete'  => sub { shift->logger->exiting(""); };

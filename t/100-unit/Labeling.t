@@ -23,7 +23,6 @@ foreach my $labeling (@all_labelings) {
 
   ok($labeling->id, "id");
 
-  lives_ok(sub { $labeling->validate },          'validate expecting to live');
   lives_ok(sub { $labeling->equals($labeling) }, 'equals expecting to live');
   lives_ok(sub { $labeling->equals_id($labeling) },
     'equals_id expecting to live');

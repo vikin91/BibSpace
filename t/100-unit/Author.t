@@ -140,11 +140,18 @@ foreach my $author (@all_authors) {
     }
     ok($author->has_entry($entry),   'has_entry');
     ok($author->has_authorship($au), 'has_authorship');
-    is($author->remove_authorship($au), 1, 'remove authorship');
-    ok(!$author->has_authorship($au),    'hasnt authorship');
-    ok(!$author->remove_authorship($au), 'cant remove authorship');
-    ok(!$author->has_authorship($au),    'hasnt authorship');
-    ok(!$author->has_entry($entry),      "hasn't entry");
+    is($author->remove_authorship($au),
+      1, 'Authorship should be removed with result 1');
+    ok(!$author->has_authorship($au),
+      'Author should no longer have authorship');
+    is($author->remove_authorship($au),
+      undef, 'Removal of non-existing authorship removal should return undef');
+    ok(!$author->has_authorship($au), 'hasnt authorship');
+    ok(!$author->has_entry($entry),
+          "Author should not have entry "
+        . aDump($author)
+        . " Entry: "
+        . aDump($entry));
 
   }
 

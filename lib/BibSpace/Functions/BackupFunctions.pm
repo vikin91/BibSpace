@@ -4,7 +4,6 @@ use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Model::Backup;
 use BibSpace::Functions::Core;
 use BibSpace::Functions::FDB;
-use BibSpace::Backend::SmartBackendHelper;
 
 use JSON -convert_blessed_universally;
 use BibSpace::Model::SerializableBase::BibSpaceDTO;
@@ -161,7 +160,6 @@ sub restore_json_backup {
         };
       }
     }
-    BibSpace::Backend::SmartBackendHelper::linkData($app);
   }
   return $success;
 }

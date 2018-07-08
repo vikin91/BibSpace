@@ -46,7 +46,6 @@ sub all {
       master_id    => $row->{master_id}
     );
 
-    # FIXME: Temporary fix. This should be fixed with a join!
     $obj->{masterObj} = undef;
     $obj->id;    # due to lazy filling of this field
 
@@ -86,8 +85,8 @@ sub empty {
   my $sth    = $dbh->prepare("SELECT 1 as num FROM Author LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
-  return if $row->{num} > 0;
-  return 1;
+  return 1 if not defined $row;
+  return;
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -158,10 +157,22 @@ sub _insert {
   my $sth   = $dbh->prepare($qry);
   my $added = 0;
   foreach my $obj (@objects) {
+    my $id        = undef;
+    my $master_id = undef;
+    $id        = $obj->id            if $obj->id > 0;
+    $master_id = $obj->get_master_id if $obj->get_master_id > 0;
     try {
-      $sth->execute($obj->id, $obj->uid, $obj->display, $obj->get_master_id);
-      $obj->id($sth->{mysql_insertid});
-      ++$added;
+      $added += $sth->execute($id, $obj->uid, $obj->display, $master_id);
+      my $inserted_id = $sth->{mysql_insertid};
+      $obj->id($inserted_id);
+      if (not $master_id) {
+
+        # sets master_id if unset
+        $obj->get_master_id;
+
+        # This updates master_id to point to i
+        $obj->repo->authors_update($obj);
+      }
     }
     catch {
       $self->logger->error("Author insert exception: $_");
@@ -169,8 +180,6 @@ sub _insert {
   }
   return $added;
 }
-before '_insert' => sub { shift->logger->entering(""); };
-after '_insert'  => sub { shift->logger->exiting(""); };
 
 =item update
     Method documentation placeholder.
@@ -180,7 +189,7 @@ after '_insert'  => sub { shift->logger->exiting(""); };
 sub update {
   my ($self, @objects) = @_;
   my $dbh     = $self->handle;
-  my $success = 1;
+  my $success = 0;
 
   foreach my $obj (@objects) {
     next if !defined $obj->id;
@@ -194,8 +203,8 @@ sub update {
     my $sth = $dbh->prepare($qry);
     my $result;
     try {
-      $result = $sth->execute($obj->{uid}, $obj->{master_id}, $obj->{display},
-        $obj->{id});
+      $sth->execute($obj->uid, $obj->get_master_id, $obj->display, $obj->id);
+      $success = 1;
     }
     catch {
       $success = 0;
@@ -216,18 +225,21 @@ after 'update'  => sub { shift->logger->exiting(""); };
 
 sub delete {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
+  my $dbh    = $self->handle;
+  my $result = 0;
   foreach my $obj (@objects) {
     my $qry = "DELETE FROM Author WHERE id=?;";
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute($obj->id);
+      $result = $sth->execute($obj->id);
     }
     catch {
+      $result = 0;
       $self->logger->error("Delete exception: $_");
     };
   }
-
+  return 1 if $result > 0;
+  return;
 }
 before 'delete' => sub { shift->logger->entering(""); };
 after 'delete'  => sub { shift->logger->exiting(""); };

@@ -71,8 +71,8 @@ sub empty {
     = $dbh->prepare("SELECT 1 as num FROM Exceptions_Entry_to_Team LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
-  return if $row->{num} > 0;
-  return 1;
+  return 1 if not defined $row;
+  return;
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -164,18 +164,22 @@ after 'update'  => sub { shift->logger->exiting(""); };
 
 sub delete {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
+  my $dbh    = $self->handle;
+  my $result = 0;
   foreach my $obj (@objects) {
     my $qry
       = "DELETE FROM Exceptions_Entry_to_Team WHERE entry_id=? AND team_id=?;";
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute($obj->entry_id, $obj->team_id);
+      $result = $sth->execute($obj->entry_id, $obj->team_id);
     }
     catch {
+      $result = 0;
       $self->logger->error("Delete exception: $_");
     };
   }
+  return 1 if $result > 0;
+  return;
 }
 before 'delete' => sub { shift->logger->entering(""); };
 after 'delete'  => sub { shift->logger->exiting(""); };

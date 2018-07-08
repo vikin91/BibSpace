@@ -37,40 +37,9 @@ sub id {
   return "(" . $self->entry_id . "-" . $self->tag_id . ")";
 }
 
-sub validate {
-  my $self = shift;
-  if (defined $self->entry and defined $self->tag) {
-    if ($self->entry->id != $self->entry_id) {
-      die "Label has been built wrongly entry->id and entry_id differs.\n"
-        . "label->entry->id: "
-        . $self->entry->id
-        . ", label->entry_id: "
-        . $self->entry_id;
-    }
-    if ($self->tag->id != $self->tag_id) {
-      die "Label has been built wrongly tag->id and tag_id differs.\n"
-        . "label->tag->id: "
-        . $self->tag->id
-        . ", label->tag_id: "
-        . $self->tag_id;
-    }
-  }
-  return 1;
-}
-
 sub equals {
   my $self = shift;
   my $obj  = shift;
-
-  die "Comparing apples to peaches! "
-    . ref($self)
-    . " against "
-    . ref($obj) . "."
-    unless ref($self) eq ref($obj);
-
-  if ($self->entry and $self->tag and $obj->entry and $obj->tag) {
-    return $self->equals_obj($obj);
-  }
   return $self->equals_id($obj);
 }
 

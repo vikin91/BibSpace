@@ -36,13 +36,24 @@ sub equals {
 sub can_be_deleted {
   my $self = shift;
 
-  return if $self->memberships_count > 0;
+  return if scalar $self->get_authors > 0;
   return 1;
 }
 
-sub get_members {
+sub get_authors {
   my $self = shift;
-  return map { $_->author } $self->memberships_all;
+  my @author_ids = map { $_->author_id }
+    $self->repo->memberships_filter(sub { $_->team_id == $self->id });
+  return $self->repo->authors_filter(
+    sub {
+      my $a = $_;
+      return grep { $_ eq $a->id } @author_ids;
+    }
+  );
+}
+
+sub get_members {
+  return shift->get_authors;
 }
 
 sub get_membership_beginning {
@@ -63,11 +74,6 @@ sub get_membership_end {
   return $author->left_team($self);
 }
 
-sub get_authors {
-  my $self = shift;
-  return map { $_->author } $self->memberships_all;
-}
-
 sub tags {
   my $self = shift;
   my $type = shift // 1;
@@ -80,6 +86,11 @@ sub tags {
   @myTags = uniq @myTags;
 
   return @myTags;
+}
+
+sub get_exceptions {
+  my $self = shift;
+  return $self->repo->exceptions_filter(sub { $_->team_id == $self->id });
 }
 
 sub get_entries {

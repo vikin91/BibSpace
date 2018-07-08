@@ -287,9 +287,6 @@ sub register {
     num_authors => sub {
       my $self = shift;
       return $self->app->repo->authors_count;
-
-      # return $self->storage->authors_all;
-
     }
   );
 
@@ -328,9 +325,7 @@ sub register {
       my $author = shift;
       my $tag    = shift;
 
-      return
-        scalar $author->authorships_filter(
-        sub { defined $_ and defined $_->entry and $_->entry->has_tag($tag) });
+      return scalar grep { $_->has_tag($tag) } $author->get_entries;
     }
   );
 
@@ -338,7 +333,7 @@ sub register {
     num_pubs_for_tag => sub {
       my $self = shift;
       my $tag  = shift;
-      return $tag->labelings_count // 0;
+      return scalar $tag->get_entries // 0;
     }
   );
 

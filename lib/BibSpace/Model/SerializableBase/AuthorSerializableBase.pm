@@ -26,9 +26,10 @@ has 'master_id' => (
 );
 
 # Read-Only getter for master_id
+# It also initializes master_id field for newly inserted elements
 sub get_master_id {
   my $self = shift;
-  if (not $self->master_id) {
+  if (not $self->master_id or $self->master_id < 0) {
     $self->master_id($self->id);
   }
   return $self->master_id;

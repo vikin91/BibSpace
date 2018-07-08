@@ -295,14 +295,11 @@ sub is_talk {
 sub matches_our_type {
   my $self  = shift;
   my $oType = shift;
-  my $repo  = shift;
-
-  die "This method requires repo, sorry." unless $repo;
 
   # example: ourType = inproceedings
   # mathces bibtex types: inproceedings, incollection
 
-  my $mapping = $repo->types_find(
+  my $mapping = $self->repo->types_find(
     sub {
       ($_->our_type cmp $oType) == 0;
     }
@@ -497,6 +494,75 @@ sub regenerate_html {
   return 0;
 }
 
+sub get_exceptions {
+  my $self = shift;
+  return $self->repo->exceptions_filter(sub { $_->entry_id == $self->id });
+}
+
+sub get_teams {
+  my $self = shift;
+
+  my @exception_team_id = map { $_->team_id } $self->get_exceptions;
+  my @exception_teams = $self->repo->teams_filter(
+    sub {
+      my $t = $_;
+      return grep { $_ eq $t->id } @exception_team_id;
+    }
+  );
+
+  ## Important: this means that entry-teams = teams + exceptions!
+  my %final_teams = map { $_->id => $_ } @exception_teams;
+
+  foreach my $author ($self->get_authors) {
+
+    foreach my $team ($author->get_teams) {
+      my $joined = $author->joined_team($team);
+      my $left   = $author->left_team($team);
+
+      # entry has no year... strange but possible
+      if (!$self->year) {
+        $final_teams{$team->id} = $team;
+      }
+      elsif ($joined <= $self->year and ($left > $self->year or $left == 0)) {
+        $final_teams{$team->id} = $team;
+      }
+    }
+  }
+  return values %final_teams;
+}
+
+sub get_tags {
+  my $self = shift;
+  my @tag_ids = map { $_->tag_id }
+    $self->repo->labelings_filter(sub { $_->entry_id == $self->id });
+  return $self->repo->tags_filter(
+    sub {
+      my $t = $_;
+      return grep { $_ eq $t->id } @tag_ids;
+    }
+  );
+}
+
+sub has_tag {
+  my $self = shift;
+  my $tag  = shift;
+  return
+    defined $self->repo->labelings_find(
+    sub { $_->entry_id == $self->id and $_->tag_id == $tag->id });
+}
+
+sub get_authors {
+  my $self = shift;
+  my @author_ids = map { $_->author_id }
+    $self->repo->authorships_filter(sub { $_->entry_id == $self->id });
+  return $self->repo->authors_filter(
+    sub {
+      my $a = $_;
+      return grep { $_ eq $a->id } @author_ids;
+    }
+  );
+}
+
 sub has_author {
   my $self   = shift;
   my $author = shift;
@@ -507,9 +573,8 @@ sub has_author {
     author_id => $author->id,
     entry_id  => $self->id
   );
-
   my $authorship
-    = $self->authorships_find(sub { $_->equals($authorship_to_find) });
+    = $self->repo->authorships_find(sub { $_->equals($authorship_to_find) });
   return defined $authorship;
 }
 
@@ -546,32 +611,6 @@ sub author_names_from_bibtex {
     push @author_names, BibSpace::Functions::Core::create_user_id($name);
   }
   return @author_names;
-}
-
-sub get_teams {
-  my $self = shift;
-
-  my @exception_teams = map { $_->team } $self->get_exceptions;
-
-  ## Important: this means that entry-teams = teams + exceptions!
-  my %final_teams = map { $_->id => $_ } @exception_teams;
-
-  foreach my $author ($self->get_authors) {
-
-    foreach my $team ($author->get_teams) {
-      my $joined = $author->joined_team($team);
-      my $left   = $author->left_team($team);
-
-      # entry has no year... strange but possible
-      if (!$self->year) {
-        $final_teams{$team->id} = $team;
-      }
-      elsif ($joined <= $self->year and ($left > $self->year or $left == 0)) {
-        $final_teams{$team->id} = $team;
-      }
-    }
-  }
-  return values %final_teams;
 }
 
 sub has_team {
