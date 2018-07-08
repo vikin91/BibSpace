@@ -9,9 +9,10 @@ sub linkData {
 
   $app->logger->info("Linking Authors (N) to (1) Authors.");
   foreach
-    my $author ($app->repo->authors_filter(sub { $_->id != $_->master_id }))
+    my $author ($app->repo->authors_filter(sub { $_->id != $_->get_master_id }))
   {
-    my $master = $app->repo->authors_find(sub { $_->id == $author->master_id });
+    my $master
+      = $app->repo->authors_find(sub { $_->id == $author->get_master_id });
     if ($master and $author) {
       $author->set_master($master);
     }

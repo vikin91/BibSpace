@@ -22,16 +22,15 @@ use Time::HiRes qw( gettimeofday tv_interval );
 =item all
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub all {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $qry    = "SELECT 
+  my $qry    = "SELECT
           id,
           uid,
           display,
-          master,
           master_id
       FROM Author";
   my @objs;
@@ -44,16 +43,9 @@ sub all {
       id           => $row->{id},
       uid          => $row->{uid},
       display      => $row->{display},
-      master       => $row->{master},
       master_id    => $row->{master_id}
     );
 
-    # if( $obj->{master_id} != $obj->{id} ){
-    #     $obj->{masterObj} = MAuthor->static_get($dbh, $obj->{master_id});
-    # }
-    # else{
-    #     $obj->{masterObj} = $obj;
-    # }
     # FIXME: Temporary fix. This should be fixed with a join!
     $obj->{masterObj} = undef;
     $obj->id;    # due to lazy filling of this field
@@ -69,7 +61,7 @@ after 'all'  => sub { shift->logger->exiting(""); };
 =item count
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub count {
   my ($self) = @_;
@@ -86,7 +78,7 @@ after 'count'  => sub { shift->logger->exiting(""); };
 =item empty
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub empty {
   my ($self) = @_;
@@ -103,7 +95,7 @@ after 'empty'  => sub { shift->logger->exiting(""); };
 =item exists
     Method documentation placeholder.
     This method takes single object as argument and returns a scalar.
-=cut 
+=cut
 
 sub exists {
   my ($self, $object) = @_;
@@ -123,7 +115,7 @@ after 'exists'  => sub { shift->logger->exiting(""); };
 =item save
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub save {
   my ($self, @objects) = @_;
@@ -150,7 +142,7 @@ after 'save'  => sub { shift->logger->exiting(""); };
 =item _insert
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub _insert {
   my ($self, @objects) = @_;
@@ -160,7 +152,7 @@ sub _insert {
     id,
     uid,
     display
-    ) 
+    )
     VALUES (?,?,?);";
   my $sth   = $dbh->prepare($qry);
   my $added = 0;
@@ -184,7 +176,7 @@ after '_insert'  => sub { shift->logger->exiting(""); };
 =item update
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub update {
   my ($self, @objects) = @_;
@@ -197,16 +189,14 @@ sub update {
     my $qry = "UPDATE Author SET
                       uid=?,
                       master_id=?,
-                      master=?,
                       display=?";
     $qry .= " WHERE id = ?";
 
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute(
-        $obj->{uid},     $obj->{master_id}, $obj->{master},
-        $obj->{display}, $obj->{id}
-      );
+      my $result
+        = $sth->execute($obj->{uid}, $obj->{master_id}, $obj->{display},
+        $obj->{id});
     }
     catch {
       $self->logger->error("Update exception: $_");
@@ -219,7 +209,7 @@ after 'update'  => sub { shift->logger->exiting(""); };
 =item delete
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub delete {
   my ($self, @objects) = @_;
@@ -241,7 +231,7 @@ after 'delete'  => sub { shift->logger->exiting(""); };
 
 =item filter
     Method documentation placeholder.
-=cut 
+=cut
 
 sub filter {
   my ($self, $coderef) = @_;
@@ -256,7 +246,7 @@ after 'filter'  => sub { shift->logger->exiting(""); };
 
 =item find
     Method documentation placeholder.
-=cut 
+=cut
 
 sub find {
   my ($self, $coderef) = @_;

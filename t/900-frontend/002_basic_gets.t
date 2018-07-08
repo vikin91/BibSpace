@@ -52,8 +52,6 @@ my @pages = (
   $self->url_for('fix_attachment_urls'), $self->url_for('clean_ugly_bibtex'),
   $self->url_for('regenerate_html_for_all'),
 
-  $self->url_for('fix_masters'),
-
   "/profile", "/backups", "/types", "/types/add", "/authors", "/authors/add",
   "/authors/reassign", "/authors/reassign_and_create", "/tagtypes",
   "/tagtypes/add", "/teams", "/teams/add", "/publications",

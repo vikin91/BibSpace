@@ -51,9 +51,9 @@ is(
 );
 
 foreach my $a (@visible_authors_helper) {
-  ok($a,                 "Author should be defined");
-  ok($a->id >= 1,        "Author id should be >= 1");
-  ok($a->master_id >= 1, "master_id should be >= 1");
+  ok($a,                     "Author should be defined");
+  ok($a->id >= 1,            "Author id should be >= 1");
+  ok($a->get_master_id >= 1, "master_id should be >= 1");
   isnt($a->get_master, undef, "MasterObj should never be undef");
 
   if ($a->is_master) {

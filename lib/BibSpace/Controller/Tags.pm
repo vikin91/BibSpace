@@ -191,7 +191,7 @@ sub get_tags_for_author_read {
     my $count = scalar @objs;
 
     my $url = $self->url_for('lyp')->query(
-      author => $author->{master},
+      author => $author->master->name,
       tag    => $tag_name,
       title  => '1',
       navbar => '1'

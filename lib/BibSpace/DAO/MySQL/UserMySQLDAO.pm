@@ -22,23 +22,23 @@ use Time::HiRes qw( gettimeofday tv_interval );
 =item all
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub all {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $qry    = "SELECT 
-              id, 
-              login, 
-              registration_time, 
-              last_login, 
-              real_name, 
-              email, 
-              pass, 
-              pass2, 
-              pass3, 
-              rank, 
-              master_id, 
+  my $qry    = "SELECT
+              id,
+              login,
+              registration_time,
+              last_login,
+              real_name,
+              email,
+              pass,
+              pass2,
+              pass3,
+              rank,
+              master_id,
               tennant_id
             FROM Login
             ORDER BY login ASC";
@@ -92,7 +92,7 @@ sub all {
 =item count
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub count {
   my ($self) = @_;
@@ -107,7 +107,7 @@ sub count {
 =item empty
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub empty {
   my ($self) = @_;
@@ -122,7 +122,7 @@ sub empty {
 =item exists
     Method documentation placeholder.
     This method takes single object as argument and returns a scalar.
-=cut 
+=cut
 
 sub exists {
   my ($self, $object) = @_;
@@ -138,7 +138,7 @@ sub exists {
 =item save
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub save {
   my ($self, @objects) = @_;
@@ -160,7 +160,7 @@ sub save {
 =item _insert
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub _insert {
   my ($self, @objects) = @_;
@@ -168,28 +168,28 @@ sub _insert {
   my $qry = "
     INSERT INTO Login(
     id,
-      login, 
-      registration_time, 
-      last_login, 
-      real_name, 
-      email, 
-      pass, 
-      pass2, 
-      pass3, 
-      rank, 
-      master_id, 
+      login,
+      registration_time,
+      last_login,
+      real_name,
+      email,
+      pass,
+      pass2,
+      pass3,
+      rank,
+      master_id,
       tennant_id
-    ) 
+    )
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
 
     try {
       my $result = $sth->execute(
-        $obj->id,         $obj->login,     $obj->registration_time,
-        $obj->last_login, $obj->real_name, $obj->email,
-        $obj->pass,       $obj->pass2,     $obj->pass3,
-        $obj->rank,       $obj->master_id, $obj->tennant_id
+        $obj->id,         $obj->login,         $obj->registration_time,
+        $obj->last_login, $obj->real_name,     $obj->email,
+        $obj->pass,       $obj->pass2,         $obj->pass3,
+        $obj->rank,       $obj->get_master_id, $obj->tennant_id
       );
       $obj->id($sth->{mysql_insertid});
     }
@@ -204,7 +204,7 @@ sub _insert {
 =item update
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub update {
   my ($self, @objects) = @_;
@@ -214,17 +214,17 @@ sub update {
     next if !defined $obj->login;
 
     # update field 'modified_time' only if needed
-    my $qry = "UPDATE Login SET 
+    my $qry = "UPDATE Login SET
             login=?,
-            registration_time=?, 
-            last_login=?, 
-            real_name=?, 
-            email=?, 
-            pass=?, 
-            pass2=?, 
-            pass3=?, 
-            rank=?, 
-            master_id=?, 
+            registration_time=?,
+            last_login=?,
+            real_name=?,
+            email=?,
+            pass=?,
+            pass2=?,
+            pass3=?,
+            rank=?,
+            master_id=?,
             tennant_id=?
           WHERE id = ?";
 
@@ -247,7 +247,7 @@ sub update {
 =item delete
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub delete {
   my ($self, @objects) = @_;
@@ -267,7 +267,7 @@ sub delete {
 
 =item filter
     Method documentation placeholder.
-=cut 
+=cut
 
 sub filter {
   my ($self, $coderef) = @_;
@@ -281,7 +281,7 @@ sub filter {
 
 =item find
     Method documentation placeholder.
-=cut 
+=cut
 
 sub find {
   my ($self, $coderef) = @_;

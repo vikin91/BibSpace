@@ -20,66 +20,82 @@ my @all_authors = $repo->authors_all;
 
 my $limit_test_objects = 30;
 
-my $other_author = $self->app->entityFactory->new_Author(uid => "Henry");
+sub aDump {
+  JSON->new->convert_blessed->utf8->pretty->encode(shift);
+}
+
 ok($self->app->repo->lr->facade, "Repository layer has facade set");
+
+my $au = $self->app->entityFactory->new_Author(uid => "Henry");
+is($au->id, undef, "Unsaved Authors have no ID. Dump:" . aDump $au);
+is($au->get_master_id, undef,
+  "Unsaved Authors have no master_ID. Dump:" . aDump $au);
+$repo->authors_save($au);
+isnt($au->id, undef, "Saved Authors have ID. Dump:" . aDump $au);
+isnt($au->get_master_id, undef,
+  "Saved Authors have master_ID. Dump:" . aDump $au);
 
 subtest 'Author constructor' => sub {
 
-  ok($other_author->id >= 1, "id should be >= 1 but is " . $other_author->id);
-  ok($other_author->master_id >= 1, "master_id should be >= 1");
-  is($other_author->master,    $other_author->uid, "master name same as uid");
-  is($other_author->master_id, $other_author->id,  "master_id name same as id");
-  isnt($other_author->get_master, undef, "masterObj should never be empty");
-  is($other_author->get_master, $other_author, "get_master should return self");
+  ok($au->id >= 1,            "id should be >= 1. Dump: " . aDump $au);
+  ok($au->get_master_id >= 1, "master_id should be >= 1. Dump: " . aDump $au);
+  is($au->name, $au->uid, "name should be same as uid. Dump: " . aDump $au);
+  is($au->get_master_id, $au->id, "master_id name same as id");
+  isnt($au->get_master, undef, "masterObj should never be empty");
+  is($au->get_master, $au, "get_master should return self");
 };
 
 subtest 'Alone author functions' => sub {
 
-  is($other_author->can_be_deleted, 1, "can_be_deleted");
+  is($au->can_be_deleted, 1, "can_be_deleted");
 };
 
 note "============ Testing " . scalar(@all_authors) . " Authors ============";
 
 foreach my $author (@all_authors) {
   last if $limit_test_objects < 0;
+  next if $author->id == $au->id;
   note "============ Testing Author ID " . $author->id . ".";
 
-  ok($author,             "author defined");
-  ok($author->get_master, "author->get_master defined");
+  ok($author,             "author should be defined");
+  ok($author->get_master, "author->get_master should be defined");
   is($author->get_master, $author, "get_master should return self");
 
-  $author->set_master($other_author);
+  note "============ Setting master "
+    . aDump($au)
+    . " to author "
+    . aDump($author)
+    . "============";
+
+  $author->set_master($au);
   isnt($author->is_master, 1, "isnt master");
-  is($author->get_master, $other_author,
-        "get_master should return master, self is "
-      . $author->id
-      . " master should be "
-      . $other_author->id
-      . " but is "
-      . $author->get_master->id);
-  is($author->is_minion,                   1, "is minion");
-  is($author->is_minion_of($other_author), 1, "is_minion_of");
+  is($author->get_master, $au,
+    "get_master should return master. Dump: " . aDump $author);
+  is($author->is_minion,         1, "is minion");
+  is($author->is_minion_of($au), 1, "is_minion_of");
   isnt($author->is_minion_of($author), 1, "isnt_minion_of");
 
-  is($author->update_master_name("John"), 1, "update master name");
-  isnt($author->master, "John");
-  is($author->uid, "John", "uid is John");
-  ok($author->remove_master, "remove master");
-  is($author->update_master_name("John"), 1);
-  is($author->master, "John", "master is John");
-  is($author->uid,    "John", "uid is John");
+  is($author->update_name("John"),
+    1, "update master name should succeed. Dump: " . aDump $author);
+  isnt($author->master->name,
+    "New master name should be John. Dump: " . aDump $author);
+  is($author->uid, "John", "New uid should be John. Dump: " . aDump $author);
+  ok($author->remove_master, "remove master should succeed");
+  is($author->update_name("John"), 1,      "update_name should return 1");
+  is($author->master->name,        "John", "New master name should be John");
+  is($author->uid,                 "John", "New uid should be John");
 
-  ok($other_author->add_minion($author), "add minion");
+  ok($au->add_minion($author), "add minion");
   isnt($author->is_master, 1, "isnt master");
-  is($author->is_minion,                   1, "is minion");
-  is($author->is_minion_of($other_author), 1, "is_minion_of");
+  is($author->is_minion,         1, "is minion");
+  is($author->is_minion_of($au), 1, "is_minion_of");
   isnt($author->is_minion_of($author), 1, "isnt_minion_of");
-  is($author->get_master, $other_author, "get_master");
+  is($author->get_master, $au, "get_master");
 
-  is($other_author->can_merge_authors($author), 1, "can_merge_authors");
-  is($author->can_merge_authors($other_author), 1, "can_merge_authors");
-  isnt($author->can_merge_authors($author),             1, "can_merge_authors");
-  isnt($other_author->can_merge_authors($other_author), 1, "can_merge_authors");
+  is($au->can_merge_authors($author), 1, "can_merge_authors");
+  is($author->can_merge_authors($au), 1, "can_merge_authors");
+  isnt($author->can_merge_authors($author), 1, "can_merge_authors");
+  isnt($au->can_merge_authors($au),         1, "can_merge_authors");
 
   if ($author->is_visible) {
     $author->toggle_visibility;

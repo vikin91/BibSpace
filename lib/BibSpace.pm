@@ -470,9 +470,6 @@ sub setup_routes {
   $manager_user->post('/authors/merge/')->to('authors#merge_authors')
     ->name('merge_authors');
 
-  $admin_user->get('/authors/fix_masters')->to('authors#fix_masters')
-    ->name('fix_masters');
-
   $manager_user->get('/authors/reassign')
     ->to('authors#reassign_authors_to_entries');
   $admin_user->get('/authors/reassign_and_create')

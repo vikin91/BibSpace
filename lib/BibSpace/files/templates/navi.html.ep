@@ -262,12 +262,6 @@
         % if(is_admin()){
             <li class="divider"></li>
             <li>
-              <a href="<%= url_for('fix_masters')%>" data-toggle="tooltip" data-placement="left" title="Should fix the 'serious warning' issued by accessing 'author->get_master'.">
-                <i class="fa fa-refresh fa-spin" style="color: blue;"></i>
-                 Fix author master relations
-              </a>
-            </li>
-            <li>
                 <a href="#modal-dialog-reassign-navi" data-toggle="modal">
                   <i class="fa fa-refresh fa-spin" style="color: yellow;"></i>
                   Reassign all papers to authors ...

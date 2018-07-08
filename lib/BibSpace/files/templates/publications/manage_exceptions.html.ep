@@ -28,9 +28,9 @@
         <div class="col-lg-8 col-md-8 col-xs-8">
             % foreach my $author (@$authors){
                 <a class="btn btn-default" type="button" href="<%= url_for('edit_author', id=>$author->{id})%>">
-                    <span class="glyphicon glyphicon-user"></span> 
-                    <%= $author->{master} %> 
-                    <i class="fa fa-external-link"></i> 
+                    <span class="glyphicon glyphicon-user"></span>
+                    <%= $author->master->name %>
+                    <i class="fa fa-external-link"></i>
                 </a>
             % }
         </div>
@@ -48,10 +48,10 @@
             % foreach my $team (@$teams){
                 <a class="btn btn-default" type="button" href="<%= url_for('edit_team', id=>$team->{id} )%>">
                     <i class="fa fa-users"></i>
-                    <%= $team->{name} %> 
-                    <i class="fa fa-external-link"></i> 
+                    <%= $team->{name} %>
+                    <i class="fa fa-external-link"></i>
                 </a>
-            % }   
+            % }
         </div>
     </div>
 
@@ -68,7 +68,7 @@
                 <div class="btn-group">
                     <a class="btn btn-default" type="button" href="<%= url_for('edit_team', id=>$exception->{id} )%>">
                         <i class="fa fa-exclamation " style="color: red;"></i>
-                        <i class="fa fa-users " style="color: #5CB85C;"></i> 
+                        <i class="fa fa-users " style="color: #5CB85C;"></i>
                         <%= $exception->team->name %>
                         <i class="fa fa-external-link"></i>
                     </a>
@@ -81,7 +81,7 @@
                     <i class="fa fa-exclamation " style="color: red;"></i>
                     Detected teams will be ignored after adding any exception (at least should be...). But temporarily they are not. Teams = teams + exceptions.
                     <i class="fa fa-exclamation " style="color: red;"></i>
-                </div> 
+                </div>
             % }
         </div>
     </div>

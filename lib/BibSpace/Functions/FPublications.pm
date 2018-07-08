@@ -305,14 +305,14 @@ sub Fget_publications_core {
   if (defined $query_author) {
     if (Scalar::Util::looks_like_number($query_author)) {
       $author_obj
-        = $self->app->repo->authors_find(sub { $_->master_id == $query_author }
+        = $self->app->repo->authors_find(sub { $_->master->id == $query_author }
         );
       $author_obj
         ||= $self->app->repo->authors_find(sub { $_->id == $query_author });
     }
     else {
-      $author_obj
-        = $self->app->repo->authors_find(sub { $_->master eq $query_author });
+      $author_obj = $self->app->repo->authors_find(
+        sub { $_->master->name eq $query_author });
       $author_obj
         ||= $self->app->repo->authors_find(sub { $_->uid eq $query_author });
     }

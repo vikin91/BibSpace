@@ -44,9 +44,13 @@ has 'masterObj' => (
 # called after the default constructor
 sub BUILD {
   my $self = shift;
+  $self->name($self->uid);
   $self->id;    # trigger lazy execution of idProvider
-  if (not defined $self->master_id or $self->master_id < 1) {
-    $self->master_id($self->id);
+  if ( not defined $self->get_master_id
+    or $self->get_master_id < 1
+    or not defined $self->master)
+  {
+    $self->set_master($self);
   }
 }
 
@@ -62,31 +66,31 @@ sub equals {
   return $result;
 }
 
-sub master {
+sub master_name {
   my $self = shift;
   return $self->get_master->uid;
+}
+
+sub master {
+  my $self = shift;
+  return $self if not $self->master_id;
+  return $self if not $self->masterObj;
+  return $self->masterObj;
 }
 
 sub set_master {
   my $self   = shift;
   my $master = shift;
+  if (not $master->id) {
+    warn "Cannot set_master if master has no ID";
+    return;
+  }
   $self->masterObj($master);
   $self->master_id($master->id);
 }
 
 sub get_master {
-  my $self = shift;
-
-  if ( not defined $self->master_id
-    or $self->master_id < 1
-    or $self->master_id == $self->id)
-  {
-    $self->set_master($self);
-    return $self;
-  }
-  return $self->masterObj if defined $self->masterObj;
-  my $master = $self->repo->authors_filter(sub { $_->id == $self->master_id });
-  return $master || $self;
+  shift->master;
 }
 
 sub is_master {
@@ -107,25 +111,19 @@ sub is_minion_of {
   return;
 }
 
-sub update_master_name {
+sub update_name {
   my $self       = shift;
   my $new_master = shift;
 
   $self->uid($new_master);
-
-  if ($self->is_minion) {
-    #
-  }
-  else {
-    $self->master($new_master);
-  }
+  $self->name($new_master);
   return 1;
 }
 
 sub remove_master {
   my $self = shift;
 
-  $self->master_id = $self->id;
+  $self->set_master($self);
 }
 
 sub add_minion {
