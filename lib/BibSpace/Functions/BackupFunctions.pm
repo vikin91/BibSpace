@@ -130,8 +130,6 @@ sub restore_json_backup {
     my @layers = $app->repo->lr->get_all_layers;
     foreach (@layers) { $_->reset_data }
 
-    # $app->repo->lr->reset_uid_providers;
-
     for my $type (@{$app->repo->entities}, @{$app->repo->relations}) {
       my $arrayRef = $decodedDTO->data->{$type};
 

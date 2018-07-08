@@ -133,10 +133,7 @@ has quick_load_fixture_filename => sub {
 # use quick_load_fixture! Useful for development and testing.
 # better disable it for production
 has use_quick_load_fixture => sub {
-  my $self = shift;
-  return if $self->mode eq 'production';
-
-  return 1 if defined $ENV{BIBSPACE_USE_DUMP} and $ENV{BIBSPACE_USE_DUMP} == 1;
+  warn "use_quick_load_fixture is deprecated";
   return;
 };
 

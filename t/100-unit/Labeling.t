@@ -25,8 +25,6 @@ foreach my $labeling (@all_labelings) {
 
   lives_ok(sub { $labeling->validate },          'validate expecting to live');
   lives_ok(sub { $labeling->equals($labeling) }, 'equals expecting to live');
-  lives_ok(sub { $labeling->equals_obj($labeling) },
-    'equals_obj expecting to live');
   lives_ok(sub { $labeling->equals_id($labeling) },
     'equals_id expecting to live');
   dies_ok(sub { $labeling->equals(undef) }, 'equals undef expecting to die');

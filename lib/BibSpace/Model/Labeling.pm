@@ -82,14 +82,6 @@ sub equals_id {
   return 1;
 }
 
-sub equals_obj {
-  my $self = shift;
-  my $obj  = shift;
-  return if !$self->entry->equals($obj->entry);
-  return if !$self->tag->equals($obj->tag);
-  return 1;
-}
-
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

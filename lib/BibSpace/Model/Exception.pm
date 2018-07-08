@@ -62,16 +62,6 @@ sub equals_id {
   return 1;
 }
 
-sub equals_obj {
-  my $self = shift;
-  my $obj  = shift;
-  die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj)
-    unless ref($self) eq ref($obj);
-  return if !$self->entry->equals($obj->entry);
-  return if !$self->team->equals($obj->team);
-  return 1;
-}
-
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

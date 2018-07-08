@@ -82,6 +82,16 @@ sub create_main_db {
 
   say "Recreating DB schema";
 
+  try {
+    say "Attempt to migrate table Author";
+    $dbh->do(
+      "ALTER TABLE `Author` DROP PRIMARY KEY, MODIFY id INTEGER(8) PRIMARY KEY AUTO_INCREMENT"
+    );
+  }
+  catch {
+    say "Migration not necessary or failed: $_";
+  };
+
   $dbh->do(
     "CREATE TABLE IF NOT EXISTS `Author`(
          id INTEGER(5) PRIMARY KEY AUTO_INCREMENT,

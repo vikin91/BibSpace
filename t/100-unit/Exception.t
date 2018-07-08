@@ -9,6 +9,10 @@ my $self     = $t_anyone->app;
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
 
+sub aDump {
+  JSON->new->convert_blessed->utf8->pretty->encode(shift);
+}
+
 my $repo           = $self->app->repo;
 my @all_exceptions = $repo->exceptions_all;
 
@@ -16,21 +20,19 @@ my $limit_num_tests = 200;
 
 note "============ Testing "
   . scalar(@all_exceptions)
-  . " entries ============";
+  . " exceptions ============";
 
 foreach my $exception (@all_exceptions) {
   last if $limit_num_tests < 0;
 
-  note "============ Testing Exception ID " . $exception->id . ".";
+  note "============ Testing Exception ID " . aDump($exception) . ".";
 
-  ok($exception->id, "id");
+  ok($exception->id, "Exception id should be defined");
 
-  # lives_ok( sub { $exception->validate }, 'validate expecting to live' );
-  lives_ok(sub { $exception->equals($exception) }, 'equals expecting to live');
-  lives_ok(sub { $exception->equals_obj($exception) },
-    'equals_obj expecting to live');
+  lives_ok(sub { $exception->equals($exception) },
+    'equals sub should not throw');
   lives_ok(sub { $exception->equals_id($exception) },
-    'equals_id expecting to live');
+    'equals_id sub should not thorw');
   dies_ok(sub { $exception->equals(undef) }, 'equals undef expecting to die');
 
   $limit_num_tests--;

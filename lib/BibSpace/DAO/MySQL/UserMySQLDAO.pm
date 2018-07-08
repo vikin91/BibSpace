@@ -115,8 +115,8 @@ sub empty {
   my $sth    = $dbh->prepare("SELECT 1 as num FROM Login LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
-  my $num = $row->{num} // 0;
-  return $num == 0;
+  return if $row->{num} > 0;
+  return 1;
 }
 
 =item exists
@@ -186,10 +186,10 @@ sub _insert {
 
     try {
       my $result = $sth->execute(
-        $obj->id,         $obj->login,         $obj->registration_time,
-        $obj->last_login, $obj->real_name,     $obj->email,
-        $obj->pass,       $obj->pass2,         $obj->pass3,
-        $obj->rank,       $obj->get_master_id, $obj->tennant_id
+        $obj->id,         $obj->login,     $obj->registration_time,
+        $obj->last_login, $obj->real_name, $obj->email,
+        $obj->pass,       $obj->pass2,     $obj->pass3,
+        $obj->rank,       $obj->master_id, $obj->tennant_id
       );
       $obj->id($sth->{mysql_insertid});
     }

@@ -86,8 +86,8 @@ sub empty {
   my $sth    = $dbh->prepare("SELECT 1 as num FROM Author LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
-  my $num = $row->{num} // 0;
-  return $num == 0;
+  return if $row->{num} > 0;
+  return 1;
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -151,14 +151,15 @@ sub _insert {
     INSERT INTO Author(
     id,
     uid,
-    display
+    display,
+    master_id
     )
-    VALUES (?,?,?);";
+    VALUES (?,?,?,?);";
   my $sth   = $dbh->prepare($qry);
   my $added = 0;
   foreach my $obj (@objects) {
     try {
-      $sth->execute($obj->id, $obj->uid, $obj->display);
+      $sth->execute($obj->id, $obj->uid, $obj->display, $obj->get_master_id);
       $obj->id($sth->{mysql_insertid});
       ++$added;
     }
@@ -167,8 +168,6 @@ sub _insert {
     };
   }
   return $added;
-
-  # $dbh->commit();
 }
 before '_insert' => sub { shift->logger->entering(""); };
 after '_insert'  => sub { shift->logger->exiting(""); };
@@ -180,12 +179,12 @@ after '_insert'  => sub { shift->logger->exiting(""); };
 
 sub update {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
+  my $dbh     = $self->handle;
+  my $success = 1;
 
   foreach my $obj (@objects) {
     next if !defined $obj->id;
 
-    # update field 'modified_time' only if needed
     my $qry = "UPDATE Author SET
                       uid=?,
                       master_id=?,
@@ -193,15 +192,19 @@ sub update {
     $qry .= " WHERE id = ?";
 
     my $sth = $dbh->prepare($qry);
+    my $result;
     try {
-      my $result
-        = $sth->execute($obj->{uid}, $obj->{master_id}, $obj->{display},
+      $result = $sth->execute($obj->{uid}, $obj->{master_id}, $obj->{display},
         $obj->{id});
     }
     catch {
+      $success = 0;
       $self->logger->error("Update exception: $_");
     };
   }
+
+  # Return for tests to signal that nothing has been thrown
+  return $success;
 }
 before 'update' => sub { shift->logger->entering(""); };
 after 'update'  => sub { shift->logger->exiting(""); };
