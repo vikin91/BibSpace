@@ -67,20 +67,9 @@ sub all {
 
     # set defaults if there is no data in mysql
     $ct ||= DateTime->now();
-
-# formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
     $mt ||= DateTime->now();
 
     # ct and mt are not in DateTime's internal format
-
-# # set formatter to output date/time in the requested format
-# $ct->set_formatter($mysqlPattern);
-# $mt->set_formatter($mysqlPattern);
-# # finally fount it!
-# # this causes to inject regexp in the object and causes problems with Storable!
-# # $mysqlPattern seems to be REGEXP - do not store this in the object!
-# say "Entry->SQL->all: parsing  mod_time: ".$mt;
-
     # add default
     my $month = $row->{month} // 0;
 
@@ -217,10 +206,11 @@ sub _insert {
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
-
+    my $id = undef;
+    $id = $obj->id if defined $obj->id and $obj->id > 0;
     try {
       my $result = $sth->execute(
-        $obj->id,             $obj->entry_type,    $obj->bibtex_key,
+        $id,                  $obj->entry_type,    $obj->bibtex_key,
         $obj->{_bibtex_type}, $obj->bib,           $obj->html,
         $obj->html_bib,       $obj->abstract,      $obj->title,
         $obj->hidden,         $obj->year,          $obj->month,
@@ -236,8 +226,6 @@ sub _insert {
           . ". Error: $_");
     };
   }
-
-  # $dbh->commit();
 }
 before '_insert' => sub { shift->logger->entering(""); };
 after '_insert'  => sub { shift->logger->exiting(""); };

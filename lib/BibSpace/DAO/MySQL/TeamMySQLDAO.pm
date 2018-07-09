@@ -144,8 +144,10 @@ sub _insert {
     INSERT INTO Team (id, name, parent) VALUES (?,?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
+    my $id = undef;
+    $id = $obj->id if defined $obj->id and $obj->id > 0;
     try {
-      my $result = $sth->execute($obj->id, $obj->name, $obj->parent);
+      my $result = $sth->execute($id, $obj->name, $obj->parent);
       $obj->id($sth->{mysql_insertid});
     }
     catch {

@@ -183,10 +183,11 @@ sub _insert {
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
-
+    my $id = undef;
+    $id = $obj->id if defined $obj->id and $obj->id > 0;
     try {
       my $result = $sth->execute(
-        $obj->id,         $obj->login,     $obj->registration_time,
+        $id,              $obj->login,     $obj->registration_time,
         $obj->last_login, $obj->real_name, $obj->email,
         $obj->pass,       $obj->pass2,     $obj->pass3,
         $obj->rank,       $obj->master_id, $obj->tennant_id

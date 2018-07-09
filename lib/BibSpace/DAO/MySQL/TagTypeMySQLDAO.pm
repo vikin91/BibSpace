@@ -154,8 +154,10 @@ sub _insert {
     INSERT INTO TagType(id, name, comment) VALUES (?,?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
+    my $id = undef;
+    $id = $obj->id if defined $obj->id and $obj->id > 0;
     try {
-      my $result = $sth->execute($obj->id, $obj->name, $obj->comment);
+      my $result = $sth->execute($id, $obj->name, $obj->comment);
       $obj->id($sth->{mysql_insertid});
     }
     catch {
