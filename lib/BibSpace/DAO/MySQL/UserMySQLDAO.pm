@@ -36,7 +36,7 @@ sub all {
               email,
               pass,
               pass2,
-              pass3,
+              forgot_pass_token,
               rank,
               master_id,
               tennant_id
@@ -79,7 +79,7 @@ sub all {
       email             => $row->{email},
       pass              => $row->{pass},
       pass2             => $row->{pass2},
-      pass3             => $row->{pass3},
+      forgot_pass_token => $row->{forgot_pass_token},
       rank              => $row->{rank},
       master_id         => $row->{master_id},
       tennant_id        => $row->{tennant_id},
@@ -175,7 +175,7 @@ sub _insert {
       email,
       pass,
       pass2,
-      pass3,
+      forgot_pass_token,
       rank,
       master_id,
       tennant_id
@@ -189,7 +189,7 @@ sub _insert {
       my $result = $sth->execute(
         $id,              $obj->login,     $obj->registration_time,
         $obj->last_login, $obj->real_name, $obj->email,
-        $obj->pass,       $obj->pass2,     $obj->pass3,
+        $obj->pass,       $obj->pass2,     $obj->forgot_pass_token,
         $obj->rank,       $obj->master_id, $obj->tennant_id
       );
       $obj->id($sth->{mysql_insertid});
@@ -223,7 +223,7 @@ sub update {
             email=?,
             pass=?,
             pass2=?,
-            pass3=?,
+            forgot_pass_token=?,
             rank=?,
             master_id=?,
             tennant_id=?
@@ -234,7 +234,7 @@ sub update {
       my $result = $sth->execute(
         $obj->login,     $obj->registration_time, $obj->last_login,
         $obj->real_name, $obj->email,             $obj->pass,
-        $obj->pass2,     $obj->pass3,             $obj->rank,
+        $obj->pass2,     $obj->forgot_pass_token, $obj->rank,
         $obj->master_id, $obj->tennant_id,        $obj->id
       );
     }

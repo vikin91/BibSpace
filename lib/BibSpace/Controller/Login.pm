@@ -243,10 +243,11 @@ sub post_gen_forgot_token {
   }
   else {
     # store token in the user object
-    $user->forgot_token(generate_token);
+    $user->forgot_pass_token(generate_token);
+    $self->app->repo->users_update($user);
 
     my $email_content = $self->render_to_string('email_forgot_password',
-      token => $user->forgot_token);
+      token => $user->forgot_pass_token);
     try {
       my %email_config = (
         mailgun_domain => $self->app->config->{mailgun_domain},
@@ -265,7 +266,7 @@ sub post_gen_forgot_token {
     };
 
     $self->app->logger->info("Forgot-password-token '"
-        . $user->forgot_token
+        . $user->forgot_pass_token
         . "' sent to '"
         . $user->email
         . "'.");
@@ -301,8 +302,10 @@ sub store_password {
   # search for user that has this token
   my $user;
   if ($token) {
-    $user = $self->app->repo->users_find(
-      sub { defined $_->forgot_token and $_->forgot_token eq $token });
+    $user
+      = $self->app->repo->users_find(
+      sub { defined $_->forgot_pass_token and $_->forgot_pass_token eq $token }
+      );
   }
 
   if (!$user) {
@@ -323,7 +326,8 @@ sub store_password {
     my $hash = encrypt_password($pass1, $salt);
     $user->pass($pass1);
     $user->pass2($salt);
-    $user->forgot_token("");
+    $user->reset_forgot_token;
+    $self->app->repo->users_update($user);
     $self->flash(
       msg_type => 'success',
       msg =>

@@ -172,9 +172,9 @@ has repo => sub {
 sub startup {
   my $self = shift;
   $self->app->logger->info("*** Starting BibSpace ***");
-
   $self->setup_config;
   $self->setup_plugins;
+  create_main_db($self->app->db);
 
   $self->app->preferences->local_time_zone(
     DateTime::TimeZone->new(name => 'local')->name);

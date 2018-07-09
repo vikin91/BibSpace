@@ -63,7 +63,7 @@ subtest 'Setting new password' => sub {
   );
 
   my $user = $t_anyone->app->repo->users_find(sub { $_->login eq 'pub_admin' });
-  my $token2 = $user->forgot_token;
+  my $token2 = $user->forgot_pass_token;
 
   ok($token2, "Checking token exists");
   is(length($token2), 32, "Checking token length");

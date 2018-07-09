@@ -24,26 +24,13 @@ use DateTime::Format::Strptime;
 use DateTime;
 my $dtPattern = DateTime::Format::Strptime->new(pattern => '%Y-%m-%d %H:%M:%S');
 
-class_has 'admin_rank'   => (is => 'ro', default => 2);
-class_has 'manager_rank' => (is => 'ro', default => 1);
-class_has 'user_rank'    => (is => 'ro', default => 0);
+sub reset_forgot_token {
+  my ($self) = @_;
+  $self->forgot_pass_token(undef);
+}
 
-has 'login'     => (is => 'rw', isa => 'Str', required => 1);
-has 'real_name' => (is => 'rw', isa => 'Str', default  => "unnamed");
-has 'email'     => (is => 'rw', isa => 'Str', required => 1);
-has 'rank' => (is => 'rw', default => User->user_rank);
-
-# pass = user password
-has 'pass' => (is => 'rw', isa => 'Str');
-
-# pass2 = salt
-has 'pass2' => (is => 'rw', isa => 'Str');
-has 'pass3' => (is => 'rw', isa => 'Maybe[Str]');
-
-# TODO: forgot_token is not a DB field!
-has 'forgot_token' => (is => 'rw', isa     => 'Maybe[Str]');
-has 'master_id'    => (is => 'rw', default => 0);
-has 'tennant_id'   => (is => 'rw', default => 0);
+has 'master_id'  => (is => 'rw', default => 0);
+has 'tennant_id' => (is => 'rw', default => 0);
 
 has 'last_login' => (
   is      => 'rw',

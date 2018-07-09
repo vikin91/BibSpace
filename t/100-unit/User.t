@@ -37,6 +37,12 @@ foreach my $user (@all_users) {
     ok($user->make_manager, "make_manager");
     ok($user->make_admin,   "make_admin");
     ok($user->make_user,    "make_user");
+    is($user->forgot_pass_token, undef, "get forgot_token should be undef");
+    $user->forgot_pass_token("aabbcc");
+    is($user->forgot_pass_token, "aabbcc", "get forgot_token should be aabbcc");
+    $user->reset_forgot_token;
+    is($user->forgot_pass_token, undef,
+      "get forgot_token should be undef again");
   }
 
   $limit_num_tests--;
