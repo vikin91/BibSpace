@@ -159,7 +159,7 @@ foreach my $obj (@objects) {
     my $code = '$t_anyone->app->repo->' . "$obj" . "_" . "$action;";
     my $res  = eval "$code";
     ok(!$@, "eval error empty");
-    is($res, undef, $obj . "_$action - output: $res should be undef");
+    is($res, undef, $obj . "_$action - output should be undef");
   }
   foreach my $action ('filter', 'find') {
     note "=== $obj action $action ===";
