@@ -164,9 +164,7 @@ sub add_to_team {
   my $team   = $self->app->repo->teams_find(sub   { $_->id == $team_id });
 
   if (defined $author and defined $team) {
-    my $membership = Membership->new(
-      author    => $author->get_master,
-      team      => $team,
+    my $membership = $self->app->repo->entityFactory->new_Membership(
       author_id => $author->get_master->id,
       team_id   => $team->id
     );
@@ -430,14 +428,12 @@ sub post_edit_membership_dates {
   my $team   = $self->app->repo->teams_find(sub   { $_->id == $team_id });
 
   if ($author and $team) {
-    my $search_mem = Membership->new(
-      author    => $author->get_master,
-      team      => $team,
+    my $search_membership = $self->app->repo->entityFactory->new_Membership(
       author_id => $author->get_master->id,
       team_id   => $team->id
     );
-    my $membership
-      = $self->app->repo->memberships_find(sub { $_->equals($search_mem) });
+    my $membership = $self->app->repo->memberships_find(
+      sub { $_->equals($search_membership) });
 
     if ($membership) {
 

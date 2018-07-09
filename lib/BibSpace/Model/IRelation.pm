@@ -10,5 +10,5 @@ sub BUILD {
   my $self = shift;
   $self->id;    # trigger lazy execution of idProvider
 }
-
+has 'repo' => (is => 'ro', isa => 'FlatRepositoryFacade', required => 1);
 1;

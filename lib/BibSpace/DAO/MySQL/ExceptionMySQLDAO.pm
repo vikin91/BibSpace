@@ -35,7 +35,10 @@ sub all {
 
   while (my $row = $sth->fetchrow_hashref()) {
     push @objs,
-      Exception->new(entry_id => $row->{entry_id}, team_id => $row->{team_id});
+      $self->e_factory->new_Exception(
+      entry_id => $row->{entry_id},
+      team_id  => $row->{team_id}
+      );
   }
   return @objs;
 }

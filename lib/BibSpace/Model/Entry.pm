@@ -233,11 +233,11 @@ sub discover_attachments {
   # $self->add_attachment( 'unknown', $_ ) for @discovery_other;
 }
 
-=item is_visible
+=item belongs_to_visible_author
     Entry is visible if at least one of its authors is visible
 =cut
 
-sub is_visible {
+sub belongs_to_visible_author {
   my $self = shift;
 
   my $visible_author = any { $_->is_visible } $self->get_authors;
@@ -531,10 +531,14 @@ sub get_teams {
   return values %final_teams;
 }
 
+sub get_labelings {
+  my $self = shift;
+  return $self->repo->labelings_filter(sub { $_->entry_id == $self->id });
+}
+
 sub get_tags {
   my $self = shift;
-  my @tag_ids = map { $_->tag_id }
-    $self->repo->labelings_filter(sub { $_->entry_id == $self->id });
+  my @tag_ids = map { $_->tag_id } $self->get_labelings;
   return $self->repo->tags_filter(
     sub {
       my $t = $_;
@@ -551,10 +555,14 @@ sub has_tag {
     sub { $_->entry_id == $self->id and $_->tag_id == $tag->id });
 }
 
+sub get_authorships {
+  my $self = shift;
+  return $self->repo->authorships_filter(sub { $_->entry_id == $self->id });
+}
+
 sub get_authors {
   my $self = shift;
-  my @author_ids = map { $_->author_id }
-    $self->repo->authorships_filter(sub { $_->entry_id == $self->id });
+  my @author_ids = map { $_->author_id } $self->get_authorships;
   return $self->repo->authors_filter(
     sub {
       my $a = $_;
@@ -567,9 +575,7 @@ sub has_author {
   my $self   = shift;
   my $author = shift;
 
-  my $authorship_to_find = Authorship->new(
-    author    => $author,
-    entry     => $self,
+  my $authorship_to_find = $self->repo->entityFactory->new_Authorship(
     author_id => $author->id,
     entry_id  => $self->id
   );

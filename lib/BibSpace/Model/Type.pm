@@ -32,6 +32,11 @@ sub TO_JSON {
   return $tsb_debug->TO_JSON;
 }
 
+sub id {
+  my $self = shift;
+  return "(" . $self->our_type . "-" . join($self->bibtexTypes_all, ',') . ")";
+}
+
 sub equals {
   my $self = shift;
   my $obj  = shift;

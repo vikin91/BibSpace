@@ -96,8 +96,8 @@ sub get_exceptions {
 sub get_entries {
   my $self = shift;
 
-  my @myEntries;
-  my @members = $self->get_authors;
+  my @myEntries = ();
+  my @members   = $self->get_authors;
   foreach my $author (@members) {
     push @myEntries, $author->get_entries;
   }

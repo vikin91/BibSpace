@@ -38,7 +38,7 @@ sub all {
 
   my @memberships;
   while (my $row = $sth->fetchrow_hashref()) {
-    my $mem = Membership->new(
+    my $mem = $self->e_factory->new_Membership(
       team_id   => $row->{team_id},
       author_id => $row->{author_id},
       start     => $row->{start},

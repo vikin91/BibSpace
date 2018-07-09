@@ -1,4 +1,4 @@
-package BibSpace v0.5.3;
+package BibSpace v0.6.0;
 
 # ABSTRACT: BibSpace is a system to manage Bibtex references for authors and research groups web page.
 
@@ -15,7 +15,6 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 
 use Data::Dumper;
 
-# use File::Slurp;
 use POSIX qw/strftime/;
 use Try::Tiny;
 use Path::Tiny;    # for creating directories

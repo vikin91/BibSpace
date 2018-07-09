@@ -7,6 +7,15 @@ use Try::Tiny;
 
 has 'lr' => (is => 'ro', isa => 'FlatRepository', required => 1);
 
+# Repeat functions from lower layers
+sub entityFactory {
+  shift->lr->e_factory;
+}
+
+sub e_factory {
+  shift->lr->e_factory;
+}
+
 # Inject facade into layer
 sub BUILD {
   my $self = shift;

@@ -210,7 +210,7 @@ sub has_entry {
   my $self  = shift;
   my $entry = shift;
 
-  my $authorship_to_find = Authorship->new(
+  my $authorship_to_find = $self->repo->entityFactory->new_Authorship(
     author    => $self,
     entry     => $entry,
     author_id => $self->id,
@@ -229,11 +229,9 @@ sub joined_team {
 
   return -1 if !defined $team;
 
-  my $query_mem = Membership->new(
-    author    => $self->get_master,
-    team      => $team,
+  my $query_mem = $self->repo->entityFactory->new_Membership(
+    team_id   => $team->id,
     author_id => $self->get_master->id,
-    team_id   => $team->id
   );
   my $mem = $self->repo->memberships_find(sub { $_->equals($query_mem) });
 
@@ -247,9 +245,7 @@ sub left_team {
 
   return -1 if !defined $team;
 
-  my $query_mem = Membership->new(
-    author    => $self->get_master,
-    team      => $team,
+  my $query_mem = $self->repo->entityFactory->new_Membership(
     author_id => $self->get_master->id,
     team_id   => $team->id
   );
@@ -267,15 +263,11 @@ sub update_membership {
 
   return if !$team;
 
-  my $query_mem_master = Membership->new(
-    author    => $self->get_master,
-    team      => $team,
+  my $query_mem_master = $self->repo->entityFactory->new_Membership(
     author_id => $self->get_master->id,
     team_id   => $team->id
   );
-  my $query_mem_minor = Membership->new(
-    author    => $self,
-    team      => $team,
+  my $query_mem_minor = $self->repo->entityFactory->new_Membership(
     author_id => $self->id,
     team_id   => $team->id
   );
@@ -284,9 +276,14 @@ sub update_membership {
   my $mem_minor
     = $self->repo->memberships_find(sub { $_->equals($query_mem_minor) });
 
-  if (defined $mem_minor and defined $mem_master and $mem_minor != $mem_master)
+  if (  defined $mem_minor
+    and defined $mem_master
+    and not $mem_minor->equals($mem_master))
   {
-    warn "MEMBERSHIP for master differs to membership of minor!";
+    warn "MEMBERSHIP for master differs to membership of minor! master has "
+      . $mem_master->id
+      . ", minor has "
+      . $mem_minor->id;
   }
   my $mem = $mem_master // $mem_minor;
 

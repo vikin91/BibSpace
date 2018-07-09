@@ -90,6 +90,25 @@ sub new_User {
   );
 }
 
+sub new_Authorship {
+  my ($self, %args) = @_;
+  return Authorship->new(repo => $self->facade, %args);
+}
+
+sub new_Membership {
+  my ($self, %args) = @_;
+  return Membership->new(repo => $self->facade, %args);
+}
+
+sub new_Labeling {
+  my ($self, %args) = @_;
+  return Labeling->new(repo => $self->facade, %args);
+}
+
+sub new_Exception {
+  my ($self, %args) = @_;
+  return Exception->new(repo => $self->facade, %args);
+}
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;

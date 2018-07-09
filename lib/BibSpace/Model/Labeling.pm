@@ -19,22 +19,24 @@ sub TO_JSON {
   return LabelingSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
 }
 
-has 'entry' => (
-  is     => 'rw',
-  isa    => 'Maybe[Entry]',
-  traits => ['DoNotSerialize']    # due to cycyles
-);
-has 'tag' => (
-  is     => 'rw',
-  isa    => 'Maybe[Tag]',
-  traits => ['DoNotSerialize']    # due to cycyles
-);
+sub tag {
+  my $self = shift;
+  return if not $self->tag_id or $self->tag_id < 1;
+  return $self->repo->tags_find(sub { $_->id == $self->tag_id });
+}
+
+sub entry {
+  my $self = shift;
+  return if not $self->entry_id or $self->entry_id < 1;
+  return $self->repo->entries_find(sub { $_->id == $self->entry_id });
+}
 
 sub id {
   my $self = shift;
-  return "(" . $self->entry_id . "-" . $self->tag->name . ")"
-    if defined $self->tag;
-  return "(" . $self->entry_id . "-" . $self->tag_id . ")";
+  return
+      "("
+    . ($self->entry_id || "undef") . "-"
+    . ($self->tag_id   || "undef") . ")";
 }
 
 sub equals {

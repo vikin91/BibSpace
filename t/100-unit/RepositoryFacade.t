@@ -6,7 +6,7 @@ use Test::Exception;
 use Data::Dumper;
 use Array::Utils qw(:all);
 use feature qw( say );
-use BibSpace::Repository::RepositoryFacade;
+use BibSpace::Repository::FlatRepositoryFacade;
 
 my $t_anyone = Test::Mojo->new('BibSpace');
 my $self     = $t_anyone->app;
@@ -96,46 +96,54 @@ ok($objs[0],         "Added object should exist" . aDump(@objs));
 ok($objs[0]->id > 0, "Added object should have ID > 0" . aDump(@objs));
 
 # Relations
-my $mock_obj_authorships = Authorship->new(
+my $mock_obj_authorships = $self->app->entityFactory->new_Authorship(
   entry_id  => $mock_obj_entries->id,
-  entry     => $mock_obj_entries,
   author_id => $mock_obj_authors->id,
-  author    => $mock_obj_authors
 );
-my $mock_obj_exceptions = Exception->new(
+my $mock_obj_exceptions = $self->app->entityFactory->new_Exception(
   entry_id => $mock_obj_entries->id,
-  entry    => $mock_obj_entries,
   team_id  => $mock_obj_teams->id,
-  team     => $mock_obj_teams
 );
-my $mock_obj_labelings = Labeling->new(
+my $mock_obj_labelings = $self->app->entityFactory->new_Labeling(
   entry_id => $mock_obj_entries->id,
-  entry    => $mock_obj_entries,
   tag_id   => $mock_obj_tags->id,
-  tag      => $mock_obj_tags
 );
-my $mock_obj_memberships = Membership->new(
+my $mock_obj_memberships = $self->app->entityFactory->new_Membership(
   team_id   => $mock_obj_teams->id,
-  team      => $mock_obj_teams,
   author_id => $mock_obj_authors->id,
-  author    => $mock_obj_authors
 );
 is($t_anyone->app->repo->authorships_empty, 1, "authorships_empty should be 1");
 ok($mock_obj_authorships,
+  "mock_obj_authorships: " . aDump($mock_obj_authorships));
+ok($mock_obj_authorships->author_id > 0,
+  "mock_obj_authorships: " . aDump($mock_obj_authorships));
+ok($mock_obj_authorships->entry_id > 0,
   "mock_obj_authorships: " . aDump($mock_obj_authorships));
 $t_anyone->app->repo->authorships_save($mock_obj_authorships);
 
 is($t_anyone->app->repo->exceptions_empty, 1, "exceptions_empty should be 1");
 ok($mock_obj_exceptions,
   "mock_obj_exceptions:  " . aDump($mock_obj_exceptions));
+ok($mock_obj_exceptions->entry_id > 0,
+  "mock_obj_exceptions:  " . aDump($mock_obj_exceptions));
+ok($mock_obj_exceptions->team_id > 0,
+  "mock_obj_exceptions:  " . aDump($mock_obj_exceptions));
 $t_anyone->app->repo->exceptions_save($mock_obj_exceptions);
 
 is($t_anyone->app->repo->labelings_empty, 1, "labelings_empty should be 1");
 ok($mock_obj_labelings, "mock_obj_labelings:   " . aDump($mock_obj_labelings));
+ok($mock_obj_labelings->entry_id > 0,
+  "mock_obj_labelings:   " . aDump($mock_obj_labelings));
+ok($mock_obj_labelings->tag_id > 0,
+  "mock_obj_labelings:   " . aDump($mock_obj_labelings));
 $t_anyone->app->repo->labelings_save($mock_obj_labelings);
 
 is($t_anyone->app->repo->memberships_empty, 1, "memberships_empty should be 1");
 ok($mock_obj_memberships,
+  "mock_obj_memberships: " . aDump($mock_obj_memberships));
+ok($mock_obj_memberships->author_id > 0,
+  "mock_obj_memberships: " . aDump($mock_obj_memberships));
+ok($mock_obj_memberships->team_id > 0,
   "mock_obj_memberships: " . aDump($mock_obj_memberships));
 $t_anyone->app->repo->memberships_save($mock_obj_memberships);
 
@@ -150,7 +158,7 @@ foreach my $obj (@objects) {
     note "=== $obj action $action ===";
     my $code = '$t_anyone->app->repo->' . "$obj" . "_" . "$action;";
     my $res  = eval "$code";
-    ok(!$@, "eval error empty");
+    ok(!$@, "eval error empty. code: $code warn $@");
     isnt($res, undef, $obj . "_$action - output: $res should not be undef");
     ok($res >= 1, $obj . "_$action - output: $res should be >= 1");
   }
@@ -158,7 +166,7 @@ foreach my $obj (@objects) {
     note "=== $obj action $action ===";
     my $code = '$t_anyone->app->repo->' . "$obj" . "_" . "$action;";
     my $res  = eval "$code";
-    ok(!$@, "eval error empty");
+    ok(!$@, "eval error empty. code: $code warn $@");
     is($res, undef, $obj . "_$action - output should be undef");
   }
   foreach my $action ('filter', 'find') {
@@ -166,7 +174,7 @@ foreach my $obj (@objects) {
     my $code = '$t_anyone->app->repo->' . "$obj" . "_"
       . "$action(sub {defined \$_ });";
     my $res = eval "$code";
-    ok(!$@, "eval error empty");
+    ok(!$@, "eval error empty. code: $code warn $@");
     isnt($res, undef, $obj . "_$action - output: $res should not be undef");
   }
   foreach my $action ('save', 'update') {
@@ -177,13 +185,12 @@ foreach my $obj (@objects) {
       . '; $t_anyone->app->repo->' . "$obj" . "_"
       . "$action(\$element);";
     my $res = eval "$code";
-    ok(!$@, "eval error empty");
+    ok(!$@, "eval error empty. code: $code warn $@");
     isnt($res, undef, $obj . "_$action - output: $res should not be undef");
   }
 
   # Delete will be tested at the end of this file
 }
-
 my @relations = qw(authorships exceptions labelings memberships );
 
 foreach my $obj (@relations) {
@@ -191,7 +198,7 @@ foreach my $obj (@relations) {
     note "=== $obj action $action ===";
     my $code = '$t_anyone->app->repo->' . "$obj" . "_" . "$action;";
     my $res  = eval "$code";
-    ok(!$@, "eval error empty");
+    ok(!$@, "eval error empty. code: $code warn $@");
     isnt($res, undef, $obj . "_$action - output: $res should not be undef");
     ok($res >= 1, $obj . "_$action - output: $res should be >= 1");
   }
@@ -199,7 +206,7 @@ foreach my $obj (@relations) {
     note "=== $obj action $action ===";
     my $code = '$t_anyone->app->repo->' . "$obj" . "_" . "$action;";
     my $res  = eval "$code";
-    ok(!$@, "eval error empty");
+    ok(!$@, "eval error empty. code: $code warn $@");
     is($res, undef, $obj . "_$action - output: $res should be undef");
   }
   foreach my $action ('filter', 'find') {
@@ -233,7 +240,7 @@ foreach my $obj (@objects) {
     . '; $t_anyone->app->repo->' . "$obj" . "_"
     . "$action(\$element);";
   my $res = eval "$code";
-  ok(!$@, "eval error empty");
+  ok(!$@, "eval error empty. code: $code warn $@");
   isnt($res, undef, $obj . "_$action - output: $res should not be undef");
 }
 

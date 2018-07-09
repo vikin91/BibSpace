@@ -15,7 +15,7 @@ sub add_labeling {
 
 sub remove_labeling {
   my ($self, $labeling) = @_;
-  return $self->labelings_delete($labeling);
+  return $self->repo->labelings_delete($labeling);
 }
 
 1;

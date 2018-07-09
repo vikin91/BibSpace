@@ -40,10 +40,14 @@ sub get_authors {
   return uniq @authors;
 }
 
+sub get_labelings {
+  my $self = shift;
+  return $self->repo->labelings_filter(sub { $_->tag_id == $self->id });
+}
+
 sub get_entries {
   my $self = shift;
-  my @entry_ids = map { $_->entry_id }
-    $self->repo->labelings_filter(sub { $_->tag_id == $self->id });
+  my @entry_ids = map { $_->entry_id } $self->get_labelings;
 
   return $self->repo->entries_filter(
     sub {

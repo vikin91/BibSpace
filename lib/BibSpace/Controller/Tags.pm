@@ -300,10 +300,10 @@ sub get_authors_for_tag {
     return;
   }
 
-  my @papers = map { $_->entry } $tag->labelings_all;
+  my @papers = map { $_->entry } $tag->get_labelings;
   my @authors;
   foreach my $paper (@papers) {
-    my @subset_authors = map { $_->author } $paper->authorships_all;
+    my @subset_authors = map { $_->author } $paper->get_authorships;
     push @subset_authors, @authors;
   }
   if (!@authors) {
@@ -326,20 +326,8 @@ sub delete {
   if ($tag) {
     my $name = $tag->name;
 
-    ## TODO: refactor these blocks nicely!
-    ## Deleting labelings
-    my @labelings = $tag->labelings_all;
-
-    # for each entry, remove labeling in this team
-    foreach my $labeling (@labelings) {
-      $labeling->entry->remove_labeling($labeling);
-    }
+    my @labelings = $tag->get_labelings;
     $self->app->repo->labelings_delete(@labelings);
-
-    # remove all labelings for this team
-    $tag->labelings_clear;
-
-    # finally delete tag
     $self->app->repo->tags_delete($tag);
 
     $self->flash(msg_type => 'success', msg => "Tag $name has been deleted.");

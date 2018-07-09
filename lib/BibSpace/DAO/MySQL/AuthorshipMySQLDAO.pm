@@ -36,7 +36,7 @@ sub all {
   my @objects;
 
   while (my $row = $sth->fetchrow_hashref()) {
-    my $authorship = Authorship->new(
+    my $authorship = $self->e_factory->new_Authorship(
       author_id => $row->{author_id},
       entry_id  => $row->{entry_id}
     );

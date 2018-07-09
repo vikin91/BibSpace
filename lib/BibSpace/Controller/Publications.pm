@@ -362,11 +362,11 @@ sub delete_orphaned {
     = $self->app->repo->entries_filter(sub { scalar($_->get_authors) == 0 });
 
   foreach my $entry (@entries) {
-    my @au = $entry->authorships_all;
+    my @au = $entry->get_authorships;
     $self->app->repo->authorships_delete(@au);
-    my @ex = $entry->exceptions_all;
+    my @ex = $entry->get_exceptions;
     $self->app->repo->exceptions_delete(@ex);
-    my @la = $entry->labelings_all;
+    my @la = $entry->get_labelings;
     $self->app->repo->labelings_delete(@la);
   }
 
@@ -845,9 +845,9 @@ sub delete_sure {
   }
 
   $entry->delete_all_attachments;
-  my @entry_authorships = $entry->authorships_all;
-  my @entry_labelings   = $entry->labelings_all;
-  my @entry_exceptions  = $entry->exceptions_all;
+  my @entry_authorships = $entry->get_authorships;
+  my @entry_labelings   = $entry->get_labelings;
+  my @entry_exceptions  = $entry->get_exceptions;
   $self->app->repo->authorships_delete(@entry_authorships);
   $self->app->repo->labelings_delete(@entry_labelings);
   $self->app->repo->exceptions_delete(@entry_exceptions);
@@ -908,9 +908,7 @@ sub remove_tag {
 
   if (defined $entry and defined $tag) {
 
-    my $search_label = Labeling->new(
-      entry    => $entry,
-      tag      => $tag,
+    my $search_label = $self->app->repo->entityFactory->new_Labeling(
       entry_id => $entry->id,
       tag_id   => $tag->id
     );
@@ -952,9 +950,7 @@ sub add_tag {
   my $tag   = $self->app->repo->tags_find(sub    { $_->id == $tag_id });
 
   if (defined $entry and defined $tag) {
-    my $label = Labeling->new(
-      entry    => $entry,
-      tag      => $tag,
+    my $label = $self->app->repo->entityFactory->new_Labeling(
       entry_id => $entry->id,
       tag_id   => $tag->id
     );
@@ -986,7 +982,7 @@ sub manage_exceptions {
     return;
   }
 
-  my @exceptions = $entry->exceptions_all;
+  my @exceptions = $entry->get_exceptions;
   my @all_teams  = $self->app->repo->teams_all;
   my @teams      = $entry->get_teams;
   my @authors    = $entry->get_authors;
@@ -1017,7 +1013,7 @@ sub add_exception {
 
   if (defined $entry and defined $team) {
 
-    my $exception = Exception->new(
+    my $exception = $self->app->repo->entityFactory->new_Exception(
       entry    => $entry,
       team     => $team,
       entry_id => $entry->id,
@@ -1060,11 +1056,9 @@ sub remove_exception {
 
   if (defined $entry and defined $team) {
 
-    my $ex = Exception->new(
+    my $ex = $self->app->repo->entityFactory->new_Exception(
       team_id  => $team_id,
       entry_id => $entry_id,
-      team     => $team,
-      entry    => $entry
     );
 
     my $exception = $self->app->repo->exceptions_find(sub { $_->equals($ex) });

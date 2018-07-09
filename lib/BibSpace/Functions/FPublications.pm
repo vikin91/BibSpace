@@ -53,7 +53,7 @@ sub Freassign_authors_to_entries_given_by_array {
       }
       if ($create_new == 1 or defined $author) {
 
-        my $authorship = Authorship->new(
+        my $authorship = $app->entityFactory->new_Authorship(
           author    => $author->get_master,
           entry     => $entry,
           author_id => $author->get_master->id,
@@ -395,7 +395,7 @@ sub Fget_publications_core {
   # Entries of visible authors
   # by default, we return entries of all authors
   if (defined $query_visible and $query_visible == 1) {
-    @entries = grep { $_->is_visible } @entries;
+    @entries = grep { $_->belongs_to_visible_author } @entries;
   }
 
   ######## complex filters

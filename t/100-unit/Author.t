@@ -120,17 +120,13 @@ foreach my $author (@all_authors) {
 
     note "Checking entry " . $entry->id;
 
-    my $au = Authorship->new(
-      author    => $author,
-      entry     => $entry,
+    my $au = $self->app->entityFactory->new_Authorship(
       author_id => $author->id,
       entry_id  => $entry->id
     );
 
-    ok($au->validate,        'validate');
-    ok($au->equals($au),     'equals');
-    ok($au->equals_id($au),  'equals_id');
-    ok($au->equals_obj($au), 'equals_obj');
+    ok($au->equals($au),    'equals');
+    ok($au->equals_id($au), 'equals_id');
 
     if (!$author->has_authorship($au)) {
       ok($author->add_authorship($au), 'add_authorship');

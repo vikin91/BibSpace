@@ -19,22 +19,24 @@ sub TO_JSON {
   return ExceptionSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
 }
 
-has 'entry' => (
-  is     => 'rw',
-  isa    => 'Maybe[Entry]',
-  traits => ['DoNotSerialize']    # due to cycyles
-);
-has 'team' => (
-  is     => 'rw',
-  isa    => 'Maybe[Team]',
-  traits => ['DoNotSerialize']    # due to cycyles
-);
+sub team {
+  my $self = shift;
+  return if not $self->team_id or $self->team_id < 1;
+  return $self->repo->teams_find(sub { $_->id == $self->team_id });
+}
+
+sub entry {
+  my $self = shift;
+  return if not $self->entry_id or $self->entry_id < 1;
+  return $self->repo->entries_find(sub { $_->id == $self->entry_id });
+}
 
 sub id {
   my $self = shift;
-  return "(" . $self->entry_id . "-" . $self->team->name . ")"
-    if defined $self->team;
-  return "(" . $self->entry_id . "-" . $self->team_id . ")";
+  return
+      "("
+    . ($self->entry_id || "undef") . "-"
+    . ($self->team_id  || "undef") . ")";
 }
 
 =item equals
@@ -44,11 +46,6 @@ sub id {
 sub equals {
   my $self = shift;
   my $obj  = shift;
-  die "Comparing apples to peaches! " . ref($self) . " against " . ref($obj)
-    unless ref($self) eq ref($obj);
-  if ($self->entry and $self->team and $obj->entry and $obj->team) {
-    return $self->equals_obj($obj);
-  }
   return $self->equals_id($obj);
 }
 
