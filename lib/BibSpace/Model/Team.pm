@@ -81,7 +81,7 @@ sub tags {
   my @myTags;
   my @members = $self->get_authors;
   foreach my $author (@members) {
-    push @myTags, $author->get_tags($type);
+    push @myTags, $author->get_tags_of_type($type);
   }
   @myTags = uniq @myTags;
 

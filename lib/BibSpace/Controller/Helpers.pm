@@ -262,7 +262,7 @@ sub register {
       my $type = shift // 1;
 
       my $paper = $self->app->repo->entries_find(sub { $_->id == $eid });
-      my @tags = $paper->get_tags($type);
+      my @tags = $paper->get_tags_of_type($type);
       @tags = sort { $a->name cmp $b->name } @tags;
       return @tags;
     }
@@ -275,7 +275,7 @@ sub register {
       my $type = shift // 1;
 
       my $paper = $self->app->repo->entries_find(sub { $_->id == $eid });
-      my %has_tags = map { $_ => 1 } $paper->get_tags($type);
+      my %has_tags = map { $_ => 1 } $paper->get_tags_of_type($type);
       my @all_tags = $self->app->repo->tags_filter(sub { $_->type == $type });
       my @unassigned = grep { not $has_tags{$_} } @all_tags;
       @unassigned = sort { $a->name cmp $b->name } @unassigned;

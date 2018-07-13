@@ -536,8 +536,17 @@ sub get_labelings {
   return $self->repo->labelings_filter(sub { $_->entry_id == $self->id });
 }
 
+sub get_tags_of_type {
+  my $self     = shift;
+  my $tag_type = shift // 1;
+  return grep { $_->type == $tag_type } $self->get_tags;
+}
+
 sub get_tags {
   my $self = shift;
+  my $potentialType = shift;
+  die "use entry->get_tags_of_type instead" if defined $potentialType;
+
   my @tag_ids = map { $_->tag_id } $self->get_labelings;
   return $self->repo->tags_filter(
     sub {

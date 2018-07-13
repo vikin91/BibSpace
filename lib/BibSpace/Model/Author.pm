@@ -308,14 +308,19 @@ sub update_membership {
 
 #################################################################################### TAGS
 
-sub get_tags {
-
+sub get_tags_of_type {
   my $self = shift;
-  my $type = shift // 1;
+  my $tag_type = shift // 1;
+  return grep { $_->type == $tag_type } $self->get_tags;
+}
+
+sub get_tags {
+  my $self = shift;
+  my $potentialType = shift;
+  die "use entry->get_tags_of_type instead" if defined $potentialType;
 
   my @myTags;
-
-  map { push @myTags, $_->get_tags($type) } $self->get_entries;
+  map { push @myTags, $_->get_tags } $self->get_entries;
   @myTags = uniq @myTags;
 
   return @myTags;

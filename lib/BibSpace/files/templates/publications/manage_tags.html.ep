@@ -9,7 +9,7 @@
         <div class="col-lg-1"></div>
         <div class="col-lg-10 col-md-10 col-xs-10">
             <a class="btn btn-default" href="<%= get_referrer %>">
-                <span class="glyphicon glyphicon-arrow-left"></span> 
+                <span class="glyphicon glyphicon-arrow-left"></span>
                 Back
             </a>
         </div>
@@ -17,27 +17,27 @@
 
     <hr>
 
-    %= include 'preview_row', preview => $entry->{html}, btype=> $entry->{bibtex_type}, bkey => $entry->bibtex_key;
+    %= include 'preview_row', preview => $entry->html, btype=> $entry->bibtex_type, bkey => $entry->bibtex_key;
 
     % foreach my $ttobj ( @$tag_types ){
         <div class="row">
             <div class="col-lg-1"></div>
             <div class="col-lg-2 col-md-2 col-xs-2">
                 <button type="button" class="btn btn-success">
-                    <span class="glyphicon glyphicon-tags"></span> 
+                    <span class="glyphicon glyphicon-tags"></span>
                     Assigned <%= $ttobj->name %>
                 </button>
             </div>
             <div class="col-lg-8 col-md-8 col-xs-8">
-                % foreach my $tobj (get_tags_of_type_for_paper($entry->{id}, $ttobj->{id})){
+                % foreach my $tobj (get_tags_of_type_for_paper($entry->id, $ttobj->id)){
                     <div class="btn-group">
 
-                        <a type="button" class="btn btn-default" href="<%= url_for('publications')->query(tag=>$tobj->{name})%>">
-                            <span class="glyphicon glyphicon-tag"></span> 
-                            <%= $tobj->name %> 
+                        <a type="button" class="btn btn-default" href="<%= url_for('publications')->query(tag=>$tobj->name)%>">
+                            <span class="glyphicon glyphicon-tag"></span>
+                            <%= $tobj->name %>
                             <i class="fa fa-external-link"></i>
                         </a>
-                        
+
                         <a class="btn btn-default" href="<%= url_for('remove_tag_from_publication', eid=> $entry->id, tid=>$tobj->id) %>">
                             <span class="glyphicon glyphicon-remove" style="color: red;"></span>
                             <span style="color: #FFFFFF;">-</span>
@@ -57,10 +57,10 @@
                 <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-tags"></span> Unassigned <%= $ttobj->{name} %> </button>
             </div>
             <div class="col-lg-8 col-md-8 col-xs-8">
-                % foreach my $tobj (get_unassigned_tags_of_type_for_paper($entry->{id}, $ttobj->{id})){
+                % foreach my $tobj (get_unassigned_tags_of_type_for_paper($entry->id, $ttobj->id)){
                     <div class="btn-group">
                         <button type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-tag" style="color: #5CB85C;"></span> <%= $tobj->{name} %></button>
-                        <a class="btn btn-default btn-xs" href=" <%= url_for('add_tag_to_publication', eid=>$entry->{id}, tid=>$tobj->{id}) %>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span> <span style="color: #FFFFFF;">+</span></a>
+                        <a class="btn btn-default btn-xs" href=" <%= url_for('add_tag_to_publication', eid=>$entry->id, tid=>$tobj->id) %>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span> <span style="color: #FFFFFF;">+</span></a>
                     </div>
                 % }
             </div>
@@ -71,9 +71,3 @@
 
 
 </div> <!-- container -->
-
-
-
-
-
-
