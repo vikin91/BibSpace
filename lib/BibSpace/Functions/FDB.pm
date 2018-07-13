@@ -314,21 +314,6 @@ sub prepare_user_table_mysql {
 sub apply_migrations {
   my $dbh = shift;
   try {
-    say "Attempt to migrate table Login";
-    $dbh->do(
-      "ALTER TABLE `Login` ADD COLUMN `forgot_pass_token` VARCHAR(250) DEFAULT NULL"
-    );
-  }
-  catch {
-    say "Migration not necessary or failed: $_";
-  };
-  try {
-    $dbh->do("ALTER TABLE `Login` DROP COLUMN `pass3`");
-  }
-  catch {
-    say "Migration not necessary or failed: $_";
-  };
-  try {
     say "Attempt to migrate table Author";
     $dbh->do(
       "ALTER TABLE `Author` DROP PRIMARY KEY, MODIFY id INTEGER(8) PRIMARY KEY AUTO_INCREMENT"

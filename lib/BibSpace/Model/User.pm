@@ -24,14 +24,18 @@ use DateTime::Format::Strptime;
 use DateTime;
 my $dtPattern = DateTime::Format::Strptime->new(pattern => '%Y-%m-%d %H:%M:%S');
 
-sub reset_forgot_token {
-  my ($self) = @_;
-  $self->forgot_pass_token(undef);
+sub get_forgot_pass_token {
+  shift->pass3;
 }
 
-has 'master_id'  => (is => 'rw', default => 0);
-has 'tennant_id' => (is => 'rw', default => 0);
+sub set_forgot_pass_token {
+  shift->pass3(shift);;
+}
 
+sub reset_forgot_token {
+  my ($self) = @_;
+  $self->pass3(undef);
+}
 has 'last_login' => (
   is      => 'rw',
   isa     => 'DateTime',
@@ -119,8 +123,8 @@ sub record_logging_in {
   my $self = shift;
   $self->last_login(
     DateTime->now->set_time_zone($self->preferences->local_time_zone));
-
 }
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

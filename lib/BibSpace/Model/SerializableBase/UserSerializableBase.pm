@@ -18,7 +18,7 @@ has 'email'     => (is => 'rw', isa => 'Str', required => 1);
 has 'rank'  => (is => 'rw', default => UserSerializableBase->user_rank);
 has 'pass'  => (is => 'rw', isa     => 'Str');
 has 'pass2' => (is => 'rw', isa     => 'Str', documentation => q{Salt});
-has 'forgot_pass_token' => (
+has 'pass3' => (
   is            => 'rw',
   isa           => 'Maybe[Str]',
   documentation => q{Last password forgot token}
