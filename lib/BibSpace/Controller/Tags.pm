@@ -241,8 +241,10 @@ sub get_tags_for_team_read {
   foreach my $paper (@team_entries) {
 
     # merge two hashes
-    %team_tags_hash = (%team_tags_hash,
-      map { "" . $_->name => $_ } $paper->get_tags_of_type($tag_type));
+    %team_tags_hash = (
+      %team_tags_hash,
+      map { "" . $_->name => $_ } $paper->get_tags_of_type($tag_type)
+    );
   }
   my @team_tags = values %team_tags_hash;
 

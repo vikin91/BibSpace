@@ -112,7 +112,8 @@ sub all_without_tag {
   # this will filter entries based on query
   my @all = Fget_publications_main_hashed_args($self, {year => undef});
 
-  my @untagged_entries = grep { scalar $_->get_tags_of_type($tagtype) == 0 } @all;
+  my @untagged_entries
+    = grep { scalar $_->get_tags_of_type($tagtype) == 0 } @all;
   my @filtered
     = Fget_publications_main_hashed_args($self, {}, \@untagged_entries);
 

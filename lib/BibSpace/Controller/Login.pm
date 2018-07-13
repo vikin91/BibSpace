@@ -302,10 +302,12 @@ sub store_password {
   # search for user that has this token
   my $user;
   if ($token) {
-    $user
-      = $self->app->repo->users_find(
-      sub { defined $_->get_forgot_pass_token and $_->get_forgot_pass_token eq $token }
-      );
+    $user = $self->app->repo->users_find(
+      sub {
+        defined $_->get_forgot_pass_token
+          and $_->get_forgot_pass_token eq $token;
+      }
+    );
   }
 
   if (!$user) {

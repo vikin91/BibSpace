@@ -537,13 +537,13 @@ sub get_labelings {
 }
 
 sub get_tags_of_type {
-  my $self     = shift;
+  my $self = shift;
   my $tag_type = shift // 1;
   return grep { $_->type == $tag_type } $self->get_tags;
 }
 
 sub get_tags {
-  my $self = shift;
+  my $self          = shift;
   my $potentialType = shift;
   die "use entry->get_tags_of_type instead" if defined $potentialType;
 

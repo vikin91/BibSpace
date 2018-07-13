@@ -29,7 +29,7 @@ sub get_forgot_pass_token {
 }
 
 sub set_forgot_pass_token {
-  shift->pass3(shift);;
+  shift->pass3(shift);
 }
 
 sub reset_forgot_token {

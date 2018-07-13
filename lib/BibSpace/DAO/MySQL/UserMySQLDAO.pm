@@ -234,7 +234,7 @@ sub update {
       my $result = $sth->execute(
         $obj->login,     $obj->registration_time, $obj->last_login,
         $obj->real_name, $obj->email,             $obj->pass,
-        $obj->pass2,     $obj->pass3, $obj->rank,
+        $obj->pass2,     $obj->pass3,             $obj->rank,
         $obj->master_id, $obj->tennant_id,        $obj->id
       );
     }

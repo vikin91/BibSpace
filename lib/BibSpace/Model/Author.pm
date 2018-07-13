@@ -315,7 +315,7 @@ sub get_tags_of_type {
 }
 
 sub get_tags {
-  my $self = shift;
+  my $self          = shift;
   my $potentialType = shift;
   die "use entry->get_tags_of_type instead" if defined $potentialType;
 
