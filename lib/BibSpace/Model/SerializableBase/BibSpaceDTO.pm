@@ -6,7 +6,10 @@ package BibSpaceDTO;
 use utf8;
 use v5.16;
 use Moose;
+use MooseX::ClassAttribute;
 use Try::Tiny;
+use Data::Dumper;
+$Data::Dumper::Maxdepth = 2;
 
 # Class attribute is not serialized
 has 'formatVersion' => (is => 'ro', isa => 'Str', default => '1');
@@ -15,7 +18,12 @@ has 'formatVersion' => (is => 'ro', isa => 'Str', default => '1');
 # It is used for deserializing dateTime objects
 # Always set this parameter to a value that is default for serialization in class 'DateTime'
 # Currently, it is '%Y-%m-%dT%T'
-has 'dateTimeFormat' => (is => 'rw', isa => 'Str', default => '%Y-%m-%dT%T');
+# THe parameter is ro, becuse there are no means and need to change it currently
+has 'dateTimeFormat' => (is => 'ro', isa => 'Str', default => '%Y-%m-%dT%T');
+
+# duplicate as class atribute to make some functions purely static
+class_has 'dateTimeFormat' =>
+  (is => 'ro', isa => 'Str', default => '%Y-%m-%dT%T');
 
 # The hash has form: 'ClassName' => Array[InstanceofClassName]
 has 'data' => (
@@ -36,12 +44,13 @@ has 'data' => (
 );
 
 # Converts BibSpaceDTO object into JSON string
+# THis method changes types of objects from Labeling to LabelingSerializableBase
 sub toJSON {
   my $self = shift;
 
   use JSON -convert_blessed_universally;
   my $json_obj = JSON->new->convert_blessed->utf8->pretty;
-  return $json_obj->encode($self);
+  return $json_obj->encode($self);    # this method chnages self!!
 }
 
 # Static constructor method that creates BibSpaceDTO from LayeredRepo
@@ -79,10 +88,6 @@ sub toLayeredRepo {
   # This will hold rich objects constructed from data from shallow object
   my $dto = BibSpaceDTO->new('FormatVersion' => 1);
 
-  # print "###############\n";
-  # use Data::Dumper;
-  # $Data::Dumper::Maxdepth = 2;
-
   # Init containers for objects
   for my $className ($parsedDTO->keys) {
     $dto->set($className, []);
@@ -106,7 +111,7 @@ sub toLayeredRepo {
 
       # BlessedObj has only SerializableBase
       # Call normal constructor to create rich object
-      my $mooseObj = $self->_hashToMooseObject(
+      my $mooseObj = BibSpaceDTO->_hashToMooseObject(
         $className,
         $objHash,
         {
@@ -132,7 +137,8 @@ sub _hashToMooseObject {
   my $mooseObj;
   try {
     # Try calling constructor that creates DateTime rich fields from string
-    $mooseObj = $className->new__DateTime_from_string($self->dateTimeFormat,
+    $mooseObj
+      = $className->new__DateTime_from_string(BibSpaceDTO->dateTimeFormat,
       (%hashObj, %hashArgs));
   }
   catch {

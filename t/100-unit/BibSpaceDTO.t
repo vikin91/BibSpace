@@ -2,6 +2,8 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Exception;
 use Test::Mojo;
+use Data::Dumper;
+$Data::Dumper::Maxdepth = 2;
 
 my $t_logged_in = Test::Mojo->new('BibSpace');
 $t_logged_in->post_ok(
@@ -14,17 +16,38 @@ TestManager->apply_fixture($self->app);
 
 use JSON -convert_blessed_universally;
 
-my $bibspaceDTOObject = BibSpaceDTO->fromLayeredRepo($self->repo);
-my $jsonString        = $bibspaceDTOObject->toJSON();
+subtest 'DTO serialization to JSON should not change DTO self-object' => sub {
+  my $referenceDTOfromRepo = BibSpaceDTO->fromLayeredRepo($self->repo);
+  my $labelings0           = $referenceDTOfromRepo->get('Labeling');
+  my $l0                   = $labelings0->[0];
+
+  isa_ok $l0, 'Labeling', "Object before serialization should be Labeling";
+  isa_ok $l0, 'Labeling',
+    "Object before serialization should be Labeling (second check)";
+
+  my $referenceDTOasJSON = $referenceDTOfromRepo->toJSON();
+
+  my $labelings1 = $referenceDTOfromRepo->get('Labeling');
+  my $l1         = $labelings1->[0];
+
+  isa_ok $l0, 'Labeling',
+    "Object fetched before serialization should be isa Labeling after serialization";
+  isa_ok $l1, 'Labeling',
+    "Object fetched after serialization should be isa Labeling";
+
+};
+
+my $referenceDTOfromRepo = BibSpaceDTO->fromLayeredRepo($self->repo);
+my $referenceDTOasJSON   = $referenceDTOfromRepo->toJSON();
 
 subtest 'DTO  create' => sub {
-  ok($jsonString, "Shall produce non-empty string");
-  lives_ok { JSON->new->decode($jsonString) }
+  ok($referenceDTOasJSON, "Shall produce non-empty string");
+  lives_ok { JSON->new->decode($referenceDTOasJSON) }
   "Json string should be valid - decodable";
-  ok(JSON->new->decode($jsonString),
+  ok(JSON->new->decode($referenceDTOasJSON),
     "Json string should return non-undef object after decode");
   lives_ok {
-    bless(JSON->new->decode($jsonString), 'BibSpaceDTO')
+    bless(JSON->new->decode($referenceDTOasJSON), 'BibSpaceDTO')
   }
   "JSON string should be blessable back to BibSpaceDTO";
 };
@@ -35,9 +58,7 @@ subtest 'Type Objects Should have arrays serialized properly' => sub {
   $type->bibtexTypes_add("Article");
   is($type->get_first_bibtex_type, 'Article');
 
-  use JSON -convert_blessed_universally;
-  my $json_obj = JSON->new->convert_blessed->utf8->pretty;
-  my $jStr     = $json_obj->encode($type);
+  my $jStr = JSON->new->convert_blessed->utf8->pretty->encode($type);
 
   unlike(
     $jStr,
@@ -49,84 +70,111 @@ subtest 'Type Objects Should have arrays serialized properly' => sub {
     qr/bibtexTypes" : \[\W*Article\W*\]/s,
     "JSON should contain 'Article' in the 'bibtexTypes' array"
   );
-
-# unlike($jsonString, qr/bibtexTypes" : \[\]/, "JSON should not contain empty 'bibtexTypes' arrays");
 };
 
-subtest 'DTO  restore from JSON' => sub {
+subtest 'DTO restore from JSON' => sub {
   use Try::Tiny;
-  my $decodedJson;
   try {
-    $decodedJson = JSON->new->decode($jsonString);
+    my $decodedReferenceJSONhash = JSON->new->decode($referenceDTOasJSON);
   }
   finally {
     # Just mute errors
   };
-  my $decodedDTO;
   lives_ok {
-    $decodedDTO = bless(JSON->new->decode($jsonString), 'BibSpaceDTO')
+    my $decodedReferenceJSONhash = JSON->new->decode($referenceDTOasJSON);
+    bless($decodedReferenceJSONhash, 'BibSpaceDTO')
   }
-  "Json string should be blessable into BibSpaceDTO class";
+  "Json string should be decodable into hash and hash should be blessable into BibSpaceDTO class";
 
-  $decodedDTO = $bibspaceDTOObject->toLayeredRepo($jsonString, $self->repo);
-  isa_ok($decodedDTO, 'BibSpaceDTO',
-    "Decoded class should be BibSpaceDTO, but is " . ref $decodedDTO);
+  note
+    "Create rich BibSpaceDTO object from parsed JSON that has been blessed into BibSpaceDTO";
+
+  my $restoredDTO
+    = BibSpaceDTO->toLayeredRepo($referenceDTOasJSON, $self->repo);
+
+  isa_ok($restoredDTO, 'BibSpaceDTO',
+    "Decoded class should be BibSpaceDTO, but is " . ref $restoredDTO);
   is(
-    ref $decodedDTO,
-    ref $bibspaceDTOObject,
-    "Obj type should be " . ref $bibspaceDTOObject
+    ref $restoredDTO,
+    ref $referenceDTOfromRepo,
+    "Obj type should be " . ref $referenceDTOfromRepo
   );
   is(
-    ref $decodedDTO->data,
-    ref $bibspaceDTOObject->data,
-    "->data type should be " . ref $bibspaceDTOObject->data
+    ref $restoredDTO->data,
+    ref $referenceDTOfromRepo->data,
+    "restoredDTO->data type should be " . ref $referenceDTOfromRepo->data
   );
 
-  isa_ok($decodedDTO->data, 'HASH', "Bad class, " . ref $decodedDTO->data);
+  isa_ok($restoredDTO->data, 'HASH', "Bad class, " . ref $restoredDTO->data);
 
-  for my $entity (keys %{$decodedDTO->data}) {
-    note("Testing collection holding objects of type $entity");
-    my $value         = $decodedDTO->data->{$entity};
-    my $expectedValue = $bibspaceDTOObject->data->{$entity};
+  for my $restoredDTOHashKey (keys %{$restoredDTO->data}) {
+    note("Testing collection holding objects of type $restoredDTOHashKey");
+    my $value
+      = $restoredDTO->get($restoredDTOHashKey);    #data->{$restoredDTOHashKey};
+    my $expectedValue = $referenceDTOfromRepo->get($restoredDTOHashKey)
+      ;    #data->{$restoredDTOHashKey};
+           # print Dumper $expectedValue;
+           # $VAR1 = [
+           #       bless( {
+           #                'team_id' => 1,
+           #                'entry_id' => 588
+           #              }, 'ExceptionSerializableBase' ),
+           #       bless( {
+           #                'team_id' => 6,
+           #                'entry_id' => 588
+           #              }, 'ExceptionSerializableBase' ),
+           #       bless( {
+           #                'team_id' => 6,
+           #                'entry_id' => 1173
+           #              }, 'ExceptionSerializableBase' )
+           #     ];
     is(
       ref $value,
       ref $expectedValue,
-      "->data->{$entity} should be " . ref $expectedValue
+      "restoredDTO->data->{$restoredDTOHashKey} should be "
+        . ref $expectedValue
     );
 
     # FIXME: Assume that there is at least 1 object of each type stored
-    my $obj   = $value->[0];
-    my $exObj = $expectedValue->[0];
-    is(ref $obj, ref $exObj, "->data->{$entity}->[0] should be " . ref $exObj);
+    my $gotObject      = $value->[0];
+    my $expectedObject = $expectedValue->[0];
+    is(
+      ref $gotObject,
+      ref $expectedObject,
+      "restoredDTO->data->{$restoredDTOHashKey}->[0] should be "
+        . ref $expectedObject
+    );
   }
 
-  my $oTest     = $decodedDTO->data->{'Entry'}->[0]->creation_time;
-  my $oExpected = $bibspaceDTOObject->data->{'Entry'}->[0]->creation_time;
+  my $oTest     = $restoredDTO->data->{'Entry'}->[0]->creation_time;
+  my $oExpected = $referenceDTOfromRepo->data->{'Entry'}->[0]->creation_time;
   is(
     ref $oTest,
     ref $oExpected,
-    "->data->{Entry}->[0]->creation_time should be " . ref $oExpected
+    "restoredDTO->data->{Entry}->[0]->creation_time should be "
+      . ref $oExpected
   );
 
 TODO: {
     local $TODO = "Do not bless but use constructor instead!";
-    my $oTest     = $decodedDTO->data->{'Entry'}->[0]->attachments;
-    my $oExpected = $bibspaceDTOObject->data->{'Entry'}->[0]->attachments;
+    my $oTest     = $restoredDTO->data->{'Entry'}->[0]->attachments;
+    my $oExpected = $referenceDTOfromRepo->data->{'Entry'}->[0]->attachments;
     is(
       ref $oTest,
       ref $oExpected,
-      "->data->{Entry}->[0]->attachments should be " . ref $oExpected
+      "restoredDTO->data->{Entry}->[0]->attachments should be "
+        . ref $oExpected
     );
   }
 
 TODO: {
     local $TODO = "Do not bless but use constructor instead!";
-    my $oTest     = $decodedDTO->data->{'Entry'}->[0]->title;
-    my $oExpected = $bibspaceDTOObject->data->{'Entry'}->[0]->title;
+    my $oTest     = $restoredDTO->data->{'Entry'}->[0]->title;
+    my $oExpected = $referenceDTOfromRepo->data->{'Entry'}->[0]->title;
     is(
       ref $oTest,
       ref $oExpected,
-      "->data->{Entry}->[0]->title should be " . ref $oExpected
+      "restoredDTO->data->{Entry}->[0]->title should be " . ref $oExpected
     );
   }
 };
@@ -170,19 +218,18 @@ subtest 'DTO restore Entry from JSON and check blessing to DateTime' => sub {
   };
   my $decodedDTO;
   lives_ok {
-    $decodedDTO = bless(JSON->new->decode($jsonString), 'BibSpaceDTO')
+    $decodedDTO = bless(JSON->new->decode($referenceDTOasJSON), 'BibSpaceDTO')
   }
   "Json string should be blessable into BibSpaceDTO class";
 
   # Creates DTO. Requires repo only for uid provider and preferences
-  $decodedDTO
-    = $bibspaceDTOObject->toLayeredRepo($singleEntryJSON, $self->repo);
+  $decodedDTO = BibSpaceDTO->toLayeredRepo($singleEntryJSON, $self->repo);
   isa_ok($decodedDTO, 'BibSpaceDTO',
     "Decoded class should be BibSpaceDTO, but is " . ref $decodedDTO);
   is(
     ref $decodedDTO,
-    ref $bibspaceDTOObject,
-    "Obj type should be of type " . ref $bibspaceDTOObject
+    ref $referenceDTOfromRepo,
+    "Obj type should be of type " . ref $referenceDTOfromRepo
   );
   is(ref $decodedDTO->data, 'HASH', "->data type should be HASH");
 
@@ -192,9 +239,9 @@ subtest 'DTO restore Entry from JSON and check blessing to DateTime' => sub {
   my $value = $decodedDTO->data->{'Entry'};
   is(ref $value, 'ARRAY', "->data->{'Entry'} should be ARRAY");
 
-  my $obj = $value->[0];
-  is(ref $obj, 'Entry', "->data->{'Entry'}->[0] should be Entry");
-  is(ref $obj->creation_time,
+  my $gotObject = $value->[0];
+  is(ref $gotObject, 'Entry', "->data->{'Entry'}->[0] should be Entry");
+  is(ref $gotObject->creation_time,
     'DateTime', "->data->{'Entry'}->[0]->creation_time should be DateTime");
 };
 

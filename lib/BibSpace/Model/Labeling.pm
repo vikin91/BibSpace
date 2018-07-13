@@ -15,8 +15,7 @@ extends 'LabelingSerializableBase';
 # Cast self to SerializableBase and serialize
 sub TO_JSON {
   my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return LabelingSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
+  return LabelingSerializableBase->meta->rebless_instance_back($self)->TO_JSON;
 }
 
 sub tag {

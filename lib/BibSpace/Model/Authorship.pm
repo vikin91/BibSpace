@@ -10,15 +10,13 @@ use Try::Tiny;
 
 use Moose;
 with 'IRelation';
-
 use BibSpace::Model::SerializableBase::AuthorshipSerializableBase;
 extends 'AuthorshipSerializableBase';
 
 # Cast self to SerializableBase and serialize
 sub TO_JSON {
   my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return AuthorshipSerializableBase->meta->rebless_instance_back($copy)
+  return AuthorshipSerializableBase->meta->rebless_instance_back($self)
     ->TO_JSON;
 }
 

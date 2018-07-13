@@ -14,8 +14,7 @@ extends 'MembershipSerializableBase';
 # Cast self to SerializableBase and serialize
 sub TO_JSON {
   my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return MembershipSerializableBase->meta->rebless_instance_back($copy)
+  return MembershipSerializableBase->meta->rebless_instance_back($self)
     ->TO_JSON;
 }
 
