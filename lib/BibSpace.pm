@@ -40,8 +40,6 @@ use BibSpace::Converter::IHtmlBibtexConverter;
 use BibSpace::Converter::Bibtex2HtmlConverter;
 use BibSpace::Converter::BibStyleConverter;
 
-use Storable;
-
 use BibSpace::Util::Preferences;
 use BibSpace::Util::EntityFactory;
 
@@ -120,19 +118,6 @@ has get_log_dir => sub {
 
 has version => sub {
   return $BibSpace::VERSION // "0.6.0";
-};
-
-has quick_load_fixture_filename => sub {
-  my $self = shift;
-  return $self->app->home->rel_file('bibspace.dat');
-};
-
-# don't want to read data form DB and wait to link them every reload?
-# use quick_load_fixture! Useful for development and testing.
-# better disable it for production
-has use_quick_load_fixture => sub {
-  warn "use_quick_load_fixture is deprecated";
-  return;
 };
 
 # Using multiple is not be supported currently.
@@ -327,13 +312,7 @@ sub setup_routes {
     ->name('load_fixture');
   $admin_user->get('/persistence/save')->to('persistence#save_fixture')
     ->name('save_fixture');
-  $admin_user->get('/persistence/copy_mysql_to_smart')
-    ->to('persistence#copy_mysql_to_smart')->name('copy_mysql_to_smart');
-  $admin_user->get('/persistence/copy_smart_to_mysql')
-    ->to('persistence#copy_smart_to_mysql')->name('copy_smart_to_mysql');
 
-  $admin_user->get('/persistence/persistence_status')
-    ->to('persistence#persistence_status')->name('persistence_status');
   $admin_user->get('/persistence/persistence_status_ajax')
     ->to('persistence#persistence_status_ajax')
     ->name('persistence_status_ajax');
@@ -344,9 +323,6 @@ sub setup_routes {
     ->name('reset_smart');
   $admin_user->get('/persistence/reset_all')->to('persistence#reset_all')
     ->name('reset_all');
-
-  $admin_user->get('/persistence/insert_random_data')
-    ->to('persistence#insert_random_data')->name('insert_random_data');
 
   ################ SETTINGS ################
   $logged_user->get('/profile')->to('login#profile');
@@ -396,6 +372,8 @@ sub setup_routes {
     ->name('regenerate_html_in_chunk');
 
   $manager_user->get('/backups')->to('backup#index')->name('backup_index');
+
+  # Do default backup
   $manager_user->put('/backups')->to('backup#save')->name('backup_do');
   $manager_user->put('/backups/mysql')->to('backup#save_mysql')
     ->name('backup_do_mysql');

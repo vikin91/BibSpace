@@ -19,9 +19,7 @@ use List::Util qw(first);
 use BibSpace::Functions::Core;
 use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::BackupFunctions;
-
 use BibSpace::Model::Backup;
-use Storable;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -54,7 +52,7 @@ sub index {
 
 sub save {
   my $self = shift;
-  return $self->save_storable;
+  return $self->save_json;
 }
 
 sub save_json {
@@ -68,12 +66,6 @@ sub save_json {
   else {
     $self->flash(msg_type => 'danger', msg => "Backup create failed!");
   }
-  $self->redirect_to('backup_index');
-}
-
-sub save_storable {
-  my $self = shift;
-  $self->flash(msg_type => 'danger', msg => "Backup type no longer supported!");
   $self->redirect_to('backup_index');
 }
 
@@ -229,19 +221,6 @@ sub controller_restore_json_backup {
     $msg      = 'Cannot restore - backup not found or not healthy!';
   }
   $self->flash(msg_type => $msg_type, msg => $msg,);
-  $self->redirect_to('backup_index');
-  return;
-}
-
-sub controller_restore_storable_backup {
-  my $self   = shift;
-  my $backup = shift;
-
-  $self->flash(
-    msg_type => 'danger',
-    msg =>
-      "Backup of type 'storable' is no longer supported. Please use JSON backup."
-  );
   $self->redirect_to('backup_index');
   return;
 }

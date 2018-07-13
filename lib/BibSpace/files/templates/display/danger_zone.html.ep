@@ -18,35 +18,13 @@
 </div>
 
 <div class="panel panel-default">
-  <div class="panel-heading">Move data between layers</div>
+  <div class="panel-heading">Reset system state</div>
   <div class="panel-body">
-      <a class="btn btn-default" href="<%= url_for('copy_mysql_to_smart') %>">mysql ==> smart</a>
-      <a class="btn btn-default" href="<%= url_for('copy_smart_to_mysql') %>">smart ==> mysql</a>
+      <a class="btn btn-danger" href="<%= url_for('reset_all') %>" data-toggle="tooltip" data-placement="bottom" title="WARNING: this will delete all data including users (also pub_admin). System will operate in demo mode - anyone will be able to access the system without loging-in."> Delete all data</a>
   </div>
 </div>
-
-
-<div class="panel panel-default">
-  <div class="panel-heading">Reset layers</div>
-  <div class="panel-body">
-      <a class="btn btn-danger" href="<%= url_for('reset_smart') %>" data-toggle="tooltip" data-placement="bottom" title="WARNING: this will delete all users (including pub_admin). System will operate in demo mode.">reset smart</a>
-      <a class="btn btn-danger" href="<%= url_for('reset_mysql') %>">reset mysql</a>
-      <a class="btn btn-danger" href="<%= url_for('reset_all') %>" data-toggle="tooltip" data-placement="bottom" title="WARNING: this will delete all users (including pub_admin). System will operate in demo mode.">reset ALL</a>
-  </div>
-</div>
-
-
-<div class="panel panel-default">
-  <div class="panel-heading">Generate random data</div>
-  <div class="panel-body">
-      <a class="btn btn-success" href="<%= url_for('insert_random_data') %>">Insert 300 random entities of each Type</a>
-  </div>
-</div>
-
-
 
 <script>
-
 function persistence_status(){
   $.ajax({
       type: 'get',
@@ -61,9 +39,5 @@ function persistence_status(){
 
 $('#get_persistence_backends_status').click( function() {
   persistence_status()
-});
-
-$('#copy_smart_to_mysql').click( function() {
-    copy_smart_to_mysql()
 });
 </script>

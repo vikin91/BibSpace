@@ -8,11 +8,6 @@
     <div class="row">
         <div class="col-lg-12 col-md-12 col-xs-12">
           <a class="btn btn-default" href="<%= get_referrer %>"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
-          %= form_for backup_do => (class=>'display-inline') => begin
-            <button type="submit" class="btn btn-success">
-              <i class="fa fa-hdd-o"></i> Do 'storable' backup (deprecated) <i class="fa fa-hdd-o"></i>
-            </button>
-          % end
           %= form_for backup_do_mysql => (class=>'display-inline') => begin
             <button type="submit" class="btn btn-success">
               <i class="fa fa-hdd-o"></i> Do 'mysql' backup <i class="fa fa-hdd-o"></i>
@@ -31,11 +26,6 @@
               </button>
             % end
           % }
-           <button class="btn btn-info" data-toggle="tooltip" data-placement="bottom" title="
-           Storable backups are dumps of the 'SmartArray' repository layer. They represent the current state of the system, i.e., BibSpace reads from the 'SmartArray'.
-
-           Restoring storable backups overwrites all layers."><i class="fa fa-question "></i> Help</button>
-        </div>
     </div>
 
     <div class="row">
@@ -87,10 +77,7 @@
                         <button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-hdd"></span> <%= $backup->type %> / <%= $backup->name %> / <%= $backup->sha %></button>
                     </td>
                     <td>
-                        % if( $backup->is_healthy and $backup->type eq 'storable' ){
-                          <a class="btn btn-warning btn-sm" href="#modal-dialog-restore-storable-<%=$backup->id%>" data-toggle="modal"><span class="glyphicon glyphicon-import"></span> Restore...</a>
-                        %}
-                        % elsif( $backup->is_healthy and $backup->type eq 'json' ){
+                        % if( $backup->is_healthy and $backup->type eq 'json' ){
                           <a class="btn btn-warning btn-sm" href="#modal-dialog-restore-json-<%=$backup->id%>" data-toggle="modal"><span class="glyphicon glyphicon-import"></span> Restore...</a>
                         %}
                         % else{
@@ -147,43 +134,7 @@
       </div>
       <!-- END OF MODAL DIALOG FOR DELETE -->
 
-      <!-- MODAL DIALOG FOR RESTORE STORABLE -->
-      <div id="modal-dialog-restore-storable-<%=$backup->id%>" class="modal">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-                <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
-                <h3>Are you sure?</h3>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to restore the state of DB from backup <span class="badge"><%=$backup->filename %></span>?</p>
-                <br>
-                <div class="alert alert-danger">
-
-                  <strong>This is quite serious operation!</strong> Here is what will happen:
-                  <ol>
-                    <li>Backup file will be read.</li>
-                    <li>Backup contents will replace current 'read' layer (SmartArray).</li>
-                    <li>All layers will be reset! MySQL database will be dropped and recreated.</li>
-                    <li>Contents of the backup layer will be pushed to all layers in a batch operation.</li>
-                  </ol>
-                </div>
-                <div class="modal-footer">
-                %= form_for 'backup_restore' => {id => $backup->id} => (class=>'display-inline') => begin
-                  %= hidden_field id => $backup->id
-                  <button type="submit" class="btn btn-warning">
-                    Yes, restore <span class="glyphicon glyphicon-import"></span>
-                  </button>
-                % end
-                <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-success">No, maybe later <span class="glyphicon glyphicon-leaf"></span></a>
-                </div>
-            </div>
-          </div>
-        </div>
-    </div>
-    <!-- END OF MODAL DIALOG FOR RESTORE STORABLE -->
-
-    <!-- MODAL DIALOG FOR RESTORE STORABLE -->
+    <!-- MODAL DIALOG FOR RESTORE JSON -->
     <div id="modal-dialog-restore-json-<%=$backup->id%>" class="modal">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -211,7 +162,7 @@
         </div>
       </div>
   </div>
-  <!-- END OF MODAL DIALOG FOR RESTORE STORABLE -->
+  <!-- END OF MODAL DIALOG FOR RESTORE JSON -->
 %}
 
 </div>

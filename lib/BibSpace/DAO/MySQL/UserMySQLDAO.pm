@@ -60,21 +60,19 @@ sub all {
   while (my $row = $sth->fetchrow_hashref()) {
 
     # set formatter to parse date/time in the requested format
-    my $rt = $mysqlPattern->parse_datetime($row->{registration_time});
-    my $ll = $mysqlPattern->parse_datetime($row->{last_login});
+    my $regTime   = $mysqlPattern->parse_datetime($row->{registration_time});
+    my $lastLogin = $mysqlPattern->parse_datetime($row->{last_login});
 
     # set defaults if there is no data in mysql
-    $rt ||= DateTime->now()
-      ; # formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
-    $ll ||= DateTime->now()
-      ; # formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
+    $regTime   ||= DateTime->now();
+    $lastLogin ||= DateTime->now();
 
     my $obj = $self->e_factory->new_User(
       old_mysql_id      => $row->{id},
       id                => $row->{id},
       login             => $row->{login},
-      registration_time => $rt,
-      last_login        => $ll,
+      registration_time => $regTime,
+      last_login        => $lastLogin,
       real_name         => $row->{real_name},
       email             => $row->{email},
       pass              => $row->{pass},

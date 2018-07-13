@@ -7,7 +7,6 @@ use BibSpace::Functions::FDB;
 
 use JSON -convert_blessed_universally;
 use BibSpace::Model::SerializableBase::BibSpaceDTO;
-use Storable;
 
 use Data::Dumper;
 use utf8;

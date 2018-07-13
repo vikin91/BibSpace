@@ -18,19 +18,10 @@ TestManager->apply_fixture($self->app);
 
 my @pages = (
   $t_logged_in->app->url_for('system_status'),
-
-  # $t_logged_in->app->url_for('reset_smart'),
-  # $t_logged_in->app->url_for('copy_mysql_to_smart'),
-  $t_logged_in->app->url_for('reset_mysql'),
-
-  # $t_logged_in->app->url_for('copy_smart_to_mysql'),
-  $t_logged_in->app->url_for('persistence_status'),
   $t_logged_in->app->url_for('reset_all'),
-
-  # $t_logged_in->app->url_for('load_fixture'),
-
-# $t_logged_in->app->url_for('save_fixture'), # saving test fixture shall not be tested!
-  $t_logged_in->app->url_for('insert_random_data', num => 50),
+  $t_logged_in->app->url_for('load_fixture'),
+  $t_logged_in->app->url_for('save_fixture')
+  ,    # saving test fixture shall not be tested!
 );
 
 for my $page (@pages) {
