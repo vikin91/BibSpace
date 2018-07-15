@@ -10,7 +10,7 @@
             <H1 class="pull-right">Author: </H1>
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <h1> <%= $author->uid %> </h1>
+            <h1 class="author-master-name"> <%= $author->uid %> </h1>
         </div>
     </div>
 
@@ -156,7 +156,7 @@
             % for my $minor_author (@$minor_authors){
                  <li class="list-group-item">
 
-                    <span class="badge">
+                    <span class="badge author-id">
                         <span class="glyphicon glyphicon-barcode"></span>
                         <%= $minor_author->id %>
                     </span>

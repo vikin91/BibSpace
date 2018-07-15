@@ -36,15 +36,17 @@ sub all_authors {    # refactored
   @authors = grep { $_->is_master } @authors;
 
   if ($letter) {
-    @authors = grep { (substr($_->master, 0, 1) cmp $letter) == 0 } @authors;
+    @authors
+      = grep { (substr($_->get_master->name, 0, 1) cmp $letter) == 0 } @authors;
   }
   my @letters;
   if (defined $visible) {
-    @letters = map { substr($_->master, 0, 1) }
+    @letters = map { substr($_->get_master->name, 0, 1) }
       $self->app->repo->authors_filter(sub { $_->display == $visible });
   }
   else {
-    @letters = map { substr($_->master, 0, 1) } $self->app->repo->authors_all;
+    @letters = map { substr($_->get_master->name, 0, 1) }
+      $self->app->repo->authors_all;
   }
   @letters = uniq @letters;
   @letters = sort @letters;
@@ -186,7 +188,8 @@ sub add_to_team {
       msg_type => "danger"
     );
   }
-  $self->redirect_to($self->get_referrer);
+  $self->redirect_to($self->url_for('edit_author', id => $author->id)
+      || $self->get_referrer);
 }
 
 sub remove_from_team {
@@ -198,7 +201,12 @@ sub remove_from_team {
   my $team   = $self->app->repo->teams_find(sub   { $_->id == $team_id });
 
   if (defined $author and defined $team) {
-    my $membership = $author->memberships_find(sub { $_->team->equals($team) });
+    my $search_membership = $self->app->repo->entityFactory->new_Membership(
+      author_id => $author->get_master->id,
+      team_id   => $team->id
+    );
+    my $membership = $self->app->repo->memberships_find(
+      sub { $_->equals($search_membership) });
     $author->remove_membership($membership);
     $team->remove_membership($membership);
     $self->app->repo->memberships_delete($membership);
@@ -217,7 +225,8 @@ sub remove_from_team {
       msg_type => "danger"
     );
   }
-  $self->redirect_to($self->get_referrer);
+  $self->redirect_to($self->url_for('edit_author', id => $author->id)
+      || $self->get_referrer);
 }
 
 sub remove_uid {
