@@ -81,19 +81,21 @@ subtest 'Add author post' => sub {
 
   $op->post_ok(
     $self->url_for('add_author') => {Accept     => '*/*'},
-    form                         => {new_master => 'TestMaster'}
+    form                         => {new_master => 'XTestMasterAutogen'}
     )->element_exists('h1[class$=author-master-name]')
-    ->text_like('h1[class$=author-master-name]' => qr/TestMaster/);
+    ->text_like('h1[class$=author-master-name]' => qr/XTestMasterAutogen/);
 
   $op->post_ok(
     $self->url_for('add_author') => {Accept     => '*/*'},
-    form                         => {new_master => 'TestMaster'}
+    form                         => {new_master => 'XTestMasterAutogen'}
     )
-    ->content_like(qr/Author with proposed master: TestMaster already exists!/);
+    ->content_like(
+    qr/Author with proposed master: XTestMasterAutogen already exists!/);
 };
 
 subtest '(fixture) Add author to team' => sub {
-  my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
+  my $author
+    = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen' });
   ok($author->id > 1);
   my $aid   = $author->id;
   my $aname = $author->name;
@@ -107,12 +109,13 @@ subtest '(fixture) Add author to team' => sub {
   $op->get_ok($url)->status_is(200)
     ->content_like(qr/\QAuthor $aname has just joined team $tname/)
     ->element_exists('h1[class$=author-master-name]')
-    ->text_like('h1[class$=author-master-name]' => qr/TestMaster/)
+    ->text_like('h1[class$=author-master-name]' => qr/XTestMasterAutogen/)
     ->text_like('span[class$=author-id]'        => qr/\Q$aid/);
 };
 
 subtest '(fixture) Remove author from team' => sub {
-  my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
+  my $author
+    = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen' });
   ok($author->id > 1);
   my $aid   = $author->id;
   my $aname = $author->name;
@@ -125,69 +128,77 @@ subtest '(fixture) Remove author from team' => sub {
     )
     )->status_is(200)->content_like(qr/\QAuthor $aname has just left team/)
     ->element_exists('h1[class$=author-master-name]')
-    ->text_like('h1[class$=author-master-name]' => qr/TestMaster/);
+    ->text_like('h1[class$=author-master-name]' => qr/XTestMasterAutogen/);
 };
 
 subtest '(fixture) Toggle author visibility' => sub {
-  my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
+  my $author
+    = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen' });
   ok($author->id > 1);
 
   # Make invisible
   my $old_visibility = $author->display;
   $author->display(0);
 
-  $op->get_ok($self->url_for('all_authors')->query(visible => 0, letter => 'T'))
-    ->status_is(200)->element_exists('ul li a[class$=author-letter-T]')
-    ->text_like('td p:only-child[class$=author-master-name]' => qr/TestMaster/);
+  $op->get_ok($self->url_for('all_authors')->query(visible => 0, letter => 'X'))
+    ->status_is(200)->element_exists('ul li a[class$=author-letter-X]')
+    ->text_like(
+    'td p:only-child[class$=author-master-name]' => qr/XTestMasterAutogen/);
 
   $op->get_ok($self->url_for('toggle_author_visibility', id => $author->id))
     ->status_is(200);
 
-  $op->get_ok($self->url_for('all_authors')->query(visible => 1, letter => 'T'))
-    ->status_is(200)->element_exists('ul li a[class$=author-letter-T]')
-    ->text_like('td p:only-child[class$=author-master-name]' => qr/TestMaster/);
+  $op->get_ok($self->url_for('all_authors')->query(visible => 1, letter => 'X'))
+    ->status_is(200)->element_exists('ul li a[class$=author-letter-X]')
+    ->text_like(
+    'td p:only-child[class$=author-master-name]' => qr/XTestMasterAutogen/);
 
   $op->get_ok($self->url_for('toggle_author_visibility', id => $author->id))
     ->status_is(200);
 
-  $op->get_ok($self->url_for('all_authors')->query(visible => 0, letter => 'T'))
-    ->status_is(200)->element_exists('ul li a[class$=author-letter-T]')
-    ->text_like('td p:only-child[class$=author-master-name]' => qr/TestMaster/);
+  $op->get_ok($self->url_for('all_authors')->query(visible => 0, letter => 'X'))
+    ->status_is(200)->element_exists('ul li a[class$=author-letter-X]')
+    ->text_like(
+    'td p:only-child[class$=author-master-name]' => qr/XTestMasterAutogen/);
 
   $author->display($old_visibility);
 };
 
 subtest 'Edit author post add user_id (name)' => sub {
-  my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
+  my $author
+    = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen' });
   ok($author->id > 1);
   my $aid = $author->id;
 
   $op->post_ok(
     $self->url_for('edit_author') => {Accept => '*/*'},
-    form => {id => $author->id, new_user_id => 'TestMaster2'}
+    form => {id => $author->id, new_user_id => 'XTestMasterAutogen2'}
     )->element_exists('h1[class$=author-master-name]')
-    ->text_like('h1[class$=author-master-name]' => qr/TestMaster/);
+    ->text_like('h1[class$=author-master-name]' => qr/XTestMasterAutogen/);
 
   $op->post_ok(
     $self->url_for('edit_author') => {Accept => '*/*'},
-    form => {id => $author->id, new_user_id => 'TestMaster2'}
+    form => {id => $author->id, new_user_id => 'XTestMasterAutogen2'}
     )
     ->content_like(
-    qr/Cannot add user ID TestMaster2. Such ID already exist. Maybe you want to merge authors instead?/
+    qr/Cannot add user ID XTestMasterAutogen2. Such ID already exist. Maybe you want to merge authors instead?/
     );
 
   my $edit_get_url = $self->url_for('edit_author', id => $author->id);
   $op->get_ok($edit_get_url)->status_is(200)
     ->element_exists('h1[class$=author-master-name]')
-    ->text_like('h1[class$=author-master-name]' => qr/TestMaster/)
-    ->element_exists('a[class$=author-minor-name-TestMaster2]')
-    ->text_like('a[class$=author-minor-name-TestMaster2]' => qr/TestMaster2/);
+    ->text_like('h1[class$=author-master-name]' => qr/XTestMasterAutogen/)
+    ->element_exists('a[class$=author-minor-name-XTestMasterAutogen2]')
+    ->text_like('a[class$=author-minor-name-XTestMasterAutogen2]' =>
+      qr/XTestMasterAutogen2/);
 };
 
 subtest 'Edit author remove minion (unlink)' => sub {
-  my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
+  my $author
+    = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen' });
   ok($author->id > 1);
-  my $minion = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster2' });
+  my $minion
+    = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen2' });
   ok($minion->id > 1);
 
   my $url = $self->url_for(
@@ -200,40 +211,61 @@ subtest 'Edit author remove minion (unlink)' => sub {
   my $edit_get_url = $self->url_for('edit_author', id => $author->id);
   $op->get_ok($edit_get_url)->status_is(200)
     ->element_exists('h1[class$=author-master-name]')
-    ->text_like('h1[class$=author-master-name]' => qr/TestMaster/)
-    ->element_exists('a[class$=author-minor-name-TestMaster]')
-    ->text_like('a[class$=author-minor-name-TestMaster]' => qr/TestMaster/)
-    ->element_exists_not('a[class$=author-minor-name-TestMaster3]');
+    ->text_like('h1[class$=author-master-name]' => qr/XTestMasterAutogen/)
+    ->element_exists('a[class$=author-minor-name-XTestMasterAutogen]')
+    ->text_like(
+    'a[class$=author-minor-name-XTestMasterAutogen]' => qr/XTestMasterAutogen/)
+    ->element_exists_not('a[class$=author-minor-name-XTestMasterAutogen3]');
 };
 
 subtest 'Edit author post change master name' => sub {
-  my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
+  my $author
+    = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen' });
   ok($author->id > 1);
 
   $op->post_ok(
     $self->url_for('edit_author') => {Accept => '*/*'},
-    form => {id => $author->id, new_master => 'TestMaster3'}
-  )->content_like(qr/Master name has been updated successfully/);
+    form => {id => $author->id, new_master => 'XTestMasterAutogen3'}
+    )->status_is(200)
+    ->content_like(qr/Master name has been updated successfully/);
 
   my $edit_get_url = $self->url_for('edit_author', id => $author->id);
   $op->get_ok($edit_get_url)->status_is(200)
     ->element_exists('h1[class$=author-master-name]')
-    ->text_like('h1[class$=author-master-name]' => qr/TestMaster3/);
+    ->text_like('h1[class$=author-master-name]' => qr/XTestMasterAutogen3/);
 
   $op->post_ok(
     $self->url_for('edit_author') => {Accept => '*/*'},
-    form => {id => $author->id, new_master => 'TestMaster3'}
-  )->content_like(qr/This master name is already taken/);
+    form => {id => $author->id, new_master => 'XTestMasterAutogen3'}
+  )->status_is(200)->content_like(qr/This master name is already taken/);
 
   # Return to the original master name
   $op->post_ok(
     $self->url_for('edit_author') => {Accept => '*/*'},
-    form => {id => $author->id, new_master => 'TestMaster'}
-  )->content_like(qr/Master name has been updated successfully/);
+    form => {id => $author->id, new_master => 'XTestMasterAutogen'}
+    )->status_is(200)
+    ->content_like(qr/Master name has been updated successfully/);
+};
+
+subtest 'Edit author delete' => sub {
+  my $author
+    = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen' });
+  ok($author->id > 1);
+  my $aid   = $author->id;
+  my $aname = $author->name;
+
+  my $delete_url = $self->url_for('delete_author', id => $author->id);
+  $op->get_ok($delete_url)->status_is(200)
+    ->content_like(qr/\QAuthor $aname ID $aid has been removed successfully/);
+
+  my $edit_get_url = $self->url_for('edit_author', id => $author->id);
+  $op->get_ok($edit_get_url)->status_is(200)
+    ->content_like(qr/\QAuthor with id $aid does not exist!/);
 };
 
 subtest 'Edit author delete force' => sub {
-  my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
+  my $author
+    = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen2' });
   ok($author->id > 1);
   my $aid   = $author->id;
   my $aname = $author->name;

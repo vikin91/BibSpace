@@ -204,8 +204,6 @@ sub has_entry {
   my $entry = shift;
 
   my $authorship_to_find = $self->repo->entityFactory->new_Authorship(
-    author    => $self,
-    entry     => $entry,
     author_id => $self->id,
     entry_id  => $entry->id
   );

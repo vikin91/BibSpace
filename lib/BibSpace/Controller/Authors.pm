@@ -312,27 +312,31 @@ sub merge_authors {
   if (defined $author_source and defined $author_destination) {
     if ($author_destination->can_merge_authors($author_source)) {
 
-      my @src_authorships = $author_source->authorships_all;
+      my @src_memberships = $self->app->repo->memberships_filter(
+        sub { $_->author_id == $author_source->id });
+
+      my @src_authorships = $self->app->repo->authorships_filter(
+        sub { $_->author_id == $author_source->id });
+
       foreach my $src_authorship (@src_authorships) {
 
         # Removing the authorship from the source author
-        $src_authorship->author->remove_authorship($src_authorship);
-
-        # authorships cannot be updated, so we need to delete and add later
         $self->app->repo->authorships_delete($src_authorship);
 
-        # Changing the authorship to point to a new author
-        $src_authorship->author($author_destination);
+     # Changing the authorship to point to a new author (new object is required)
+
+        my $new_authorship = $self->app->repo->entityFactory->new_Authorship(
+          author_id => $author_destination->id,
+          entry_id  => $src_authorship->entry_id
+        );
 
         # store changes the authorship in the repo
-        $self->app->repo->authorships_save($src_authorship);
-
-        # Adding the authorship to the new author
-        $author_destination->add_authorship($src_authorship);
+        $self->app->repo->authorships_save($new_authorship);
       }
-      $author_source->memberships_clear;
-      $author_source->set_master($author_destination);
 
+ # Source author abandons all teams - information about their teams is destroyed
+      $self->app->repo->authorships_delete(@src_memberships);
+      $author_source->set_master($author_destination);
       $self->app->repo->authors_save($author_destination);
       $self->app->repo->authors_save($author_source);
 
@@ -340,8 +344,14 @@ sub merge_authors {
       Freassign_authors_to_entries_given_by_array($self->app, 0, \@entries);
 
       $self->flash(
-        msg =>
-          "Author <strong>$copy_name</strong> was merged into <strong>$author_destination->master->name</strong>.",
+        msg => "Author $copy_name was merged into "
+          . $author_destination->master->name . ". "
+          . "Information about teams of author $copy_name was deleted. "
+          . "The new master "
+          . $author_destination->name
+          . " does not change their teams. "
+          . "All entries of author $copy_name are now assigned to author "
+          . $author_destination->name . ".",
         msg_type => "success"
       );
     }
@@ -360,7 +370,9 @@ sub merge_authors {
     );
   }
 
-  $self->redirect_to($self->get_referrer);
+  $self->redirect_to(
+         $self->url_for('edit_author', id => $author_destination->id)
+      || $self->get_referrer);
 }
 
 sub edit_post {
