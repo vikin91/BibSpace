@@ -43,7 +43,59 @@ subtest '(fixture) Add merge authors using author IDs' => sub {
     ->element_exists('a[class$=author-minor-name-TestMaster]')
     ->text_like('a[class$=author-minor-name-TestMaster]' => qr/TestMaster/);
 
-  # Check if their entries are merged properly
+  my @entries_master = $author_to->get_entries;
+  my @entries_minion = $author_from->get_entries;
+
+ # 3 is a magic number calculated from fixture data
+ # master and minion have 1 common paper, and 1 separate paper each - total is 3
+  is(scalar @entries_master,
+    3, "Master author should have 3 entries after merging");
+  is(scalar @entries_minion,
+    0, "Minion author should have 0 entries after merging");
+
+};
+
+subtest 'Edit author remove minion (unlink)' => sub {
+  my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
+  ok($author->id > 1);
+  my $minion = $op->app->repo->authors_find(sub { $_->name eq 'TestMinion' });
+  ok($minion->id > 1);
+
+  my $url = $self->url_for(
+    'remove_author_uid',
+    master_id => $author->id,
+    minor_id  => $minion->id
+  );
+  $op->get_ok($url)->status_is(200);
+
+  my $edit_get_url_master = $self->url_for('edit_author', id => $author->id);
+  $op->get_ok($edit_get_url_master)->status_is(200)
+    ->element_exists('h1[class$=author-master-name]')
+    ->text_like('h1[class$=author-master-name]' => qr/TestMaster/)
+    ->element_exists('a[class$=author-minor-name-TestMaster]')
+    ->text_like('a[class$=author-minor-name-TestMaster]' => qr/TestMaster/)
+    ->element_exists_not('a[class$=author-minor-name-TestMinion]');
+
+  my $edit_get_url_minion = $self->url_for('edit_author', id => $minion->id);
+  $op->get_ok($edit_get_url_minion)->status_is(200)
+    ->element_exists('h1[class$=author-master-name]')
+    ->text_like('h1[class$=author-master-name]' => qr/TestMinion/)
+    ->element_exists('a[class$=author-minor-name-TestMinion]')
+    ->text_like('a[class$=author-minor-name-TestMinion]' => qr/TestMinion/)
+    ->element_exists_not('a[class$=author-minor-name-TestMaster]');
+
+  # TODO: run reassign?
+
+  my @entries_master = $author->get_entries;
+  my @entries_minion = $minion->get_entries;
+
+ # 2 are magic numbers calculated from fixture data
+ # master and minion have 1 common paper, and 1 separate paper each - total is 3
+  is(scalar @entries_master,
+    2, "Master author should have 3 entries after merging");
+  is(scalar @entries_minion,
+    2, "Minion author should have 0 entries after merging");
+
 };
 
 done_testing();
