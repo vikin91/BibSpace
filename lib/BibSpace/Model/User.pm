@@ -12,14 +12,6 @@ use MooseX::ClassAttribute;
 with 'IEntity';
 use BibSpace::Model::SerializableBase::UserSerializableBase;
 extends 'UserSerializableBase';
-
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return UserSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
-}
-
 use DateTime::Format::Strptime;
 use DateTime;
 my $dtPattern = DateTime::Format::Strptime->new(pattern => '%Y-%m-%d %H:%M:%S');

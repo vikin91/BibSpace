@@ -12,12 +12,6 @@ with 'IRelation';
 use BibSpace::Model::SerializableBase::ExceptionSerializableBase;
 extends 'ExceptionSerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  return ExceptionSerializableBase->meta->rebless_instance_back($self)->TO_JSON;
-}
-
 sub team {
   my $self = shift;
   return if not $self->team_id or $self->team_id < 1;

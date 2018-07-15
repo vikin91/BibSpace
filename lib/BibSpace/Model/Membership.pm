@@ -11,13 +11,6 @@ with 'IRelation';
 use BibSpace::Model::SerializableBase::MembershipSerializableBase;
 extends 'MembershipSerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  return MembershipSerializableBase->meta->rebless_instance_back($self)
-    ->TO_JSON;
-}
-
 sub author {
   my $self = shift;
   return if not $self->author_id or $self->author_id < 1;

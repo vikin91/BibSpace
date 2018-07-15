@@ -49,8 +49,8 @@ sub toJSON {
   my $self = shift;
 
   use JSON -convert_blessed_universally;
-  my $json_obj = JSON->new->convert_blessed->utf8->pretty;
-  return $json_obj->encode($self);    # this method chnages self!!
+  return JSON->new->convert_blessed->utf8->pretty->encode($self)
+    ;    # this method chnages self!!
 }
 
 # Static constructor method that creates BibSpaceDTO from LayeredRepo

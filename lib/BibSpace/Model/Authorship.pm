@@ -1,28 +1,22 @@
 package Authorship;
 
-use Data::Dumper;
 use utf8;
 use v5.16;
 use BibSpace::Model::Author;
 use BibSpace::Model::Entry;
 use BibSpace::Model::IRelation;
 use Try::Tiny;
+use Data::Dumper;
+$Data::Dumper::Maxdepth = 2;
 
 use Moose;
 with 'IRelation';
 use BibSpace::Model::SerializableBase::AuthorshipSerializableBase;
 extends 'AuthorshipSerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  return AuthorshipSerializableBase->meta->rebless_instance_back($self)
-    ->TO_JSON;
-}
-
-# the fileds below are used for linking process
-has 'entry_id'  => (is => 'ro', isa => 'Int');
-has 'author_id' => (is => 'ro', isa => 'Int');
+# # the fileds below are used for linking process
+# has 'entry_id'  => (is => 'ro', isa => 'Int');
+# has 'author_id' => (is => 'ro', isa => 'Int');
 
 sub author {
   my $self = shift;

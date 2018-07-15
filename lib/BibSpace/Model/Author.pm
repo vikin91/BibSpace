@@ -17,13 +17,6 @@ with 'IEntity', 'IAuthored', 'IMembered';
 use BibSpace::Model::SerializableBase::AuthorSerializableBase;
 extends 'AuthorSerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return AuthorSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
-}
-
 # A placeholder for master object. This will be lazily populated on first read
 has 'masterObj' => (
   is            => 'rw',

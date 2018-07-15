@@ -6,17 +6,13 @@ use BibSpace::Model::Entry;
 use BibSpace::Model::Tag;
 use BibSpace::Model::IRelation;
 use Try::Tiny;
+use Data::Dumper;
+$Data::Dumper::Maxdepth = 2;
 
 use Moose;
 with 'IRelation';
 use BibSpace::Model::SerializableBase::LabelingSerializableBase;
 extends 'LabelingSerializableBase';
-
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  return LabelingSerializableBase->meta->rebless_instance_back($self)->TO_JSON;
-}
 
 sub tag {
   my $self = shift;

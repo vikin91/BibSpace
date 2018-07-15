@@ -15,16 +15,6 @@ with 'IEntity', 'IMembered', 'IHavingException';
 use BibSpace::Model::SerializableBase::TeamSerializableBase;
 extends 'TeamSerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return TeamSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
-}
-
-has 'name' => (is => 'rw', isa => 'Str');
-has 'parent' => (is => 'rw');
-
 sub equals {
   my $self = shift;
   my $obj  = shift;

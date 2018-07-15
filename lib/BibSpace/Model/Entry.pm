@@ -30,13 +30,6 @@ with 'IEntity', 'ILabeled', 'IAuthored', 'IHavingException';
 use BibSpace::Model::SerializableBase::EntrySerializableBase;
 extends 'EntrySerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return EntrySerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
-}
-
 has 'entry_type' => (is => 'rw', isa => 'Str', default => 'paper');
 has 'bibtex_key' => (is => 'rw', isa => 'Maybe[Str]');
 has '_bibtex_type' =>

@@ -19,7 +19,7 @@ note "============ Testing " . scalar(@all_types) . " Types ============";
 foreach my $type (@all_types) {
   last if $limit_num_tests < 0;
 
-  note "============ Testing Type ID " . $type->id . ".";
+  note "============ Testing Type ID " . $type->our_type . ".";
 
   ok($type->equals($type), "equals");
 

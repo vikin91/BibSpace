@@ -14,13 +14,6 @@ with 'IEntity', 'ILabeled';
 use BibSpace::Model::SerializableBase::TagSerializableBase;
 extends 'TagSerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return TagSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
-}
-
 has 'tagtype' =>
   (is => 'rw', isa => 'Maybe[TagType]', traits => ['DoNotSerialize'],);
 

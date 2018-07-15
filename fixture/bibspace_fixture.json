@@ -1,23 +1,210 @@
 {
+   "formatVersion" : "1",
    "data" : {
-      "Membership" : [
+      "TagType" : [
          {
-            "stop" : 0,
-            "team_id" : 1,
-            "start" : 0,
+            "name" : "Tag",
+            "id" : 1,
+            "comment" : "keyword",
+            "old_mysql_id" : 1
+         },
+         {
+            "id" : 2,
+            "old_mysql_id" : 2,
+            "comment" : "12 categories defined as in research agenda",
+            "name" : "Category"
+         },
+         {
+            "name" : "Other",
+            "id" : 3,
+            "old_mysql_id" : 3,
+            "comment" : "Reserved for other grouppings of papers (e.g., QPME_Bibliography)"
+         },
+         {
+            "id" : 4,
+            "old_mysql_id" : 4,
+            "comment" : "Tags Imported from Bibtex",
+            "name" : "Imported"
+         }
+      ],
+      "Author" : [
+         {
+            "old_mysql_id" : 527,
+            "id" : 527,
+            "display" : 1,
+            "uid" : "RygielskiPiotr",
+            "master_id" : 527,
+            "name" : "RygielskiPiotr"
+         },
+         {
+            "uid" : "SPEC",
+            "display" : 1,
+            "id" : 591,
+            "old_mysql_id" : 591,
+            "name" : "SPEC",
+            "master_id" : 591
+         },
+         {
+            "old_mysql_id" : 1121,
+            "uid" : "HerbstNikolas",
+            "id" : 1121,
+            "display" : 1,
+            "name" : "HerbstNikolas",
+            "master_id" : 1121
+         },
+         {
+            "name" : "MilenkoskiAleksandar",
+            "master_id" : 1389,
+            "old_mysql_id" : 1389,
+            "display" : 1,
+            "id" : 1389,
+            "uid" : "MilenkoskiAleksandar"
+         },
+         {
+            "old_mysql_id" : 1486,
+            "id" : 1486,
+            "display" : 1,
+            "uid" : "GrohmannJohannes",
+            "name" : "GrohmannJohannes",
+            "master_id" : 1486
+         },
+         {
+            "uid" : "ExampleJohny",
+            "display" : 1,
+            "id" : 1487,
+            "old_mysql_id" : 1487,
+            "name" : "ExampleJohny",
+            "master_id" : 1487
+         },
+         {
+            "old_mysql_id" : 1488,
+            "uid" : "HerbstNikolasRoman",
+            "id" : 1488,
+            "display" : 0,
+            "name" : "HerbstNikolasRoman",
+            "master_id" : 1121
+         }
+      ],
+      "User" : [
+         {
+            "pass" : "$2a$08$gabQ/Wh1O4X/rxFyw1MN9.JAW7fpGkgnqL4n1MBn0Fke3trEwIFEK",
+            "last_login" : "2017-02-08T18:20:27",
+            "rank" : 1,
+            "real_name" : "James Bond",
+            "login" : "j.bond007",
+            "master_id" : 0,
+            "id" : 2,
+            "old_mysql_id" : 2,
+            "registration_time" : "2017-02-08T18:20:18",
+            "email" : "test@example.com",
+            "pass2" : "gabQ/Wh1O4X/rxFyw1MN9.",
+            "pass3" : null,
+            "tennant_id" : 0
+         },
+         {
+            "pass" : "$2a$08$RjsJK5.hcmqMphocOzVsUOAbdhZBdl9gNlGDzl69AyApzIQO2P7TK",
+            "master_id" : 0,
+            "real_name" : "Admin",
+            "login" : "pub_admin",
+            "rank" : 2,
+            "last_login" : "2017-12-10T19:32:04",
+            "registration_time" : "2017-02-08T14:21:41",
+            "old_mysql_id" : 1,
+            "id" : 1,
+            "tennant_id" : 0,
+            "pass2" : "RjsJK5.hcmqMphocOzVsUO",
+            "pass3" : null,
+            "email" : "pub_admin@example.com"
+         }
+      ],
+      "Exception" : [
+         {
+            "entry_id" : 588,
+            "team_id" : 1
+         },
+         {
+            "entry_id" : 588,
+            "team_id" : 6
+         },
+         {
+            "team_id" : 6,
+            "entry_id" : 1173
+         }
+      ],
+      "Authorship" : [
+         {
+            "author_id" : 1389,
+            "entry_id" : 435
+         },
+         {
+            "author_id" : 591,
+            "entry_id" : 588
+         },
+         {
+            "author_id" : 527,
+            "entry_id" : 675
+         },
+         {
+            "entry_id" : 781,
             "author_id" : 527
          },
          {
-            "stop" : 2012,
-            "team_id" : 3,
-            "start" : 2009,
+            "author_id" : 527,
+            "entry_id" : 1077
+         },
+         {
+            "author_id" : 1121,
+            "entry_id" : 1099
+         },
+         {
+            "entry_id" : 1105,
             "author_id" : 527
+         },
+         {
+            "entry_id" : 1105,
+            "author_id" : 1389
+         },
+         {
+            "entry_id" : 1111,
+            "author_id" : 1121
          },
          {
             "author_id" : 1486,
-            "start" : 0,
-            "team_id" : 1,
-            "stop" : 0
+            "entry_id" : 1159
+         },
+         {
+            "author_id" : 527,
+            "entry_id" : 1166
+         },
+         {
+            "author_id" : 1487,
+            "entry_id" : 1173
+         }
+      ],
+      "Team" : [
+         {
+            "parent" : null,
+            "name" : "SE-WUERZBURG",
+            "id" : 1,
+            "old_mysql_id" : 1
+         },
+         {
+            "parent" : null,
+            "name" : "PiotrPL",
+            "id" : 3,
+            "old_mysql_id" : 3
+         },
+         {
+            "parent" : null,
+            "name" : "DESCARTES_ALUMNI",
+            "id" : 4,
+            "old_mysql_id" : 4
+         },
+         {
+            "parent" : null,
+            "name" : "DESCARTES",
+            "id" : 6,
+            "old_mysql_id" : 6
          }
       ],
       "Labeling" : [
@@ -50,16 +237,16 @@
             "entry_id" : 1077
          },
          {
-            "tag_id" : 10,
-            "entry_id" : 1099
-         },
-         {
-            "entry_id" : 1077,
-            "tag_id" : 11
+            "entry_id" : 1099,
+            "tag_id" : 10
          },
          {
             "tag_id" : 11,
-            "entry_id" : 1111
+            "entry_id" : 1077
+         },
+         {
+            "entry_id" : 1111,
+            "tag_id" : 11
          },
          {
             "entry_id" : 202,
@@ -78,8 +265,8 @@
             "entry_id" : 588
          },
          {
-            "tag_id" : 30,
-            "entry_id" : 781
+            "entry_id" : 781,
+            "tag_id" : 30
          },
          {
             "entry_id" : 202,
@@ -110,44 +297,44 @@
             "entry_id" : 1105
          },
          {
-            "entry_id" : 1077,
-            "tag_id" : 54
+            "tag_id" : 54,
+            "entry_id" : 1077
          },
          {
             "entry_id" : 1077,
             "tag_id" : 55
          },
          {
-            "tag_id" : 57,
-            "entry_id" : 202
-         },
-         {
-            "tag_id" : 57,
-            "entry_id" : 435
+            "entry_id" : 202,
+            "tag_id" : 57
          },
          {
             "entry_id" : 435,
-            "tag_id" : 58
+            "tag_id" : 57
+         },
+         {
+            "tag_id" : 58,
+            "entry_id" : 435
          },
          {
             "tag_id" : 58,
             "entry_id" : 1159
          },
          {
-            "tag_id" : 59,
-            "entry_id" : 1159
+            "entry_id" : 1159,
+            "tag_id" : 59
          },
          {
-            "entry_id" : 1111,
-            "tag_id" : 60
+            "tag_id" : 60,
+            "entry_id" : 1111
+         },
+         {
+            "entry_id" : 1099,
+            "tag_id" : 61
          },
          {
             "tag_id" : 61,
-            "entry_id" : 1099
-         },
-         {
-            "entry_id" : 1111,
-            "tag_id" : 61
+            "entry_id" : 1111
          },
          {
             "entry_id" : 1159,
@@ -166,8 +353,8 @@
             "tag_id" : 66
          },
          {
-            "tag_id" : 68,
-            "entry_id" : 435
+            "entry_id" : 435,
+            "tag_id" : 68
          },
          {
             "tag_id" : 69,
@@ -186,208 +373,357 @@
             "entry_id" : 1166
          }
       ],
-      "Authorship" : [
+      "Membership" : [
          {
-            "author_id" : 1389,
-            "entry_id" : 435
-         },
-         {
-            "entry_id" : 588,
-            "author_id" : 591
-         },
-         {
-            "entry_id" : 675,
-            "author_id" : 527
-         },
-         {
+            "team_id" : 1,
             "author_id" : 527,
-            "entry_id" : 781
+            "start" : 0,
+            "stop" : 0
          },
          {
-            "entry_id" : 1077,
+            "team_id" : 3,
+            "start" : 2009,
+            "stop" : 2012,
             "author_id" : 527
          },
          {
-            "author_id" : 1121,
-            "entry_id" : 1099
+            "team_id" : 1,
+            "author_id" : 1486,
+            "start" : 0,
+            "stop" : 0
+         }
+      ],
+      "Type" : [
+         {
+            "id" : null,
+            "bibtexTypes" : [
+               "manual"
+            ],
+            "description" : null,
+            "onLanding" : 1,
+            "old_mysql_id" : null,
+            "our_type" : "manual"
          },
          {
-            "author_id" : 527,
-            "entry_id" : 1105
+            "onLanding" : 0,
+            "old_mysql_id" : null,
+            "our_type" : "phdthesis",
+            "description" : null,
+            "id" : null,
+            "bibtexTypes" : [
+               "phdthesis"
+            ]
          },
          {
-            "author_id" : 1389,
-            "entry_id" : 1105
+            "onLanding" : 0,
+            "old_mysql_id" : null,
+            "our_type" : "bibtex-inproceedings",
+            "description" : null,
+            "bibtexTypes" : [
+               "inproceedings"
+            ],
+            "id" : null
          },
          {
-            "entry_id" : 1111,
-            "author_id" : 1121
+            "onLanding" : 1,
+            "old_mysql_id" : null,
+            "our_type" : "article",
+            "description" : null,
+            "bibtexTypes" : [
+               "article"
+            ],
+            "id" : null
          },
          {
-            "entry_id" : 1159,
-            "author_id" : 1486
+            "old_mysql_id" : null,
+            "our_type" : "inbook",
+            "onLanding" : 0,
+            "description" : null,
+            "id" : null,
+            "bibtexTypes" : [
+               "inbook"
+            ]
          },
          {
-            "entry_id" : 1166,
-            "author_id" : 527
+            "our_type" : "inproceedings",
+            "old_mysql_id" : null,
+            "onLanding" : 1,
+            "bibtexTypes" : [
+               "incollection",
+               "inproceedings"
+            ],
+            "id" : null,
+            "description" : null
          },
          {
-            "entry_id" : 1173,
-            "author_id" : 1487
+            "old_mysql_id" : null,
+            "onLanding" : 0,
+            "our_type" : "volumes",
+            "bibtexTypes" : [
+               "book",
+               "phdthesis",
+               "proceedings"
+            ],
+            "id" : null,
+            "description" : null
+         },
+         {
+            "onLanding" : 0,
+            "old_mysql_id" : null,
+            "our_type" : "bibtex-incollection",
+            "id" : null,
+            "bibtexTypes" : [
+               "incollection"
+            ],
+            "description" : null
+         },
+         {
+            "old_mysql_id" : null,
+            "onLanding" : 0,
+            "our_type" : "book",
+            "description" : null,
+            "id" : null,
+            "bibtexTypes" : [
+               "book",
+               "inbook",
+               "proceedings"
+            ]
+         },
+         {
+            "onLanding" : 0,
+            "our_type" : "unpublished",
+            "old_mysql_id" : null,
+            "description" : null,
+            "id" : null,
+            "bibtexTypes" : [
+               "unpublished"
+            ]
+         },
+         {
+            "onLanding" : 1,
+            "old_mysql_id" : null,
+            "our_type" : "theses",
+            "description" : null,
+            "id" : null,
+            "bibtexTypes" : [
+               "mastersthesis",
+               "phdthesis"
+            ]
+         },
+         {
+            "id" : null,
+            "bibtexTypes" : [
+               "incollection"
+            ],
+            "description" : null,
+            "our_type" : "incollection",
+            "old_mysql_id" : null,
+            "onLanding" : 0
+         },
+         {
+            "onLanding" : 0,
+            "our_type" : "supervised_theses",
+            "old_mysql_id" : null,
+            "description" : null,
+            "id" : null,
+            "bibtexTypes" : [
+               "mastersthesis",
+               "phdthesis"
+            ]
+         },
+         {
+            "old_mysql_id" : null,
+            "our_type" : "misc",
+            "onLanding" : 1,
+            "id" : null,
+            "bibtexTypes" : [
+               "misc"
+            ],
+            "description" : null
+         },
+         {
+            "our_type" : "proceedings",
+            "onLanding" : 0,
+            "old_mysql_id" : null,
+            "id" : null,
+            "bibtexTypes" : [
+               "proceedings"
+            ],
+            "description" : null
+         },
+         {
+            "id" : null,
+            "bibtexTypes" : [
+               "techreport"
+            ],
+            "description" : null,
+            "onLanding" : 1,
+            "old_mysql_id" : null,
+            "our_type" : "techreport"
+         },
+         {
+            "description" : null,
+            "id" : null,
+            "bibtexTypes" : [
+               "mastersthesis"
+            ],
+            "old_mysql_id" : null,
+            "onLanding" : 0,
+            "our_type" : "mastersthesis"
          }
       ],
       "Tag" : [
          {
             "type" : 1,
-            "old_mysql_id" : 4,
-            "name" : "Networking",
             "id" : 4,
-            "permalink" : "N"
+            "old_mysql_id" : 4,
+            "permalink" : "N",
+            "name" : "Networking"
          },
          {
+            "type" : 1,
             "id" : 6,
-            "permalink" : null,
-            "name" : "Virtualization",
             "old_mysql_id" : 6,
-            "type" : 1
+            "permalink" : null,
+            "name" : "Virtualization"
          },
          {
-            "id" : 8,
-            "permalink" : null,
             "name" : "Simulation",
-            "old_mysql_id" : 8,
-            "type" : 1
+            "permalink" : null,
+            "id" : 8,
+            "type" : 1,
+            "old_mysql_id" : 8
          },
          {
             "old_mysql_id" : 9,
             "type" : 1,
-            "name" : "Meta-models",
+            "id" : 9,
             "permalink" : null,
-            "id" : 9
+            "name" : "Meta-models"
          },
          {
-            "name" : "Performance",
-            "id" : 10,
-            "permalink" : null,
             "old_mysql_id" : 10,
-            "type" : 1
+            "id" : 10,
+            "type" : 1,
+            "name" : "Performance",
+            "permalink" : null
          },
          {
+            "name" : "Prediction",
             "permalink" : null,
             "id" : 11,
-            "name" : "Prediction",
-            "old_mysql_id" : 11,
-            "type" : 1
+            "type" : 1,
+            "old_mysql_id" : 11
          },
          {
             "name" : "QPME_Bibliography",
+            "permalink" : null,
             "id" : 15,
-            "permalink" : null,
-            "old_mysql_id" : 15,
-            "type" : 3
+            "type" : 3,
+            "old_mysql_id" : 15
          },
          {
-            "type" : 1,
-            "old_mysql_id" : 19,
             "name" : "Cloud",
+            "permalink" : null,
+            "old_mysql_id" : 19,
             "id" : 19,
-            "permalink" : null
+            "type" : 1
          },
          {
-            "name" : "QPN",
+            "old_mysql_id" : 20,
             "id" : 20,
-            "permalink" : null,
             "type" : 1,
-            "old_mysql_id" : 20
+            "name" : "QPN",
+            "permalink" : null
          },
          {
-            "type" : 1,
+            "name" : "BUNGEE",
+            "permalink" : null,
             "old_mysql_id" : 21,
-            "permalink" : null,
             "id" : 21,
-            "name" : "BUNGEE"
+            "type" : 1
          },
          {
-            "type" : 1,
-            "old_mysql_id" : 22,
+            "permalink" : null,
             "name" : "DML",
-            "id" : 22,
-            "permalink" : null
+            "old_mysql_id" : 22,
+            "type" : 1,
+            "id" : 22
          },
          {
-            "permalink" : null,
+            "type" : 1,
             "id" : 23,
-            "name" : "DQL",
             "old_mysql_id" : 23,
-            "type" : 1
-         },
-         {
-            "old_mysql_id" : 28,
-            "type" : 1,
-            "id" : 28,
             "permalink" : null,
-            "name" : "SDN"
+            "name" : "DQL"
          },
          {
-            "old_mysql_id" : 30,
+            "id" : 28,
             "type" : 1,
-            "name" : "SPEC",
-            "id" : 30,
+            "old_mysql_id" : 28,
+            "name" : "SDN",
             "permalink" : null
          },
          {
+            "name" : "SPEC",
+            "permalink" : null,
+            "id" : 30,
+            "type" : 1,
+            "old_mysql_id" : 30
+         },
+         {
+            "type" : 1,
             "id" : 31,
+            "old_mysql_id" : 31,
             "permalink" : null,
-            "name" : "Award",
-            "type" : 1,
-            "old_mysql_id" : 31
+            "name" : "Award"
          },
          {
-            "name" : "Elasticity",
-            "permalink" : null,
-            "id" : 33,
             "old_mysql_id" : 33,
-            "type" : 1
+            "type" : 1,
+            "id" : 33,
+            "permalink" : null,
+            "name" : "Elasticity"
          },
          {
-            "old_mysql_id" : 36,
+            "id" : 36,
             "type" : 1,
+            "old_mysql_id" : 36,
             "name" : "Isolation",
-            "permalink" : null,
-            "id" : 36
+            "permalink" : null
          },
          {
             "name" : "Power",
-            "id" : 41,
             "permalink" : null,
             "old_mysql_id" : 41,
+            "id" : 41,
             "type" : 1
          },
          {
-            "name" : "Reliability",
+            "old_mysql_id" : 43,
+            "type" : 1,
             "id" : 43,
             "permalink" : null,
-            "type" : 1,
-            "old_mysql_id" : 43
+            "name" : "Reliability"
          },
          {
+            "type" : 1,
             "id" : 44,
+            "old_mysql_id" : 44,
             "permalink" : null,
-            "name" : "Security",
-            "type" : 1,
-            "old_mysql_id" : 44
+            "name" : "Security"
          },
          {
-            "old_mysql_id" : 49,
-            "type" : 1,
+            "name" : "Tool",
+            "permalink" : null,
             "id" : 49,
-            "permalink" : null,
-            "name" : "Tool"
+            "type" : 1,
+            "old_mysql_id" : 49
          },
          {
-            "id" : 51,
-            "permalink" : null,
             "name" : "QPME",
+            "permalink" : null,
+            "id" : 51,
             "type" : 1,
             "old_mysql_id" : 51
          },
@@ -399,109 +735,109 @@
             "name" : "Optimization"
          },
          {
-            "old_mysql_id" : 53,
-            "type" : 2,
             "name" : "Design_of_enterprise_system_architectures",
             "permalink" : "A1",
-            "id" : 53
-         },
-         {
-            "name" : "Formal_architecture_modeling",
-            "permalink" : "A2",
-            "id" : 54,
+            "id" : 53,
             "type" : 2,
-            "old_mysql_id" : 54
+            "old_mysql_id" : 53
          },
          {
-            "name" : "Analytical_and_simulation-based_analysis",
+            "type" : 2,
+            "id" : 54,
+            "old_mysql_id" : 54,
+            "permalink" : "A2",
+            "name" : "Formal_architecture_modeling"
+         },
+         {
+            "type" : 2,
             "id" : 55,
-            "permalink" : "A3",
             "old_mysql_id" : 55,
-            "type" : 2
+            "permalink" : "A3",
+            "name" : "Analytical_and_simulation-based_analysis"
          },
          {
             "old_mysql_id" : 56,
+            "id" : 56,
             "type" : 2,
             "name" : "Model_extraction,_calibration_and_maintenance",
-            "id" : 56,
             "permalink" : "A4"
          },
          {
-            "permalink" : "B1",
+            "type" : 2,
             "id" : 57,
-            "name" : "Metrics_and_benchmarking_methodologies",
-            "type" : 2,
-            "old_mysql_id" : 57
+            "old_mysql_id" : 57,
+            "permalink" : "B1",
+            "name" : "Metrics_and_benchmarking_methodologies"
          },
          {
-            "type" : 2,
-            "old_mysql_id" : 58,
-            "name" : "Instrumentation_profiling_and_workload_characterization",
             "permalink" : "B2",
-            "id" : 58
+            "name" : "Instrumentation_profiling_and_workload_characterization",
+            "type" : 2,
+            "id" : 58,
+            "old_mysql_id" : 58
          },
          {
-            "old_mysql_id" : 59,
-            "type" : 2,
+            "permalink" : "B3",
             "name" : "Statistical_estimation_and_machine_learning",
+            "type" : 2,
             "id" : 59,
-            "permalink" : "B3"
+            "old_mysql_id" : 59
          },
          {
             "permalink" : "B4",
-            "id" : 60,
             "name" : "Online_monitoring_and_forecasting",
-            "old_mysql_id" : 60,
-            "type" : 2
+            "type" : 2,
+            "id" : 60,
+            "old_mysql_id" : 60
          },
          {
             "id" : 61,
-            "permalink" : "C1",
+            "type" : 2,
+            "old_mysql_id" : 61,
             "name" : "Data_center_resource_management",
-            "type" : 2,
-            "old_mysql_id" : 61
+            "permalink" : "C1"
          },
          {
-            "old_mysql_id" : 62,
-            "type" : 2,
             "id" : 62,
-            "permalink" : "C2",
-            "name" : "Application_quality_of_service_management"
+            "type" : 2,
+            "old_mysql_id" : 62,
+            "name" : "Application_quality_of_service_management",
+            "permalink" : "C2"
          },
          {
-            "name" : "Power-energy_efficient_computing",
+            "old_mysql_id" : 63,
+            "type" : 2,
             "id" : 63,
             "permalink" : "C3",
-            "type" : 2,
-            "old_mysql_id" : 63
+            "name" : "Power-energy_efficient_computing"
          },
          {
-            "name" : "Multi-criteria_optimization",
+            "old_mysql_id" : 64,
             "id" : 64,
-            "permalink" : "C4",
             "type" : 2,
-            "old_mysql_id" : 64
+            "name" : "Multi-criteria_optimization",
+            "permalink" : "C4"
          },
          {
-            "name" : "Self-adaptive-systems",
-            "permalink" : null,
-            "id" : 65,
             "old_mysql_id" : 65,
-            "type" : 1
-         },
-         {
-            "old_mysql_id" : 66,
+            "id" : 65,
             "type" : 1,
-            "permalink" : null,
-            "id" : 66,
-            "name" : "Self-aware-computing"
+            "name" : "Self-adaptive-systems",
+            "permalink" : null
          },
          {
-            "name" : "DNI",
-            "id" : 67,
-            "permalink" : "DNI",
+            "id" : 66,
+            "type" : 1,
+            "old_mysql_id" : 66,
+            "name" : "Self-aware-computing",
+            "permalink" : null
+         },
+         {
             "old_mysql_id" : 67,
-            "type" : 3
+            "id" : 67,
+            "type" : 3,
+            "name" : "DNI",
+            "permalink" : "DNI"
          },
          {
             "old_mysql_id" : 68,
@@ -511,641 +847,322 @@
             "name" : "HInjector"
          },
          {
-            "name" : "Supervised_by_Nikolas_Herbst",
-            "id" : 69,
             "permalink" : null,
+            "name" : "Supervised_by_Nikolas_Herbst",
+            "old_mysql_id" : 69,
             "type" : 3,
-            "old_mysql_id" : 69
+            "id" : 69
          },
          {
-            "old_mysql_id" : 70,
             "type" : 3,
-            "permalink" : null,
             "id" : 70,
+            "old_mysql_id" : 70,
+            "permalink" : null,
             "name" : "Thesis_supervised_by_SE_member"
          },
          {
-            "permalink" : null,
+            "type" : 3,
             "id" : 71,
-            "name" : "Thesis_supervised_by_Simon_Spinner",
             "old_mysql_id" : 71,
-            "type" : 3
+            "permalink" : null,
+            "name" : "Thesis_supervised_by_Simon_Spinner"
          },
          {
             "old_mysql_id" : 72,
             "type" : 3,
-            "permalink" : "talks",
             "id" : 72,
+            "permalink" : "talks",
             "name" : "Talks"
          },
          {
+            "old_mysql_id" : 73,
+            "type" : 3,
             "id" : 73,
             "permalink" : null,
-            "name" : "Thesis_supervised_by_Nikolaus_Huber",
-            "old_mysql_id" : 73,
+            "name" : "Thesis_supervised_by_Nikolaus_Huber"
+         },
+         {
+            "name" : "Thesis_supervised_by_Fabian_Brosig",
+            "permalink" : null,
+            "old_mysql_id" : 74,
+            "id" : 74,
             "type" : 3
          },
          {
-            "old_mysql_id" : 74,
             "type" : 3,
-            "name" : "Thesis_supervised_by_Fabian_Brosig",
-            "id" : 74,
+            "id" : 75,
+            "old_mysql_id" : 75,
+            "permalink" : null,
+            "name" : "Thesis_supervised_by_Juergen_Walter"
+         },
+         {
+            "old_mysql_id" : 76,
+            "id" : 76,
+            "type" : 3,
+            "name" : "Thesis_supervised_by_Joakim_vonKistowski",
             "permalink" : null
          },
          {
-            "name" : "Thesis_supervised_by_Juergen_Walter",
-            "permalink" : null,
-            "id" : 75,
-            "old_mysql_id" : 75,
-            "type" : 3
-         },
-         {
-            "name" : "Thesis_supervised_by_Joakim_vonKistowski",
-            "id" : 76,
-            "permalink" : null,
-            "old_mysql_id" : 76,
-            "type" : 3
-         },
-         {
-            "permalink" : null,
-            "id" : 77,
-            "name" : "Supervised_PhD_Thesis",
             "old_mysql_id" : 77,
-            "type" : 3
+            "type" : 3,
+            "id" : 77,
+            "permalink" : null,
+            "name" : "Supervised_PhD_Thesis"
          },
          {
             "type" : 3,
+            "id" : 78,
             "old_mysql_id" : 78,
             "permalink" : null,
-            "id" : 78,
             "name" : "Interpolation"
          },
          {
-            "type" : 3,
             "old_mysql_id" : 81,
-            "name" : "Thesis_supervised_by_Aleksandar_Milenkoski",
-            "id" : 81,
-            "permalink" : null
-         },
-         {
-            "name" : "Media-coverage",
-            "id" : 230,
-            "permalink" : null,
             "type" : 3,
-            "old_mysql_id" : 230
+            "id" : 81,
+            "permalink" : null,
+            "name" : "Thesis_supervised_by_Aleksandar_Milenkoski"
          },
          {
-            "old_mysql_id" : 231,
+            "type" : 3,
+            "id" : 230,
+            "old_mysql_id" : 230,
+            "permalink" : null,
+            "name" : "Media-coverage"
+         },
+         {
+            "permalink" : null,
+            "name" : "Thesis_supervised_by_Piotr_Rygielski",
             "type" : 3,
             "id" : 231,
-            "permalink" : null,
-            "name" : "Thesis_supervised_by_Piotr_Rygielski"
+            "old_mysql_id" : 231
          },
          {
-            "id" : 240,
-            "permalink" : null,
-            "name" : "Thesis_supervised_by_Lukas_Ifflaender",
             "type" : 3,
-            "old_mysql_id" : 240
-         }
-      ],
-      "Type" : [
-         {
-            "bibtexTypes" : [
-               "phdthesis"
-            ],
-            "id" : null,
-            "our_type" : "phdthesis",
-            "onLanding" : 0,
-            "old_mysql_id" : null
-         },
-         {
-            "id" : null,
-            "bibtexTypes" : [
-               "inbook"
-            ],
-            "old_mysql_id" : null,
-            "our_type" : "inbook",
-            "onLanding" : 0
-         },
-         {
-            "old_mysql_id" : null,
-            "onLanding" : 1,
-            "our_type" : "theses",
-            "bibtexTypes" : [
-               "mastersthesis",
-               "phdthesis"
-            ],
-            "id" : null
-         },
-         {
-            "old_mysql_id" : null,
-            "onLanding" : 0,
-            "our_type" : "mastersthesis",
-            "id" : null,
-            "bibtexTypes" : [
-               "mastersthesis"
-            ]
-         },
-         {
-            "old_mysql_id" : null,
-            "our_type" : "unpublished",
-            "onLanding" : 0,
-            "bibtexTypes" : [
-               "unpublished"
-            ],
-            "id" : null
-         },
-         {
-            "bibtexTypes" : [
-               "techreport"
-            ],
-            "id" : null,
-            "onLanding" : 1,
-            "our_type" : "techreport",
-            "old_mysql_id" : null
-         },
-         {
-            "bibtexTypes" : [
-               "article"
-            ],
-            "id" : null,
-            "old_mysql_id" : null,
-            "our_type" : "article",
-            "onLanding" : 1
-         },
-         {
-            "old_mysql_id" : null,
-            "onLanding" : 0,
-            "our_type" : "supervised_theses",
-            "id" : null,
-            "bibtexTypes" : [
-               "mastersthesis",
-               "phdthesis"
-            ]
-         },
-         {
-            "our_type" : "proceedings",
-            "onLanding" : 0,
-            "old_mysql_id" : null,
-            "bibtexTypes" : [
-               "proceedings"
-            ],
-            "id" : null
-         },
-         {
-            "onLanding" : 1,
-            "our_type" : "inproceedings",
-            "old_mysql_id" : null,
-            "bibtexTypes" : [
-               "incollection",
-               "inproceedings"
-            ],
-            "id" : null
-         },
-         {
-            "old_mysql_id" : null,
-            "our_type" : "incollection",
-            "onLanding" : 0,
-            "bibtexTypes" : [
-               "incollection"
-            ],
-            "id" : null
-         },
-         {
-            "id" : null,
-            "bibtexTypes" : [
-               "book",
-               "phdthesis",
-               "proceedings"
-            ],
-            "onLanding" : 0,
-            "our_type" : "volumes",
-            "old_mysql_id" : null
-         },
-         {
-            "our_type" : "bibtex-incollection",
-            "onLanding" : 0,
-            "old_mysql_id" : null,
-            "id" : null,
-            "bibtexTypes" : [
-               "incollection"
-            ]
-         },
-         {
-            "bibtexTypes" : [
-               "misc"
-            ],
-            "id" : null,
-            "old_mysql_id" : null,
-            "our_type" : "misc",
-            "onLanding" : 1
-         },
-         {
-            "bibtexTypes" : [
-               "book",
-               "inbook",
-               "proceedings"
-            ],
-            "id" : null,
-            "our_type" : "book",
-            "onLanding" : 0,
-            "old_mysql_id" : null
-         },
-         {
-            "onLanding" : 0,
-            "our_type" : "bibtex-inproceedings",
-            "old_mysql_id" : null,
-            "bibtexTypes" : [
-               "inproceedings"
-            ],
-            "id" : null
-         },
-         {
-            "id" : null,
-            "bibtexTypes" : [
-               "manual"
-            ],
-            "onLanding" : 1,
-            "our_type" : "manual",
-            "old_mysql_id" : null
+            "id" : 240,
+            "old_mysql_id" : 240,
+            "permalink" : null,
+            "name" : "Thesis_supervised_by_Lukas_Ifflaender"
          }
       ],
       "Entry" : [
          {
-            "id" : 202,
-            "hidden" : 0,
-            "html" : "Nikolas&nbsp;Roman Herbst.\nQuantifying the Impact of Configuration Space for Elasticity Benchmarking.\nStudy Thesis, Karlsruhe Institute of Technology (KIT), Am Fasanengarten 5, 76131 Karlsruhe, Germany, 2011.\n[&nbsp;<a class=\"bib-preview-a\" onclick=\"showAbstract('bib-of-Herbst2011a')\">bib</a>&nbsp;|&nbsp;<a class=\"abstract-preview-a\" onclick=\"showAbstract('abstract-of-Herbst2011a')\">Abstract</a>\n&nbsp;|&nbsp;<a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/202.pdf\" target=\"_blank\">pdf</a>\n&nbsp;]\n<div id=\"bib-of-Herbst2011a\" class=\"inline-bib\" style=\"display:none;\"><pre>@mastersthesis{Herbst2011a,\n  abstract = {{Elasticity is the ability of a software system to dynamically adapt the amount of the resources it provides to clients as their workloads increase or decrease. In the context of cloud computing, automated resizing of a virtual machine's resources can be considered as a key step towards optimisation of a system's cost and energy efficiency. Existing work on cloud computing is limited to the technical view of implementing elastic systems, and definitions of scalability have not been extended to cover elasticity. This study thesis presents a detailed discussion of elasticity, proposes metrics as well as measurement techniques, and outlines next steps for enabling comparisons between cloud computing offerings on the basis of elasticity. I discuss results of our work on measuring elasticity of thread pools provided by the Java virtual machine, as well as an experiment setup for elastic CPU time slice resizing in a virtualized environment. An experiment setup is presented as future work for dynamically adding and removing z/VM Linux virtual machine instances to a performance relevant group of virtualized servers.}},\n  address = {Am Fasanengarten 5, 76131 Karlsruhe, Germany},\n  author = {Nikolas Roman Herbst},\n  keywords = {Cloud, Resource Elasticity},\n  pdf = {http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/202.pdf},\n  school = {{Karlsruhe Institute of Technology (KIT)}},\n  title = {{Quantifying the Impact of Configuration Space for Elasticity Benchmarking}},\n  type = {{Study Thesis}},\n  year = {2011},\n}\n\n</pre></div>\n<div id=\"abstract-of-Herbst2011a\" class=\"inline-bib\" style=\"display:none;\"><blockquote>{Elasticity is the ability of a software system to dynamically adapt the amount of the resources it provides to clients as their workloads increase or decrease. In the context of cloud computing, automated resizing of a virtual machine's resources can be considered as a key step towards optimisation of a system's cost and energy efficiency. Existing work on cloud computing is limited to the technical view of implementing elastic systems, and definitions of scalability have not been extended to cover elasticity. This study thesis presents a detailed discussion of elasticity, proposes metrics as well as measurement techniques, and outlines next steps for enabling comparisons between cloud computing offerings on the basis of elasticity. I discuss results of our work on measuring elasticity of thread pools provided by the Java virtual machine, as well as an experiment setup for elastic CPU time slice resizing in a virtualized environment. An experiment setup is presented as future work for dynamically adding and removing z/VM Linux virtual machine instances to a performance relevant group of virtualized servers.}</blockquote></div>",
-            "creation_time" : "2017-02-08T17:53:52",
-            "bib" : "@mastersthesis{Herbst2011a,\n  abstract = {{Elasticity is the ability of a software system to dynamically adapt the amount of the resources it provides to clients as their workloads increase or decrease. In the context of cloud computing, automated resizing of a virtual machine's resources can be considered as a key step towards optimisation of a system's cost and energy efficiency. Existing work on cloud computing is limited to the technical view of implementing elastic systems, and definitions of scalability have not been extended to cover elasticity. This study thesis presents a detailed discussion of elasticity, proposes metrics as well as measurement techniques, and outlines next steps for enabling comparisons between cloud computing offerings on the basis of elasticity. I discuss results of our work on measuring elasticity of thread pools provided by the Java virtual machine, as well as an experiment setup for elastic CPU time slice resizing in a virtualized environment. An experiment setup is presented as future work for dynamically adding and removing z/VM Linux virtual machine instances to a performance relevant group of virtualized servers.}},\n  address = {Am Fasanengarten 5, 76131 Karlsruhe, Germany},\n  author = {Nikolas Roman Herbst},\n  keywords = {Cloud, Resource Elasticity},\n  school = {{Karlsruhe Institute of Technology (KIT)}},\n  title = {{Quantifying the Impact of Configuration Space for Elasticity Benchmarking}},\n  type = {{Study Thesis}},\n  year = {2011},\n  pdf = {http://localhost:8083/publications/download/paper/202.pdf},\n}\n\n",
-            "month" : 0,
             "entry_type" : "paper",
-            "modified_time" : "2017-12-10T19:35:01",
-            "year" : 2011,
-            "need_html_regen" : 0,
             "old_mysql_id" : 202,
-            "bibtex_key" : "Herbst2011a",
+            "bib" : "@mastersthesis{Herbst2011a,\n  abstract = {{Elasticity is the ability of a software system to dynamically adapt the amount of the resources it provides to clients as their workloads increase or decrease. In the context of cloud computing, automated resizing of a virtual machine's resources can be considered as a key step towards optimisation of a system's cost and energy efficiency. Existing work on cloud computing is limited to the technical view of implementing elastic systems, and definitions of scalability have not been extended to cover elasticity. This study thesis presents a detailed discussion of elasticity, proposes metrics as well as measurement techniques, and outlines next steps for enabling comparisons between cloud computing offerings on the basis of elasticity. I discuss results of our work on measuring elasticity of thread pools provided by the Java virtual machine, as well as an experiment setup for elastic CPU time slice resizing in a virtualized environment. An experiment setup is presented as future work for dynamically adding and removing z/VM Linux virtual machine instances to a performance relevant group of virtualized servers.}},\n  address = {Am Fasanengarten 5, 76131 Karlsruhe, Germany},\n  author = {Nikolas Roman Herbst},\n  keywords = {Cloud, Resource Elasticity},\n  school = {{Karlsruhe Institute of Technology (KIT)}},\n  title = {{Quantifying the Impact of Configuration Space for Elasticity Benchmarking}},\n  type = {{Study Thesis}},\n  year = {2011},\n  pdf = {http://localhost:8083/publications/download/paper/202.pdf},\n}\n\n",
+            "creation_time" : "2017-02-08T17:53:52",
+            "html_bib" : "<a name=\"Herbst2011a\"></a><pre>\n@mastersthesis{Herbst2011a,\n  abstract = {{Elasticity is the ability of a software system to dynamically adapt the amount of the resources it provides to clients as their workloads increase or decrease. In the context of cloud computing, automated resizing of a virtual machine's resources can be considered as a key step towards optimisation of a system's cost and energy efficiency. Existing work on cloud computing is limited to the technical view of implementing elastic systems, and definitions of scalability have not been extended to cover elasticity. This study thesis presents a detailed discussion of elasticity, proposes metrics as well as measurement techniques, and outlines next steps for enabling comparisons between cloud computing offerings on the basis of elasticity. I discuss results of our work on measuring elasticity of thread pools provided by the Java virtual machine, as well as an experiment setup for elastic CPU time slice resizing in a virtualized environment. An experiment setup is presented as future work for dynamically adding and removing z/VM Linux virtual machine instances to a performance relevant group of virtualized servers.}},\n  address = {Am Fasanengarten 5, 76131 Karlsruhe, Germany},\n  author = {Nikolas Roman Herbst},\n  keywords = {Cloud, Resource Elasticity},\n  pdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/202.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/202.pdf</a>},\n  school = {{Karlsruhe Institute of Technology (KIT)}},\n  title = {{Quantifying the Impact of Configuration Space for Elasticity Benchmarking}},\n  type = {{Study Thesis}},\n  year = {2011}\n}\n</pre>\n\n",
+            "abstract" : "{Elasticity is the ability of a software system to dynamically adapt the amount of the resources it provides to clients as their workloads increase or decrease. In the context of cloud computing, automated resizing of a virtual machine's resources can be considered as a key step towards optimisation of a system's cost and energy efficiency. Existing work on cloud computing is limited to the technical view of implementing elastic systems, and definitions of scalability have not been extended to cover elasticity. This study thesis presents a detailed discussion of elasticity, proposes metrics as well as measurement techniques, and outlines next steps for enabling comparisons between cloud computing offerings on the basis of elasticity. I discuss results of our work on measuring elasticity of thread pools provided by the Java virtual machine, as well as an experiment setup for elastic CPU time slice resizing in a virtualized environment. An experiment setup is presented as future work for dynamically adding and removing z/VM Linux virtual machine instances to a performance relevant group of virtualized servers.}",
             "title" : "{Quantifying the Impact of Configuration Space for Elasticity Benchmarking}",
             "_bibtex_type" : "mastersthesis",
-            "abstract" : "{Elasticity is the ability of a software system to dynamically adapt the amount of the resources it provides to clients as their workloads increase or decrease. In the context of cloud computing, automated resizing of a virtual machine's resources can be considered as a key step towards optimisation of a system's cost and energy efficiency. Existing work on cloud computing is limited to the technical view of implementing elastic systems, and definitions of scalability have not been extended to cover elasticity. This study thesis presents a detailed discussion of elasticity, proposes metrics as well as measurement techniques, and outlines next steps for enabling comparisons between cloud computing offerings on the basis of elasticity. I discuss results of our work on measuring elasticity of thread pools provided by the Java virtual machine, as well as an experiment setup for elastic CPU time slice resizing in a virtualized environment. An experiment setup is presented as future work for dynamically adding and removing z/VM Linux virtual machine instances to a performance relevant group of virtualized servers.}",
-            "html_bib" : "<a name=\"Herbst2011a\"></a><pre>\n@mastersthesis{Herbst2011a,\n  abstract = {{Elasticity is the ability of a software system to dynamically adapt the amount of the resources it provides to clients as their workloads increase or decrease. In the context of cloud computing, automated resizing of a virtual machine's resources can be considered as a key step towards optimisation of a system's cost and energy efficiency. Existing work on cloud computing is limited to the technical view of implementing elastic systems, and definitions of scalability have not been extended to cover elasticity. This study thesis presents a detailed discussion of elasticity, proposes metrics as well as measurement techniques, and outlines next steps for enabling comparisons between cloud computing offerings on the basis of elasticity. I discuss results of our work on measuring elasticity of thread pools provided by the Java virtual machine, as well as an experiment setup for elastic CPU time slice resizing in a virtualized environment. An experiment setup is presented as future work for dynamically adding and removing z/VM Linux virtual machine instances to a performance relevant group of virtualized servers.}},\n  address = {Am Fasanengarten 5, 76131 Karlsruhe, Germany},\n  author = {Nikolas Roman Herbst},\n  keywords = {Cloud, Resource Elasticity},\n  pdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/202.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/202.pdf</a>},\n  school = {{Karlsruhe Institute of Technology (KIT)}},\n  title = {{Quantifying the Impact of Configuration Space for Elasticity Benchmarking}},\n  type = {{Study Thesis}},\n  year = {2011}\n}\n</pre>\n\n"
+            "year" : 2011,
+            "html" : "Nikolas&nbsp;Roman Herbst.\nQuantifying the Impact of Configuration Space for Elasticity Benchmarking.\nStudy Thesis, Karlsruhe Institute of Technology (KIT), Am Fasanengarten 5, 76131 Karlsruhe, Germany, 2011.\n[&nbsp;<a class=\"bib-preview-a\" onclick=\"showAbstract('bib-of-Herbst2011a')\">bib</a>&nbsp;|&nbsp;<a class=\"abstract-preview-a\" onclick=\"showAbstract('abstract-of-Herbst2011a')\">Abstract</a>\n&nbsp;|&nbsp;<a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/202.pdf\" target=\"_blank\">pdf</a>\n&nbsp;]\n<div id=\"bib-of-Herbst2011a\" class=\"inline-bib\" style=\"display:none;\"><pre>@mastersthesis{Herbst2011a,\n  abstract = {{Elasticity is the ability of a software system to dynamically adapt the amount of the resources it provides to clients as their workloads increase or decrease. In the context of cloud computing, automated resizing of a virtual machine's resources can be considered as a key step towards optimisation of a system's cost and energy efficiency. Existing work on cloud computing is limited to the technical view of implementing elastic systems, and definitions of scalability have not been extended to cover elasticity. This study thesis presents a detailed discussion of elasticity, proposes metrics as well as measurement techniques, and outlines next steps for enabling comparisons between cloud computing offerings on the basis of elasticity. I discuss results of our work on measuring elasticity of thread pools provided by the Java virtual machine, as well as an experiment setup for elastic CPU time slice resizing in a virtualized environment. An experiment setup is presented as future work for dynamically adding and removing z/VM Linux virtual machine instances to a performance relevant group of virtualized servers.}},\n  address = {Am Fasanengarten 5, 76131 Karlsruhe, Germany},\n  author = {Nikolas Roman Herbst},\n  keywords = {Cloud, Resource Elasticity},\n  pdf = {http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/202.pdf},\n  school = {{Karlsruhe Institute of Technology (KIT)}},\n  title = {{Quantifying the Impact of Configuration Space for Elasticity Benchmarking}},\n  type = {{Study Thesis}},\n  year = {2011},\n}\n\n</pre></div>\n<div id=\"abstract-of-Herbst2011a\" class=\"inline-bib\" style=\"display:none;\"><blockquote>{Elasticity is the ability of a software system to dynamically adapt the amount of the resources it provides to clients as their workloads increase or decrease. In the context of cloud computing, automated resizing of a virtual machine's resources can be considered as a key step towards optimisation of a system's cost and energy efficiency. Existing work on cloud computing is limited to the technical view of implementing elastic systems, and definitions of scalability have not been extended to cover elasticity. This study thesis presents a detailed discussion of elasticity, proposes metrics as well as measurement techniques, and outlines next steps for enabling comparisons between cloud computing offerings on the basis of elasticity. I discuss results of our work on measuring elasticity of thread pools provided by the Java virtual machine, as well as an experiment setup for elastic CPU time slice resizing in a virtualized environment. An experiment setup is presented as future work for dynamically adding and removing z/VM Linux virtual machine instances to a performance relevant group of virtualized servers.}</blockquote></div>",
+            "id" : 202,
+            "hidden" : 0,
+            "need_html_regen" : 0,
+            "bibtex_key" : "Herbst2011a",
+            "modified_time" : "2017-12-10T19:35:01",
+            "month" : 0
          },
          {
+            "entry_type" : "paper",
+            "old_mysql_id" : 435,
+            "bib" : "@inproceedings{MiPaAnViKo2013-ACSAC-HInjector,\n  address = {Maryland, USA},\n  author = {Aleksandar Milenkoski and Bryan D. Payne and Nuno Antunes and Marco Vieira and Samuel Kounev},\n  booktitle = {The 2013 Annual Computer Security Applications Conference (ACSAC 2013)},\n  publisher = {{Applied Computer Security Associates (ACSA)}},\n  location = {New Orleans, Louisiana, USA},\n  title = {{HInjector: Injecting Hypercall Attacks for Evaluating VMI-based Intrusion Detection Systems}},\n  titleaddon = {{(Poster Paper)}},\n  year = {2013},\n  month = {March},\n  pdf = {http://localhost:8083/publications/download/paper/435.pdf},\n}\n\n",
+            "creation_time" : "2017-02-08T17:53:53",
             "html_bib" : "<a name=\"MiPaAnViKo2013-ACSAC-HInjector\"></a><pre>\n@inproceedings{MiPaAnViKo2013-ACSAC-HInjector,\n  address = {Maryland, USA},\n  author = {Aleksandar Milenkoski and Bryan D. Payne and Nuno Antunes and Marco Vieira and Samuel Kounev},\n  booktitle = {The 2013 Annual Computer Security Applications Conference (ACSAC 2013)},\n  publisher = {{Applied Computer Security Associates (ACSA)}},\n  location = {New Orleans, Louisiana, USA},\n  pdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/435.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/435.pdf</a>},\n  title = {{HInjector: Injecting Hypercall Attacks for Evaluating VMI-based Intrusion Detection Systems}},\n  titleaddon = {{(Poster Paper)}},\n  year = {2013},\n  month = {March}\n}\n</pre>\n\n",
             "abstract" : null,
             "title" : "{HInjector: Injecting Hypercall Attacks for Evaluating VMI-based Intrusion Detection Systems}",
             "_bibtex_type" : "inproceedings",
             "year" : 2013,
-            "need_html_regen" : 0,
-            "old_mysql_id" : 435,
-            "bibtex_key" : "MiPaAnViKo2013-ACSAC-HInjector",
-            "month" : 3,
-            "entry_type" : "paper",
-            "modified_time" : "2017-12-10T19:35:01",
-            "hidden" : 0,
-            "creation_time" : "2017-02-08T17:53:53",
             "html" : "Aleksandar Milenkoski, Bryan&nbsp;D. Payne, Nuno Antunes, Marco Vieira, and Samuel Kounev.\nHInjector: Injecting Hypercall Attacks for Evaluating VMI-based Intrusion Detection Systems (Poster Paper).\nIn <span class=\"em\"> The 2013 Annual Computer Security Applications Conference (ACSAC 2013)</span>, New Orleans, Louisiana, USA, March 2013. Applied Computer Security Associates (ACSA), Maryland, USA.\nMarch 2013.\n[&nbsp;<a class=\"bib-preview-a\" onclick=\"showAbstract('bib-of-MiPaAnViKo2013-ACSAC-HInjector')\">bib</a>&nbsp;|&nbsp;<a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/435.pdf\" target=\"_blank\">pdf</a>\n&nbsp;]\n<div id=\"bib-of-MiPaAnViKo2013-ACSAC-HInjector\" class=\"inline-bib\" style=\"display:none;\"><pre>@inproceedings{MiPaAnViKo2013-ACSAC-HInjector,\n  address = {Maryland, USA},\n  author = {Aleksandar Milenkoski and Bryan D. Payne and Nuno Antunes and Marco Vieira and Samuel Kounev},\n  booktitle = {The 2013 Annual Computer Security Applications Conference (ACSAC 2013)},\n  publisher = {{Applied Computer Security Associates (ACSA)}},\n  location = {New Orleans, Louisiana, USA},\n  pdf = {http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/435.pdf},\n  title = {{HInjector: Injecting Hypercall Attacks for Evaluating VMI-based Intrusion Detection Systems}},\n  titleaddon = {{(Poster Paper)}},\n  year = {2013},\n  month = {March},\n}\n\n</pre></div>",
-            "bib" : "@inproceedings{MiPaAnViKo2013-ACSAC-HInjector,\n  address = {Maryland, USA},\n  author = {Aleksandar Milenkoski and Bryan D. Payne and Nuno Antunes and Marco Vieira and Samuel Kounev},\n  booktitle = {The 2013 Annual Computer Security Applications Conference (ACSAC 2013)},\n  publisher = {{Applied Computer Security Associates (ACSA)}},\n  location = {New Orleans, Louisiana, USA},\n  title = {{HInjector: Injecting Hypercall Attacks for Evaluating VMI-based Intrusion Detection Systems}},\n  titleaddon = {{(Poster Paper)}},\n  year = {2013},\n  month = {March},\n  pdf = {http://localhost:8083/publications/download/paper/435.pdf},\n}\n\n",
-            "id" : 435
+            "id" : 435,
+            "hidden" : 0,
+            "need_html_regen" : 0,
+            "bibtex_key" : "MiPaAnViKo2013-ACSAC-HInjector",
+            "modified_time" : "2017-12-10T19:35:01",
+            "month" : 3
          },
          {
-            "abstract" : "SPECjAppServer2002 (Java Application Server) is a client/server benchmark for measuring the performance of Java Enterprise Application Servers using a subset of J2EE APIs in a complete end-to-end web application. It is the same as SPECjAppServer2001 (released in September 2002) except that the Enterprise Java Beans (EJBs) are defined using the EJB 2.0 specification instead of the EJB 1.1 specification. SPECjAppServer2002 can therefore take advantage of several EJB 2.0 features such as local interfaces, the EJB-QL query language, and Container Managed Relationships (CMR) between entity beans. Joining the client-side SPECjvm98 and the server side SPECjbb2000, SPECjAppServer2002 and SPECjAppServer2001 continue the SPEC tradition of giving Java users the most objective and representative benchmarks for measuring a system's ability to run Java applications. SPEC has designed the SPECjAppServer2002 benchmark to exercise the Java Enterprise Application Server, the Java Virtual Machine (JVM), as well as the server Systems Under Test (SUT). As a true J2EE application the benchmark will require a functional RDBMS (for JDBC) and a Web Server, but the benchmark has been designed so that the SUT can be a single system. Please note that while the SPECjAppServer2002 suite is still available for purchase, the suite has been retired, no further results are being accepted for publication, and support is no longer provided.",
-            "title" : "{SPECjAppServer2002 - Industry-standard enterprise Java application server benchmark (J2EE 1.3).}",
-            "_bibtex_type" : "misc",
-            "html_bib" : "<a name=\"sp2002-SPEC-SPECjAppServer2002\"></a><pre>\n@misc{sp2002-SPEC-SPECjAppServer2002,\n  abstract = {SPECjAppServer2002 (Java Application Server) is a client/server benchmark for measuring the performance of Java Enterprise Application Servers using a subset of J2EE APIs in a complete end-to-end web application. It is the same as SPECjAppServer2001 (released in September 2002) except that the Enterprise Java Beans (EJBs) are defined using the EJB 2.0 specification instead of the EJB 1.1 specification. SPECjAppServer2002 can therefore take advantage of several EJB 2.0 features such as local interfaces, the EJB-QL query language, and Container Managed Relationships (CMR) between entity beans. Joining the client-side SPECjvm98 and the server side SPECjbb2000, SPECjAppServer2002 and SPECjAppServer2001 continue the SPEC tradition of giving Java users the most objective and representative benchmarks for measuring a system's ability to run Java applications. SPEC has designed the SPECjAppServer2002 benchmark to exercise the Java Enterprise Application Server, the Java Virtual Machine (JVM), as well as the server Systems Under Test (SUT). As a true J2EE application the benchmark will require a functional RDBMS (for JDBC) and a Web Server, but the benchmark has been designed so that the SUT can be a single system. Please note that while the SPECjAppServer2002 suite is still available for purchase, the suite has been retired, no further results are being accepted for publication, and support is no longer provided.},\n  author = {SPEC},\n  howpublished = {Standard Performance Evaluation Corporation},\n  month = {November},\n  title = {{SPECjAppServer2002 - Industry-standard enterprise Java application server benchmark (J2EE 1.3).}},\n  url = {<a target=\"blank\" href=\"http://www.spec.org/jAppServer2002/\">http://www.spec.org/jAppServer2002/</a>},\n  year = {2002}\n}\n</pre>\n\n",
-            "html" : "SPEC.\nSPECjAppServer2002 - Industry-standard enterprise Java application server benchmark (J2EE 1.3).\nStandard Performance Evaluation Corporation, November 2002.\n[&nbsp;<a class=\"bib-preview-link\" data-id=\"sp2002-SPEC-SPECjAppServer2002\">bib</a>&nbsp;|&nbsp;<a class=\"abstract-preview-link\" data-id=\"sp2002-SPEC-SPECjAppServer2002\">abstract</a>\n&nbsp;|&nbsp;<a href=\"http://www.spec.org/jAppServer2002/\" target=\"_blank\">http</a>\n&nbsp;]\n<div class=\"bibspace-entry-bib\" data-id=\"sp2002-SPEC-SPECjAppServer2002\" class=\"inline-bib\" style=\"display:none;\"><pre>@misc{sp2002-SPEC-SPECjAppServer2002,\n  author = {SPEC},\n  howpublished = {Standard Performance Evaluation Corporation},\n  month = {November},\n  title = {{SPECjAppServer2002 - Industry-standard enterprise Java application server benchmark (J2EE 1.3).}},\n  url = {http://www.spec.org/jAppServer2002/},\n  year = {2002},\n}\n\n</pre></div>\n<div class=\"bibspace-entry-abstract\" data-id=\"sp2002-SPEC-SPECjAppServer2002\" class=\"inline-bib\" style=\"display:none;\"><pre>SPECjAppServer2002 (Java Application Server) is a client/server benchmark for measuring the performance of Java Enterprise Application Servers using a subset of J2EE APIs in a complete end-to-end web application. It is the same as SPECjAppServer2001 (released in September 2002) except that the Enterprise Java Beans (EJBs) are defined using the EJB 2.0 specification instead of the EJB 1.1 specification. SPECjAppServer2002 can therefore take advantage of several EJB 2.0 features such as local interfaces, the EJB-QL query language, and Container Managed Relationships (CMR) between entity beans. Joining the client-side SPECjvm98 and the server side SPECjbb2000, SPECjAppServer2002 and SPECjAppServer2001 continue the SPEC tradition of giving Java users the most objective and representative benchmarks for measuring a system's ability to run Java applications. SPEC has designed the SPECjAppServer2002 benchmark to exercise the Java Enterprise Application Server, the Java Virtual Machine (JVM), as well as the server Systems Under Test (SUT). As a true J2EE application the benchmark will require a functional RDBMS (for JDBC) and a Web Server, but the benchmark has been designed so that the SUT can be a single system. Please note that while the SPECjAppServer2002 suite is still available for purchase, the suite has been retired, no further results are being accepted for publication, and support is no longer provided.</pre></div>",
-            "bib" : "@misc{sp2002-SPEC-SPECjAppServer2002,\n  abstract = {SPECjAppServer2002 (Java Application Server) is a client/server benchmark for measuring the performance of Java Enterprise Application Servers using a subset of J2EE APIs in a complete end-to-end web application. It is the same as SPECjAppServer2001 (released in September 2002) except that the Enterprise Java Beans (EJBs) are defined using the EJB 2.0 specification instead of the EJB 1.1 specification. SPECjAppServer2002 can therefore take advantage of several EJB 2.0 features such as local interfaces, the EJB-QL query language, and Container Managed Relationships (CMR) between entity beans. Joining the client-side SPECjvm98 and the server side SPECjbb2000, SPECjAppServer2002 and SPECjAppServer2001 continue the SPEC tradition of giving Java users the most objective and representative benchmarks for measuring a system's ability to run Java applications. SPEC has designed the SPECjAppServer2002 benchmark to exercise the Java Enterprise Application Server, the Java Virtual Machine (JVM), as well as the server Systems Under Test (SUT). As a true J2EE application the benchmark will require a functional RDBMS (for JDBC) and a Web Server, but the benchmark has been designed so that the SUT can be a single system. Please note that while the SPECjAppServer2002 suite is still available for purchase, the suite has been retired, no further results are being accepted for publication, and support is no longer provided.},\n  author = {SPEC},\n  howpublished = {Standard Performance Evaluation Corporation},\n  month = {November},\n  title = {{SPECjAppServer2002 - Industry-standard enterprise Java application server benchmark (J2EE 1.3).}},\n  url = {http://www.spec.org/jAppServer2002/},\n  year = {2002},\n}\n\n",
-            "creation_time" : "2017-02-08T17:53:53",
             "hidden" : 0,
-            "id" : 588,
-            "old_mysql_id" : 588,
-            "bibtex_key" : "sp2002-SPEC-SPECjAppServer2002",
-            "year" : 2002,
             "need_html_regen" : 0,
             "modified_time" : "2017-02-08T02:00:03",
             "month" : 11,
-            "entry_type" : "paper"
+            "bibtex_key" : "sp2002-SPEC-SPECjAppServer2002",
+            "year" : 2002,
+            "html" : "SPEC.\nSPECjAppServer2002 - Industry-standard enterprise Java application server benchmark (J2EE 1.3).\nStandard Performance Evaluation Corporation, November 2002.\n[&nbsp;<a class=\"bib-preview-link\" data-id=\"sp2002-SPEC-SPECjAppServer2002\">bib</a>&nbsp;|&nbsp;<a class=\"abstract-preview-link\" data-id=\"sp2002-SPEC-SPECjAppServer2002\">abstract</a>\n&nbsp;|&nbsp;<a href=\"http://www.spec.org/jAppServer2002/\" target=\"_blank\">http</a>\n&nbsp;]\n<div class=\"bibspace-entry-bib\" data-id=\"sp2002-SPEC-SPECjAppServer2002\" class=\"inline-bib\" style=\"display:none;\"><pre>@misc{sp2002-SPEC-SPECjAppServer2002,\n  author = {SPEC},\n  howpublished = {Standard Performance Evaluation Corporation},\n  month = {November},\n  title = {{SPECjAppServer2002 - Industry-standard enterprise Java application server benchmark (J2EE 1.3).}},\n  url = {http://www.spec.org/jAppServer2002/},\n  year = {2002},\n}\n\n</pre></div>\n<div class=\"bibspace-entry-abstract\" data-id=\"sp2002-SPEC-SPECjAppServer2002\" class=\"inline-bib\" style=\"display:none;\"><pre>SPECjAppServer2002 (Java Application Server) is a client/server benchmark for measuring the performance of Java Enterprise Application Servers using a subset of J2EE APIs in a complete end-to-end web application. It is the same as SPECjAppServer2001 (released in September 2002) except that the Enterprise Java Beans (EJBs) are defined using the EJB 2.0 specification instead of the EJB 1.1 specification. SPECjAppServer2002 can therefore take advantage of several EJB 2.0 features such as local interfaces, the EJB-QL query language, and Container Managed Relationships (CMR) between entity beans. Joining the client-side SPECjvm98 and the server side SPECjbb2000, SPECjAppServer2002 and SPECjAppServer2001 continue the SPEC tradition of giving Java users the most objective and representative benchmarks for measuring a system's ability to run Java applications. SPEC has designed the SPECjAppServer2002 benchmark to exercise the Java Enterprise Application Server, the Java Virtual Machine (JVM), as well as the server Systems Under Test (SUT). As a true J2EE application the benchmark will require a functional RDBMS (for JDBC) and a Web Server, but the benchmark has been designed so that the SUT can be a single system. Please note that while the SPECjAppServer2002 suite is still available for purchase, the suite has been retired, no further results are being accepted for publication, and support is no longer provided.</pre></div>",
+            "id" : 588,
+            "creation_time" : "2017-02-08T17:53:53",
+            "html_bib" : "<a name=\"sp2002-SPEC-SPECjAppServer2002\"></a><pre>\n@misc{sp2002-SPEC-SPECjAppServer2002,\n  abstract = {SPECjAppServer2002 (Java Application Server) is a client/server benchmark for measuring the performance of Java Enterprise Application Servers using a subset of J2EE APIs in a complete end-to-end web application. It is the same as SPECjAppServer2001 (released in September 2002) except that the Enterprise Java Beans (EJBs) are defined using the EJB 2.0 specification instead of the EJB 1.1 specification. SPECjAppServer2002 can therefore take advantage of several EJB 2.0 features such as local interfaces, the EJB-QL query language, and Container Managed Relationships (CMR) between entity beans. Joining the client-side SPECjvm98 and the server side SPECjbb2000, SPECjAppServer2002 and SPECjAppServer2001 continue the SPEC tradition of giving Java users the most objective and representative benchmarks for measuring a system's ability to run Java applications. SPEC has designed the SPECjAppServer2002 benchmark to exercise the Java Enterprise Application Server, the Java Virtual Machine (JVM), as well as the server Systems Under Test (SUT). As a true J2EE application the benchmark will require a functional RDBMS (for JDBC) and a Web Server, but the benchmark has been designed so that the SUT can be a single system. Please note that while the SPECjAppServer2002 suite is still available for purchase, the suite has been retired, no further results are being accepted for publication, and support is no longer provided.},\n  author = {SPEC},\n  howpublished = {Standard Performance Evaluation Corporation},\n  month = {November},\n  title = {{SPECjAppServer2002 - Industry-standard enterprise Java application server benchmark (J2EE 1.3).}},\n  url = {<a target=\"blank\" href=\"http://www.spec.org/jAppServer2002/\">http://www.spec.org/jAppServer2002/</a>},\n  year = {2002}\n}\n</pre>\n\n",
+            "title" : "{SPECjAppServer2002 - Industry-standard enterprise Java application server benchmark (J2EE 1.3).}",
+            "_bibtex_type" : "misc",
+            "abstract" : "SPECjAppServer2002 (Java Application Server) is a client/server benchmark for measuring the performance of Java Enterprise Application Servers using a subset of J2EE APIs in a complete end-to-end web application. It is the same as SPECjAppServer2001 (released in September 2002) except that the Enterprise Java Beans (EJBs) are defined using the EJB 2.0 specification instead of the EJB 1.1 specification. SPECjAppServer2002 can therefore take advantage of several EJB 2.0 features such as local interfaces, the EJB-QL query language, and Container Managed Relationships (CMR) between entity beans. Joining the client-side SPECjvm98 and the server side SPECjbb2000, SPECjAppServer2002 and SPECjAppServer2001 continue the SPEC tradition of giving Java users the most objective and representative benchmarks for measuring a system's ability to run Java applications. SPEC has designed the SPECjAppServer2002 benchmark to exercise the Java Enterprise Application Server, the Java Virtual Machine (JVM), as well as the server Systems Under Test (SUT). As a true J2EE application the benchmark will require a functional RDBMS (for JDBC) and a Web Server, but the benchmark has been designed so that the SUT can be a single system. Please note that while the SPECjAppServer2002 suite is still available for purchase, the suite has been retired, no further results are being accepted for publication, and support is no longer provided.",
+            "entry_type" : "paper",
+            "old_mysql_id" : 588,
+            "bib" : "@misc{sp2002-SPEC-SPECjAppServer2002,\n  abstract = {SPECjAppServer2002 (Java Application Server) is a client/server benchmark for measuring the performance of Java Enterprise Application Servers using a subset of J2EE APIs in a complete end-to-end web application. It is the same as SPECjAppServer2001 (released in September 2002) except that the Enterprise Java Beans (EJBs) are defined using the EJB 2.0 specification instead of the EJB 1.1 specification. SPECjAppServer2002 can therefore take advantage of several EJB 2.0 features such as local interfaces, the EJB-QL query language, and Container Managed Relationships (CMR) between entity beans. Joining the client-side SPECjvm98 and the server side SPECjbb2000, SPECjAppServer2002 and SPECjAppServer2001 continue the SPEC tradition of giving Java users the most objective and representative benchmarks for measuring a system's ability to run Java applications. SPEC has designed the SPECjAppServer2002 benchmark to exercise the Java Enterprise Application Server, the Java Virtual Machine (JVM), as well as the server Systems Under Test (SUT). As a true J2EE application the benchmark will require a functional RDBMS (for JDBC) and a Web Server, but the benchmark has been designed so that the SUT can be a single system. Please note that while the SPECjAppServer2002 suite is still available for purchase, the suite has been retired, no further results are being accepted for publication, and support is no longer provided.},\n  author = {SPEC},\n  howpublished = {Standard Performance Evaluation Corporation},\n  month = {November},\n  title = {{SPECjAppServer2002 - Industry-standard enterprise Java application server benchmark (J2EE 1.3).}},\n  url = {http://www.spec.org/jAppServer2002/},\n  year = {2002},\n}\n\n"
          },
          {
             "id" : 675,
-            "hidden" : 1,
-            "creation_time" : "2017-02-08T17:53:54",
             "html" : "Pawel &#346;wi&#261;tek, Piotr Rygielski, and Adam Grzech.\nResources Management and Services Personalization in Future Internet Applications.\n<span class=\"em\"> Advances in Electronics and Telecommunications</span>, 2(3):50&ndash;54, November 2011, Pozna&#324; University of Technology Press, Pozna&#324;, Poland.\n[&nbsp;<a class=\"bib-preview-a\" onclick=\"showAbstract('bib-of-SwRyGr2011-EAT')\">bib</a>&nbsp;|&nbsp;<a href=\"http://www.advances.et.put.poznan.pl/\" target=\"_blank\">http</a>\n&nbsp;]\n<div id=\"bib-of-SwRyGr2011-EAT\" class=\"inline-bib\" style=\"display:none;\"><pre>@article{SwRyGr2011-EAT,\n  address = {Pozna{\\'n}, Poland},\n  author = {Pawel \\'{S}wi\\k{a}tek and Piotr Rygielski and Adam Grzech},\n  isbn = {2081-8580},\n  journal = {Advances in Electronics and Telecommunications},\n  month = {November},\n  number = {3},\n  pages = {50--54},\n  publisher = {Pozna{\\'n} University of Technology Press},\n  title = {{Resources Management and Services Personalization in Future Internet Applications}},\n  url = {http://www.advances.et.put.poznan.pl/},\n  volume = {2},\n  year = {2011},\n}\n\n</pre></div>",
-            "bib" : "@article{SwRyGr2011-EAT,\n  address = {Pozna{\\'n}, Poland},\n  author = {Pawel \\'{S}wi\\k{a}tek and Piotr Rygielski and Adam Grzech},\n  isbn = {2081-8580},\n  journal = {Advances in Electronics and Telecommunications},\n  month = {November},\n  number = {3},\n  pages = {50--54},\n  publisher = {Pozna{\\'n} University of Technology Press},\n  title = {{Resources Management and Services Personalization in Future Internet Applications}},\n  url = {http://www.advances.et.put.poznan.pl/},\n  volume = {2},\n  year = {2011},\n}\n\n",
-            "entry_type" : "paper",
+            "year" : 2011,
             "month" : 11,
             "modified_time" : "2017-02-08T02:00:03",
-            "need_html_regen" : 0,
-            "year" : 2011,
             "bibtex_key" : "SwRyGr2011-EAT",
+            "need_html_regen" : 0,
+            "hidden" : 1,
+            "bib" : "@article{SwRyGr2011-EAT,\n  address = {Pozna{\\'n}, Poland},\n  author = {Pawel \\'{S}wi\\k{a}tek and Piotr Rygielski and Adam Grzech},\n  isbn = {2081-8580},\n  journal = {Advances in Electronics and Telecommunications},\n  month = {November},\n  number = {3},\n  pages = {50--54},\n  publisher = {Pozna{\\'n} University of Technology Press},\n  title = {{Resources Management and Services Personalization in Future Internet Applications}},\n  url = {http://www.advances.et.put.poznan.pl/},\n  volume = {2},\n  year = {2011},\n}\n\n",
             "old_mysql_id" : 675,
-            "_bibtex_type" : "article",
+            "entry_type" : "paper",
             "title" : "{Resources Management and Services Personalization in Future Internet Applications}",
+            "_bibtex_type" : "article",
             "abstract" : null,
-            "html_bib" : "<a name=\"SwRyGr2011-EAT\"></a><pre>\n@article{SwRyGr2011-EAT,\n  address = {Pozna{\\'n}, Poland},\n  author = {Pawel \\'{S}wi\\k{a}tek and Piotr Rygielski and Adam Grzech},\n  isbn = {2081-8580},\n  journal = {Advances in Electronics and Telecommunications},\n  month = {November},\n  number = {3},\n  pages = {50--54},\n  publisher = {Pozna{\\'n} University of Technology Press},\n  title = {{Resources Management and Services Personalization in Future Internet Applications}},\n  url = {<a target=\"blank\" href=\"http://www.advances.et.put.poznan.pl/\">http://www.advances.et.put.poznan.pl/</a>},\n  volume = {2},\n  year = {2011}\n}\n</pre>\n\n"
+            "html_bib" : "<a name=\"SwRyGr2011-EAT\"></a><pre>\n@article{SwRyGr2011-EAT,\n  address = {Pozna{\\'n}, Poland},\n  author = {Pawel \\'{S}wi\\k{a}tek and Piotr Rygielski and Adam Grzech},\n  isbn = {2081-8580},\n  journal = {Advances in Electronics and Telecommunications},\n  month = {November},\n  number = {3},\n  pages = {50--54},\n  publisher = {Pozna{\\'n} University of Technology Press},\n  title = {{Resources Management and Services Personalization in Future Internet Applications}},\n  url = {<a target=\"blank\" href=\"http://www.advances.et.put.poznan.pl/\">http://www.advances.et.put.poznan.pl/</a>},\n  volume = {2},\n  year = {2011}\n}\n</pre>\n\n",
+            "creation_time" : "2017-02-08T17:53:54"
          },
          {
-            "creation_time" : "2017-02-08T17:53:54",
-            "html" : "\n\nSamuel Kounev, Kai Sachs, and Piotr Rygielski.\nSPEC Research Group Newsletter, vol. 1 no. 4, January 2015.\nPublished by Standard Performance Evaluation Corporation (SPEC).\n[&nbsp;<a class=\"abstract-a\" onclick=\"showAbstract('bib-of-SPEC-RG-NEWSLETTER-4')\">bib</a>&nbsp;| <a href=\"http://research.spec.org/en/newsletter.html\">.html</a>&nbsp;| <a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/781.pdf\" target=\"blank\">.pdf</a>&nbsp; ] <div id=\"bib-of-SPEC-RG-NEWSLETTER-4\" class=\"inline-bib\" style=\"display:none;\"><pre>\n@misc{SPEC-RG-NEWSLETTER-4,\nauthor = {Samuel Kounev and Kai Sachs and Piotr Rygielski},\nmonth = {January},\nnote = {Published by Standard Performance Evaluation Corporation (SPEC)},\ntitle = {{SPEC Research Group Newsletter, vol. 1 no. 4}},\nurl = {<a target=\"blank\" href=\"http://research.spec.org/en/newsletter.html\">http://research.spec.org/en/newsletter.html</a>},\nyear = {2015},\npdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/781.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/781.pdf</a>}\n}\n</pre>\n</div>\n",
             "bib" : "@misc{SPEC-RG-NEWSLETTER-4,\n  author = {Samuel Kounev and Kai Sachs and Piotr Rygielski},\n  month = {January},\n  note = {Published by Standard Performance Evaluation Corporation (SPEC)},\n  title = {{SPEC Research Group Newsletter, vol. 1 no. 4}},\n  url = {http://research.spec.org/en/newsletter.html},\n  year = {2015},\n  pdf = {http://localhost:8083/publications/download/paper/781.pdf},\n}\n\n",
-            "hidden" : 0,
-            "id" : 781,
-            "bibtex_key" : "SPEC-RG-NEWSLETTER-4",
             "old_mysql_id" : 781,
-            "need_html_regen" : 0,
-            "year" : 2015,
-            "modified_time" : "2017-12-10T19:35:01",
             "entry_type" : "paper",
-            "month" : 1,
-            "abstract" : null,
             "_bibtex_type" : "misc",
             "title" : "{SPEC Research Group Newsletter, vol. 1 no. 4}",
-            "html_bib" : "<a name=\"SPEC-RG-NEWSLETTER-4\"></a><pre>\n@misc{SPEC-RG-NEWSLETTER-4,\n  author = {Samuel Kounev and Kai Sachs and Piotr Rygielski},\n  month = {January},\n  note = {Published by Standard Performance Evaluation Corporation (SPEC)},\n  title = {{SPEC Research Group Newsletter, vol. 1 no. 4}},\n  url = {<a target=\"blank\" href=\"http://research.spec.org/en/newsletter.html\">http://research.spec.org/en/newsletter.html</a>},\n  year = {2015},\n  pdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/781.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/781.pdf</a>}\n}\n</pre>\n\n"
-         },
-         {
-            "html_bib" : "<a name=\"KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches\"></a><pre>\n@inproceedings{KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches,\n  author = {Samuel Kounev and Fabian Brosig and Philipp Meier and Steffen Becker and Anne Koziolek and Heiko Koziolek and Piotr Rygielski},\n  title = {{Analysis of the Trade-offs in Different Modeling Approaches for Performance Prediction of Software Systems}},\n  booktitle = {Software Engineering 2016 (SE 2016), Fachtagung des GI-Fachbereichs Softwaretechnik, 23.-26. M\\\"{a}rz 2016, Vienna, Austria},\n  publisher = {GI},\n  series = {Lecture Notes in Informatics (LNI)},\n  address = {Vienna, Austria},\n  days = {23-26},\n  month = {February},\n  year = {2016},\n  pages = {47--48},\n  titleaddon = {{(Talk Extended Abstract)}},\n  http = {<a target=\"blank\" href=\"http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html\">http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html</a>},\n  pdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1077.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1077.pdf</a>},\n  slides = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1077\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1077</a>}\n}\n</pre>\n\n",
-            "_bibtex_type" : "inproceedings",
-            "title" : "{Analysis of the Trade-offs in Different Modeling Approaches for Performance Prediction of Software Systems}",
             "abstract" : null,
-            "modified_time" : "2017-12-10T19:35:02",
-            "entry_type" : "talk",
-            "month" : 2,
-            "old_mysql_id" : 1077,
-            "bibtex_key" : "KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches",
+            "html_bib" : "<a name=\"SPEC-RG-NEWSLETTER-4\"></a><pre>\n@misc{SPEC-RG-NEWSLETTER-4,\n  author = {Samuel Kounev and Kai Sachs and Piotr Rygielski},\n  month = {January},\n  note = {Published by Standard Performance Evaluation Corporation (SPEC)},\n  title = {{SPEC Research Group Newsletter, vol. 1 no. 4}},\n  url = {<a target=\"blank\" href=\"http://research.spec.org/en/newsletter.html\">http://research.spec.org/en/newsletter.html</a>},\n  year = {2015},\n  pdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/781.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/781.pdf</a>}\n}\n</pre>\n\n",
+            "creation_time" : "2017-02-08T17:53:54",
+            "id" : 781,
+            "html" : "\n\nSamuel Kounev, Kai Sachs, and Piotr Rygielski.\nSPEC Research Group Newsletter, vol. 1 no. 4, January 2015.\nPublished by Standard Performance Evaluation Corporation (SPEC).\n[&nbsp;<a class=\"abstract-a\" onclick=\"showAbstract('bib-of-SPEC-RG-NEWSLETTER-4')\">bib</a>&nbsp;| <a href=\"http://research.spec.org/en/newsletter.html\">.html</a>&nbsp;| <a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/781.pdf\" target=\"blank\">.pdf</a>&nbsp; ] <div id=\"bib-of-SPEC-RG-NEWSLETTER-4\" class=\"inline-bib\" style=\"display:none;\"><pre>\n@misc{SPEC-RG-NEWSLETTER-4,\nauthor = {Samuel Kounev and Kai Sachs and Piotr Rygielski},\nmonth = {January},\nnote = {Published by Standard Performance Evaluation Corporation (SPEC)},\ntitle = {{SPEC Research Group Newsletter, vol. 1 no. 4}},\nurl = {<a target=\"blank\" href=\"http://research.spec.org/en/newsletter.html\">http://research.spec.org/en/newsletter.html</a>},\nyear = {2015},\npdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/781.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/781.pdf</a>}\n}\n</pre>\n</div>\n",
+            "year" : 2015,
+            "month" : 1,
+            "modified_time" : "2017-12-10T19:35:01",
+            "bibtex_key" : "SPEC-RG-NEWSLETTER-4",
             "need_html_regen" : 0,
-            "year" : 2016,
-            "id" : 1077,
-            "html" : "\n\nSamuel Kounev, Fabian Brosig, Philipp Meier, Steffen Becker, Anne Koziolek,\nHeiko Koziolek, and Piotr Rygielski.\nAnalysis of the Trade-offs in Different Modeling Approaches for\nPerformance Prediction of Software Systems (Talk Extended Abstract).\nIn <em>Software Engineering 2016 (SE 2016), Fachtagung des\nGI-Fachbereichs Softwaretechnik, 23.-26. M&auml;rz 2016, Vienna, Austria</em>,\nFebruary 2016, Lecture Notes in Informatics (LNI), pages 47-48. GI, Vienna,\nAustria.\nFebruary 2016.\n[&nbsp;<a class=\"abstract-a\" onclick=\"showAbstract('bib-of-KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches')\">bib</a>&nbsp;| <a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1077\" target=\"blank\">slides</a>&nbsp;| <a href=\"http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html\">.html</a>&nbsp;| <a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1077.pdf\" target=\"blank\">.pdf</a>&nbsp; ] <div id=\"bib-of-KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches\" class=\"inline-bib\" style=\"display:none;\"><pre>\n@inproceedings{KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches,\nauthor = {Samuel Kounev and Fabian Brosig and Philipp Meier and Steffen Becker and Anne Koziolek and Heiko Koziolek and Piotr Rygielski},\ntitle = {{Analysis of the Trade-offs in Different Modeling Approaches for Performance Prediction of Software Systems}},\nbooktitle = {Software Engineering 2016 (SE 2016), Fachtagung des GI-Fachbereichs Softwaretechnik, 23.-26. M\\\"{a}rz 2016, Vienna, Austria},\npublisher = {GI},\nseries = {Lecture Notes in Informatics (LNI)},\naddress = {Vienna, Austria},\ndays = {23-26},\nmonth = {February},\nyear = {2016},\npages = {47--48},\ntitleaddon = {{(Talk Extended Abstract)}},\nhttp = {<a target=\"blank\" href=\"http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html\">http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html</a>},\npdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1077.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1077.pdf</a>},\nslides = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1077\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1077</a>}\n}\n</pre>\n</div>\n",
-            "bib" : "@inproceedings{KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches,\n  author = {Samuel Kounev and Fabian Brosig and Philipp Meier and Steffen Becker and Anne Koziolek and Heiko Koziolek and Piotr Rygielski},\n  title = {{Analysis of the Trade-offs in Different Modeling Approaches for Performance Prediction of Software Systems}},\n  booktitle = {Software Engineering 2016 (SE 2016), Fachtagung des GI-Fachbereichs Softwaretechnik, 23.-26. M\\\"{a}rz 2016, Vienna, Austria},\n  publisher = {GI},\n  series = {Lecture Notes in Informatics (LNI)},\n  address = {Vienna, Austria},\n  days = {23-26},\n  month = {February},\n  year = {2016},\n  pages = {47--48},\n  titleaddon = {{(Talk Extended Abstract)}},\n  http = {http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html},\n  pdf = {http://localhost:8083/publications/download/paper/1077.pdf},\n  slides = {http://localhost:8083/publications/download/slides/1077},\n}\n\n",
-            "creation_time" : "2016-02-24T18:09:58",
             "hidden" : 0
          },
          {
+            "bib" : "@inproceedings{KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches,\n  author = {Samuel Kounev and Fabian Brosig and Philipp Meier and Steffen Becker and Anne Koziolek and Heiko Koziolek and Piotr Rygielski},\n  title = {{Analysis of the Trade-offs in Different Modeling Approaches for Performance Prediction of Software Systems}},\n  booktitle = {Software Engineering 2016 (SE 2016), Fachtagung des GI-Fachbereichs Softwaretechnik, 23.-26. M\\\"{a}rz 2016, Vienna, Austria},\n  publisher = {GI},\n  series = {Lecture Notes in Informatics (LNI)},\n  address = {Vienna, Austria},\n  days = {23-26},\n  month = {February},\n  year = {2016},\n  pages = {47--48},\n  titleaddon = {{(Talk Extended Abstract)}},\n  http = {http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html},\n  pdf = {http://localhost:8083/publications/download/paper/1077.pdf},\n  slides = {http://localhost:8083/publications/download/slides/1077},\n}\n\n",
+            "old_mysql_id" : 1077,
+            "entry_type" : "talk",
+            "abstract" : null,
+            "title" : "{Analysis of the Trade-offs in Different Modeling Approaches for Performance Prediction of Software Systems}",
+            "_bibtex_type" : "inproceedings",
+            "html_bib" : "<a name=\"KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches\"></a><pre>\n@inproceedings{KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches,\n  author = {Samuel Kounev and Fabian Brosig and Philipp Meier and Steffen Becker and Anne Koziolek and Heiko Koziolek and Piotr Rygielski},\n  title = {{Analysis of the Trade-offs in Different Modeling Approaches for Performance Prediction of Software Systems}},\n  booktitle = {Software Engineering 2016 (SE 2016), Fachtagung des GI-Fachbereichs Softwaretechnik, 23.-26. M\\\"{a}rz 2016, Vienna, Austria},\n  publisher = {GI},\n  series = {Lecture Notes in Informatics (LNI)},\n  address = {Vienna, Austria},\n  days = {23-26},\n  month = {February},\n  year = {2016},\n  pages = {47--48},\n  titleaddon = {{(Talk Extended Abstract)}},\n  http = {<a target=\"blank\" href=\"http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html\">http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html</a>},\n  pdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1077.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1077.pdf</a>},\n  slides = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1077\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1077</a>}\n}\n</pre>\n\n",
+            "creation_time" : "2016-02-24T18:09:58",
+            "id" : 1077,
+            "html" : "\n\nSamuel Kounev, Fabian Brosig, Philipp Meier, Steffen Becker, Anne Koziolek,\nHeiko Koziolek, and Piotr Rygielski.\nAnalysis of the Trade-offs in Different Modeling Approaches for\nPerformance Prediction of Software Systems (Talk Extended Abstract).\nIn <em>Software Engineering 2016 (SE 2016), Fachtagung des\nGI-Fachbereichs Softwaretechnik, 23.-26. M&auml;rz 2016, Vienna, Austria</em>,\nFebruary 2016, Lecture Notes in Informatics (LNI), pages 47-48. GI, Vienna,\nAustria.\nFebruary 2016.\n[&nbsp;<a class=\"abstract-a\" onclick=\"showAbstract('bib-of-KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches')\">bib</a>&nbsp;| <a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1077\" target=\"blank\">slides</a>&nbsp;| <a href=\"http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html\">.html</a>&nbsp;| <a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1077.pdf\" target=\"blank\">.pdf</a>&nbsp; ] <div id=\"bib-of-KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches\" class=\"inline-bib\" style=\"display:none;\"><pre>\n@inproceedings{KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches,\nauthor = {Samuel Kounev and Fabian Brosig and Philipp Meier and Steffen Becker and Anne Koziolek and Heiko Koziolek and Piotr Rygielski},\ntitle = {{Analysis of the Trade-offs in Different Modeling Approaches for Performance Prediction of Software Systems}},\nbooktitle = {Software Engineering 2016 (SE 2016), Fachtagung des GI-Fachbereichs Softwaretechnik, 23.-26. M\\\"{a}rz 2016, Vienna, Austria},\npublisher = {GI},\nseries = {Lecture Notes in Informatics (LNI)},\naddress = {Vienna, Austria},\ndays = {23-26},\nmonth = {February},\nyear = {2016},\npages = {47--48},\ntitleaddon = {{(Talk Extended Abstract)}},\nhttp = {<a target=\"blank\" href=\"http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html\">http://subs.emis.de/LNI/Proceedings/Proceedings252/article3.html</a>},\npdf = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1077.pdf\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1077.pdf</a>},\nslides = {<a target=\"blank\" href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1077\">http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1077</a>}\n}\n</pre>\n</div>\n",
+            "year" : 2016,
+            "bibtex_key" : "KoBrMeBeKoKoRy2016-SE-tradeoffs_perf_prediction_approaches",
+            "modified_time" : "2017-12-10T19:35:02",
+            "month" : 2,
+            "need_html_regen" : 0,
+            "hidden" : 0
+         },
+         {
+            "bib" : "@inproceedings{SpinnerZLUGHK-2015-RADIO-MemoryScaling,\n  author = {Simon Spinner and Xiaoyun Zhu and Lei Lu and Mustafa Uysal and Rean Griffith and Nikolas Herbst and Samuel Kounev},\n  title = {{Proactive Memory Scaling of Virtualized Applications}},\n  booktitle = {VMware R&D Innovation Offsite (RADIO)},\n  year = {2015},\n  month = {July},\n}\n\n",
+            "old_mysql_id" : 1099,
+            "entry_type" : "paper",
             "title" : "{Proactive Memory Scaling of Virtualized Applications}",
             "_bibtex_type" : "inproceedings",
             "abstract" : null,
             "html_bib" : "<a name=\"SpinnerZLUGHK-2015-RADIO-MemoryScaling\"></a><pre>\n@inproceedings{SpinnerZLUGHK-2015-RADIO-MemoryScaling,\n  author = {Simon Spinner and Xiaoyun Zhu and Lei Lu and Mustafa Uysal and Rean Griffith and Nikolas Herbst and Samuel Kounev},\n  title = {{Proactive Memory Scaling of Virtualized Applications}},\n  booktitle = {VMware R&D Innovation Offsite (RADIO)},\n  year = {2015},\n  month = {July}\n}\n</pre>\n\n",
-            "id" : 1099,
             "creation_time" : "2016-04-20T17:12:15",
-            "bib" : "@inproceedings{SpinnerZLUGHK-2015-RADIO-MemoryScaling,\n  author = {Simon Spinner and Xiaoyun Zhu and Lei Lu and Mustafa Uysal and Rean Griffith and Nikolas Herbst and Samuel Kounev},\n  title = {{Proactive Memory Scaling of Virtualized Applications}},\n  booktitle = {VMware R&D Innovation Offsite (RADIO)},\n  year = {2015},\n  month = {July},\n}\n\n",
+            "id" : 1099,
             "html" : "\n\nSimon Spinner, Xiaoyun Zhu, Lei Lu, Mustafa Uysal, Rean Griffith, Nikolas\nHerbst, and Samuel Kounev.\nProactive Memory Scaling of Virtualized Applications.\nIn <em>VMware R&D Innovation Offsite (RADIO)</em>, July 2015.\n[&nbsp;<a class=\"abstract-a\" onclick=\"showAbstract('bib-of-SpinnerZLUGHK-2015-RADIO-MemoryScaling')\">bib</a>&nbsp; ] <div id=\"bib-of-SpinnerZLUGHK-2015-RADIO-MemoryScaling\" class=\"inline-bib\" style=\"display:none;\"><pre>\n@inproceedings{SpinnerZLUGHK-2015-RADIO-MemoryScaling,\nauthor = {Simon Spinner and Xiaoyun Zhu and Lei Lu and Mustafa Uysal and Rean Griffith and Nikolas Herbst and Samuel Kounev},\ntitle = {{Proactive Memory Scaling of Virtualized Applications}},\nbooktitle = {VMware R&D Innovation Offsite (RADIO)},\nyear = {2015},\nmonth = {July}\n}\n</pre>\n</div>\n",
-            "hidden" : 1,
-            "modified_time" : "2017-02-08T02:00:03",
-            "month" : 7,
-            "entry_type" : "paper",
-            "bibtex_key" : "SpinnerZLUGHK-2015-RADIO-MemoryScaling",
-            "old_mysql_id" : 1099,
             "year" : 2015,
+            "month" : 7,
+            "modified_time" : "2017-02-08T02:00:03",
+            "bibtex_key" : "SpinnerZLUGHK-2015-RADIO-MemoryScaling",
+            "need_html_regen" : 0,
+            "hidden" : 1
+         },
+         {
+            "html_bib" : "<a name=\"MiIoKoSaMuCuDiRoRy2016-IEEECC-cup\"></a><pre>\n@article{MiIoKoSaMuCuDiRoRy2016-IEEECC-cup,\n  author = {Aleksandar Milenkoski and Alexandru Iosup and Samuel Kounev and Kai Sachs and Diane E. Mularz and Jonathan A. Curtiss and Jason J. Ding and Florian Rosenberg and Piotr Rygielski},\n  title = {{CUP: A Formalism for Expressing Cloud Usage Patterns for Experts and Non-Experts}},\n  journal = {IEEE Cloud Computing},\n  year = {2016},\n  note = {To Appear}\n}\n</pre>\n\n",
+            "creation_time" : "2016-05-09T11:05:03",
+            "abstract" : null,
+            "title" : "{CUP: A Formalism for Expressing Cloud Usage Patterns for Experts and Non-Experts}",
+            "_bibtex_type" : "article",
+            "entry_type" : "paper",
+            "bib" : "@article{MiIoKoSaMuCuDiRoRy2016-IEEECC-cup,\n  author = {Aleksandar Milenkoski and Alexandru Iosup and Samuel Kounev and Kai Sachs and Diane E. Mularz and Jonathan A. Curtiss and Jason J. Ding and Florian Rosenberg and Piotr Rygielski},\n  title = {{CUP: A Formalism for Expressing Cloud Usage Patterns for Experts and Non-Experts}},\n  journal = {IEEE Cloud Computing},\n  publisher = {IEEE},\n year = {2016},\n  note = {To Appear},\n}\n\n",
+            "old_mysql_id" : 1105,
+            "hidden" : 0,
+            "bibtex_key" : "MiIoKoSaMuCuDiRoRy2016-IEEECC-cup",
+            "modified_time" : "2017-02-08T02:00:03",
+            "month" : 0,
+            "need_html_regen" : 0,
+            "html" : "\n\nAleksandar Milenkoski, Alexandru Iosup, Samuel Kounev, Kai Sachs, Diane&nbsp;E.\nMularz, Jonathan&nbsp;A. Curtiss, Jason&nbsp;J. Ding, Florian Rosenberg, and Piotr\nRygielski.\nCUP: A Formalism for Expressing Cloud Usage Patterns for Experts and\nNon-Experts.\n<em>IEEE Cloud Computing</em>, 2016.\nTo Appear.\n[&nbsp;<a class=\"abstract-a\" onclick=\"showAbstract('bib-of-MiIoKoSaMuCuDiRoRy2016-IEEECC-cup')\">bib</a>&nbsp; ] <div id=\"bib-of-MiIoKoSaMuCuDiRoRy2016-IEEECC-cup\" class=\"inline-bib\" style=\"display:none;\"><pre>\n@article{MiIoKoSaMuCuDiRoRy2016-IEEECC-cup,\nauthor = {Aleksandar Milenkoski and Alexandru Iosup and Samuel Kounev and Kai Sachs and Diane E. Mularz and Jonathan A. Curtiss and Jason J. Ding and Florian Rosenberg and Piotr Rygielski},\ntitle = {{CUP: A Formalism for Expressing Cloud Usage Patterns for Experts and Non-Experts}},\njournal = {IEEE Cloud Computing},\nyear = {2016},\nnote = {To Appear}\n}\n</pre>\n</div>\n",
+            "year" : 2016,
+            "id" : 1105
+         },
+         {
+            "id" : 1111,
+            "html" : "Nikolas Herbst, Ayman Amin, Artur Andrzejak, Lars Grunske, Samuel Kounev, Ole&nbsp;J. Mengshoel, and Priya Sundararajan.\nOnline Workload Forecasting.\nIn <span class=\"em\"> Self-Aware Computing Systems</span>, Samuel Kounev, Jeffrey&nbsp;O. Kephart, Xiaoyun Zhu, and Aleksandar Milenkoski, editors. Springer Verlag, Berlin Heidelberg, Germany, 2017.\nTo Appear.\n[&nbsp;<a class=\"bib-preview-a\" onclick=\"showAbstract('bib-of-HeAmAnGrMeSuKo2016-self')\">bib</a>&nbsp;|&nbsp;<a class=\"abstract-preview-a\" onclick=\"showAbstract('abstract-of-HeAmAnGrMeSuKo2016-self')\">Abstract</a>\n&nbsp;]\n<div id=\"bib-of-HeAmAnGrMeSuKo2016-self\" class=\"inline-bib\" style=\"display:none;\"><pre>@incollection{HeAmAnGrMeSuKo2016-self,\r\n  title = {{Online Workload Forecasting}},\r\n  editor = {Samuel Kounev and Jeffrey O. Kephart and Xiaoyun Zhu and Aleksandar Milenkoski},\r\n  author = {Nikolas Herbst and Ayman Amin and Artur Andrzejak and Lars Grunske and Samuel Kounev and Ole J. Mengshoel and Priya Sundararajan},\r\n  booktitle = {{Self-Aware Computing Systems}},\r\n  publisher = {{Springer Verlag}},\r\n  address = {{Berlin Heidelberg, Germany}},\r\n  year = {2017},\r\n  note = {{To Appear}},\r\nabstract={{This chapter gives a summary of the state-of-the-art approaches from different research fields that can be applied to continuously forecast future developments of time series data streams. More specifically, the input time series data contains continuously monitored metrics that quantify the amount of incoming workload units to a self-aware system. It is the goal of this chapter to identify and present approaches for online workload forecasting that are required for a self-aware system to act proactively in terms of problem prevention and optimization inferred from likely changes in their usage. The research fields covered are machine learning and time series analysis. We describe explicit limitations and advantages for each forecasting method.}}\r\n}</pre></div>\n<div id=\"abstract-of-HeAmAnGrMeSuKo2016-self\" class=\"inline-bib\" style=\"display:none;\"><blockquote>{This chapter gives a summary of the state-of-the-art approaches from different research fields that can be applied to continuously forecast future developments of time series data streams. More specifically, the input time series data contains continuously monitored metrics that quantify the amount of incoming workload units to a self-aware system. It is the goal of this chapter to identify and present approaches for online workload forecasting that are required for a self-aware system to act proactively in terms of problem prevention and optimization inferred from likely changes in their usage. The research fields covered are machine learning and time series analysis. We describe explicit limitations and advantages for each forecasting method.}</blockquote></div>",
+            "year" : 2017,
+            "bibtex_key" : "HeAmAnGrMeSuKo2016-self",
+            "month" : 0,
+            "modified_time" : "2017-02-08T02:00:03",
+            "need_html_regen" : 0,
+            "hidden" : 0,
+            "bib" : "@incollection{HeAmAnGrMeSuKo2016-self,\r\n  title = {{Online Workload Forecasting}},\r\n  editor = {Samuel Kounev and Jeffrey O. Kephart and Xiaoyun Zhu and Aleksandar Milenkoski},\r\n  author = {Nikolas Herbst and Ayman Amin and Artur Andrzejak and Lars Grunske and Samuel Kounev and Ole J. Mengshoel and Priya Sundararajan},\r\n  booktitle = {{Self-Aware Computing Systems}},\r\n  publisher = {{Springer Verlag}},\r\n  address = {{Berlin Heidelberg, Germany}},\r\n  year = {2017},\r\n  note = {{To Appear}},\r\nabstract={{This chapter gives a summary of the state-of-the-art approaches from different research fields that can be applied to continuously forecast future developments of time series data streams. More specifically, the input time series data contains continuously monitored metrics that quantify the amount of incoming workload units to a self-aware system. It is the goal of this chapter to identify and present approaches for online workload forecasting that are required for a self-aware system to act proactively in terms of problem prevention and optimization inferred from likely changes in their usage. The research fields covered are machine learning and time series analysis. We describe explicit limitations and advantages for each forecasting method.}}\r\n}",
+            "old_mysql_id" : 1111,
+            "entry_type" : "paper",
+            "abstract" : "{This chapter gives a summary of the state-of-the-art approaches from different research fields that can be applied to continuously forecast future developments of time series data streams. More specifically, the input time series data contains continuously monitored metrics that quantify the amount of incoming workload units to a self-aware system. It is the goal of this chapter to identify and present approaches for online workload forecasting that are required for a self-aware system to act proactively in terms of problem prevention and optimization inferred from likely changes in their usage. The research fields covered are machine learning and time series analysis. We describe explicit limitations and advantages for each forecasting method.}",
+            "_bibtex_type" : "incollection",
+            "title" : "{Online Workload Forecasting}",
+            "html_bib" : "<a name=\"HeAmAnGrMeSuKo2016-self\"></a><pre>\n@incollection{HeAmAnGrMeSuKo2016-self,\n  title = {{Online Workload Forecasting}},\n  editor = {Samuel Kounev and Jeffrey O. Kephart and Xiaoyun Zhu and Aleksandar Milenkoski},\n  author = {Nikolas Herbst and Ayman Amin and Artur Andrzejak and Lars Grunske and Ole J. Mengshoel and Priya Sundararajan and Samuel Kounev},\n  booktitle = {{Self-Aware Computing Systems}},\n  publisher = {{Springer Verlag}},\n  address = {{Berlin Heidelberg, Germany}},\n  year = {2016},\n  note = {{To Appear}}\n}\n</pre>\n\n",
+            "creation_time" : "2016-05-10T15:48:15"
+         },
+         {
+            "entry_type" : "paper",
+            "bib" : "@mastersthesis{grohmann16,\n  author = {Johannes Grohmann},\n  abstract = {Resource demands are key parameters of performance models used to predict the behavior of data centers. They define the amount of time a request spends obtaining a limited resource like the CPU. Requests can be grouped into different workload classes. Measuring these resource demands is usually unfeasible in practice. Therefore, several different approaches to estimate the resource demands of different workload classes exist. However, different use-cases with individual properties influence the accuracy of the estimators. Among others the number of different workload classes to estimate is known to have an impact on the solution quality, but affects some approaches more than others. Additionally, most approaches offer specific parameters to configure and optimize the estimators. Nevertheless, in order to optimize the parameters of one estimation approach or to choose the best estimator for a given scenario either expert knowledge or exhaustive testing is required. While some works on comparing different approaches and configurations exist, we extend this by learning on a given training set and specially adapting the estimation approaches in order to optimize performance for the required target scenario. We simplify automated resource demand estimation by designing a framework for ready-to-use reliable resource demand estimation. In order to do so, we develop generic algorithms that can be used to autonomously optimize parameter configurations of black-box estimation approaches on a given training set. Secondly, machine learning algorithms analyze the behavior of the resource demand estimators on different training traces and automatically pick the best approach for a prior unseen trace. The framework is modularized and configurable and can be trained on any kind of trace data. We implement different algorithms for optimization as well as machine learning and evaluate them on a training set containing measurements of a real system. The results show that parameter optimization is very promising and can increase the accuracy of single approaches of up to 10%. When recommending one approach as opposed to running all simultaneously, comparable results can be achieved, while saving more than 50% of the runtime. However, a combination of both approaches does not seem useful on our data set.},\n  title = {{Reliable Resource Demand Estimation}},\n  year = {2016},\n  month = {October},\n  school = {University of W\\\"{u}rzburg},\n  address = {Am Hubland, Informatikgeb\\\"aude, 97074 W\\\"urzburg, Germany},\n  type = {{Master Thesis}},\n  keywords = {Resource Demand Estimation, Machine Learning, Optimization, Meta-Learning},\n  pdf = {http://localhost:8083/publications/download/paper/1159.pdf},\n  slides = {http://localhost:8083/publications/download/slides/1159},\n}\n\n",
+            "old_mysql_id" : 1159,
+            "html_bib" : null,
+            "creation_time" : "2016-11-07T14:22:45",
+            "abstract" : "Resource demands are key parameters of performance models used to predict the behavior of data centers. They define the amount of time a request spends obtaining a limited resource like the CPU. Requests can be grouped into different workload classes. Measuring these resource demands is usually unfeasible in practice. Therefore, several different approaches to estimate the resource demands of different workload classes exist. However, different use-cases with individual properties influence the accuracy of the estimators. Among others the number of different workload classes to estimate is known to have an impact on the solution quality, but affects some approaches more than others. Additionally, most approaches offer specific parameters to configure and optimize the estimators. Nevertheless, in order to optimize the parameters of one estimation approach or to choose the best estimator for a given scenario either expert knowledge or exhaustive testing is required. While some works on comparing different approaches and configurations exist, we extend this by learning on a given training set and specially adapting the estimation approaches in order to optimize performance for the required target scenario. We simplify automated resource demand estimation by designing a framework for ready-to-use reliable resource demand estimation. In order to do so, we develop generic algorithms that can be used to autonomously optimize parameter configurations of black-box estimation approaches on a given training set. Secondly, machine learning algorithms analyze the behavior of the resource demand estimators on different training traces and automatically pick the best approach for a prior unseen trace. The framework is modularized and configurable and can be trained on any kind of trace data. We implement different algorithms for optimization as well as machine learning and evaluate them on a training set containing measurements of a real system. The results show that parameter optimization is very promising and can increase the accuracy of single approaches of up to 10%. When recommending one approach as opposed to running all simultaneously, comparable results can be achieved, while saving more than 50% of the runtime. However, a combination of both approaches does not seem useful on our data set.",
+            "title" : "{Reliable Resource Demand Estimation}",
+            "_bibtex_type" : "mastersthesis",
+            "html" : "Johannes Grohmann.\nReliable Resource Demand Estimation.\nMaster Thesis, University of W&#252;rzburg, Am Hubland, Informatikgeb&#228;ude, 97074 W&#252;rzburg, Germany, October 2016.\n[&nbsp;<a class=\"bib-preview-a\" onclick=\"showAbstract('bib-of-grohmann16')\">bib</a>&nbsp;|&nbsp;<a class=\"abstract-preview-a\" onclick=\"showAbstract('abstract-of-grohmann16')\">Abstract</a>\n&nbsp;|&nbsp;<a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1159.pdf\" target=\"_blank\">pdf</a>\n&nbsp;|&nbsp;<a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1159\" target=\"_blank\">slides</a>\n&nbsp;]\n<div id=\"bib-of-grohmann16\" class=\"inline-bib\" style=\"display:none;\"><pre>@mastersthesis{grohmann16,\r\n  author = {Johannes Grohmann},\r\n  abstract = {Resource demands are key parameters of performance models used to predict the behavior of data centers. They define the amount of time a request spends obtaining a limited resource like the CPU. Requests can be grouped into different workload classes. Measuring these resource demands is usually unfeasible in practice. Therefore, several different approaches to estimate the resource demands of different workload classes exist. However, different use-cases with individual properties influence the accuracy of the estimators. Among others the number of different workload classes to estimate is known to have an impact on the solution quality, but affects some approaches more than others. Additionally, most approaches offer specific parameters to configure and optimize the estimators. Nevertheless, in order to optimize the parameters of one estimation approach or to choose the best estimator for a given scenario either expert knowledge or exhaustive testing is required. While some works on comparing different approaches and configurations exist, we extend this by learning on a given training set and specially adapting the estimation approaches in order to optimize performance for the required target scenario. We simplify automated resource demand estimation by designing a framework for ready-to-use reliable resource demand estimation. In order to do so, we develop generic algorithms that can be used to autonomously optimize parameter configurations of black-box estimation approaches on a given training set. Secondly, machine learning algorithms analyze the behavior of the resource demand estimators on different training traces and automatically pick the best approach for a prior unseen trace. The framework is modularized and configurable and can be trained on any kind of trace data. We implement different algorithms for optimization as well as machine learning and evaluate them on a training set containing measurements of a real system. The results show that parameter optimization is very promising and can increase the accuracy of single approaches of up to 10%. When recommending one approach as opposed to running all simultaneously, comparable results can be achieved, while saving more than 50% of the runtime. However, a combination of both approaches does not seem useful on our data set.},\r\n  title = {{Reliable Resource Demand Estimation}},\r\n  year = {2016},\r\n  month = {October},\r\n  school = {University of W\\\"{u}rzburg},\r\n  address = {Am Hubland, Informatikgeb\\\"aude, 97074 W\\\"urzburg, Germany},\r\n  type = {{Master Thesis}},\r\n  keywords = {Resource Demand Estimation, Machine Learning, Optimization, Meta-Learning},\r\n  pdf = {http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1159.pdf},\r\n  slides = {http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1159},\r\n}</pre></div>\n<div id=\"abstract-of-grohmann16\" class=\"inline-bib\" style=\"display:none;\"><blockquote>Resource demands are key parameters of performance models used to predict the behavior of data centers. They define the amount of time a request spends obtaining a limited resource like the CPU. Requests can be grouped into different workload classes. Measuring these resource demands is usually unfeasible in practice. Therefore, several different approaches to estimate the resource demands of different workload classes exist. However, different use-cases with individual properties influence the accuracy of the estimators. Among others the number of different workload classes to estimate is known to have an impact on the solution quality, but affects some approaches more than others. Additionally, most approaches offer specific parameters to configure and optimize the estimators. Nevertheless, in order to optimize the parameters of one estimation approach or to choose the best estimator for a given scenario either expert knowledge or exhaustive testing is required. While some works on comparing different approaches and configurations exist, we extend this by learning on a given training set and specially adapting the estimation approaches in order to optimize performance for the required target scenario. We simplify automated resource demand estimation by designing a framework for ready-to-use reliable resource demand estimation. In order to do so, we develop generic algorithms that can be used to autonomously optimize parameter configurations of black-box estimation approaches on a given training set. Secondly, machine learning algorithms analyze the behavior of the resource demand estimators on different training traces and automatically pick the best approach for a prior unseen trace. The framework is modularized and configurable and can be trained on any kind of trace data. We implement different algorithms for optimization as well as machine learning and evaluate them on a training set containing measurements of a real system. The results show that parameter optimization is very promising and can increase the accuracy of single approaches of up to 10%. When recommending one approach as opposed to running all simultaneously, comparable results can be achieved, while saving more than 50% of the runtime. However, a combination of both approaches does not seem useful on our data set.</blockquote></div>",
+            "year" : 2016,
+            "id" : 1159,
+            "hidden" : 0,
+            "bibtex_key" : "grohmann16",
+            "modified_time" : "2017-12-10T19:35:02",
+            "month" : 10,
             "need_html_regen" : 0
          },
          {
             "entry_type" : "paper",
-            "month" : 0,
-            "modified_time" : "2017-02-08T02:00:03",
-            "need_html_regen" : 0,
-            "year" : 2016,
-            "bibtex_key" : "MiIoKoSaMuCuDiRoRy2016-IEEECC-cup",
-            "old_mysql_id" : 1105,
-            "id" : 1105,
-            "hidden" : 0,
-            "bib" : "@article{MiIoKoSaMuCuDiRoRy2016-IEEECC-cup,\n  author = {Aleksandar Milenkoski and Alexandru Iosup and Samuel Kounev and Kai Sachs and Diane E. Mularz and Jonathan A. Curtiss and Jason J. Ding and Florian Rosenberg and Piotr Rygielski},\n  title = {{CUP: A Formalism for Expressing Cloud Usage Patterns for Experts and Non-Experts}},\n  journal = {IEEE Cloud Computing},\n  publisher = {IEEE},\n year = {2016},\n  note = {To Appear},\n}\n\n",
-            "html" : "\n\nAleksandar Milenkoski, Alexandru Iosup, Samuel Kounev, Kai Sachs, Diane&nbsp;E.\nMularz, Jonathan&nbsp;A. Curtiss, Jason&nbsp;J. Ding, Florian Rosenberg, and Piotr\nRygielski.\nCUP: A Formalism for Expressing Cloud Usage Patterns for Experts and\nNon-Experts.\n<em>IEEE Cloud Computing</em>, 2016.\nTo Appear.\n[&nbsp;<a class=\"abstract-a\" onclick=\"showAbstract('bib-of-MiIoKoSaMuCuDiRoRy2016-IEEECC-cup')\">bib</a>&nbsp; ] <div id=\"bib-of-MiIoKoSaMuCuDiRoRy2016-IEEECC-cup\" class=\"inline-bib\" style=\"display:none;\"><pre>\n@article{MiIoKoSaMuCuDiRoRy2016-IEEECC-cup,\nauthor = {Aleksandar Milenkoski and Alexandru Iosup and Samuel Kounev and Kai Sachs and Diane E. Mularz and Jonathan A. Curtiss and Jason J. Ding and Florian Rosenberg and Piotr Rygielski},\ntitle = {{CUP: A Formalism for Expressing Cloud Usage Patterns for Experts and Non-Experts}},\njournal = {IEEE Cloud Computing},\nyear = {2016},\nnote = {To Appear}\n}\n</pre>\n</div>\n",
-            "creation_time" : "2016-05-09T11:05:03",
-            "html_bib" : "<a name=\"MiIoKoSaMuCuDiRoRy2016-IEEECC-cup\"></a><pre>\n@article{MiIoKoSaMuCuDiRoRy2016-IEEECC-cup,\n  author = {Aleksandar Milenkoski and Alexandru Iosup and Samuel Kounev and Kai Sachs and Diane E. Mularz and Jonathan A. Curtiss and Jason J. Ding and Florian Rosenberg and Piotr Rygielski},\n  title = {{CUP: A Formalism for Expressing Cloud Usage Patterns for Experts and Non-Experts}},\n  journal = {IEEE Cloud Computing},\n  year = {2016},\n  note = {To Appear}\n}\n</pre>\n\n",
-            "_bibtex_type" : "article",
-            "title" : "{CUP: A Formalism for Expressing Cloud Usage Patterns for Experts and Non-Experts}",
-            "abstract" : null
-         },
-         {
-            "modified_time" : "2017-02-08T02:00:03",
-            "month" : 0,
-            "entry_type" : "paper",
-            "bibtex_key" : "HeAmAnGrMeSuKo2016-self",
-            "old_mysql_id" : 1111,
-            "year" : 2017,
-            "need_html_regen" : 0,
-            "id" : 1111,
-            "html" : "Nikolas Herbst, Ayman Amin, Artur Andrzejak, Lars Grunske, Samuel Kounev, Ole&nbsp;J. Mengshoel, and Priya Sundararajan.\nOnline Workload Forecasting.\nIn <span class=\"em\"> Self-Aware Computing Systems</span>, Samuel Kounev, Jeffrey&nbsp;O. Kephart, Xiaoyun Zhu, and Aleksandar Milenkoski, editors. Springer Verlag, Berlin Heidelberg, Germany, 2017.\nTo Appear.\n[&nbsp;<a class=\"bib-preview-a\" onclick=\"showAbstract('bib-of-HeAmAnGrMeSuKo2016-self')\">bib</a>&nbsp;|&nbsp;<a class=\"abstract-preview-a\" onclick=\"showAbstract('abstract-of-HeAmAnGrMeSuKo2016-self')\">Abstract</a>\n&nbsp;]\n<div id=\"bib-of-HeAmAnGrMeSuKo2016-self\" class=\"inline-bib\" style=\"display:none;\"><pre>@incollection{HeAmAnGrMeSuKo2016-self,\r\n  title = {{Online Workload Forecasting}},\r\n  editor = {Samuel Kounev and Jeffrey O. Kephart and Xiaoyun Zhu and Aleksandar Milenkoski},\r\n  author = {Nikolas Herbst and Ayman Amin and Artur Andrzejak and Lars Grunske and Samuel Kounev and Ole J. Mengshoel and Priya Sundararajan},\r\n  booktitle = {{Self-Aware Computing Systems}},\r\n  publisher = {{Springer Verlag}},\r\n  address = {{Berlin Heidelberg, Germany}},\r\n  year = {2017},\r\n  note = {{To Appear}},\r\nabstract={{This chapter gives a summary of the state-of-the-art approaches from different research fields that can be applied to continuously forecast future developments of time series data streams. More specifically, the input time series data contains continuously monitored metrics that quantify the amount of incoming workload units to a self-aware system. It is the goal of this chapter to identify and present approaches for online workload forecasting that are required for a self-aware system to act proactively in terms of problem prevention and optimization inferred from likely changes in their usage. The research fields covered are machine learning and time series analysis. We describe explicit limitations and advantages for each forecasting method.}}\r\n}</pre></div>\n<div id=\"abstract-of-HeAmAnGrMeSuKo2016-self\" class=\"inline-bib\" style=\"display:none;\"><blockquote>{This chapter gives a summary of the state-of-the-art approaches from different research fields that can be applied to continuously forecast future developments of time series data streams. More specifically, the input time series data contains continuously monitored metrics that quantify the amount of incoming workload units to a self-aware system. It is the goal of this chapter to identify and present approaches for online workload forecasting that are required for a self-aware system to act proactively in terms of problem prevention and optimization inferred from likely changes in their usage. The research fields covered are machine learning and time series analysis. We describe explicit limitations and advantages for each forecasting method.}</blockquote></div>",
-            "creation_time" : "2016-05-10T15:48:15",
-            "bib" : "@incollection{HeAmAnGrMeSuKo2016-self,\r\n  title = {{Online Workload Forecasting}},\r\n  editor = {Samuel Kounev and Jeffrey O. Kephart and Xiaoyun Zhu and Aleksandar Milenkoski},\r\n  author = {Nikolas Herbst and Ayman Amin and Artur Andrzejak and Lars Grunske and Samuel Kounev and Ole J. Mengshoel and Priya Sundararajan},\r\n  booktitle = {{Self-Aware Computing Systems}},\r\n  publisher = {{Springer Verlag}},\r\n  address = {{Berlin Heidelberg, Germany}},\r\n  year = {2017},\r\n  note = {{To Appear}},\r\nabstract={{This chapter gives a summary of the state-of-the-art approaches from different research fields that can be applied to continuously forecast future developments of time series data streams. More specifically, the input time series data contains continuously monitored metrics that quantify the amount of incoming workload units to a self-aware system. It is the goal of this chapter to identify and present approaches for online workload forecasting that are required for a self-aware system to act proactively in terms of problem prevention and optimization inferred from likely changes in their usage. The research fields covered are machine learning and time series analysis. We describe explicit limitations and advantages for each forecasting method.}}\r\n}",
-            "hidden" : 0,
-            "html_bib" : "<a name=\"HeAmAnGrMeSuKo2016-self\"></a><pre>\n@incollection{HeAmAnGrMeSuKo2016-self,\n  title = {{Online Workload Forecasting}},\n  editor = {Samuel Kounev and Jeffrey O. Kephart and Xiaoyun Zhu and Aleksandar Milenkoski},\n  author = {Nikolas Herbst and Ayman Amin and Artur Andrzejak and Lars Grunske and Ole J. Mengshoel and Priya Sundararajan and Samuel Kounev},\n  booktitle = {{Self-Aware Computing Systems}},\n  publisher = {{Springer Verlag}},\n  address = {{Berlin Heidelberg, Germany}},\n  year = {2016},\n  note = {{To Appear}}\n}\n</pre>\n\n",
-            "title" : "{Online Workload Forecasting}",
-            "_bibtex_type" : "incollection",
-            "abstract" : "{This chapter gives a summary of the state-of-the-art approaches from different research fields that can be applied to continuously forecast future developments of time series data streams. More specifically, the input time series data contains continuously monitored metrics that quantify the amount of incoming workload units to a self-aware system. It is the goal of this chapter to identify and present approaches for online workload forecasting that are required for a self-aware system to act proactively in terms of problem prevention and optimization inferred from likely changes in their usage. The research fields covered are machine learning and time series analysis. We describe explicit limitations and advantages for each forecasting method.}"
-         },
-         {
-            "title" : "{Reliable Resource Demand Estimation}",
-            "_bibtex_type" : "mastersthesis",
-            "abstract" : "Resource demands are key parameters of performance models used to predict the behavior of data centers. They define the amount of time a request spends obtaining a limited resource like the CPU. Requests can be grouped into different workload classes. Measuring these resource demands is usually unfeasible in practice. Therefore, several different approaches to estimate the resource demands of different workload classes exist. However, different use-cases with individual properties influence the accuracy of the estimators. Among others the number of different workload classes to estimate is known to have an impact on the solution quality, but affects some approaches more than others. Additionally, most approaches offer specific parameters to configure and optimize the estimators. Nevertheless, in order to optimize the parameters of one estimation approach or to choose the best estimator for a given scenario either expert knowledge or exhaustive testing is required. While some works on comparing different approaches and configurations exist, we extend this by learning on a given training set and specially adapting the estimation approaches in order to optimize performance for the required target scenario. We simplify automated resource demand estimation by designing a framework for ready-to-use reliable resource demand estimation. In order to do so, we develop generic algorithms that can be used to autonomously optimize parameter configurations of black-box estimation approaches on a given training set. Secondly, machine learning algorithms analyze the behavior of the resource demand estimators on different training traces and automatically pick the best approach for a prior unseen trace. The framework is modularized and configurable and can be trained on any kind of trace data. We implement different algorithms for optimization as well as machine learning and evaluate them on a training set containing measurements of a real system. The results show that parameter optimization is very promising and can increase the accuracy of single approaches of up to 10%. When recommending one approach as opposed to running all simultaneously, comparable results can be achieved, while saving more than 50% of the runtime. However, a combination of both approaches does not seem useful on our data set.",
+            "bib" : "@phdthesis{Rygielski2017-phd,\r\nauthor = {Piotr Rygielski},\r\ntitle = {Flexible Modeling Data Center Networks for Capacity Management},\r\nyear = {2017},\r\nmonth = {},\r\nschool = {University of W\\\"{u}rzburg, Germany},\r\n}",
+            "old_mysql_id" : 1166,
             "html_bib" : null,
-            "id" : 1159,
-            "hidden" : 0,
-            "html" : "Johannes Grohmann.\nReliable Resource Demand Estimation.\nMaster Thesis, University of W&#252;rzburg, Am Hubland, Informatikgeb&#228;ude, 97074 W&#252;rzburg, Germany, October 2016.\n[&nbsp;<a class=\"bib-preview-a\" onclick=\"showAbstract('bib-of-grohmann16')\">bib</a>&nbsp;|&nbsp;<a class=\"abstract-preview-a\" onclick=\"showAbstract('abstract-of-grohmann16')\">Abstract</a>\n&nbsp;|&nbsp;<a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1159.pdf\" target=\"_blank\">pdf</a>\n&nbsp;|&nbsp;<a href=\"http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1159\" target=\"_blank\">slides</a>\n&nbsp;]\n<div id=\"bib-of-grohmann16\" class=\"inline-bib\" style=\"display:none;\"><pre>@mastersthesis{grohmann16,\r\n  author = {Johannes Grohmann},\r\n  abstract = {Resource demands are key parameters of performance models used to predict the behavior of data centers. They define the amount of time a request spends obtaining a limited resource like the CPU. Requests can be grouped into different workload classes. Measuring these resource demands is usually unfeasible in practice. Therefore, several different approaches to estimate the resource demands of different workload classes exist. However, different use-cases with individual properties influence the accuracy of the estimators. Among others the number of different workload classes to estimate is known to have an impact on the solution quality, but affects some approaches more than others. Additionally, most approaches offer specific parameters to configure and optimize the estimators. Nevertheless, in order to optimize the parameters of one estimation approach or to choose the best estimator for a given scenario either expert knowledge or exhaustive testing is required. While some works on comparing different approaches and configurations exist, we extend this by learning on a given training set and specially adapting the estimation approaches in order to optimize performance for the required target scenario. We simplify automated resource demand estimation by designing a framework for ready-to-use reliable resource demand estimation. In order to do so, we develop generic algorithms that can be used to autonomously optimize parameter configurations of black-box estimation approaches on a given training set. Secondly, machine learning algorithms analyze the behavior of the resource demand estimators on different training traces and automatically pick the best approach for a prior unseen trace. The framework is modularized and configurable and can be trained on any kind of trace data. We implement different algorithms for optimization as well as machine learning and evaluate them on a training set containing measurements of a real system. The results show that parameter optimization is very promising and can increase the accuracy of single approaches of up to 10%. When recommending one approach as opposed to running all simultaneously, comparable results can be achieved, while saving more than 50% of the runtime. However, a combination of both approaches does not seem useful on our data set.},\r\n  title = {{Reliable Resource Demand Estimation}},\r\n  year = {2016},\r\n  month = {October},\r\n  school = {University of W\\\"{u}rzburg},\r\n  address = {Am Hubland, Informatikgeb\\\"aude, 97074 W\\\"urzburg, Germany},\r\n  type = {{Master Thesis}},\r\n  keywords = {Resource Demand Estimation, Machine Learning, Optimization, Meta-Learning},\r\n  pdf = {http://se2.informatik.uni-wuerzburg.de/pa/publications/download/paper/1159.pdf},\r\n  slides = {http://se2.informatik.uni-wuerzburg.de/pa/publications/download/slides/1159},\r\n}</pre></div>\n<div id=\"abstract-of-grohmann16\" class=\"inline-bib\" style=\"display:none;\"><blockquote>Resource demands are key parameters of performance models used to predict the behavior of data centers. They define the amount of time a request spends obtaining a limited resource like the CPU. Requests can be grouped into different workload classes. Measuring these resource demands is usually unfeasible in practice. Therefore, several different approaches to estimate the resource demands of different workload classes exist. However, different use-cases with individual properties influence the accuracy of the estimators. Among others the number of different workload classes to estimate is known to have an impact on the solution quality, but affects some approaches more than others. Additionally, most approaches offer specific parameters to configure and optimize the estimators. Nevertheless, in order to optimize the parameters of one estimation approach or to choose the best estimator for a given scenario either expert knowledge or exhaustive testing is required. While some works on comparing different approaches and configurations exist, we extend this by learning on a given training set and specially adapting the estimation approaches in order to optimize performance for the required target scenario. We simplify automated resource demand estimation by designing a framework for ready-to-use reliable resource demand estimation. In order to do so, we develop generic algorithms that can be used to autonomously optimize parameter configurations of black-box estimation approaches on a given training set. Secondly, machine learning algorithms analyze the behavior of the resource demand estimators on different training traces and automatically pick the best approach for a prior unseen trace. The framework is modularized and configurable and can be trained on any kind of trace data. We implement different algorithms for optimization as well as machine learning and evaluate them on a training set containing measurements of a real system. The results show that parameter optimization is very promising and can increase the accuracy of single approaches of up to 10%. When recommending one approach as opposed to running all simultaneously, comparable results can be achieved, while saving more than 50% of the runtime. However, a combination of both approaches does not seem useful on our data set.</blockquote></div>",
-            "creation_time" : "2016-11-07T14:22:45",
-            "bib" : "@mastersthesis{grohmann16,\n  author = {Johannes Grohmann},\n  abstract = {Resource demands are key parameters of performance models used to predict the behavior of data centers. They define the amount of time a request spends obtaining a limited resource like the CPU. Requests can be grouped into different workload classes. Measuring these resource demands is usually unfeasible in practice. Therefore, several different approaches to estimate the resource demands of different workload classes exist. However, different use-cases with individual properties influence the accuracy of the estimators. Among others the number of different workload classes to estimate is known to have an impact on the solution quality, but affects some approaches more than others. Additionally, most approaches offer specific parameters to configure and optimize the estimators. Nevertheless, in order to optimize the parameters of one estimation approach or to choose the best estimator for a given scenario either expert knowledge or exhaustive testing is required. While some works on comparing different approaches and configurations exist, we extend this by learning on a given training set and specially adapting the estimation approaches in order to optimize performance for the required target scenario. We simplify automated resource demand estimation by designing a framework for ready-to-use reliable resource demand estimation. In order to do so, we develop generic algorithms that can be used to autonomously optimize parameter configurations of black-box estimation approaches on a given training set. Secondly, machine learning algorithms analyze the behavior of the resource demand estimators on different training traces and automatically pick the best approach for a prior unseen trace. The framework is modularized and configurable and can be trained on any kind of trace data. We implement different algorithms for optimization as well as machine learning and evaluate them on a training set containing measurements of a real system. The results show that parameter optimization is very promising and can increase the accuracy of single approaches of up to 10%. When recommending one approach as opposed to running all simultaneously, comparable results can be achieved, while saving more than 50% of the runtime. However, a combination of both approaches does not seem useful on our data set.},\n  title = {{Reliable Resource Demand Estimation}},\n  year = {2016},\n  month = {October},\n  school = {University of W\\\"{u}rzburg},\n  address = {Am Hubland, Informatikgeb\\\"aude, 97074 W\\\"urzburg, Germany},\n  type = {{Master Thesis}},\n  keywords = {Resource Demand Estimation, Machine Learning, Optimization, Meta-Learning},\n  pdf = {http://localhost:8083/publications/download/paper/1159.pdf},\n  slides = {http://localhost:8083/publications/download/slides/1159},\n}\n\n",
-            "month" : 10,
-            "entry_type" : "paper",
-            "modified_time" : "2017-12-10T19:35:02",
-            "year" : 2016,
-            "need_html_regen" : 0,
-            "bibtex_key" : "grohmann16",
-            "old_mysql_id" : 1159
-         },
-         {
+            "creation_time" : "2016-12-07T10:20:56",
             "_bibtex_type" : "phdthesis",
             "title" : "Flexible Modeling Data Center Networks for Capacity Management",
             "abstract" : null,
-            "html_bib" : null,
+            "html" : "Piotr Rygielski.\n<span class=\"em\"> Flexible Modeling Data Center Networks for Capacity Management</span>.\nPhD thesis, University of W&#252;rzburg, Germany, 2017.\n[&nbsp;<a class=\"bib-preview-a\" onclick=\"showAbstract('bib-of-Rygielski2017-phd')\">bib</a>&nbsp;]\n<div id=\"bib-of-Rygielski2017-phd\" class=\"inline-bib\" style=\"display:none;\"><pre>@phdthesis{Rygielski2017-phd,\r\nauthor = {Piotr Rygielski},\r\ntitle = {Flexible Modeling Data Center Networks for Capacity Management},\r\nyear = {2017},\r\nmonth = {},\r\nschool = {University of W\\\"{u}rzburg, Germany},\r\n}</pre></div>",
+            "year" : 2017,
             "id" : 1166,
             "hidden" : 1,
-            "bib" : "@phdthesis{Rygielski2017-phd,\r\nauthor = {Piotr Rygielski},\r\ntitle = {Flexible Modeling Data Center Networks for Capacity Management},\r\nyear = {2017},\r\nmonth = {},\r\nschool = {University of W\\\"{u}rzburg, Germany},\r\n}",
-            "html" : "Piotr Rygielski.\n<span class=\"em\"> Flexible Modeling Data Center Networks for Capacity Management</span>.\nPhD thesis, University of W&#252;rzburg, Germany, 2017.\n[&nbsp;<a class=\"bib-preview-a\" onclick=\"showAbstract('bib-of-Rygielski2017-phd')\">bib</a>&nbsp;]\n<div id=\"bib-of-Rygielski2017-phd\" class=\"inline-bib\" style=\"display:none;\"><pre>@phdthesis{Rygielski2017-phd,\r\nauthor = {Piotr Rygielski},\r\ntitle = {Flexible Modeling Data Center Networks for Capacity Management},\r\nyear = {2017},\r\nmonth = {},\r\nschool = {University of W\\\"{u}rzburg, Germany},\r\n}</pre></div>",
-            "creation_time" : "2016-12-07T10:20:56",
-            "entry_type" : "paper",
             "month" : 0,
             "modified_time" : "2017-02-08T02:00:03",
-            "need_html_regen" : 0,
-            "year" : 2017,
             "bibtex_key" : "Rygielski2017-phd",
-            "old_mysql_id" : 1166
+            "need_html_regen" : 0
          },
          {
+            "id" : 1173,
+            "html" : "Johny Example.\nSelected aspects of some methods.\n<span class=\"em\"> Journal of this and that</span>, August 2017, Printer-at-home publishing.\n[&nbsp;<a class=\"bib-preview-link\" data-id=\"key2017\">bib</a>&nbsp;]\n<div class=\"bibspace-entry-bib\" data-id=\"key2017\" class=\"inline-bib\" style=\"display:none;\"><pre>@article{key2017,\n  author = {Johny Example},\n  journal = {Journal of this and that},\n  publisher = {Printer-at-home publishing},\n  title = {{Selected aspects of some methods}},\n  year = {2017},\n  month = {August},\n  day = {1--31},\n}\n\n</pre></div>",
+            "year" : 2017,
+            "bibtex_key" : "key2017",
+            "modified_time" : "2017-08-08T08:19:26",
+            "month" : 8,
+            "need_html_regen" : 0,
+            "hidden" : 0,
+            "bib" : "@article{key2017,\r\n      author = {Johny Example},\r\n      journal = {Journal of this and that},\r\n      publisher = {Printer-at-home publishing},\r\n      title = {{Selected aspects of some methods}},\r\n      year = {2017},\r\n      month = {August},\r\n      day = {1--31},\r\n    }",
+            "old_mysql_id" : 1173,
+            "entry_type" : "paper",
             "abstract" : null,
             "title" : "{Selected aspects of some methods}",
             "_bibtex_type" : "article",
             "html_bib" : null,
-            "bib" : "@article{key2017,\r\n      author = {Johny Example},\r\n      journal = {Journal of this and that},\r\n      publisher = {Printer-at-home publishing},\r\n      title = {{Selected aspects of some methods}},\r\n      year = {2017},\r\n      month = {August},\r\n      day = {1--31},\r\n    }",
-            "creation_time" : "2017-08-08T08:19:26",
-            "html" : "Johny Example.\nSelected aspects of some methods.\n<span class=\"em\"> Journal of this and that</span>, August 2017, Printer-at-home publishing.\n[&nbsp;<a class=\"bib-preview-link\" data-id=\"key2017\">bib</a>&nbsp;]\n<div class=\"bibspace-entry-bib\" data-id=\"key2017\" class=\"inline-bib\" style=\"display:none;\"><pre>@article{key2017,\n  author = {Johny Example},\n  journal = {Journal of this and that},\n  publisher = {Printer-at-home publishing},\n  title = {{Selected aspects of some methods}},\n  year = {2017},\n  month = {August},\n  day = {1--31},\n}\n\n</pre></div>",
-            "hidden" : 0,
-            "id" : 1173,
-            "old_mysql_id" : 1173,
-            "bibtex_key" : "key2017",
-            "year" : 2017,
-            "need_html_regen" : 0,
-            "modified_time" : "2017-08-08T08:19:26",
-            "month" : 8,
-            "entry_type" : "paper"
-         }
-      ],
-      "Team" : [
-         {
-            "parent" : null,
-            "old_mysql_id" : 1,
-            "id" : 1,
-            "name" : "SE-WUERZBURG"
-         },
-         {
-            "name" : "PiotrPL",
-            "id" : 3,
-            "parent" : null,
-            "old_mysql_id" : 3
-         },
-         {
-            "old_mysql_id" : 4,
-            "parent" : null,
-            "name" : "DESCARTES_ALUMNI",
-            "id" : 4
-         },
-         {
-            "id" : 6,
-            "name" : "DESCARTES",
-            "parent" : null,
-            "old_mysql_id" : 6
-         }
-      ],
-      "User" : [
-         {
-            "real_name" : "James Bond",
-            "login" : "j.bond007",
-            "pass" : "$2a$08$gabQ/Wh1O4X/rxFyw1MN9.JAW7fpGkgnqL4n1MBn0Fke3trEwIFEK",
-            "rank" : 1,
-            "id" : 2,
-            "pass3" : null,
-            "master_id" : 0,
-            "registration_time" : "2017-02-08T18:20:18",
-            "last_login" : "2017-02-08T18:20:27",
-            "pass2" : "gabQ/Wh1O4X/rxFyw1MN9.",
-            "email" : "test@example.com",
-            "old_mysql_id" : 2,
-            "tennant_id" : 0
-         },
-         {
-            "pass3" : null,
-            "master_id" : 0,
-            "registration_time" : "2017-02-08T14:21:41",
-            "last_login" : "2017-12-10T19:32:04",
-            "login" : "pub_admin",
-            "real_name" : "Admin",
-            "pass" : "$2a$08$RjsJK5.hcmqMphocOzVsUOAbdhZBdl9gNlGDzl69AyApzIQO2P7TK",
-            "rank" : 2,
-            "id" : 1,
-            "email" : "pub_admin@example.com",
-            "old_mysql_id" : 1,
-            "tennant_id" : 0,
-            "pass2" : "RjsJK5.hcmqMphocOzVsUO"
-         }
-      ],
-      "Exception" : [
-         {
-            "entry_id" : 588,
-            "team_id" : 1
-         },
-         {
-            "team_id" : 6,
-            "entry_id" : 588
-         },
-         {
-            "team_id" : 6,
-            "entry_id" : 1173
-         }
-      ],
-      "TagType" : [
-         {
-            "id" : 1,
-            "comment" : "keyword",
-            "name" : "Tag",
-            "old_mysql_id" : 1
-         },
-         {
-            "id" : 2,
-            "comment" : "12 categories defined as in research agenda",
-            "name" : "Category",
-            "old_mysql_id" : 2
-         },
-         {
-            "old_mysql_id" : 3,
-            "comment" : "Reserved for other grouppings of papers (e.g., QPME_Bibliography)",
-            "name" : "Other",
-            "id" : 3
-         },
-         {
-            "id" : 4,
-            "comment" : "Tags Imported from Bibtex",
-            "name" : "Imported",
-            "old_mysql_id" : 4
-         }
-      ],
-      "Author" : [
-         {
-            "old_mysql_id" : 527,
-            "master_id" : 527,
-            "uid" : "RygielskiPiotr",
-            "id" : 527,
-            "name" : "RygielskiPiotr",
-            "display" : 1
-         },
-         {
-            "master_id" : 591,
-            "uid" : "SPEC",
-            "old_mysql_id" : 591,
-            "display" : 1,
-            "id" : 591,
-            "name" : "SPEC"
-         },
-         {
-            "master_id" : 1121,
-            "uid" : "HerbstNikolas",
-            "old_mysql_id" : 1121,
-            "display" : 1,
-            "id" : 1121,
-            "name" : "HerbstNikolas"
-         },
-         {
-            "display" : 1,
-            "id" : 1389,
-            "name" : "MilenkoskiAleksandar",
-            "master_id" : 1389,
-            "uid" : "MilenkoskiAleksandar",
-            "old_mysql_id" : 1389
-         },
-         {
-            "master_id" : 1486,
-            "uid" : "GrohmannJohannes",
-            "old_mysql_id" : 1486,
-            "display" : 1,
-            "id" : 1486,
-            "name" : "GrohmannJohannes"
-         },
-         {
-            "uid" : "ExampleJohny",
-            "master_id" : 1487,
-            "old_mysql_id" : 1487,
-            "display" : 1,
-            "name" : "ExampleJohny",
-            "id" : 1487
-         },
-         {
-            "uid" : "HerbstNikolasRoman",
-            "master_id" : 1121,
-            "old_mysql_id" : 1488,
-            "display" : 0,
-            "name" : "HerbstNikolasRoman",
-            "id" : 1488
+            "creation_time" : "2017-08-08T08:19:26"
          }
       ]
    },
-   "formatVersion" : "1",
    "dateTimeFormat" : "%Y-%m-%dT%T"
 }
