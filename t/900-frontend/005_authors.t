@@ -88,13 +88,16 @@ subtest 'Add author post' => sub {
   $op->post_ok(
     $self->url_for('add_author') => {Accept     => '*/*'},
     form                         => {new_master => 'TestMaster'}
-  )->content_like(qr/Author with proposed master: .+ already exists!/);
+    )
+    ->content_like(qr/Author with proposed master: TestMaster already exists!/);
 };
 
 subtest '(fixture) Add author to team' => sub {
   my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
   ok($author->id > 1);
-  my $aid = $author->id;
+  my $aid   = $author->id;
+  my $aname = $author->name;
+  my $tname = $some_team->name;
 
   my $url = $self->url_for(
     'add_author_to_team',
@@ -102,16 +105,17 @@ subtest '(fixture) Add author to team' => sub {
     tid => $some_team->id
   );
   $op->get_ok($url)->status_is(200)
-    ->content_like(qr/Author .+ has just joined team/)
+    ->content_like(qr/\QAuthor $aname has just joined team $tname/)
     ->element_exists('h1[class$=author-master-name]')
     ->text_like('h1[class$=author-master-name]' => qr/TestMaster/)
-    ->text_like('span[class$=author-id]'        => qr/${aid}/);
+    ->text_like('span[class$=author-id]'        => qr/\Q$aid/);
 };
 
 subtest '(fixture) Remove author from team' => sub {
   my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
   ok($author->id > 1);
-  my $aid = $author->id;
+  my $aid   = $author->id;
+  my $aname = $author->name;
 
   $op->get_ok(
     $self->url_for(
@@ -119,11 +123,9 @@ subtest '(fixture) Remove author from team' => sub {
       id  => $author->id,
       tid => $some_team->id
     )
-    )->status_is(200)->content_like(qr/Author .+ has just left team/)
+    )->status_is(200)->content_like(qr/\QAuthor $aname has just left team/)
     ->element_exists('h1[class$=author-master-name]')
     ->text_like('h1[class$=author-master-name]' => qr/TestMaster/);
-
-  # ->text_like('span[class$=author-id]' => qr/${aid}/);
 };
 
 subtest '(fixture) Toggle author visibility' => sub {
@@ -158,6 +160,7 @@ subtest '(fixture) Toggle author visibility' => sub {
 subtest 'Edit author post add user_id (name)' => sub {
   my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
   ok($author->id > 1);
+  my $aid = $author->id;
 
   $op->post_ok(
     $self->url_for('edit_author') => {Accept => '*/*'},
@@ -170,7 +173,7 @@ subtest 'Edit author post add user_id (name)' => sub {
     form => {id => $author->id, new_user_id => 'TestMaster2'}
     )
     ->content_like(
-    qr/Cannot add user ID .+\. Such ID already exist. Maybe you want to merge authors instead\?/
+    qr/Cannot add user ID TestMaster2. Such ID already exist. Maybe you want to merge authors instead?/
     );
 
   my $edit_get_url = $self->url_for('edit_author', id => $author->id);
@@ -221,6 +224,27 @@ subtest 'Edit author post change master name' => sub {
     $self->url_for('edit_author') => {Accept => '*/*'},
     form => {id => $author->id, new_master => 'TestMaster3'}
   )->content_like(qr/This master name is already taken/);
+
+  # Return to the original master name
+  $op->post_ok(
+    $self->url_for('edit_author') => {Accept => '*/*'},
+    form => {id => $author->id, new_master => 'TestMaster'}
+  )->content_like(qr/Master name has been updated successfully/);
+};
+
+subtest 'Edit author delete force' => sub {
+  my $author = $op->app->repo->authors_find(sub { $_->name eq 'TestMaster' });
+  ok($author->id > 1);
+  my $aid   = $author->id;
+  my $aname = $author->name;
+
+  my $delete_url = $self->url_for('delete_author_force', id => $author->id);
+  $op->get_ok($delete_url)->status_is(200)
+    ->content_like(qr/\QAuthor $aname ID $aid has been removed successfully/);
+
+  my $edit_get_url = $self->url_for('edit_author', id => $author->id);
+  $op->get_ok($edit_get_url)->status_is(200)
+    ->content_like(qr/\QAuthor with id $aid does not exist!/);
 };
 
 done_testing();

@@ -420,7 +420,7 @@ sub setup_routes {
     ->name('delete_author');
 
   $admin_user->get('/authors/delete/<:id>/force')
-    ->to('authors#delete_author_force');
+    ->to('authors#delete_author_force')->name('delete_author_force');
 
   $manager_user->post('/authors/edit_membership_dates')
     ->to('authors#post_edit_membership_dates')
@@ -443,9 +443,6 @@ sub setup_routes {
 
   $manager_user->get('/authors/toggle_visibility/<:id>')
     ->to('authors#toggle_visibility')->name('toggle_author_visibility');
-
-  # $logged_user->get('/authors/toggle_visibility')
-  #     ->to('authors#toggle_visibility');
 
   ################ TAG TYPES ################
   # $logged_user->get('/tags/')->to('tags#index')->name("tags_index");

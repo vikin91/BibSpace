@@ -175,10 +175,7 @@ sub add_to_team {
     $author->add_membership($membership);
 
     $self->flash(
-      msg => "Author <b>"
-        . $author->uid
-        . "</b> has just joined team <b>"
-        . $team->name . "</b>",
+      msg => "Author " . $author->uid . " has just joined team " . $team->name,
       msg_type => "success"
     );
   }
@@ -212,10 +209,7 @@ sub remove_from_team {
     $self->app->repo->memberships_delete($membership);
 
     $self->flash(
-      msg => "Author <b>"
-        . $author->uid
-        . "</b> has just left team <b>"
-        . $team->name . "</b>",
+      msg => "Author " . $author->uid . " has just left team " . $team->name,
       msg_type => "success"
     );
   }
@@ -479,7 +473,7 @@ sub delete_author {
   my $self = shift;
   my $id   = $self->param('id');
 
-  my $author = $self->app->repo->authors_find(sub { $_->{id} == $id });
+  my $author = $self->app->repo->authors_find(sub { $_->id == $id });
 
   if ($author and $author->can_be_deleted()) {
     $self->delete_author_force();
@@ -500,39 +494,25 @@ sub delete_author_force {
 
   if ($author) {
 
-    ## TODO: refactor these blocks nicely!
-
-    ## Deleting memberships
-    my @memberships = $author->memberships_all;
-
-    # for each team, remove membership in this team
-    foreach my $membership (@memberships) {
-      $membership->team->remove_membership($membership);
-    }
+    # Deleting memberships
+    my @memberships = $self->app->repo->memberships_filter(
+      sub { $_->author_id == $author->id });
     $self->app->repo->memberships_delete(@memberships);
 
-    # remove all memberships for this team
-    $author->memberships_clear;
-
-    ## Deleting authorships
-    my @authorships = $author->authorships_all;
-
-    # for each team, remove authorship in this team
-    foreach my $authorship (@authorships) {
-      $authorship->entry->remove_authorship($authorship);
-    }
+    # Deleting authorships
+    my @authorships = $self->app->repo->authorships_filter(
+      sub { $_->author_id == $author->id });
     $self->app->repo->authorships_delete(@authorships);
 
-    # remove all authorships for this team
-    $author->authorships_clear;
-
-    # finally delete author
+    # Finally delete author
     $self->app->repo->authors_delete($author);
 
     $self->app->logger->info(
       "Author " . $author->uid . " ID $id has been deleted.");
     $self->flash(
-      msg      => "Author " . $author->uid . " ID $id removed successfully.",
+      msg => "Author "
+        . $author->uid
+        . " ID $id has been removed successfully.",
       msg_type => "success"
     );
   }
