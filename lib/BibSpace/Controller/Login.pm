@@ -238,7 +238,7 @@ sub post_gen_forgot_token {
       msg_type => 'warning',
       msg      => "User '$login' or email '$email' does not exist. Try again."
     );
-    $self->redirect_to('forgot');
+    $self->redirect_to($self->url_for('forgot_password'));
     return;
   }
   else {
@@ -277,11 +277,10 @@ sub post_gen_forgot_token {
         "Email with password reset instructions has been sent. Expect an email from "
         . $self->app->config->{mailgun_from}
     );
-    $self->redirect_to('/');
-
+    $self->redirect_to('start');
+    return;
   }
-
-  $self->redirect_to('forgot');
+  $self->redirect_to('forgot_password');
 }
 
 sub token_clicked {
@@ -383,7 +382,7 @@ sub login {
     $user->record_logging_in;
 
     $self->app->logger->info("Login as '$input_login' success.");
-    $self->redirect_to('/');
+    $self->redirect_to('start');
     return;
   }
   else {
@@ -510,7 +509,7 @@ sub post_do_register {
       msg_type => 'success',
       msg => "User created successfully! You may now login using login: $login."
     );
-    $self->redirect_to('/');
+    $self->redirect_to('start');
   }
   catch {
     $failure_reason = $_;
