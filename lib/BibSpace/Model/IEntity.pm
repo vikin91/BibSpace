@@ -1,7 +1,6 @@
 package IEntity;
 use namespace::autoclean;
 
-use BibSpace::Util::IntegerUidProvider;
 use Moose::Role;
 use MooseX::StrictConstructor;
 
