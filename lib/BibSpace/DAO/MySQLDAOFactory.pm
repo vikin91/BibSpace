@@ -31,8 +31,6 @@ sub getMembershipDao {
     e_factory => $self->e_factory
   );
 }
-before 'getMembershipDao' => sub { shift->logger->entering(""); };
-after 'getMembershipDao'  => sub { shift->logger->exiting(""); };
 
 sub getTagDao {
   my $self = shift;
@@ -42,8 +40,6 @@ sub getTagDao {
     e_factory => $self->e_factory
   );
 }
-before 'getTagDao' => sub { shift->logger->entering(""); };
-after 'getTagDao'  => sub { shift->logger->exiting(""); };
 
 sub getAuthorshipDao {
   my $self = shift;
@@ -53,8 +49,6 @@ sub getAuthorshipDao {
     e_factory => $self->e_factory
   );
 }
-before 'getAuthorshipDao' => sub { shift->logger->entering(""); };
-after 'getAuthorshipDao'  => sub { shift->logger->exiting(""); };
 
 sub getEntryDao {
   my $self = shift;
@@ -64,8 +58,6 @@ sub getEntryDao {
     e_factory => $self->e_factory
   );
 }
-before 'getEntryDao' => sub { shift->logger->entering(""); };
-after 'getEntryDao'  => sub { shift->logger->exiting(""); };
 
 sub getTeamDao {
   my $self = shift;
@@ -75,8 +67,6 @@ sub getTeamDao {
     e_factory => $self->e_factory
   );
 }
-before 'getTeamDao' => sub { shift->logger->entering(""); };
-after 'getTeamDao'  => sub { shift->logger->exiting(""); };
 
 sub getExceptionDao {
   my $self = shift;
@@ -86,8 +76,6 @@ sub getExceptionDao {
     e_factory => $self->e_factory
   );
 }
-before 'getExceptionDao' => sub { shift->logger->entering(""); };
-after 'getExceptionDao'  => sub { shift->logger->exiting(""); };
 
 sub getTagTypeDao {
   my $self = shift;
@@ -97,8 +85,6 @@ sub getTagTypeDao {
     e_factory => $self->e_factory
   );
 }
-before 'getTagTypeDao' => sub { shift->logger->entering(""); };
-after 'getTagTypeDao'  => sub { shift->logger->exiting(""); };
 
 sub getLabelingDao {
   my $self = shift;
@@ -108,8 +94,6 @@ sub getLabelingDao {
     e_factory => $self->e_factory
   );
 }
-before 'getLabelingDao' => sub { shift->logger->entering(""); };
-after 'getLabelingDao'  => sub { shift->logger->exiting(""); };
 
 sub getAuthorDao {
   my $self = shift;
@@ -119,8 +103,6 @@ sub getAuthorDao {
     e_factory => $self->e_factory
   );
 }
-before 'getAuthorDao' => sub { shift->logger->entering(""); };
-after 'getAuthorDao'  => sub { shift->logger->exiting(""); };
 
 sub getTypeDao {
   my $self = shift;
@@ -130,8 +112,6 @@ sub getTypeDao {
     e_factory => $self->e_factory
   );
 }
-before 'getTypeDao' => sub { shift->logger->entering(""); };
-after 'getTypeDao'  => sub { shift->logger->exiting(""); };
 
 sub getUserDao {
   my $self = shift;
@@ -141,8 +121,6 @@ sub getUserDao {
     e_factory => $self->e_factory
   );
 }
-before 'getUserDao' => sub { shift->logger->entering(""); };
-after 'getUserDao'  => sub { shift->logger->exiting(""); };
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

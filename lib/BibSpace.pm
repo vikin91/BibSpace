@@ -21,10 +21,7 @@ use Path::Tiny;    # for creating directories
 use Mojo::Home;
 use File::Spec;
 
-use BibSpace::Backend::SmartArray;
-use BibSpace::Backend::SmartHash;
 use BibSpace::Util::SimpleLogger;
-use BibSpace::Util::SmartUidProvider;
 use BibSpace::Util::DummyUidProvider;
 use BibSpace::Util::Statistics;
 
@@ -142,10 +139,9 @@ has flatRepository => sub {
   );
 
   return FlatRepository->new(
-    logger            => $self->logger,
-    preferences       => $self->preferences,
-    id_provider_class => 'IntegerUidProvider',
-    layer             => $mySQLLayer
+    logger      => $self->logger,
+    preferences => $self->preferences,
+    layer       => $mySQLLayer
   );
 };
 

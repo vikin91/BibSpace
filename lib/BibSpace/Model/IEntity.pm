@@ -14,10 +14,10 @@ has 'preferences' =>
   (is => 'ro', isa => 'Preferences', traits => ['DoNotSerialize']);
 
 has 'idProvider' => (
-  is       => 'ro',
-  does     => 'IUidProvider',
-  required => 1,
-  traits   => ['DoNotSerialize'],
+  is      => 'rw',
+  does    => 'Maybe[IUidProvider]',
+  default => undef,
+  traits  => ['DoNotSerialize'],
 );
 
 has 'old_mysql_id' => (is => 'ro', isa => 'Maybe[Int]', default => undef);

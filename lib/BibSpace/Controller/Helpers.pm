@@ -27,17 +27,6 @@ sub register {
   my ($self, $app) = @_;
 
 # this must be a helper,
-# because smartIDprovider can be exchanged during system lifetime (e.g. restore backup),
-# so the reference must always point to the currently valid id provider
-# smartIDProvider must be instantiated INSIDE flatRepository
-  $app->helper(
-    smartIDProvider => sub {
-      my $self = shift;
-      return $self->app->flatRepository->uidProvider;
-    }
-  );
-
-# this must be a helper,
 # because entityFactory can be exchanged during system lifetime (e.g. restore backup),
 # so the reference must always point to the currently valid id provider
 # entityFactory must be instantiated INSIDE flatRepository

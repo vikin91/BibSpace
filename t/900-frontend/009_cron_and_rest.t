@@ -33,26 +33,6 @@ ok($self->app->statistics->toLines);
 
 note "============ Leftovers... ============";
 
-use BibSpace::Util::DummyUidProvider;
-
-my $duip
-  = DummyUidProvider->new(for_type => 'Dummy', logger => $self->app->logger);
-ok($duip);
-ok($duip->reset);
-ok($duip->registerUID);
-ok($duip->generateUID);
-
-use BibSpace::Util::SmartUidProvider;
-
-my $suip = SmartUidProvider->new(
-  idProviderClassName => 'IntegerUidProvider',
-  logger              => $self->app->logger
-);
-ok($suip->_init('Entry'));
-ok($suip->generateUID('Entry'));
-ok($suip->generateUID('Entry'));
-ok($suip->registerUID('Entry', 999999));
-
 ok(1);
 done_testing();
 

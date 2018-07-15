@@ -75,7 +75,6 @@ sub toLayeredRepo {
   my $jsonString = shift;
   my $repoFacade = shift
     // die "Need to provide repoFacade of destination repository";
-  my $repoUidProvider = $repoFacade->lr->uidProvider;
   my $repoPreferences = $repoFacade->lr->preferences;
 
   # This parses a shallow BibSpaceDTO
@@ -93,9 +92,6 @@ sub toLayeredRepo {
     $dto->set($className, []);
   }
 
-  # Reset ID providers for all classes - only once!
-  $repoUidProvider->reset;
-
   # Fill containers with objects
   for my $className ($parsedDTO->keys) {
     my $arrayRef = $parsedDTO->data->{$className};
@@ -105,21 +101,10 @@ sub toLayeredRepo {
       # Load className and call constructor
       Class::Load::load_class($className);
 
-      # Rich objects require several additional objects in their constructor
-      # See IEntity.pm for details
-      my $idProvider = $repoUidProvider->get_provider($className);
-
       # BlessedObj has only SerializableBase
       # Call normal constructor to create rich object
-      my $mooseObj = BibSpaceDTO->_hashToMooseObject(
-        $className,
-        $objHash,
-        {
-          idProvider  => $idProvider,
-          preferences => $repoPreferences,
-          repo        => $repoFacade
-        }
-      );
+      my $mooseObj = BibSpaceDTO->_hashToMooseObject($className, $objHash,
+        {preferences => $repoPreferences, repo => $repoFacade});
       push @{$dto->get($className)}, $mooseObj;
     }
   }

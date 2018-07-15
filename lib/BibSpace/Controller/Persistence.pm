@@ -91,7 +91,6 @@ sub reset_all {
 
   my @layers = $self->app->repo->lr->get_all_layers;
   foreach (@layers) { $_->reset_data }
-  $self->app->repo->lr->reset_uid_providers;
 
   # no pub_admin user would lock the whole system
   # if you insert it here, it may will cause clash of IDs

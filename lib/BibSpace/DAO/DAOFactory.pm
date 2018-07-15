@@ -6,8 +6,6 @@ use namespace::autoclean;
 use Moose;
 use BibSpace::Util::ILogger;
 use BibSpace::DAO::MySQLDAOFactory;
-use BibSpace::DAO::RedisDAOFactory;
-use BibSpace::DAO::SmartArrayDAOFactory;
 
 use BibSpace::Util::EntityFactory;
 
