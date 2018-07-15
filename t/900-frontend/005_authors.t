@@ -132,7 +132,7 @@ subtest '(fixture) Edit author membership dates' => sub {
     $self->url_for('edit_author_membership_dates') => {Accept => '*/*'},
     form =>
       {aid => $aid, tid => $some_team->id, new_start => 2000, new_stop => 2018}
-    )->status_is(200)
+    )->status_is(200)->content_like(qr/Membership updated successfully/)
     ->element_exists('span[class$=author-joined-team-year-2000]')
     ->element_exists('span[class~=author-joined-team-id-1]')
     ->element_exists('span[class$=author-left-team-year-2018]')
