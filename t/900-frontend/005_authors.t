@@ -113,6 +113,32 @@ subtest '(fixture) Add author to team' => sub {
     ->text_like('span[class$=author-id]'        => qr/\Q$aid/);
 };
 
+subtest '(fixture) Edit author membership dates' => sub {
+  my $author
+    = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen' });
+  ok($author->id > 1);
+  my $aid   = $author->id;
+  my $aname = $author->name;
+  my $tname = $some_team->name;
+
+  my $edit_get_url = $self->url_for('edit_author', id => $author->id);
+  $op->get_ok($edit_get_url)->status_is(200)
+    ->element_exists('span[class$=author-joined-team-year-0]')
+    ->element_exists('span[class~=author-joined-team-id-1]')
+    ->element_exists('span[class$=author-left-team-year-inf]')
+    ->element_exists('span[class~=author-left-team-id-1]');
+
+  $op->post_ok(
+    $self->url_for('edit_author_membership_dates') => {Accept => '*/*'},
+    form =>
+      {aid => $aid, tid => $some_team->id, new_start => 2000, new_stop => 2018}
+    )->status_is(200)
+    ->element_exists('span[class$=author-joined-team-year-2000]')
+    ->element_exists('span[class~=author-joined-team-id-1]')
+    ->element_exists('span[class$=author-left-team-year-2018]')
+    ->element_exists('span[class~=author-left-team-id-1]');
+};
+
 subtest '(fixture) Remove author from team' => sub {
   my $author
     = $op->app->repo->authors_find(sub { $_->name eq 'XTestMasterAutogen' });

@@ -246,10 +246,16 @@
                         <div data-toggle="tooltip" data-placement="right" title="Click to edit">
                             <div class="btn-group pull-right">
                                 <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Joined the group in year">
-                                    <i class="fa fa-sun-o"></i> <%= $author->joined_team( $team ) %>
+                                    <i class="fa fa-sun-o"></i>
+                                    <span class="author-joined-team author-joined-team-id-<%= $team->id%> author-joined-team-year-<%= $author->joined_team( $team ) %>">
+                                      <%= $author->joined_team( $team ) %>
+                                    </span>
                                 </span>
                                 <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Left the group in year">
-                                    <i class="fa fa-moon-o"></i> <%= $author->left_team( $team ) || b('&#8734;') %>
+                                    <i class="fa fa-moon-o"></i>
+                                    <span class="author-left-team author-left-team-id-<%= $team->id %>  author-left-team-year-<%= $author->left_team( $team ) || b('inf')  %>">
+                                      <%= $author->left_team( $team ) || b('&#8734;') %>
+                                    </span>
                                 </span>
                             </div>
                         </div>

@@ -110,7 +110,6 @@ sub update_name {
 
 sub remove_master {
   my $self = shift;
-
   $self->set_master($self);
 }
 
