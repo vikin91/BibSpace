@@ -22,7 +22,6 @@ use Mojo::Home;
 use File::Spec;
 
 use BibSpace::Util::SimpleLogger;
-use BibSpace::Util::DummyUidProvider;
 use BibSpace::Util::Statistics;
 
 use BibSpace::Model::User;
@@ -267,7 +266,7 @@ sub setup_routes {
   my $anyone = $self->routes;
   $anyone->get('/')->to('display#index')->name('start');
 
-  $anyone->get('/forgot')->to('login#forgot');
+  $anyone->get('/forgot')->to('login#forgot')->name('forgot_password');
   $anyone->post('/forgot/gen')->to('login#post_gen_forgot_token');
   $anyone->get('/forgot/reset/<:token>')->to('login#token_clicked')
     ->name("token_clicked");
@@ -400,7 +399,7 @@ sub setup_routes {
     ->name('toggle_landing_type');
 
   $manager_user->get('/types/<:our_type>/map/<:bibtex_type>')
-    ->to('types#map_types');
+    ->to('types#map_types')->name('map_bibtex_type');
   $manager_user->get('/types/<:our_type>/unmap/<:bibtex_type>')
     ->to('types#unmap_types')->name('unmap_bibtex_type');
 

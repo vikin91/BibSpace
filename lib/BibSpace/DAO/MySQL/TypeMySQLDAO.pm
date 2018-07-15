@@ -144,7 +144,6 @@ sub _insert {
         my $result
           = $sth->execute($bibtex_type, $obj->our_type, $obj->onLanding,
           $obj->description);
-        $obj->id($sth->{mysql_insertid});
       }
       catch {
         $self->logger->error("Insert exception: $_");
@@ -168,13 +167,9 @@ sub save {
   foreach my $obj (@objects) {
     if ($self->exists($obj)) {
       $self->update($obj);
-      $self->logger->lowdebug(
-        "Updated " . ref($obj) . " ID " . $obj->id . " in DB.");
     }
     else {
       $self->_insert($obj);
-      $self->logger->lowdebug(
-        "Inserted " . ref($obj) . " ID " . $obj->id . " into DB.");
     }
   }
 }

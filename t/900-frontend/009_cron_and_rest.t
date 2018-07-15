@@ -10,9 +10,7 @@ use BibSpace::Controller::Cron;
 
 my $t_anyone = Test::Mojo->new('BibSpace');
 my $self     = $t_anyone->app;
-
 $t_anyone->ua->inactivity_timeout(3600);
-
 use BibSpace::TestManager;
 TestManager->apply_fixture($t_anyone->app);
 
