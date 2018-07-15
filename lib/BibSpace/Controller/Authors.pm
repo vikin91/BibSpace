@@ -231,8 +231,8 @@ sub remove_from_team {
 
 sub remove_uid {
   my $self      = shift;
-  my $master_id = $self->param('masterid');
-  my $minor_id  = $self->param('uid');
+  my $master_id = $self->param('master_id');
+  my $minor_id  = $self->param('minor_id');
 
   my $author_master
     = $self->app->repo->authors_find(sub { $_->id == $master_id });
@@ -257,7 +257,10 @@ sub remove_uid {
     my @master_entries = $author_master->get_entries;
 
     # remove master authorships from both authors
-    foreach my $master_authorship ($author_master->authorships_all) {
+    my @author_authorships
+      = $self->app->repo->authorships_filter(sub { $_->author_id == $master_id }
+      );
+    foreach my $master_authorship (@author_authorships) {
       $author_master->remove_authorship($master_authorship);
       $author_minor->remove_authorship($master_authorship);
 
@@ -266,7 +269,10 @@ sub remove_uid {
     }
 
     # remove minion authorships from both authors
-    foreach my $minion_authorship ($author_minor->authorships_all) {
+    my @minion_authorships
+      = $self->app->repo->authorships_filter(sub { $_->author_id == $minor_id }
+      );
+    foreach my $minion_authorship (@minion_authorships) {
       $author_minor->remove_authorship($minion_authorship);
       $author_master->remove_authorship($minion_authorship);
 
@@ -411,7 +417,7 @@ sub edit_post {
       if (defined $existing_author) {
         $self->flash(
           msg =>
-            "Cannot add user ID $new_user_id. Such ID already exist. Maybe you wan to merge authors?",
+            "Cannot add user ID $new_user_id. Such ID already exist. Maybe you want to merge authors instead?",
           msg_type => "warning"
         );
       }
@@ -535,54 +541,6 @@ sub delete_author_force {
   }
 
   $self->redirect_to($self->url_for('all_authors'));
-}
-
-## do not use this on production! this is for making the tests faster!!
-sub delete_invisible_authors {
-  my $self = shift;
-
-  my @authors = $self->app->repo->authors_filter(sub { !$_->is_visible });
-
-  foreach my $author (@authors) {
-
-    ## TODO: refactor these blocks nicely!
-
-    ## Deleting memberships
-    my @memberships = $author->memberships_all;
-
-    # for each team, remove membership in this team
-    foreach my $membership (@memberships) {
-      $membership->team->remove_membership($membership);
-    }
-    $self->app->repo->memberships_delete(@memberships);
-
-    # remove all memberships for this team
-    $author->memberships_clear;
-
-    ## Deleting authorships
-    my @authorships = $author->authorships_all;
-
-    # for each team, remove authorship in this team
-    foreach my $authorship (@authorships) {
-
-      # my $entry = $authorship->entry;
-      $authorship->entry->remove_authorship($authorship);
-
-      # $self->app->repo->entries_delete($entry);
-    }
-    $self->app->repo->authorships_delete(@authorships);
-
-    # remove all authorships for this team
-    $author->authorships_clear;
-
-    # finally delete author
-    $self->app->repo->authors_delete($author);
-
-    $self->flash(msg => "Authors decimated! ", msg_type => "success");
-  }
-
-  $self->redirect_to($self->url_for('all_authors'));
-
 }
 
 sub reassign_authors_to_entries {

@@ -422,9 +422,6 @@ sub setup_routes {
   $admin_user->get('/authors/delete/<:id>/force')
     ->to('authors#delete_author_force');
 
-  # for dev only!!
-  $admin_user->get('/authors/decimate')->to('authors#delete_invisible_authors');
-
   $manager_user->post('/authors/edit_membership_dates')
     ->to('authors#post_edit_membership_dates')
     ->name('edit_author_membership_dates');
@@ -433,7 +430,7 @@ sub setup_routes {
     ->to('authors#add_to_team')->name('add_author_to_team');
   $manager_user->get('/authors/<:id>/remove_from_team/<:tid>')
     ->to('authors#remove_from_team')->name('remove_author_from_team');
-  $manager_user->get('/authors/<:masterid>/remove_uid/<:uid>')
+  $manager_user->get('/authors/<:master_id>/remove_uid/<:minor_id>')
     ->to('authors#remove_uid')->name('remove_author_uid');
 
   $manager_user->post('/authors/merge/')->to('authors#merge_authors')
