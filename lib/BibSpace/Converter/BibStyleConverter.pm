@@ -196,7 +196,7 @@ sub _add_html_links {
     push @code, build_link('slides', $entry->get('slides'));
   }
   if ($entry->exists('doi')) {
-    push @code, build_link('DOI', "http://dx.doi.org/" . $entry->get('doi'));
+    push @code, build_link('DOI', "https://doi.org/" . $entry->get('doi'));
   }
   if ($entry->exists('url')) {
     push @code, build_link('http', $entry->get('url'));
