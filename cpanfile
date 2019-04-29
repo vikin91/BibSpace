@@ -19,7 +19,7 @@ requires 'Module::Build::Mojolicious' , '>= 0.0';
 requires 'Module::CPANfile' , '>= 0.0';
 requires 'Mojolicious' , '>= 7.22';
 requires 'Mojolicious::Plugin::RenderFile' , '>= 0.0';
-requires 'Moose' , '>= 0.0';
+requires 'Moose' , '>= 2.0604';
 requires 'MooseX::ClassAttribute' , '>= 0.0';
 requires 'MooseX::Privacy' , '>=0.0';
 requires 'MooseX::Singleton' , '>= 0.0';
@@ -30,7 +30,7 @@ requires 'Scalar::Util' , '>= 0.0';
 requires 'Session::Token' , '>= 0.0';
 requires 'TeX::Encode' , '>= 0.0';
 requires 'Text::ASCIIMathML' , '>= 0.0';
-requires 'Text::BibTeX' , '>= 0.0';
+requires 'Text::BibTeX' , '== 0.88'; # 0.86 and 0.87 are broken - use 0.85 or 0.88
 requires 'Time::HiRes' , '>= 0.0';
 requires 'UUID::Tiny' , '>= 0.0';
 requires 'WWW::Mechanize' , '>= 0.0';
@@ -45,8 +45,4 @@ on 'test' => sub {
   requires 'Test::Pod::Coverage' , '>= 0.0';
   requires 'Test::Code::TidyAll' , '>= 0.0';
   requires 'Perl::Tidy' , '>= 0.0';
-};
-
-on 'develop' => sub {
-  requires 'Dist::Zilla' , '>= 0.0';
 };
