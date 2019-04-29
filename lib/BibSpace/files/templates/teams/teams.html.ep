@@ -22,12 +22,19 @@
             % foreach my $team (@{$teams}){
               <tr>
 
-                <td><span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Team's ID"><span class="glyphicon glyphicon-barcode"></span> <%= $team->{id} %></span></td>
+                <td>
+                  <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="left" title="Team's ID">
+                    <span class="glyphicon glyphicon-barcode"></span> <span class="team-id-<%= $team->id %>"><%= $team->{id} %></span>
+                  </span>
+                </td>
                 <td>
                     <div class="btn-group" role="group" aria-label="Edit team">
-                        <a role="button" class="btn btn-success" href="<%= url_for('edit_team', id=>$team->id) %>" data-toggle="tooltip" data-placement="left" title="Edit team members"><span class="glyphicon glyphicon-pencil"></span>
+                        <a role="button" class="btn btn-success" href="<%= url_for('edit_team', id=>$team->id) %>" data-toggle="tooltip" data-placement="left" title="Edit team members">
+                          <span class="glyphicon glyphicon-pencil"></span>
                         </a>
-                        <button class="btn btn-default" ><i class="fa fa-users"></i> <%= $team->name %></button>
+                        <button class="btn btn-default team-name-<%= $team->name %>" ><i class="fa fa-users"></i>
+                          <span class="team-name-<%= $team->name %>"><%= $team->name %></span>
+                        </button>
                     </div>
                 </td>
                 <td><a class="btn btn-default btn-sm" href="<%= url_for('/publications')->query(team=>$team->{name})%>"><i class="fa fa-files-o"></i> Show papers</a></td>
