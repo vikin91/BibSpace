@@ -40,12 +40,6 @@ $admin_user->get_ok($page, "Get for page $page")
   ->status_isnt(500, "Checking: 500 $page");
 
 # Not-existing team should return 404
-$page = $self->url_for('team_members', teamid => -1);
-note "============ Testing page $page ============";
-$admin_user->get_ok($page, "Get for page $page")
-  ->status_is(404, "Checking: 404 $page")
-  ->status_isnt(500, "Checking: 500 $page");
-
 $page = $self->url_for('edit_team', teamid => -1);
 note "============ Testing page $page ============";
 $admin_user->get_ok($page, "Get for page $page")
@@ -53,12 +47,6 @@ $admin_user->get_ok($page, "Get for page $page")
   ->status_isnt(500, "Checking: 500 $page");
 
 foreach my $team (@teams) {
-
-  $page = $self->url_for('team_members', teamid => $team->id);
-  note "============ Testing page $page ============";
-  $admin_user->get_ok($page, "Get for page $page")
-    ->status_isnt(404, "Checking: 404 $page")
-    ->status_isnt(500, "Checking: 500 $page");
 
   $page = $self->url_for('edit_team', teamid => $team->id);
   note "============ Testing page $page ============";
@@ -93,19 +81,3 @@ $admin_user->get_ok(
 
 ok(1);
 done_testing();
-
-# READ
-# $logged_user->get('/teams')->to('teams#show')->name('all_teams');
-# $logged_user->get('/teams/members/<:teamid>')->to('teams#team_members')->name('team_members');
-# $manager_user->get('/teams/edit/<:id>')->to('teams#edit')->name('edit_team');
-# $logged_user->get('/teams/unrealted_papers/<:teamid>')
-#   ->to('publications#show_unrelated_to_team')
-#   ->name('unrelated_papers_for_team');
-
-# DELETE
-# $manager_user->get('/teams/delete/<:id>')->to('teams#delete_team')->name('delete_team');
-# $manager_user->get('/teams/delete/<:id>/force')->to('teams#delete_team_force')->name('delete_team_force');
-
-# CREATE
-# $manager_user->get('/teams/add')->to('teams#add_team')->name('add_team_get');
-# $manager_user->post('/teams/add/')->to('teams#add_team_post')->name('add_team_post');

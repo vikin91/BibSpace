@@ -500,16 +500,14 @@ sub setup_routes {
   $anyone->get('/r/t4t/<:team_id>')->to('tags#get_tags_for_team_read');
 
   ################ TEAMS ################
-  $logged_user->get('/teams')->to('teams#show')->name('all_teams');
-  $logged_user->get('/teams/members/<:teamid>')->to('teams#team_members')
-    ->name('team_members');
+  $logged_user->get('/teams')->to('teams#show')->name('all_teams');;
 
   $manager_user->get('/teams/edit/<:id>')->to('teams#edit')->name('edit_team');
   $manager_user->get('/teams/delete/<:id>')->to('teams#delete_team')
     ->name('delete_team');
   $manager_user->get('/teams/delete/<:id>/force')
     ->to('teams#delete_team_force')->name('delete_team_force');
-  $logged_user->get('/teams/unrealted_papers/<:teamid>')
+  $logged_user->get('/teams/<:teamid>/unrelated_papers')
     ->to('publications#show_unrelated_to_team')
     ->name('unrelated_papers_for_team');
 
