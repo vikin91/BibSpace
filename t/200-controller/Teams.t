@@ -40,15 +40,17 @@ $admin_user->get_ok($page, "Get for page $page")
   ->status_isnt(500, "Checking: 500 $page");
 
 # Not-existing team should return 404
-$page = $self->url_for('edit_team', teamid => -1);
+$page = $self->url_for('edit_team', id => -1);
 note "============ Testing page $page ============";
+# This does not return 404 if not found.
+# It redirects to the previous page (Status 301 - but gets 200 due to allow_redirects) and displays error buble
 $admin_user->get_ok($page, "Get for page $page")
-  ->status_is(404, "Checking: 404 $page")
+  ->status_isnt(404, "Checking: 404 $page")
   ->status_isnt(500, "Checking: 500 $page");
 
 foreach my $team (@teams) {
 
-  $page = $self->url_for('edit_team', teamid => $team->id);
+  $page = $self->url_for('edit_team', id => $team->id);
   note "============ Testing page $page ============";
   $admin_user->get_ok($page, "Get for page $page")
     ->status_isnt(404, "Checking: 404 $page")
