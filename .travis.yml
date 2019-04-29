@@ -1,44 +1,46 @@
+---
 language: perl
 perl:
-- '5.22'
+  - '5.22'
+  - '5.28'
 dist: trusty
 sudo: required
 services:
-- mysql
+  - mysql
 addons:
   apt:
     packages:
-    - ocaml
-    - libbtparse-dev
-    - libdbd-mysql-perl
-    - tree
+      - ocaml
+      - libbtparse-dev
+      - libdbd-mysql-perl
+      - tree
 git:
   depth: 3
 before_install:
-- sudo apt-get install -y texlive-base bibtex2html
-- git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
-- source ~/travis-perl-helpers/init
-- build-perl
-- perl -V
-- export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=0
+  - sudo apt-get install -y texlive-base bibtex2html
+  - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
+  - source ~/travis-perl-helpers/init
+  - build-perl
+  - perl -V
+  - export AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=j1:c HARNESS_TIMER=0
 install:
-  cpanm --installdeps --notest --verbose .
+  - cpanm --installdeps --notest --verbose .
 before_script:
-- mysql --version
-- mysql -u root -e "SELECT VERSION();"
-- mysql -u root -e 'create database IF NOT EXISTS bibspace;'
-- mysql -u root -e "CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';"
-- mysql -u root -e "GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';"
-- mysql -u root -e "FLUSH PRIVILEGES;"
-- mojo version
-- coverage-setup
+  - mysql --version
+  - mysql -u root -e "SELECT VERSION();"
+  - mysql -u root -e 'create database IF NOT EXISTS bibspace;'
+  - mysql -u root -e "CREATE USER 'bibspace_user'@'localhost' IDENTIFIED BY 'passw00rd';"
+  - mysql -u root -e "GRANT ALL PRIVILEGES ON bibspace.* TO 'bibspace_user'@'localhost';"
+  - mysql -u root -e "FLUSH PRIVILEGES;"
+  - mojo version
+  - coverage-setup
 notifications:
   email:
     on_success: always
     on_failure: always
 script:
-- export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
-- export BIBSPACE_USE_DUMP=1
-- PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr
+  - export BIBSPACE_CONFIG=lib/BibSpace/files/config/default.conf
+  - export BIBSPACE_USE_DUMP=1
+  - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lr
 after_success:
-- cover -report coveralls
+  - cover -report coveralls
