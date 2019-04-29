@@ -73,13 +73,18 @@ $admin_user->post_ok(
 $admin_user->post_ok(
   $self->url_for('add_team_post') => form => {new_team => "test-team-2"});
 
-# FIXME: delete is done with verb GET
-$admin_user->get_ok(
-  $self->url_for('delete_team') => form => {new_team => "test-team-1"});
+my $team1 = $self->app->repo->teams_find(sub { $_->name eq "test-team-1" });
+my $team2 = $self->app->repo->teams_find(sub { $_->name eq "test-team-2" });
 
 # FIXME: delete is done with verb GET
 $admin_user->get_ok(
-  $self->url_for('delete_team_force') => form => {new_team => "test-team-2"});
+  $self->url_for('delete_team', id => $team1->id)
+);
+
+# FIXME: delete is done with verb GET
+$admin_user->get_ok(
+  $self->url_for('delete_team_force', id => $team2->id)
+);
 
 ok(1);
 done_testing();
