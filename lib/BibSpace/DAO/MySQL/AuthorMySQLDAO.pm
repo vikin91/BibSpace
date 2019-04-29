@@ -159,7 +159,7 @@ sub _insert {
   foreach my $obj (@objects) {
     my $id        = undef;
     my $master_id = undef;
-    $id = $obj->id if defined $obj->id and $obj->id > 0;
+    $id        = $obj->id if defined $obj->id and $obj->id > 0;
     $master_id = $obj->get_master_id
       if defined $obj->get_master_id and $obj->get_master_id > 0;
     try {

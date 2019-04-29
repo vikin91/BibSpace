@@ -38,7 +38,7 @@ subtest 'Add new our type' => sub {
   $op->post_ok(
     $self->url_for('add_type_post') => {Accept   => '*/*'},
     form                            => {new_type => 'XTestType'}
-    )->element_exists('p[class$=type-name-XTestType]')
+  )->element_exists('p[class$=type-name-XTestType]')
     ->text_like('p[class$=type-name-XTestType]' => qr/XTestType/);
 };
 
@@ -46,7 +46,7 @@ subtest 'Update type description' => sub {
   $op->post_ok(
     $self->url_for('update_type_description') => {Accept => '*/*'},
     form => {our_type => 'XTestType', new_description => "This is test type"}
-    )->element_exists('input[class$=type-description]')
+  )->element_exists('input[class$=type-description]')
     ->element_exists(
     'input[class$=type-description][value=\'This is test type\']');
 
@@ -138,7 +138,7 @@ subtest 'Remove type' => sub {
   $op->post_ok(
     $self->url_for('add_type_post') => {Accept   => '*/*'},
     form                            => {new_type => 'XTestType'}
-    )->element_exists('p[class$=type-name-XTestType]')
+  )->element_exists('p[class$=type-name-XTestType]')
     ->text_like('p[class$=type-name-XTestType]' => qr/XTestType/);
 
   my $all_page = $self->url_for('all_types');

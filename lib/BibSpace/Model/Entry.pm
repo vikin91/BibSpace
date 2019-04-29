@@ -496,7 +496,7 @@ sub get_teams {
   my $self = shift;
 
   my @exception_team_id = map { $_->team_id } $self->get_exceptions;
-  my @exception_teams = $self->repo->teams_filter(
+  my @exception_teams   = $self->repo->teams_filter(
     sub {
       my $t = $_;
       return grep { $_ eq $t->id } @exception_team_id;
@@ -530,7 +530,7 @@ sub get_labelings {
 }
 
 sub get_tags_of_type {
-  my $self = shift;
+  my $self     = shift;
   my $tag_type = shift // 1;
   return grep { $_->type == $tag_type } $self->get_tags;
 }
@@ -563,7 +563,7 @@ sub get_authorships {
 }
 
 sub get_authors {
-  my $self = shift;
+  my $self       = shift;
   my @author_ids = map { $_->author_id } $self->get_authorships;
   return $self->repo->authors_filter(
     sub {

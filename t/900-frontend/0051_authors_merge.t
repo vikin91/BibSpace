@@ -32,7 +32,7 @@ subtest '(fixture) Add merge authors using author IDs' => sub {
   $op->post_ok(
     $self->url_for('merge_authors') => {Accept => '*/*'},
     form => {author_to => $author_to->id, author_from => $author_from->id}
-    )->status_is(200)->element_exists('h1[class$=author-master-name]')
+  )->status_is(200)->element_exists('h1[class$=author-master-name]')
     ->text_like('h1[class$=author-master-name]' => qr/TestMaster/)
     ->content_like(qr/\Q Author TestMinion was merged into TestMaster/);
 

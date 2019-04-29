@@ -31,7 +31,7 @@ sub can_be_deleted {
 }
 
 sub get_authors {
-  my $self = shift;
+  my $self       = shift;
   my @author_ids = map { $_->author_id }
     $self->repo->memberships_filter(sub { $_->team_id == $self->id });
   return $self->repo->authors_filter(

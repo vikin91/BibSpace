@@ -137,8 +137,8 @@ sub edit_author {
     my @author_tags  = $author->get_tags;
 
     # cannot use objects as keys due to hash stringification!
-    my %author_teams_hash = map { $_->id => 1 } @author_teams;
-    my @unassigned_teams = grep { not $author_teams_hash{$_->id} } @all_teams;
+    my %author_teams_hash = map  { $_->id => 1 } @author_teams;
+    my @unassigned_teams  = grep { not $author_teams_hash{$_->id} } @all_teams;
 
     my @minor_authors
       = $self->app->repo->authors_filter(sub { $_->is_minion_of($author) });
@@ -536,7 +536,7 @@ sub delete_author_force {
 }
 
 sub reassign_authors_to_entries {
-  my $self = shift;
+  my $self       = shift;
   my $create_new = shift // 0;
 
   my @all_entries = $self->app->repo->entries_all;

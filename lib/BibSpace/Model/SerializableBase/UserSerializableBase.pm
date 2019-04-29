@@ -34,7 +34,7 @@ sub new__DateTime_from_string {
   my ($class, $dtFormat, %args) = @_;
 
 # last_login and registration_time are inputed as strings in format: '2017-02-08T02:00:03'
-  my $inputPattern = DateTime::Format::Strptime->new(pattern => $dtFormat);
+  my $inputPattern   = DateTime::Format::Strptime->new(pattern => $dtFormat);
   my $last_login_obj = $inputPattern->parse_datetime($args{'last_login'});
   my $registration_time_obj
     = $inputPattern->parse_datetime($args{'registration_time'});

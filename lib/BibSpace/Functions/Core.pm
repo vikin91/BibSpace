@@ -169,14 +169,14 @@ sub check_password_policy {
 }
 
 sub generate_token {
-  my $self = shift;
+  my $self  = shift;
   my $token = Session::Token->new(length => 32)->get;
   return $token;
 }
 
 sub encrypt_password {
   my $password = shift;
-  my $salt = shift || salt();
+  my $salt     = shift || salt();
 
   # Generate a salt if one is not passed
   # Set the cost to 8 and append a NULL

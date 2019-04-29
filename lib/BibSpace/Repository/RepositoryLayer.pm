@@ -53,7 +53,7 @@ has 'reset_data_callback_arguments' => (
         Holds an array of parameters for the function that resets data of this layer.
     },
 );
-has 'is_read' => (is => 'ro', isa => 'Bool', default => undef);
+has 'is_read'         => (is => 'ro', isa => 'Bool', default => undef);
 has 'creates_on_read' => (
   is       => 'ro',
   isa      => 'Bool',

@@ -180,7 +180,7 @@ sub do_cron_night {
 sub do_cron_week {
   my $self = shift;
 
-  my $backup1 = do_mysql_backup($self->app, "cron");
+  my $backup1     = do_mysql_backup($self->app, "cron");
   my $num_deleted = delete_old_backups($self->app);
 
 }

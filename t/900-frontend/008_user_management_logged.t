@@ -50,7 +50,7 @@ subtest 'User management: admin registration' => sub {
       password1 => 'asdf',
       password2 => 'qwerty'
     }
-    )->status_isnt(404)->status_isnt(500)
+  )->status_isnt(404)->status_isnt(500)
     ->content_like(qr/Passwords don't match!/i,
     "Trying to register with non-matching passwords");
 
@@ -62,10 +62,10 @@ subtest 'User management: admin registration' => sub {
       password1 => 'a',
       password2 => 'a'
     }
-    )->status_isnt(404)->status_isnt(500)->content_like(
+  )->status_isnt(404)->status_isnt(500)->content_like(
     qr/Password is too short, use minimum 4 symbols/i,
     "Trying to register with too short password"
-    );
+  );
 
   $t_logged_in->post_ok(
     '/register' => form => {
@@ -75,7 +75,7 @@ subtest 'User management: admin registration' => sub {
       password1 => 'a1234',
       password2 => 'a1234'
     }
-    )->status_isnt(404)->status_isnt(500)->content_like(qr/Login is missing/i,
+  )->status_isnt(404)->status_isnt(500)->content_like(qr/Login is missing/i,
     "Trying to register with missing login and email");
 
   $t_logged_in->post_ok(
@@ -86,7 +86,7 @@ subtest 'User management: admin registration' => sub {
       password1 => 'qwerty',
       password2 => 'qwerty'
     }
-    )->status_isnt(404)->status_isnt(500)
+  )->status_isnt(404)->status_isnt(500)
     ->content_like(
     qr/User created successfully! You may now login using login: $token/i,
     "Trying to register with valid data");
@@ -99,7 +99,7 @@ subtest 'User management: admin registration' => sub {
       password1 => 'qwerty',
       password2 => 'qwerty'
     }
-    )->status_isnt(404)->status_isnt(500)
+  )->status_isnt(404)->status_isnt(500)
     ->content_like(qr/This login is already taken/i,
     "Trying to register pub_admin");
 

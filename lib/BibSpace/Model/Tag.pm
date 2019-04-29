@@ -39,7 +39,7 @@ sub get_labelings {
 }
 
 sub get_entries {
-  my $self = shift;
+  my $self      = shift;
   my @entry_ids = map { $_->entry_id } $self->get_labelings;
 
   return $self->repo->entries_filter(

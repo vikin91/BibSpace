@@ -187,7 +187,7 @@ sub get_teams {
 }
 
 sub get_entries {
-  my $self = shift;
+  my $self      = shift;
   my @entry_ids = map { $_->entry_id }
     $self->repo->authorships_filter(sub { $_->author_id == $self->id });
   return $self->repo->entries_filter(
@@ -299,7 +299,7 @@ sub update_membership {
 #################################################################################### TAGS
 
 sub get_tags_of_type {
-  my $self = shift;
+  my $self     = shift;
   my $tag_type = shift // 1;
   return grep { $_->type == $tag_type } $self->get_tags;
 }

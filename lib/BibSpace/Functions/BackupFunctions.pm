@@ -66,7 +66,7 @@ sub read_backups {
 }
 
 sub do_json_backup {
-  my $app = shift;
+  my $app  = shift;
   my $name = shift // 'normal';
 
   my $backup_dir = Path::Tiny->new($app->get_backups_dir)->relative;
@@ -84,7 +84,7 @@ sub do_json_backup {
 }
 
 sub do_mysql_backup {
-  my $app = shift;
+  my $app  = shift;
   my $name = shift // 'normal';
 
   my $backup_dir = Path::Tiny->new($app->get_backups_dir)->relative;
@@ -116,7 +116,7 @@ sub restore_json_backup {
   my $decodedDTO;
   try {
     $decodedDTO = $dto->toLayeredRepo($jsonString, $app->repo);
-    $success = 1;
+    $success    = 1;
   }
   catch {
     $app->logger->error("Exception during JSON restore: $_");

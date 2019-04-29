@@ -82,7 +82,7 @@ subtest 'Add author post' => sub {
   $op->post_ok(
     $self->url_for('add_author') => {Accept     => '*/*'},
     form                         => {new_master => 'XTestMasterAutogen'}
-    )->element_exists('h1[class$=author-master-name]')
+  )->element_exists('h1[class$=author-master-name]')
     ->text_like('h1[class$=author-master-name]' => qr/XTestMasterAutogen/);
 
   $op->post_ok(
@@ -132,7 +132,7 @@ subtest '(fixture) Edit author membership dates' => sub {
     $self->url_for('edit_author_membership_dates') => {Accept => '*/*'},
     form =>
       {aid => $aid, tid => $some_team->id, new_start => 2000, new_stop => 2018}
-    )->status_is(200)->content_like(qr/Membership updated successfully/)
+  )->status_is(200)->content_like(qr/Membership updated successfully/)
     ->element_exists('span[class$=author-joined-team-year-2000]')
     ->element_exists('span[class~=author-joined-team-id-1]')
     ->element_exists('span[class$=author-left-team-year-2018]')
@@ -152,7 +152,7 @@ subtest '(fixture) Remove author from team' => sub {
       id  => $author->id,
       tid => $some_team->id
     )
-    )->status_is(200)->content_like(qr/\QAuthor $aname has just left team/)
+  )->status_is(200)->content_like(qr/\QAuthor $aname has just left team/)
     ->element_exists('h1[class$=author-master-name]')
     ->text_like('h1[class$=author-master-name]' => qr/XTestMasterAutogen/);
 };
@@ -199,7 +199,7 @@ subtest 'Edit author post add user_id (name)' => sub {
   $op->post_ok(
     $self->url_for('edit_author') => {Accept => '*/*'},
     form => {id => $author->id, new_user_id => 'XTestMasterAutogen2'}
-    )->element_exists('h1[class$=author-master-name]')
+  )->element_exists('h1[class$=author-master-name]')
     ->text_like('h1[class$=author-master-name]' => qr/XTestMasterAutogen/);
 
   $op->post_ok(
@@ -252,7 +252,7 @@ subtest 'Edit author post change master name' => sub {
   $op->post_ok(
     $self->url_for('edit_author') => {Accept => '*/*'},
     form => {id => $author->id, new_master => 'XTestMasterAutogen3'}
-    )->status_is(200)
+  )->status_is(200)
     ->content_like(qr/Master name has been updated successfully/);
 
   my $edit_get_url = $self->url_for('edit_author', id => $author->id);
@@ -269,7 +269,7 @@ subtest 'Edit author post change master name' => sub {
   $op->post_ok(
     $self->url_for('edit_author') => {Accept => '*/*'},
     form => {id => $author->id, new_master => 'XTestMasterAutogen'}
-    )->status_is(200)
+  )->status_is(200)
     ->content_like(qr/Master name has been updated successfully/);
 };
 
