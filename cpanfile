@@ -30,7 +30,7 @@ requires 'Scalar::Util' , '>= 0.0';
 requires 'Session::Token' , '>= 0.0';
 requires 'TeX::Encode' , '>= 0.0';
 requires 'Text::ASCIIMathML' , '>= 0.0';
-requires 'Text::BibTeX' , '== 0.87';
+requires 'Text::BibTeX' , '== 0.85'; # 0.86 and 0.87 are broken as of 1st of May 2019
 requires 'Time::HiRes' , '>= 0.0';
 requires 'UUID::Tiny' , '>= 0.0';
 requires 'WWW::Mechanize' , '>= 0.0';
