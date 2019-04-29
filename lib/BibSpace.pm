@@ -501,7 +501,8 @@ sub setup_routes {
 
   ################ TEAMS ################
   $logged_user->get('/teams')->to('teams#show')->name('all_teams');
-  $logged_user->get('/teams/members/<:teamid>')->to('teams#team_members');
+  $logged_user->get('/teams/members/<:teamid>')->to('teams#team_members')
+    ->name('team_members');
 
   $manager_user->get('/teams/edit/<:id>')->to('teams#edit')->name('edit_team');
   $manager_user->get('/teams/delete/<:id>')->to('teams#delete_team')
@@ -513,7 +514,8 @@ sub setup_routes {
     ->name('unrelated_papers_for_team');
 
   $manager_user->get('/teams/add')->to('teams#add_team')->name('add_team_get');
-  $manager_user->post('/teams/add/')->to('teams#add_team_post');
+  $manager_user->post('/teams/add/')->to('teams#add_team_post')
+    ->name('add_team_post');
 
   ################ EDITING PUBLICATIONS ################
     #<<< no perltidy here

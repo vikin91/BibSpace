@@ -35,7 +35,7 @@
       <span class="btn btn-default pull-right" ><i class="fa fa-users"></i> Team name</span>
     </div>
     <div class="col-lg-4 col-md-4 col-xs-4">
-      <form class="form-horizontal" role="form" method="POST" action="<%= url_for('/teams/add')%>">
+      <form class="form-horizontal" role="form" method="POST" action="<%= url_for('add_team_post')%>">
           <div class="input-group">
             <input class="form-control" type="text" name="new_team" placeholder="Team"></input>
             <div class="input-group-btn">
