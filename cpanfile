@@ -46,7 +46,3 @@ on 'test' => sub {
   requires 'Test::Code::TidyAll' , '>= 0.0';
   requires 'Perl::Tidy' , '>= 0.0';
 };
-
-on 'develop' => sub {
-  requires 'Dist::Zilla' , '>= 0.0';
-};
