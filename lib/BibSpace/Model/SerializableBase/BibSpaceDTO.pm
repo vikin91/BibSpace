@@ -18,8 +18,10 @@ has 'formatVersion' => (is => 'ro', isa => 'Str', default => '1');
 # It is used for deserializing dateTime objects
 # Always set this parameter to a value that is default for serialization in class 'DateTime'
 # Currently, it is '%Y-%m-%dT%T'
-# THe parameter is ro, becuse there are no means and need to change it currently
-has 'dateTimeFormat' => (is => 'ro', isa => 'Str', default => '%Y-%m-%dT%T');
+# The parameter is ro, becuse there are no means and need to change it currently
+
+# Commenting it out due to warning that this is replaced by the class_has version
+# has 'dateTimeFormat' => (is => 'ro', isa => 'Str', default => '%Y-%m-%dT%T');
 
 # duplicate as class atribute to make some functions purely static
 class_has 'dateTimeFormat' =>
