@@ -100,7 +100,7 @@ sub promote_to_rank {
   my $rank = shift;
 
   my $profile_id = $self->param('id');
-  my $user_obj = $self->app->repo->users_find(sub { $_->id == $profile_id });
+  my $user_obj   = $self->app->repo->users_find(sub { $_->id == $profile_id });
 
   my $me
     = $self->app->repo->users_find(sub { $_->login eq $self->session('user') });

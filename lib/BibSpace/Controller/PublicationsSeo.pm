@@ -91,7 +91,7 @@ sub meta {
     my $von = undef;
     $von = join(' ', $name->part('von')) if defined $name->part('von');
     my $lastname = join(' ', $name->part('last'));
-    my $jr = undef;
+    my $jr       = undef;
     $jr = join(' ', $name->part('jr')) if defined $name->part('jr');
 
     $name_clean = $firstname;

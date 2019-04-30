@@ -1,3 +1,4 @@
+---
 version: '3'
 
 # the db container is not accessing from outside of docker,
@@ -16,7 +17,7 @@ services:
       MYSQL_USER: bibspace_user
       MYSQL_PASSWORD: passw00rd
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-u", "root", "-ppassw00rdROOT"]
+      test: ["CMD", "mysqladmin", "ping", "-u", "root", "-ppassw00rdROOT"]
       timeout: 5s
       retries: 6
 
@@ -36,7 +37,6 @@ services:
     restart: always
     ports:
       - "8083:8083"
-    restart: always
     environment:
       BIBSPACE_RUN_MODE: production
       BIBSPACE_DB_HOST: db:3306
@@ -45,4 +45,3 @@ services:
       BIBSPACE_DB_DATABASE: bibspace
       BIBSPACE_CONFIG: lib/BibSpace/files/config/default.conf
       BIBSPACE_USE_DUMP: 0
-

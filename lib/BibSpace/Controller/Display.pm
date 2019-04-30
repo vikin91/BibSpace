@@ -100,7 +100,7 @@ sub show_log {
 
 sub show_log_ws {
   my $self = shift;
-  my $num = $self->param('num') // 20;
+  my $num  = $self->param('num') // 20;
 
   $self->on(
     message => sub {
@@ -122,7 +122,7 @@ sub show_log_ws {
 
 sub show_stats {
   my $self = shift;
-  my $num = $self->param('num') // 20;
+  my $num  = $self->param('num') // 20;
 
   my @lines = $self->app->statistics->toLines;
 
@@ -132,14 +132,14 @@ sub show_stats {
 
 sub show_stats_websocket {
   my $self = shift;
-  my $num = $self->param('num') // 20;
+  my $num  = $self->param('num') // 20;
 
   $self->on(
     message => sub {
       my ($self, $filter) = @_;
 
       my @all_lines = $self->app->statistics->toLines;
-      my @lines = grep {/$filter/} @all_lines;
+      my @lines     = grep {/$filter/} @all_lines;
       $self->send(Mojo::JSON::encode_json(\@lines));
     }
   );

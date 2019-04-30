@@ -112,7 +112,7 @@ subtest 'DTO  restore from JSON' => sub {
     "->data->{Entry}->[0]->creation_time should be " . ref $oExpected
   );
 
-  TODO: {
+TODO: {
     local $TODO = "Do not bless but use constructor instead!";
     my $oTest     = $decodedDTO->data->{'Entry'}->[0]->attachments;
     my $oExpected = $bibspaceDTOObject->data->{'Entry'}->[0]->attachments;
@@ -121,9 +121,9 @@ subtest 'DTO  restore from JSON' => sub {
       ref $oExpected,
       "->data->{Entry}->[0]->attachments should be " . ref $oExpected
     );
-  };
+  }
 
-  TODO: {
+TODO: {
     local $TODO = "Do not bless but use constructor instead!";
     my $oTest     = $decodedDTO->data->{'Entry'}->[0]->title;
     my $oExpected = $bibspaceDTOObject->data->{'Entry'}->[0]->title;
@@ -132,7 +132,7 @@ subtest 'DTO  restore from JSON' => sub {
       ref $oExpected,
       "->data->{Entry}->[0]->title should be " . ref $oExpected
     );
-  };
+  }
 };
 my $singleEntryJSON = <<'EOS';
 {

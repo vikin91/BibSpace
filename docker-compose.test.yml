@@ -5,8 +5,6 @@ services:
     image: bibspace
     command: sh -c "cd /BibSpace && prove -lr /BibSpace/t"
     restart: "no"
-    depends_on:
-      - db
     volumes:
       - ${PWD}/public/uploads:/BibSpace/public/uploads
       - ${PWD}/backups:/BibSpace/backups

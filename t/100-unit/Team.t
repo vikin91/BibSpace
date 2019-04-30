@@ -26,7 +26,7 @@ foreach my $team (@all_teams) {
   note "============ Testing Team ID " . $team->id . ".";
 
   my $member_author = ($team->get_authors)[0];
-  my $non_member = $repo->authors_find(sub { !$_->has_team($team) });
+  my $non_member    = $repo->authors_find(sub { !$_->has_team($team) });
 
   if ($member_author) {
 

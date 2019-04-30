@@ -28,7 +28,7 @@ subtest 'PublicationsSEO: public functions' => sub {
   for my $e (@entries) {
     note "============ Testing SEO page for entry id $e->{id} ============";
     my $entry_id = $e->id;
-    my $page = $self->url_for('metalist_entry', id => $entry_id);
+    my $page     = $self->url_for('metalist_entry', id => $entry_id);
 
     if (!$e->is_hidden()) {
       $t_anyone->get_ok($page)

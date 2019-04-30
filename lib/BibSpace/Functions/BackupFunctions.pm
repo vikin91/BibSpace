@@ -70,7 +70,7 @@ sub read_backups {
 }
 
 sub do_json_backup {
-  my $app = shift;
+  my $app  = shift;
   my $name = shift // 'normal';
 
   my $backup_dir = Path::Tiny->new($app->get_backups_dir)->relative;
@@ -88,7 +88,7 @@ sub do_json_backup {
 }
 
 sub do_storable_backup {
-  my $app = shift;
+  my $app  = shift;
   my $name = shift // 'normal';
 
   my $backup_dir = Path::Tiny->new($app->get_backups_dir)->relative;
@@ -107,7 +107,7 @@ sub do_storable_backup {
 }
 
 sub do_mysql_backup {
-  my $app = shift;
+  my $app  = shift;
   my $name = shift // 'normal';
 
   my $backup_dir = Path::Tiny->new($app->get_backups_dir)->relative;
@@ -151,19 +151,21 @@ sub restore_json_backup {
   };
 
   # First Models, then Relations
-  if (defined $success and $success == 1){
+  if (defined $success and $success == 1) {
     my @layers = $app->repo->lr->get_all_layers;
     foreach (@layers) { $_->reset_data }
+
     # $app->repo->lr->reset_uid_providers;
 
     for my $type (@{$app->repo->entities}, @{$app->repo->relations}) {
       my $arrayRef = $decodedDTO->data->{$type};
-      # Authors reference each other, so the order of restoring is important
-      # First masters, because they always reference themselves, and then minions
+
+     # Authors reference each other, so the order of restoring is important
+     # First masters, because they always reference themselves, and then minions
       my @waitingLine;
       for my $object (@$arrayRef) {
         try {
-          if ($type eq "Author" && $object->is_minion){
+          if ($type eq "Author" && $object->is_minion) {
             print "Putting $object->{uid} to waiting line\n";
             push @waitingLine, $object;
           }
@@ -172,7 +174,9 @@ sub restore_json_backup {
           }
         }
         catch {
-           $app->logger->warn("Skipped restoring object of type '$type' from JSON backup. Error: $_");
+          $app->logger->warn(
+            "Skipped restoring object of type '$type' from JSON backup. Error: $_"
+          );
         };
       }
       for my $object (@waitingLine) {
@@ -181,11 +185,13 @@ sub restore_json_backup {
           $app->repo->lr->save($type, $object);
         }
         catch {
-           $app->logger->warn("Could not restore minion Author from waitingLine. Error: $_");
+          $app->logger->warn(
+            "Could not restore minion Author from waitingLine. Error: $_");
         };
       }
     }
     BibSpace::Backend::SmartBackendHelper::linkData($app);
+
     # TODO: Do linking in the smart layer!
   }
   return $success;
