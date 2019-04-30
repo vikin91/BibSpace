@@ -1,16 +1,13 @@
+---
 version: '3'
 services:
 
   sut:
-    image: bibspace
-    command: sh -c "cd /BibSpace && prove -lr /BibSpace/t"
+    build: .
+    command: sh -c 'cd /BibSpace && util/wait-for db:3306 -- prove -lr /BibSpace/t'
     restart: "no"
-    volumes:
-      - ${PWD}/public/uploads:/BibSpace/public/uploads
-      - ${PWD}/backups:/BibSpace/backups
-      - ${PWD}/log:/BibSpace/log
-      - ${PWD}/json_data:/BibSpace/json_data
-      - ${PWD}/fixture:/BibSpace/fixture
+    depends_on:
+      - db
     environment:
       BIBSPACE_RUN_MODE: production
       BIBSPACE_DB_HOST: db:3306
@@ -19,3 +16,16 @@ services:
       BIBSPACE_DB_DATABASE: bibspace
       BIBSPACE_CONFIG: lib/BibSpace/files/config/default.conf
       BIBSPACE_USE_DUMP: 0
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: passw00rdROOT
+      MYSQL_DATABASE: bibspace
+      MYSQL_USER: bibspace_user
+      MYSQL_PASSWORD: passw00rd
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-u", "root", "-ppassw00rdROOT"]
+      timeout: 5s
+      retries: 6
