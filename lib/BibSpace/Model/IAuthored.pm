@@ -48,7 +48,7 @@ sub get_authors {
 }
 
 sub get_entries {
-  my $self = shift;
+  my $self    = shift;
   my @entries = map { $_->entry } $self->authorships_all;
   @entries = sort_publications(@entries);
   return @entries;

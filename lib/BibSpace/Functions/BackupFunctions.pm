@@ -70,7 +70,7 @@ sub read_backups {
 }
 
 sub do_json_backup {
-  my $app = shift;
+  my $app  = shift;
   my $name = shift // 'normal';
 
   my $backup_dir = Path::Tiny->new($app->get_backups_dir)->relative;
@@ -88,7 +88,7 @@ sub do_json_backup {
 }
 
 sub do_storable_backup {
-  my $app = shift;
+  my $app  = shift;
   my $name = shift // 'normal';
 
   my $backup_dir = Path::Tiny->new($app->get_backups_dir)->relative;
@@ -107,7 +107,7 @@ sub do_storable_backup {
 }
 
 sub do_mysql_backup {
-  my $app = shift;
+  my $app  = shift;
   my $name = shift // 'normal';
 
   my $backup_dir = Path::Tiny->new($app->get_backups_dir)->relative;

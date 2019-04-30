@@ -55,7 +55,7 @@ our %mons = (
 sub all {
   my $self = shift;
 
-  my @all = Fget_publications_main_hashed_args($self, {year => undef});
+  my @all      = Fget_publications_main_hashed_args($self, {year => undef});
   my @filtered = Fget_publications_main_hashed_args($self, {}, \@all);
 
   $self->stash(entries => \@filtered, all_entries => \@all);
@@ -64,7 +64,7 @@ sub all {
 
 sub all_recently_added {
   my $self = shift;
-  my $num = $self->param('num') // 10;
+  my $num  = $self->param('num') // 10;
 
   $self->app->logger->info("Displaying recently added entries.");
 
@@ -85,7 +85,7 @@ sub all_recently_added {
 
 sub all_recently_modified {
   my $self = shift;
-  my $num = $self->param('num') // 10;
+  my $num  = $self->param('num') // 10;
 
   $self->app->logger->info("Displaying recently modified entries.");
 
@@ -106,7 +106,7 @@ sub all_recently_modified {
 }
 
 sub all_without_tag {
-  my $self = shift;
+  my $self    = shift;
   my $tagtype = $self->param('tagtype') // 1;
 
   # this will filter entries based on query
@@ -151,13 +151,13 @@ sub show_unrelated_to_team {
   $self->app->logger->info("Displaying entries unrelated to team '$team_id'.");
 
   my $team_name = "";
-  my $team = $self->app->repo->teams_find(sub { $_->id == $team_id });
+  my $team      = $self->app->repo->teams_find(sub { $_->id == $team_id });
   $team_name = $team->name if defined $team;
 
-  my @all = Fget_publications_main_hashed_args($self, {year => undef});
+  my @all        = Fget_publications_main_hashed_args($self, {year => undef});
   my @teamEntres = $team->get_entries;
 
-  my %inTeam = map { $_ => 1 } @teamEntres;
+  my %inTeam           = map  { $_ => 1 } @teamEntres;
   my @entriesUnrelated = grep { not $inTeam{$_} } @all;
 
   # hash destroys order!
@@ -747,7 +747,7 @@ sub regenerate_html_for_all {
 }
 
 sub regenerate_html_in_chunk {
-  my $self = shift;
+  my $self       = shift;
   my $chunk_size = $self->param('chunk_size') // 30;
 
   my $converter = $self->app->bibtexConverter;
@@ -871,7 +871,7 @@ sub show_authors_of_entry {
   }
 
   my @authors = map { $_->author } $entry->authorships_all;
-  my @teams = $entry->get_teams;
+  my @teams   = $entry->get_teams;
 
   $self->stash(entry => $entry, authors => \@authors, teams => \@teams);
   $self->render(template => 'publications/show_authors');
@@ -992,7 +992,7 @@ sub manage_exceptions {
   my @authors    = $entry->get_authors;
 
   # cannot use objects as keysdue to stringification!
-  my %exceptions_hash = map { $_->team->id => 1 } @exceptions;
+  my %exceptions_hash  = map  { $_->team->id => 1 } @exceptions;
   my @unassigned_teams = grep { not $exceptions_hash{$_->id} } @all_teams;
 
   $self->stash(
@@ -1291,7 +1291,7 @@ sub publications_add_post {
 
 sub publications_edit_get {
   my $self = shift;
-  my $id = $self->param('id') || -1;
+  my $id   = $self->param('id') || -1;
 
   $self->app->logger->info("Editing publication entry id $id");
 

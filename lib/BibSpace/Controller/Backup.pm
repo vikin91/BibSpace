@@ -201,7 +201,7 @@ sub restore_backup {
     }
     else {
       $msg_type = 'danger';
-      $msg = 'Unknown backup type: ', $backup->type;
+      $msg      = 'Unknown backup type: ', $backup->type;
     }
 
   }

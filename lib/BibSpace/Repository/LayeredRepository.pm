@@ -88,7 +88,7 @@ class_has 'models' => (
 =cut
 
 sub get_read_layer {
-  my $self = shift;
+  my $self      = shift;
   my $readLayer = first { $_->is_read } $self->get_all_layers;
   return $readLayer;
 }
@@ -219,7 +219,7 @@ sub get_summary_table {
   # get_id_provider_summary_hash
 
   my %count_hash;    #layer_name => summary_hash
-  my @prefixes = qw(CNT_ ID_);
+  my @prefixes    = qw(CNT_ ID_);
   my @column_name = map { $_ . "OK" } @prefixes;
   foreach my $layer ($self->get_all_layers) {
     push @column_name, "CNT_" . $layer->name;

@@ -29,7 +29,7 @@ sub index {
   my $type   = $self->param('type') // 1;
 
   my @all_tags = $self->app->repo->tags_filter(sub { $_->type == $type });
-  my @tags = @all_tags;
+  my @tags     = @all_tags;
   if (defined $letter) {
     @tags = grep { (substr($_->name, 0, 1) cmp $letter) == 0 } @all_tags;
   }
