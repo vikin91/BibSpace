@@ -6,7 +6,7 @@ use Moose;
 use BibSpace::Model::SerializableBase::IEntitySerializableBase;
 with 'IEntitySerializableBase';
 
-has 'name' => (is => 'rw', isa => 'Str');
+has 'name'   => (is => 'rw', isa => 'Str');
 has 'parent' => (is => 'rw');
 
 no Moose;

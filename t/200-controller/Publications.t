@@ -76,7 +76,6 @@ subtest 'edit_publication_post' => sub {
 
   ok($entry, "Find an entry to conduct test");
 
-
   my $bib_content = '
   @article{key_2017_TEST,
     author = {Johny Example},
@@ -128,8 +127,10 @@ $admin_user->post_ok(
   "Upload simple file OK"
 );
 
-ok(-e $self->app->get_upload_dir . "/papers/paper-" . $entry->id . ".pdf",
-  "uploaded pdf file should exist for entry ID: '" . $entry->id . "'");
+ok(
+  -e $self->app->get_upload_dir . "/papers/paper-" . $entry->id . ".pdf",
+  "uploaded pdf file should exist for entry ID: '" . $entry->id . "'"
+);
 
 $page = $self->url_for(
   'download_publication_pdf',

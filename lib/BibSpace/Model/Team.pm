@@ -22,7 +22,7 @@ sub TO_JSON {
   return TeamSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
 }
 
-has 'name' => (is => 'rw', isa => 'Str');
+has 'name'   => (is => 'rw', isa => 'Str');
 has 'parent' => (is => 'rw');
 
 sub equals {

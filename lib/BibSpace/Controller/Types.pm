@@ -45,7 +45,7 @@ sub manage {
   my $self      = shift;
   my $type_name = $self->param('name');
 
-  my @all = $self->app->repo->types_all;
+  my @all  = $self->app->repo->types_all;
   my $type = $self->app->repo->types_find(sub { $_->our_type eq $type_name });
 
   my @all_our_types         = uniq map { $_->our_type } @all;
@@ -53,7 +53,7 @@ sub manage {
   my @assigned_bibtex_types = $type->bibtexTypes_all;
 
   # # cannot use objects as keysdue to stringification!
-  my %types_hash = map { $_ => 1 } @assigned_bibtex_types;
+  my %types_hash        = map  { $_ => 1 } @assigned_bibtex_types;
   my @unassigned_btypes = grep { not $types_hash{$_} } @all_bibtex_types;
 
   $self->stash(

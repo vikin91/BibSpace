@@ -9,7 +9,7 @@ use File::Path qw/make_path/;
 ################################### Example of business entity for testing
 package Entry;
 use Moose;
-has 'bib' => (is => 'rw', isa => 'Str');
+has 'bib'  => (is => 'rw', isa => 'Str');
 has 'year' => (is => 'rw', isa => 'Int', default => 2017);
 __PACKAGE__->meta->make_immutable;
 no Moose;
