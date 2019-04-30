@@ -42,6 +42,7 @@ $admin_user->get_ok($page, "Get for page $page")
 # Not-existing team should return 404
 $page = $self->url_for('edit_team', id => -1);
 note "============ Testing page $page ============";
+
 # This does not return 404 if not found.
 # It redirects to the previous page (Status 301 - but gets 200 due to allow_redirects) and displays error buble
 $admin_user->get_ok($page, "Get for page $page")
@@ -77,14 +78,10 @@ my $team1 = $self->app->repo->teams_find(sub { $_->name eq "test-team-1" });
 my $team2 = $self->app->repo->teams_find(sub { $_->name eq "test-team-2" });
 
 # FIXME: delete is done with verb GET
-$admin_user->get_ok(
-  $self->url_for('delete_team', id => $team1->id)
-);
+$admin_user->get_ok($self->url_for('delete_team', id => $team1->id));
 
 # FIXME: delete is done with verb GET
-$admin_user->get_ok(
-  $self->url_for('delete_team_force', id => $team2->id)
-);
+$admin_user->get_ok($self->url_for('delete_team_force', id => $team2->id));
 
 ok(1);
 done_testing();
