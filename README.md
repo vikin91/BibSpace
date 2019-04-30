@@ -11,19 +11,33 @@ BibSpace is an Online Bibtex Publications Management Software for Authors and Re
 
 ## Using BibSpace with Docker ##
 
-BibSpace has no official docker image on dockerhub (yet), thus you need to build it manually. However, an image with prerequisites exists to ease the process of building. Here are the commands to build BibSpace using docker.
+### Testing
+
+To run BibSpace tests (inside Docker), run the following commands.
 
 ```
-# build BibSpace image
 docker-compose build
-# run it with docker-compose
-docker-compose up -d
-# thats it! Point you browser to http://localhost:8083/ to open BibSpace
-# you may stop the container with
+docker-compose  -f docker-compose.yml -f docker-compose.test.yml up
+```
+
+### Running
+
+To run BibSpace in production mode, run the following commands:
+
+```
+docker-compose build
+docker-compose -f docker-compose.yml up -d
+```
+
+Thats it! Point you browser to http://localhost:8083/ to open BibSpace.
+
+You may stop the container with
+
+```
 docker-compose down
 ```
 
-Your MySQL data is stored in `db_data`, whereas preferences and stats in `json_data`.
+The MySQL data is stored in `db_data`, whereas preferences and stats in `json_data`.
 
 ## Updating
 
@@ -31,13 +45,14 @@ Make sure to backup your data (regular backup + copy all `json` files) before up
 
 ### From Version <=0.5.2 to 0.6.x
 
-Update first to version 0.5.3.
-Then backup your data to JSON format and make sure that data can be restored correctly.
-Next, update to version 0.6.0 and restore data from the JSON backup.
+1) *Important*: Update to version 0.5.3 first - this will enable JSON backups.
+2) Backup your data to JSON format and make sure that data can be restored correctly.
+3) Replace code with version 0.6.0 and restore data from the JSON backup.
 
 ### From Version 0.5.0 to >0.5.0
 
-Update normally, then execute the following:
+1) Update normally by replacing the code with newer version
+2) Execute the following commands:
 
 ```
 mkdir -p json_data
@@ -45,5 +60,17 @@ mv *.json json_data/
 ```
 
 ## TODOs ##
-BibSpace is currently undergoing serious refactoring.
-Feel free to post an issue if you have a question or want to report a bug.
+
+I currently work on BibSpace to improve severl things.
+I ship code in coding sessions that happen rather rarely - once, twice per year.
+In each session I implement things according to the following priority list:
+- [ ] Fix bugs from open issues
+- [ ] Increase test coverage
+- [ ] Implement features
+
+Moreover, I keep redesigning BibSpace to increase the quality of code.
+Remeber that this was a `perl` and `Mojolicious` sandobx, so not all parts were written poperly in the past.
+The following elements will be improved as the work progresses:
+- Fixing the ugliest backend API and refactoring it to adhere to REST API best practices
+- Separate backend and frontent code into separate code modules or even projects
+- Applying modern frontend framework
