@@ -29,7 +29,7 @@ docker-compose build
 docker-compose -f docker-compose.yml up -d
 ```
 
-Thats it! Point you browser to http://localhost:8083/ to open BibSpace.
+That's it! Point you browser to http://localhost:8083/ to open BibSpace.
 
 You may stop the container with
 
@@ -61,7 +61,7 @@ mv *.json json_data/
 
 ## TODOs ##
 
-I currently work on BibSpace to improve severl things.
+I currently work on BibSpace to improve several things.
 I ship code in coding sessions that happen rather rarely - once, twice per year.
 In each session I implement things according to the following priority list:
 - [ ] Fix bugs from open issues
@@ -69,8 +69,8 @@ In each session I implement things according to the following priority list:
 - [ ] Implement features
 
 Moreover, I keep redesigning BibSpace to increase the quality of code.
-Remeber that this was a `perl` and `Mojolicious` sandobx, so not all parts were written poperly in the past.
+Remember that this was a `perl` and `Mojolicious` sandbox, so not all parts were written properly in the past.
 The following elements will be improved as the work progresses:
 - Fixing the ugliest backend API and refactoring it to adhere to REST API best practices
-- Separate backend and frontent code into separate code modules or even projects
+- Separate backend and frontend code into separate code modules or even projects
 - Applying modern frontend framework

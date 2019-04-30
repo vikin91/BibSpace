@@ -571,26 +571,20 @@ sub setup_routes {
     ####### ATTACHMENTS START
 
     # temporary alias
-    $anyone->get('/publications/download/<:filetype>/<:id>.pdf')
+    # For now, ID must be a number. Change later for UUID
+    $anyone->get('/publications/download/:filetype/<id:num>.pdf')
         ->to('publications#download')
         ->name('download_publication_pdf');
 
-
-    $anyone->get('/publications/download/<:filetype>/<:id>')
+    $anyone->get('/publications/download/:filetype/<id:num>')
         ->to('publications#download')
         ->name('download_publication');
 
-
-
-    $manager_user->get('/publications/discover_attachments/<:id>')
+    $manager_user->get('/publications/discover_attachments/<id:num>')
         ->to('publications#discover_attachments')
         ->name('discover_attachments');
 
-    # $anyone->get('/publications/download/<:filetype>/<:id>\.<#format>' )
-    #     ->to('publications#download')
-    #     ->name('download_publication_pdf');
-    #
-    $manager_user->get('/publications/remove_attachment/<:filetype>/<:id>')
+    $manager_user->get('/publications/remove_attachment/:filetype/<id:num>')
         ->to('publications#remove_attachment')
         ->name('publications_remove_attachment');
 
