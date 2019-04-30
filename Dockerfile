@@ -47,3 +47,6 @@ HEALTHCHECK --interval=5s --timeout=3s CMD curl --fail http://localhost:8083/sys
 FROM bibspace-base as bibspace
 # For production
 CMD ["BibSpace/bin/bibspace", "daemon", "-m", "production", "-l", "http://*:8083"]
+
+# For development
+# CMD ["morbo", "BibSpace/bin/bibspace", "-l", "http://*:8083"]
