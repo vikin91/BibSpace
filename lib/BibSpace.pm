@@ -628,7 +628,6 @@ sub setup_routes {
 
   ################ TEAMS ################
   $logged_user->get('/teams')->to('teams#show')->name('all_teams');
-  $logged_user->get('/teams/members/:teamid')->to('teams#team_members');
 
   $manager_user->get('/teams/edit/:id')->to('teams#edit')->name('edit_team');
   $manager_user->get('/teams/delete/:id')->to('teams#delete_team')
