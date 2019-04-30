@@ -500,7 +500,7 @@ sub setup_routes {
   $anyone->get('/r/t4t/<:team_id>')->to('tags#get_tags_for_team_read');
 
   ################ TEAMS ################
-  $logged_user->get('/teams')->to('teams#show')->name('all_teams');;
+  $logged_user->get('/teams')->to('teams#show')->name('all_teams');
 
   $manager_user->get('/teams/edit/<:id>')->to('teams#edit')->name('edit_team');
   $manager_user->get('/teams/delete/<:id>')->to('teams#delete_team')

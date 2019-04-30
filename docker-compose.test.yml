@@ -1,0 +1,23 @@
+version: '3'
+services:
+
+  sut:
+    image: bibspace
+    command: sh -c "cd /BibSpace && prove -lr /BibSpace/t"
+    restart: "no"
+    depends_on:
+      - db
+    volumes:
+      - ${PWD}/public/uploads:/BibSpace/public/uploads
+      - ${PWD}/backups:/BibSpace/backups
+      - ${PWD}/log:/BibSpace/log
+      - ${PWD}/json_data:/BibSpace/json_data
+      - ${PWD}/fixture:/BibSpace/fixture
+    environment:
+      BIBSPACE_RUN_MODE: production
+      BIBSPACE_DB_HOST: db:3306
+      BIBSPACE_DB_USER: bibspace_user
+      BIBSPACE_DB_PASS: passw00rd
+      BIBSPACE_DB_DATABASE: bibspace
+      BIBSPACE_CONFIG: lib/BibSpace/files/config/default.conf
+      BIBSPACE_USE_DUMP: 0

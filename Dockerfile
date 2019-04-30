@@ -44,15 +44,6 @@ LABEL version="0.6.0"
 EXPOSE 8083
 HEALTHCHECK --interval=5s --timeout=3s CMD curl --fail http://localhost:8083/system_status || exit 1
 
-FROM bibspace-base as bibspace-tester
-# Testing
-WORKDIR /BibSpace
-CMD ["prove", "-lrv", "/BibSpace/t"]
-
-FROM bibspace-base as bibspace-runner
+FROM bibspace-base as bibspace
 # For production
 CMD ["BibSpace/bin/bibspace", "daemon", "-m", "production", "-l", "http://*:8083"]
-
-FROM bibspace-base as bibspace-dev
-# For development
-CMD ["morbo", "BibSpace/bin/bibspace", "-l", "http://*:8083"]
