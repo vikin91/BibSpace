@@ -76,6 +76,7 @@ subtest 'edit_publication_post' => sub {
 
   ok($entry, "Find an entry to conduct test");
 
+
   my $bib_content = '
   @article{key_2017_TEST,
     author = {Johny Example},
@@ -101,6 +102,15 @@ subtest 'edit_publication_post' => sub {
       {new_bib => $bib_content, check_key => 1});
 };
 
+# Ensure clean entry
+@entries = $admin_user->app->repo->entries_all;
+$entry   = shift @entries;
+
+$Data::Dumper::MaxDepth = 1;
+say "Selected entry ID for further tests:" . Dumper $entry->id;
+
+ok($entry->id > 0, "Example entry should have ID > 0");
+
 my $upload = {
   filetype      => 'paper',
   uploaded_file => {content => 'test', filename => 'test.pdf'}
@@ -122,7 +132,7 @@ $admin_user->post_ok(
 );
 
 ok(-e $self->app->get_upload_dir . "/papers/paper-" . $entry->id . ".pdf",
-  "uploaded simple file exists");
+  "uploaded pdf file should exist for entry ID: '" . $entry->id . "'");
 
 $page = $self->url_for(
   'download_publication_pdf',
@@ -164,6 +174,7 @@ $page = $self->url_for(
   filetype => 'paper',
   id       => $entry->id
 );
+
 $admin_user->get_ok($page, "Download real file OK: $page")
   ->status_isnt(404, "Checking: 404 $page")
   ->status_isnt(500, "Checking: 500 $page");
@@ -173,6 +184,7 @@ $page = $self->url_for(
   filetype => 'slides',
   id       => $entry->id
 );
+
 $admin_user->get_ok($page, "Download real file OK: $page")
   ->status_isnt(404, "Checking: 404 $page")
   ->status_isnt(500, "Checking: 500 $page");
