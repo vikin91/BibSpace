@@ -102,12 +102,9 @@ subtest 'edit_publication_post' => sub {
       {new_bib => $bib_content, check_key => 1});
 };
 
-# Ensure clean entry
+# Ensure clean entry object for further tests
 @entries = $admin_user->app->repo->entries_all;
 $entry   = shift @entries;
-
-$Data::Dumper::MaxDepth = 1;
-say "Selected entry ID for further tests:" . Dumper $entry->id;
 
 ok($entry->id > 0, "Example entry should have ID > 0");
 

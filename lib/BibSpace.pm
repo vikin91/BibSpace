@@ -852,7 +852,7 @@ sub setup_routes {
   ################ CRON ################
 
   $anyone->get('/cron')->to('cron#index');
-  $anyone->get('/cron/(#level)')->to('cron#cron');
+  $anyone->get('/cron/<#level>')->to('cron#cron');
 
    #>>>
   return;
