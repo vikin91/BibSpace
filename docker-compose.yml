@@ -1,14 +1,10 @@
 ---
 version: '3'
 
-# the db container is not accessing from outside of docker,
-# so the password is not an issue
-
 services:
   db:
     image: mysql:5.7
     volumes:
-      #  path/on/host:path/in/container
       - ./db_data:/var/lib/mysql
     restart: always
     environment:
