@@ -103,7 +103,7 @@ sub promote_to_rank {
   my $rank = shift;
 
   my $profile_id = $self->param('id');
-  my $user_obj = $self->app->repo->users_find(sub { $_->id == $profile_id });
+  my $user_obj   = $self->app->repo->users_find(sub { $_->id == $profile_id });
 
   my $me
     = $self->app->repo->users_find(sub { $_->login eq $self->session('user') });
@@ -324,9 +324,9 @@ sub store_password {
 
   if ($pass1 eq $pass2 and check_password_policy($pass1)) {
 
-    my $salt = salt();
-    my $hash = encrypt_password($pass1, $salt);
-    $user->pass($pass1);
+    my $salt          = salt();
+    my $password_hash = encrypt_password($pass1, $salt);
+    $user->pass($password_hash);
     $user->pass2($salt);
     $user->forgot_token("");
     $self->flash(
