@@ -1,5 +1,16 @@
 ### Changelog ###
 
+#### v0.6.0 - ??.05.2019
+
+ * Added:
+   *
+ * Fixed:
+   * Issue with some changes not being persisted in the database. (#21).
+ * Changed:
+   *
+ * Removed:
+   * (Internal) Support for build-in in-memory cache `SmartLayer`.
+
 #### v0.5.4 - ??.05.2019
 
  * Added:
