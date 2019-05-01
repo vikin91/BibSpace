@@ -44,7 +44,7 @@ RUN apk update \
   && rm -rf /var/cache/apk/*
 
 RUN echo "Europe/Berlin" > /config/etc/timezone
-LABEL version="0.5.3"
+LABEL version="0.5.4"
 EXPOSE 8083
 HEALTHCHECK --interval=30s --timeout=15s CMD curl --fail http://localhost:8083/system_status || exit 1
 
