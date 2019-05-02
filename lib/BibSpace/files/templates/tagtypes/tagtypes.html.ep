@@ -66,10 +66,18 @@
                     <!-- MODAL DIALOG FOR DELETE TAG -->
                 </td>
                 <td>
-                    <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Tag ID"><span class="glyphicon glyphicon-barcode"></span> <%=$tt->{id}%></span>
+                    <span class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="top" title="Tag ID">
+                      <span class="glyphicon glyphicon-barcode"></span>
+                      <span class="tag-type-id tag-type-id-<%= $tt->id %>"><%= $tt->id %></span>
+                    </span>
                 </td>
                 <td>
-                    <p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-tags"></span> <%= $tt->{name} %></p>
+                    <span class="btn btn-default btn-sm">
+                      <span class="glyphicon glyphicon-tags"></span>
+                      % my $tt_name = $tt->name;
+                      % $tt_name =~ s/\s/_/g;
+                      <span class="tag-type-name tag-type-name-<%= $tt_name %>"><%= $tt->name %></span>
+                    </span>
                 </td>
                 <td>
                     <p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-comment"></span> <%= $tt->{comment} %></p>
