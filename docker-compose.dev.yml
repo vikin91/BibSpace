@@ -1,0 +1,37 @@
+---
+version: '3'
+services:
+
+  sut:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: sh -c 'cd /BibSpace && morbo bin/bibspace -l http://*:8083'
+    restart: "no"
+    volumes:
+      - .:/BibSpace
+    ports:
+      - "8083:8083"
+    depends_on:
+      - db
+    environment:
+      BIBSPACE_RUN_MODE: production
+      BIBSPACE_DB_HOST: db:3306
+      BIBSPACE_DB_USER: bibspace_user
+      BIBSPACE_DB_PASS: passw00rd
+      BIBSPACE_DB_DATABASE: bibspace
+      BIBSPACE_CONFIG: lib/BibSpace/files/config/default.conf
+      BIBSPACE_USE_DUMP: 0
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: passw00rdROOT
+      MYSQL_DATABASE: bibspace
+      MYSQL_USER: bibspace_user
+      MYSQL_PASSWORD: passw00rd
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-u", "root", "-ppassw00rdROOT"]
+      timeout: 5s
+      retries: 6
