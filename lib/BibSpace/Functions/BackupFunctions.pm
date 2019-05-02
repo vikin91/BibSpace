@@ -166,7 +166,7 @@ sub restore_json_backup {
       for my $object (@$arrayRef) {
         try {
           if ($type eq "Author" && $object->is_minion) {
-            print "Putting $object->{uid} to waiting line\n";
+            $app->logger->debug("Putting $object->{uid} to waiting line\n");
             push @waitingLine, $object;
           }
           else {
@@ -181,7 +181,7 @@ sub restore_json_backup {
       }
       for my $object (@waitingLine) {
         try {
-          print "Adding $object->{uid} from waiting line\n";
+          $app->logger->debug("Adding $object->{uid} from waiting line\n");
           $app->repo->lr->save($type, $object);
         }
         catch {
@@ -191,8 +191,6 @@ sub restore_json_backup {
       }
     }
     BibSpace::Backend::SmartBackendHelper::linkData($app);
-
-    # TODO: Do linking in the smart layer!
   }
   return $success;
 }

@@ -74,8 +74,6 @@ sub linkData {
       $tag->tagtype($tagtype);
     }
   }
-
-  $app->app->logger->info("TODO: Linking OurTypes (N) to (1) Entries.");
 }
 
 1;
