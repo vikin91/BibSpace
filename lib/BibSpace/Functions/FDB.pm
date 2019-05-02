@@ -28,18 +28,16 @@ sub db_connect {
 
   my $conn = undef;
   my %attr = (RaiseError => 1, AutoCommit => 1, mysql_auto_reconnect => 1);
+  my $connect_string = "DBI:mysql:database=$db_database;host=$db_host";
   try {
-# $conn = Apache::DBI->connect_on_init("DBI:mysql:database=$db_database;host=$db_host", $db_user, $db_pass, \%attr );
     print
       "(Re)connecting to: 'DBI:mysql:database=$db_database;host=$db_host'\n";
-    $conn = DBI->connect_cached("DBI:mysql:database=$db_database;host=$db_host",
-      $db_user, $db_pass, \%attr);
+    $conn = DBI->connect($connect_string, $db_user, $db_pass, \%attr);
   }
   catch {
     warn "db_connect: could not connect to the database: $_";
     warn "Trying to recreate database...";
 
-# THIS BLOCK MAY CAUSE PROBLEMS !!! If MySQL dies during operation, make sure to check again without this block.
     try {
       my $drh = DBI->install_driver("mysql");
       $drh->func('createdb', $db_database, $db_host, $db_user, $db_pass,
