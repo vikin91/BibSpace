@@ -322,27 +322,24 @@ sub populate_from_bib {
 
   return if !$self->has_valid_bibtex;
 
-  if (defined $self->bib and $self->bib ne '') {
-    my $bibtex_entry = new Text::BibTeX::Entry();
-    my $s            = $bibtex_entry->parse_s($self->bib);
+  my $bibtex_entry = new Text::BibTeX::Entry();
+  my $s            = $bibtex_entry->parse_s($self->bib);
 
-    $self->bibtex_key($bibtex_entry->key);
-    my $year_str = $bibtex_entry->get('year');
-    if (Scalar::Util::looks_like_number($year_str)) {
-      $self->year($year_str);
-    }
-
-    if ($bibtex_entry->exists('booktitle')) {
-      $self->title($bibtex_entry->get('booktitle'));
-    }
-    if ($bibtex_entry->exists('title')) {
-      $self->title($bibtex_entry->get('title'));
-    }
-    $self->abstract($bibtex_entry->get('abstract') || undef);
-    $self->_bibtex_type($bibtex_entry->type);
-    return 1;
+  $self->bibtex_key($bibtex_entry->key);
+  my $year_str = $bibtex_entry->get('year');
+  if (Scalar::Util::looks_like_number($year_str)) {
+    $self->year($year_str);
   }
-  return;
+
+  if ($bibtex_entry->exists('booktitle')) {
+    $self->title($bibtex_entry->get('booktitle'));
+  }
+  if ($bibtex_entry->exists('title')) {
+    $self->title($bibtex_entry->get('title'));
+  }
+  $self->abstract($bibtex_entry->get('abstract') || undef);
+  $self->_bibtex_type($bibtex_entry->type);
+  return 1;
 }
 
 sub add_bibtex_field {
@@ -584,13 +581,6 @@ sub has_author {
   my $authorship
     = $self->repo->authorships_find(sub { $_->equals($authorship_to_find) });
   return defined $authorship;
-}
-
-sub has_master_author {
-  my $self   = shift;
-  my $author = shift;
-
-  return $self->has_author($author->get_master);
 }
 
 sub author_names_from_bibtex {
