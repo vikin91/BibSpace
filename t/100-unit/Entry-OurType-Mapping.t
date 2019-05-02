@@ -114,11 +114,7 @@ subtest 'Restore Entries from JSON' => sub {
   my $decodedDTO;
 
   # Creates DTO. Requires repo only for uid provider and preferences
-  $decodedDTO = $bibspaceDTOObject->toLayeredRepo(
-    $twoEntriesJSON,
-    $self->repo->lr->uidProvider,
-    $self->repo->lr->preferences
-  );
+  $decodedDTO = $bibspaceDTOObject->toLayeredRepo($twoEntriesJSON, $self->repo);
   isa_ok($decodedDTO, 'BibSpaceDTO',
     "Decoded class should be BibSpaceDTO, but is " . ref $decodedDTO);
 
@@ -132,5 +128,4 @@ subtest
   'Repeat subtest: Compare entries with types: inproceedings and incollection before restoring backup'
   => \&compare_types;
 
-ok(1);
 done_testing();
