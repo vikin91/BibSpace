@@ -15,10 +15,7 @@ TestManager->apply_fixture($self->app);
 
 my $repo = $self->app->repo;
 
-subtest
-  'Compare entries with types: inproceedings and incollection before restoring backup'
-  => sub {
-
+sub compare_types {
   my @entries_bibtex_incollection = $repo->entries_filter(
     sub { $_->matches_our_type('bibtex-incollection', $repo) });
   my @entries_bibtex_inproceedings = $repo->entries_filter(
@@ -50,7 +47,11 @@ subtest
     $e_bib_inc + $e_bib_inp,
     "Our Inproceedings = bibtex inproceedings + bibtex incollection"
   );
-  };
+}
+
+subtest
+  'Compare entries with types: inproceedings and incollection before restoring backup'
+  => \&compare_types;
 
 # Assumption: incollection = incollection + inproceedings
 my $twoEntriesJSON = <<'EOS';
@@ -129,40 +130,7 @@ subtest 'Restore Entries from JSON' => sub {
 
 subtest
   'Repeat subtest: Compare entries with types: inproceedings and incollection before restoring backup'
-  => sub {
-
-  my @entries_bibtex_incollection = $repo->entries_filter(
-    sub { $_->matches_our_type('bibtex-incollection', $repo) });
-  my @entries_bibtex_inproceedings = $repo->entries_filter(
-    sub { $_->matches_our_type('bibtex-inproceedings', $repo) });
-  my @entries_our_incollection
-    = $repo->entries_filter(sub { $_->matches_our_type('incollection', $repo) }
-    );
-  my @entries_our_inproceedings
-    = $repo->entries_filter(sub { $_->matches_our_type('inproceedings', $repo) }
-    );
-
-  my $e_bib_inc = scalar @entries_bibtex_incollection;
-  my $e_bib_inp = scalar @entries_bibtex_inproceedings;
-  my $e_our_inc = scalar @entries_our_incollection;
-  my $e_our_inp = scalar @entries_our_inproceedings;
-
-  ok(
-    $e_bib_inp <= $e_our_inp,
-    "There should be more or equal number of entries of type our inproceedings than bibtex inproceedings"
-  );
-
-  ok(
-    $e_bib_inc == $e_our_inc,
-    "There should be equal number of entries of type our incollection and bibtex incollection"
-  );
-
-  is(
-    $e_our_inp,
-    $e_bib_inc + $e_bib_inp,
-    "Our Inproceedings = bibtex inproceedings + bibtex incollection"
-  );
-  };
+  => \&compare_types;
 
 ok(1);
 done_testing();
