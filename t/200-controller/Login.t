@@ -42,27 +42,9 @@ my $user2
   = $t_logged_in->app->repo->users_find(sub { $_->login eq 'HenryJohnTester2' }
   );
 
-ok($me);
-ok($user);
-ok($user2);
-
-#  $logged_user->get('/profile')->to('login#profile');
-#  $admin_user->get('/manage_users')->to('login#manage_users')->name('manage_users');
-#  $admin_user->get('/profile/:id')->to('login#foreign_profile')->name('show_user_profile');
-#  $admin_user->get('/profile/delete/:id')->to('login#delete_user')->name('delete_user');
-
-#  $admin_user->get('/profile/make_user/:id')->to('login#make_user')->name('make_user');
-#  $admin_user->get('/profile/make_manager/:id')->to('login#make_manager')->name('make_manager');
-#  $admin_user->get('/profile/make_admin/:id')->to('login#make_admin')->name('make_admin');
-#  $anyone->get('/forgot')->to('login#forgot');
-#  $anyone->post('/forgot/gen')->to('login#post_gen_forgot_token');
-#  $anyone->get('/forgot/reset/:token')->to('login#token_clicked')->name("token_clicked");
-#  $anyone->post('/forgot/store')->to('login#store_password');
-#  $anyone->get('/login_form')->to('login#login_form')->name('login_form');
-#  $anyone->post('/do_login')->to('login#login')->name('do_login');
-#  $anyone->get('/youneedtologin')->to('login#not_logged_in')->name('youneedtologin');
-#  $anyone->get('/badpassword')->to('login#bad_password')->name('badpassword');
-#  $anyone->get('/logout')->to('login#logout')->name('logout');
+ok($me,    "Admin user exists");
+ok($user,  "A test user (1) exists");
+ok($user2, "A test user (2) exists");
 
 my @pages = (
   '/profile', $t_logged_in->app->url_for('manage_users'),
@@ -74,6 +56,8 @@ my @pages = (
   $t_logged_in->app->url_for('make_admin',        id => $user->id),
   $t_logged_in->app->url_for('delete_user',       id => $user->id)
   ,    # shall not be deleted - is admin
+  $t_logged_in->app->url_for('delete_user', id => 99999)
+  ,    # shall not be deleted - does not exist
   $t_logged_in->app->url_for('delete_user', id => $me->id)
   ,    # shall not be deleted - is me
   $t_logged_in->app->url_for('make_user', id => $me->id)
