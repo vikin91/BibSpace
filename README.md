@@ -1,16 +1,16 @@
-# README #
+# README
 
 BibSpace is an Online Bibtex Publications Management Software for Authors and Research Groups.
 Read about its features at the _Error Blog_ under: [BibSpace @ the Error Blog](https://blog.hex64.com/bibspace-online-bibtex-publications-management-software-for-authors-and-research-groups/).
 
-## Build status ##
+## Build Status
 
 [![Build Status](https://travis-ci.org/vikin91/BibSpace.svg?branch=master)](https://travis-ci.org/vikin91/BibSpace) [![Coverage Status](https://coveralls.io/repos/github/vikin91/BibSpace/badge.svg?branch=master)](https://coveralls.io/github/vikin91/BibSpace?branch=master)
 
-## Installation ##
+## Native Installation
 * See [INSTALL.md](INSTALL.md)
 
-## Using BibSpace with Docker ##
+## Using BibSpace with Docker
 
 ### Testing
 
@@ -52,6 +52,7 @@ The MySQL data is stored in `db_data`, whereas preferences and stats in `json_da
   git clone --branch <version> https://github.com/vikin91/BibSpace.git
   ```
   Whereas `<version>` equals the name of a branch or release tag, for example: `v0.5.4`.
+
 3. (Optional) Restore backup if any data got lost.
 
 #### Any update of Docker  installation
@@ -98,7 +99,7 @@ mkdir -p json_data
 mv *.json json_data/
 ```
 
-## TODOs ##
+## TODOs
 
 I currently work on BibSpace to improve several things.
 I ship code in coding sessions that happen rather rarely - once, twice per year.
