@@ -11,7 +11,7 @@
  * Removed:
    * (Internal) Support for build-in in-memory cache `SmartLayer`.
 
-#### v0.5.4 - ??.05.2019
+#### v0.5.4 - 04.05.2019
 
  * Added:
    * Support for Mojolicious `>7.55` by changing route placeholders from `()` to `<>` (#38)
