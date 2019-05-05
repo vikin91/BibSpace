@@ -123,7 +123,6 @@ sub cron_run {
 
   my $text_to_render;
 
-  ############ Cron ACTIONS
   if ($last_call_hours < $call_freq) {
     $text_to_render
       = "Cron level $level called too often. Last call $last_call_hours hours ago. Come back in $left hours\n";
@@ -133,7 +132,6 @@ sub cron_run {
     $text_to_render = "Cron level $level here\n";
   }
 
-  ############ Cron ACTIONS
   $self->app->logger->info("Cron level $level started");
 
   if ($level == 0) {
@@ -165,29 +163,28 @@ sub cron_run {
 sub do_cron_day {
   my $self = shift;
   do_json_backup($self->app, "cron");
+  return 1;
 }
 
 sub do_cron_night {
-  my $self = shift;
-
+  my $self    = shift;
   my @entries = $self->app->repo->entries_all;
-
   for my $e (@entries) {
     $e->regenerate_html(0, $self->app->bst, $self->app->bibtexConverter);
   }
+  return 1;
 }
 
 sub do_cron_week {
   my $self = shift;
-
-  my $backup1     = do_mysql_backup($self->app, "cron");
-  my $num_deleted = delete_old_backups($self->app);
-
+  do_mysql_backup($self->app, "cron");
+  delete_old_backups($self->app);
+  return 1;
 }
 
 sub do_cron_month {
   my $self = shift;
-
+  return 1;
 }
 
 sub log_cron_usage {
@@ -230,28 +227,5 @@ sub get_last_cron_run {
   my $diff = $now->subtract_datetime($last_call);
   return $diff;
 }
-
-# sub get_last_cron_run_in_hours {
-#     my $self   = shift;
-#     my $level = shift;
-
-#     my $last_call_str = $self->app->preferences->cron_get($level);
-#     return 0 if !$last_call_str;
-
-#     my $now = DateTime->now->set_time_zone($self->app->preferences->local_time_zone);
-#     my $last_call;
-#     try{
-#         $last_call = DateTime::Format::HTTP->parse_datetime( $last_call_str );
-#     }
-#     catch{
-#         warn;
-#         $self->app->logger->error("Cannot parse date of last cron usage. Parser got input: '$last_call_str', error: $_ ");
-#     };
-#     return 0 if !$last_call;
-
-#     my $diff = $now->subtract_datetime($last_call);
-#     my $hours = $diff->hours;
-#     return $hours;
-# }
 
 1;

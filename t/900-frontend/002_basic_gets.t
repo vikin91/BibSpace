@@ -58,8 +58,7 @@ my @pages = (
   "/authors/reassign", "/authors/reassign_and_create", "/tagtypes",
   "/tagtypes/add", "/teams", "/teams/add", "/publications",
   $self->url_for('all_orphaned'), "/publications/candidates_to_delete",
-  "/publications/missing_month", "/read/publications/meta", "/cron",
-  "/cron/day", "/cron/night", "/cron/week", "/cron/month", "/logout",
+  "/publications/missing_month", "/read/publications/meta", "/logout",
 );
 
 # Logout must be last!

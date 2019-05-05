@@ -14,23 +14,35 @@ $t_anyone->ua->inactivity_timeout(3600);
 use BibSpace::TestManager;
 TestManager->apply_fixture($t_anyone->app);
 
-$t_anyone->get_ok("/cron/night")->status_isnt(404, "Checking: 404 /cron/night")
-  ->status_isnt(500, "Checking: 500 /cron/night");
+subtest "Run cron functions" => sub {
+  is(BibSpace::Controller::Cron::do_cron_day($self),
+    1, "Cron day should return 1");
+  is(BibSpace::Controller::Cron::do_cron_night($self),
+    1, "Cron night should return 1");
+  is(BibSpace::Controller::Cron::do_cron_week($self),
+    1, "Cron week should return 1");
+  is(BibSpace::Controller::Cron::do_cron_month($self),
+    1, "Cron month should return 1");
+};
 
-note "============ Testing cron day ============";
-BibSpace::Controller::Cron::do_cron_day($self);
-note "============ Testing cron night ============";
-BibSpace::Controller::Cron::do_cron_night($self);
-note "============ Testing cron week ============";
-BibSpace::Controller::Cron::do_cron_week($self);
-note "============ Testing cron month ============";
-BibSpace::Controller::Cron::do_cron_month($self);
+subtest "Test cron pages" => sub {
+  $t_anyone->get_ok("/cron")->status_isnt(404)->status_isnt(500)
+    ->content_like(qr/Cron day/)->content_like(qr/Cron night/)
+    ->content_like(qr/Cron week/)->content_like(qr/Cron month/)
+    ->content_like(qr/last run/);
 
-note "============ Testing statistics output ============";
-ok($self->app->statistics->toLines);
+  $t_anyone->get_ok("/cron/night")->status_isnt(404)->status_isnt(500)
+    ->content_like(qr/Cron level 1/);
 
-note "============ Leftovers... ============";
+  $t_anyone->get_ok("/cron/week")->status_isnt(404)->status_isnt(500)
+    ->content_like(qr/Cron level 2/);
 
-ok(1);
+  $t_anyone->get_ok("/cron/month")->status_isnt(404)->status_isnt(500)
+    ->content_like(qr/Cron level 3/);
+};
+
+subtest "Test statistics function" => sub {
+  ok($self->app->statistics->toLines);
+};
+
 done_testing();
-
