@@ -387,7 +387,7 @@ sub fix_file_urls {
 
   my @all_entries;
 
-  if ($id) {
+  if ($id and $id > 0) {
     my $entry = $self->app->repo->entries_find(sub { $_->id == $id });
     push @all_entries, $entry if $entry;
   }
@@ -403,17 +403,15 @@ sub fix_file_urls {
 
     ++$num_checks;
     my $str;
-    $str .= "Entry " . $entry->id . ": ";
     $entry->discover_attachments($self->app->get_upload_dir);
     my @discovered_types = $entry->attachments_keys;
 
-    $str .= "has types: (";
-    foreach (@discovered_types) {
-      $str .= " $_, ";
-    }
-    $str .= "). Fixed: ";
+    $str .= "Entry " . $entry->id . ": ";
+    $str
+      .= "with types: ("
+      . join(" ", @discovered_types)
+      . "). Fixed the following: ";
 
-    # say $str;
     my $fixed;
     my $file     = $entry->get_attachment('paper');
     my $file_url = $self->url_for(
@@ -427,7 +425,7 @@ sub fix_file_urls {
       $str .= "\n\t";
       $entry->add_bibtex_field("pdf", "$file_url");
       $fixed = 1;
-      $str .= "Added Bibtex filed PDF " . $file_url;
+      $str .= "Added Bibtex field 'pdf = { " . $file_url . "}'";
     }
 
     $file     = $entry->get_attachment('slides');
@@ -442,7 +440,7 @@ sub fix_file_urls {
       $str .= "\n\t";
       $entry->add_bibtex_field("slides", "$file_url");
       $fixed = 1;
-      $str .= "Added Bibtex filed SLIDES " . $file_url;
+      $str .= "Added Bibtex field 'slides = { " . $file_url . "}'";
     }
     $str .= "\n";
 
