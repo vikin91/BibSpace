@@ -97,7 +97,7 @@ subtest 'Setting new password' => sub {
 
 note "============ Registration anyone ============";
 
-$t_anyone->get_ok("/noregister")->status_is(200)
+$t_anyone->get_ok($self->url_for('registration_disabled'))->status_is(200)
   ->content_like(qr/Registration is disabled/i);
 
 subtest 'User management: public registration' => sub {

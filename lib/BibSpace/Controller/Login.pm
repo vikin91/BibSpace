@@ -457,7 +457,7 @@ sub register {
     return;
   }
   else {
-    $self->redirect_to('/noregister');
+    $self->redirect_to('registration_disabled');
   }
 }
 
@@ -471,7 +471,7 @@ sub post_do_register {
   my $password2 = $self->param('password2');
 
   if (!$self->can_register) {
-    $self->redirect_to('/noregister');
+    $self->redirect_to('registration_disabled');
     return;
   }
 

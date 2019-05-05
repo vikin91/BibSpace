@@ -7,16 +7,15 @@
       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <div class="alert alert-warning">
           <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-          <i class="fa  fa-exclamation-circle "></i> <strong>Registration is disabled</strong> 
-          <p>If you require an account, contact the system administrator.</p>
+          <p>Registration is disabled. If you require an account, contact the system administrator.</p>
         </div>
 
       </div>
     </div>
 
     <hr>
-</div>       
-          
+</div>
+
 
 
 

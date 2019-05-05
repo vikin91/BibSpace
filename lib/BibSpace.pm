@@ -286,7 +286,8 @@ sub setup_routes {
   $anyone->get('/register')->to('login#register')->name('register');
   $anyone->post('/register')->to('login#post_do_register')
     ->name('post_do_register');
-  $anyone->any('/noregister')->to('login#register_disabled');
+  $anyone->any('/noregister')->to('login#register_disabled')
+    ->name('registration_disabled');
 
   my $logged_user  = $anyone->under->to('login#check_is_logged_in');
   my $manager_user = $logged_user->under->to('login#under_check_is_manager');
@@ -320,7 +321,7 @@ sub setup_routes {
     ->name('reset_all');
 
   ################ SETTINGS ################
-  $logged_user->get('/profile')->to('login#profile');
+  $logged_user->get('/profile')->to('login#profile')->name('show_my_profile');
   $admin_user->get('/manage_users')->to('login#manage_users')
     ->name('manage_users');
   $admin_user->get('/profile/<:id>')->to('login#foreign_profile')
