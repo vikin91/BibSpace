@@ -25,6 +25,13 @@ foreach my $team (@all_teams) {
 
   note "============ Testing Team ID " . $team->id . ".";
 
+  my @memberships = $team->get_memberships;
+  ok(
+    scalar @memberships ge 0,
+    "Team should have 0 or more memberships and has "
+      . (scalar @memberships) . "."
+  );
+
   my $member_author = ($team->get_authors)[0];
   my $non_member    = $repo->authors_find(sub { !$_->has_team($team) });
 

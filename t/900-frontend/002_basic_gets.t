@@ -64,8 +64,6 @@ my @pages = (
 
 # Logout must be last!
 
-# Logout must be last!
-
 my $ws_page;
 $ws_page = $self->url_for('show_stats_websocket', num => 10);
 $t_logged_in->websocket_ok($ws_page, "Websocket OK for $ws_page");

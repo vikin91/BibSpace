@@ -9,6 +9,7 @@
  * Changed:
    *
  * Removed:
+   * Support for `Storable` backup
    * (Internal) Support for build-in in-memory cache `SmartLayer`.
 
 #### v0.5.4 - 04.05.2019

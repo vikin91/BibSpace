@@ -12,7 +12,7 @@ TestManager->apply_fixture($self->app);
 my $repo          = $self->app->repo;
 my @all_labelings = $repo->labelings_all;
 
-my $limit_num_tests = 200;
+my $limit_num_tests = 50;
 
 note "============ Testing " . scalar(@all_labelings) . " entries ============";
 

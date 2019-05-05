@@ -30,10 +30,14 @@ sub can_be_deleted {
   return 1;
 }
 
+sub get_memberships {
+  my $self = shift;
+  return $self->repo->memberships_filter(sub { $_->team_id == $self->id });
+}
+
 sub get_authors {
   my $self       = shift;
-  my @author_ids = map { $_->author_id }
-    $self->repo->memberships_filter(sub { $_->team_id == $self->id });
+  my @author_ids = map { $_->author_id } $self->get_memberships;
   return $self->repo->authors_filter(
     sub {
       my $a = $_;
