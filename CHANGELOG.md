@@ -1,18 +1,19 @@
 ### Changelog ###
 
-#### v0.6.0 - ??.05.2019
+#### v0.6.0 - 24.05.2019
 
- * Added:
-   *
  * Fixed:
-   * Issue with some changes not being persisted in the database. (#21).
+   * (Major) Issue with some changes not being persisted in the database (#21).
  * Changed:
-   *
+   * Default backup format to JSON
  * Removed:
    * Support for `Storable` backup
    * (Internal) Support for build-in in-memory cache `SmartLayer`.
 
 #### v0.5.4 - 04.05.2019
+
+This version supports backups in format: `Storable` and `JSON`.
+Use it to migrate your data from `0.5.x` to `0.6.x`.
 
  * Added:
    * Support for Mojolicious `>7.55` by changing route placeholders from `()` to `<>` (#38)
@@ -24,17 +25,19 @@
 
 #### v0.5.3 - 07.2018
 
-This version is probably the only one that supports both types of backups: Storable and JSON.
-Use it to migrate your data from 0.5.x to 0.6.x.
+This version supports backups in format: `Storable` and `JSON`.
+Use it to migrate your data from `0.5.x` to `0.6.x`.
 
-* Deprecation: Storable backups are marked as deprecated now. Use JSON backup instead.
-* Feature: Add support for independent JSON backup and restore
-
-* Fix: Non-ANSI usernames are now properly encoded with UTF-8 on the Publications page
-* Fix: External link to DateTime formats uses now permalink to CPAN
-* Fix: Show recenlty added/modified works correctly for less than 10 objects in system
-* Fix: Harden tests for less than 10 objects in system
-* Internal: Add SerializableBase to BibSpace Entities
+* Added:
+  * Support for independent JSON backup and restore
+  * (Internal) Add SerializableBase to BibSpace Entities
+* Fixed:
+  * Non-ANSI usernames are now properly encoded with UTF-8 on the Publications page
+  * External link to DateTime formats uses now permalink to CPAN
+  * Show recently added/modified works correctly for less than 10 objects in system
+  * Tests for less than 10 objects in system
+* Deprecated:
+  * Storable backups. Use JSON backup instead.
 
 #### v0.5.2 - 08.2017 ####
 
@@ -83,7 +86,7 @@ Use it to migrate your data from 0.5.x to 0.6.x.
 #### v0.4.5 - 08.10.2016 ####
 
 * Code refactoring - towards OO design and getting rid of core.pm - edit_author, authors, tags
-* Various bugfixes, e.g., showing publications with no tag for autor no longer returns 404.
+* Various bugfixes, e.g., showing publications with no tag for author no longer returns 404.
 
 #### v0.4.4 - 18.09.2016 ####
 
@@ -97,7 +100,7 @@ Use it to migrate your data from 0.5.x to 0.6.x.
 
 #### v0.4.1 - 31.05.2016 ####
 
-* Add function to change download urls from direct file paths to file serving function
+* Add function to change download URLs from direct file paths to file serving function
 * Add function to remove attachments
 * Fixing multiple minor bugs
 
