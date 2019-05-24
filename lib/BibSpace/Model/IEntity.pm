@@ -1,50 +1,45 @@
 package IEntity;
 use namespace::autoclean;
 
-use BibSpace::Util::IntegerUidProvider;
 use Moose::Role;
 use MooseX::StrictConstructor;
 
 require BibSpace::Model::SerializableBase::IEntitySerializableBase;
 with 'IEntitySerializableBase';
 
-requires 'equals';
-requires 'TO_JSON';
-
-sub _generateUIDEntry {
-  my $self = shift;
-
-  if (defined $self->old_mysql_id and $self->old_mysql_id > 0) {
-    $self->idProvider->registerUID($self->old_mysql_id);
-    return $self->old_mysql_id;
-  }
-  return $self->idProvider->generateUID();
-}
+# Responsibility for ID management is moved to the storage backend
 
 has 'preferences' =>
   (is => 'ro', isa => 'Preferences', traits => ['DoNotSerialize']);
 
 has 'idProvider' => (
-  is       => 'ro',
-  does     => 'IUidProvider',
-  required => 1,
-  traits   => ['DoNotSerialize'],
+  is      => 'rw',
+  does    => 'Maybe[IUidProvider]',
+  default => undef,
+  traits  => ['DoNotSerialize'],
 );
 
 has 'old_mysql_id' => (is => 'ro', isa => 'Maybe[Int]', default => undef);
+has 'id'           => (is => 'rw', isa => 'Maybe[Int]', default => undef);
 
-has 'id' => (
-  is       => 'ro',
-  isa      => 'Int',
-  builder  => '_generateUIDEntry',
-  lazy     => 1,
-  init_arg => undef
-);
+requires 'equals';
 
-# called after the default constructor
-sub BUILD {
+has 'repo' => (is => 'ro', isa => 'FlatRepositoryFacade', required => 1);
+
+# Custm cloning method is required because the following construct does not copy fileds values
+# my $clone = $self->meta->clone_object($self);
+# LabelingSerializableBase->meta->rebless_instance_back($clone);
+sub get_base {
+  my $self            = shift;
+  my $base_class_name = ref($self) . "SerializableBase";
+  Class::Load::load_class($base_class_name);
+  return $base_class_name->new(%$self);
+}
+
+# Cast self to SerializableBase and serialize
+sub TO_JSON {
   my $self = shift;
-  $self->id;    # trigger lazy execution of idProvider
+  return $self->get_base->TO_JSON;
 }
 
 1;

@@ -26,15 +26,15 @@
             %foreach my $author (@$authors){
                 <div class="btn-group">
                     <span class="btn btn-default">
-                      <span class="glyphicon glyphicon-tag"></span> <%= $author->{master} %> 
+                      <span class="glyphicon glyphicon-tag"></span> <%= $author->master->name %>
                     </span>
-                    <a class="btn btn-info" href="<%= url_for('publications')->query( author=>$author->{master}, tag=>$tag->{name} ) %>">
+                    <a class="btn btn-info" href="<%= url_for('publications')->query( author=>$author->master->name, tag=>$tag->{name} ) %>">
                       <span class="glyphicon glyphicon-file"></span>
                       <span class="badge"><%=num_pubs_for_author_and_tag($author, $tag)%></span>
                     </a>
                 </div>
             %}
         </div>
-    </div> 
+    </div>
 </div>
 

@@ -4,7 +4,6 @@ use Data::Dumper;
 use utf8;
 use Text::BibTeX;    # parsing bib files
 use DateTime;
-use Path::Tiny;      # for creating directories
 use Try::Tiny;
 
 use v5.16;           #because of ~~

@@ -44,17 +44,10 @@ sub db_connect {
         'admin');
     }
     catch {
-      die "FATAL: DB Recreation falied: $_";
+      die "FATAL: DB Recreation failed: $_";
     };
-
-    # we catch and throw...
-
   };
-  my $dbh = $conn;
-
-  return if !$dbh;
-  create_main_db($dbh);
-  return $dbh;
+  return $conn;
 }
 
 sub reset_db_data {
@@ -75,40 +68,6 @@ sub reset_db_data {
   finally {
     $dbh->do(q{SET FOREIGN_KEY_CHECKS = 1;});
   };
-  return $dbh;
-}
-
-sub purge_and_create_db {
-  my ($dbh, $db_host, $db_user, $db_database, $db_pass) = @_;
-
-  # my $drh = DBI->install_driver("mysql");
-
-# say "!!! DROPPING DATABASE '$db_database'.";
-# try {
-#   my $rc = $drh->func( 'dropdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
-# }
-# catch {
-#   warn $_;
-# };
-
-# say "!!! CREATING DATABASE '$db_database'.";
-# try {
-#   my $rc = $drh->func( 'createdb', $db_database, $db_host, $db_user, $db_pass, 'admin' );
-# }
-# catch {
-#   warn $_;
-# };
-
-  # say "Restarting connection to '$db_database'.";
-  # try {
-  #   $dbh = db_connect( $db_host, $db_user, $db_database, $db_pass );
-  #   create_main_db($dbh);
-
-  # }
-  # catch {
-  #   warn $_;
-  # };
-
   return $dbh;
 }
 
@@ -262,12 +221,7 @@ sub create_main_db {
   # prepare_token_table_mysql($dbh);
   prepare_cron_table($dbh);
   prepare_user_table_mysql($dbh);
-
-# this causes desynchronisation between layers!!
-# mysql has some initial data, whereas smart doesnt (so id providers are unaware of the data as well)
-  populate_tables($dbh);
-
-  # $dbh->commit();
+  apply_migrations($dbh);
 }
 
 # sub prepare_token_table_mysql {
@@ -359,42 +313,17 @@ sub prepare_user_table_mysql {
   };
 }
 
-sub populate_tables {
+sub apply_migrations {
   my $dbh = shift;
   try {
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('incollection','inproceedings',NULL,1)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('incollection','bibtex-incollection',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('inproceedings','bibtex-inproceedings',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('inbook','book',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('mastersthesis','theses',NULL,1)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('phdthesis','theses',NULL,1)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('phdthesis','volumes',NULL,1)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('proceedings','volumes',NULL,1)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('article','article',NULL,1)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('book','book',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('inbook','inbook',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('incollection','incollection',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('inproceedings','inproceedings',NULL,1)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('manual','manual','Manuals',1)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('mastersthesis','mastersthesis',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('misc','misc',NULL,1)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('phdthesis','phdthesis',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('proceedings','proceedings',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('techreport','techreport',NULL,1)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('unpublished','unpublished',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('book','volumes',NULL,0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('mastersthesis','supervised_theses','Supervised Theses',0)");
-# $dbh->do("INSERT IGNORE INTO OurType_to_Type VALUES('phdthesis','supervised_theses','Supervised Theses',0)");
-
-# $dbh->do("INSERT IGNORE INTO `TagType` VALUES ('Tag','keyword',1)");
-# $dbh->do("INSERT IGNORE INTO `TagType` VALUES ('Category','12 categories defined as in research agenda',2)");
-# $dbh->do("INSERT IGNORE INTO `TagType` VALUES ('Other','Reserved for other groupings of papers',3)");
+    say "Attempt to migrate table Author";
+    $dbh->do(
+      "ALTER TABLE `Author` DROP PRIMARY KEY, MODIFY id INTEGER(8) PRIMARY KEY AUTO_INCREMENT"
+    );
   }
   catch {
-    say "Data already exist. Doing nothing.";
+    say "Migration not necessary or failed: $_";
   };
-
-  # $dbh->commit();
 }
 
 1;

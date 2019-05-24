@@ -10,7 +10,7 @@
             <H1 class="pull-right">Author: </H1>
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
-            <h1> <%= $author->uid %> </h1>
+            <h1 class="author-master-name"> <%= $author->uid %> </h1>
         </div>
     </div>
 
@@ -20,23 +20,23 @@
         </div>
         <div class="col-lg-10 col-md-10 col-xs-10">
             <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id) %>">
-                <i class="fa fa-files-o"></i> 
-                Show entries 
+                <i class="fa fa-files-o"></i>
+                Show entries
                 <span class="badge"><%= num_pubs( undef, undef, [$author->get_entries] ) %></span>
             </a>
             <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'paper') %>">
-                <i class="fa fa-files-o"></i> 
-                Show papers 
+                <i class="fa fa-files-o"></i>
+                Show papers
                 <span class="badge"><%= num_pubs( 'paper', undef, [$author->get_entries] ) %></span>
             </a>
             <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->id, entry_type=>'talk')%>">
-                <i class="fa fa-microphone"></i> 
-                Show talks 
+                <i class="fa fa-microphone"></i>
+                Show talks
                 <span class="badge"><%= num_pubs( 'talk', undef, [$author->get_entries] ) %></span>
             </a>
             <a class="btn btn-default" href="<%= url_for('tags_for_author', author_id =>$author->id )%>">
                 <i class="fa fa-tags" aria-hidden="true"></i>
-                <i class="fa fa-cloud" aria-hidden="true"></i> Show tag-cloud 
+                <i class="fa fa-cloud" aria-hidden="true"></i> Show tag-cloud
             </a>
         </div>
     </div>
@@ -47,44 +47,44 @@
             <div class="btn-group">
                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                     <i class="fa fa-cog"></i>
-                    Actions 
+                    Actions
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu" role="menu">
                     <li>
-                        <a href="<%= url_for('lp')->query(author=>$author->master) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $author->master %>">
-                            <i class="fa fa-user"></i>
-                            <span class="glyphicon glyphicon-plane"></span> 
-                            Landing Page Types
-                        </a>
-                    </li>
-                    <li>
-                        <a href="<%= url_for('lp')->query(author=>$author->master) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $author->master %>">
-                            <i class="fa fa-user"></i>
-                            <span class="glyphicon glyphicon-plane"></span> 
-                            Landing Page Types
-                        </a>
-                    </li>
-                    <li>
-                        <a href="<%= url_for('lyp')->query(author=>$author->master) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $author->master %>">
+                        <a href="<%= url_for('lp')->query(author=>$author->master->name) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $author->master->name %>">
                             <i class="fa fa-user"></i>
                             <span class="glyphicon glyphicon-plane"></span>
-                            <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> 
+                            Landing Page Types
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<%= url_for('lp')->query(author=>$author->master->name) %>"  data-toggle="tooltip" data-placement="left" title="Landing page with papers of the author <%= $author->master->name %>">
+                            <i class="fa fa-user"></i>
+                            <span class="glyphicon glyphicon-plane"></span>
+                            Landing Page Types
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<%= url_for('lyp')->query(author=>$author->master->name) %>" data-toggle="tooltip" data-placement="left" title="Landing page (years) with papers of the author <%= $author->master->name %>">
+                            <i class="fa fa-user"></i>
+                            <span class="glyphicon glyphicon-plane"></span>
+                            <span class="glyphicon glyphicon-sort-by-attributes-alt"></span>
                             Landing Page Years
                         </a>
                     </li>
                     <li>
-                        <a href="<%= url_for('readbibtex')->query(author=>$author->master)%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $author->master %>">
+                        <a href="<%= url_for('readbibtex')->query(author=>$author->master->name)%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $author->master->name %>">
                             <i class="fa fa-user"></i>
-                            <span class="glyphicon glyphicon-plane"></span> 
+                            <span class="glyphicon glyphicon-plane"></span>
                             Landing Page BibTeX
                         </a>
                     </li>
                     <li class="divider"></li>
                     <li>
-                        <a href="<%= url_for('mark_author_to_regenerate', author_id => $author->id)%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $author->master %>">
+                        <a href="<%= url_for('mark_author_to_regenerate', author_id => $author->id)%>" data-toggle="tooltip" data-placement="left" title="Get bibtex of all papers of author <%= $author->master->name %>">
                             <i class="fa fa-user"></i>
-                            <span class="glyphicon glyphicon-refresh"></span> 
+                            <span class="glyphicon glyphicon-refresh"></span>
                             Mark entries of this author for HTML regeneration
                         </a>
                     </li>
@@ -92,7 +92,7 @@
                     % my @ttobjs = get_important_tag_types($self);
                     % foreach my $ttobj (@ttobjs){
                         <li>
-                        <a href="<%= url_for('get_untagged_publications', tagtype=>$ttobj->id )->query(author=>$author->master) %>">
+                        <a href="<%= url_for('get_untagged_publications', tagtype=>$ttobj->id )->query(author=>$author->master->name) %>">
                             <span class="glyphicon glyphicon-warning-sign" style="color: orange;"></span> Show papers without "<%=$ttobj->{name}%>"
                         </a>
                         </li>
@@ -105,14 +105,14 @@
                 </a>
             % }
             % else {
-                <a  class="btn btn-danger" href="<%= url_for('edit_author', id=>$author->master_id) %>">
-                    This author is not master. Click to edit master: <%=$author->master%> 
+                <a  class="btn btn-danger" href="<%= url_for('edit_author', id=>$author->master->id) %>">
+                    This author is not master. Click to edit master: <%=$author->master->name %>
                 </a>
             % }
         </div>
     </div>
 
-    
+
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
             <H1 class="pull-right">Edit author </H1>
@@ -120,7 +120,7 @@
         <div class="col-lg-10 col-md-10 col-xs-10">
         </div>
     </div>
-  
+
   <!-- MUID -->
 
 
@@ -131,11 +131,11 @@
         <div class="col-lg-6 col-md-6 col-xs-6">
           <form class="form-horizontal" role="form" method="POST" action="<%= url_for('edit_author_post') %>">
               <div class="input-group">
-                <input type="hidden" name="master" value="<%= $author->{master} %>"></input>
+                <input type="hidden" name="master" value="<%= $author->master->name %>"></input>
                 <input type="hidden" name="id" value="<%= $id %>"></input>
-                <input class="form-control" type="text" name="new_master" placeholder="master_id" value="<%= $author->{master} %>"></input>
+                <input class="form-control" type="text" name="new_master" placeholder="master_id" value="<%= $author->master->name %>"></input>
                 <div class="input-group-btn">
-                    <button class="btn btn-default" type="submit" data-toggle="tooltip" data-placement="bottom" title="This will change the Master author ID! Current master id will be lost unless you add '<%= $author->{master} %>' as user id."><span style="color: white">|</span><i class="glyphicon glyphicon-floppy-disk" style="color: red;"></i> </button>
+                    <button class="btn btn-default" type="submit" data-toggle="tooltip" data-placement="bottom" title="This will change the Master author ID! Current master id will be lost unless you add '<%= $author->master->name %>' as user id."><span style="color: white">|</span><i class="glyphicon glyphicon-floppy-disk" style="color: red;"></i> </button>
                 </div>
               </div>
           </form>
@@ -151,29 +151,29 @@
         </div>
         <div class="col-lg-6 col-md-6 col-xs-6">
             % my $i = 0;
-            % 
+            %
             <ul class="list-group">
             % for my $minor_author (@$minor_authors){
                  <li class="list-group-item">
-                    
-                    <span class="badge">
+
+                    <span class="badge author-id">
                         <span class="glyphicon glyphicon-barcode"></span>
                         <%= $minor_author->id %>
                     </span>
                     %if( $minor_author->id != $author->id){
-                        <a class="btn btn-danger btn-sm" href="<%= url_for('remove_author_uid', masterid=>$id, uid=>$minor_author->{id}) %>">
+                        <a class="btn btn-danger btn-sm" href="<%= url_for('remove_author_uid', master_id=>$id, minor_id=>$minor_author->id) %>">
                             <i class="fa fa-chain-broken" style="color: white;"></i>
                         </a>
                     %}
-                    <a href="<%= url_for('edit_author', id=>$minor_author->id) %>">
-                        <%= $minor_author->uid %>
+                    <a href="<%= url_for('edit_author', id=>$minor_author->id) %>" class="author-minor-name author-minor-name-<%= $minor_author->name%>">
+                        <%= $minor_author->name %>
                     </a>
                 </li>
             %}
             </ul>
         </div>
     </div>
-    
+
     <!-- Add UID -->
 
     <div class="row">
@@ -183,7 +183,7 @@
         <div class="col-lg-6 col-md-6 col-xs-6">
             <form class="form-horizontal" role="form" method="POST" action="<%= url_for('edit_author_post') %>">
                 <div class="input-group">
-                    <input type="hidden" name="master" value="<%= $author->{master} %>"></input>
+                    <input type="hidden" name="master" value="<%= $author->master->name %>"></input>
                     <input type="hidden" name="id" value="<%= $id %>"></input>
                     <input class="form-control" type="text" name="new_user_id" placeholder="UserID. Example: vonMustermanMax Juergen"></input>
                     <div class="input-group-btn">
@@ -218,9 +218,9 @@
     </div>
 
     <hr>
-  
 
-    
+
+
 
     <div class="row">
         <div class="col-lg-2 col-md-2 col-xs-2">
@@ -235,21 +235,27 @@
                 <td>
                     <div class="btn-group pull-right">
                         <a type="button" class="btn btn-default" href="<%= url_for('edit_team', id=>$team->id ) %>">
-                            <i class="fa fa-users" style="color: #5CB85C;"></i> <%= $team->{name} %>  
+                            <i class="fa fa-users" style="color: #5CB85C;"></i> <%= $team->{name} %>
                         </a>
                         <a class="btn btn-default" href="<%= url_for('remove_author_from_team', id=>$id, tid=>$team->{id}  ) %>" data-toggle="tooltip" data-placement="bottom" title="Remove from team"><span class="glyphicon glyphicon-minus" style="color: red;"></span> <span style="color: white">|</span></a>
                     </div>
                 </td>
                 <td>
-                    
+
                     <a href="#modal-dialog-dates-team-<%=$team->{id} %>-author-<%= $author->{id} %>" data-toggle="modal">
                         <div data-toggle="tooltip" data-placement="right" title="Click to edit">
                             <div class="btn-group pull-right">
                                 <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Joined the group in year">
-                                    <i class="fa fa-sun-o"></i> <%= $author->joined_team( $team ) %>
+                                    <i class="fa fa-sun-o"></i>
+                                    <span class="author-joined-team author-joined-team-id-<%= $team->id%> author-joined-team-year-<%= $author->joined_team( $team ) %>">
+                                      <%= $author->joined_team( $team ) %>
+                                    </span>
                                 </span>
                                 <span class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Left the group in year">
-                                    <i class="fa fa-moon-o"></i> <%= $author->left_team( $team ) || b('&#8734;') %>
+                                    <i class="fa fa-moon-o"></i>
+                                    <span class="author-left-team author-left-team-id-<%= $team->id %>  author-left-team-year-<%= $author->left_team( $team ) || b('inf')  %>">
+                                      <%= $author->left_team( $team ) || b('&#8734;') %>
+                                    </span>
                                 </span>
                             </div>
                         </div>
@@ -261,7 +267,7 @@
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <a href="#" data-dismiss="modal" aria-hidden="true" class="close">×</a>
-                                    <h4>Edit membership dates of <strong><%= $author->{master} %></strong> in team <strong><%= $team->{name} %></strong>.</h4>
+                                    <h4>Edit membership dates of <strong><%= $author->master->name %></strong> in team <strong><%= $team->{name} %></strong>.</h4>
                                 </div>
                                 <div class="modal-body">
 
@@ -279,7 +285,7 @@
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button class="btn btn-success" type="submit"> 
+                                            <button class="btn btn-success" type="submit">
                                                 <span class="glyphicon glyphicon-save"></span> Save
                                             </button>
                                             <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-danger">Cancel</a>
@@ -291,8 +297,8 @@
                     <!-- END OF MODAL EDIT DATES OF MEMBERSHIP -->
                 </td>
                 <td>
-                    <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->{master}, team=>$team->{name}) %>">
-                        Show papers of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i> 
+                    <a class="btn btn-default" href="<%= url_for('publications')->query(author=>$author->master->name, team=>$team->{name}) %>">
+                        Show papers of <i class="fa fa-user"></i> <i class="fa fa-plus"></i> <i class="fa fa-users"></i>
                     </a>
                 </td>
             </tr>
@@ -300,10 +306,10 @@
             %}
             </table>
         </div>
-    </div>     
+    </div>
 
-  
-  
+
+
 
     <hr>
 
@@ -317,7 +323,7 @@
                 <div class="btn-group">
                     <a type="button" class="btn btn-default btn-sm" href="<%= url_for('edit_team', id=>$team->{id}) %>">
                         <span style="color: gray">
-                            <i class="fa fa-users"></i> <%= $team->{name} %>  
+                            <i class="fa fa-users"></i> <%= $team->{name} %>
                         </span>
                     </a>
                   <a class="btn btn-default btn-sm" href="<%= url_for('add_author_to_team', id=>$id, tid=>$team->{id} ) %>"><span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span><span style="color: white">|</span></a>
@@ -325,7 +331,7 @@
                 % $jj++;
             % }
         </div>
-    </div> 
+    </div>
 
     <hr>
 
@@ -339,9 +345,9 @@
             %foreach my $tag (@$tags){
                 <div class="btn-group">
                     <span class="btn btn-default">
-                      <span class="glyphicon glyphicon-tag"></span> <%= $tag->{name} %> 
+                      <span class="glyphicon glyphicon-tag"></span> <%= $tag->{name} %>
                     </span>
-                    <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->{master}, tag=>$tag->{name} ) %>">
+                    <a class="btn btn-info" href="<%= url_for('publications')->query(author=>$author->master->name, tag=>$tag->{name} ) %>">
                       <span class="glyphicon glyphicon-file"></span>
                       <span class="badge"><%= num_pubs_for_author_and_tag( $author, $tag )%></span>
                     </a>
@@ -349,7 +355,7 @@
               % $k++;
             %}
         </div>
-    </div> 
+    </div>
 
     <hr>
 
@@ -358,9 +364,9 @@
         <div class="row">
             <div class="col-lg-12 col-md-12 col-xs-12"/>
                 <div class="alert alert-danger" role="alert">
-                    <span class="glyphicon glyphicon-warning-sign"></span> 
+                    <span class="glyphicon glyphicon-warning-sign"></span>
                     Admin area
-                    <span class="glyphicon glyphicon-warning-sign"></span> 
+                    <span class="glyphicon glyphicon-warning-sign"></span>
                 </div>
             </div>
         </div>
@@ -369,20 +375,20 @@
         <div class="row">
             <div class="col-lg-2 col-md-2 col-xs-2">
                 <span class="btn btn-default pull-right" >
-                    <span class="glyphicon glyphicon-user"></span> 
+                    <span class="glyphicon glyphicon-user"></span>
                     Merge authors
                 </span>
             </div>
             <div class="col-lg-10 col-md-10 col-xs-10">
                 <H4> Merge authors (experimental feature) </H4>
-                <P> The author, whose ID is given in the form below, will be merged into this one (<%= $author->{master} %>). Feature is experimental. </P>
+                <P> The author, whose ID is given in the form below, will be merged into this one (<%= $author->master->name %>). Feature is experimental. </P>
                 <P> Merging affects only entries.</P>
                 <P> The result is immediate. Make backup if in doubt. Some things can be reverted (but no teams!)</P>
                 <P> Warning! The source author will abandon all teams.</P>
             </div>
         </div>
 
-    
+
         <!-- Merging -->
 
         <div class="row">
@@ -426,7 +432,7 @@
               <div class="modal-body">
 
                   <p>Are you sure you want to delete this author from the system? His/her papers remain untouched.</p>
-                  
+
                   <div class="modal-footer">
                     <a class="btn btn-warning" href="<%= url_for('authorsdeleteidforce', id=>$id)%>"><span class="glyphicon glyphicon-trash"></span> Yes, delete this author!</a>
                     <a href="#" data-dismiss="modal" aria-hidden="true" class="btn btn-info">No, leave him alone</a>
@@ -439,8 +445,8 @@
     % }
 
 
-</div>       
-          
+</div>
+
 
 
 

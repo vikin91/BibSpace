@@ -14,13 +14,6 @@ with 'IEntity', 'ILabeled';
 use BibSpace::Model::SerializableBase::TagSerializableBase;
 extends 'TagSerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return TagSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
-}
-
 has 'tagtype' =>
   (is => 'rw', isa => 'Maybe[TagType]', traits => ['DoNotSerialize'],);
 
@@ -40,9 +33,21 @@ sub get_authors {
   return uniq @authors;
 }
 
-sub get_entries {
+sub get_labelings {
   my $self = shift;
-  return map { $_->entry } $self->labelings_all;
+  return $self->repo->labelings_filter(sub { $_->tag_id == $self->id });
+}
+
+sub get_entries {
+  my $self      = shift;
+  my @entry_ids = map { $_->entry_id } $self->get_labelings;
+
+  return $self->repo->entries_filter(
+    sub {
+      my $e = $_;
+      return grep { $_ eq $e->id } @entry_ids;
+    }
+  );
 }
 
 no Moose;

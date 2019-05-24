@@ -25,6 +25,13 @@ foreach my $team (@all_teams) {
 
   note "============ Testing Team ID " . $team->id . ".";
 
+  my @memberships = $team->get_memberships;
+  ok(
+    scalar @memberships ge 0,
+    "Team should have 0 or more memberships and has "
+      . (scalar @memberships) . "."
+  );
+
   my $member_author = ($team->get_authors)[0];
   my $non_member    = $repo->authors_find(sub { !$_->has_team($team) });
 
@@ -34,25 +41,19 @@ foreach my $team (@all_teams) {
     isnt($team->get_membership_beginning($member_author), -1);
     ok(!$team->can_be_deleted, "can be deleted");
 
-    my $mem = Membership->new(
-      author    => $member_author->get_master,
-      team      => $team,
+    my $mem = $repo->entityFactory->new_Membership(
       author_id => $member_author->get_master->id,
       team_id   => $team->id
     );
 
-    my $mem2 = Membership->new(
-      author    => $member_author->get_master,
-      team      => $team,
+    my $mem2 = $repo->entityFactory->new_Membership(
       author_id => $member_author->get_master->id,
       team_id   => $team->id
     );
 
     ## testing membership actually...
-    ok($mem->validate,          "mem validate");
-    ok($mem->equals($mem2),     "mem equals");
-    ok($mem->equals_id($mem2),  "mem equals id");
-    ok($mem->equals_obj($mem2), "mem equals obj");
+    ok($mem->equals($mem2),    "mem equals");
+    ok($mem->equals_id($mem2), "mem equals id");
 
     ok($member_author->update_membership($team, 0, 0), "update mem 0 0");
     ok($member_author->update_membership($team, 100, 200),
@@ -66,16 +67,12 @@ foreach my $team (@all_teams) {
     "update mem bad 100 100 pne";
 
     if ($non_member and !$author->equals($non_member)) {
-      my $mem3 = Membership->new(
-        author    => $non_member->get_master,
-        team      => $team,
+      my $mem3 = $repo->entityFactory->new_Membership(
         author_id => $non_member->get_master->id,
         team_id   => $team->id
       );
-      ok($mem->validate,           'mem validate');
-      ok(!$mem->equals($mem3),     '!equals');
-      ok(!$mem->equals_id($mem3),  '!equals_id');
-      ok(!$mem->equals_obj($mem3), '!equals_obj');
+      ok(!$mem->equals($mem3),    '!equals');
+      ok(!$mem->equals_id($mem3), '!equals_id');
 
       ok(!$team->has_membership($mem3), '!has_membership');
     }

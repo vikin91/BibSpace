@@ -67,7 +67,10 @@
                     </td>
 
                     <td>
-                        <p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-book"></span> <%= $otype->our_type %></p>
+                        <p class="btn btn-default btn-sm type-name type-name-<%=$otype->our_type%>" >
+                          <span class="glyphicon glyphicon-book"></span>
+                          <%= $otype->our_type %>
+                        </p>
                     </td>
                     <td>
                         <a class="btn btn-default btn-sm" href="<%= url_for('publications')->query(bibtex_type=>$otype->our_type) %>">

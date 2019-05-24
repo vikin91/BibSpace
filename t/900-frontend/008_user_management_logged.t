@@ -29,7 +29,7 @@ ok(defined $token);
 is(length($token), 32);
 
 subtest 'User management: noregister' => sub {
-  $t_logged_in->get_ok("/noregister")->status_is(200)
+  $t_logged_in->get_ok($self->url_for('registration_disabled'))->status_is(200)
     ->content_like(qr/Registration is disabled/i);
 };
 

@@ -30,13 +30,6 @@ with 'IEntity', 'ILabeled', 'IAuthored', 'IHavingException';
 use BibSpace::Model::SerializableBase::EntrySerializableBase;
 extends 'EntrySerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return EntrySerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
-}
-
 has 'entry_type' => (is => 'rw', isa => 'Str', default => 'paper');
 has 'bibtex_key' => (is => 'rw', isa => 'Maybe[Str]');
 has '_bibtex_type' =>
@@ -233,11 +226,11 @@ sub discover_attachments {
   # $self->add_attachment( 'unknown', $_ ) for @discovery_other;
 }
 
-=item is_visible
+=item belongs_to_visible_author
     Entry is visible if at least one of its authors is visible
 =cut
 
-sub is_visible {
+sub belongs_to_visible_author {
   my $self = shift;
 
   my $visible_author = any { $_->is_visible } $self->get_authors;
@@ -295,14 +288,11 @@ sub is_talk {
 sub matches_our_type {
   my $self  = shift;
   my $oType = shift;
-  my $repo  = shift;
-
-  die "This method requires repo, sorry." unless $repo;
 
   # example: ourType = inproceedings
   # mathces bibtex types: inproceedings, incollection
 
-  my $mapping = $repo->types_find(
+  my $mapping = $self->repo->types_find(
     sub {
       ($_->our_type cmp $oType) == 0;
     }
@@ -332,27 +322,24 @@ sub populate_from_bib {
 
   return if !$self->has_valid_bibtex;
 
-  if (defined $self->bib and $self->bib ne '') {
-    my $bibtex_entry = new Text::BibTeX::Entry();
-    my $s            = $bibtex_entry->parse_s($self->bib);
+  my $bibtex_entry = new Text::BibTeX::Entry();
+  my $s            = $bibtex_entry->parse_s($self->bib);
 
-    $self->bibtex_key($bibtex_entry->key);
-    my $year_str = $bibtex_entry->get('year');
-    if (Scalar::Util::looks_like_number($year_str)) {
-      $self->year($year_str);
-    }
-
-    if ($bibtex_entry->exists('booktitle')) {
-      $self->title($bibtex_entry->get('booktitle'));
-    }
-    if ($bibtex_entry->exists('title')) {
-      $self->title($bibtex_entry->get('title'));
-    }
-    $self->abstract($bibtex_entry->get('abstract') || undef);
-    $self->_bibtex_type($bibtex_entry->type);
-    return 1;
+  $self->bibtex_key($bibtex_entry->key);
+  my $year_str = $bibtex_entry->get('year');
+  if (Scalar::Util::looks_like_number($year_str)) {
+    $self->year($year_str);
   }
-  return;
+
+  if ($bibtex_entry->exists('booktitle')) {
+    $self->title($bibtex_entry->get('booktitle'));
+  }
+  if ($bibtex_entry->exists('title')) {
+    $self->title($bibtex_entry->get('title'));
+  }
+  $self->abstract($bibtex_entry->get('abstract') || undef);
+  $self->_bibtex_type($bibtex_entry->type);
+  return 1;
 }
 
 sub add_bibtex_field {
@@ -497,27 +484,103 @@ sub regenerate_html {
   return 0;
 }
 
+sub get_exceptions {
+  my $self = shift;
+  return $self->repo->exceptions_filter(sub { $_->entry_id == $self->id });
+}
+
+sub get_teams {
+  my $self = shift;
+
+  my @exception_team_id = map { $_->team_id } $self->get_exceptions;
+  my @exception_teams   = $self->repo->teams_filter(
+    sub {
+      my $t = $_;
+      return grep { $_ eq $t->id } @exception_team_id;
+    }
+  );
+
+  ## Important: this means that entry-teams = teams + exceptions!
+  my %final_teams = map { $_->id => $_ } @exception_teams;
+
+  foreach my $author ($self->get_authors) {
+
+    foreach my $team ($author->get_teams) {
+      my $joined = $author->joined_team($team);
+      my $left   = $author->left_team($team);
+
+      # entry has no year... strange but possible
+      if (!$self->year) {
+        $final_teams{$team->id} = $team;
+      }
+      elsif ($joined <= $self->year and ($left > $self->year or $left == 0)) {
+        $final_teams{$team->id} = $team;
+      }
+    }
+  }
+  return values %final_teams;
+}
+
+sub get_labelings {
+  my $self = shift;
+  return $self->repo->labelings_filter(sub { $_->entry_id == $self->id });
+}
+
+sub get_tags_of_type {
+  my $self     = shift;
+  my $tag_type = shift // 1;
+  return grep { $_->type == $tag_type } $self->get_tags;
+}
+
+sub get_tags {
+  my $self          = shift;
+  my $potentialType = shift;
+  die "use entry->get_tags_of_type instead" if defined $potentialType;
+
+  my @tag_ids = map { $_->tag_id } $self->get_labelings;
+  return $self->repo->tags_filter(
+    sub {
+      my $t = $_;
+      return grep { $_ eq $t->id } @tag_ids;
+    }
+  );
+}
+
+sub has_tag {
+  my $self = shift;
+  my $tag  = shift;
+  return
+    defined $self->repo->labelings_find(
+    sub { $_->entry_id == $self->id and $_->tag_id == $tag->id });
+}
+
+sub get_authorships {
+  my $self = shift;
+  return $self->repo->authorships_filter(sub { $_->entry_id == $self->id });
+}
+
+sub get_authors {
+  my $self       = shift;
+  my @author_ids = map { $_->author_id } $self->get_authorships;
+  return $self->repo->authors_filter(
+    sub {
+      my $a = $_;
+      return grep { $_ eq $a->id } @author_ids;
+    }
+  );
+}
+
 sub has_author {
   my $self   = shift;
   my $author = shift;
 
-  my $authorship_to_find = Authorship->new(
-    author    => $author,
-    entry     => $self,
+  my $authorship_to_find = $self->repo->entityFactory->new_Authorship(
     author_id => $author->id,
     entry_id  => $self->id
   );
-
   my $authorship
-    = $self->authorships_find(sub { $_->equals($authorship_to_find) });
+    = $self->repo->authorships_find(sub { $_->equals($authorship_to_find) });
   return defined $authorship;
-}
-
-sub has_master_author {
-  my $self   = shift;
-  my $author = shift;
-
-  return $self->has_author($author->get_master);
 }
 
 sub author_names_from_bibtex {
@@ -546,32 +609,6 @@ sub author_names_from_bibtex {
     push @author_names, BibSpace::Functions::Core::create_user_id($name);
   }
   return @author_names;
-}
-
-sub get_teams {
-  my $self = shift;
-
-  my @exception_teams = map { $_->team } $self->get_exceptions;
-
-  ## Important: this means that entry-teams = teams + exceptions!
-  my %final_teams = map { $_->id => $_ } @exception_teams;
-
-  foreach my $author ($self->get_authors) {
-
-    foreach my $team ($author->get_teams) {
-      my $joined = $author->joined_team($team);
-      my $left   = $author->left_team($team);
-
-      # entry has no year... strange but possible
-      if (!$self->year) {
-        $final_teams{$team->id} = $team;
-      }
-      elsif ($joined <= $self->year and ($left > $self->year or $left == 0)) {
-        $final_teams{$team->id} = $team;
-      }
-    }
-  }
-  return values %final_teams;
 }
 
 sub has_team {

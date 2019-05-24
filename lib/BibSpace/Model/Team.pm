@@ -15,16 +15,6 @@ with 'IEntity', 'IMembered', 'IHavingException';
 use BibSpace::Model::SerializableBase::TeamSerializableBase;
 extends 'TeamSerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return TeamSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
-}
-
-has 'name'   => (is => 'rw', isa => 'Str');
-has 'parent' => (is => 'rw');
-
 sub equals {
   my $self = shift;
   my $obj  = shift;
@@ -36,13 +26,28 @@ sub equals {
 sub can_be_deleted {
   my $self = shift;
 
-  return if $self->memberships_count > 0;
+  return if scalar $self->get_authors > 0;
   return 1;
 }
 
-sub get_members {
+sub get_memberships {
   my $self = shift;
-  return map { $_->author } $self->memberships_all;
+  return $self->repo->memberships_filter(sub { $_->team_id == $self->id });
+}
+
+sub get_authors {
+  my $self       = shift;
+  my @author_ids = map { $_->author_id } $self->get_memberships;
+  return $self->repo->authors_filter(
+    sub {
+      my $a = $_;
+      return grep { $_ eq $a->id } @author_ids;
+    }
+  );
+}
+
+sub get_members {
+  return shift->get_authors;
 }
 
 sub get_membership_beginning {
@@ -63,11 +68,6 @@ sub get_membership_end {
   return $author->left_team($self);
 }
 
-sub get_authors {
-  my $self = shift;
-  return map { $_->author } $self->memberships_all;
-}
-
 sub tags {
   my $self = shift;
   my $type = shift // 1;
@@ -75,18 +75,23 @@ sub tags {
   my @myTags;
   my @members = $self->get_authors;
   foreach my $author (@members) {
-    push @myTags, $author->get_tags($type);
+    push @myTags, $author->get_tags_of_type($type);
   }
   @myTags = uniq @myTags;
 
   return @myTags;
 }
 
+sub get_exceptions {
+  my $self = shift;
+  return $self->repo->exceptions_filter(sub { $_->team_id == $self->id });
+}
+
 sub get_entries {
   my $self = shift;
 
-  my @myEntries;
-  my @members = $self->get_authors;
+  my @myEntries = ();
+  my @members   = $self->get_authors;
   foreach my $author (@members) {
     push @myEntries, $author->get_entries;
   }

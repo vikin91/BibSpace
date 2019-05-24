@@ -36,15 +36,17 @@ sub all_authors {    # refactored
   @authors = grep { $_->is_master } @authors;
 
   if ($letter) {
-    @authors = grep { (substr($_->master, 0, 1) cmp $letter) == 0 } @authors;
+    @authors
+      = grep { (substr($_->get_master->name, 0, 1) cmp $letter) == 0 } @authors;
   }
   my @letters;
   if (defined $visible) {
-    @letters = map { substr($_->master, 0, 1) }
+    @letters = map { substr($_->get_master->name, 0, 1) }
       $self->app->repo->authors_filter(sub { $_->display == $visible });
   }
   else {
-    @letters = map { substr($_->master, 0, 1) } $self->app->repo->authors_all;
+    @letters = map { substr($_->get_master->name, 0, 1) }
+      $self->app->repo->authors_all;
   }
   @letters = uniq @letters;
   @letters = sort @letters;
@@ -75,7 +77,7 @@ sub add_post {
   if (defined $new_master and length($new_master) > 0) {
 
     my $author
-      = $self->app->repo->authors_find(sub { $_->master eq $new_master });
+      = $self->app->repo->authors_find(sub { $_->master->name eq $new_master });
 
     if (!defined $author) {    # no such user exists yet
 
@@ -164,9 +166,7 @@ sub add_to_team {
   my $team   = $self->app->repo->teams_find(sub   { $_->id == $team_id });
 
   if (defined $author and defined $team) {
-    my $membership = Membership->new(
-      author    => $author->get_master,
-      team      => $team,
+    my $membership = $self->app->repo->entityFactory->new_Membership(
       author_id => $author->get_master->id,
       team_id   => $team->id
     );
@@ -175,10 +175,7 @@ sub add_to_team {
     $author->add_membership($membership);
 
     $self->flash(
-      msg => "Author <b>"
-        . $author->uid
-        . "</b> has just joined team <b>"
-        . $team->name . "</b>",
+      msg => "Author " . $author->uid . " has just joined team " . $team->name,
       msg_type => "success"
     );
   }
@@ -188,7 +185,8 @@ sub add_to_team {
       msg_type => "danger"
     );
   }
-  $self->redirect_to($self->get_referrer);
+  $self->redirect_to($self->url_for('edit_author', id => $author->id)
+      || $self->get_referrer);
 }
 
 sub remove_from_team {
@@ -200,16 +198,18 @@ sub remove_from_team {
   my $team   = $self->app->repo->teams_find(sub   { $_->id == $team_id });
 
   if (defined $author and defined $team) {
-    my $membership = $author->memberships_find(sub { $_->team->equals($team) });
+    my $search_membership = $self->app->repo->entityFactory->new_Membership(
+      author_id => $author->get_master->id,
+      team_id   => $team->id
+    );
+    my $membership = $self->app->repo->memberships_find(
+      sub { $_->equals($search_membership) });
     $author->remove_membership($membership);
     $team->remove_membership($membership);
     $self->app->repo->memberships_delete($membership);
 
     $self->flash(
-      msg => "Author <b>"
-        . $author->uid
-        . "</b> has just left team <b>"
-        . $team->name . "</b>",
+      msg => "Author " . $author->uid . " has just left team " . $team->name,
       msg_type => "success"
     );
   }
@@ -219,13 +219,14 @@ sub remove_from_team {
       msg_type => "danger"
     );
   }
-  $self->redirect_to($self->get_referrer);
+  $self->redirect_to($self->url_for('edit_author', id => $author->id)
+      || $self->get_referrer);
 }
 
 sub remove_uid {
   my $self      = shift;
-  my $master_id = $self->param('masterid');
-  my $minor_id  = $self->param('uid');
+  my $master_id = $self->param('master_id');
+  my $minor_id  = $self->param('minor_id');
 
   my $author_master
     = $self->app->repo->authors_find(sub { $_->id == $master_id });
@@ -250,7 +251,10 @@ sub remove_uid {
     my @master_entries = $author_master->get_entries;
 
     # remove master authorships from both authors
-    foreach my $master_authorship ($author_master->authorships_all) {
+    my @author_authorships
+      = $self->app->repo->authorships_filter(sub { $_->author_id == $master_id }
+      );
+    foreach my $master_authorship (@author_authorships) {
       $author_master->remove_authorship($master_authorship);
       $author_minor->remove_authorship($master_authorship);
 
@@ -259,7 +263,10 @@ sub remove_uid {
     }
 
     # remove minion authorships from both authors
-    foreach my $minion_authorship ($author_minor->authorships_all) {
+    my @minion_authorships
+      = $self->app->repo->authorships_filter(sub { $_->author_id == $minor_id }
+      );
+    foreach my $minion_authorship (@minion_authorships) {
       $author_minor->remove_authorship($minion_authorship);
       $author_master->remove_authorship($minion_authorship);
 
@@ -305,27 +312,31 @@ sub merge_authors {
   if (defined $author_source and defined $author_destination) {
     if ($author_destination->can_merge_authors($author_source)) {
 
-      my @src_authorships = $author_source->authorships_all;
+      my @src_memberships = $self->app->repo->memberships_filter(
+        sub { $_->author_id == $author_source->id });
+
+      my @src_authorships = $self->app->repo->authorships_filter(
+        sub { $_->author_id == $author_source->id });
+
       foreach my $src_authorship (@src_authorships) {
 
         # Removing the authorship from the source author
-        $src_authorship->author->remove_authorship($src_authorship);
-
-        # authorships cannot be updated, so we need to delete and add later
         $self->app->repo->authorships_delete($src_authorship);
 
-        # Changing the authorship to point to a new author
-        $src_authorship->author($author_destination);
+     # Changing the authorship to point to a new author (new object is required)
+
+        my $new_authorship = $self->app->repo->entityFactory->new_Authorship(
+          author_id => $author_destination->id,
+          entry_id  => $src_authorship->entry_id
+        );
 
         # store changes the authorship in the repo
-        $self->app->repo->authorships_save($src_authorship);
-
-        # Adding the authorship to the new author
-        $author_destination->add_authorship($src_authorship);
+        $self->app->repo->authorships_save($new_authorship);
       }
-      $author_source->memberships_clear;
-      $author_source->set_master($author_destination);
 
+ # Source author abandons all teams - information about their teams is destroyed
+      $self->app->repo->authorships_delete(@src_memberships);
+      $author_source->set_master($author_destination);
       $self->app->repo->authors_save($author_destination);
       $self->app->repo->authors_save($author_source);
 
@@ -333,8 +344,14 @@ sub merge_authors {
       Freassign_authors_to_entries_given_by_array($self->app, 0, \@entries);
 
       $self->flash(
-        msg =>
-          "Author <strong>$copy_name</strong> was merged into <strong>$author_destination->{master}</strong>.",
+        msg => "Author $copy_name was merged into "
+          . $author_destination->master->name . ". "
+          . "Information about teams of author $copy_name was deleted. "
+          . "The new master "
+          . $author_destination->name
+          . " does not change their teams. "
+          . "All entries of author $copy_name are now assigned to author "
+          . $author_destination->name . ".",
         msg_type => "success"
       );
     }
@@ -353,7 +370,9 @@ sub merge_authors {
     );
   }
 
-  $self->redirect_to($self->get_referrer);
+  $self->redirect_to(
+         $self->url_for('edit_author', id => $author_destination->id)
+      || $self->get_referrer);
 }
 
 sub edit_post {
@@ -369,10 +388,10 @@ sub edit_post {
     if (defined $new_master) {
 
       my $existing = $self->app->repo->authors_find(
-        sub { ($_->master cmp $new_master) == 0 });
+        sub { ($_->master->name cmp $new_master) == 0 });
 
       if (!defined $existing) {
-        $author->update_master_name($new_master);
+        $author->update_name($new_master);
         $self->app->repo->authors_save($author);
         $self->flash(
           msg      => "Master name has been updated successfully.",
@@ -385,7 +404,7 @@ sub edit_post {
         $self->flash(
           msg => "This master name is already taken by <a href=\""
             . $self->url_for('edit_author', id => $existing->id) . "\">"
-            . $existing->master . "</a>.",
+            . $existing->master->name . "</a>.",
           msg_type => "danger"
         );
         $self->redirect_to($self->url_for('edit_author', id => $id));
@@ -404,7 +423,7 @@ sub edit_post {
       if (defined $existing_author) {
         $self->flash(
           msg =>
-            "Cannot add user ID $new_user_id. Such ID already exist. Maybe you wan to merge authors?",
+            "Cannot add user ID $new_user_id. Such ID already exist. Maybe you want to merge authors instead?",
           msg_type => "warning"
         );
       }
@@ -430,14 +449,12 @@ sub post_edit_membership_dates {
   my $team   = $self->app->repo->teams_find(sub   { $_->id == $team_id });
 
   if ($author and $team) {
-    my $search_mem = Membership->new(
-      author    => $author->get_master,
-      team      => $team,
+    my $search_membership = $self->app->repo->entityFactory->new_Membership(
       author_id => $author->get_master->id,
       team_id   => $team->id
     );
-    my $membership
-      = $self->app->repo->memberships_find(sub { $_->equals($search_mem) });
+    my $membership = $self->app->repo->memberships_find(
+      sub { $_->equals($search_membership) });
 
     if ($membership) {
 
@@ -468,7 +485,7 @@ sub delete_author {
   my $self = shift;
   my $id   = $self->param('id');
 
-  my $author = $self->app->repo->authors_find(sub { $_->{id} == $id });
+  my $author = $self->app->repo->authors_find(sub { $_->id == $id });
 
   if ($author and $author->can_be_deleted()) {
     $self->delete_author_force();
@@ -489,39 +506,25 @@ sub delete_author_force {
 
   if ($author) {
 
-    ## TODO: refactor these blocks nicely!
-
-    ## Deleting memberships
-    my @memberships = $author->memberships_all;
-
-    # for each team, remove membership in this team
-    foreach my $membership (@memberships) {
-      $membership->team->remove_membership($membership);
-    }
+    # Deleting memberships
+    my @memberships = $self->app->repo->memberships_filter(
+      sub { $_->author_id == $author->id });
     $self->app->repo->memberships_delete(@memberships);
 
-    # remove all memberships for this team
-    $author->memberships_clear;
-
-    ## Deleting authorships
-    my @authorships = $author->authorships_all;
-
-    # for each team, remove authorship in this team
-    foreach my $authorship (@authorships) {
-      $authorship->entry->remove_authorship($authorship);
-    }
+    # Deleting authorships
+    my @authorships = $self->app->repo->authorships_filter(
+      sub { $_->author_id == $author->id });
     $self->app->repo->authorships_delete(@authorships);
 
-    # remove all authorships for this team
-    $author->authorships_clear;
-
-    # finally delete author
+    # Finally delete author
     $self->app->repo->authors_delete($author);
 
     $self->app->logger->info(
       "Author " . $author->uid . " ID $id has been deleted.");
     $self->flash(
-      msg      => "Author " . $author->uid . " ID $id removed successfully.",
+      msg => "Author "
+        . $author->uid
+        . " ID $id has been removed successfully.",
       msg_type => "success"
     );
   }
@@ -530,54 +533,6 @@ sub delete_author_force {
   }
 
   $self->redirect_to($self->url_for('all_authors'));
-}
-
-## do not use this on production! this is for making the tests faster!!
-sub delete_invisible_authors {
-  my $self = shift;
-
-  my @authors = $self->app->repo->authors_filter(sub { !$_->is_visible });
-
-  foreach my $author (@authors) {
-
-    ## TODO: refactor these blocks nicely!
-
-    ## Deleting memberships
-    my @memberships = $author->memberships_all;
-
-    # for each team, remove membership in this team
-    foreach my $membership (@memberships) {
-      $membership->team->remove_membership($membership);
-    }
-    $self->app->repo->memberships_delete(@memberships);
-
-    # remove all memberships for this team
-    $author->memberships_clear;
-
-    ## Deleting authorships
-    my @authorships = $author->authorships_all;
-
-    # for each team, remove authorship in this team
-    foreach my $authorship (@authorships) {
-
-      # my $entry = $authorship->entry;
-      $authorship->entry->remove_authorship($authorship);
-
-      # $self->app->repo->entries_delete($entry);
-    }
-    $self->app->repo->authorships_delete(@authorships);
-
-    # remove all authorships for this team
-    $author->authorships_clear;
-
-    # finally delete author
-    $self->app->repo->authors_delete($author);
-
-    $self->flash(msg => "Authors decimated! ", msg_type => "success");
-  }
-
-  $self->redirect_to($self->url_for('all_authors'));
-
 }
 
 sub reassign_authors_to_entries {
@@ -598,66 +553,6 @@ sub reassign_authors_to_entries {
 sub reassign_authors_to_entries_and_create_authors {
   my $self = shift;
   $self->reassign_authors_to_entries(1);
-}
-
-sub fix_masters {
-  my $self = shift;
-
-  my @all_authors = $self->app->repo->authors_all;
-
-  my @broken_authors_0
-    = grep { ($_->is_minion) and (!defined $_->masterObj) } @all_authors;
-
-  # masterObj not set although it should be
-  my @broken_authors_1
-    = grep { (!defined $_->masterObj) and ($_->master_id != $_->id) }
-    @all_authors;
-
-  # masterObj set incorrectly
-  my @broken_authors_2
-    = grep { $_->masterObj and $_->master_id != $_->masterObj->id }
-    @all_authors;
-
-  my $num_fixes_0 = @broken_authors_0;
-  my $num_fixes_1 = @broken_authors_1;
-  my $num_fixes_2 = @broken_authors_2;
-
-  my $msg_type
-    = ($num_fixes_0 + $num_fixes_1 + $num_fixes_2) == 0 ? 'success' : 'danger';
-  my $msg = "Analysis is finished. Authors broken: 
-  <ul>
-    <li>"
-    . scalar(@broken_authors_0)
-    . " of type 0 (is minion but master undefined)</li>
-    <li>"
-    . scalar(@broken_authors_1)
-    . " of type 1 (masterObj not set although it should)</li>
-    <li>"
-    . scalar(@broken_authors_2) . " of type 2 (masterObj set incorrectly)</li>
-  </ul>";
-
-  # we cure all problems with the same medicine...
-  foreach my $author ((@broken_authors_0, @broken_authors_1, @broken_authors_2))
-  {
-    my $master
-      = $self->app->repo->authors_find(sub { $_->id == $author->master_id });
-    if (defined $master) {
-      $author->masterObj($master);
-      ++$num_fixes_0;
-      ++$num_fixes_1;
-      ++$num_fixes_2;
-    }
-  }
-  $msg
-    .= "</br>Fixing is finished. Masters were re-added to the authors. Fixed: 
-  <ul>
-    <li>$num_fixes_0 of type 0 (is minion but master undefined)</li>
-    <li>$num_fixes_1 of type 1 (masterObj not set although it should)</li>
-    <li>$num_fixes_2 of type 2 (masterObj set incorrectly)</li>
-  </ul>";
-
-  $self->flash(msg => $msg, msg_type => $msg_type);
-  $self->redirect_to($self->get_referrer);
 }
 
 sub toggle_visibility {

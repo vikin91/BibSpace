@@ -19,21 +19,22 @@
         </div>
     </div>
 
-    <hr>  
+    <hr>
 
 
     <div class="row">
         <div class="col-lg-3 col-md-3 col-xs-3">
             <button type="button" class="btn btn-success">
-                <span class="glyphicon glyphicon-book"></span> Mapped types 
+                <span class="glyphicon glyphicon-book"></span> Mapped types
             </button>
         </div>
         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
             <span class="btn btn-info" ><span class="glyphicon glyphicon-book"></span> <strong><%= $type->our_type %></strong> = </span>
             % foreach my $a_type_str (@assigned_btypes){
                 <div class="btn-group">
-                    <span type="button" class="btn btn-default">
-                        <span class="glyphicon glyphicon-book"></span> <%= $a_type_str %>
+                    <span type="button" class="btn btn-default type-mapped-<%=$a_type_str%>">
+                      <span class="glyphicon glyphicon-book"></span>
+                      <%= $a_type_str %>
                     </span>
                     <a class="btn btn-default" href="<%= url_for('unmap_bibtex_type', our_type=>$type->our_type, bibtex_type=>$a_type_str)%>">
                         <span class="glyphicon glyphicon-remove" style="color: red;"></span>
@@ -50,13 +51,13 @@
             <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-book"></span> Unassigned BibTeX types </button>
         </div>
         <div class="col-lg-8 col-md-8 col-xs-8">
-            % 
+            %
             % foreach my $b_type (@$unassigned_btypes){
                 <div class="btn-group">
                     <button type="button" class="btn btn-default btn-sm">
                         <span class="glyphicon glyphicon-book" style="color: #5CB85C;"></span> <%= $b_type %>
                     </button>
-                    <a class="btn btn-default btn-sm" href="<%= url_for('typesour_typemapbibtex_type', our_type=>$type->our_type, bibtex_type=>$b_type)%>">
+                    <a class="btn btn-default btn-sm" href="<%= url_for('map_bibtex_type', our_type=>$type->our_type, bibtex_type=>$b_type)%>">
                         <span class="glyphicon glyphicon-plus" style="color: #5CB85C;"></span>
                     </a>
                 </div>
@@ -78,7 +79,7 @@
               <div class="input-group">
                 <input type="hidden" name="our_type" value="<%= $type->our_type %>"></input>
                 <input type="hidden" name="back_url" value="<%= get_referrer %>"></input>
-                <input class="form-control" type="text" name="new_description" placeholder="New description" value="<%= $type->description %>"></input>
+                <input class="form-control type-description" type="text" name="new_description" placeholder="New description" value="<%= $type->description %>"></input>
                 <div class="input-group-btn">
                     <button class="btn btn-default" type="submit" data-toggle="tooltip" data-placement="bottom" title="Save"> <i class="glyphicon glyphicon-floppy-disk" style="color: red;"></i> </button>
                 </div>

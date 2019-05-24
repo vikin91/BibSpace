@@ -11,7 +11,6 @@ use Try::Tiny;
 use Data::Dumper;
 
 use Mojo::Base 'Mojolicious::Controller';
-use Storable;
 use BibSpace::Functions::Core;
 use BibSpace::Util::Preferences;
 

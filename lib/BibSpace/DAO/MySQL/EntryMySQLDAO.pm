@@ -22,7 +22,7 @@ use Time::HiRes qw( gettimeofday tv_interval );
 =item all
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub all {
   my ($self) = @_;
@@ -66,28 +66,16 @@ sub all {
     my $mt = $mysqlPattern->parse_datetime($row->{modified_time});
 
     # set defaults if there is no data in mysql
-    $ct ||= DateTime->now()
-      ; # formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
-    $mt ||= DateTime->now()
-      ; # formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
+    $ct ||= DateTime->now();
+    $mt ||= DateTime->now();
 
     # ct and mt are not in DateTime's internal format
-
-# # set formatter to output date/time in the requested format
-# $ct->set_formatter($mysqlPattern);
-# $mt->set_formatter($mysqlPattern);
-# # finally fount it!
-# # this causes to inject regexp in the object and causes problems with Storable!
-# # $mysqlPattern seems to be REGEXP - do not store this in the object!
-# say "Entry->SQL->all: parsing  mod_time: ".$mt;
-
     # add default
     my $month = $row->{month} // 0;
 
-    push @objs,
-      $self->e_factory->new_Entry(
-      old_mysql_id    => $row->{id},
+    my $obj = $self->e_factory->new_Entry(
       id              => $row->{id},
+      old_mysql_id    => $row->{id},
       entry_type      => $row->{entry_type},
       bibtex_key      => $row->{bibtex_key},
       _bibtex_type    => $row->{bibtex_type},
@@ -102,7 +90,11 @@ sub all {
       creation_time   => $ct,
       modified_time   => $mt,
       need_html_regen => $row->{need_html_regen},
-      );
+    );
+
+    # Factory sets id to undef, so extra rewrite is needed
+    # $obj->{id} = $row->{id};
+    push @objs, $obj;
   }
   return @objs;
 }
@@ -112,7 +104,7 @@ after 'all'  => sub { shift->logger->exiting(""); };
 =item count
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub count {
   my ($self) = @_;
@@ -129,7 +121,7 @@ after 'count'  => sub { shift->logger->exiting(""); };
 =item empty
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub empty {
   my ($self) = @_;
@@ -137,8 +129,8 @@ sub empty {
   my $sth    = $dbh->prepare("SELECT 1 as num FROM Entry LIMIT 1;");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
-  my $num = $row->{num} // 0;
-  return $num == 0;
+  return 1 if not defined $row;
+  return;
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -146,7 +138,7 @@ after 'empty'  => sub { shift->logger->exiting(""); };
 =item exists
     Method documentation placeholder.
     This method takes single object as argument and returns a scalar.
-=cut 
+=cut
 
 sub exists {
   my ($self, $object) = @_;
@@ -164,7 +156,7 @@ after 'exists'  => sub { shift->logger->exiting(""); };
 =item save
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub save {
   my ($self, @objects) = @_;
@@ -188,7 +180,7 @@ after 'save'  => sub { shift->logger->exiting(""); };
 =item _insert
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub _insert {
   my ($self, @objects) = @_;
@@ -210,19 +202,21 @@ sub _insert {
     creation_time,
     modified_time,
     need_html_regen
-    ) 
+    )
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
-
+    my $id = undef;
+    $id = $obj->id if defined $obj->id and $obj->id > 0;
     try {
       my $result = $sth->execute(
-        $obj->id,             $obj->entry_type,    $obj->bibtex_key,
+        $id,                  $obj->entry_type,    $obj->bibtex_key,
         $obj->{_bibtex_type}, $obj->bib,           $obj->html,
         $obj->html_bib,       $obj->abstract,      $obj->title,
         $obj->hidden,         $obj->year,          $obj->month,
         $obj->creation_time,  $obj->modified_time, $obj->need_html_regen,
       );
+      $obj->id($sth->{mysql_insertid});
     }
     catch {
       $self->logger->error("Insert exception during inserting ID "
@@ -232,8 +226,6 @@ sub _insert {
           . ". Error: $_");
     };
   }
-
-  # $dbh->commit();
 }
 before '_insert' => sub { shift->logger->entering(""); };
 after '_insert'  => sub { shift->logger->exiting(""); };
@@ -241,7 +233,7 @@ after '_insert'  => sub { shift->logger->exiting(""); };
 =item update
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub update {
   my ($self, @objects) = @_;
@@ -290,30 +282,33 @@ after 'update'  => sub { shift->logger->exiting(""); };
 =item delete
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub delete {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
+  my $dbh    = $self->handle;
+  my $result = 0;
   foreach my $obj (@objects) {
     my $qry = "DELETE FROM Entry WHERE id=?;";
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute($obj->id);
+      $result = $sth->execute($obj->id);
     }
     catch {
+      $result = 0;
       $self->logger->error("Delete exception: $_",
         "" . __PACKAGE__ . "->delete");
     };
   }
-
+  return 1 if $result > 0;
+  return;
 }
 before 'delete' => sub { shift->logger->entering(""); };
 after 'delete'  => sub { shift->logger->exiting(""); };
 
 =item filter
     Method documentation placeholder.
-=cut 
+=cut
 
 sub filter {
   my ($self, $coderef) = @_;
@@ -328,7 +323,7 @@ after 'filter'  => sub { shift->logger->exiting(""); };
 
 =item find
     Method documentation placeholder.
-=cut 
+=cut
 
 sub find {
   my ($self, $coderef) = @_;

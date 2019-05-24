@@ -5,7 +5,7 @@ package BibStyle::LocalBibStyle v0.0.4;
 =head1 NAME
 
 Text::BibTeX::BibStyle - Format Text::BibTeX::Entry items using .bst
-This is a local copy of Text::BibTeX::BibStyle (v 0.0.3) from CPAN. 
+This is a local copy of Text::BibTeX::BibStyle (v 0.0.3) from CPAN.
 This version will be pushed to CPAN once tests are ready
 
 =cut
@@ -1262,7 +1262,26 @@ under the same terms as Perl itself.
     # We can use builtin eval for these functions
     my $arg1 = $self->_pop(i => $token, 1);
     my $arg2 = $self->_pop(i => $token);
-    $self->_push(_check_type_warnings() ? 0 : eval "0+($arg2 $token $arg1)");
+
+    # Original code
+    # $self->_push(_check_type_warnings() ? 0 : eval "0+($arg2 $token $arg1)");
+    #
+    # Replace eval with safe code due to warnings:
+    # Insecure dependency in open while running with -t switch
+    my $result = 0;
+    if ($token =~ '[*<>+-]') {
+      $result = 1 if $arg2 > $arg1 and $token eq '>';
+      $result = 1 if $arg2 < $arg1 and $token eq '<';
+
+      $result = 0 + $arg2 + $arg1 if $token eq '+';
+      $result = 0 + $arg2 - $arg1 if $token eq '-';
+      $result = 0 + $arg2 * $arg1 if $token eq '*';
+
+      $self->_push(_check_type_warnings() ? 0 : $result);
+    }
+    else {
+      $self->_warning("UNSUPPORTED TOKEN $token");
+    }
   }
 
   sub _function_assign {

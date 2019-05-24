@@ -27,24 +27,13 @@ sub register {
   my ($self, $app) = @_;
 
 # this must be a helper,
-# because smartIDprovider can be exchanged during system lifetime (e.g. restore backup),
-# so the reference must always point to the currently valid id provider
-# smartIDProvider must be instantiated INSIDE LayeredRepository
-  $app->helper(
-    smartIDProvider => sub {
-      my $self = shift;
-      return $self->app->layeredRepository->uidProvider;
-    }
-  );
-
-# this must be a helper,
 # because entityFactory can be exchanged during system lifetime (e.g. restore backup),
 # so the reference must always point to the currently valid id provider
-# entityFactory must be instantiated INSIDE LayeredRepository
+# entityFactory must be instantiated INSIDE flatRepository
   $app->helper(
     entityFactory => sub {
       my $self = shift;
-      return $self->app->layeredRepository->e_factory;
+      return $self->app->flatRepository->e_factory;
     }
   );
 
@@ -262,7 +251,7 @@ sub register {
       my $type = shift // 1;
 
       my $paper = $self->app->repo->entries_find(sub { $_->id == $eid });
-      my @tags  = $paper->get_tags($type);
+      my @tags  = $paper->get_tags_of_type($type);
       @tags = sort { $a->name cmp $b->name } @tags;
       return @tags;
     }
@@ -275,7 +264,7 @@ sub register {
       my $type = shift // 1;
 
       my $paper = $self->app->repo->entries_find(sub { $_->id == $eid });
-      my %has_tags   = map { $_ => 1 } $paper->get_tags($type);
+      my %has_tags   = map { $_ => 1 } $paper->get_tags_of_type($type);
       my @all_tags   = $self->app->repo->tags_filter(sub { $_->type == $type });
       my @unassigned = grep { not $has_tags{$_} } @all_tags;
       @unassigned = sort { $a->name cmp $b->name } @unassigned;
@@ -287,9 +276,6 @@ sub register {
     num_authors => sub {
       my $self = shift;
       return $self->app->repo->authors_count;
-
-      # return $self->storage->authors_all;
-
     }
   );
 
@@ -328,9 +314,7 @@ sub register {
       my $author = shift;
       my $tag    = shift;
 
-      return
-        scalar $author->authorships_filter(
-        sub { defined $_ and defined $_->entry and $_->entry->has_tag($tag) });
+      return scalar grep { $_->has_tag($tag) } $author->get_entries;
     }
   );
 
@@ -338,7 +322,7 @@ sub register {
     num_pubs_for_tag => sub {
       my $self = shift;
       my $tag  = shift;
-      return $tag->labelings_count // 0;
+      return scalar $tag->get_entries // 0;
     }
   );
 

@@ -403,7 +403,7 @@ sub delatexify {
 
 =item string_replace_with_counting
   uses counting to do strin replace
-  Example:  
+  Example:
     single runn of 'string_replace_with_counting' with parameters
       s = aaa{bbb{cc{dd}}}
       opening = {
@@ -413,11 +413,11 @@ sub delatexify {
       opening_replace = ''
       closing replace = ''
     returns: aaa{bbb{ccdd}}
-    next run: 
+    next run:
     returns: aaa{bbbccdd}
-    next run: 
+    next run:
     returns: aaabbbccdd
-=cut 
+=cut
 
 sub string_replace_with_counting {
   my ($s, $opening, $closing, $avoid_l, $avoid_r, $opening_replace,

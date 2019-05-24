@@ -4,11 +4,9 @@ use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Model::Backup;
 use BibSpace::Functions::Core;
 use BibSpace::Functions::FDB;
-use BibSpace::Backend::SmartBackendHelper;
 
 use JSON -convert_blessed_universally;
 use BibSpace::Model::SerializableBase::BibSpaceDTO;
-use Storable;
 
 use Data::Dumper;
 use utf8;
@@ -30,11 +28,9 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw(
   find_backup
   read_backups
-  do_storable_backup
   do_json_backup
   do_mysql_backup
   restore_json_backup
-  restore_storable_backup
   delete_old_backups
 );
 ## Trivial DAO FIND
@@ -87,25 +83,6 @@ sub do_json_backup {
   return $backup;
 }
 
-sub do_storable_backup {
-  my $app  = shift;
-  my $name = shift // 'normal';
-
-  my $backup_dir = Path::Tiny->new($app->get_backups_dir)->relative;
-  $backup_dir =~ s!/*$!/!;    # hy do I need to add this???
-
-  my $backup = Backup->create($name, "storable");
-  $backup->dir("" . $backup_dir);
-
-  my $layer = $app->repo->lr->get_read_layer;
-  my $path  = "" . $backup->get_path;
-
-  $Storable::forgive_me = "do store regexp please";
-  Storable::store $layer, $path;
-
-  return $backup;
-}
-
 sub do_mysql_backup {
   my $app  = shift;
   my $name = shift // 'normal';
@@ -138,12 +115,8 @@ sub restore_json_backup {
   my $dto = BibSpaceDTO->new();
   my $decodedDTO;
   try {
-    $decodedDTO = $dto->toLayeredRepo(
-      $jsonString,
-      $app->repo->lr->uidProvider,
-      $app->repo->lr->preferences
-    );
-    $success = 1;
+    $decodedDTO = $dto->toLayeredRepo($jsonString, $app->repo);
+    $success    = 1;
   }
   catch {
     $app->logger->error("Exception during JSON restore: $_");
@@ -154,8 +127,6 @@ sub restore_json_backup {
   if (defined $success and $success == 1) {
     my @layers = $app->repo->lr->get_all_layers;
     foreach (@layers) { $_->reset_data }
-
-    # $app->repo->lr->reset_uid_providers;
 
     for my $type (@{$app->repo->entities}, @{$app->repo->relations}) {
       my $arrayRef = $decodedDTO->data->{$type};
@@ -190,43 +161,8 @@ sub restore_json_backup {
         };
       }
     }
-    BibSpace::Backend::SmartBackendHelper::linkData($app);
   }
   return $success;
-}
-
-sub restore_storable_backup {
-  my $backup = shift;
-  my $app    = shift;
-
-  my $layer = retrieve($backup->get_path);
-
-  say "restore_storable_backup has retrieved:" . $layer->get_summary_table;
-
-  ## this writes to all layers!!
-
-  my @layers = $app->repo->lr->get_all_layers;
-  foreach (@layers) { $_->reset_data }
-  $app->repo->lr->reset_uid_providers;
-
-# say "Smart layer after reset:" . $app->repo->lr->get_layer('smart')->get_summary_table;
-
-  my $layer_to_replace = $app->repo->lr->get_read_layer;
-  $app->repo->lr->replace_layer($layer_to_replace->name, $layer);
-
-  foreach my $layer (@layers) {
-    next if $layer->name eq $layer_to_replace->name;
-
-    $app->repo->lr->copy_data(
-      {from => $layer_to_replace->name, to => $layer->name});
-  }
-
-# say "Smart layer after replace:" . $app->repo->lr->get_layer('smart')->get_summary_table;
-
-  say "restore_storable_backup DONE. Smart layer after copy_data:"
-    . $app->repo->lr->get_layer('smart')->get_summary_table;
-  say "restore_storable_backup DONE. All layer after copy_data:"
-    . $app->repo->lr->get_summary_table;
 }
 
 sub delete_old_backups {

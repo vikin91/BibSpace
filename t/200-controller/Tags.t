@@ -17,14 +17,6 @@ $admin_user->ua->max_redirects(3);
 use BibSpace::TestManager;
 TestManager->apply_fixture($self->app);
 
-# $logged_user->get('/tags/:type')->to( 'tags#index', type => 1 )->name('all_tags');
-# $admin_user->get('/tags/add/:type')->to( 'tags#add', type => 1 )->name('add_tag_get');
-# $admin_user->post('/tags/add/:type')->to( 'tags#add_post', type => 1 )->name('add_tag_post');
-# $logged_user->get('/tags/authors/:tid/:type')->to( 'tags#get_authors_for_tag', type => 1 )
-#   ->name('get_authors_for_tag');
-# $admin_user->get('/tags/delete/:id')->to('tags#delete')->name('delete_tag');
-# $manager_user->get('/tags/edit/:id')->to('tags#edit')->name('edit_tag');
-
 my @entries = $admin_user->app->repo->entries_all;
 my $entry   = shift @entries;
 my $author  = ($admin_user->app->repo->authors_all)[0];
@@ -65,7 +57,6 @@ foreach my $type (@tagTypes) {
   $admin_user->post_ok(
     $self->url_for('add_tag_post', type => $typeID) => form =>
       {new_tag => "zz_$typeID;aa_$typeID;;test_tag2_type_$typeID"});
-
 }
 
 foreach my $tag (@tags) {
@@ -94,7 +85,6 @@ foreach my $tag (@tags) {
   $admin_user->get_ok($page, "Get for page $page")
     ->status_isnt(404, "Checking: 404 $page")
     ->status_isnt(500, "Checking: 500 $page");
-
 }
 
 my $tag_del = shift @tags;
@@ -104,9 +94,6 @@ note "============ Testing page $page ============";
 $admin_user->get_ok($page, "Get for page $page")
   ->status_isnt(404, "Checking: 404 $page")
   ->status_isnt(500, "Checking: 500 $page");
-
-# subtest 'aaa' => sub {
-# };
 
 ok(1);
 done_testing();

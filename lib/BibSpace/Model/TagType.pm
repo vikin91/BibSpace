@@ -10,16 +10,6 @@ with 'IEntity';
 use BibSpace::Model::SerializableBase::TagTypeSerializableBase;
 extends 'TagTypeSerializableBase';
 
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return TagTypeSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
-}
-
-has 'name'    => (is => 'rw', isa => 'Str');
-has 'comment' => (is => 'rw', isa => 'Maybe[Str]');
-
 sub equals {
   my $self = shift;
   my $obj  = shift;

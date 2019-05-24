@@ -11,7 +11,7 @@
     <li role="presentation">
   % }
     <a href="<%= url_with->query(letter=>$selected_letter) %>">
-      <span class="glyphicon glyphicon-user"></span> 
+      <span class="glyphicon glyphicon-user"></span>
       All authors
     </a>
   </li>
@@ -22,7 +22,7 @@
     <li role="presentation">
   % }
     <a href="<%= url_with->query(letter=>$selected_letter, visible=>1) %>">
-      <span class="glyphicon glyphicon-eye-open"></span> 
+      <span class="glyphicon glyphicon-eye-open"></span>
       Show visible
       </a>
   </li>
@@ -33,7 +33,7 @@
     <li role="presentation">
   % }
     <a href="<%= url_with->query(letter=>$selected_letter, visible=>0) %>">
-      <span class="glyphicon glyphicon-eye-open"></span> 
+      <span class="glyphicon glyphicon-eye-open"></span>
       Show invisible
       </a>
   </li>
@@ -47,7 +47,7 @@
     % else{
         <li role="presentation" class="active">
     % }
-      <a class="btn btn-default btn-sm" href="<%= url_with->query(visible=>$visible) %>"> All </a>
+      <a class="btn btn-default btn-sm author-letter-all" href="<%= url_with->query(visible=>$visible) %>"> All </a>
     </li>
   % foreach my $let (@{$letters}){
     % if( $selected_letter and $let eq $selected_letter ){
@@ -56,7 +56,9 @@
     % else{
       <li role="presentation">
     % }
-    <a class="btn btn-default btn-sm" href="<%= url_with->query(letter=>$let, visible=>$visible) %>"><%= $let %></a>
+    <a class="btn btn-default btn-sm author-leter author-letter-<%= $let %>" href="<%= url_with->query(letter=>$let, visible=>$visible) %>">
+      <%= $let %>
+    </a>
     </li>
   %}
   </ul>
@@ -70,32 +72,51 @@
         <table class="table table-hover">
         <tbody>
         % foreach my $author (@{$authors}){
-          
+
           <tr>
-            <td><p class="btn btn-default btn-sm">[<%= $j %>]</p></td>
+            <td>
+              <p class="btn btn-default btn-sm"><%= $j %></p>
+            </td>
             <td>
                 % if ($author->is_visible){
-                  <a class="btn btn-info btn-sm" href="<%= url_for('toggle_author_visibility', id=>$author->{id}) %>"><span class="glyphicon glyphicon-eye-open"></span></a>
+                  <a class="btn btn-info btn-sm" href="<%= url_for('toggle_author_visibility', id=>$author->id) %>">
+                    <span class="glyphicon glyphicon-eye-open"></span>
+                  </a>
                 %}
                 %else{
-                  <a class="btn btn-danger btn-sm" href="<%= url_for('toggle_author_visibility', id=>$author->{id}) %>"><span class="glyphicon glyphicon-eye-close"></span></a>
-                  
+                  <a class="btn btn-danger btn-sm" href="<%= url_for('toggle_author_visibility', id=>$author->id) %>">
+                    <span class="glyphicon glyphicon-eye-close"></span>
+                  </a>
+
                 %}
                 % if ( $author->can_be_deleted){
-                  <a class="btn btn-danger btn-sm" href="<%= url_for('delete_author', id=>$author->{id} ) %>"><span class="glyphicon glyphicon-trash"></span></a>
+                  <a class="btn btn-danger btn-sm" href="<%= url_for('delete_author', id=>$author->id ) %>">
+                    <span class="glyphicon glyphicon-trash"></span>
+                  </a>
                 %}
                 %else{
                   <button class="btn btn-default btn-sm"><span class="glyphicon glyphicon-trash"></span></button>
                 %}
 
-                <a class="btn btn-success btn-sm" href="<%= url_for('edit_author', id=>$author->{id} )%>"><span class="glyphicon glyphicon-pencil"></span> Edit</a>
+                <a class="btn btn-success btn-sm" href="<%= url_for('edit_author', id=>$author->id )%>">
+                  <span class="glyphicon glyphicon-pencil"></span> Edit
+                </a>
 
             </td>
-            <td><p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-barcode"></span> <%= $author->id %></p></td>
-            <td><p class="btn btn-default btn-sm" ><span class="glyphicon glyphicon-user"></span> <%= $author->master %></p></td>
-            <td><a class="btn btn-default btn-sm" href="<%= url_for('publications')->query(author=>$author->{master}) %>"><i class="fa fa-files-o"></i> Show papers</a></td>
-            <td><a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications')->query(author=>$author->{master}) %>"><span class="glyphicon glyphicon-plane"></span> Landing page</a></td>
-            <td><a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications')->query(author=>$author->{master}) %>"><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing page years</a></td>
+            <td>
+              <p class="btn btn-default btn-sm author-id" >
+                <span class="glyphicon glyphicon-barcode"></span>
+                <%= $author->id %>
+              </p>
+            </td>
+            <td>
+              <p class="btn btn-default btn-sm author-master-name" >
+                <span class="glyphicon glyphicon-user"></span> <%= $author->master->name %>
+              </p>
+            </td>
+            <td><a class="btn btn-default btn-sm" href="<%= url_for('publications')->query(author=>$author->master->name) %>"><i class="fa fa-files-o"></i> Show papers</a></td>
+            <td><a class="btn btn-default btn-sm" href="<%= url_for('/landing/publications')->query(author=>$author->master->name) %>"><span class="glyphicon glyphicon-plane"></span> Landing page</a></td>
+            <td><a class="btn btn-default btn-sm" href="<%= url_for('/landing-years/publications')->query(author=>$author->master->name) %>"><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Landing page years</a></td>
           </tr>
           % $i++;
           % $j--;

@@ -191,7 +191,7 @@ sub get_tags_for_author_read {
     my $count = scalar @objs;
 
     my $url = $self->url_for('lyp')->query(
-      author => $author->{master},
+      author => $author->master->name,
       tag    => $tag_name,
       title  => '1',
       navbar => '1'
@@ -241,8 +241,10 @@ sub get_tags_for_team_read {
   foreach my $paper (@team_entries) {
 
     # merge two hashes
-    %team_tags_hash = (%team_tags_hash,
-      map { "" . $_->name => $_ } $paper->get_tags($tag_type));
+    %team_tags_hash = (
+      %team_tags_hash,
+      map { "" . $_->name => $_ } $paper->get_tags_of_type($tag_type)
+    );
   }
   my @team_tags = values %team_tags_hash;
 
@@ -300,10 +302,10 @@ sub get_authors_for_tag {
     return;
   }
 
-  my @papers = map { $_->entry } $tag->labelings_all;
+  my @papers = map { $_->entry } $tag->get_labelings;
   my @authors;
   foreach my $paper (@papers) {
-    my @subset_authors = map { $_->author } $paper->authorships_all;
+    my @subset_authors = map { $_->author } $paper->get_authorships;
     push @subset_authors, @authors;
   }
   if (!@authors) {
@@ -326,20 +328,8 @@ sub delete {
   if ($tag) {
     my $name = $tag->name;
 
-    ## TODO: refactor these blocks nicely!
-    ## Deleting labelings
-    my @labelings = $tag->labelings_all;
-
-    # for each entry, remove labeling in this team
-    foreach my $labeling (@labelings) {
-      $labeling->entry->remove_labeling($labeling);
-    }
+    my @labelings = $tag->get_labelings;
     $self->app->repo->labelings_delete(@labelings);
-
-    # remove all labelings for this team
-    $tag->labelings_clear;
-
-    # finally delete tag
     $self->app->repo->tags_delete($tag);
 
     $self->flash(msg_type => 'success', msg => "Tag $name has been deleted.");

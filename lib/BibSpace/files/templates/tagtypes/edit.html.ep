@@ -17,12 +17,12 @@
 
   <div class="row">
       <div class="col-md-10">
-        <a class="btn btn-success" href="<%= url_for('/tagtypes')%>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all tag types</a>
+        <a class="btn btn-success" href="<%= url_for('all_tag_types')%>"><span class="glyphicon glyphicon-arrow-left"></span> Back to the list of all tag types</a>
       </div>
   </div>
-  
+
   <br>
-  
+
   <div class="row">
   	<div class="col-md-10">
    		<div class="panel panel-default">
@@ -31,7 +31,7 @@
     			</div>
     			<div class="panel-body">
                 <!-- FORM -->
-                <form role="form" method="post" action="<%= url_for('/tagtypes/edit/')%><%= $id %>">
+                <form role="form" method="post" action="<%= url_for('edit_tag_type', id => $id)%>">
                     <div class="form-group">
                         <label for="user">Edit tag type</label>
                         <input type="text" class="form-control" style="border-radius:0px" name="new_name" id="new_name" placeholder="Porpose a compact name. Spaces will be changed to underscores." value="<%= $name %>">

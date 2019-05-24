@@ -22,16 +22,15 @@ use Time::HiRes qw( gettimeofday tv_interval );
 =item all
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub all {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $qry    = "SELECT 
+  my $qry    = "SELECT
           id,
           uid,
           display,
-          master,
           master_id
       FROM Author";
   my @objs;
@@ -44,17 +43,9 @@ sub all {
       id           => $row->{id},
       uid          => $row->{uid},
       display      => $row->{display},
-      master       => $row->{master},
       master_id    => $row->{master_id}
     );
 
-    # if( $obj->{master_id} != $obj->{id} ){
-    #     $obj->{masterObj} = MAuthor->static_get($dbh, $obj->{master_id});
-    # }
-    # else{
-    #     $obj->{masterObj} = $obj;
-    # }
-    # FIXME: Temporary fix. This should be fixed with a join!
     $obj->{masterObj} = undef;
     $obj->id;    # due to lazy filling of this field
 
@@ -69,7 +60,7 @@ after 'all'  => sub { shift->logger->exiting(""); };
 =item count
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub count {
   my ($self) = @_;
@@ -86,7 +77,7 @@ after 'count'  => sub { shift->logger->exiting(""); };
 =item empty
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub empty {
   my ($self) = @_;
@@ -94,8 +85,8 @@ sub empty {
   my $sth    = $dbh->prepare("SELECT 1 as num FROM Author LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
-  my $num = $row->{num} // 0;
-  return $num == 0;
+  return 1 if not defined $row;
+  return;
 }
 before 'empty' => sub { shift->logger->entering(""); };
 after 'empty'  => sub { shift->logger->exiting(""); };
@@ -103,7 +94,7 @@ after 'empty'  => sub { shift->logger->exiting(""); };
 =item exists
     Method documentation placeholder.
     This method takes single object as argument and returns a scalar.
-=cut 
+=cut
 
 sub exists {
   my ($self, $object) = @_;
@@ -111,9 +102,9 @@ sub exists {
   my $dbh = $self->handle;
   my $sth = $dbh->prepare(
     "SELECT EXISTS(SELECT 1 FROM Author WHERE id=? LIMIT 1) as num ");
-  $sth->execute($object->id);
-  my $row = $sth->fetchrow_hashref();
-  my $num = $row->{num} // 0;
+  my $result = $sth->execute($object->id);
+  my $row    = $sth->fetchrow_hashref();
+  my $num    = $row->{num} // 0;
   return $num > 0;
 
 }
@@ -123,7 +114,7 @@ after 'exists'  => sub { shift->logger->exiting(""); };
 =item save
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub save {
   my ($self, @objects) = @_;
@@ -150,7 +141,7 @@ after 'save'  => sub { shift->logger->exiting(""); };
 =item _insert
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub _insert {
   my ($self, @objects) = @_;
@@ -159,62 +150,71 @@ sub _insert {
     INSERT INTO Author(
     id,
     uid,
-    master_id,
-    master,
-    display
-    ) 
-    VALUES (?,?,?,?,?);";
+    display,
+    master_id
+    )
+    VALUES (?,?,?,?);";
   my $sth   = $dbh->prepare($qry);
   my $added = 0;
   foreach my $obj (@objects) {
+    my $id        = undef;
+    my $master_id = undef;
+    $id        = $obj->id if defined $obj->id and $obj->id > 0;
+    $master_id = $obj->get_master_id
+      if defined $obj->get_master_id and $obj->get_master_id > 0;
     try {
-      my $result
-        = $sth->execute($obj->id, $obj->uid, $obj->master_id, $obj->master,
-        $obj->display);
-      ++$added;
+      $added += $sth->execute($id, $obj->uid, $obj->display, $master_id);
+      my $inserted_id = $sth->{mysql_insertid};
+      $obj->id($inserted_id);
+      if (not $master_id) {
+
+        # sets master_id if unset
+        $obj->get_master_id;
+
+        # This updates master_id to point to i
+        $obj->repo->authors_update($obj);
+      }
     }
     catch {
-      $self->logger->error("Insert exception: $_");
+      $self->logger->error("Author insert exception: $_");
     };
   }
   return $added;
-
-  # $dbh->commit();
 }
-before '_insert' => sub { shift->logger->entering(""); };
-after '_insert'  => sub { shift->logger->exiting(""); };
 
 =item update
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub update {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
+  my $dbh     = $self->handle;
+  my $success = 0;
 
   foreach my $obj (@objects) {
     next if !defined $obj->id;
 
-    # update field 'modified_time' only if needed
     my $qry = "UPDATE Author SET
                       uid=?,
                       master_id=?,
-                      master=?,
                       display=?";
     $qry .= " WHERE id = ?";
 
     my $sth = $dbh->prepare($qry);
+    my $result;
     try {
-      my $result = $sth->execute(
-        $obj->{uid},     $obj->{master_id}, $obj->{master},
-        $obj->{display}, $obj->{id}
-      );
+      $sth->execute($obj->uid, $obj->get_master_id, $obj->display, $obj->id);
+      $success = 1;
     }
     catch {
+      $success = 0;
       $self->logger->error("Update exception: $_");
     };
   }
+
+  # Return for tests to signal that nothing has been thrown
+  return $success;
 }
 before 'update' => sub { shift->logger->entering(""); };
 after 'update'  => sub { shift->logger->exiting(""); };
@@ -222,29 +222,32 @@ after 'update'  => sub { shift->logger->exiting(""); };
 =item delete
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub delete {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
+  my $dbh    = $self->handle;
+  my $result = 0;
   foreach my $obj (@objects) {
     my $qry = "DELETE FROM Author WHERE id=?;";
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute($obj->id);
+      $result = $sth->execute($obj->id);
     }
     catch {
+      $result = 0;
       $self->logger->error("Delete exception: $_");
     };
   }
-
+  return 1 if $result > 0;
+  return;
 }
 before 'delete' => sub { shift->logger->entering(""); };
 after 'delete'  => sub { shift->logger->exiting(""); };
 
 =item filter
     Method documentation placeholder.
-=cut 
+=cut
 
 sub filter {
   my ($self, $coderef) = @_;
@@ -259,7 +262,7 @@ after 'filter'  => sub { shift->logger->exiting(""); };
 
 =item find
     Method documentation placeholder.
-=cut 
+=cut
 
 sub find {
   my ($self, $coderef) = @_;

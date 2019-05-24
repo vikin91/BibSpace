@@ -19,9 +19,7 @@ use List::Util qw(first);
 use BibSpace::Functions::Core;
 use BibSpace::Functions::MySqlBackupFunctions;
 use BibSpace::Functions::BackupFunctions;
-
 use BibSpace::Model::Backup;
-use Storable;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::Base 'Mojolicious::Plugin::Config';
@@ -54,27 +52,13 @@ sub index {
 
 sub save {
   my $self = shift;
-  return $self->save_storable;
+  return $self->save_json;
 }
 
 sub save_json {
   my $self = shift;
 
   my $backup = do_json_backup($self->app);
-
-  if ($backup->is_healthy) {
-    $self->flash(msg_type => 'success', msg => "Backup created successfully");
-  }
-  else {
-    $self->flash(msg_type => 'danger', msg => "Backup create failed!");
-  }
-  $self->redirect_to('backup_index');
-}
-
-sub save_storable {
-  my $self = shift;
-
-  my $backup = do_storable_backup($self->app);
 
   if ($backup->is_healthy) {
     $self->flash(msg_type => 'success', msg => "Backup created successfully");
@@ -193,10 +177,7 @@ sub restore_backup {
   my $msg      = '';
 
   if ($backup and $backup->is_healthy) {
-    if ($backup->type eq 'storable') {
-      return $self->controller_restore_storable_backup($backup);
-    }
-    elsif ($backup->type eq 'json') {
+    if ($backup->type eq 'json') {
       return $self->controller_restore_json_backup($backup);
     }
     else {
@@ -240,37 +221,6 @@ sub controller_restore_json_backup {
     $msg      = 'Cannot restore - backup not found or not healthy!';
   }
   $self->flash(msg_type => $msg_type, msg => $msg,);
-  $self->redirect_to('backup_index');
-  return;
-}
-
-sub controller_restore_storable_backup {
-  my $self   = shift;
-  my $backup = shift;
-
-  if ($backup and $backup->is_healthy) {
-
-    restore_storable_backup($backup, $self->app);
-
-    $self->app->logger->info("Restoring storable backup " . $backup->uuid);
-
-    my $status
-      = "Status: <pre style=\"font-family:monospace;\">"
-      . $self->app->repo->lr->get_summary_table
-      . "</pre>";
-
-    $self->flash(
-      msg_type => 'success',
-      msg =>
-        "Backup restored successfully. Database recreated, persistence layers in sync. $status"
-    );
-  }
-  else {
-    $self->flash(
-      msg_type => 'danger',
-      msg      => "Cannot restore - backup not healthy!"
-    );
-  }
   $self->redirect_to('backup_index');
   return;
 }

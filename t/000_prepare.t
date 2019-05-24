@@ -8,8 +8,8 @@ use Try::Tiny;
 use BibSpace;
 
 use BibSpace::Model::Backup;
-use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
-use BibSpace::Functions::FDB;    # TODO: purge DB etc.
+use BibSpace::Functions::BackupFunctions qw(restore_json_backup);
+use BibSpace::Functions::FDB;
 
 `rm log/*.log`;
 `rm bibspace.dat`;
@@ -36,7 +36,7 @@ ok(db_connect($db_host, $db_user, $db_database, $db_pass),
   "Can connect to database");
 $dbh = $self->app->db;
 
-my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.dat');
+my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.json');
 my $fixture_name = '' . $fixture_file->basename;
 my $fixture_dir  = '' . $fixture_file->dirname;
 
@@ -55,10 +55,7 @@ SKIP: {
   note "Find backup file";
   my $fixture = Backup->new(dir => $fixture_dir, filename => $fixture_name);
 
-  note "restore_storable_backup - read data into all layers";
-
-  # this restores data to all layers!
-  restore_storable_backup($fixture, $self->app);
+  restore_json_backup($fixture, $self->app);
 
 }
 

@@ -22,23 +22,23 @@ use Time::HiRes qw( gettimeofday tv_interval );
 =item all
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub all {
   my ($self) = @_;
   my $dbh    = $self->handle;
-  my $qry    = "SELECT 
-              id, 
-              login, 
-              registration_time, 
-              last_login, 
-              real_name, 
-              email, 
-              pass, 
-              pass2, 
-              pass3, 
-              rank, 
-              master_id, 
+  my $qry    = "SELECT
+              id,
+              login,
+              registration_time,
+              last_login,
+              real_name,
+              email,
+              pass,
+              pass2,
+              pass3,
+              rank,
+              master_id,
               tennant_id
             FROM Login
             ORDER BY login ASC";
@@ -60,21 +60,19 @@ sub all {
   while (my $row = $sth->fetchrow_hashref()) {
 
     # set formatter to parse date/time in the requested format
-    my $rt = $mysqlPattern->parse_datetime($row->{registration_time});
-    my $ll = $mysqlPattern->parse_datetime($row->{last_login});
+    my $regTime   = $mysqlPattern->parse_datetime($row->{registration_time});
+    my $lastLogin = $mysqlPattern->parse_datetime($row->{last_login});
 
     # set defaults if there is no data in mysql
-    $rt ||= DateTime->now()
-      ; # formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
-    $ll ||= DateTime->now()
-      ; # formatter => $mysqlPattern);  # do not store pattern! - it is incompat. with Storable
+    $regTime   ||= DateTime->now();
+    $lastLogin ||= DateTime->now();
 
     my $obj = $self->e_factory->new_User(
       old_mysql_id      => $row->{id},
       id                => $row->{id},
       login             => $row->{login},
-      registration_time => $rt,
-      last_login        => $ll,
+      registration_time => $regTime,
+      last_login        => $lastLogin,
       real_name         => $row->{real_name},
       email             => $row->{email},
       pass              => $row->{pass},
@@ -92,7 +90,7 @@ sub all {
 =item count
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub count {
   my ($self) = @_;
@@ -107,7 +105,7 @@ sub count {
 =item empty
     Method documentation placeholder.
     This method takes no arguments and returns array or scalar.
-=cut 
+=cut
 
 sub empty {
   my ($self) = @_;
@@ -115,14 +113,14 @@ sub empty {
   my $sth    = $dbh->prepare("SELECT 1 as num FROM Login LIMIT 1");
   $sth->execute();
   my $row = $sth->fetchrow_hashref();
-  my $num = $row->{num} // 0;
-  return $num == 0;
+  return 1 if not defined $row;
+  return;
 }
 
 =item exists
     Method documentation placeholder.
     This method takes single object as argument and returns a scalar.
-=cut 
+=cut
 
 sub exists {
   my ($self, $object) = @_;
@@ -138,7 +136,7 @@ sub exists {
 =item save
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub save {
   my ($self, @objects) = @_;
@@ -160,37 +158,39 @@ sub save {
 =item _insert
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub _insert {
   my ($self, @objects) = @_;
   my $dbh = $self->handle;
   my $qry = "
     INSERT INTO Login(
-      id, 
-      login, 
-      registration_time, 
-      last_login, 
-      real_name, 
-      email, 
-      pass, 
-      pass2, 
-      pass3, 
-      rank, 
-      master_id, 
+    id,
+      login,
+      registration_time,
+      last_login,
+      real_name,
+      email,
+      pass,
+      pass2,
+      pass3,
+      rank,
+      master_id,
       tennant_id
-    ) 
+    )
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
   my $sth = $dbh->prepare($qry);
   foreach my $obj (@objects) {
-
+    my $id = undef;
+    $id = $obj->id if defined $obj->id and $obj->id > 0;
     try {
       my $result = $sth->execute(
-        $obj->id,         $obj->login,     $obj->registration_time,
+        $id,              $obj->login,     $obj->registration_time,
         $obj->last_login, $obj->real_name, $obj->email,
         $obj->pass,       $obj->pass2,     $obj->pass3,
         $obj->rank,       $obj->master_id, $obj->tennant_id
       );
+      $obj->id($sth->{mysql_insertid});
     }
     catch {
       $self->logger->error("Insert exception: $_");
@@ -203,7 +203,7 @@ sub _insert {
 =item update
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub update {
   my ($self, @objects) = @_;
@@ -213,17 +213,17 @@ sub update {
     next if !defined $obj->login;
 
     # update field 'modified_time' only if needed
-    my $qry = "UPDATE Login SET 
+    my $qry = "UPDATE Login SET
             login=?,
-            registration_time=?, 
-            last_login=?, 
-            real_name=?, 
-            email=?, 
-            pass=?, 
-            pass2=?, 
-            pass3=?, 
-            rank=?, 
-            master_id=?, 
+            registration_time=?,
+            last_login=?,
+            real_name=?,
+            email=?,
+            pass=?,
+            pass2=?,
+            pass3=?,
+            rank=?,
+            master_id=?,
             tennant_id=?
           WHERE id = ?";
 
@@ -246,27 +246,30 @@ sub update {
 =item delete
     Method documentation placeholder.
     This method takes single object or array of objects as argument and returns nothing.
-=cut 
+=cut
 
 sub delete {
   my ($self, @objects) = @_;
-  my $dbh = $self->handle;
+  my $dbh    = $self->handle;
+  my $result = 0;
   foreach my $obj (@objects) {
     my $qry = "DELETE FROM Login WHERE id=?;";
     my $sth = $dbh->prepare($qry);
     try {
-      my $result = $sth->execute($obj->id);
+      $result = $sth->execute($obj->id);
     }
     catch {
+      $result = 0;
       $self->logger->error("Delete exception: $_");
     };
   }
-
+  return 1 if $result > 0;
+  return;
 }
 
 =item filter
     Method documentation placeholder.
-=cut 
+=cut
 
 sub filter {
   my ($self, $coderef) = @_;
@@ -280,7 +283,7 @@ sub filter {
 
 =item find
     Method documentation placeholder.
-=cut 
+=cut
 
 sub find {
   my ($self, $coderef) = @_;

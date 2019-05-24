@@ -11,24 +11,12 @@ use Try::Tiny;
 use Data::Dumper;
 
 use BibSpace::Functions::MySqlBackupFunctions;
+use BibSpace::Functions::BackupFunctions qw/restore_json_backup/;
 use BibSpace::Functions::Core;
 use BibSpace::Model::Backup;
-use BibSpace::Functions::BackupFunctions qw(restore_storable_backup);
 use BibSpace::Functions::FDB;
 
 use Mojo::Base 'Mojolicious::Controller';
-
-sub persistence_status {
-  my $self = shift;
-
-  my $status
-    = "Status: <pre style=\"font-family:monospace;\">"
-    . $self->app->repo->lr->get_summary_table
-    . "</pre>";
-  $self->stash(msg_type => 'success', msg => $status);
-  $self->flash(msg_type => 'success', msg => $status);
-  $self->redirect_to($self->get_referrer);
-}
 
 sub persistence_status_ajax {
   my $self = shift;
@@ -38,13 +26,13 @@ sub persistence_status_ajax {
     . $self->app->repo->lr->get_summary_table
     . "</pre>";
   $self->render(text => $status);
-
 }
 
 sub load_fixture {
   my $self = shift;
 
-  my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.dat');
+  my $fixture_file
+    = $self->app->home->rel_file('fixture/bibspace_fixture.json');
   $self->app->logger->info("Loading fixture from: " . $fixture_file->to_string);
 
   my $fixture = Backup->new(
@@ -52,7 +40,7 @@ sub load_fixture {
     filename => '' . $fixture_file->basename
   );
 
-  restore_storable_backup($fixture, $self->app);
+  restore_json_backup($fixture, $self->app);
 
   my $status
     = "Status: <pre style=\"font-family:monospace;\">"
@@ -70,20 +58,20 @@ sub save_fixture {
 
   $self->app->logger->warn("PERSISTENCE CONTROLLER does: save_fixture");
 
-  my $fixture_file = $self->app->home->rel_file('fixture/bibspace_fixture.dat');
+  my $fixture_file
+    = $self->app->home->rel_file('fixture/bibspace_fixture.json');
 
-  my $backup = Backup->create('dummy', "storable");
+  my $backup = Backup->create('dummy', "json");
   $backup->dir('' . $fixture_file->dirname);
   $backup->filename('' . $fixture_file->basename);
 
   my $layer = $self->app->repo->lr->get_read_layer;
   my $path  = "" . $backup->get_path;
 
-  $Storable::forgive_me = "do store regexp please, we will not use them anyway";
-
-# if you see any exceptions being thrown here, this might be due to REGEXP caused by DateTime pattern.
-# this should not happen currently however - I think it is fixed now.
-  Storable::store $layer, $path;
+  # Doing backup
+  my $dtoObject  = BibSpaceDTO->fromLayeredRepo($self->app->repo);
+  my $jsonString = $dtoObject->toJSON;
+  Path::Tiny::path($backup->get_path)->spew($jsonString);
 
   my $status
     = "Status: <pre style=\"font-family:monospace;\">"
@@ -96,141 +84,6 @@ sub save_fixture {
   $self->redirect_to($self->get_referrer);
 }
 
-sub copy_mysql_to_smart {
-  my $self = shift;
-
-  $self->app->logger->warn("PERSISTENCE CONTROLLER does: copy_mysql_to_smart");
-
-  $self->app->repo->lr->copy_data({from => 'mysql', to => 'smart'});
-  $self->app->link_data;
-
-  my $status
-    = "Status: <pre style=\"font-family:monospace;\">"
-    . $self->app->repo->lr->get_summary_table
-    . "</pre>";
-  $self->flash(msg_type => 'success', msg => "Copied mysql => smart. $status");
-  $self->redirect_to($self->get_referrer);
-}
-
-sub copy_smart_to_mysql {
-  my $self = shift;
-
-  $self->app->repo->lr->copy_data({from => 'smart', to => 'mysql'});
-
-  my $status
-    = "Status: <pre style=\"font-family:monospace;\">"
-    . $self->app->repo->lr->get_summary_table
-    . "</pre>";
-  $self->flash(msg_type => 'success', msg => "Copied smart => mysql. $status");
-  $self->redirect_to($self->get_referrer);
-}
-
-sub insert_random_data {
-  my $self = shift;
-  my $num  = $self->param('num') // 300;
-
-  my $str_len = 60;
-
-  for (1 .. $num) {
-    my $obj = $self->app->entityFactory->new_User(
-      login     => random_string($str_len),
-      email     => random_string($str_len) . '@example.com',
-      real_name => random_string($str_len),
-      pass      => random_string($str_len),
-      pass2     => random_string($str_len)
-
-    );
-    $self->app->repo->users_save($obj);
-
-    $obj
-      = $self->app->entityFactory->new_Author(uid => random_string($str_len),);
-    $self->app->repo->authors_save($obj);
-
-    $obj
-      = $self->app->entityFactory->new_Entry(bib => random_string($str_len),);
-    $self->app->repo->entries_save($obj);
-
-    $obj
-      = $self->app->entityFactory->new_TagType(name => random_string($str_len),
-      );
-    $self->app->repo->tagTypes_save($obj);
-
-    my $tt = ($self->app->repo->tagTypes_all)[0];
-
-    $obj = $self->app->entityFactory->new_Tag(
-      name => random_string($str_len),
-      type => $tt->id
-    );
-    $self->app->repo->tags_save($obj);
-
-    $obj
-      = $self->app->entityFactory->new_Team(name => random_string($str_len),);
-    $self->app->repo->teams_save($obj);
-  }
-
-  my $status
-    = "Status: <pre style=\"font-family:monospace;\">"
-    . $self->app->repo->lr->get_summary_table
-    . "</pre>";
-  $self->flash(msg_type => 'success', msg => "Copied smart => mysql. $status");
-  $self->redirect_to($self->get_referrer);
-}
-
-sub reset_smart {
-  my $self = shift;
-
-  $self->app->logger->warn("PERSISTENCE CONTROLLER does: reset_smart");
-
-  my $layer = $self->app->repo->lr->get_layer('smart');
-  if ($layer) {
-    $layer->reset_data;
-  }
-
-  # no pub_admin user would lock the whole system
-  # if you insert it here, it may will cause clash of IDs
-  # $self->app->insert_admin;
-  # instead, do not insert admin and set system in demo mode
-  $self->app->preferences->run_in_demo_mode(1);
-
-  say "setting preferences->run_in_demo_mode to: '"
-    . $self->app->preferences->run_in_demo_mode . "'";
-
-  my $status
-    = "Status: <pre style=\"font-family:monospace;\">"
-    . $self->app->repo->lr->get_summary_table
-    . "</pre>";
-  $self->flash(msg_type => 'success', msg => $status);
-  $self->redirect_to($self->get_referrer);
-}
-
-sub reset_mysql {
-  my $self = shift;
-
-  $self->app->logger->warn("PERSISTENCE CONTROLLER does: reset_mysql");
-
-  my $layer = $self->app->repo->lr->get_layer('mysql');
-  if ($layer) {
-    $layer->reset_data;
-    my $status
-      = "Status: <pre style=\"font-family:monospace;\">"
-      . $self->app->repo->lr->get_summary_table
-      . "</pre>";
-    $self->flash(msg_type => 'success', msg => $status);
-  }
-  else {
-    my $status
-      = "Status: <pre style=\"font-family:monospace;\">"
-      . $self->app->repo->lr->get_summary_table
-      . "</pre>";
-    $self->flash(
-      msg_type => 'danger',
-      msg      => "Reset failed - backend handle undefined. " . $status
-    );
-  }
-
-  $self->redirect_to($self->get_referrer);
-}
-
 sub reset_all {
   my $self = shift;
 
@@ -238,7 +91,6 @@ sub reset_all {
 
   my @layers = $self->app->repo->lr->get_all_layers;
   foreach (@layers) { $_->reset_data }
-  $self->app->repo->lr->reset_uid_providers;
 
   # no pub_admin user would lock the whole system
   # if you insert it here, it may will cause clash of IDs

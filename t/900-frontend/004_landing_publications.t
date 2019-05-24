@@ -22,22 +22,29 @@ $t_logged_in->ua->max_redirects(3);
 
 my @all_tag_type_objs = $t_logged_in->app->repo->tagTypes_all;
 my $some_tag_type_obj = $all_tag_type_objs[0];
+BAIL_OUT("Example tag_type must exist for this test") if not $some_tag_type_obj;
 
 my @tags
   = $t_logged_in->app->repo->tags_filter(sub { scalar($_->get_entries) > 0 });
 my $some_tag = $tags[0];
+BAIL_OUT("Example tag (one that has some entries) must exist for this test")
+  if not $some_tag;
 
 my @tags_permalink = $t_logged_in->app->repo->tags_filter(
   sub { defined $_->permalink and length($_->permalink) > 1 });
 my $some_permalink = $tags_permalink[0];
+BAIL_OUT("Example permalink must exist for this test") if not $some_permalink;
 
 my @teams     = $t_logged_in->app->repo->teams_all;
 my $some_team = $teams[0];
+BAIL_OUT("Example team must exist for this test") if not $some_team;
 
 my @authors
   = $t_logged_in->app->repo->authors_filter(sub { scalar($_->get_entries) > 0 }
   );
 my $some_author = $authors[0];
+BAIL_OUT("Example author (having entries) must exist for this test")
+  if not $some_author;
 
 # generated with: ./bin/bibspace routes | grep GET | grep -v :
 my @pages = (

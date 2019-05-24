@@ -53,7 +53,7 @@ sub Freassign_authors_to_entries_given_by_array {
       }
       if ($create_new == 1 or defined $author) {
 
-        my $authorship = Authorship->new(
+        my $authorship = $app->entityFactory->new_Authorship(
           author    => $author->get_master,
           entry     => $entry,
           author_id => $author->get_master->id,
@@ -246,20 +246,20 @@ sub Fget_publications_core {
   my $query_tag         = shift;
   my $query_team        = shift;
   my $query_permalink   = shift;
-    #<<< no perltidy here
-    my $query_visible     = shift // 0;  # value can be set only from code (not from browser)
-    my $query_hidden      = shift;       # value can be set only from code (not from browser)
-    my $debug             = shift // 0;  # value can be set only from code (not from browser)
+  #<<< no perltidy here
+  my $query_visible     = shift // 0;  # value can be set only from code (not from browser)
+  my $query_hidden      = shift;       # value can be set only from code (not from browser)
+  my $debug             = shift // 0;  # value can be set only from code (not from browser)
 
-    # catch bad urls like: ...&entry_type=&tag=&author=
-    $query_author      = undef if defined $query_author      and length( "".$query_author      ) < 1;
-    $query_year        = undef if defined $query_year        and length( "".$query_year        ) < 1;
-    $query_bibtex_type = undef if defined $query_bibtex_type and length( "".$query_bibtex_type ) < 1;
-    $query_entry_type  = undef if defined $query_entry_type  and length( "".$query_entry_type  ) < 1;
-    $query_tag         = undef if defined $query_tag         and length( "".$query_tag         ) < 1;
-    $query_team        = undef if defined $query_team        and length( "".$query_team        ) < 1;
-    $query_permalink   = undef if defined $query_permalink   and length( "".$query_permalink   ) < 1;
-    #>>>
+  # catch bad urls like: ...&entry_type=&tag=&author=
+  $query_author      = undef if defined $query_author      and length( "".$query_author      ) < 1;
+  $query_year        = undef if defined $query_year        and length( "".$query_year        ) < 1;
+  $query_bibtex_type = undef if defined $query_bibtex_type and length( "".$query_bibtex_type ) < 1;
+  $query_entry_type  = undef if defined $query_entry_type  and length( "".$query_entry_type  ) < 1;
+  $query_tag         = undef if defined $query_tag         and length( "".$query_tag         ) < 1;
+  $query_team        = undef if defined $query_team        and length( "".$query_team        ) < 1;
+  $query_permalink   = undef if defined $query_permalink   and length( "".$query_permalink   ) < 1;
+  #>>>
 
   if ($debug == 1) {
     $self->app->logger->debug(Dumper $self->req->params);
@@ -305,14 +305,14 @@ sub Fget_publications_core {
   if (defined $query_author) {
     if (Scalar::Util::looks_like_number($query_author)) {
       $author_obj
-        = $self->app->repo->authors_find(sub { $_->master_id == $query_author }
+        = $self->app->repo->authors_find(sub { $_->master->id == $query_author }
         );
       $author_obj
         ||= $self->app->repo->authors_find(sub { $_->id == $query_author });
     }
     else {
-      $author_obj
-        = $self->app->repo->authors_find(sub { $_->master eq $query_author });
+      $author_obj = $self->app->repo->authors_find(
+        sub { $_->master->name eq $query_author });
       $author_obj
         ||= $self->app->repo->authors_find(sub { $_->uid eq $query_author });
     }
@@ -395,7 +395,7 @@ sub Fget_publications_core {
   # Entries of visible authors
   # by default, we return entries of all authors
   if (defined $query_visible and $query_visible == 1) {
-    @entries = grep { $_->is_visible } @entries;
+    @entries = grep { $_->belongs_to_visible_author } @entries;
   }
 
   ######## complex filters

@@ -121,7 +121,7 @@ sub do_delete_team {
   my $team = shift;
 
   ## Deleting memberships
-  my @memberships = $team->memberships_all;
+  my @memberships = $team->get_memberships;
 
   # for each team, remove membership in this team
   foreach my $membership (@memberships) {

@@ -12,39 +12,22 @@ use MooseX::ClassAttribute;
 with 'IEntity';
 use BibSpace::Model::SerializableBase::UserSerializableBase;
 extends 'UserSerializableBase';
-
-# Cast self to SerializableBase and serialize
-sub TO_JSON {
-  my $self = shift;
-  my $copy = $self->meta->clone_object($self);
-  return UserSerializableBase->meta->rebless_instance_back($copy)->TO_JSON;
-}
-
 use DateTime::Format::Strptime;
 use DateTime;
 my $dtPattern = DateTime::Format::Strptime->new(pattern => '%Y-%m-%d %H:%M:%S');
 
-class_has 'admin_rank'   => (is => 'ro', default => 2);
-class_has 'manager_rank' => (is => 'ro', default => 1);
-class_has 'user_rank'    => (is => 'ro', default => 0);
+sub get_forgot_pass_token {
+  shift->pass3;
+}
 
-has 'login'     => (is => 'rw', isa => 'Str', required => 1);
-has 'real_name' => (is => 'rw', isa => 'Str', default  => "unnamed");
-has 'email'     => (is => 'rw', isa => 'Str', required => 1);
-has 'rank' => (is => 'rw', default => User->user_rank);
+sub set_forgot_pass_token {
+  shift->pass3(shift);
+}
 
-# pass = user password
-has 'pass' => (is => 'rw', isa => 'Str');
-
-# pass2 = salt
-has 'pass2' => (is => 'rw', isa => 'Str');
-has 'pass3' => (is => 'rw', isa => 'Maybe[Str]');
-
-# TODO: forgot_token is not a DB field!
-has 'forgot_token' => (is => 'rw', isa     => 'Maybe[Str]');
-has 'master_id'    => (is => 'rw', default => 0);
-has 'tennant_id'   => (is => 'rw', default => 0);
-
+sub reset_forgot_token {
+  my ($self) = @_;
+  $self->pass3(undef);
+}
 has 'last_login' => (
   is      => 'rw',
   isa     => 'DateTime',
@@ -132,8 +115,8 @@ sub record_logging_in {
   my $self = shift;
   $self->last_login(
     DateTime->now->set_time_zone($self->preferences->local_time_zone));
-
 }
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

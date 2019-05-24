@@ -263,6 +263,29 @@ subtest 'add_publication_post' => sub {
       {new_bib => '@bad_content!', save => 1});
 };
 
+subtest 'Add orphaned publication' => sub {
+
+  my @orph_entries = $admin_user->app->repo->entries_filter(
+    sub { scalar($_->get_authors) == 0 });
+  ok(scalar @orph_entries >= 0, "Some orphaned entries may exist beforehand");
+
+  my $random_string = random_string(16);
+
+  my $bib_content = '
+  @misc{key_2017_TEST' . $random_string . ',
+    publisher = {Foo Publishing house},
+    title = {{Selected aspects of some methods}},
+    year = {2017},
+  }';
+
+  $admin_user->post_ok($self->url_for('add_publication_post') => form =>
+      {new_bib => $bib_content, save => 1});
+
+  my @orph_entries = $admin_user->app->repo->entries_filter(
+    sub { scalar($_->get_authors) == 0 });
+  ok(scalar @orph_entries > 0, "Some orphaned entries exist");
+};
+
 # generated with: ./bin/bibspace routes | grep GET | grep -v :
 my @pages = (
   $self->url_for('publications'), $self->url_for('recently_added', num => 10),
@@ -322,8 +345,9 @@ my @pages = (
   $self->url_for('manage_attachments', id => 0),
   $self->url_for('manage_attachments', id => $entry->id),
 
-  $self->url_for('fix_attachment_urls', id => 0),
-  $self->url_for('fix_attachment_urls', id => $entry->id),
+  $self->url_for('fix_attachment_urls'),
+  $self->url_for('fix_attachment_urls')->query(id => 0),
+  $self->url_for('fix_attachment_urls')->query(id => $entry->id),
 
   $self->url_for('manage_exceptions', id => 0),
   $self->url_for('manage_exceptions', id => $entry->id),

@@ -17,13 +17,22 @@ my $repo = $self->app->repo;
 
 my @all_entries = $repo->entries_all;
 
-my $limit_test_entries = 20;
+my $limit_test_entries = 10;
 
 note "============ Testing " . scalar(@all_entries) . " Entries ============";
 
 foreach my $entry (@all_entries) {
   last if $limit_test_entries < 0;
   note ">> Testing Entry ID " . $entry->id . ".";
+
+  ok($entry->equals($entry), "Entry is equal to itself");
+  dies_ok(sub { $entry->equals(undef) }, 'equals undef expecting to die');
+
+  ok($entry->equals_bibtex($entry), "Entry is equal_bibtex to itself");
+  dies_ok(
+    sub { $entry->equals_bibtex(undef) },
+    'equal_bibtex undef expecting to die'
+  );
 
   $entry->make_paper;
   ok($entry->is_paper);
@@ -54,8 +63,7 @@ foreach my $entry (@all_entries) {
   ok($entry->fix_month, "month fixed");
   is($entry->month, 4, "month fixed correctly");
 
-  if ($entry->has_bibtex_field('author') or $entry->has_bibtex_field('editor'))
-  {
+  if ($entry->has_bibtex_field('author')) {
     my @author_names = $entry->author_names_from_bibtex;
     ok(scalar @author_names > 0, "Entry has authors in bibtex");
   }
@@ -64,6 +72,21 @@ foreach my $entry (@all_entries) {
     my @author_names = $entry->author_names_from_bibtex;
     is(scalar @author_names, 1, "Entry has 1 author in bibtex");
   }
+
+  note "Testing case where there are no authors but there are editors";
+  $entry->remove_bibtex_fields(['author']);
+  if ($entry->has_bibtex_field('editor')) {
+    my @author_names = $entry->author_names_from_bibtex;
+    ok(scalar @author_names > 0, "Entry has editors in bibtex");
+  }
+  else {
+    $entry->add_bibtex_field("editor", "James Bond");
+    my @author_names = $entry->author_names_from_bibtex;
+    is(scalar @author_names, 1, "Entry has 1 editor in bibtex");
+  }
+
+  # readd removed field
+  $entry->add_bibtex_field("author", "James Bond");
 
   if ($entry->has_bibtex_field('tags')) {
     is($entry->remove_bibtex_fields(['tags']), 1, "remove tags bibtex field");
@@ -89,5 +112,4 @@ foreach my $entry (@all_entries) {
 my $broken_entry = $self->app->entityFactory->new_Entry(bib => ' ');
 $broken_entry->regenerate_html(1, $self->app->bst, $self->app->bibtexConverter);
 
-ok(1);
 done_testing();

@@ -41,10 +41,12 @@ my $some_author = $authors[0];
 
 # generated with: ./bin/bibspace routes | grep GET | grep -v :
 my @pages = (
-  $self->url_for('start'), $self->url_for('system_status'), "/forgot",
-  "/login_form", "/youneedtologin", "/badpassword", "/register", "/log",
-
-  $self->url_for('add_publication'), $self->url_for('add_many_publications'),
+  $self->url_for('start'),           $self->url_for('system_status'),
+  $self->url_for('forgot_password'), $self->url_for('show_stats'),
+  $self->url_for('login_form'),      $self->url_for('youneedtologin'),
+  $self->url_for('badpassword'),     $self->url_for('register'),
+  $self->url_for('show_log'),        $self->url_for('add_publication'),
+  $self->url_for('add_many_publications'),
   $self->url_for('recently_changed', num => 10),
   $self->url_for('recently_added',   num => 10),
 
@@ -52,17 +54,12 @@ my @pages = (
   $self->url_for('fix_attachment_urls'), $self->url_for('clean_ugly_bibtex'),
   $self->url_for('regenerate_html_for_all'),
 
-  $self->url_for('fix_masters'),
-
   "/profile", "/backups", "/types", "/types/add", "/authors", "/authors/add",
   "/authors/reassign", "/authors/reassign_and_create", "/tagtypes",
   "/tagtypes/add", "/teams", "/teams/add", "/publications",
   $self->url_for('all_orphaned'), "/publications/candidates_to_delete",
-  "/publications/missing_month", "/read/publications/meta", "/cron",
-  "/cron/day", "/cron/night", "/cron/week", "/cron/month", "/logout",
+  "/publications/missing_month", "/read/publications/meta", "/logout",
 );
-
-# Logout must be last!
 
 # Logout must be last!
 

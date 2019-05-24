@@ -119,18 +119,6 @@ sub fix_bibtex_national_characters {
   # makes sth \ss sth --> sth {\ss} sth
   $str =~ s/(?<!\{)\\ss(?!\})/\{\\ss}/g;
 
-  # if( $str =~ /(?<!\{)(\\".)(?!\})/ ){
-  #   say "BEFORE:" .$str;
-  #   $str =~ s/(?<!\{)(\\".)(?!\})/\{$1\}/g;
-  #   say "AFTER:" .$str;
-  # }
-  # if( $str =~ /(?<!\{)(\\".)(?!\})/ ){
-  #   say "NOT FIXED!!!";
-  # }
-  # else{
-  #   say "FIXED OK!";
-  # }
-
   return $str;
 }
 
@@ -337,7 +325,7 @@ sub get_month_numeric {
 
   return 1  if /jan/ or /january/   or /januar/   or /1/  or /01/;
   return 2  if /feb/ or /february/  or /februar/  or /2/  or /02/;
-  return 3  if /mar/ or /march/     or /3/        or /03/;
+  return 3  if /mar/ or /march/     or /maerz/    or /3/  or /03/;
   return 4  if /apr/ or /april/     or /4/        or /04/;
   return 5  if /may/ or /mai/       or /maj/      or /5/  or /05/;
   return 6  if /jun/ or /june/      or /juni/     or /6/  or /06/;

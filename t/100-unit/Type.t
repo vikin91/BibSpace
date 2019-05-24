@@ -12,10 +12,6 @@ TestManager->apply_fixture($self->app);
 my $repo      = $self->app->repo;
 my @all_types = $repo->types_all;
 
-# my $author = ($repo->authors_all)[0];
-# my $author2 = ($repo->authors_all)[1];
-# my $entry = ($repo->entries_all)[0];
-
 my $limit_num_tests = 20;
 
 note "============ Testing " . scalar(@all_types) . " Types ============";
@@ -23,7 +19,7 @@ note "============ Testing " . scalar(@all_types) . " Types ============";
 foreach my $type (@all_types) {
   last if $limit_num_tests < 0;
 
-  note "============ Testing Type ID " . $type->id . ".";
+  note "============ Testing Type ID " . $type->our_type . ".";
 
   ok($type->equals($type), "equals");
 
